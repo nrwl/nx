@@ -33,10 +33,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       'product/server.ts',
       tree
         .read('product/server.ts', 'utf-8')
-        .replace(
-          'const port = 4201;',
-          `const port = process.env['PORT'] || 4200;`
-        )
+        .replace('const port = 4201;', `const port = process.env.PORT || 4200;`)
     );
 
     updateSsrServerPort(tree);
@@ -105,36 +102,25 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
 
     updateSsrServerPort(tree);
     expect(tree.read('shell/server.ts', 'utf-8')).toContain(
-      `port = process.env['PORT'] || ${shellPort}`
+      `port = process.env.PORT || ${shellPort}`
     );
     expect(tree.read('shell/server.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import * as path from 'path';
       import express from 'express';
       import cors from 'cors';
-
       import { handleRequest } from './src/main.server';
-
-      const port = process.env['PORT'] || 4200;
+      const port = process.env.PORT || 4200;
       const app = express();
-
       const browserDist = path.join(process.cwd(), 'dist/shell/browser');
       const indexPath = path.join(browserDist, 'index.html');
-
       app.use(cors());
-
-      app.get(
-        '*.*',
-        express.static(browserDist, {
+      app.get('*.*', express.static(browserDist, {
           maxAge: '1y',
-        })
-      );
-
+      }));
       app.use('*', handleRequest(indexPath));
-
       const server = app.listen(port, () => {
-        console.log(\`Express server listening on http://localhost:\${port}\`);
+          console.log(\`Express server listening on http://localhost:\${port}\`);
       });
-
       server.on('error', console.error);
       "
     `);
@@ -168,36 +154,25 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
     updateSsrServerPort(tree);
 
     expect(tree.read('host/server.ts', 'utf-8')).toContain(
-      `port = process.env['PORT'] || ${hostPort}`
+      `port = process.env.PORT || ${hostPort}`
     );
     expect(tree.read('host/server.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import * as path from 'path';
       import express from 'express';
       import cors from 'cors';
-
       import { handleRequest } from './src/main.server';
-
-      const port = process.env['PORT'] || 4200;
+      const port = process.env.PORT || 4200;
       const app = express();
-
       const browserDist = path.join(process.cwd(), 'dist/host/browser');
       const indexPath = path.join(browserDist, 'index.html');
-
       app.use(cors());
-
-      app.get(
-        '*.*',
-        express.static(browserDist, {
+      app.get('*.*', express.static(browserDist, {
           maxAge: '1y',
-        })
-      );
-
+      }));
       app.use('*', handleRequest(indexPath));
-
       const server = app.listen(port, () => {
-        console.log(\`Express server listening on http://localhost:\${port}\`);
+          console.log(\`Express server listening on http://localhost:\${port}\`);
       });
-
       server.on('error', console.error);
       "
     `);

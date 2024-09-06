@@ -63,13 +63,11 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   }
 
   // add path to exposes property
-  const offsetFromProjectRoot = offsetFromRoot(projectRoot);
-  addPathToExposes(
-    tree,
-    projectRoot,
-    schema.name,
-    joinPathFragments(offsetFromProjectRoot, schema.path)
-  );
+  const normalizedModulePath =
+    schema.bundler === 'rspack'
+      ? joinPathFragments(offsetFromRoot(projectRoot), schema.path)
+      : schema.path;
+  addPathToExposes(tree, projectRoot, schema.name, normalizedModulePath);
 
   // Add new path to tsconfig
   const rootJSON = readJson(tree, getRootTsConfigPathInTree(tree));

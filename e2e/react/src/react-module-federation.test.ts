@@ -638,7 +638,7 @@ describe('React Module Federation', () => {
       }
     }, 500_000);
 
-    it('debugthis should support different versions workspace libs for host and remote', async () => {
+    it('should support different versions workspace libs for host and remote', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
       const lib = uniq('lib');

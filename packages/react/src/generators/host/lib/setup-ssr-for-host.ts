@@ -21,7 +21,9 @@ export async function setupSsrForHost(
   const tasks: GeneratorCallback[] = [];
   let project = readProjectConfiguration(tree, appName);
   project.targets.serve.executor =
-    '@nx/rspack:module-federation-ssr-dev-server';
+    options.bundler === 'rspack'
+      ? '@nx/rspack:module-federation-ssr-dev-server'
+      : '@nx/react:module-federation-ssr-dev-server';
   updateProjectConfiguration(tree, appName, project);
 
   const pathToModuleFederationSsrFiles = options.typescriptConfiguration
