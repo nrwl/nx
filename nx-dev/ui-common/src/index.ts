@@ -27,7 +27,7 @@ export { resourceMenuItems } from './lib/headers/menu-items';
 export { solutionsMenuItems } from './lib/headers/menu-items';
 export { eventItems } from './lib/headers/menu-items';
 export { learnItems } from './lib/headers/menu-items';
-export { plans } from './lib/headers/menu-items';
+export { solutions as plans } from './lib/headers/menu-items';
 export { featuresItems } from './lib/headers/menu-items';
 export { DefaultMenuItem } from './lib/headers/default-menu-item';
 export { MobileMenuItem } from './lib/headers/mobile-menu-item';

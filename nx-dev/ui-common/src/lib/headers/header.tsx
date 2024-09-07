@@ -14,7 +14,7 @@ import {
   eventItems,
   featuresItems,
   learnItems,
-  plans,
+  solutions,
   resourceMenuItems,
   solutionsMenuItems,
 } from './menu-items';
@@ -431,7 +431,7 @@ export function Header(): JSX.Element {
                                   />
                                 </Disclosure.Button>
                                 <Disclosure.Panel as="ul" className="space-y-1">
-                                  {plans.map((item) => (
+                                  {solutions.map((item) => (
                                     <MobileMenuItem
                                       key={item.name}
                                       item={item}
