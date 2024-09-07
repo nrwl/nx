@@ -319,7 +319,8 @@ export function addExtendsToLintConfig(
   plugin:
     | string
     | { name: string; needCompatFixup: boolean }
-    | Array<string | { name: string; needCompatFixup: boolean }>
+    | Array<string | { name: string; needCompatFixup: boolean }>,
+  insertAtTheEnd = false
 ): GeneratorCallback {
   if (useFlatConfig(tree)) {
     const pluginExtends: ts.SpreadElement[] = [];
@@ -381,7 +382,7 @@ export function addExtendsToLintConfig(
     // start of the `extends` array
     for (const pluginExtend of pluginExtends.reverse()) {
       content = addBlockToFlatConfigExport(content, pluginExtend, {
-        insertAtTheEnd: false,
+        insertAtTheEnd,
       });
     }
     tree.write(fileName, content);

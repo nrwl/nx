@@ -122,6 +122,7 @@ export const getGlobalFlatEslintConfiguration = (
   content = addBlockToFlatConfigExport(
     content,
     generateFlatOverride({
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
       rules: {},
     })
   );

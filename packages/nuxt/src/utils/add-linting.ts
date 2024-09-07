@@ -19,6 +19,7 @@ import {
 import { nuxtEslintConfigVersion } from './versions';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
+// TODO(colum): Look into the recommended set up using `withNuxt` inside eslint.config.mjs. https://eslint.nuxt.com/packages/config
 export async function addLinting(
   host: Tree,
   options: {
@@ -39,18 +40,33 @@ export async function addLinting(
       skipFormat: true,
       rootProject: options.rootProject,
       addPlugin: true,
-      // Merging base flat config with `@nuxt/eslint-config` results in merge error due to `@typescript-eslint` being registered twice.
-      skipExtendedBaseConfig: true,
     });
     tasks.push(lintTask);
 
-    editEslintConfigFiles(host, options.projectRoot);
-
     if (isEslintConfigSupported(host, options.projectRoot)) {
-      const addExtendsTask = addExtendsToLintConfig(host, options.projectRoot, [
-        '@nuxt/eslint-config',
-      ]);
+      editEslintConfigFiles(host, options.projectRoot);
+
+      const addExtendsTask = addExtendsToLintConfig(
+        host,
+        options.projectRoot,
+        ['@nuxt/eslint-config'],
+        true
+      );
       tasks.push(addExtendsTask);
+
+      if (useFlatConfig(host)) {
+        addOverrideToLintConfig(
+          host,
+          options.projectRoot,
+          {
+            files: ['**/*.vue'],
+            languageOptions: {
+              parserOptions: { parser: '@typescript-eslint/parser' },
+            },
+          } as unknown // languageOptions is not in eslintrc format but for flat config
+        );
+      }
+
       addIgnoresToLintConfig(host, options.projectRoot, [
         '.nuxt/**',
         '.output/**',
@@ -89,49 +105,30 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
       o.files = [o.files, '*.vue'];
     }
   };
-
-  if (isEslintConfigSupported(tree, projectRoot)) {
-    if (useFlatConfig(tree)) {
-      addOverrideToLintConfig(
-        tree,
-        projectRoot,
-        {
-          rules: { 'vue/multi-word-component-names': 'off' },
-        },
-        { insertAtTheEnd: false }
-      );
-    } else {
-      if (
-        lintConfigHasOverride(
-          tree,
-          projectRoot,
-          (o) => o.parserOptions && !hasVueFiles(o),
-          true
-        )
-      ) {
-        updateOverrideInLintConfig(
-          tree,
-          projectRoot,
-          (o) => !!o.parserOptions,
-          (o) => {
-            addVueFiles(o);
-            return o;
-          }
-        );
-      } else {
-        replaceOverridesInLintConfig(tree, projectRoot, [
-          {
-            files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: { 'vue/multi-word-component-names': 'off' },
-          },
-        ]);
+  if (
+    lintConfigHasOverride(
+      tree,
+      projectRoot,
+      (o) => o.parserOptions && !hasVueFiles(o),
+      true
+    )
+  ) {
+    updateOverrideInLintConfig(
+      tree,
+      projectRoot,
+      (o) => !!o.parserOptions,
+      (o) => {
+        addVueFiles(o);
+        return o;
       }
-    }
-  }
-
-  // Edit root config too
-  if (!isEslintConfigSupported(tree)) {
-    return;
+    );
+  } else {
+    replaceOverridesInLintConfig(tree, projectRoot, [
+      {
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
+        rules: {},
+      },
+    ]);
   }
 
   if (

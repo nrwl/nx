@@ -125,6 +125,7 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
       );
       // Add an empty rules object to users know how to add/override rules
       addOverrideToLintConfig(tree, projectRoot, {
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
         rules: { 'vue/multi-word-component-names': 'off' },
       });
     } else {
