@@ -653,6 +653,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Nx Module Federation Technical Overview",
+                "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+                "id": "nx-module-federation-technical-overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Faster Builds with Module Federation",
                 "path": "/concepts/module-federation/faster-builds-with-module-federation",
                 "id": "faster-builds-with-module-federation",
@@ -850,6 +858,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Module Federation Technical Overview",
+            "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+            "id": "nx-module-federation-technical-overview",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Faster Builds with Module Federation",
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
             "id": "faster-builds-with-module-federation",
@@ -880,6 +896,14 @@
         "name": "Module Federation and Nx",
         "path": "/concepts/module-federation/module-federation-and-nx",
         "id": "module-federation-and-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Module Federation Technical Overview",
+        "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+        "id": "nx-module-federation-technical-overview",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1091,14 +1115,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Change Cache Location",
-                "path": "/recipes/running-tasks/change-cache-location",
-                "id": "change-cache-location",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
@@ -1142,6 +1158,30 @@
                 "name": "Reduce Repetitive Configuration",
                 "path": "/recipes/running-tasks/reduce-repetitive-configuration",
                 "id": "reduce-repetitive-configuration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Change Cache Location",
+                "path": "/recipes/running-tasks/change-cache-location",
+                "id": "change-cache-location",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Skip Task Caching",
+                "path": "/recipes/running-tasks/skipping-cache",
+                "id": "skipping-cache",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate to Inferred Tasks (Project Crystal)",
+                "path": "/recipes/running-tasks/convert-to-inferred",
+                "id": "convert-to-inferred",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1923,6 +1963,22 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Customize Conventional Commit Types",
+                "path": "/recipes/nx-release/customize-conventional-commit-types",
+                "id": "customize-conventional-commit-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "File Based Versioning (Version Plans)",
+                "path": "/recipes/nx-release/file-based-versioning-version-plans",
+                "id": "file-based-versioning-version-plans",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configure Custom Registries",
                 "path": "/recipes/nx-release/configure-custom-registries",
                 "id": "configure-custom-registries",
@@ -1963,14 +2019,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Customize Conventional Commit Types",
-                "path": "/recipes/nx-release/customize-conventional-commit-types",
-                "id": "customize-conventional-commit-types",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Configure Changelog Format",
                 "path": "/recipes/nx-release/configure-changelog-format",
                 "id": "configure-changelog-format",
@@ -1982,6 +2030,14 @@
                 "name": "Publish a Custom Dist Directory",
                 "path": "/recipes/nx-release/publish-custom-dist-directory",
                 "id": "publish-custom-dist-directory",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Build Before Versioning",
+                "path": "/recipes/nx-release/build-before-versioning",
+                "id": "build-before-versioning",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2081,14 +2137,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Change Cache Location",
-            "path": "/recipes/running-tasks/change-cache-location",
-            "id": "change-cache-location",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
@@ -2135,6 +2183,30 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Change Cache Location",
+            "path": "/recipes/running-tasks/change-cache-location",
+            "id": "change-cache-location",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Skip Task Caching",
+            "path": "/recipes/running-tasks/skipping-cache",
+            "id": "skipping-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate to Inferred Tasks (Project Crystal)",
+            "path": "/recipes/running-tasks/convert-to-inferred",
+            "id": "convert-to-inferred",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2159,14 +2231,6 @@
         "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Change Cache Location",
-        "path": "/recipes/running-tasks/change-cache-location",
-        "id": "change-cache-location",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2215,6 +2279,30 @@
         "name": "Reduce Repetitive Configuration",
         "path": "/recipes/running-tasks/reduce-repetitive-configuration",
         "id": "reduce-repetitive-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Change Cache Location",
+        "path": "/recipes/running-tasks/change-cache-location",
+        "id": "change-cache-location",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Skip Task Caching",
+        "path": "/recipes/running-tasks/skipping-cache",
+        "id": "skipping-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate to Inferred Tasks (Project Crystal)",
+        "path": "/recipes/running-tasks/convert-to-inferred",
+        "id": "convert-to-inferred",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3626,6 +3714,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Customize Conventional Commit Types",
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "id": "customize-conventional-commit-types",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "File Based Versioning (Version Plans)",
+            "path": "/recipes/nx-release/file-based-versioning-version-plans",
+            "id": "file-based-versioning-version-plans",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configure Custom Registries",
             "path": "/recipes/nx-release/configure-custom-registries",
             "id": "configure-custom-registries",
@@ -3666,14 +3770,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Customize Conventional Commit Types",
-            "path": "/recipes/nx-release/customize-conventional-commit-types",
-            "id": "customize-conventional-commit-types",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Configure Changelog Format",
             "path": "/recipes/nx-release/configure-changelog-format",
             "id": "configure-changelog-format",
@@ -3685,6 +3781,14 @@
             "name": "Publish a Custom Dist Directory",
             "path": "/recipes/nx-release/publish-custom-dist-directory",
             "id": "publish-custom-dist-directory",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Build Before Versioning",
+            "path": "/recipes/nx-release/build-before-versioning",
+            "id": "build-before-versioning",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3712,6 +3816,22 @@
         "name": "Automatically Version with Conventional Commits",
         "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
         "id": "automatically-version-with-conventional-commits",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Customize Conventional Commit Types",
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "id": "customize-conventional-commit-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "File Based Versioning (Version Plans)",
+        "path": "/recipes/nx-release/file-based-versioning-version-plans",
+        "id": "file-based-versioning-version-plans",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3757,14 +3877,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Customize Conventional Commit Types",
-        "path": "/recipes/nx-release/customize-conventional-commit-types",
-        "id": "customize-conventional-commit-types",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Configure Changelog Format",
         "path": "/recipes/nx-release/configure-changelog-format",
         "id": "configure-changelog-format",
@@ -3776,6 +3888,14 @@
         "name": "Publish a Custom Dist Directory",
         "path": "/recipes/nx-release/publish-custom-dist-directory",
         "id": "publish-custom-dist-directory",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Build Before Versioning",
+        "path": "/recipes/nx-release/build-before-versioning",
+        "id": "build-before-versioning",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4314,9 +4434,9 @@
         "children": [
           {
             "name": "Commands",
-            "path": "/nx-api/nx",
-            "id": "commands",
-            "isExternal": true,
+            "path": "/reference/nx-commands",
+            "id": "nx-commands",
+            "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
@@ -4381,9 +4501,9 @@
       },
       {
         "name": "Commands",
-        "path": "/nx-api/nx",
-        "id": "commands",
-        "isExternal": true,
+        "path": "/reference/nx-commands",
+        "id": "nx-commands",
+        "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
@@ -4898,7 +5018,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Getting Started with Plugins",
+            "name": "Extending Nx with Plugins",
             "path": "/extending-nx/intro/getting-started",
             "id": "getting-started",
             "isExternal": false,
@@ -4909,7 +5029,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Getting Started with Plugins",
+        "name": "Extending Nx with Plugins",
         "path": "/extending-nx/intro/getting-started",
         "id": "getting-started",
         "isExternal": false,
@@ -4917,23 +5037,23 @@
         "disableCollapsible": false
       },
       {
-        "name": "5 Min Tutorials",
+        "name": "Tutorials",
         "path": "/extending-nx/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
-            "name": "Create a Local Plugin",
-            "path": "/extending-nx/tutorials/create-plugin",
-            "id": "create-plugin",
+            "name": "Enforce Organizational Best Practices",
+            "path": "/extending-nx/tutorials/organization-specific-plugin",
+            "id": "organization-specific-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Maintain a Published Plugin",
-            "path": "/extending-nx/tutorials/publish-plugin",
-            "id": "publish-plugin",
+            "name": "Create a Tooling Plugin",
+            "path": "/extending-nx/tutorials/tooling-plugin",
+            "id": "tooling-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4942,17 +5062,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Create a Local Plugin",
-        "path": "/extending-nx/tutorials/create-plugin",
-        "id": "create-plugin",
+        "name": "Enforce Organizational Best Practices",
+        "path": "/extending-nx/tutorials/organization-specific-plugin",
+        "id": "organization-specific-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Maintain a Published Plugin",
-        "path": "/extending-nx/tutorials/publish-plugin",
-        "id": "publish-plugin",
+        "name": "Create a Tooling Plugin",
+        "path": "/extending-nx/tutorials/tooling-plugin",
+        "id": "tooling-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4963,22 +5083,6 @@
         "id": "recipes",
         "isExternal": false,
         "children": [
-          {
-            "name": "Write a Simple Executor",
-            "path": "/extending-nx/recipes/local-executors",
-            "id": "local-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Compose Executors",
-            "path": "/extending-nx/recipes/compose-executors",
-            "id": "compose-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
           {
             "name": "Write a Simple Generator",
             "path": "/extending-nx/recipes/local-generators",
@@ -5028,6 +5132,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Write a Simple Executor",
+            "path": "/extending-nx/recipes/local-executors",
+            "id": "local-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Compose Executors",
+            "path": "/extending-nx/recipes/compose-executors",
+            "id": "compose-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Create a Preset",
             "path": "/extending-nx/recipes/create-preset",
             "id": "create-preset",
@@ -5044,30 +5164,22 @@
             "disableCollapsible": false
           },
           {
-            "name": "Modify the Project Graph",
+            "name": "Infer Tasks or Projects",
             "path": "/extending-nx/recipes/project-graph-plugins",
             "id": "project-graph-plugins",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish a Plugin",
+            "path": "/extending-nx/recipes/publish-plugin",
+            "id": "publish-plugin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Write a Simple Executor",
-        "path": "/extending-nx/recipes/local-executors",
-        "id": "local-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Compose Executors",
-        "path": "/extending-nx/recipes/compose-executors",
-        "id": "compose-executors",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5119,6 +5231,22 @@
         "disableCollapsible": false
       },
       {
+        "name": "Write a Simple Executor",
+        "path": "/extending-nx/recipes/local-executors",
+        "id": "local-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Compose Executors",
+        "path": "/extending-nx/recipes/compose-executors",
+        "id": "compose-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Create a Preset",
         "path": "/extending-nx/recipes/create-preset",
         "id": "create-preset",
@@ -5135,9 +5263,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Modify the Project Graph",
+        "name": "Infer Tasks or Projects",
         "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish a Plugin",
+        "path": "/extending-nx/recipes/publish-plugin",
+        "id": "publish-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5301,9 +5437,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Cloud AI",
-            "path": "/ci/features/nx-cloud-ai",
-            "id": "nx-cloud-ai",
+            "name": "Automatically Split E2E Tasks (Atomizer)",
+            "path": "/ci/features/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/features/flaky-tasks",
+            "id": "flaky-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5317,17 +5461,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks (Atomizer)",
-            "path": "/ci/features/split-e2e-tasks",
-            "id": "split-e2e-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Identify and Re-run Flaky Tasks",
-            "path": "/ci/features/flaky-tasks",
-            "id": "flaky-tasks",
+            "name": "Explain With AI",
+            "path": "/ci/features/explain-with-ai",
+            "id": "explain-with-ai",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5360,9 +5496,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Cloud AI",
-        "path": "/ci/features/nx-cloud-ai",
-        "id": "nx-cloud-ai",
+        "name": "Automatically Split E2E Tasks (Atomizer)",
+        "path": "/ci/features/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/features/flaky-tasks",
+        "id": "flaky-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5376,17 +5520,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Automatically Split E2E Tasks (Atomizer)",
-        "path": "/ci/features/split-e2e-tasks",
-        "id": "split-e2e-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Identify and Re-run Flaky Tasks",
-        "path": "/ci/features/flaky-tasks",
-        "id": "flaky-tasks",
+        "name": "Explain With AI",
+        "path": "/ci/features/explain-with-ai",
+        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5428,6 +5564,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Nx Cloud AI",
+            "path": "/ci/concepts/nx-cloud-ai",
+            "id": "nx-cloud-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5460,6 +5604,14 @@
         "name": "Cache Security",
         "path": "/ci/concepts/cache-security",
         "id": "cache-security",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud AI",
+        "path": "/ci/concepts/nx-cloud-ai",
+        "id": "nx-cloud-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5542,9 +5694,17 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Access Tokens",
+                "name": "CI Access Tokens",
                 "path": "/ci/recipes/security/access-tokens",
                 "id": "access-tokens",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Personal Access Tokens",
+                "path": "/ci/recipes/security/personal-access-tokens",
+                "id": "personal-access-tokens",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5904,9 +6064,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Access Tokens",
+            "name": "CI Access Tokens",
             "path": "/ci/recipes/security/access-tokens",
             "id": "access-tokens",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Personal Access Tokens",
+            "path": "/ci/recipes/security/personal-access-tokens",
+            "id": "personal-access-tokens",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5931,9 +6099,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Access Tokens",
+        "name": "CI Access Tokens",
         "path": "/ci/recipes/security/access-tokens",
         "id": "access-tokens",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Personal Access Tokens",
+        "path": "/ci/recipes/security/personal-access-tokens",
+        "id": "personal-access-tokens",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6607,14 +6783,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Explain With AI",
-            "path": "/ci/troubleshooting/explain-with-ai",
-            "id": "explain-with-ai",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6623,14 +6791,6 @@
         "name": "CI Execution Failed",
         "path": "/ci/troubleshooting/ci-execution-failed",
         "id": "ci-execution-failed",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Explain With AI",
-        "path": "/ci/troubleshooting/explain-with-ai",
-        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6732,6 +6892,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "module-federation-dev-ssr",
+                "path": "/nx-api/angular/executors/module-federation-dev-ssr",
+                "name": "module-federation-dev-ssr",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "application",
                 "path": "/nx-api/angular/executors/application",
                 "name": "application",
@@ -6767,14 +6935,6 @@
                 "id": "webpack-server",
                 "path": "/nx-api/angular/executors/webpack-server",
                 "name": "webpack-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "module-federation-dev-ssr",
-                "path": "/nx-api/angular/executors/module-federation-dev-ssr",
-                "name": "module-federation-dev-ssr",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7227,6 +7387,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/detox/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -7635,6 +7803,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/expo/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -7947,9 +8123,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "sync",
-                "path": "/nx-api/js/generators/sync",
-                "name": "sync",
+                "id": "typescript-sync",
+                "path": "/nx-api/js/generators/typescript-sync",
+                "name": "typescript-sync",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8584,6 +8760,22 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "login",
+                "path": "/nx-api/nx/documents/login",
+                "id": "login",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "logout",
+                "path": "/nx-api/nx/documents/logout",
+                "id": "logout",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9209,6 +9401,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/react-native/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9569,6 +9769,14 @@
                 "id": "migrate-7",
                 "path": "/nx-api/storybook/generators/migrate-7",
                 "name": "migrate-7",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "migrate-8",
+                "path": "/nx-api/storybook/generators/migrate-8",
+                "name": "migrate-8",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

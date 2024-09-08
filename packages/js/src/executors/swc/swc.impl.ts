@@ -170,9 +170,6 @@ export async function* swcExecutor(
           format: [
             determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
           ],
-          // As long as d.ts files match their .js counterparts, we don't need to emit them.
-          // TSC can match them correctly based on file names.
-          skipTypings: true,
         },
         context
       );
@@ -192,9 +189,6 @@ export async function* swcExecutor(
           format: [
             determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
           ],
-          // As long as d.ts files match their .js counterparts, we don't need to emit them.
-          // TSC can match them correctly based on file names.
-          skipTypings: true,
           extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
         },
         context

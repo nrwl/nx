@@ -1,38 +1,37 @@
-import { TaskRun } from '../../utils/task-history';
+import type { TaskRun } from '../../native';
 
-export const GET_TASK_HISTORY_FOR_HASHES =
-  'GET_TASK_HISTORY_FOR_HASHES' as const;
+export const GET_FLAKY_TASKS = 'GET_FLAKY_TASKS' as const;
 
-export type HandleGetTaskHistoryForHashesMessage = {
-  type: typeof GET_TASK_HISTORY_FOR_HASHES;
+export type HandleGetFlakyTasks = {
+  type: typeof GET_FLAKY_TASKS;
   hashes: string[];
 };
 
-export function isHandleGetTaskHistoryForHashesMessage(
+export function isHandleGetFlakyTasksMessage(
   message: unknown
-): message is HandleGetTaskHistoryForHashesMessage {
+): message is HandleGetFlakyTasks {
   return (
     typeof message === 'object' &&
     message !== null &&
     'type' in message &&
-    message['type'] === GET_TASK_HISTORY_FOR_HASHES
+    message['type'] === GET_FLAKY_TASKS
   );
 }
 
-export const WRITE_TASK_RUNS_TO_HISTORY = 'WRITE_TASK_RUNS_TO_HISTORY' as const;
+export const RECORD_TASK_RUNS = 'RECORD_TASK_RUNS' as const;
 
-export type HandleWriteTaskRunsToHistoryMessage = {
-  type: typeof WRITE_TASK_RUNS_TO_HISTORY;
+export type HandleRecordTaskRunsMessage = {
+  type: typeof RECORD_TASK_RUNS;
   taskRuns: TaskRun[];
 };
 
 export function isHandleWriteTaskRunsToHistoryMessage(
   message: unknown
-): message is HandleWriteTaskRunsToHistoryMessage {
+): message is HandleRecordTaskRunsMessage {
   return (
     typeof message === 'object' &&
     message !== null &&
     'type' in message &&
-    message['type'] === WRITE_TASK_RUNS_TO_HISTORY
+    message['type'] === RECORD_TASK_RUNS
   );
 }

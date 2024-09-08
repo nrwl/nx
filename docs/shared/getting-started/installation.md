@@ -140,8 +140,8 @@ Try one of these tutorials for a full walkthrough of what to do after you instal
 - [Single React App Tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [Single Angular App Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
 - [Single Vue App Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
-- [React Monorepo Tutorial](/getting-started/tutorials/react-standalone-tutorial)
-- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+- [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 
 ## More Documentation
 

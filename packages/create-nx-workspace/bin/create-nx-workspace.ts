@@ -26,7 +26,6 @@ import {
   withPackageManager,
 } from '../src/internal-utils/yargs-options';
 import { showNxWarning } from '../src/utils/nx/show-nx-warning';
-import { printNxCloudSuccessMessage } from '../src/utils/nx/nx-cloud';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
@@ -110,65 +109,67 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       withOptions(
         yargs
           .option('name', {
-            describe: chalk.dim`Workspace name (e.g. org name)`,
+            describe: chalk.dim`Workspace name (e.g. org name).`,
             type: 'string',
           })
           .option('preset', {
+            // This describe is hard to auto-fix because of the loop in the code.
+            // eslint-disable-next-line @nx/workspace/valid-command-object
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
               .map((p) => `"${p}"`)
               .join(
                 ', '
-              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset`,
+              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset.`,
             type: 'string',
           })
           .option('interactive', {
-            describe: chalk.dim`Enable interactive mode with presets`,
+            describe: chalk.dim`Enable interactive mode with presets.`,
             type: 'boolean',
             default: true,
           })
           .option('workspaceType', {
-            describe: chalk.dim`The type of workspace to create`,
+            describe: chalk.dim`The type of workspace to create.`,
             choices: ['integrated', 'package-based', 'standalone'],
             type: 'string',
           })
           .option('appName', {
-            describe: chalk.dim`The name of the app when using a monorepo with certain stacks`,
+            describe: chalk.dim`The name of the app when using a monorepo with certain stacks.`,
             type: 'string',
           })
           .option('style', {
-            describe: chalk.dim`Stylesheet type to be used with certain stacks`,
+            describe: chalk.dim`Stylesheet type to be used with certain stacks.`,
             type: 'string',
           })
           .option('standaloneApi', {
-            describe: chalk.dim`Use Standalone Components if generating an Angular app`,
+            describe: chalk.dim`Use Standalone Components if generating an Angular app.`,
             type: 'boolean',
             default: true,
           })
           .option('routing', {
-            describe: chalk.dim`Add a routing setup for an Angular app`,
+            describe: chalk.dim`Add a routing setup for an Angular app.`,
             type: 'boolean',
             default: true,
           })
           .option('bundler', {
-            describe: chalk.dim`Bundler to be used to build the app`,
+            describe: chalk.dim`Bundler to be used to build the app.`,
             type: 'string',
           })
           .option('framework', {
-            describe: chalk.dim`Framework option to be used with certain stacks`,
+            describe: chalk.dim`Framework option to be used with certain stacks.`,
             type: 'string',
           })
           .option('docker', {
-            describe: chalk.dim`Generate a Dockerfile for the Node API`,
+            describe: chalk.dim`Generate a Dockerfile for the Node API.`,
             type: 'boolean',
           })
           .option('nextAppDir', {
-            describe: chalk.dim`Enable the App Router for Next.js`,
+            describe: chalk.dim`Enable the App Router for Next.js.`,
             type: 'boolean',
           })
           .option('nextSrcDir', {
-            describe: chalk.dim`Generate a 'src/' directory for Next.js`,
+            describe: chalk.dim`Generate a 'src/' directory for Next.js.`,
             type: 'boolean',
           })
           .option('e2eTestRunner', {
@@ -177,7 +178,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           })
           .option('ssr', {
-            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application`,
+            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.`,
             type: 'boolean',
           })
           .option('prefix', {
@@ -229,11 +230,12 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     meta: [
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      parsedArgs.nxCloud,
     ],
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
-    printNxCloudSuccessMessage(workspaceInfo.nxCloudInfo);
+    console.log(workspaceInfo.nxCloudInfo);
   }
 
   if (isKnownPreset(parsedArgs.preset)) {
@@ -555,7 +557,9 @@ async function determineReactOptions(
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (
     preset === Preset.RemixMonorepo ||
-    preset === Preset.RemixStandalone
+    preset === Preset.RemixStandalone ||
+    preset === Preset.ReactNative ||
+    preset === Preset.Expo
   ) {
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }

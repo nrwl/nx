@@ -17,8 +17,15 @@ import { WithReactOptions } from '../../../../plugins/with-react';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
-export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
+export async function createApplicationFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
   let styleSolutionSpecificAppFiles: string;
   if (options.styledModule && options.style !== 'styled-jsx') {
     styleSolutionSpecificAppFiles = '../files/style-styled-module';
@@ -34,6 +41,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     styleSolutionSpecificAppFiles = '../files/style-css-module';
   }
 
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    host,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
     host,
     options.appProjectRoot
@@ -42,6 +58,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
     ...names(options.name),
     ...options,
+    js: !!options.js, // Ensure this is defined in template
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     appTests,
@@ -139,11 +156,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.minimal) {
+    const tutorialUrl = options.rootProject
+      ? 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial'
+      : 'https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project';
+
     generateFiles(
       host,
-      join(__dirname, '../files/nx-welcome'),
+      join(__dirname, '../files/nx-welcome', onBoardingStatus),
       options.appProjectRoot,
-      templateVariables
+      { ...templateVariables, connectCloudUrl, tutorialUrl }
     );
   }
 
@@ -155,7 +176,9 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   );
 
   if (options.js) {
-    toJS(host);
+    toJS(host, {
+      useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
+    });
   }
 
   createTsConfig(
@@ -181,7 +204,13 @@ function createNxWebpackPluginOptions(
     ),
     index: './src/index.html',
     baseHref: '/',
-    main: maybeJs(options, `./src/main.tsx`),
+    main: maybeJs(
+      {
+        js: options.js,
+        useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
+      },
+      `./src/main.tsx`
+    ),
     tsConfig: './tsconfig.app.json',
     assets: ['./src/favicon.ico', './src/assets'],
     styles:

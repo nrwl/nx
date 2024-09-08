@@ -75,7 +75,7 @@ export async function getOptions(
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
     root: resolved.config.root ?? root,
-    configFile: viteConfigPath,
+    config: viteConfigPath,
   };
 
   return mergeConfig(resolved?.config?.['test'] ?? {}, settings);

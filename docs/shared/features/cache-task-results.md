@@ -1,8 +1,13 @@
 # Cache Task Results
 
-It's costly to rebuild and retest the same code over and over again. Nx has the most sophisticated and battle-tested computation caching system to make sure it never rebuilds the same code twice. It knows when the task you are about to run, has been executed before, so it can use the cache to restore the results of running that task.
+{% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote Caching with Nx Replay" /%}
 
-If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
+Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
+
+- drastically **speeds up your task execution times** while developing locally and even more [in CI](/ci/features/remote-cache)
+- **saves you money on CI/CD costs** by reducing the number of tasks that need to be executed
+
+Nx **restores both the terminal output and the files** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
 
 ## Define Cacheable Tasks
 
@@ -51,33 +56,28 @@ the same output. As an example, e2e test runs that hit the backend API cannot be
 the result of the test run.
 {% /callout %}
 
-Now, if you run a `build` task twice, the second time the operation will be instant because it is restored from the cache.
+## Enable Remote Caching
 
-{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" alt="Video showing the terminal output of running a build command first without cache and then with cache. The 2nd run is almost instant, taking just 18ms" /%}
+By default, Nx caches task results locally. The biggest benefit of caching comes from using remote caching in CI, where you can **share the cache between different runs**. To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
 
-Nx restores both
+```shell
+npx nx connect
+```
 
-- the terminal output
-- the files & artifacts created as a result of running the task (e.g. your `build` or `dist` directory)
-
-Keep reading to learn how to fine-tune what gets cached.
+Learn more about [remote caching](/ci/features/remote-cache).
 
 ## Fine-tune Caching with Inputs and Outputs
 
-{% callout type="note" title="Detect Inputs and Outputs" %}
-Nx can automatically set inputs and outputs for you based on your tooling configuration settings when you use [inferred tasks](/concepts/inferred-tasks)
-{% /callout %}
-
-Nx's caching feature starts with sensible defaults, but you can also fine-tune the defaults to control exactly what gets cached and when. There are two main options that control caching:
+Nx's caching feature starts with sensible defaults, but you can also **fine-tune the defaults** to control exactly what gets cached and when. There are two main options that control caching:
 
 - **Inputs -** define what gets included as part of the calculated hash (e.g. files, environment variables, etc.)
 - **Outputs -** define folders where files might be placed as part of the task execution.
 
 You can define these inputs and outputs at the project level (`project.json`) or globally for all projects (in `nx.json`).
 
-Take the following example: we want to exclude all `*.md` files from the cache such that whenever we change the README.md (or any other markdown file), it does _not_ invalidate the build cache. We also know that the build output will be stored in a folder named after the project name in the `dist` folder at the root of the workspace.
+Take the following example: we want to exclude all `*.md` files from the cache so that whenever we change the README.md (or any other markdown file), it does _not_ invalidate the build cache. We also know that the build output will be stored in a folder named after the project name in the `dist` folder at the root of the workspace.
 
-To achieve this, we can add an `inputs` and `outputs` definition globally for all projects or at a per-project level:
+To achieve this, we can add `inputs` and `outputs` definitions globally for all projects or at a per-project level:
 
 {% tabs %}
 {% tab label="Globally" %}
@@ -94,7 +94,7 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
 ```
 
 {% /tab %}
-{% tab label="Project Level" %}
+{% tab label="Project Level (project.json)" %}
 
 ```json {% fileName="packages/some-project/project.json"  %}
 {
@@ -112,37 +112,61 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
 ```
 
 {% /tab %}
+{% tab label="Project Level (package.json)" %}
 
-Note, you only need to define output locations if they differ from the usual `dist` or `build` directory which Nx automatically recognizes.
+```json {% fileName="packages/some-project/package.json"  %}
+{
+  "name": "some-project",
+  "nx": {
+    "targets": {
+      "build": {
+        ...
+        "inputs": ["!{projectRoot}/**/*.md"],
+        "outputs": ["{workspaceRoot}/dist/apps/some-project"],
+        ...
+      }
+      ...
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+Note that you only need to define output locations if they differ from the usual `dist` or `build` directory, which Nx automatically recognizes.
 
 Learn more [about configuring inputs including `namedInputs`](/recipes/running-tasks/configure-inputs).
 
-## Where is the Cache Stored?
+## Configure Caching Automatically
 
-The cache is stored in `.nx/cache` by default. You can also [change where the cache](/recipes/running-tasks/change-cache-location) is stored if you want.
+When using [Nx plugins](/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/concepts/inferred-tasks) and configure caching** based on your underlying tooling configuration files.
 
-## Enable Remote Caching
-
-You can enable remote caching (Nx Replay) by connecting to [Nx Cloud](/ci/features/remote-cache). To connect Nx to Nx Cloud, [create an account on cloud.nx.app](https://cloud.nx.app) and connect to your repository.
-
-Learn more about [remote caching](/ci/features/remote-cache).
-
-## Turn off or Skip the Cache
-
-If you want to ignore the cache (both reads and writes), use the `--skip-nx-cache` flag:
+For example, if you add the `@nx/vite` plugin using the following command...
 
 ```shell
-nx build header --skip-nx-cache
+npx nx add @nx/vite
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached tasks](/features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+...it automatically detects your `vite.config.ts` file, infers the tasks you'd be able to run, such as `build`, and **automatically configures the cache settings** for these tasks as well as the [task pipeline](/concepts/task-pipeline-configuration) (e.g., triggering dependent builds).
 
-## Clear the Local Cache
+This means **you don't need to manually specify cacheable operations for Vite tasks** and the cache setting such as inputs and outputs are always in sync with the `vite.config.ts` file.
 
-To clear the local cache, run:
+To view the task settings that have been automatically configured by a plugin, use the following command:
 
 ```shell
-npx nx reset
+nx show project <project-name> --web
 ```
 
-For more details refer to the [`nx reset`](/nx-api/nx/documents/reset) page.
+Alternatively, you can view these directly in your editor by installing [Nx Console](/getting-started/editor-setup).
+
+Learn more details about [Nx plugins](/concepts/nx-plugins) and [inferred tasks](/concepts/inferred-tasks).
+
+## Troubleshoot Cache Settings
+
+Caching is hard. If you run into issues, check out the following resources:
+
+- [Debug cache misses](/troubleshooting/troubleshoot-cache-misses)
+- [Turn off or skip the cache](/recipes/running-tasks/skipping-cache)
+- [Change the cache location](/recipes/running-tasks/change-cache-location)
+- [Clear the local or remote cache](/nx-api/nx/documents/reset)

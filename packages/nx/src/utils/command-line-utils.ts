@@ -36,6 +36,8 @@ export interface NxArgs {
   nxIgnoreCycles?: boolean;
   type?: string;
   batch?: boolean;
+  excludeTaskDependencies?: boolean;
+  skipSync?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -53,6 +55,10 @@ export function createOverrides(__overrides_unparsed__: string[] = []) {
 
   overrides.__overrides_unparsed__ = __overrides_unparsed__;
   return overrides;
+}
+
+export function getBaseRef(nxJson: NxJsonConfiguration) {
+  return nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
 }
 
 export function splitArgsIntoNxArgsAndOverrides(
@@ -119,7 +125,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       });
     }
 
-    // Allow setting base and head via environment variables (lower priority then direct command arguments)
+    // Allow setting base and head via environment variables (lower priority than direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
       nxArgs.base = process.env.NX_BASE;
       if (options.printWarnings) {
@@ -142,8 +148,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base =
-        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
+      nxArgs.base = getBaseRef(nxJson);
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (
@@ -177,25 +182,30 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   normalizeNxArgsRunner(nxArgs, nxJson, options);
 
+  nxArgs['parallel'] = readParallelFromArgsAndEnv(args);
+
+  return { nxArgs, overrides } as any;
+}
+
+export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
   if (args['parallel'] === 'false' || args['parallel'] === false) {
-    nxArgs['parallel'] = 1;
+    return 1;
   } else if (
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
     args['parallel'] === '' ||
-    process.env.NX_PARALLEL // dont require passing --parallel if NX_PARALLEL is set
+    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    (process.env.NX_PARALLEL && args['parallel'] === undefined)
   ) {
-    nxArgs['parallel'] = Number(
-      nxArgs['maxParallel'] ||
-        nxArgs['max-parallel'] ||
+    return Number(
+      args['maxParallel'] ||
+        args['max-parallel'] ||
         process.env.NX_PARALLEL ||
         3
     );
   } else if (args['parallel'] !== undefined) {
-    nxArgs['parallel'] = Number(args['parallel']);
+    return Number(args['parallel']);
   }
-
-  return { nxArgs, overrides } as any;
 }
 
 function normalizeNxArgsRunner(

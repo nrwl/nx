@@ -28,7 +28,7 @@ export async function runOne(
     (TargetDependencyConfig | string)[]
   > = {},
   extraOptions = {
-    excludeTaskDependencies: false,
+    excludeTaskDependencies: args.excludeTaskDependencies,
     loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
   } as {
     excludeTaskDependencies: boolean;
@@ -55,9 +55,6 @@ export async function runOne(
     nxJson
   );
 
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
   if (nxArgs.help) {
     await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);

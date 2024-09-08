@@ -1,0 +1,17 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-native": "*",
+    "@testing-library/react-native": "*",
+    "metro-config": "*",
+    "react-native": "*",
+    "expo": "*",
+    "react-native-svg": "*",
+    "react-native-web": "*"
+  },
+  "scripts": {
+    "eas-build-post-install": "cd <%= offsetFromRoot %> && node tools/scripts/eas-build-post-install.mjs . <%= appProjectRoot %>"
+  }
+}

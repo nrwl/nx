@@ -423,6 +423,26 @@ describe('Nx Plugin', () => {
     }, 90000);
   });
 
+  it('should be able to generate a create-package plugin without e2e tests', async () => {
+    const plugin = uniq('plugin');
+    const createAppName = `create-${plugin}-app`;
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
+    );
+    runCLI(
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin}`
+    );
+
+    const buildResults = runCLI(`build ${createAppName}`);
+    expect(buildResults).toContain('Done compiling TypeScript files');
+
+    checkFilesExist(
+      `libs/${plugin}/src/generators/preset`,
+      `libs/${createAppName}`,
+      `dist/libs/${createAppName}/bin/index.js`
+    );
+  });
+
   it('should be able to generate a create-package plugin ', async () => {
     const plugin = uniq('plugin');
     const createAppName = `create-${plugin}-app`;
@@ -449,7 +469,7 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     expect(() =>
       runCLI(
-        `generate @nx/plugin:create-package ${plugin} --project=invalid-plugin`
+        `generate @nx/plugin:create-package create-${plugin} --project=invalid-plugin`
       )
     ).toThrow();
   });

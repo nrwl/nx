@@ -219,6 +219,10 @@ export default async function runExecutor(
     npmPublishCommandSegments.push(`--otp=${options.otp}`);
   }
 
+  if (options.access) {
+    npmPublishCommandSegments.push(`--access=${options.access}`);
+  }
+
   if (isDryRun) {
     npmPublishCommandSegments.push(`--dry-run`);
   }

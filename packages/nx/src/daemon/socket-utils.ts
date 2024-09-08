@@ -1,5 +1,5 @@
 import { unlinkSync } from 'fs';
-import { platform } from 'os';
+import { platform, tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { getDaemonSocketDir, getSocketDir } from './tmp-dir';
 import { createSerializableError } from '../utils/serializable-error';
@@ -12,20 +12,43 @@ export const isWindows = platform() === 'win32';
  * See https://nodejs.org/dist/latest-v14.x/docs/api/net.html#net_identifying_paths_for_ipc_connections for a full breakdown
  * of OS differences between Unix domain sockets and named pipes.
  */
-export const getFullOsSocketPath = () =>
-  isWindows
-    ? '\\\\.\\pipe\\nx\\' + resolve(getDaemonSocketDir())
-    : resolve(getDaemonSocketDir());
+export const getFullOsSocketPath = () => {
+  const path = resolve(getDaemonSocketDir());
+
+  assertValidSocketPath(path);
+
+  return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
+};
 
 export const getForkedProcessOsSocketPath = (id: string) => {
   let path = resolve(join(getSocketDir(), 'fp' + id + '.sock'));
-  return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
+
+  assertValidSocketPath(path);
+
+  return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
 };
 
 export const getPluginOsSocketPath = (id: string) => {
-  let path = resolve(join(getSocketDir(), 'plugin' + id + '.sock'));
-  return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
+  let path = resolve(join(getSocketDir(true), 'plugin' + id + '.sock'));
+
+  assertValidSocketPath(path);
+
+  return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
 };
+
+function assertValidSocketPath(path: string) {
+  if (path.length > 95) {
+    throw new Error(
+      [
+        'Attempted to open socket that exceeds the maximum socket length.',
+        '',
+        `Set NX_SOCKET_DIR to a shorter path (e.g. ${
+          isWindows ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
+        }) to avoid this issue.`,
+      ].join('\n')
+    );
+  }
+}
 
 export function killSocketOrPath(): void {
   try {

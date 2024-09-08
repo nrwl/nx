@@ -1,4 +1,8 @@
 import {
+  RULE_NAME as validCommandObjectName,
+  rule as validCommandObject,
+} from './rules/valid-command-object';
+import {
   RULE_NAME as validSchemaDescriptionName,
   rule as validSchemaDescription,
 } from './rules/valid-schema-description';
@@ -27,5 +31,8 @@ module.exports = {
    *  [myCustomRuleName]: myCustomRule
    * }
    */
-  rules: { [validSchemaDescriptionName]: validSchemaDescription },
+  rules: {
+    [validSchemaDescriptionName]: validSchemaDescription,
+    [validCommandObjectName]: validCommandObject,
+  },
 };

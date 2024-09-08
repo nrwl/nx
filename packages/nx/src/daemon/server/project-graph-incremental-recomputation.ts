@@ -62,6 +62,9 @@ export let currentProjectGraph: ProjectGraph | undefined;
 
 const collectedUpdatedFiles = new Set<string>();
 const collectedDeletedFiles = new Set<string>();
+const projectGraphRecomputationListeners = new Set<
+  (projectGraph: ProjectGraph) => void
+>();
 let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
@@ -69,8 +72,10 @@ let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 
 export async function getCachedSerializedProjectGraphPromise(): Promise<SerializedProjectGraph> {
   try {
+    let wasScheduled = false;
     // recomputing it now on demand. we can ignore the scheduled timeout
     if (scheduledTimeoutId) {
+      wasScheduled = true;
       clearTimeout(scheduledTimeoutId);
       scheduledTimeoutId = undefined;
     }
@@ -88,7 +93,13 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(plugins);
     }
-    return await cachedSerializedProjectGraphPromise;
+    const result = await cachedSerializedProjectGraphPromise;
+
+    if (wasScheduled) {
+      notifyProjectGraphRecomputationListeners(result.projectGraph);
+    }
+
+    return result;
   } catch (e) {
     return {
       error: e,
@@ -135,13 +146,21 @@ export function addUpdatedAndDeletedFiles(
 
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
-      await cachedSerializedProjectGraphPromise;
+      const { projectGraph } = await cachedSerializedProjectGraphPromise;
 
       if (createdFiles.length > 0) {
         notifyFileWatcherSockets(createdFiles, null, null);
       }
+
+      notifyProjectGraphRecomputationListeners(projectGraph);
     }, waitPeriod);
   }
+}
+
+export function registerProjectGraphRecomputationListener(
+  listener: (projectGraph: ProjectGraph) => void
+) {
+  projectGraphRecomputationListeners.add(listener);
 }
 
 function computeWorkspaceConfigHash(
@@ -217,7 +236,11 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     performance.mark('hash-watched-changes-start');
     const updatedFiles = [...collectedUpdatedFiles.values()];
     const deletedFiles = [...collectedDeletedFiles.values()];
-    let updatedFileHashes = updateFilesInContext(updatedFiles, deletedFiles);
+    let updatedFileHashes = updateFilesInContext(
+      workspaceRoot,
+      updatedFiles,
+      deletedFiles
+    );
     performance.mark('hash-watched-changes-end');
     performance.measure(
       'hash changed files from watcher',
@@ -411,5 +434,11 @@ async function resetInternalStateIfNxDepsMissing() {
     }
   } catch (e) {
     await resetInternalState();
+  }
+}
+
+function notifyProjectGraphRecomputationListeners(projectGraph: ProjectGraph) {
+  for (const listener of projectGraphRecomputationListeners) {
+    listener(projectGraph);
   }
 }

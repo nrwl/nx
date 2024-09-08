@@ -29,6 +29,7 @@ import {
   isAggregateCreateNodesError,
 } from '../error-types';
 import { IS_WASM } from '../../native';
+import { platform } from 'os';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -145,17 +146,32 @@ export const nxPluginCache: Map<
   [Promise<LoadedNxPlugin>, () => void]
 > = new Map();
 
+function isIsolationEnabled() {
+  // Explicitly enabled, regardless of further conditions
+  if (process.env.NX_ISOLATE_PLUGINS === 'true') {
+    return true;
+  }
+  if (
+    // Explicitly disabled
+    process.env.NX_ISOLATE_PLUGINS === 'false' ||
+    // Isolation is disabled on WASM builds currently.
+    IS_WASM
+  ) {
+    return false;
+  }
+  // Default value
+  return true;
+}
+
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<readonly [LoadedNxPlugin[], () => void]> {
   performance.mark('loadNxPlugins:start');
 
-  const loadingMethod =
-    process.env.NX_ISOLATE_PLUGINS === 'true' ||
-    (!IS_WASM && process.env.NX_ISOLATE_PLUGINS !== 'false')
-      ? loadNxPluginInIsolation
-      : loadNxPlugin;
+  const loadingMethod = isIsolationEnabled()
+    ? loadNxPluginInIsolation
+    : loadNxPlugin;
 
   plugins = await normalizePlugins(plugins, root);
 

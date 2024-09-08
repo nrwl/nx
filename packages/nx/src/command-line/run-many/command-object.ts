@@ -11,7 +11,7 @@ import { handleErrors } from '../../utils/params';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
-  describe: 'Run target for multiple listed projects',
+  describe: 'Run target for multiple listed projects.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withRunManyOptions(

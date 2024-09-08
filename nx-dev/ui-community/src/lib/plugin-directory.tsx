@@ -66,8 +66,8 @@ export function PluginDirectory({
   return (
     <div id="plugin-directory">
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
-        <SectionHeading as="h2" variant="display" id="plugins-registry">
-          <span className="whitespace-nowrap">Nx Plugins</span> Registry
+        <SectionHeading as="h2" variant="title" id="plugins-registry">
+          <span className="whitespace-nowrap">Nx Plugin</span> Registry
         </SectionHeading>
         <div>
           <label htmlFor="search" className="sr-only">

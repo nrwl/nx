@@ -1,5 +1,4 @@
 import {
-  formatFiles,
   generateFiles,
   getPackageManagerVersion,
   names,
@@ -14,6 +13,155 @@ import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { NormalizedSchema } from './new';
+import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+
+type PresetInfo = {
+  generateAppCmd?: string;
+  generateLibCmd?: string;
+  generateNxReleaseInfo?: boolean;
+  learnMoreLink?: string;
+};
+
+// map from the preset to the name of the plugin s.t. the README can have a more
+// meaningful generator command.
+const presetToPluginMap: { [key in Preset]: PresetInfo } = {
+  [Preset.Apps]: {
+    learnMoreLink:
+      'https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.NPM]: {
+    generateNxReleaseInfo: true,
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.TS]: {
+    generateLibCmd: '@nx/js',
+    generateNxReleaseInfo: true,
+    learnMoreLink:
+      'https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.WebComponents]: {
+    generateAppCmd: null,
+    learnMoreLink:
+      'https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.AngularMonorepo]: {
+    generateAppCmd: '@nx/angular',
+    generateLibCmd: '@nx/angular',
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.AngularStandalone]: {
+    generateAppCmd: '@nx/angular',
+    generateLibCmd: '@nx/angular',
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.ReactMonorepo]: {
+    generateAppCmd: '@nx/react',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.ReactStandalone]: {
+    generateAppCmd: '@nx/react',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/react-standalone-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.NextJsStandalone]: {
+    generateAppCmd: '@nx/next',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.RemixMonorepo]: {
+    generateAppCmd: '@nx/remix',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.RemixStandalone]: {
+    generateAppCmd: '@nx/remix',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.ReactNative]: {
+    generateAppCmd: '@nx/react-native',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/nx-api/react-native?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.VueMonorepo]: {
+    generateAppCmd: '@nx/vue',
+    generateLibCmd: '@nx/vue',
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/vue-standalone-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.VueStandalone]: {
+    generateAppCmd: '@nx/vue',
+    generateLibCmd: '@nx/vue',
+    learnMoreLink:
+      'https://nx.dev/getting-started/tutorials/vue-standalone-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.Nuxt]: {
+    generateAppCmd: '@nx/nuxt',
+    generateLibCmd: '@nx/vue',
+    learnMoreLink:
+      'https://nx.dev/nx-api/nuxt?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.NuxtStandalone]: {
+    generateAppCmd: '@nx/nuxt',
+    generateLibCmd: '@nx/vue',
+    learnMoreLink:
+      'https://nx.dev/nx-api/nuxt?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.Expo]: {
+    generateAppCmd: '@nx/expo',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/nx-api/expo?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.NextJs]: {
+    generateAppCmd: '@nx/next',
+    generateLibCmd: '@nx/react',
+    learnMoreLink:
+      'https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.Nest]: {
+    generateAppCmd: '@nx/nest',
+    generateLibCmd: '@nx/node',
+    learnMoreLink:
+      'https://nx.dev/nx-api/nest?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.Express]: {
+    generateAppCmd: '@nx/express',
+    generateLibCmd: '@nx/node',
+    learnMoreLink:
+      'https://nx.dev/nx-api/express?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.NodeStandalone]: {
+    generateAppCmd: '@nx/node',
+    generateLibCmd: '@nx/node',
+    learnMoreLink:
+      'https://nx.dev/nx-api/node?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.NodeMonorepo]: {
+    generateAppCmd: '@nx/node',
+    generateLibCmd: '@nx/node',
+    learnMoreLink:
+      'https://nx.dev/nx-api/node?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+  [Preset.TsStandalone]: {
+    generateAppCmd: null,
+    generateLibCmd: null,
+    generateNxReleaseInfo: true,
+    learnMoreLink:
+      'https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+  },
+};
 
 export async function generateWorkspaceFiles(
   tree: Tree,
@@ -29,9 +177,23 @@ export async function generateWorkspaceFiles(
     tree.root
   );
   options = normalizeOptions(options);
-  createReadme(tree, options);
   createFiles(tree, options);
-  createNxJson(tree, options);
+  const nxJson = createNxJson(tree, options);
+
+  const token =
+    options.nxCloud !== 'skip'
+      ? await connectToNxCloud(
+          tree,
+          {
+            installationSource: 'create-nx-workspace',
+            directory: options.directory,
+            github: options.useGitHub,
+          },
+          nxJson
+        )
+      : null;
+
+  await createReadme(tree, options, token);
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
@@ -47,7 +209,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  await formatFiles(tree);
+  return token;
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -96,6 +258,8 @@ function createNxJson(
   }
 
   writeJson<NxJsonConfiguration>(tree, join(directory, 'nx.json'), nxJson);
+
+  return nxJson;
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {
@@ -125,20 +289,39 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-function createReadme(
+async function createReadme(
   tree: Tree,
-  { name, appName, directory, preset }: NormalizedSchema
+  { name, appName, directory, preset, nxCloud }: NormalizedSchema,
+  nxCloudToken?: string
 ) {
   const formattedNames = names(name);
+
+  // default to an empty one for custom presets
+  const presetInfo: PresetInfo = presetToPluginMap[preset] ?? {
+    package: '',
+    generateLibCmd: null,
+  };
+
+  const nxCloudOnboardingUrl = nxCloudToken
+    ? await createNxCloudOnboardingURL('readme', nxCloudToken)
+    : null;
+
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
     isJsStandalone: preset === Preset.TsStandalone,
+    isEmptyRepo: !appName,
     appName,
+    generateAppCmd: presetInfo.generateAppCmd,
+    generateLibCmd: presetInfo.generateLibCmd,
+    generateNxReleaseInfo: presetInfo.generateNxReleaseInfo,
+    learnMoreLink: presetInfo.learnMoreLink,
     serveCommand:
       preset === Preset.NextJs || preset === Preset.NextJsStandalone
         ? 'dev'
         : 'serve',
     name,
+    nxCloud,
+    nxCloudOnboardingUrl,
   });
 }
 
@@ -217,6 +400,7 @@ function normalizeOptions(options: NormalizedSchema) {
     name,
     ...options,
     defaultBase,
+    nxCloud: options.nxCloud ?? 'skip',
   };
 }
 

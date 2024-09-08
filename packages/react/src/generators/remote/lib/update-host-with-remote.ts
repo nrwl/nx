@@ -88,11 +88,15 @@ function findAppComponentPath(host: Tree, sourceRoot: string) {
     'app/app.tsx',
     'app/App.tsx',
     'app/app.js',
+    'app/app.jsx',
     'app/App.js',
+    'app/App.jsx',
     'app.tsx',
     'App.tsx',
     'app.js',
     'App.js',
+    'app.jsx',
+    'App.jsx',
   ];
   for (const loc of locations) {
     if (host.exists(joinPathFragments(sourceRoot, loc))) {

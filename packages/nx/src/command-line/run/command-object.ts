@@ -35,7 +35,7 @@ export const yargsRunCommand: CommandModule = {
 export const yargsNxInfixCommand: CommandModule = {
   ...yargsRunCommand,
   command: '$0 <target> [project] [_..]',
-  describe: 'Run a target for a project',
+  describe: 'Run a target for a project.',
   handler: async (args) => {
     const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',

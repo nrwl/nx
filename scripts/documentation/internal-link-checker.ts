@@ -142,7 +142,7 @@ function readApiJson(manifestFileName: string): string[] {
 const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
   (manifestFileName) => readApiJson(manifestFileName)
 );
-const ignoreAnchorUrls = ['/nx-api', '/blog'];
+const ignoreAnchorUrls = ['/nx-api', '/blog', '/pricing', '/ci/reference'];
 
 const errors: Array<{ file: string; link: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];

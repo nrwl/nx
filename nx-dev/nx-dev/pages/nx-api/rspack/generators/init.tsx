@@ -7,12 +7,11 @@ import {
   SchemaMetadata,
 } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
-import { useRouter } from 'next/router';
-import { useEffect, useRef } from 'react';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
 import { schema } from '../../../../lib/rspack/schema/generators/init';
 import { pkg } from '../../../../lib/rspack/pkg';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 export default function InitGenerator({
   menu,
@@ -23,25 +22,7 @@ export default function InitGenerator({
   pkg: ProcessedPackageMetadata;
   schema: SchemaMetadata;
 }): JSX.Element {
-  const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
-
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
-
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
-
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
 
   const vm: {
     menu: Menu;
@@ -79,14 +60,9 @@ export default function InitGenerator({
           navIsOpen={navIsOpen}
           toggleNav={toggleNav}
         />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
+        <ScrollableContent resetScrollOnNavigation={true}>
           <PackageSchemaViewer pkg={vm.package} schema={vm.schema} />
-        </div>
+        </ScrollableContent>
       </main>
     </div>
   );

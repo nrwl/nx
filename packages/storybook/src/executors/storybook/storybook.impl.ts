@@ -1,5 +1,4 @@
-import { ExecutorContext } from '@nx/devkit';
-import * as build from '@storybook/core-server';
+import { ExecutorContext, logger } from '@nx/devkit';
 import {
   pleaseUpgrade,
   storybookConfigExistsCheck,
@@ -14,10 +13,15 @@ export default async function* storybookExecutor(
   success: boolean;
   info?: { port: number; baseUrl?: string };
 }> {
-  const storybook7 = storybookMajorVersion() >= 7;
-  if (!storybook7) {
+  const storybookMajor = storybookMajorVersion();
+  if (storybookMajor > 0 && storybookMajor <= 6) {
     throw pleaseUpgrade();
+  } else if (storybookMajor === 7) {
+    logger.warn(
+      `Support for Storybook 7 is deprecated. Please upgrade to Storybook 8. See https://nx.dev/nx-api/storybook/generators/migrate-8 for more details.`
+    );
   }
+
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const buildOptions: CLIOptions = options;
   const result = await runInstance(buildOptions);
@@ -33,14 +37,15 @@ export default async function* storybookExecutor(
   await new Promise<{ success: boolean }>(() => {});
 }
 
-function runInstance(options: CLIOptions): Promise<void | {
+async function runInstance(options: CLIOptions): Promise<void | {
   port: number;
   address: string;
   networkAddress: string;
 }> {
+  const storybookCore = await import('@storybook/core-server');
   const env = process.env.NODE_ENV ?? 'development';
   process.env.NODE_ENV = env;
-  return build.build({
+  return storybookCore.build({
     ...options,
     mode: 'dev',
   });

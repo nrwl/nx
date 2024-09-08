@@ -26,14 +26,17 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
+- [neverConnectToCloud](../../devkit/documents/Workspace#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
 - [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
+- [nxCloudId](../../devkit/documents/Workspace#nxcloudid): string
 - [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
 - [plugins](../../devkit/documents/Workspace#plugins): PluginConfiguration[]
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record<string, Record<string, unknown>>
 - [projects](../../devkit/documents/Workspace#projects): Record<string, ProjectConfiguration>
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
+- [sync](../../devkit/documents/Workspace#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
@@ -203,6 +206,18 @@ Named inputs targets can refer to reduce duplication
 
 ---
 
+### neverConnectToCloud
+
+• `Optional` **neverConnectToCloud**: `boolean`
+
+Set this to false to disable connection to Nx Cloud
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud)
+
+---
+
 ### nxCloudAccessToken
 
 • `Optional` **nxCloudAccessToken**: `string`
@@ -225,6 +240,19 @@ Specifies the encryption key used to encrypt artifacts data before sending it to
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey)
+
+---
+
+### nxCloudId
+
+• `Optional` **nxCloudId**: `string`
+
+If specified Nx will use nx-cloud by default with the given cloud id.
+To use a different runner that accepts a cloud id, define it in [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudId](../../devkit/documents/NxJsonConfiguration#nxcloudid)
 
 ---
 
@@ -298,6 +326,18 @@ Configuration for `nx release` (versioning and publishing of applications and li
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[release](../../devkit/documents/NxJsonConfiguration#release)
+
+---
+
+### sync
+
+• `Optional` **sync**: `NxSyncConfiguration`
+
+Configuration for the `nx sync` command.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[sync](../../devkit/documents/NxJsonConfiguration#sync)
 
 ---
 

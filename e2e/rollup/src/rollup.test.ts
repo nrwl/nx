@@ -47,6 +47,7 @@ describe('Rollup Plugin', () => {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
+        types: './index.esm.d.ts',
       },
       './package.json': './package.json',
     });
@@ -102,7 +103,7 @@ describe('Rollup Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500000);
 
-  it('should support additional entry-points', async () => {
+  it('should support additional entry-points and sourcemaps', async () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     runCLI(
@@ -119,7 +120,8 @@ describe('Rollup Plugin', () => {
         compiler: 'tsc',
         generateExportsField: true,
         additionalEntryPoints: ['./src/{foo,bar}.ts'],
-        format: ['cjs', 'esm']
+        format: ['cjs', 'esm'],
+        sourceMap: true,
       });
     `
     );
@@ -130,28 +132,37 @@ describe('Rollup Plugin', () => {
     runCLI(`build ${myPkg}`);
 
     checkFilesExist(`dist/libs/${myPkg}/index.esm.js`);
+    checkFilesExist(`dist/libs/${myPkg}/index.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
+    checkFilesExist(`dist/libs/${myPkg}/index.cjs.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
     checkFilesExist(`dist/libs/${myPkg}/foo.esm.js`);
+    checkFilesExist(`dist/libs/${myPkg}/foo.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/foo.cjs.js`);
+    checkFilesExist(`dist/libs/${myPkg}/foo.cjs.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/bar.esm.js`);
+    checkFilesExist(`dist/libs/${myPkg}/bar.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/bar.cjs.js`);
+    checkFilesExist(`dist/libs/${myPkg}/bar.cjs.js.map`);
     expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
       './package.json': './package.json',
       '.': {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
+        types: './index.esm.d.ts',
       },
       './bar': {
         module: './bar.esm.js',
         import: './bar.cjs.mjs',
         default: './bar.cjs.js',
+        types: './bar.esm.d.ts',
       },
       './foo': {
         module: './foo.esm.js',
         import: './foo.cjs.mjs',
         default: './foo.cjs.js',
+        types: './foo.esm.d.ts',
       },
     });
   });

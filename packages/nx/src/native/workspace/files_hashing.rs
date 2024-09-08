@@ -10,7 +10,7 @@ use crate::native::walker::{nx_walker, NxFile};
 use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
 
 pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
-    let files = nx_walker(workspace_root).collect::<Vec<_>>();
+    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
     trace!("Found {} files", files.len());
     hash_files(files).into_iter().collect()
 }
@@ -19,7 +19,7 @@ pub fn selective_files_hash(
     workspace_root: &Path,
     mut archived_files: NxFileHashes,
 ) -> NxFileHashes {
-    let files = nx_walker(workspace_root).collect::<Vec<_>>();
+    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
     let mut archived = vec![];
     let mut not_archived = vec![];
     let now = std::time::Instant::now();

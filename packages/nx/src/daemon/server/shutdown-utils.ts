@@ -35,16 +35,24 @@ export function getOutputWatcherInstance() {
 interface HandleServerProcessTerminationParams {
   server: Server;
   reason: string;
+  sockets: Iterable<Socket>;
 }
 
 export async function handleServerProcessTermination({
   server,
   reason,
+  sockets,
 }: HandleServerProcessTerminationParams) {
   try {
-    server.close();
-    deleteDaemonJsonProcessCache();
-    cleanupPlugins();
+    await new Promise((res) => {
+      server.close(() => {
+        res(null);
+      });
+
+      for (const socket of sockets) {
+        socket.destroy();
+      }
+    });
 
     if (watcherInstance) {
       await watcherInstance.stop();
@@ -59,6 +67,9 @@ export async function handleServerProcessTermination({
         `Stopping the watcher for ${workspaceRoot} (outputs)`
       );
     }
+
+    deleteDaemonJsonProcessCache();
+    cleanupPlugins();
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {

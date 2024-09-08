@@ -104,18 +104,7 @@
       },
       "reporter": {
         "type": "string",
-        "enum": [
-          "list",
-          "line",
-          "dot",
-          "json",
-          "junit",
-          "null",
-          "github",
-          "html",
-          "blob"
-        ],
-        "description": "Reporter to use, comma-separated, can be 'list', 'line', 'dot', 'json', 'junit', 'null', 'github', 'html', 'blob'. To configure reporter options, use the playwright configuration."
+        "description": "Common Reporter values to use, comma-separated, 'list', 'line', 'dot', 'json', 'junit', 'null', 'github', 'html', 'blob'. To configure reporter options, use the playwright configuration."
       },
       "retries": {
         "type": "number",

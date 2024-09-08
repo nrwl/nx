@@ -71,12 +71,15 @@ export const allowedWorkspaceExtensions = [
   'installation',
   'release',
   'nxCloudAccessToken',
+  'nxCloudId',
   'nxCloudUrl',
   'nxCloudEncryptionKey',
   'parallel',
   'cacheDirectory',
   'useDaemonProcess',
   'useInferencePlugins',
+  'neverConnectToCloud',
+  'sync',
 ] as const;
 
 if (!patched) {

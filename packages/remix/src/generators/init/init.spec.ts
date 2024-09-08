@@ -39,6 +39,7 @@ describe('Remix Init Generator', () => {
             "options": {
               "buildTargetName": "build",
               "devTargetName": "dev",
+              "serveStaticTargetName": "serve-static",
               "startTargetName": "start",
               "typecheckTargetName": "typecheck",
             },

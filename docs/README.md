@@ -94,14 +94,14 @@ Your content goes here.
 {% /callout %}
 ```
 
-#### Disclosure
+#### Deep Dives
 
-A disclosure can be used for less important information that is initially collapsed.
+These are special callouts that are collapsed with the intention of containing more deep-dive information about the topic which isn't required to understand right away.
 
 ```markdown
-{% disclosure title="string" %}
-Your content goes here.
-{% /disclosure %}
+{% callout type="deepdive" title="string" %}
+Your deep-dive content goes here.
+{% /callout %}
 ```
 
 #### Cards

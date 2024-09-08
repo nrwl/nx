@@ -2,8 +2,8 @@ import * as React from 'react'
 <%- importStatement %>
 
 <% for (let cmp of components) { %>
-describe(<%= cmp.name %>.name, () => {<% if (cmp.typeName) { %>
-  let props: <%= cmp.typeName%>;
+describe(<%= cmp.name %>.name, () => {<% if (cmp.props.length > 0) { %>
+  let props: <% if (cmp.typeName) { %><%= cmp.typeName %><% } else if (cmp.inlineTypeString) { %><%- cmp.inlineTypeString %><% } else { %>unknown<% } %>;
 
   beforeEach(() => {
     props = {<% for (let prop of cmp.props) { %>

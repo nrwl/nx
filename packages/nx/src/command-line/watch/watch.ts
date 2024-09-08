@@ -155,10 +155,6 @@ export async function watch(args: WatchArguments) {
     'g'
   );
 
-  if (args.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
   if (!daemonClient.enabled()) {
     output.error({
       title:

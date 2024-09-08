@@ -1,11 +1,11 @@
 import { Argv, CommandModule } from 'yargs';
 import { WatchArguments } from './watch';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
-import { parseCSV } from '../yargs-utils/shared-options';
+import { parseCSV, withVerbose } from '../yargs-utils/shared-options';
 
 export const yargsWatchCommand: CommandModule = {
   command: 'watch',
-  describe: 'Watch for changes within projects, and execute commands',
+  describe: 'Watch for changes within projects, and execute commands.',
   builder: (yargs) => linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
   handler: async (args) => {
     await import('./watch').then((m) => m.watch(args as WatchArguments));
@@ -13,7 +13,7 @@ export const yargsWatchCommand: CommandModule = {
 };
 
 function withWatchOptions(yargs: Argv) {
-  return yargs
+  return withVerbose(yargs)
     .parserConfiguration({
       'strip-dashed': true,
       'populate--': true,

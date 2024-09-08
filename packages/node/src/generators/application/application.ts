@@ -48,7 +48,7 @@ import { initGenerator } from '../init/init';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export interface NormalizedSchema extends Schema {
@@ -79,6 +79,7 @@ function getWebpackBuildConfig(
         options.appProjectRoot,
         'webpack.config.js'
       ),
+      generatePackageJson: true,
     },
     configurations: {
       development: {},
@@ -134,8 +135,14 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
     executor: '@nx/js:node',
     defaultConfiguration: 'development',
+    // Run build, which includes dependency on "^build" by default, so the first run
+    // won't error out due to missing build artifacts.
+    dependsOn: ['build'],
     options: {
       buildTarget: `${options.name}:build`,
+      // Even though `false` is the default, set this option so users know it
+      // exists if they want to always run dependencies during each rebuild.
+      runBuildTargetDependencies: false,
     },
     configurations: {
       development: {
@@ -272,6 +279,10 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
     }
 
     updateProjectConfiguration(tree, options.frontendProject, projectConfig);
+  } else {
+    logger.warn(
+      `Skip updating proxy for frontend project "${options.frontendProject}" since "serve" target is not found in project.json. For more information, see: https://nx.dev/recipes/node/application-proxies.`
+    );
   }
 }
 
@@ -390,9 +401,19 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       ...options,
       skipFormat: true,
     });
+    tasks.push(nestTasks);
+
+    if (options.docker) {
+      const dockerTask = await setupDockerGenerator(tree, {
+        ...options,
+        project: options.name,
+        skipFormat: true,
+      });
+      tasks.push(dockerTask);
+    }
     return runTasksInSerial(
       ...[
-        nestTasks,
+        ...tasks,
         () => {
           logShowProjectCommand(options.name);
         },

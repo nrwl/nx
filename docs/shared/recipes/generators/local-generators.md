@@ -16,7 +16,7 @@ If you don't already have a local plugin, use Nx to generate one:
 
 ```shell {% skipRescope=true %}
 nx add @nx/plugin
-nx g @nx/plugin:plugin my-plugin
+nx g @nx/plugin:plugin my-plugin --directory=tools/my-plugin
 ```
 
 Note that `latest` should match the version of the `nx` plugins installed in your workspace.
@@ -24,7 +24,7 @@ Note that `latest` should match the version of the `nx` plugins installed in you
 Use the Nx CLI to generate the initial files needed for your generator.
 
 ```shell
-nx generate @nx/plugin:generator my-generator --project=my-plugin
+nx generate @nx/plugin:generator my-generator --directory=tools/my-plugin/src/generators/my-generator
 ```
 
 After the command is finished, the generator is created in the plugin `generators` folder.
@@ -32,7 +32,7 @@ After the command is finished, the generator is created in the plugin `generator
 ```text
 happynrwl/
 ├── apps/
-├── libs/
+├── tools/
 │   ├── my-plugin
 │   │   ├── src
 │   │   │   ├── generators

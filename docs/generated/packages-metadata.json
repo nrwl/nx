@@ -94,6 +94,15 @@
         "type": "executor"
       },
       {
+        "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+        "file": "generated/packages/angular/executors/module-federation-dev-ssr.json",
+        "hidden": false,
+        "name": "module-federation-dev-ssr",
+        "originalFilePath": "/packages/angular/src/executors/module-federation-ssr-dev-server/schema.json",
+        "path": "angular/executors/module-federation-dev-ssr",
+        "type": "executor"
+      },
+      {
         "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
         "file": "generated/packages/angular/executors/application.json",
         "hidden": false,
@@ -136,15 +145,6 @@
         "name": "webpack-server",
         "originalFilePath": "/packages/angular/src/builders/webpack-server/schema.json",
         "path": "angular/executors/webpack-server",
-        "type": "executor"
-      },
-      {
-        "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host.",
-        "file": "generated/packages/angular/executors/module-federation-dev-ssr.json",
-        "hidden": false,
-        "name": "module-federation-dev-ssr",
-        "originalFilePath": "/packages/angular/src/builders/module-federation-dev-ssr/schema.json",
-        "path": "angular/executors/module-federation-dev-ssr",
         "type": "executor"
       }
     ],
@@ -598,6 +598,15 @@
         "originalFilePath": "/packages/detox/src/generators/application/schema.json",
         "path": "detox/generators/application",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Detox project(s) using `@nx/detox:*` executors to use `@nx/detox/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/detox/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/detox/src/generators/convert-to-inferred/schema.json",
+        "path": "detox/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -977,6 +986,15 @@
         "originalFilePath": "/packages/expo/src/generators/component/schema.json",
         "path": "expo/generators/component",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Expo project(s) using `@nx/expo:*` executors to use `@nx/expo/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/expo/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/expo/src/generators/convert-to-inferred/schema.json",
+        "path": "expo/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1249,11 +1267,11 @@
       },
       {
         "description": "Synchronize TypeScript project references based on the project graph",
-        "file": "generated/packages/js/generators/sync.json",
+        "file": "generated/packages/js/generators/typescript-sync.json",
         "hidden": true,
-        "name": "sync",
-        "originalFilePath": "/packages/js/src/generators/sync/schema.json",
-        "path": "js/generators/sync",
+        "name": "typescript-sync",
+        "originalFilePath": "/packages/js/src/generators/typescript-sync/schema.json",
+        "path": "js/generators/typescript-sync",
         "type": "generator"
       }
     ],
@@ -1928,6 +1946,28 @@
         "path": "nx/documents/add",
         "tags": [],
         "originalFilePath": "generated/cli/add"
+      },
+      {
+        "id": "login",
+        "name": "login",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/login",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/login",
+        "tags": [],
+        "originalFilePath": "generated/cli/login"
+      },
+      {
+        "id": "logout",
+        "name": "logout",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/logout",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/logout",
+        "tags": [],
+        "originalFilePath": "generated/cli/logout"
       }
     ],
     "executors": [
@@ -2526,6 +2566,15 @@
         "originalFilePath": "/packages/react-native/src/generators/web-configuration/schema.json",
         "path": "react-native/generators/web-configuration",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing React Native project(s) using `@nx/react-native:*` executors to use `@nx/react-native/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/react-native/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/react-native/src/generators/convert-to-inferred/schema.json",
+        "path": "react-native/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2871,6 +2920,15 @@
         "name": "migrate-7",
         "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
         "path": "storybook/generators/migrate-7",
+        "type": "generator"
+      },
+      {
+        "description": "Migrate to Storybook version 8.",
+        "file": "generated/packages/storybook/generators/migrate-8.json",
+        "hidden": false,
+        "name": "migrate-8",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-8/schema.json",
+        "path": "storybook/generators/migrate-8",
         "type": "generator"
       }
     ],

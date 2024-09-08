@@ -239,12 +239,128 @@ describe('workspace', () => {
       expect(readJson(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
 
-    it('should work with existing .prettierignore file', async () => {
-      tree.write('/.prettierignore', '# existing ignore rules');
+    it('should update paths in existing .prettierignore file', async () => {
+      tree.write(
+        '.prettierignore',
+        `
+# should be modified
+src
+/src
+src/foo
+/src/foo
+!src
+!/src
+!src/foo
+!/src/foo
+
+# should not be modified
+xsrc
+srcx
+x/src
+/srcx
+xsrc/foo
+x/src/foo
+!xsrc
+!srcx
+!x/src
+!/srcx
+!xsrc/foo
+!x/src/foo
+`
+      );
+
       await migrateFromAngularCli(tree, { skipFormat: true });
 
-      const prettierIgnore = tree.read('/.prettierignore').toString();
-      expect(prettierIgnore).toBe('# existing ignore rules');
+      const prettierIgnore = tree.read('.prettierignore').toString();
+      expect(prettierIgnore).toMatchInlineSnapshot(`
+        "
+        # should be modified
+        apps/myApp/src
+        /apps/myApp/src
+        apps/myApp/src/foo
+        /apps/myApp/src/foo
+        !apps/myApp/src
+        !/apps/myApp/src
+        !apps/myApp/src/foo
+        !/apps/myApp/src/foo
+
+        # should not be modified
+        xsrc
+        srcx
+        x/src
+        /srcx
+        xsrc/foo
+        x/src/foo
+        !xsrc
+        !srcx
+        !x/src
+        !/srcx
+        !xsrc/foo
+        !x/src/foo
+        "
+      `);
+    });
+
+    it('should update paths in existing .gitignore file', async () => {
+      tree.write(
+        '.gitignore',
+        `
+# should be modified
+src
+/src
+src/foo
+/src/foo
+!src
+!/src
+!src/foo
+!/src/foo
+
+# should not be modified
+xsrc
+srcx
+x/src
+/srcx
+xsrc/foo
+x/src/foo
+!xsrc
+!srcx
+!x/src
+!/srcx
+!xsrc/foo
+!x/src/foo
+`
+      );
+
+      await migrateFromAngularCli(tree, { skipFormat: true });
+
+      const gitIgnore = tree.read('.gitignore').toString();
+      expect(gitIgnore).toMatchInlineSnapshot(`
+        "
+        # should be modified
+        apps/myApp/src
+        /apps/myApp/src
+        apps/myApp/src/foo
+        /apps/myApp/src/foo
+        !apps/myApp/src
+        !/apps/myApp/src
+        !apps/myApp/src/foo
+        !/apps/myApp/src/foo
+
+        # should not be modified
+        xsrc
+        srcx
+        x/src
+        /srcx
+        xsrc/foo
+        x/src/foo
+        !xsrc
+        !srcx
+        !x/src
+        !/srcx
+        !xsrc/foo
+        !x/src/foo
+        "
+      `);
     });
 
     it('should generate .gitkeep file in apps directory when there are no applications', async () => {

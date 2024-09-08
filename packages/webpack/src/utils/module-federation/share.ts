@@ -81,7 +81,12 @@ export function shareWorkspaceLibraries(
   return {
     getAliases: () =>
       pathMappings.reduce(
-        (aliases, library) => ({ ...aliases, [library.name]: library.path }),
+        (aliases, library) => ({
+          ...aliases,
+          // If the library path ends in a wildcard, remove it as webpack can't handle this in resolve.alias
+          // e.g. path/to/my/lib/* -> path/to/my/lib
+          [library.name]: library.path.replace(/\/\*$/, ''),
+        }),
         {}
       ),
     getLibraries: (
@@ -145,7 +150,22 @@ export function shareWorkspaceLibraries(
         for (const library of pathMappings) {
           const libFolder = normalize(dirname(library.path));
           if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
-            req.request = library.name;
+            const newReq = library.name.endsWith('/*')
+              ? /**
+                 * req usually is in the form of "../../../path/to/file"
+                 * library.path is usually in the form of "/Users/username/path/to/Workspace/path/to/library"
+                 *
+                 * When a wildcard is used in the TS path mappings, we want to get everything after the import to
+                 * re-route the request correctly inline with the webpack resolve.alias
+                 */
+                join(
+                  library.name,
+                  req.request.split(
+                    library.path.replace(workspaceRoot, '').replace('/*', '')
+                  )[1]
+                )
+              : library.name;
+            req.request = newReq;
           }
         }
       }),

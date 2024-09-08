@@ -22,7 +22,7 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 describe('React Module Federation', () => {
   describe('Default Configuration', () => {
     beforeAll(() => {
-      newProject({ packages: ['@nx/react'] });
+      newProject({ packages: ['@nx/react', '@nx/webpack'] });
     });
 
     afterAll(() => cleanupProject());
@@ -40,7 +40,7 @@ describe('React Module Federation', () => {
         const remote3 = uniq('remote3');
 
         runCLI(
-          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
+          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
         );
 
         checkFilesExist(
@@ -126,46 +126,109 @@ describe('React Module Federation', () => {
       500_000
     );
 
-    it('should generate host and remote apps with ssr', async () => {
-      const shell = uniq('shell');
-      const remote1 = uniq('remote1');
-      const remote2 = uniq('remote2');
-      const remote3 = uniq('remote3');
+    describe('ssr', () => {
+      it('should generate host and remote apps with ssr', async () => {
+        const shell = uniq('shell');
+        const remote1 = uniq('remote1');
+        const remote2 = uniq('remote2');
+        const remote3 = uniq('remote3');
 
-      await runCLIAsync(
-        `generate @nx/react:host ${shell} --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived --skipFormat`
-      );
-
-      expect(readPort(shell)).toEqual(4200);
-      expect(readPort(remote1)).toEqual(4201);
-      expect(readPort(remote2)).toEqual(4202);
-      expect(readPort(remote3)).toEqual(4203);
-
-      [shell, remote1, remote2, remote3].forEach((app) => {
-        checkFilesExist(
-          `apps/${app}/module-federation.config.ts`,
-          `apps/${app}/module-federation.server.config.ts`
+        await runCLIAsync(
+          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived --skipFormat`
         );
-        ['build', 'server'].forEach((target) => {
-          ['development', 'production'].forEach(async (configuration) => {
-            const cliOutput = runCLI(`run ${app}:${target}:${configuration}`);
-            expect(cliOutput).toContain('Successfully ran target');
 
-            await killPorts(readPort(app));
+        expect(readPort(shell)).toEqual(4200);
+        expect(readPort(remote1)).toEqual(4201);
+        expect(readPort(remote2)).toEqual(4202);
+        expect(readPort(remote3)).toEqual(4203);
+
+        [shell, remote1, remote2, remote3].forEach((app) => {
+          checkFilesExist(
+            `apps/${app}/module-federation.config.ts`,
+            `apps/${app}/module-federation.server.config.ts`
+          );
+          ['build', 'server'].forEach((target) => {
+            ['development', 'production'].forEach(async (configuration) => {
+              const cliOutput = runCLI(`run ${app}:${target}:${configuration}`);
+              expect(cliOutput).toContain('Successfully ran target');
+
+              await killPorts(readPort(app));
+            });
           });
         });
+      }, 500_000);
+
+      it('should serve remotes as static when running the host by default', async () => {
+        const shell = uniq('shell');
+        const remote1 = uniq('remote1');
+        const remote2 = uniq('remote2');
+        const remote3 = uniq('remote3');
+
+        await runCLIAsync(
+          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+        );
+
+        const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
+          output.includes(`Nx SSR Static remotes proxies started successfully`)
+        );
+
+        await killProcessAndPorts(serveResult.pid);
+      }, 500_000);
+
+      it('should serve remotes as static and they should be able to be accessed from the host', async () => {
+        const shell = uniq('shell');
+        const remote1 = uniq('remote1');
+        const remote2 = uniq('remote2');
+        const remote3 = uniq('remote3');
+
+        await runCLIAsync(
+          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+        );
+
+        const capitalize = (s: string) =>
+          s.charAt(0).toUpperCase() + s.slice(1);
+
+        updateFile(`apps/${shell}-e2e/src/e2e/app.cy.ts`, (content) => {
+          return `
+        describe('${shell}-e2e', () => {
+          beforeEach(() => cy.visit('/'));
+
+          it('should display welcome message', () => { 
+            expect(cy.get('ul li').should('have.length', 4));
+            expect(cy.get('ul li').eq(0).should('have.text', 'Home'));
+            expect(cy.get('ul li').eq(1).should('have.text', '${capitalize(
+              remote1
+            )}'));
+            expect(cy.get('ul li').eq(2).should('have.text', '${capitalize(
+              remote2
+            )}'));
+            expect(cy.get('ul li').eq(3).should('have.text', '${capitalize(
+              remote3
+            )}'));
+          });
       });
-    }, 500_000);
+        `;
+        });
+
+        if (runE2ETests()) {
+          const hostE2eResults = await runCommandUntil(
+            `e2e ${shell}-e2e --no-watch --verbose`,
+            (output) => output.includes('All specs passed!')
+          );
+          await killProcessAndPorts(hostE2eResults.pid);
+        }
+      }, 600_000);
+    });
 
     it('should should support generating host and remote apps with the new name and root format', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
       runCLI(
-        `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:remote ${remote} --bundler=webpack --host=${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -238,7 +301,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --bundler=webpack --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
@@ -247,7 +310,7 @@ describe('React Module Federation', () => {
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${remote} --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -339,7 +402,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
@@ -348,7 +411,7 @@ describe('React Module Federation', () => {
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${childRemote} --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -447,7 +510,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
       );
 
       // Update remote to be loaded via script
@@ -581,7 +644,7 @@ describe('React Module Federation', () => {
       const lib = uniq('lib');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
@@ -731,7 +794,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -867,7 +930,7 @@ describe('React Module Federation', () => {
       const remotePort = 4205;
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       updateJson(`${remote}/project.json`, (project) => {

@@ -1,4 +1,5 @@
 import { transformImagePath } from './transform-image-path';
+import { join, sep } from 'path';
 
 describe('transformImagePath', () => {
   it('should transform relative paths', () => {
@@ -7,10 +8,14 @@ describe('transformImagePath', () => {
     );
 
     expect(transform('./test.png')).toEqual(
-      '/documentation/shared/using-nx/test.png'
+      sep + join('documentation', 'shared', 'using-nx', 'test.png')
     );
-    expect(transform('../test.png')).toEqual('/documentation/shared/test.png');
-    expect(transform('../../test.png')).toEqual('/documentation/test.png');
+    expect(transform('../test.png')).toEqual(
+      sep + join('documentation', 'shared', 'test.png')
+    );
+    expect(transform('../../test.png')).toEqual(
+      sep + join('documentation', 'test.png')
+    );
   });
 
   it('should transform absolute paths', () => {

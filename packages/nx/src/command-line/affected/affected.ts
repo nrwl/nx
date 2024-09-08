@@ -32,7 +32,7 @@ export async function affected(
     (TargetDependencyConfig | string)[]
   > = {},
   extraOptions = {
-    excludeTaskDependencies: false,
+    excludeTaskDependencies: args.excludeTaskDependencies,
     loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
   } as {
     excludeTaskDependencies: boolean;
@@ -53,10 +53,6 @@ export async function affected(
     },
     nxJson
   );
-
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 

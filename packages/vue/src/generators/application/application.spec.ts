@@ -1,7 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readProjectConfiguration } from '@nx/devkit';
+import {
+  Tree,
+  readProjectConfiguration,
+  readNxJson,
+  updateNxJson,
+} from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -21,12 +26,62 @@ describe('application generator', () => {
   });
 
   it('should set up project correctly with given options', async () => {
-    await applicationGenerator(tree, { ...options, unitTestRunner: 'vitest' });
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
+      },
+    });
+    updateNxJson(tree, nxJson);
+    await applicationGenerator(tree, {
+      ...options,
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      addPlugin: true,
+    });
     expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test-e2e/playwright.config.ts', 'utf-8')
+    ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
+    expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+      .toMatchInlineSnapshot(`
+      {
+        "dependsOn": [
+          "^build",
+        ],
+      }
+    `);
+  });
+
+  it('should set up project correctly for cypress', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
+      },
+    });
+    updateNxJson(tree, nxJson);
+    await applicationGenerator(tree, {
+      ...options,
+      addPlugin: true,
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'cypress',
+    });
+    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should set up project correctly with PascalCase name', async () => {

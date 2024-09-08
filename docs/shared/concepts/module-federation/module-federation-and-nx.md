@@ -2,6 +2,15 @@
 
 Module Federation is a technique that allows developers to share code and resources across multiple applications. It has become more popular in recent years since the addition of the [ModuleFederationPlugin](https://webpack.js.org/plugins/module-federation-plugin/) in [Webpack](https://webpack.js.org).
 
+{% callout type="note" title="Nx uses @module-federation/enhanced" %}
+As of Nx 19.5, our Module Federation support is provided by the [@module-federation/enhanced](https://npmjs.com/@module-federation/enhanced) package.
+This package is owned and maintained by [Zack Jackson](https://x.com/ScriptedAlchemy), the creator of Module Federation, and the [ByteDance](https://x.com/ByteDanceTalk) team.
+
+Using this package for Nx's Module Federation support keeps our support aligned with the latest improvements, features and bug fixes for Module Federation.
+
+You can learn more about Module Federation Enhanced on their [docs](https://module-federation.io/).
+{% /callout %}
+
 An increasing number of enterprise applications have started to adopt Module Federation to help them develop and scale their applications quickly, while reducing some overhead in sharing code between teams.
 
 Nx added out-of-the-box support for Module Federation with Webpack to make it more approachable, less complex and leverage some unique benefits that can only be realised in a monorepo.
@@ -90,6 +99,16 @@ Nx offers out-of-the-box support for Module Federation with React and Angular. T
 - Type Safety - allowing for type-safety between `hosts` and `remotes` to catch issues early and to take advantage of autocompletion in IDEs
 - Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by `federated modules`
 - Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
+
+### Develop as a User
+
+For both the best DX (Development Experience) and most accurate development of a Module Federation architecture we recommend viewing it as a single application. In other words, the `host` and all the `remotes` are composed to form a single application.
+
+The `host` is the entry point and the `remotes` are modules used by the application. It just happens that the `remotes` are fetched over-the-wire at runtime rather than being bundled into the application.
+
+To support this, as well as to ensure a great local DX, we built our Module Federation support in such a way that when developing locally you should always run `serve` on your `host` application. This will start up your full Module Federation architecture; serving your `host` with `webpack-dev-server` and each `remote` via a single `http-server`. You can learn more about this on our [Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview).
+
+When you're working on a specific `remote` application, you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
 
 ## Use Cases
 

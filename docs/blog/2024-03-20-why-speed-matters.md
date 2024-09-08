@@ -54,7 +54,7 @@ With Nx Replay, you can see significant speed improvements in your CI pipelines 
 
 [Nx Agents](/ci/features/distribute-task-execution) represent the pinnacle of task distribution optimization, ensuring that tasks are executed as efficiently as possible based on the specific requirements of each change. Some features that make up this effort are:
 
-- [Easy integration with existing providers](/ci/features/distribute-task-execution#cicd-guides)
+- [Easy integration with existing providers](/ci/recipes/set-up)
   - Distribution is handled on the Nx Cloud infrastructure and all you need is a single line. What’s more, all results are played back to your original CI provider script which triggers the Nx Cloud distribution, so that you can make use of the resulting artifacts
 - [Efficient task distribution](/ci/features/dynamic-agents)
   - Save compute resources and reduce costs, minimizing idle time and compute waste

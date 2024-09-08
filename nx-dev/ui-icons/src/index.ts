@@ -11,6 +11,7 @@ export * from './lib/customers/7eleven';
 export * from './lib/customers/adidas';
 export * from './lib/customers/adobe';
 export * from './lib/customers/american-airlines';
+export * from './lib/customers/amplify';
 export * from './lib/customers/aws';
 export * from './lib/customers/bill';
 export * from './lib/customers/bloomberg';
@@ -72,6 +73,15 @@ export * from './lib/customers/zipari';
 // EDITORS
 export * from './lib/editors/jetbrains';
 export * from './lib/editors/visual-studio-code';
+
+// OTHERS
+export * from './lib/monorepo-world';
+
+// PODCASTS
+export * from './lib/podcasts/amazon-music';
+export * from './lib/podcasts/apple-podcasts';
+export * from './lib/podcasts/i-heart-radio';
+export * from './lib/podcasts/spotify';
 
 // PRODUCTS
 export * from './lib/products';

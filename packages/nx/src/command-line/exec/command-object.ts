@@ -6,7 +6,7 @@ import {
 
 export const yargsExecCommand: CommandModule = {
   command: 'exec',
-  describe: 'Executes any command as if it was a target on the project',
+  describe: 'Executes any command as if it was a target on the project.',
   builder: (yargs) => withRunManyOptions(yargs),
   handler: async (args) => {
     try {

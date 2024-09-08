@@ -1,11 +1,11 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { output } from './utils/output';
-import { setupNxCloud } from './utils/nx/nx-cloud';
+import { getOnboardingInfo, readNxCloudToken } from './utils/nx/nx-cloud';
 import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { commitChanges, initializeGitRepo } from './utils/git/git';
+import { initializeGitRepo } from './utils/git/git';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 
@@ -51,11 +51,28 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
   }
 
-  let gitSuccess = false;
-  if (!skipGit && commit) {
+  let connectUrl: string | undefined;
+  let nxCloudInfo: string | undefined;
+  if (nxCloud !== 'skip') {
+    const token = readNxCloudToken(directory) as string;
+
+    if (nxCloud !== 'yes') {
+      await setupCI(directory, nxCloud, packageManager);
+    }
+
+    const { connectCloudUrl, output } = await getOnboardingInfo(
+      nxCloud,
+      token,
+      directory,
+      useGitHub
+    );
+    connectUrl = connectCloudUrl;
+    nxCloudInfo = output;
+  }
+
+  if (!skipGit) {
     try {
-      await initializeGitRepo(directory, { defaultBase, commit });
-      gitSuccess = true;
+      await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
     } catch (e) {
       if (e instanceof Error) {
         output.error({
@@ -68,30 +85,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   }
 
-  let nxCloudInstallRes;
-  if (nxCloud !== 'skip') {
-    nxCloudInstallRes = await setupNxCloud(
-      directory,
-      packageManager,
-      nxCloud,
-      useGitHub
-    );
-
-    if (nxCloud !== 'yes') {
-      const nxCIsetupRes = await setupCI(
-        directory,
-        nxCloud,
-        packageManager,
-        nxCloudInstallRes?.code === 0
-      );
-      if (nxCIsetupRes?.code === 0) {
-        commitChanges(directory, `feat(nx): Generated CI workflow`);
-      }
-    }
-  }
-
   return {
-    nxCloudInfo: nxCloudInstallRes?.stdout,
+    nxCloudInfo,
     directory,
   };
+}
+
+export function extractConnectUrl(text: string): string | null {
+  const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
+  const match = text.match(urlPattern);
+  return match ? match[0] : null;
 }

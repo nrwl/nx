@@ -69,6 +69,10 @@ export interface RollupWithNxPluginOptions {
    */
   skipTypeField?: boolean;
   /**
+   * Output sourcemaps.
+   */
+  sourceMap?: boolean;
+  /**
    * The path to tsconfig file.
    */
   tsConfig: string;

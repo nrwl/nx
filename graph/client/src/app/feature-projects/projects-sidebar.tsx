@@ -68,24 +68,24 @@ export function ProjectsSidebar(): JSX.Element {
   const [lastHash, setLastHash] = useState(selectedProjectRouteData.hash);
   const params = useParams();
   const navigate = useNavigate();
-  const routeContructor = useRouteConstructor();
+  const routeConstructor = useRouteConstructor();
 
   function resetFocus() {
     projectGraphService.send({ type: 'unfocusProject' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function showAllProjects() {
-    navigate(routeContructor('/projects/all', true));
+    navigate(routeConstructor('/projects/all', true));
   }
 
   function hideAllProjects() {
     projectGraphService.send({ type: 'deselectAll' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function showAffectedProjects() {
-    navigate(routeContructor('/projects/affected', true));
+    navigate(routeConstructor('/projects/affected', true));
   }
 
   function searchDepthFilterEnabledChange(checked: boolean) {
@@ -166,12 +166,12 @@ export function ProjectsSidebar(): JSX.Element {
 
   function resetTraceStart() {
     projectGraphService.send({ type: 'clearTraceStart' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function resetTraceEnd() {
     projectGraphService.send({ type: 'clearTraceEnd' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {
@@ -320,7 +320,7 @@ export function ProjectsSidebar(): JSX.Element {
   const updateTextFilter = useCallback(
     (textFilter: string) => {
       projectGraphService.send({ type: 'filterByText', search: textFilter });
-      navigate(routeContructor('/projects', true));
+      navigate(routeConstructor('/projects', true));
     },
     [projectGraphService]
   );
@@ -335,6 +335,7 @@ export function ProjectsSidebar(): JSX.Element {
           resetFocus={resetFocus}
         ></FocusedPanel>
       ) : null}
+
       {isTracing ? (
         <TracingPanel
           start={tracingInfo.start}
@@ -377,7 +378,7 @@ export function ProjectsSidebar(): JSX.Element {
         ></SearchDepth>
 
         <ExperimentalFeature>
-          <div className="mx-4 mt-4 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
+          <div className="mx-4 mt-8 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
             <h3 className="cursor-text px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200">
               Experimental Features
             </h3>

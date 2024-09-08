@@ -38,9 +38,6 @@ export async function nxExecCommand(
     { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
   const scriptArgV: string[] = readScriptArgV(overrides);
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 

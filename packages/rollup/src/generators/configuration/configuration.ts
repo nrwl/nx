@@ -16,7 +16,7 @@ import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupProjectSchema } from './schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { hasPlugin } from '../../utils/has-plugin';
 import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';

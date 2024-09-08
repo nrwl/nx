@@ -29,6 +29,12 @@
       "version": "18.1.0-beta.3",
       "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
       "implementation": "./src/migrations/update-18-1-0/update-cypress-version-13-6-6"
+    },
+    "update-19-6-0-update-ci-webserver-for-vite": {
+      "cli": "nx",
+      "version": "19.6.0-beta.4",
+      "description": "Update ciWebServerCommand to use static serve for the application.",
+      "implementation": "./src/migrations/update-19-6-0/update-ci-webserver-for-static-serve"
     }
   },
   "packageJsonUpdates": {

@@ -28,11 +28,7 @@ export default async function (tree: Tree) {
         continue;
       }
 
-      try {
-        validateOutputs(target.outputs);
-      } catch (e) {
-        target.outputs = transformLegacyOutputs(project.root, e);
-      }
+      target.outputs = transformLegacyOutputs(project.root, target.outputs);
     }
     try {
       updateProjectConfiguration(tree, projectName, project);
@@ -44,11 +40,10 @@ export default async function (tree: Tree) {
           (json) => {
             for (const target of Object.values(json.nx?.targets ?? {})) {
               if (target.outputs) {
-                try {
-                  validateOutputs(target.outputs);
-                } catch (e) {
-                  target.outputs = transformLegacyOutputs(project.root, e);
-                }
+                target.outputs = transformLegacyOutputs(
+                  project.root,
+                  target.outputs
+                );
               }
             }
 
@@ -64,11 +59,7 @@ export default async function (tree: Tree) {
       if (!target.outputs) {
         continue;
       }
-      try {
-        validateOutputs(target.outputs);
-      } catch (e: any) {
-        target.outputs = transformLegacyOutputs('{projectRoot}', e);
-      }
+      target.outputs = transformLegacyOutputs('{projectRoot}', target.outputs);
     }
 
     updateNxJson(tree, nxJson);

@@ -30,11 +30,15 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
           './package.json': './package.json',
-          '.': './index.esm.js',
+          '.': {
+            import: './index.esm.js',
+            types: './index.esm.d.ts',
+          },
         },
         main: './index.esm.js',
         module: './index.esm.js',
         type: 'module',
+        types: './index.esm.d.ts',
       });
 
       spy.mockRestore();
@@ -59,6 +63,7 @@ describe('updatePackageJson', () => {
         },
         main: './index.cjs.js',
         type: 'commonjs',
+        types: './index.cjs.d.ts',
       });
 
       spy.mockRestore();
@@ -83,10 +88,12 @@ describe('updatePackageJson', () => {
             module: './index.esm.js',
             import: './index.cjs.mjs',
             default: './index.cjs.js',
+            types: './index.esm.d.ts',
           },
         },
         main: './index.cjs.js',
         module: './index.esm.js',
+        types: './index.esm.d.ts',
       });
 
       spy.mockRestore();
@@ -103,7 +110,10 @@ describe('updatePackageJson', () => {
         },
         {
           exports: {
-            './foo': './foo.esm.js',
+            './foo': {
+              import: './some/custom/path/foo.esm.js',
+              types: './some/custom/path/foo.d.ts',
+            },
           },
         } as unknown as PackageJson
       );
@@ -111,13 +121,19 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
           './package.json': './package.json',
-          '.': './index.esm.js',
-
-          './foo': './foo.esm.js',
+          '.': {
+            import: './index.esm.js',
+            types: './index.esm.d.ts',
+          },
+          './foo': {
+            import: './some/custom/path/foo.esm.js',
+            types: './some/custom/path/foo.d.ts',
+          },
         },
         main: './index.esm.js',
         module: './index.esm.js',
         type: 'module',
+        types: './index.esm.d.ts',
       });
 
       spy.mockRestore();
@@ -140,6 +156,7 @@ describe('updatePackageJson', () => {
         main: './index.esm.js',
         module: './index.esm.js',
         type: 'module',
+        types: './index.esm.d.ts',
       });
 
       spy.mockRestore();
@@ -159,6 +176,7 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         main: './index.cjs.js',
         type: 'commonjs',
+        types: './index.cjs.d.ts',
       });
 
       spy.mockRestore();
@@ -178,6 +196,7 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         main: './index.cjs.js',
         module: './index.esm.js',
+        types: './index.esm.d.ts',
       });
 
       spy.mockRestore();
@@ -202,6 +221,7 @@ describe('updatePackageJson', () => {
         main: './index.esm.js',
         module: './index.esm.js',
         type: 'module',
+        types: './index.esm.d.ts',
         exports: {
           './foo': './foo.esm.js',
         },
@@ -231,6 +251,7 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         main: './index.esm.js',
         module: './index.esm.js',
+        types: './index.esm.d.ts',
         exports: {
           './foo': './foo.esm.js',
         },
@@ -258,6 +279,7 @@ describe('updatePackageJson', () => {
         main: './index.esm.js',
         module: './index.esm.js',
         type: 'module',
+        types: './index.esm.d.ts',
         exports: {
           './foo': './foo.esm.js',
         },
@@ -286,6 +308,7 @@ describe('updatePackageJson', () => {
         main: './index.esm.js',
         module: './index.esm.js',
         type: 'module',
+        types: './index.esm.d.ts',
         exports: {
           './foo': './foo.esm.js',
         },

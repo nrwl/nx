@@ -105,6 +105,9 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
               },
             },
             "serve-static": {
+              "dependsOn": [
+                "build-something",
+              ],
               "executor": "@nx/web:file-server",
               "options": {
                 "buildTarget": "build-something",

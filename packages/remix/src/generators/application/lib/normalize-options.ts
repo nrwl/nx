@@ -9,9 +9,6 @@ export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2ePort: number;
   parsedTags: string[];
 }
 
@@ -36,35 +33,8 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  let e2eWebServerTarget = options.addPlugin ? 'dev' : 'serve';
-  if (options.addPlugin) {
-    if (nxJson.plugins) {
-      for (const plugin of nxJson.plugins) {
-        if (
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/remix/plugin' &&
-          (plugin.options as RemixPluginOptions).devTargetName
-        ) {
-          e2eWebServerTarget = (plugin.options as RemixPluginOptions)
-            .devTargetName;
-        }
-      }
-    }
-  }
-
-  let e2ePort = options.addPlugin ? 3000 : 4200;
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    (nxJson.targetDefaults?.[e2eWebServerTarget].options?.port ||
-      nxJson.targetDefaults?.[e2eWebServerTarget].options?.env?.PORT)
-  ) {
-    e2ePort =
-      nxJson.targetDefaults?.[e2eWebServerTarget].options?.port ||
-      nxJson.targetDefaults?.[e2eWebServerTarget].options?.env?.PORT;
-  }
   const e2eProjectName = options.rootProject ? 'e2e' : `${projectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${projectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -77,9 +47,6 @@ export async function normalizeOptions(
     projectRoot,
     e2eProjectName,
     e2eProjectRoot,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2ePort,
     parsedTags,
   };
 }

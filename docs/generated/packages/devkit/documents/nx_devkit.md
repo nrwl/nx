@@ -35,6 +35,7 @@ It only uses language primitives and immutable objects
 - [FileData](../../devkit/documents/FileData)
 - [FileMap](../../devkit/documents/FileMap)
 - [GeneratorsJson](../../devkit/documents/GeneratorsJson)
+- [GraphJson](../../devkit/documents/GraphJson)
 - [Hash](../../devkit/documents/Hash)
 - [HasherContext](../../devkit/documents/HasherContext)
 - [ImplicitJsonSubsetDependency](../../devkit/documents/ImplicitJsonSubsetDependency)

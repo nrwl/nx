@@ -1,0 +1,756 @@
+{
+  "nextapp": {
+    "name": "nextapp",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/nextapp",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nx/next:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "root": "apps/nextapp",
+          "outputPath": "dist/apps/nextapp"
+        },
+        "configurations": {
+          "development": { "outputPath": "apps/nextapp" },
+          "production": {}
+        }
+      },
+      "serve": {
+        "executor": "@nx/next:server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "nextapp:build", "dev": true },
+        "configurations": {
+          "development": {
+            "buildTarget": "nextapp:build:development",
+            "dev": true
+          },
+          "production": {
+            "buildTarget": "nextapp:build:production",
+            "dev": false
+          }
+        }
+      },
+      "export": {
+        "executor": "@nx/next:export",
+        "options": { "buildTarget": "nextapp:build:production" }
+      },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/nextapp/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/nextapp/**/*.{ts,tsx,js,jsx}"] }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/nextapp/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/nextapp",
+          "configDir": "apps/nextapp/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/nextapp"
+  },
+  "nextapp-ts": {
+    "name": "nextapp-ts",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/nextapp-ts",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nx/next:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "root": "apps/nextapp-ts",
+          "outputPath": "dist/apps/nextapp-ts"
+        },
+        "configurations": {
+          "development": { "outputPath": "apps/nextapp-ts" },
+          "production": {}
+        }
+      },
+      "serve": {
+        "executor": "@nx/next:server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "nextapp-ts:build", "dev": true },
+        "configurations": {
+          "development": {
+            "buildTarget": "nextapp-ts:build:development",
+            "dev": true
+          },
+          "production": {
+            "buildTarget": "nextapp-ts:build:production",
+            "dev": false
+          }
+        }
+      },
+      "export": {
+        "executor": "@nx/next:export",
+        "options": { "buildTarget": "nextapp-ts:build:production" }
+      },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/nextapp-ts/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/nextapp-ts/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/nextapp-ts/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/nextapp-ts",
+          "configDir": "apps/nextapp-ts/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/nextapp-ts"
+  },
+  "ngapp": {
+    "name": "ngapp",
+    "$schema": "../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "apps/ngapp/src",
+    "prefix": "sbmigrat",
+    "targets": {
+      "build": {
+        "executor": "@angular-devkit/build-angular:browser",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/apps/ngapp",
+          "index": "apps/ngapp/src/index.html",
+          "main": "apps/ngapp/src/main.ts",
+          "polyfills": ["zone.js"],
+          "tsConfig": "apps/ngapp/tsconfig.app.json",
+          "assets": ["apps/ngapp/src/favicon.ico", "apps/ngapp/src/assets"],
+          "styles": ["apps/ngapp/src/styles.css"],
+          "scripts": []
+        },
+        "configurations": {
+          "production": {
+            "budgets": [
+              {
+                "type": "initial",
+                "maximumWarning": "500kb",
+                "maximumError": "1mb"
+              },
+              {
+                "type": "anyComponentStyle",
+                "maximumWarning": "2kb",
+                "maximumError": "4kb"
+              }
+            ],
+            "outputHashing": "all"
+          },
+          "development": {
+            "buildOptimizer": false,
+            "optimization": false,
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "sourceMap": true,
+            "namedChunks": true
+          }
+        },
+        "defaultConfiguration": "production"
+      },
+      "serve": {
+        "executor": "@angular-devkit/build-angular:dev-server",
+        "configurations": {
+          "production": { "browserTarget": "ngapp:build:production" },
+          "development": { "browserTarget": "ngapp:build:development" }
+        },
+        "defaultConfiguration": "development"
+      },
+      "extract-i18n": {
+        "executor": "@angular-devkit/build-angular:extract-i18n",
+        "options": { "browserTarget": "ngapp:build" }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/ngapp/**/*.ts", "apps/ngapp/**/*.html"]
+        }
+      },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/ngapp/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      },
+      "storybook": {
+        "executor": "@storybook/angular:start-storybook",
+        "options": {
+          "port": 4400,
+          "configDir": "apps/ngapp/.storybook",
+          "browserTarget": "ngapp:build",
+          "compodoc": false
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@storybook/angular:build-storybook",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "outputDir": "dist/storybook/ngapp",
+          "configDir": "apps/ngapp/.storybook",
+          "browserTarget": "ngapp:build",
+          "compodoc": false
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/ngapp"
+  },
+  "ngapp-ts": {
+    "name": "ngapp-ts",
+    "$schema": "../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "apps/ngapp-ts/src",
+    "prefix": "sbmigrat",
+    "targets": {
+      "build": {
+        "executor": "@angular-devkit/build-angular:browser",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/apps/ngapp-ts",
+          "index": "apps/ngapp-ts/src/index.html",
+          "main": "apps/ngapp-ts/src/main.ts",
+          "polyfills": ["zone.js"],
+          "tsConfig": "apps/ngapp-ts/tsconfig.app.json",
+          "assets": [
+            "apps/ngapp-ts/src/favicon.ico",
+            "apps/ngapp-ts/src/assets"
+          ],
+          "styles": ["apps/ngapp-ts/src/styles.css"],
+          "scripts": []
+        },
+        "configurations": {
+          "production": {
+            "budgets": [
+              {
+                "type": "initial",
+                "maximumWarning": "500kb",
+                "maximumError": "1mb"
+              },
+              {
+                "type": "anyComponentStyle",
+                "maximumWarning": "2kb",
+                "maximumError": "4kb"
+              }
+            ],
+            "outputHashing": "all"
+          },
+          "development": {
+            "buildOptimizer": false,
+            "optimization": false,
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "sourceMap": true,
+            "namedChunks": true
+          }
+        },
+        "defaultConfiguration": "production"
+      },
+      "serve": {
+        "executor": "@angular-devkit/build-angular:dev-server",
+        "configurations": {
+          "production": { "browserTarget": "ngapp-ts:build:production" },
+          "development": { "browserTarget": "ngapp-ts:build:development" }
+        },
+        "defaultConfiguration": "development"
+      },
+      "extract-i18n": {
+        "executor": "@angular-devkit/build-angular:extract-i18n",
+        "options": { "browserTarget": "ngapp-ts:build" }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": [
+            "apps/ngapp-ts/**/*.ts",
+            "apps/ngapp-ts/**/*.html"
+          ]
+        }
+      },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/ngapp-ts/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      },
+      "storybook": {
+        "executor": "@storybook/angular:start-storybook",
+        "options": {
+          "port": 4400,
+          "configDir": "apps/ngapp-ts/.storybook",
+          "browserTarget": "ngapp-ts:build",
+          "compodoc": false
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@storybook/angular:build-storybook",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "outputDir": "dist/storybook/ngapp-ts",
+          "configDir": "apps/ngapp-ts/.storybook",
+          "browserTarget": "ngapp-ts:build",
+          "compodoc": false
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/ngapp-ts"
+  },
+  "rv1": {
+    "name": "rv1",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/rv1/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nx/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/rv1" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nx/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "rv1:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "rv1:build:development",
+            "hmr": true
+          },
+          "production": { "buildTarget": "rv1:build:production", "hmr": false }
+        }
+      },
+      "preview": {
+        "executor": "@nx/vite:preview-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "rv1:build" },
+        "configurations": {
+          "development": { "buildTarget": "rv1:build:development" },
+          "production": { "buildTarget": "rv1:build:production" }
+        }
+      },
+      "test": {
+        "executor": "@nx/vite:test",
+        "outputs": ["coverage/apps/rv1"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/rv1"
+        }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/rv1/**/*.{ts,tsx,js,jsx}"] }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/rv1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/rv1",
+          "configDir": "apps/rv1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/rv1"
+  },
+  "rv2-ts": {
+    "name": "rv2-ts",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/rv2-ts/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nx/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/rv2-ts" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nx/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "rv2-ts:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "rv2-ts:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "rv2-ts:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "preview": {
+        "executor": "@nx/vite:preview-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "rv2-ts:build" },
+        "configurations": {
+          "development": { "buildTarget": "rv2-ts:build:development" },
+          "production": { "buildTarget": "rv2-ts:build:production" }
+        }
+      },
+      "test": {
+        "executor": "@nx/vite:test",
+        "outputs": ["coverage/apps/rv2-ts"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/rv2-ts"
+        }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/rv2-ts/**/*.{ts,tsx,js,jsx}"] }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/rv2-ts/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/rv2-ts",
+          "configDir": "apps/rv2-ts/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/rv2-ts"
+  },
+  "rw1": {
+    "name": "rw1",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/rw1/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nx/webpack:webpack",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "compiler": "babel",
+          "outputPath": "dist/apps/rw1",
+          "index": "apps/rw1/src/index.html",
+          "baseHref": "/",
+          "main": "apps/rw1/src/main.tsx",
+          "tsConfig": "apps/rw1/tsconfig.app.json",
+          "assets": ["apps/rw1/src/favicon.ico", "apps/rw1/src/assets"],
+          "styles": ["apps/rw1/src/styles.css"],
+          "scripts": [],
+          "isolatedConfig": true,
+          "webpackConfig": "apps/rw1/webpack.config.js"
+        },
+        "configurations": {
+          "development": {
+            "extractLicenses": false,
+            "optimization": false,
+            "sourceMap": true,
+            "vendorChunk": true
+          },
+          "production": {
+            "fileReplacements": [
+              {
+                "replace": "apps/rw1/src/environments/environment.ts",
+                "with": "apps/rw1/src/environments/environment.prod.ts"
+              }
+            ],
+            "optimization": true,
+            "outputHashing": "all",
+            "sourceMap": false,
+            "namedChunks": false,
+            "extractLicenses": true,
+            "vendorChunk": false
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nx/webpack:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "rw1:build", "hmr": true },
+        "configurations": {
+          "development": { "buildTarget": "rw1:build:development" },
+          "production": { "buildTarget": "rw1:build:production", "hmr": false }
+        }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/rw1/**/*.{ts,tsx,js,jsx}"] }
+      },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/rw1/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/rw1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/rw1",
+          "configDir": "apps/rw1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/rw1"
+  },
+  "wv1": {
+    "name": "wv1",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "apps/wv1/src",
+    "tags": [],
+    "targets": {
+      "build": {
+        "executor": "@nx/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/wv1" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nx/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "wv1:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "wv1:build:development",
+            "hmr": true
+          },
+          "production": { "buildTarget": "wv1:build:production", "hmr": false }
+        }
+      },
+      "preview": {
+        "executor": "@nx/vite:preview-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "wv1:build" },
+        "configurations": {
+          "development": { "buildTarget": "wv1:build:development" },
+          "production": { "buildTarget": "wv1:build:production" }
+        }
+      },
+      "test": {
+        "executor": "@nx/vite:test",
+        "outputs": ["coverage/apps/wv1"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/wv1"
+        }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/wv1/**/*.ts"] }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/web-components",
+          "port": 4400,
+          "configDir": "apps/wv1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/web-components",
+          "outputDir": "dist/storybook/wv1",
+          "configDir": "apps/wv1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "root": "apps/wv1"
+  },
+  "ww1": {
+    "name": "ww1",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "apps/ww1/src",
+    "tags": [],
+    "targets": {
+      "build": {
+        "executor": "@nx/webpack:webpack",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "outputPath": "dist/apps/ww1",
+          "compiler": "babel",
+          "main": "apps/ww1/src/main.ts",
+          "tsConfig": "apps/ww1/tsconfig.app.json",
+          "webpackConfig": "apps/ww1/webpack.config.js",
+          "assets": ["apps/ww1/src/favicon.ico", "apps/ww1/src/assets"],
+          "index": "apps/ww1/src/index.html",
+          "baseHref": "/",
+          "styles": ["apps/ww1/src/styles.css"],
+          "scripts": []
+        },
+        "configurations": {
+          "production": {
+            "optimization": true,
+            "outputHashing": "all",
+            "sourceMap": false,
+            "namedChunks": false,
+            "extractLicenses": true,
+            "vendorChunk": false,
+            "fileReplacements": [
+              {
+                "replace": "apps/ww1/src/environments/environment.ts",
+                "with": "apps/ww1/src/environments/environment.prod.ts"
+              }
+            ]
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nx/webpack:dev-server",
+        "options": { "buildTarget": "ww1:build" },
+        "configurations": {
+          "production": { "buildTarget": "ww1:build:production" }
+        }
+      },
+      "test": {
+        "executor": "@nx/vite:test",
+        "outputs": ["coverage/apps/ww1"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/ww1"
+        }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/ww1/**/*.ts"] }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/web-components",
+          "port": 4400,
+          "configDir": "apps/ww1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/web-components",
+          "outputDir": "dist/storybook/ww1",
+          "configDir": "apps/ww1/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "root": "apps/ww1"
+  }
+}

@@ -6,6 +6,7 @@ import {
   useTransform,
 } from 'framer-motion';
 import { ReactNode, useRef } from 'react';
+import { usePrefersReducedMotion } from './prefers-reduced-motion';
 
 /**
  * Creates a moving border effect around the specified component by animating a rectangular SVG element.
@@ -53,6 +54,11 @@ export function MovingBorder({
   );
 
   const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px) translateX(-50%) translateY(-50%)`;
+
+  const shouldReduceMotion = usePrefersReducedMotion();
+  if (shouldReduceMotion) {
+    return;
+  }
 
   return (
     <>

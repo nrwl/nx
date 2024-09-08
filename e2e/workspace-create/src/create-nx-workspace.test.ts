@@ -307,6 +307,7 @@ describe('create-nx-workspace', () => {
       preset: 'react-native',
       appName,
       packageManager: 'npm',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -320,6 +321,7 @@ describe('create-nx-workspace', () => {
       preset: 'expo',
       appName,
       packageManager: 'npm',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
