@@ -26,6 +26,7 @@ export interface PackageManagerCommands {
   exec: string;
   dlx: string;
   list: string;
+  pack: string;
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
@@ -115,6 +116,15 @@ export function getPackageManagerCommand(
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
+        /**
+         * `(p)npm pack` will download a tarball of the specified version,
+         * whereas `yarn` pack creates a tarball of the active workspace, so it
+         * does not work for getting the content of a library.
+         *
+         * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+         *
+         */
+        pack: 'npm pack',
       };
     },
     pnpm: () => {
@@ -148,6 +158,7 @@ export function getPackageManagerCommand(
           }`,
         list: 'pnpm ls --depth 100',
         getRegistryUrl: 'pnpm config get registry',
+        pack: 'pnpm pack',
       };
     },
     npm: () => {
@@ -167,9 +178,18 @@ export function getPackageManagerCommand(
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
         getRegistryUrl: 'npm config get registry',
+        pack: 'npm pack',
       };
     },
     bun: () => {
+      let supportPack: boolean;
+      try {
+        const bunVersion = getPackageManagerVersion('bun', root);
+        supportPack = gte(bunVersion, '1.1.27');
+      } catch {
+        // as its just been release lets fallback on npm
+        supportPack = false;
+      }
       // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
@@ -182,6 +202,7 @@ export function getPackageManagerCommand(
         dlx: 'bunx',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
+        pack: supportPack ? 'bun pm pack' : 'npm pack',
       };
     },
   };
@@ -456,21 +477,9 @@ export async function packageRegistryPack(
   pkg: string,
   version: string
 ): Promise<{ tarballPath: string }> {
-  let pm = detectPackageManager();
-  if (pm === 'yarn' || pm === 'bun') {
-    /**
-     * `(p)npm pack` will download a tarball of the specified version,
-     * whereas `yarn` pack creates a tarball of the active workspace, so it
-     * does not work for getting the content of a library.
-     *
-     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
-     *
-     * bun doesn't currently support pack
-     */
-    pm = 'npm';
-  }
+  const pmc = getPackageManagerCommand();
 
-  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
+  const { stdout } = await execAsync(`${pmc.pack} ${pkg}@${version}`, {
     cwd,
     windowsHide: true,
   });
