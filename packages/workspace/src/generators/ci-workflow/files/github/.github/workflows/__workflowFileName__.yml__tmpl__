@@ -20,7 +20,7 @@ jobs:
       <% if(packageManager == 'pnpm'){ %>
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
       <% } %>
       <% if(packageManager == 'bun'){ %>
       - uses: oven-sh/setup-bun@v1
