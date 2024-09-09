@@ -27,7 +27,7 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   if (generatorCollectionChoices.size === 0) {
     output.error({
       title:
-        'No convert-to-inferred generators found. You can install plugins using nx add.',
+        'No inference plugin found. For information on this migration, see https://nx.dev/recipes/running-tasks/convert-to-inferred',
     });
     return;
   }
@@ -47,7 +47,7 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
       await prompt<{ generatorsToRun: string[] }>({
         type: 'multiselect',
         name: 'generatorsToRun',
-        message: 'Which convert-to-inferred generators should be run?',
+        message: 'Which inference plugin do you want to use?',
         choices: allChoices,
         initial: allChoices,
         validate: (result: string[]) => {

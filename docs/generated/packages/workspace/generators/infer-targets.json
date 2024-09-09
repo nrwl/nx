@@ -15,7 +15,7 @@
       },
       "plugins": {
         "type": "array",
-        "description": "Which plugins' convert-to-inferred generators to look for. For example @nx/eslint or @nx/jest",
+        "description": "The plugins used to infer targets. For example @nx/eslint or @nx/jest",
         "items": { "type": "string" }
       },
       "skipFormat": {
