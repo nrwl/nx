@@ -76,7 +76,8 @@ export function getGitHubRepoData(
       return {
         hostname,
         apiBaseUrl,
-        slug: match[1] as RepoSlug,
+        // Ensure any trailing .git is stripped
+        slug: match[1].replace(/\.git$/, '') as RepoSlug,
       };
     } else {
       throw new Error(
@@ -370,9 +371,11 @@ async function resolveGithubToken(hostname: string): Promise<string | null> {
       }
     }
   }
-  console.log(
-    `Warning: It was not possible to automatically resolve a GitHub token from your environment for hostname ${hostname}. If you set the GITHUB_TOKEN or GH_TOKEN environment variable, that will be used for GitHub API requests.`
-  );
+  if (hostname !== 'github.com') {
+    console.log(
+      `Warning: It was not possible to automatically resolve a GitHub token from your environment for hostname ${hostname}. If you set the GITHUB_TOKEN or GH_TOKEN environment variable, that will be used for GitHub API requests.`
+    );
+  }
   return null;
 }
 
