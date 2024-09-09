@@ -849,6 +849,17 @@
         "tags": []
       },
       {
+        "id": "sync-generators",
+        "name": "Sync Generators",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/sync-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/sync-generators",
+        "tags": []
+      },
+      {
         "id": "turbo-and-nx",
         "name": "Nx and Turborepo",
         "description": "",
@@ -1128,6 +1139,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-daemon",
+    "tags": []
+  },
+  "/concepts/sync-generators": {
+    "id": "sync-generators",
+    "name": "Sync Generators",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/sync-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/sync-generators",
     "tags": []
   },
   "/concepts/turbo-and-nx": {

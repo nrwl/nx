@@ -1902,6 +1902,28 @@
         "tags": [],
         "originalFilePath": "generated/cli/repair"
       },
+      "/nx-api/nx/documents/sync": {
+        "id": "sync",
+        "name": "sync",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/sync",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/sync",
+        "tags": [],
+        "originalFilePath": "generated/cli/sync"
+      },
+      "/nx-api/nx/documents/sync-check": {
+        "id": "sync-check",
+        "name": "sync:check",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/sync-check",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/sync-check",
+        "tags": [],
+        "originalFilePath": "generated/cli/sync-check"
+      },
       "/nx-api/nx/documents/exec": {
         "id": "exec",
         "name": "exec",

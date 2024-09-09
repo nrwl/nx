@@ -247,6 +247,11 @@
               "file": "shared/concepts/daemon"
             },
             {
+              "name": "Sync Generators",
+              "id": "sync-generators",
+              "file": "shared/concepts/sync-generators"
+            },
+            {
               "name": "Nx and Turborepo",
               "id": "turbo-and-nx",
               "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
@@ -1533,6 +1538,12 @@
               "file": "shared/recipes/generators/modifying-files"
             },
             {
+              "name": "Register a Sync Generator",
+              "id": "register-sync-generator",
+              "tags": ["generate-code"],
+              "file": "shared/recipes/generators/register-sync-generator"
+            },
+            {
               "name": "Write a Migration",
               "id": "migration-generators",
               "tags": ["create-your-own-plugin"],
@@ -2089,6 +2100,16 @@
               "name": "repair",
               "id": "repair",
               "file": "generated/cli/repair"
+            },
+            {
+              "name": "sync",
+              "id": "sync",
+              "file": "generated/cli/sync"
+            },
+            {
+              "name": "sync:check",
+              "id": "sync-check",
+              "file": "generated/cli/sync-check"
             },
             {
               "name": "exec",

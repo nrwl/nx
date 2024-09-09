@@ -97,6 +97,22 @@ nx repair
 {% link-card title="nx repair" type="API Reference" url="/nx-api/nx/documents/repair" /%}
 {% /cards %}
 
+### sync
+
+Run all sync generators
+
+```shell
+nx sync
+nx sync:check
+```
+
+{% cards %}
+{% link-card title="nx sync" type="API Reference" url="/nx-api/nx/documents/sync" /%}
+{% link-card title="nx sync:check" type="API Reference" url="/nx-api/nx/documents/sync-check" /%}
+{% link-card title="Sync Generators" type="Concept" url="/concepts/sync-generators" /%}
+{% link-card title="Register a Sync Generator" type="Recipe" url="/extending-nx/recipes/register-sync-generator" /%}
+{% /cards %}
+
 ### connect
 
 Connect an Nx workspace to Nx Cloud
