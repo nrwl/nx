@@ -1,11 +1,11 @@
 ---
 title: 'sync:check - CLI command'
-description: 'Check that all sync generators have been run'
+description: 'Check that no changes are required after running all sync generators.'
 ---
 
 # sync:check
 
-Check that all sync generators have been run
+Check that no changes are required after running all sync generators.
 
 ## Usage
 

@@ -1,8 +1,8 @@
-# Register a Sync Generator
+# Create a Sync Generator
 
-Sync generators are intended to keep applicable files in sync with your project graph before a task is run. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.
+Sync generators are generators that are used to ensure that your file system is in the correct state before a task is run or the CI process is started. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.
 
-## Create a Sync Generator
+## Create a Generator
 
 Create a sync generator the same way you would [create any generator](/extending-nx/recipes/local-generators):
 
@@ -47,14 +47,19 @@ export async function mySyncGenerator(
 export default mySyncGenerator;
 ```
 
-## Performance Considerations
+## Use the Project Graph
+
+One of the benefits of sync generators is that you can keep configuration files up to date with your project graph.
+
+## Performance and DX Considerations
 
 When writing a sync generator, it is important to remember that this generator is going to block the execution of its associated task and any tasks that depend on that task. Because of this fact, make sure to follow the following performance tips:
 
 - Make the generator idempotent. Running the generator multiple times in a row should have the same impact as running the generator a single time.
-- Only write to the file system when a file is actually changed. Avoid reformatting files that have not been actually modified.
+- Only write to the file system when a file is actually changed. Avoid reformatting files that have not been actually modified. Nx will identify the workspace as out of sync if there's any file change after the sync generator is run.
+- Make sure to provide an informative `outOfSyncMessage` so that developers know what to do to unblock their tasks.
 
-Do whatever you can to make your sync generators as fast as possible, because users will be running them over and over again without even realizing it.
+Do whatever you can to make your sync generators as fast and user-friendly as possible, because users will be running them over and over again without even realizing it.
 
 ## Register a Sync Generator
 

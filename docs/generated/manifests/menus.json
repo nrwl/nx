@@ -5140,9 +5140,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Register a Sync Generator",
-            "path": "/extending-nx/recipes/register-sync-generator",
-            "id": "register-sync-generator",
+            "name": "Create a Sync Generator",
+            "path": "/extending-nx/recipes/create-sync-generator",
+            "id": "create-sync-generator",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5247,9 +5247,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Register a Sync Generator",
-        "path": "/extending-nx/recipes/register-sync-generator",
-        "id": "register-sync-generator",
+        "name": "Create a Sync Generator",
+        "path": "/extending-nx/recipes/create-sync-generator",
+        "id": "create-sync-generator",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

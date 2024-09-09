@@ -1,11 +1,11 @@
 ---
 title: 'sync - CLI command'
-description: 'Run all sync generators'
+description: 'Sync the workspace files by running all the sync generators.'
 ---
 
 # sync
 
-Run all sync generators
+Sync the workspace files by running all the sync generators.
 
 ## Usage
 

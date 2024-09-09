@@ -339,10 +339,10 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/generators/register-sync-generator",
-      "id": "register-sync-generator",
-      "name": "Register a Sync Generator",
-      "path": "/extending-nx/recipes/register-sync-generator"
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

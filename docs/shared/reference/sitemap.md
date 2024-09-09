@@ -241,7 +241,7 @@
     - [Provide Options for Generators](/extending-nx/recipes/generator-options)
     - [Create Files](/extending-nx/recipes/creating-files)
     - [Modify Files](/extending-nx/recipes/modifying-files)
-    - [Register a Sync Generator](/extending-nx/recipes/register-sync-generator)
+    - [Create a Sync Generator](/extending-nx/recipes/create-sync-generator)
     - [Write a Migration](/extending-nx/recipes/migration-generators)
     - [Write a Simple Executor](/extending-nx/recipes/local-executors)
     - [Compose Executors](/extending-nx/recipes/compose-executors)
