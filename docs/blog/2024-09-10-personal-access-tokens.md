@@ -3,8 +3,9 @@ title: Better security with Personal Access Tokens
 slug: personal-access-tokens
 authors: ['Philip Fulcher']
 tags: [nx-cloud]
-cover_image: /blog/images/2024-09-06/personal-access-tokens-header.png
+cover_image: /blog/images/2024-09-10/personal-access-tokens-header.png
 youtubeUrl: https://youtu.be/i51LPtagb2s
+published: false
 ---
 
 Today, Nx Cloud gets a huge upgrade to managing access to your cached artifacts

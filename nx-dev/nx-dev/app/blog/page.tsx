@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
 };
 async function getBlogs() {
-  return await blogApi.getBlogs();
+  return await blogApi.getBlogs((p) => !!p.published);
 }
 
 async function getBlogTags() {

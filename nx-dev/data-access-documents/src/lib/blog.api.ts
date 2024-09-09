@@ -74,6 +74,7 @@ export class BlogApi {
         podcastIHeartUrl: frontmatter.podcastIHeartUrl,
         podcastAppleUrl: frontmatter.podcastAppleUrl,
         podcastAmazonUrl: frontmatter.podcastAmazonUrl,
+        published: frontmatter.published ?? true,
       };
       const isDevelopment = process.env.NODE_ENV === 'development';
       const shouldIncludePost = !frontmatter.draft || isDevelopment;
