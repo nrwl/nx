@@ -352,4 +352,16 @@ export const champions3: Champion[] = [
     ],
     location: 'USA',
   },
+  {
+    name: 'Ahmed Elsakaan',
+    expertise: 'Passionate about Monorepos, Web tooling, React and Typescript.',
+    imageUrl: '/images/champions/ahmed-elsakaan.webp',
+    contact: [
+      {
+        label: '@ixahmedxii',
+        link: 'https://twitter.com/ixahmedxii',
+      },
+    ],
+    location: 'London, United Kingdom',
+  },
 ];
