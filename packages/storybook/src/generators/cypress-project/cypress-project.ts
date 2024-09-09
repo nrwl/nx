@@ -77,7 +77,8 @@ export async function cypressProjectGenerator(
   const generatedCypressProjectName = getE2eProjectName(
     schema.name,
     libRoot,
-    schema.directory
+    schema.directory,
+    schema.projectNameAndRootFormat
   );
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
 
