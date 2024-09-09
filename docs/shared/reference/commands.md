@@ -5,6 +5,7 @@ The Nx CLI provides many commands. They are organized here into commands that:
 - [Modify Code](#modify-code)
 - [Run Tasks](#run-tasks)
 - [Display Information](#display-information)
+- [Integrate with Nx Cloud](#integrate-with-nx-cloud)
 
 There is also a section for separate commands that can [create a new Nx workspace](#create-commands) for you.
 
@@ -95,19 +96,6 @@ nx repair
 
 {% cards %}
 {% link-card title="nx repair" type="API Reference" url="/nx-api/nx/documents/repair" /%}
-{% /cards %}
-
-### connect
-
-Connect an Nx workspace to Nx Cloud
-
-```shell
-nx connect
-```
-
-{% cards %}
-{% link-card title="nx connect" type="API Reference" url="/nx-api/nx/documents/connect-to-nx-cloud" /%}
-{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect-to-nx-cloud" /%}
 {% /cards %}
 
 ### format
@@ -290,6 +278,47 @@ nx daemon
 {% cards %}
 {% link-card title="nx daemon" type="API Reference" url="/nx-api/nx/documents/daemon" /%}
 {% link-card title="Nx Daemon" type="Concept" url="/concepts/nx-daemon" /%}
+{% /cards %}
+
+## Integrate with Nx Cloud
+
+### connect
+
+Connect an Nx workspace to Nx Cloud
+
+```shell
+nx connect
+```
+
+{% cards %}
+{% link-card title="nx connect" type="API Reference" url="/nx-api/nx/documents/connect-to-nx-cloud" /%}
+{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect-to-nx-cloud" /%}
+{% /cards %}
+
+### login
+
+Connect an Nx workspace to Nx Cloud
+
+```shell
+nx login
+```
+
+{% cards %}
+{% link-card title="nx login" type="API Reference" url="/nx-api/nx/documents/login" /%}
+{% link-card title="Personal Access Tokens" type="Recipe" url="/ci/recipes/security/personal-access-tokens" /%}
+{% /cards %}
+
+### logout
+
+Connect an Nx workspace to Nx Cloud
+
+```shell
+nx logout
+```
+
+{% cards %}
+{% link-card title="nx logout" type="API Reference" url="/nx-api/nx/documents/logout" /%}
+{% link-card title="Personal Access Tokens" type="Recipe" url="/ci/recipes/security/personal-access-tokens" /%}
 {% /cards %}
 
 ## Create Commands
