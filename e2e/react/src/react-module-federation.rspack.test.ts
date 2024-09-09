@@ -25,7 +25,7 @@ describe('React Rspack Module Federation', () => {
       newProject({ packages: ['@nx/react'] });
     });
 
-    // afterAll(() => cleanupProject());
+    afterAll(() => cleanupProject());
 
     it.each`
       js
@@ -922,7 +922,7 @@ describe('React Rspack Module Federation', () => {
     });
 
     afterAll(() => cleanupProject());
-    it('ttt should load remote dynamic module', async () => {
+    it('should load remote dynamic module', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
       const remotePort = 4205;

@@ -223,6 +223,16 @@ export function startProxies(
       target: mappedLocationOfHost,
       changeOrigin: true,
       secure: sslCert ? false : undefined,
+      pathRewrite: (path) => {
+        let pathRewrite = path;
+        for (const app of staticRemotesConfig.remotes) {
+          if (path.endsWith(app)) {
+            pathRewrite = '/';
+            break;
+          }
+        }
+        return pathRewrite;
+      },
     })
   );
   const proxyServer = (sslCert ? https : http)
