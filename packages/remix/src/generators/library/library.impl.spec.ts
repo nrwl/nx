@@ -7,10 +7,7 @@ import applicationGenerator from '../application/application.impl';
 import libraryGenerator from './library.impl';
 
 describe('Remix Library Generator', () => {
-  describe.each([
-    ['derived', 'libs/test'],
-    ['as-provided', 'test'],
-  ])(
+  describe.each([['as-provided', 'test']])(
     '-projectNameAndRootFormat=%s',
     (projectNameAndRootFormat: ProjectNameAndRootFormat, libDir) => {
       it('should generate a library correctly', async () => {

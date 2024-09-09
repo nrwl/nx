@@ -1,7 +1,8 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { joinPathFragments, readJson, readNxJson, type Tree } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
+
+import * as devkitExports from 'nx/src/devkit-exports';
 import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
@@ -11,7 +12,7 @@ import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 describe('Remix Application', () => {
   beforeEach(() => {
     jest
-      .spyOn(devkit, 'getPackageManagerCommand')
+      .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
   });
 
@@ -167,10 +168,7 @@ describe('Remix Application', () => {
     });
   });
 
-  describe.each([
-    ['derived', 'apps/test', 'apps/test-e2e'],
-    ['as-provided', 'test', 'test-e2e'],
-  ])(
+  describe.each([['as-provided', 'test', 'test-e2e']])(
     'Integrated Repo --projectNameAndRootFormat=%s',
     (projectNameAndRootFormat: ProjectNameAndRootFormat, appDir, e2eDir) => {
       it('should create the application correctly', async () => {

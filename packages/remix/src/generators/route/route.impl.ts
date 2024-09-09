@@ -39,17 +39,11 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
 
   const routeFilePath = await resolveRemixRouteFile(
     tree,
-    options.nameAndDirectoryFormat === 'as-provided'
-      ? joinPathFragments(directory, name)
-      : options.path,
-    options.nameAndDirectoryFormat === 'as-provided' ? undefined : projectName,
-    '.tsx'
+    joinPathFragments(directory, name),
+    undefined
   );
 
-  const nameToUseForComponent =
-    options.nameAndDirectoryFormat === 'as-provided'
-      ? name.replace('.tsx', '')
-      : options.path.replace(/^\//, '').replace(/\/$/, '').replace('.tsx', '');
+  const nameToUseForComponent = name.replace('.tsx', '');
 
   const { className: componentName } = names(
     nameToUseForComponent === '.' || nameToUseForComponent === ''
@@ -104,7 +98,6 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
 
   if (options.style === 'css') {
     await StyleGenerator(tree, {
-      project: projectName,
       path: routeFilePath,
       nameAndDirectoryFormat: 'as-provided',
     });
