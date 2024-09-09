@@ -20,8 +20,6 @@ import * as posix from 'node:path/posix';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
-export interface AngularPluginOptions {}
-
 type AngularProjects = Record<
   string,
   Pick<ProjectConfiguration, 'projectType' | 'sourceRoot' | 'targets'>
@@ -53,9 +51,15 @@ const knownExecutors = {
   ]),
   devServer: new Set(['@angular-devkit/build-angular:dev-server']),
   extractI18n: new Set(['@angular-devkit/build-angular:extract-i18n']),
-  prerender: new Set(['@angular-devkit/build-angular:prerender']),
+  prerender: new Set([
+    '@angular-devkit/build-angular:prerender',
+    '@nguniversal/builders:prerender',
+  ]),
   server: new Set(['@angular-devkit/build-angular:server']),
-  serveSsr: new Set(['@angular-devkit/build-angular:ssr-dev-server']),
+  serveSsr: new Set([
+    '@angular-devkit/build-angular:ssr-dev-server',
+    '@nguniversal/builders:ssr-dev-server',
+  ]),
   test: new Set(['@angular-devkit/build-angular:karma']),
 };
 
@@ -72,7 +76,7 @@ function writeProjectsToCache(
   writeJsonFile(cachePath, results);
 }
 
-export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
+export const createNodesV2: CreateNodesV2<{}> = [
   '**/angular.json',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -97,7 +101,7 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
 
 async function createNodesInternal(
   configFilePath: string,
-  options: AngularPluginOptions,
+  options: {} | undefined,
   context: CreateNodesContextV2,
   projectsCache: Record<string, AngularProjects>
 ): Promise<CreateNodesResult> {
@@ -121,7 +125,6 @@ async function createNodesInternal(
   projectsCache[hash] ??= await buildAngularProjects(
     configFilePath,
     angularWorkspaceRoot,
-    options,
     context
   );
 
@@ -131,7 +134,6 @@ async function createNodesInternal(
 async function buildAngularProjects(
   configFilePath: string,
   angularWorkspaceRoot: string,
-  options: AngularPluginOptions,
   context: CreateNodesContextV2
 ): Promise<AngularProjects> {
   const projects: Record<string, AngularProjects[string] & { root: string }> =
@@ -444,7 +446,11 @@ function updatePrerenderTarget(
   // it must exist since we collected it when processing it
   const target = projects[projectName].targets[targetName];
 
-  target.metadata.help.example.options = { discoverRoutes: false };
+  target.metadata.help.example.options =
+    getAngularJsonProjectTargets(angularJson.projects[projectName])[targetName]
+      .builder === '@angular-devkit/build-angular:prerender'
+      ? { discoverRoutes: false }
+      : { guessRoutes: false };
 
   const { inputs, outputs } = getBrowserAndServerTargetInputsAndOutputs(
     projectName,
