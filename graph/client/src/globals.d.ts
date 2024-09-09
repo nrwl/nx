@@ -20,6 +20,11 @@ export declare global {
     appConfig: AppConfig;
     useXstateInspect: boolean;
     externalApi?: ExternalApi;
+
+    // using bundled graph components directly from outside the graph app
+    __NX_RENDER_GRAPH__?: boolean;
+    renderPDV?: (data: any) => void;
+    renderError?: (data: any) => void;
   }
 }
 declare module 'cytoscape' {
