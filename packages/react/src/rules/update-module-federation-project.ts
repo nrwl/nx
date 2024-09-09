@@ -20,7 +20,7 @@ export function updateModuleFederationProject(
     dynamic?: boolean;
     bundler?: 'rspack' | 'webpack';
   }
-): GeneratorCallback {
+) {
   const projectConfig = readProjectConfiguration(host, options.projectName);
 
   if (options.bundler === 'rspack') {
@@ -101,25 +101,25 @@ export function updateModuleFederationProject(
   projectConfig.targets.serve.options.port = options.devServerPort;
 
   // `serve-static` for remotes that don't need to be in development mode
+  const serveStaticExecutor =
+    options.bundler === 'rspack'
+      ? '@nx/rspack:module-federation-static-server'
+      : '@nx/react:module-federation-static-server';
   projectConfig.targets['serve-static'] = {
-    executor: '@nx/web:file-server',
+    executor: serveStaticExecutor,
     defaultConfiguration: 'production',
     options: {
-      buildTarget: `${options.projectName}:build`,
-      watch: false,
-      port: options.devServerPort,
+      serveTarget: `${options.projectName}:serve`,
     },
     configurations: {
       development: {
-        buildTarget: `${options.projectName}:build:development`,
+        serveTarget: `${options.projectName}:serve:development`,
       },
       production: {
-        buildTarget: `${options.projectName}:build:production`,
+        serveTarget: `${options.projectName}:serve:production`,
       },
     },
   };
 
   updateProjectConfiguration(host, options.projectName, projectConfig);
-
-  return addDependenciesToPackageJson(host, {}, { '@nx/web': nxVersion });
 }
