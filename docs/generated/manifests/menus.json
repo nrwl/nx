@@ -1220,6 +1220,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Import an Existing Project into an Nx Workspace",
+                "path": "/recipes/adopting-nx/import-project",
+                "id": "import-project",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Preserving Git Histories",
                 "path": "/recipes/adopting-nx/preserving-git-histories",
                 "id": "preserving-git-histories",
@@ -2338,6 +2346,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Import an Existing Project into an Nx Workspace",
+            "path": "/recipes/adopting-nx/import-project",
+            "id": "import-project",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Preserving Git Histories",
             "path": "/recipes/adopting-nx/preserving-git-histories",
             "id": "preserving-git-histories",
@@ -2376,6 +2392,14 @@
         "name": "Add to any Project",
         "path": "/recipes/adopting-nx/adding-to-existing-project",
         "id": "adding-to-existing-project",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Import an Existing Project into an Nx Workspace",
+        "path": "/recipes/adopting-nx/import-project",
+        "id": "import-project",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

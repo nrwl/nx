@@ -461,6 +461,11 @@
                   "file": "shared/migration/adding-to-existing-project"
                 },
                 {
+                  "name": "Import an Existing Project into an Nx Workspace",
+                  "id": "import-project",
+                  "file": "shared/migration/import-project"
+                },
+                {
                   "name": "Preserving Git Histories",
                   "id": "preserving-git-histories",
                   "file": "shared/migration/preserving-git-histories"
