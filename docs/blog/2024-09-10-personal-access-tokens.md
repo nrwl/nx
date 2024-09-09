@@ -54,7 +54,7 @@ read from the cache, but limit read/write access to core contributors.
 
 ## Controlling default access
 
-![Personal access token settings in Nx Cloud workspace](/blog/images/2024-09-06/workspace-settings.avif)
+![Personal access token settings in Nx Cloud workspace](/blog/images/2024-09-10/workspace-settings.avif)
 
 By default, a workspace that opts in to personal access tokens will allow anonymous users (users without a personal
 access token defined) read-only access. This can be changed to disallow access to the cache for anonymous users

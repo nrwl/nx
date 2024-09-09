@@ -36,7 +36,7 @@ export async function generateMetadata(
 }
 
 export async function generateStaticParams() {
-  return (await blogApi.getBlogs((p) => !!p.published)).map((post) => {
+  return (await blogApi.getBlogs()).map((post) => {
     return { slug: post.slug };
   });
 }
