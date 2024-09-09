@@ -6,11 +6,11 @@ import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
-import { Pill } from '../pill';
-import { TargetTechnologies } from '../target-technologies/target-technologies';
+import { TagList } from '../tag-list/tag-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
+import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
+import { TargetTechnologies } from '../target-technologies/target-technologies';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -97,21 +97,14 @@ export const ProjectDetails = ({
           )}
         </div>
         <div className="flex flex-wrap justify-between py-2">
-          <div>
+          <div className="min-w-0">
             {projectData.metadata?.description ? (
               <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
                 {projectData.metadata?.description}
               </p>
             ) : null}
             {projectData.tags && projectData.tags.length ? (
-              <p>
-                <span className="font-medium">Tags:</span>
-                {projectData.tags?.map((tag) => (
-                  <span className="ml-2 font-mono lowercase">
-                    <Pill text={tag} />
-                  </span>
-                ))}
-              </p>
+              <TagList tags={projectData.tags} />
             ) : null}
             {projectData.root ? (
               <p>
