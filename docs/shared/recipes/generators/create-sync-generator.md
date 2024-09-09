@@ -49,7 +49,28 @@ export default mySyncGenerator;
 
 ## Use the Project Graph
 
-One of the benefits of sync generators is that you can keep configuration files up to date with your project graph.
+One of the benefits of sync generators is that you can keep configuration files up to date with your project graph. To read from the project graph, use the [`createProjectGraphAsync`](/nx-api/devkit/documents/createProjectGraphAsync) from the `@nx/devkit` package. It could look something like this:
+
+```ts {% fileName="tools/my-plugin/src/generators/my-sync-generator/my-sync-generator.ts" %}
+import { Tree, createProjectGraphAsync } from '@nx/devkit';
+import { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
+
+export async function mySyncGenerator(
+  tree: Tree
+): Promise<SyncGeneratorResult> {
+  const projectGraph = await createProjectGraphAsync();
+  const numberOfProjects = Object.values(projectGraph.nodes).length;
+  tree.write(
+    '/project-count.txt',
+    `There are ${numberOfProjects} projects in the repository.`
+  );
+  return {
+    outOfSyncMessage: 'The project-count.txt file needs to be created',
+  };
+}
+
+export default mySyncGenerator;
+```
 
 ## Performance and DX Considerations
 
