@@ -3,7 +3,7 @@ title: Better security with Personal Access Tokens
 slug: personal-access-tokens
 authors: ['Philip Fulcher']
 tags: [nx-cloud]
-cover_image: /blog/images/2024-09-10/personal-access-tokens-header.png
+cover_image: /blog/images/2024-09-10/personal-access-tokens-header.avif
 youtubeUrl: https://youtu.be/i51LPtagb2s
 published: false
 ---
