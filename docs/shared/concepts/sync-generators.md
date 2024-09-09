@@ -1,6 +1,6 @@
 # Sync Generators
 
-Sync generators allow you to update code before a task is run or before code is sent to CI. Sync generators are designed to perform maintenance work that is required for a particular task or for CI.
+In Nx 19.7, you can use sync generators to update code before a task is run or before code is sent to CI. Sync generators are designed to perform maintenance work that is required for a particular task or for CI.
 
 Sync Generator Examples:
 
