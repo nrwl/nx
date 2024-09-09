@@ -4,6 +4,7 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
+import { NxCloudIcon } from '@nx/nx-dev/ui-icons';
 
 export function HowCanWeHelp(): JSX.Element {
   return (
@@ -22,7 +23,7 @@ export function HowCanWeHelp(): JSX.Element {
                 className="h-5 w-5 shrink-0"
               />
               <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
-                Sales
+                Talk to Sales
               </h3>
             </div>
             <p className="mt-4">
@@ -46,12 +47,12 @@ export function HowCanWeHelp(): JSX.Element {
                 className="h-5 w-5 shrink-0"
               />
               <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
-                Engineers
+                Learn more about Nx Cloud
               </h3>
             </div>
             <p className="mt-4">
               Contact our developer productivity engineers for demos, onboarding
-              assistance, and technical product questions.
+              and product questions.
             </p>
             <ButtonLink
               href="/contact/engineering"
@@ -63,7 +64,7 @@ export function HowCanWeHelp(): JSX.Element {
               Reach out to engineers
             </ButtonLink>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 md:col-span-2 dark:border-slate-800/40 dark:bg-slate-800/60">
+          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
             <div className="flex items-center gap-2">
               <ChatBubbleLeftRightIcon
                 aria-hidden="true"
@@ -88,6 +89,31 @@ export function HowCanWeHelp(): JSX.Element {
               className="mt-6"
             >
               <span>Ask questions on Discord</span>
+              <ArrowUpRightIcon aria-hidden="true" className="h-3 w-3" />
+            </ButtonLink>
+          </section>
+          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
+            <div className="flex items-center gap-2">
+              <NxCloudIcon aria-hidden="true" className="h-5 w-5 shrink-0" />
+              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">
+                Nx Cloud support
+              </h3>
+            </div>
+            <p className="mt-4">
+              If you have questions about using Nx Cloud, need help connecting
+              your repository, or have questions about billing, log in to your
+              account and contact support.
+            </p>
+            <ButtonLink
+              href="https://cloud.nx.app"
+              variant="secondary"
+              size="default"
+              title="Sign in to Nx Cloud"
+              target="_blank"
+              rel="nofollow"
+              className="mt-6"
+            >
+              <span>Sign in to Nx Cloud</span>
               <ArrowUpRightIcon aria-hidden="true" className="h-3 w-3" />
             </ButtonLink>
           </section>

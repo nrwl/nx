@@ -2,6 +2,9 @@ import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getCloudUrl } from './get-cloud-options';
 
+/**
+ * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
+ */
 export async function createNxCloudOnboardingURL(
   onboardingSource: string,
   accessToken?: string,
@@ -130,7 +133,7 @@ async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
     }
     return !!response.data.isGithubIntegrationEnabled;
   } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       logger.warn(`Failed to access system features. GitHub integration assumed to be disabled. 
     ${e}`);
     }

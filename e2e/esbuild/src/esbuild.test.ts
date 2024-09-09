@@ -241,16 +241,16 @@ describe('EsBuild Plugin', () => {
     updateFile(
       `libs/${myPkg}/src/index.ts`,
       `
-      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
-      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
+      console.log(process.env['NX_SOME_SECRET']);
+      console.log(process.env['NX_SOME_TOKEN']);
       console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
     runCLI(`build ${myPkg} --platform=browser`, {
       env: {
-        NX_CLOUD_ENCRYPTION_KEY: 'secret',
-        NX_CLOUD_ACCESS_TOKEN: 'secret',
+        NX_SOME_SECRET: 'secret',
+        NX_SOME_TOKEN: 'secret',
         NX_PUBLIC_TEST: 'foobar',
       },
     });
@@ -282,15 +282,13 @@ describe('EsBuild Plugin', () => {
       `
     );
 
-    runCLI(
-      `build ${declarationPkg} --declaration=true --declarationRootDir='libs/${declarationPkg}/src'`
-    );
+    runCLI(`build ${declarationPkg} --declaration=true`);
 
     checkFilesExist(
       `dist/libs/${declarationPkg}/index.cjs`,
-      `dist/libs/${declarationPkg}/index.d.ts`,
-      `dist/libs/${declarationPkg}/lib/${declarationPkg}.d.ts`,
-      `dist/libs/${declarationPkg}/lib/testDir/sub.d.ts`
+      `dist/libs/${declarationPkg}/src/index.d.ts`,
+      `dist/libs/${declarationPkg}/src/lib/${declarationPkg}.d.ts`,
+      `dist/libs/${declarationPkg}/src/lib/testDir/sub.d.ts`
     );
 
     expect(runCommand(`node dist/libs/${declarationPkg}`)).toMatch(

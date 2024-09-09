@@ -34,6 +34,7 @@ export async function withModuleFederation(
     }
 
     config.optimization = {
+      ...(config.optimization ?? {}),
       runtimeChunk: false,
     };
 
@@ -81,6 +82,7 @@ export async function withModuleFederation(
                 ),
               ]
             : configOverride?.runtimePlugins,
+        virtualRuntimeEntry: true,
       }),
       sharedLibraries.getReplacementPlugin()
     );

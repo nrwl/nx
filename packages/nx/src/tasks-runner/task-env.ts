@@ -124,9 +124,9 @@ function getNxEnvVariablesForTask(
 
 /**
  * This function loads a .env file and expands the variables in it.
- * It is going to override existing environmentVariables.
- * @param filename
- * @param environmentVariables
+ * @param filename the .env file to load
+ * @param environmentVariables the object to load environment variables into
+ * @param override whether to override existing environment variables
  */
 export function loadAndExpandDotEnvFile(
   filename: string,

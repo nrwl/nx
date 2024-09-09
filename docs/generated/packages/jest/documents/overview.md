@@ -70,7 +70,7 @@ within the same workspace. In this case, you can configure the `@nx/jest/plugin`
 ### Splitting E2E Tests
 
 If Jest is used to run E2E tests, you can enable [splitting the tasks](/ci/features/split-e2e-tasks) by file to get
-improved caching, distribution, and retrying flaky tests. Enable this, by providing a `ciTargetName`. This will create a
+improved caching, distribution, and retrying flaky tests. Enable this Atomizer feature by providing a `ciTargetName`. This will create a
 target with that name which can be used in CI to run the tests for each file in a distributed fashion.
 
 ```json {% fileName="nx.json" %}
@@ -159,6 +159,16 @@ To run Jest tests via nx use
 
 ```shell
 nx test frontend
+```
+
+### Testing Specific Files
+
+Using a single positional argument or the `--testFile` flag will run all test files matching the regex. For more info check out the [Jest documentation](https://jestjs.io/docs/cli#jest-regexfortestfiles).
+
+```shell
+nx test frontend HomePage.tsx
+# or
+nx test frontend --testFile HomePage.tsx
 ```
 
 ### Watching for Changes
@@ -274,9 +284,10 @@ const cleanupRegisteredPaths = registerTsProject('./tsconfig.base.json');
 import { yourFancyFunction } from '@some-org/my-util-library';
 export default async function () {
   yourFancyFunction();
+
+  // make sure to run the clean up!
+  cleanupRegisteredPaths();
 }
-// make sure to run the clean up!
-cleanupRegisteredPaths();
 ```
 
 If you're using `@swc/jest` and a global setup/teardown file, you have to set the `noInterop: false` and use dynamic imports within the setup function:

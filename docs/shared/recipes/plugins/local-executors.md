@@ -1,4 +1,4 @@
-# Local Executors
+# Write a Simple Executor
 
 Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to provide guidance in the terminal with `--help` and when invoking with [Nx Console](/getting-started/editor-setup)
 
@@ -6,7 +6,7 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 ## Creating an executor
 
-If you don't already have a local plugin, use Nx to generate one:
+If you don't already have a plugin, use Nx to generate one:
 
 ```shell {% skipRescope=true %}
 nx add @nx/plugin

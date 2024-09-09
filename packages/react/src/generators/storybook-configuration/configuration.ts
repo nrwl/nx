@@ -1,14 +1,17 @@
 import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
+  type GeneratorCallback,
   joinPathFragments,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, reactViteVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   // TODO(katerina): Nx 19 -> remove Cypress
@@ -48,6 +51,7 @@ export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
+  const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -69,6 +73,16 @@ export async function storybookConfigurationGeneratorInternal(
     uiFramework = '@storybook/react-webpack5';
   }
 
+  if (uiFramework === '@storybook/react-vite') {
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { '@vitejs/plugin-react': reactViteVersion }
+      )
+    );
+  }
+
   const installTask = await configurationGenerator(host, {
     project: schema.project,
     configureCypress: schema.configureCypress,
@@ -83,13 +97,15 @@ export async function storybookConfigurationGeneratorInternal(
     addPlugin: schema.addPlugin,
   });
 
+  tasks.push(installTask);
+
   if (schema.generateStories) {
     await generateStories(host, schema);
   }
 
   await formatFiles(host);
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default storybookConfigurationGenerator;

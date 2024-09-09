@@ -44,9 +44,6 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
-      e2ePort: 4200,
-      e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -81,11 +78,8 @@ describe('Normalize Options', () => {
       bundler: 'vite',
       linter: Linter.None,
       rootProject: false,
-      e2eProjectName: 'my-app-e2e',
+      e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
-      e2ePort: 4200,
-      e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -124,9 +118,6 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
-      e2ePort: 4200,
-      e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -161,11 +152,8 @@ describe('Normalize Options', () => {
       bundler: 'vite',
       linter: Linter.None,
       rootProject: false,
-      e2eProjectName: 'directory/my-app-e2e',
+      e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
-      e2ePort: 4200,
-      e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -203,9 +191,6 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
-      e2ePort: 4200,
-      e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'serve',
     });
   });
 });

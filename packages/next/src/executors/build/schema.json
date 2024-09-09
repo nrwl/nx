@@ -58,6 +58,14 @@
       "default": false,
       "x-priority": "internal"
     },
+    "skipOverrides": {
+      "type": "boolean",
+      "description": "Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+    },
+    "skipPackageManager": {
+      "type": "boolean",
+      "description": "Do not add a `packageManager` entry to the generated package.json file."
+    },
     "debug": {
       "type": "boolean",
       "description": "Enable Next.js debug build logging"

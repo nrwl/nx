@@ -48,6 +48,15 @@ pnpm add -D lit http-server
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+nx add @nx/node
+bun add -D lit http-server
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Create an Application

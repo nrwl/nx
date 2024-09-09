@@ -3,8 +3,8 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
-  appFileName: string; // the file name of app to be tested
-  appClassName: string; // the class name of app to be tested
+  appFileName: string; // the file name of app to be tested in kebab case
+  appClassName: string; // the class name of app to be tested in pascal case
   appExpoName: string; // the expo name of app to be tested in class case
   appRoot: string; // the root path of e2e project. e.g. apps/app-directory/app
   e2eProjectName: string; // the name of e2e project
@@ -32,10 +32,7 @@ export async function normalizeOptions(
   const { fileName: appFileName, className: appClassName } = names(
     options.appName || options.appProject
   );
-  const { root: appRoot } = readProjectConfiguration(
-    host,
-    names(options.appProject).fileName
-  );
+  const { root: appRoot } = readProjectConfiguration(host, options.appProject);
 
   return {
     ...options,

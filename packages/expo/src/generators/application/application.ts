@@ -43,6 +43,7 @@ export async function expoApplicationGeneratorInternal(
     ...schema,
     skipFormat: true,
   });
+
   tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
@@ -51,7 +52,7 @@ export async function expoApplicationGeneratorInternal(
   }
   initRootBabelConfig(host);
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   const lintTask = await addLinting(host, {

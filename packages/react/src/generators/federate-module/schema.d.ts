@@ -1,3 +1,5 @@
+import { Linter, LinterType } from '@nx/eslint';
+
 export interface Schema {
   name: string;
   path: string;
@@ -6,8 +8,9 @@ export interface Schema {
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   host?: string;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   skipFormat?: boolean;
   style?: SupportedStyles;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
+  bundler?: 'rspack' | 'webpack';
 }

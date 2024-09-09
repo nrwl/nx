@@ -1,5 +1,11 @@
 const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
 module.exports = withModuleFederation({
     ...config,
     /*
@@ -12,4 +18,4 @@ module.exports = withModuleFederation({
      *   ['app2', 'https://app2.example.com'],
      * ]
      */
-});
+}, { dts: false });

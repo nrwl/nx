@@ -1,6 +1,7 @@
 import {
   createNodesFromFiles,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -56,6 +57,8 @@ interface NormalizedPluginOptions {
 }
 
 type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
+
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(cachePath: string): Record<string, TscProjectResult> {
   return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
@@ -228,6 +231,17 @@ function buildTscTargets(
           context.workspaceRoot,
           projectRoot
         ),
+        syncGenerators: ['@nx/js:typescript-sync'],
+        metadata: {
+          technologies: ['typescript'],
+          description: 'Runs type-checking for the project.',
+          help: {
+            command: `${pmc.exec} tsc --build --help`,
+            example: {
+              args: ['--force'],
+            },
+          },
+        },
       };
     }
   }
@@ -261,6 +275,17 @@ function buildTscTargets(
         context.workspaceRoot,
         projectRoot
       ),
+      syncGenerators: ['@nx/js:typescript-sync'],
+      metadata: {
+        technologies: ['typescript'],
+        description: 'Builds the project with `tsc`.',
+        help: {
+          command: `${pmc.exec} tsc --build --help`,
+          example: {
+            args: ['--force'],
+          },
+        },
+      },
     };
   }
 

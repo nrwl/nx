@@ -23,6 +23,9 @@
       "{projectRoot}/**/Cargo.*",
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
+      },
+      {
+        "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
       }
     ],
     "e2eInputs": [
@@ -133,6 +136,11 @@
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
+    "e2e-macos-local": {
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"],
+      "parallelism": false
+    },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
@@ -216,12 +224,12 @@
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
       "options": {
-        "targetName": "e2e-local",
+        "targetName": "e2e-macos-local",
         "ciTargetName": "e2e-macos-ci"
       }
     }
   ],
-  "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
+  "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",

@@ -147,7 +147,7 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(host);
   }
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   if (options.style === 'tailwind') {
@@ -211,7 +211,13 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       main: joinPathFragments(
         options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`)
+        maybeJs(
+          {
+            js: options.js,
+            useJsx: true,
+          },
+          `src/main.tsx`
+        )
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       target: 'web',

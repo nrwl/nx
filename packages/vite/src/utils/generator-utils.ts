@@ -14,7 +14,7 @@ import { VitePreviewServerExecutorOptions } from '../executors/preview-server/sc
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -204,6 +204,7 @@ export function addPreviewTarget(
 
   // Adds a preview target.
   project.targets.preview = {
+    dependsOn: ['build'],
     executor: '@nx/vite:preview-server',
     defaultConfiguration: 'development',
     options: previewOptions,
@@ -416,8 +417,8 @@ export function createOrEditViteConfig(
   let viteConfigContent = '';
 
   const plugins = options.plugins
-    ? [...options.plugins, `nxViteTsPaths()`]
-    : [`nxViteTsPaths()`];
+    ? [...options.plugins, `nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`]
+    : [`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`];
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
@@ -514,6 +515,7 @@ export function createOrEditViteConfig(
       import { defineConfig } from 'vite';
       ${imports.join(';\n')}${imports.length ? ';' : ''}
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
       
       export default defineConfig({
         root: __dirname,

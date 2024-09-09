@@ -33,9 +33,13 @@ import { NxRemixGeneratorSchema } from './schema';
 import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -93,7 +97,7 @@ export async function remixApplicationGeneratorInternal(
               cwd: options.projectRoot,
             },
           },
-          ['static-serve']: {
+          ['serve-static']: {
             dependsOn: ['build'],
             command: `remix-serve build/index.js`,
             options: {
@@ -112,6 +116,15 @@ export async function remixApplicationGeneratorInternal(
 
   const installTask = updateDependencies(tree);
   tasks.push(installTask);
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    tree,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
   const vars = {
     ...options,
@@ -132,6 +145,13 @@ export async function remixApplicationGeneratorInternal(
     joinPathFragments(__dirname, 'files/common'),
     options.projectRoot,
     vars
+  );
+
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
+    options.projectRoot,
+    { ...vars, connectCloudUrl }
   );
 
   if (options.rootProject) {

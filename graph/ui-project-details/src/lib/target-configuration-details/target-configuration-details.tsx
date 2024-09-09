@@ -1,22 +1,22 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { JsonCodeBlock } from '@nx/graph/ui-code-block';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { FadingCollapsible } from './fading-collapsible';
-import { TargetConfigurationProperty } from './target-configuration-property';
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { TooltipTriggerText } from './tooltip-trigger-text';
-import { Pill } from '../pill';
-import { TargetConfigurationDetailsHeader } from '../target-configuration-details-header/target-configuration-details-header';
+import { JsonCodeBlock } from '@nx/graph-internal/ui-code-block';
 import { ExpandedTargetsContext } from '@nx/graph/shared';
-import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
+import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Pill } from '../pill';
+import { ShowOptionsHelp } from '../show-all-options/show-options-help';
+import { TargetConfigurationDetailsHeader } from '../target-configuration-details-header/target-configuration-details-header';
 import { TargetExecutor } from '../target-executor/target-executor';
 import { TargetExecutorTitle } from '../target-executor/target-executor-title';
-import { TargetSourceInfo } from '../target-source-info/target-source-info';
 import { getTargetExecutorSourceMapKey } from '../target-source-info/get-target-executor-source-map-key';
-import { ShowOptionsHelp } from '../show-all-options/show-options-help';
+import { TargetSourceInfo } from '../target-source-info/target-source-info';
+import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { FadingCollapsible } from './fading-collapsible';
+import { TargetConfigurationProperty } from './target-configuration-property';
+import { TooltipTriggerText } from './tooltip-trigger-text';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -103,6 +103,25 @@ export default function TargetConfigurationDetails({
       {/* body */}
       {!collapsed && (
         <div className="p-4 text-base">
+          {targetConfiguration.metadata?.description && (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <span className="font-medium">Description</span>
+                <span className="mb-1 ml-2 hidden group-hover:inline">
+                  <CopyToClipboardButton
+                    text={`"metadata": ${JSON.stringify({
+                      description: targetConfiguration.metadata?.description,
+                    })}`}
+                    tooltipText="Copy Description"
+                  />
+                </span>
+              </h4>
+              <p className="pl-5">
+                {targetConfiguration.metadata?.description}
+              </p>
+            </div>
+          )}
+
           <div className="group mb-4">
             <h4 className="mb-4">
               <TargetExecutorTitle {...displayHeader} />

@@ -1,7 +1,7 @@
-import { ExecutorContext, readCachedProjectGraph } from '@nx/devkit';
-import { NxWebpackExecutionContext } from '../../utils/config';
-import { NxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
-import { Configuration } from 'webpack';
+import { type ExecutorContext, readCachedProjectGraph } from '@nx/devkit';
+import type { NxWebpackExecutionContext } from '../../utils/config';
+import type { NxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
+import type { Compiler, Configuration } from 'webpack';
 import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options';
 
 /**
@@ -57,12 +57,24 @@ export async function useLegacyNxPlugin(
   };
 
   const configuration = process.env.NX_TASK_TARGET_CONFIGURATION;
-  return async (config: Configuration) => {
-    const ctx: NxWebpackExecutionContext = {
-      context,
-      options: options as NxWebpackExecutionContext['options'],
-      configuration,
-    };
-    return await fn(config, ctx);
+  const ctx: NxWebpackExecutionContext = {
+    context,
+    options: options as NxWebpackExecutionContext['options'],
+    configuration,
+  };
+  return {
+    apply(compiler: Compiler) {
+      compiler.hooks.beforeCompile.tapPromise('NxLegacyAsyncPlugin', () => {
+        return new Promise<void>((resolve) => {
+          fn(compiler.options as Configuration, ctx).then((updated) => {
+            // Merge options back shallowly since it's a fully functional configuration.
+            // Most likely, the user modified the config in place, but this guarantees that updates are applied if users did something like:
+            // `return { ...config, plugins: [...config.plugins, new MyPlugin()] }`
+            Object.assign(compiler.options, updated);
+            resolve();
+          });
+        });
+      });
+    },
   };
 }

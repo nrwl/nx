@@ -63,6 +63,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs type-checking for the project.",
+                  "help": {
+                    "command": "npx tsc --build --help",
+                    "example": {
+                      "args": [
+                        "--force",
+                      ],
+                    },
+                  },
+                  "technologies": [
+                    "typescript",
+                  ],
+                },
                 "options": {
                   "cwd": ".",
                 },
@@ -80,6 +94,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "{projectRoot}/**/*.d.cts.map",
                   "{projectRoot}/**/*.d.mts.map",
                   "{projectRoot}/tsconfig.tsbuildinfo",
+                ],
+                "syncGenerators": [
+                  "@nx/js:typescript-sync",
                 ],
               },
             },
@@ -133,10 +150,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -171,10 +205,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -212,10 +263,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -296,10 +364,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -339,10 +424,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -384,10 +486,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -429,10 +548,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -482,10 +618,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -560,10 +713,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -586,10 +756,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib/nested-project",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -812,6 +999,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -829,6 +1030,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -870,6 +1074,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -879,6 +1097,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/index.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -918,11 +1139,28 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
                       "{workspaceRoot}/dist/libs/my-lib",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -961,6 +1199,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -978,6 +1230,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1055,6 +1310,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1066,6 +1335,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1088,11 +1360,28 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib/nested-project",
                     },
                     "outputs": [
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/nested-project",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1136,6 +1425,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1145,6 +1448,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1185,6 +1491,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1202,6 +1522,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1347,10 +1670,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1392,10 +1732,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1441,10 +1798,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1490,10 +1864,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1540,10 +1931,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1598,10 +2006,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1661,10 +2086,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1884,6 +2326,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1901,6 +2357,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1947,6 +2406,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1956,6 +2429,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/index.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2000,11 +2476,28 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
                       "{workspaceRoot}/dist/libs/my-lib",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2048,6 +2541,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2065,6 +2572,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2116,6 +2626,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2126,6 +2650,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/libs/my-lib/other",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2174,6 +2701,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2183,6 +2724,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2228,6 +2772,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2245,6 +2803,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },

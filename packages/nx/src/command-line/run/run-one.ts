@@ -55,9 +55,6 @@ export async function runOne(
     nxJson
   );
 
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
   if (nxArgs.help) {
     await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);

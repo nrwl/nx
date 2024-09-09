@@ -22,7 +22,6 @@ export default async function update(tree: Tree) {
           executor: '@nx/react-native:upgrade',
           options: {},
         };
-        await runCliUpgrade(workspaceRoot, config.root);
       }
       if (
         config.targets?.['pod-install']?.executor ===

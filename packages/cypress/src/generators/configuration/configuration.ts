@@ -21,7 +21,7 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { Linter } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
@@ -40,13 +40,14 @@ export interface CypressE2EConfigSchema {
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   port?: number | 'cypress-auto';
   jsx?: boolean;
   rootProject?: boolean;
 
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
+  ciBaseUrl?: string;
   addPlugin?: boolean;
 }
 
@@ -218,10 +219,12 @@ async function addFiles(
     let webServerCommands: Record<string, string>;
 
     let ciWebServerCommand: string;
+    let ciBaseUrl: string;
 
     if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
       webServerCommands = options.webServerCommands;
       ciWebServerCommand = options.ciWebServerCommand;
+      ciBaseUrl = options.ciBaseUrl;
     } else if (hasPlugin && options.devServerTarget) {
       webServerCommands = {};
 
@@ -253,6 +256,7 @@ async function addFiles(
         bundler: options.bundler === 'vite' ? 'vite' : undefined,
         webServerCommands,
         ciWebServerCommand: ciWebServerCommand,
+        ciBaseUrl,
       },
       options.baseUrl
     );

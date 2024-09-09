@@ -8,7 +8,7 @@ import {
 
 export const yargsGraphCommand: CommandModule = {
   command: 'graph',
-  describe: 'Graph dependencies within workspace',
+  describe: 'Graph dependencies within workspace.',
   aliases: ['dep-graph'],
   builder: (yargs) =>
     linkToNxDevAndExamples(
@@ -17,7 +17,7 @@ export const yargsGraphCommand: CommandModule = {
     )
       .option('affected', {
         type: 'boolean',
-        description: 'Highlight affected projects',
+        description: 'Highlight affected projects.',
       })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
@@ -42,14 +42,14 @@ export function withGraphOptions(yargs: Argv) {
     })
 
     .option('view', {
-      describe: 'Choose whether to view the projects or task graph',
+      describe: 'Choose whether to view the projects or task graph.',
       type: 'string',
       default: 'projects',
       choices: ['projects', 'tasks'],
     })
 
     .option('targets', {
-      describe: 'The target to show tasks for in the task graph',
+      describe: 'The target to show tasks for in the task graph.',
       type: 'string',
       coerce: parseCSV,
     })
@@ -68,7 +68,7 @@ export function withGraphOptions(yargs: Argv) {
     })
 
     .option('groupByFolder', {
-      describe: 'Group projects by folder in the project graph',
+      describe: 'Group projects by folder in the project graph.',
       type: 'boolean',
     })
 
@@ -83,7 +83,7 @@ export function withGraphOptions(yargs: Argv) {
     })
 
     .option('watch', {
-      describe: 'Watch for changes to project graph and update in-browser',
+      describe: 'Watch for changes to project graph and update in-browser.',
       type: 'boolean',
       default: true,
     })

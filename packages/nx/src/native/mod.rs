@@ -10,8 +10,11 @@ mod types;
 mod utils;
 mod walker;
 pub mod workspace;
+mod machine_id;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod pseudo_terminal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod watch;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod db;

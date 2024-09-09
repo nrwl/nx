@@ -17,12 +17,27 @@ describe('processGradleDependencies', () => {
     processGradleDependencies(
       depFilePath,
       new Map([
-        [':my-utils:number-utils', 'number-utils'],
-        [':my-utils:string-utils', 'string-utils'],
+        [':my-utils:number-utils', 'utilities/number-utils'],
+        [':my-utils:string-utils', 'utilities/string-utils'],
       ]),
       'app',
       'app',
-      {} as any,
+      {
+        projects: {
+          'number-utils': {
+            root: 'utilities/number-utils',
+            name: 'number-utils',
+          },
+          'string-utils': {
+            root: 'utilities/string-utils',
+            name: 'string-utils',
+          },
+          utilities: {
+            root: 'utilities',
+            name: 'utilities',
+          },
+        },
+      } as any,
       dependencies
     );
     expect(Array.from(dependencies)).toEqual([
@@ -51,13 +66,28 @@ describe('processGradleDependencies', () => {
     processGradleDependencies(
       depFilePath,
       new Map([
-        [':my-utils:number-utils', 'number-utils'],
-        [':my-utils:string-utils', 'string-utils'],
+        [':my-utils:number-utils', 'utilities/number-utils'],
+        [':my-utils:string-utils', 'utilities/string-utils'],
         [':utilities', 'utilities'],
       ]),
       'app',
       'app',
-      {} as any,
+      {
+        projects: {
+          'number-utils': {
+            root: 'utilities/number-utils',
+            name: 'number-utils',
+          },
+          'string-utils': {
+            root: 'utilities/string-utils',
+            name: 'string-utils',
+          },
+          utilities: {
+            root: 'utilities',
+            name: 'utilities',
+          },
+        },
+      } as any,
       dependencies
     );
     expect(Array.from(dependencies)).toEqual([

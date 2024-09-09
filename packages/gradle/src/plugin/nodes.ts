@@ -30,7 +30,8 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
   build: ['^build', 'classes'],
-  test: ['classes'],
+  testClasses: ['classes'],
+  test: ['testClasses'],
   classes: ['^classes'],
 };
 

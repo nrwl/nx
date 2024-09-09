@@ -1427,7 +1427,14 @@ export async function executeMigrations(
       : 1;
   });
 
+  logger.info(`Running the following migrations:`);
+  sortedMigrations.forEach((m) =>
+    logger.info(`- ${m.package}: ${m.name} (${m.description})`)
+  );
+  logger.info(`---------------------------------------------------------\n`);
+
   for (const m of sortedMigrations) {
+    logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,
@@ -1441,15 +1448,17 @@ export async function executeMigrations(
           m.name
         );
 
+        logger.info(`Ran ${m.name} from ${m.package}`);
+        logger.info(`  ${m.description}\n`);
         if (changes.length < 1) {
+          logger.info(`No changes were made\n`);
           migrationsWithNoChanges.push(m);
-          // If no changes are made, continue on without printing anything
           continue;
         }
 
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
+        logger.info('Changes:');
         printChanges(changes, '  ');
+        logger.info('');
       } else {
         const ngCliAdapter = await getNgCompatLayer();
         const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
@@ -1462,15 +1471,17 @@ export async function executeMigrations(
           isVerbose
         );
 
+        logger.info(`Ran ${m.name} from ${m.package}`);
+        logger.info(`  ${m.description}\n`);
         if (!madeChanges) {
+          logger.info(`No changes were made\n`);
           migrationsWithNoChanges.push(m);
-          // If no changes are made, continue on without printing anything
           continue;
         }
 
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
+        logger.info('Changes:');
         loggingQueue.forEach((log) => logger.info('  ' + log));
+        logger.info('');
       }
 
       if (shouldCreateCommits) {
@@ -1625,10 +1636,6 @@ export async function migrate(
   args: { [k: string]: any },
   rawArgs: string[]
 ) {
-  if (args['verbose']) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
   await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
@@ -1692,62 +1699,21 @@ function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-// TODO (v17): This should just become something like:
-// ```
-// return !collection.generators[name] && collection.schematics[name]
-// ```
+// TODO (v21): Remove CLI determination of Angular Migration
 function isAngularMigration(
   collection: MigrationsJson,
   collectionPath: string,
   name: string
 ) {
   const entry = collection.generators?.[name] || collection.schematics?.[name];
-
-  // In the future we will determine this based on the location of the entry in the collection.
-  // If the entry is under `schematics`, it will be assumed to be an angular cli migration.
-  // If the entry is under `generators`, it will be assumed to be an nx migration.
-  // For now, we will continue to obey the cli property, if it exists.
-  // If it doesn't exist, we will check if the implementation references @angular/devkit.
   const shouldBeNx = !!collection.generators?.[name];
   const shouldBeNg = !!collection.schematics?.[name];
-  let useAngularDevkitToRunMigration = false;
-
-  const { path: implementationPath } = getImplementationPath(
-    collection,
-    collectionPath,
-    name
-  );
-  const implStringContents = readFileSync(implementationPath, 'utf-8');
-  // TODO (v17): Remove this check and the cli property access - it is only here for backwards compatibility.
-  if (
-    ['@angular/material', '@angular/cdk'].includes(collection.name) ||
-    [
-      "import('@angular-devkit",
-      'import("@angular-devkit',
-      "require('@angular-devkit",
-      'require("@angular-devkit',
-      "from '@angular-devkit",
-      'from "@angular-devkit',
-    ].some((s) => implStringContents.includes(s))
-  ) {
-    useAngularDevkitToRunMigration = true;
-  }
-
-  if (useAngularDevkitToRunMigration && shouldBeNx) {
+  if (entry.cli && entry.cli !== 'nx' && collection.generators?.[name]) {
     output.warn({
       title: `The migration '${collection.name}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
       bodyLines: [
-        'In Nx 17, migrations inside `generators` will be treated as Angular Devkit migrations.',
-        "Please open an issue on the plugin's repository if you believe this is an error.",
-      ],
-    });
-  }
-
-  if (!useAngularDevkitToRunMigration && entry.cli === 'nx' && shouldBeNg) {
-    output.warn({
-      title: `The migration '${collection.name}:${name}' appears to be an Nx migration, but is located in the 'schematics' section of migrations.json.`,
-      bodyLines: [
-        'In Nx 17, migrations inside `generators` will be treated as nx devkit migrations.',
+        'In Nx 21, migrations inside `generators` will be treated as Nx Devkit migrations and therefore may not run correctly if they are using Angular Devkit.',
+        'If the migration should be run with Angular Devkit, please place the migration inside `schematics` instead.',
         "Please open an issue on the plugin's repository if you believe this is an error.",
       ],
     });
@@ -1755,7 +1721,7 @@ function isAngularMigration(
 
   // Currently, if the cli property exists we listen to it. If its nx, its not an ng cli migration.
   // If the property is not set, we will fall back to our intuition.
-  return entry.cli ? entry.cli !== 'nx' : useAngularDevkitToRunMigration;
+  return entry.cli ? entry.cli !== 'nx' : !shouldBeNx && shouldBeNg;
 }
 
 const getNgCompatLayer = (() => {

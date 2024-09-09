@@ -3,7 +3,8 @@
   "$id": "NxAngularComponentCypressSpecGenerator",
   "type": "object",
   "cli": "nx",
-  "description": "Creates a Cypress spec for a UI component that has a story.",
+  "description": "Creates a Storybook Cypress spec for a UI component that has a story.",
+  "x-deprecated": "Use interactionTests instead. This option will be removed in v20.",
   "properties": {
     "projectName": {
       "type": "string",

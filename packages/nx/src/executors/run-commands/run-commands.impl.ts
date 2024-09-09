@@ -21,7 +21,7 @@ const childProcesses = new Set<ChildProcess | PseudoTtyProcess>();
 
 function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
   unloadDotEnvFile(path, env);
-  const result = loadAndExpandDotEnvFile(path, env);
+  const result = loadAndExpandDotEnvFile(path, env, true);
   if (result.error) {
     throw result.error;
   }
@@ -484,14 +484,19 @@ function processEnv(
   envFile?: string
 ) {
   const localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
-  const res = {
+  let res = {
     ...process.env,
     ...localEnv,
-    ...env,
   };
+  // env file from envFile option takes priority over process env
   if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
     loadEnvVars(envFile, res);
   }
+  // env variables from env option takes priority over everything else
+  res = {
+    ...res,
+    ...env,
+  };
   // need to override PATH to make sure we are using the local node_modules
   if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like
   if (localEnv.Path) res.Path = localEnv.Path; // Windows

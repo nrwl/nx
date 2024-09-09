@@ -12,6 +12,7 @@ import { useRouter } from 'next/router';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../lib/packages.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 declare const fetch: any;
 let qualityIndicators = require('./quality-indicators.json');
@@ -112,11 +113,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
               toggleNav={toggleNav}
             />
           </div>
-          <div
-            id="wrapper"
-            data-testid="wrapper"
-            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-          >
+          <ScrollableContent>
             <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
               <div id="content-wrapper" className="w-full flex-auto flex-col">
                 <div className="mb-6 pt-8">
@@ -130,7 +127,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
                     Are you a plugin author? You can{' '}
                     <a
                       className="underline"
-                      href="/extending-nx/tutorials/publish-plugin#list-your-nx-plugin"
+                      href="/extending-nx/tutorials/tooling-plugin#list-your-nx-plugin"
                     >
                       add your plugin to the registry
                     </a>{' '}
@@ -141,7 +138,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
             </div>
 
             <Footer />
-          </div>
+          </ScrollableContent>
         </main>
       </div>
     </>

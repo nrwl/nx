@@ -1,12 +1,14 @@
 import {
   expandDependencyConfigSyntaxSugar,
+  expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
-import { ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 describe('utils', () => {
   function getNode(build): ProjectGraphProjectNode {
@@ -403,47 +405,28 @@ describe('utils', () => {
   describe('transformLegacyOutputs', () => {
     it('should prefix paths with {workspaceRoot}', () => {
       const outputs = ['dist'];
-      try {
-        validateOutputs(outputs);
-      } catch (e) {
-        const result = transformLegacyOutputs('myapp', e);
-        expect(result).toEqual(['{workspaceRoot}/dist']);
-      }
-      expect.assertions(1);
+      const result = transformLegacyOutputs('myapp', outputs);
+      expect(result).toEqual(['{workspaceRoot}/dist']);
     });
 
     it('should prefix unix-absolute paths with {workspaceRoot}', () => {
       const outputs = ['/dist'];
-      try {
-        validateOutputs(outputs);
-      } catch (e) {
-        const result = transformLegacyOutputs('myapp', e);
-        expect(result).toEqual(['{workspaceRoot}/dist']);
-      }
-      expect.assertions(1);
+      const result = transformLegacyOutputs('myapp', outputs);
+      expect(result).toEqual(['{workspaceRoot}/dist']);
     });
   });
 
   it('should prefix relative paths with {projectRoot}', () => {
-    const outputs = ['/dist'];
-    try {
-      validateOutputs(outputs);
-    } catch (e) {
-      const result = transformLegacyOutputs('myapp', e);
-      expect(result).toEqual(['{workspaceRoot}/dist']);
-    }
-    expect.assertions(1);
+    const outputs = ['./dist'];
+    const result = transformLegacyOutputs('myapp', outputs);
+    expect(result).toEqual(['{projectRoot}/dist']);
   });
 
   it('should prefix paths within the project with {projectRoot}', () => {
     const outputs = ['myapp/dist'];
-    try {
-      validateOutputs(outputs);
-    } catch (e) {
-      const result = transformLegacyOutputs('myapp', e);
-      expect(result).toEqual(['{projectRoot}/dist']);
-    }
-    expect.assertions(1);
+
+    const result = transformLegacyOutputs('myapp', outputs);
+    expect(result).toEqual(['{projectRoot}/dist']);
   });
 
   describe('expandDependencyConfigSyntaxSugar', () => {
@@ -619,6 +602,137 @@ describe('utils', () => {
         },
       ]);
     });
+
+    it('should support multiple dependsOn chains', () => {
+      const graph = new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'foo',
+          targets: {
+            build: {
+              dependsOn: ['build:one'],
+            },
+            'build:one': {
+              dependsOn: [{ target: 'build:two' }],
+            },
+            'build:two': {},
+          },
+        })
+        .addProjectConfiguration({
+          name: 'bar',
+          targets: {
+            build: {
+              dependsOn: ['build:one'],
+            },
+            'build:one': {
+              dependsOn: [{ target: 'build:two' }],
+            },
+            'build:two': {},
+          },
+        })
+        .build();
+
+      const getTargetDependencies = (project: string, target: string) =>
+        getDependencyConfigs(
+          {
+            project,
+            target,
+          },
+          {},
+          graph,
+          ['build', 'build:one', 'build:two']
+        );
+
+      expect(getTargetDependencies('foo', 'build')).toEqual([
+        {
+          target: 'build:one',
+          projects: ['foo'],
+        },
+      ]);
+
+      expect(getTargetDependencies('foo', 'build:one')).toEqual([
+        {
+          target: 'build:two',
+          projects: ['foo'],
+        },
+      ]);
+
+      expect(getTargetDependencies('foo', 'build:two')).toEqual([]);
+
+      expect(getTargetDependencies('bar', 'build')).toEqual([
+        {
+          target: 'build:one',
+          projects: ['bar'],
+        },
+      ]);
+
+      expect(getTargetDependencies('bar', 'build:one')).toEqual([
+        {
+          target: 'build:two',
+          projects: ['bar'],
+        },
+      ]);
+
+      expect(getTargetDependencies('bar', 'build:two')).toEqual([]);
+    });
+  });
+
+  describe('expandWildcardDependencies', () => {
+    it('should expand wildcard dependencies', () => {
+      const allTargets = ['build', 'build:test', 'build:prod', 'build:dev'];
+      const results = expandWildcardTargetConfiguration(
+        {
+          target: 'build*',
+          projects: ['a'],
+        },
+        allTargets
+      );
+
+      expect(results).toEqual([
+        {
+          target: 'build',
+          projects: ['a'],
+        },
+        {
+          target: 'build:test',
+          projects: ['a'],
+        },
+        {
+          target: 'build:prod',
+          projects: ['a'],
+        },
+        {
+          target: 'build:dev',
+          projects: ['a'],
+        },
+      ]);
+
+      const results2 = expandWildcardTargetConfiguration(
+        {
+          target: 'build*',
+          projects: ['b'],
+        },
+        allTargets
+      );
+
+      expect(results2).toEqual([
+        {
+          target: 'build',
+          projects: ['b'],
+        },
+        {
+          target: 'build:test',
+          projects: ['b'],
+        },
+        {
+          target: 'build:prod',
+          projects: ['b'],
+        },
+        {
+          target: 'build:dev',
+          projects: ['b'],
+        },
+      ]);
+    });
   });
 
   describe('validateOutputs', () => {
@@ -639,5 +753,60 @@ describe('utils', () => {
         "The 'outputs' field must contain only strings, but received types: [string, number, object, boolean, object, object]"
       );
     });
+
+    it('throws an error if the output is a glob pattern from the workspace root', () => {
+      expect(() => validateOutputs(['{workspaceRoot}/**/dist/*.js']))
+        .toThrowErrorMatchingInlineSnapshot(`
+        "The following outputs are defined by a glob pattern from the workspace root: 
+         - {workspaceRoot}/**/dist/*.js
+
+        These can be slow, replace them with a more specific pattern."
+      `);
+    });
+
+    it("shouldn't throw an error if the output is a glob pattern from the project root", () => {
+      expect(() => validateOutputs(['{projectRoot}/*.js'])).not.toThrow();
+    });
+
+    it("shouldn't throw an error if the pattern is a glob based in a subdirectory of workspace root", () => {
+      expect(() =>
+        validateOutputs(['{workspaceRoot}/dist/**/*.js'])
+      ).not.toThrow();
+    });
+
+    it("throws an error if the output doesn't start with a prefix", () => {
+      expect(() => validateOutputs(['dist']))
+        .toThrowErrorMatchingInlineSnapshot(`
+        "The following outputs are invalid: 
+         - dist
+
+        Run \`nx repair\` to fix this."
+      `);
+    });
   });
 });
+
+class GraphBuilder {
+  nodes: Record<string, ProjectGraphProjectNode> = {};
+
+  addProjectConfiguration(
+    project: Omit<ProjectConfiguration, 'root'>,
+    type?: ProjectGraph['nodes'][string]['type']
+  ) {
+    const t = type ?? 'lib';
+    this.nodes[project.name] = {
+      name: project.name,
+      type: t,
+      data: { ...project, root: `${t}/${project.name}` },
+    };
+    return this;
+  }
+
+  build(): ProjectGraph {
+    return {
+      nodes: this.nodes,
+      dependencies: {},
+      externalNodes: {},
+    };
+  }
+}

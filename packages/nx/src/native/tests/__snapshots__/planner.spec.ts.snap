@@ -9,9 +9,7 @@ exports[`task planner dependentTasksOutputFiles should depend on dependent tasks
     "parent:!{projectRoot}/**/*.spec.ts",
     "parent:ProjectConfiguration",
     "parent:TsConfig",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -27,11 +25,9 @@ exports[`task planner should be able to handle multiple filesets per project 1`]
     "parent:ProjectConfiguration",
     "parent:TsConfig",
     "parent:{projectRoot}/**/*",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/global1",
-    "{workspaceRoot}/global2",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/global1]",
+    "workspace:[{workspaceRoot}/global2]",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -46,9 +42,7 @@ exports[`task planner should build plans where the project graph has circular de
     "parent:ProjectConfiguration",
     "parent:TsConfig",
     "parent:{projectRoot}/**/*",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
   "parent:build": [
     "AllExternalDependencies",
@@ -58,9 +52,7 @@ exports[`task planner should build plans where the project graph has circular de
     "parent:ProjectConfiguration",
     "parent:TsConfig",
     "parent:{projectRoot}/**/*",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -73,10 +65,8 @@ exports[`task planner should hash executors 1`] = `
     "proj:ProjectConfiguration",
     "proj:TsConfig",
     "proj:{projectRoot}/**/*",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/global1",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/global1]",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -89,9 +79,7 @@ exports[`task planner should include npm projects 1`] = `
     "app:TsConfig",
     "app:{projectRoot}/**/*",
     "npm:react",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -103,18 +91,14 @@ exports[`task planner should make a plan with multiple filesets of a project 1`]
     "parent:!{projectRoot}/**/*.spec.ts",
     "parent:ProjectConfiguration",
     "parent:TsConfig",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
   "parent:test": [
     "AllExternalDependencies",
     "parent:ProjectConfiguration",
     "parent:TsConfig",
     "parent:{projectRoot}/**/*",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -129,9 +113,7 @@ exports[`task planner should plan non-default filesets 1`] = `
     "parent:!{projectRoot}/**/*.spec.ts",
     "parent:ProjectConfiguration",
     "parent:TsConfig",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;
@@ -149,9 +131,7 @@ exports[`task planner should plan the task where the project has dependencies 1`
     "parent:ProjectConfiguration",
     "parent:TsConfig",
     "parent:{projectRoot}/**/*",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
   ],
 }
 `;

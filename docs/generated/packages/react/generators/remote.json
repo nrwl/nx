@@ -176,6 +176,14 @@
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
+      },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["rspack", "webpack"],
+        "x-prompt": "Which bundler do you want to use to build the application?",
+        "default": "rspack",
+        "x-priority": "important"
       }
     },
     "required": ["name"],

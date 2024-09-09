@@ -18,14 +18,15 @@ export async function withModuleFederationForSSR(
     });
 
   return (config) => {
-    config.target = false;
+    config.target = 'async-node';
     config.output.uniqueName = options.name;
     config.optimization = {
+      ...(config.optimization ?? {}),
       runtimeChunk: false,
     };
 
     config.plugins.push(
-      new (require('@module-federation/node').UniversalFederationPlugin)(
+      new (require('@module-federation/enhanced').ModuleFederationPlugin)(
         {
           name: options.name,
           filename: 'remoteEntry.js',
@@ -34,10 +35,6 @@ export async function withModuleFederationForSSR(
           shared: {
             ...sharedDependencies,
           },
-          library: {
-            type: 'commonjs-module',
-          },
-          isServer: true,
           /**
            * Apply user-defined config overrides
            */
@@ -51,7 +48,11 @@ export async function withModuleFederationForSSR(
                     '@nx/webpack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
                   ),
                 ]
-              : configOverride?.runtimePlugins,
+              : [
+                  ...(configOverride?.runtimePlugins ?? []),
+                  require.resolve('@module-federation/node/runtimePlugin'),
+                ],
+          virtualRuntimeEntry: true,
         },
         {}
       ),

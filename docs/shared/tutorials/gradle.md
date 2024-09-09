@@ -126,7 +126,7 @@ that we've installed reflects Gradle's tasks to Nx, which allows it to run any o
 ./nx show project application --web
 ```
 
-{% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" %}
+{% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" expandedTargets=["build"] height="520px" %}
 {% /project-details %}
 
 The Nx command to run the `build` task for the `application` project is:

@@ -137,6 +137,11 @@ const teamMembers = [
     imageUrl: 'mark-lindsey.avif',
   },
   {
+    name: 'Mike Hartington',
+    title: 'Director of Developer Relations',
+    imageUrl: 'mike-hartington.avif',
+  },
+  {
     name: 'Miroslav Jonas',
     title: 'Senior Engineer',
     imageUrl: 'miroslav-jonas.avif',

@@ -8,8 +8,10 @@ import {
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { motion } from 'framer-motion';
 import { NxCloudIcon } from '@nx/nx-dev/ui-icons';
+import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 
 export function AutomatedAgentsManagement(): JSX.Element {
+  const shouldReduceMotion = usePrefersReducedMotion();
   const variants = {
     hidden: {
       opacity: 0,
@@ -20,7 +22,7 @@ export function AutomatedAgentsManagement(): JSX.Element {
     visible: (i: number) => ({
       opacity: 1,
       transition: {
-        delay: i || 0,
+        delay: shouldReduceMotion ? 0 : i || 0,
       },
     }),
   };
@@ -29,8 +31,8 @@ export function AutomatedAgentsManagement(): JSX.Element {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.035,
-        duration: 0.65,
+        delay: shouldReduceMotion ? 0 : i * 0.035,
+        duration: shouldReduceMotion ? 0 : 0.65,
         ease: 'easeOut',
         when: 'beforeChildren',
         staggerChildren: 0.3,

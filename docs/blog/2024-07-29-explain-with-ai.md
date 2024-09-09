@@ -4,21 +4,25 @@ slug: 'explain-with-ai'
 authors: ['Philip Fulcher']
 cover_image: '/blog/images/2024-07-29/explain-with-ai-header.avif'
 tags: [nx, nx-cloud, ai, release]
+youtubeUrl: https://youtu.be/g2m9cHp-O-Q?si=ax-SKCO0Xvy9vFIz
+pinned: true
 ---
 
 It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool for your toolbox: **"Explain with AI" for [Nx Cloud](/nx-cloud)**.
 
 ## Your ticket to fast error debugging
 
-"Explain with AI" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Whenever you get an error message on CI, look for the "Explain with AI" button on the upper right-hand corner:
+"[Explain with AI](/ci/features/explain-with-ai)" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Whenever you get an error message on CI, look for the "Explain with AI" button on the upper right-hand corner:
 
-![Nx Cloud error log window](/blog/images/2024-07-29/explain-with-ai-1.avif)
+![Explain with AI button](/blog/images/2024-07-29/explain-with-ai-button.avif)
 
 Once you hit that button, we collect the terminal output and other Nx task information and sprinkle some AI on top of it to give you a suggested fix. That should help you quickly get to the bottom of the issue and get back to work quickly.
 
 ![Explain with AI explaining how to resolve the CI error](/blog/images/2024-07-29/explain-with-ai-2.avif)
 
 No more switching back and forth between a dozen tabs with different solutions. No more providing the right context for your masterfully written chat prompt. **Get your suggested fix and get back to work.**
+
+Also make sure [to check out our docs](/ci/features/explain-with-ai) for more information.
 
 ## How can I start using this today?
 

@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function changeBuildTarget(host: Tree, options: Schema) {
   const appConfig = readProjectConfiguration(host, options.appName);
@@ -27,4 +28,6 @@ export function changeBuildTarget(host: Tree, options: Schema) {
   };
 
   updateProjectConfiguration(host, options.appName, appConfig);
+
+  addBuildTargetDefaults(host, '@nx/angular:webpack-browser');
 }

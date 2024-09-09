@@ -1,3 +1,4 @@
+import type { Config } from '@jest/types';
 import {
   CreateNodes,
   CreateNodesContext,
@@ -13,22 +14,20 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
-
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync } from 'fs';
-import { readConfig, replaceRootDirInPath } from 'jest-config';
-import jestResolve from 'jest-resolve';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import {
   clearRequireCache,
   loadConfigFile,
 } from '@nx/devkit/src/utils/config-utils';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';
+import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { combineGlobPatterns } from 'nx/src/utils/globs';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { getInstalledJestMajorVersion } from '../utils/version-utils';
 
 const pmc = getPackageManagerCommand();
 
@@ -167,6 +166,12 @@ async function buildJestTargets(
   }
 
   const rawConfig = await loadConfigFile(absConfigFilePath);
+
+  const { readConfig } = requireJestUtil<typeof import('jest-config')>(
+    'jest-config',
+    projectRoot,
+    context.workspaceRoot
+  );
   const config = await readConfig(
     {
       _: [],
@@ -211,23 +216,30 @@ async function buildJestTargets(
 
   let metadata: ProjectConfiguration['metadata'];
   if (options?.ciTargetName) {
-    // Resolve the version of `jest-runtime` that `jest` is using.
-    const jestPath = require.resolve('jest');
-    const jest = require(jestPath) as typeof import('jest');
     // nx-ignore-next-line
-    const { default: Runtime } = require(require.resolve('jest-runtime', {
-      paths: [dirname(jestPath)],
-      // nx-ignore-next-line
-    })) as typeof import('jest-runtime');
+    const { default: Runtime } = requireJestUtil<typeof import('jest-runtime')>(
+      'jest-runtime',
+      projectRoot,
+      context.workspaceRoot
+    );
 
     const jestContext = await Runtime.createContext(config.projectConfig, {
       maxWorkers: 1,
       watchman: false,
     });
 
+    const jest = require(resolveJestPath(
+      projectRoot,
+      context.workspaceRoot
+    )) as typeof import('jest');
     const source = new jest.SearchSource(jestContext);
 
-    const specs = await source.getTestPaths(config.globalConfig);
+    const jestVersion = getInstalledJestMajorVersion()!;
+    const specs =
+      jestVersion >= 30
+        ? // @ts-expect-error Jest 30+ expects the project config as the second argument
+          await source.getTestPaths(config.globalConfig, config.projectConfig)
+        : await source.getTestPaths(config.globalConfig);
 
     const testPaths = new Set(specs.tests.map(({ path }) => path));
 
@@ -343,11 +355,17 @@ function resolvePresetInput(
     return null;
   }
 
+  const { replaceRootDirInPath } = requireJestUtil<
+    typeof import('jest-config')
+  >('jest-config', projectRoot, workspaceRoot);
   let presetPath = replaceRootDirInPath(projectRoot, presetValue);
   const isNpmPackage = !presetValue.startsWith('.') && !isAbsolute(presetPath);
   presetPath = presetPath.startsWith('.')
     ? presetPath
     : join(presetPath, 'jest-preset');
+  const { default: jestResolve } = requireJestUtil<
+    typeof import('jest-resolve')
+  >('jest-resolve', projectRoot, workspaceRoot);
   const presetModule = jestResolve.findNodeModule(presetPath, {
     basedir: projectRoot,
     extensions: ['.json', '.js', '.cjs', '.mjs'],
@@ -369,7 +387,7 @@ function resolvePresetInput(
 
 function getOutputs(
   projectRoot: string,
-  { globalConfig }: Awaited<ReturnType<typeof readConfig>>,
+  { globalConfig }: { globalConfig: Config.GlobalConfig },
   context: CreateNodesContext
 ): string[] {
   function getOutput(path: string): string {
@@ -402,4 +420,42 @@ function normalizeOptions(options: JestPluginOptions): JestPluginOptions {
   options ??= {};
   options.targetName ??= 'test';
   return options;
+}
+
+let resolvedJestPaths: Record<string, string>;
+function resolveJestPath(projectRoot: string, workspaceRoot: string): string {
+  resolvedJestPaths ??= {};
+  if (resolvedJestPaths[projectRoot]) {
+    return resolvedJestPaths[projectRoot];
+  }
+
+  resolvedJestPaths[projectRoot] = require.resolve('jest', {
+    paths: [projectRoot, workspaceRoot, __dirname],
+  });
+
+  return resolvedJestPaths[projectRoot];
+}
+
+let resolvedJestCorePaths: Record<string, string>;
+/**
+ * Resolves a jest util package version that `jest` is using.
+ */
+function requireJestUtil<T>(
+  packageName: string,
+  projectRoot: string,
+  workspaceRoot: string
+): T {
+  const jestPath = resolveJestPath(projectRoot, workspaceRoot);
+
+  resolvedJestCorePaths ??= {};
+  if (!resolvedJestCorePaths[jestPath]) {
+    // nx-ignore-next-line
+    resolvedJestCorePaths[jestPath] = require.resolve('@jest/core', {
+      paths: [dirname(jestPath)],
+    });
+  }
+
+  return require(require.resolve(packageName, {
+    paths: [dirname(resolvedJestCorePaths[jestPath])],
+  }));
 }

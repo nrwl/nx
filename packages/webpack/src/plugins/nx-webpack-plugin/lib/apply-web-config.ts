@@ -22,8 +22,6 @@ import {
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
-import { getDevServerOptions } from '../../../executors/dev-server/lib/get-dev-server-config';
-import { NormalizedWebpackExecutorOptions } from '../../../executors/webpack/schema';
 
 export function applyWebConfig(
   options: NormalizedNxAppWebpackPluginOptions,
@@ -114,7 +112,9 @@ export function applyWebConfig(
   // Process global styles.
   if (options.styles.length > 0) {
     normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
-      const resolvedPath = path.resolve(options.root, style.input);
+      const resolvedPath = style.input.startsWith('.')
+        ? style.input
+        : path.resolve(options.root, style.input);
       // Add style entry points.
       if (entries[style.bundleName]) {
         entries[style.bundleName].import.push(resolvedPath);
