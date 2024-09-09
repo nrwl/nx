@@ -40,6 +40,9 @@ export function withWeb(opts: WithWebOptions = {}) {
 
     return {
       ...config,
+      experiments: {
+        css: true,
+      },
       module: {
         ...config.module,
         rules: [
@@ -51,9 +54,11 @@ export function withWeb(opts: WithWebOptions = {}) {
           {
             test: /\.css$/,
             type: 'css',
-            use: [{
-              loader: require.resolve('postcss-loader'),
-            }]
+            use: [
+              {
+                loader: require.resolve('postcss-loader'),
+              },
+            ],
           },
           {
             test: /\.scss$|\.sass$/,
@@ -114,7 +119,7 @@ export function withWeb(opts: WithWebOptions = {}) {
         }),
         new rspack.DefinePlugin({
           'process.env.NODE_ENV': isProd ? "'production'" : "'development'",
-        })
+        }),
       ],
     };
   };
