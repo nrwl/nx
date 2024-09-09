@@ -25,7 +25,7 @@ describe('React Rspack Module Federation', () => {
       newProject({ packages: ['@nx/react'] });
     });
 
-    // afterAll(() => cleanupProject());
+    afterAll(() => cleanupProject());
 
     it.each`
       js
@@ -125,6 +125,133 @@ describe('React Rspack Module Federation', () => {
       },
       500_000
     );
+
+    it('should have interop between webpack host and rspack remote', async () => {
+      const shell = uniq('shell');
+      const remote1 = uniq('remote1');
+      const remote2 = uniq('remote2');
+
+      runCLI(
+        `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
+      );
+
+      runCLI(
+        `generate @nx/react:remote ${remote2} --host=${shell} --bundler=rspack --style=css --no-interactive --skipFormat`
+      );
+
+      updateFile(
+        `apps/${shell}-e2e/src/integration/app.spec.ts`,
+        stripIndents`
+        import { getGreeting } from '../support/app.po';
+
+        describe('shell app', () => {
+          it('should display welcome message', () => {
+            cy.visit('/')
+            getGreeting().contains('Welcome ${shell}');
+          });
+
+          it('should load remote 1', () => {
+            cy.visit('/${remote1}')
+            getGreeting().contains('Welcome ${remote1}');
+          });
+
+          it('should load remote 2', () => {
+            cy.visit('/${remote2}')
+            getGreeting().contains('Welcome ${remote2}');
+          });
+        });
+      `
+      );
+
+      [shell, remote1, remote2].forEach((app) => {
+        ['development', 'production'].forEach(async (configuration) => {
+          const cliOutput = runCLI(`run ${app}:build:${configuration}`);
+          expect(cliOutput).toContain('Successfully ran target');
+        });
+      });
+
+      const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
+        output.includes(`http://localhost:${readPort(shell)}`)
+      );
+
+      await killProcessAndPorts(serveResult.pid, readPort(shell));
+
+      if (runE2ETests()) {
+        const e2eResultsSwc = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) => output.includes('All specs passed!')
+        );
+
+        await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));
+
+        const e2eResultsTsNode = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) =>
+            output.includes('Successfully ran target e2e for project'),
+          {
+            env: { NX_PREFER_TS_NODE: 'true' },
+          }
+        );
+        await killProcessAndPorts(e2eResultsTsNode.pid, readPort(shell));
+      }
+    }, 500_000);
+
+    it('should have interop between rspack host and webpack remote', async () => {
+      const shell = uniq('shell');
+      const remote1 = uniq('remote1');
+      const remote2 = uniq('remote2');
+      runCLI(
+        `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
+      );
+
+      runCLI(
+        `generate @nx/react:remote ${remote2} --host=${shell} --bundler=webpack --style=css --no-interactive --skipFormat`
+      );
+
+      updateFile(
+        `apps/${shell}-e2e/src/integration/app.spec.ts`,
+        stripIndents`
+        import { getGreeting } from '../support/app.po';
+
+        describe('shell app', () => {
+          it('should display welcome message', () => {
+            cy.visit('/')
+            getGreeting().contains('Welcome ${shell}');
+          });
+
+          it('should load remote 1', () => {
+            cy.visit('/${remote1}')
+            getGreeting().contains('Welcome ${remote1}');
+          });
+
+          it('should load remote 2', () => {
+            cy.visit('/${remote2}')
+            getGreeting().contains('Welcome ${remote2}');
+          });
+
+        });
+      `
+      );
+
+      if (runE2ETests()) {
+        const e2eResultsSwc = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) => output.includes('All specs passed!')
+        );
+
+        await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));
+
+        const e2eResultsTsNode = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) =>
+            output.includes('Successfully ran target e2e for project'),
+          {
+            env: { NX_PREFER_TS_NODE: 'true' },
+          }
+        );
+        await killProcessAndPorts(e2eResultsTsNode.pid, readPort(shell));
+      }
+    }, 500_000);
 
     describe('ssr', () => {
       it('should generate host and remote apps with ssr', async () => {
