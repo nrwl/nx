@@ -55,6 +55,7 @@ export type ChangelogRenderer = (config: {
   entryWhenNoChanges: string | false;
   changelogRenderOptions: DefaultChangelogRenderOptions;
   dependencyBumps?: DependencyBump[];
+  // TODO(v20): remove repoSlug in favour of repoData
   repoSlug?: RepoSlug;
   repoData?: GithubRepoData;
   // TODO(v20): Evaluate if there is a cleaner way to configure this when breaking changes are allowed

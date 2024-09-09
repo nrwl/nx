@@ -68,7 +68,7 @@ export function getGitHubRepoData(
 
     // Extract the 'user/repo' part from the URL
     const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regexString = `${escapedHostname}[/:]([\\w-]+/[\\w-]+)`;
+    const regexString = `${escapedHostname}[/:]([\\w.-]+/[\\w.-]+)(\\.git)?`;
     const regex = new RegExp(regexString);
     const match = remoteUrl.match(regex);
 
@@ -370,6 +370,9 @@ async function resolveGithubToken(hostname: string): Promise<string | null> {
       }
     }
   }
+  console.log(
+    `Warning: It was not possible to automatically resolve a GitHub token from your environment for hostname ${hostname}. If you set the GITHUB_TOKEN or GH_TOKEN environment variable, that will be used for GitHub API requests.`
+  );
   return null;
 }
 
