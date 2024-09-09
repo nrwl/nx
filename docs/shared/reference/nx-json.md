@@ -512,7 +512,7 @@ The `git` property configures the automated git operations that take place as pa
 
 ## Sync
 
-These are global configuration options for the [`nx sync`](/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/concepts/sync-generators) to keep your codebase consistent with itself.
+These are global configuration options for the [`nx sync`](/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/concepts/sync-generators) to keep applicable files in sync with your project graph.
 
 ```jsonc {% fileName="nx.json" %}
 {

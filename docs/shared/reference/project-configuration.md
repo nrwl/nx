@@ -618,7 +618,7 @@ configuration above.
 
 ### Sync Generators
 
-In the same way that `dependsOn` tells Nx to run a task before this task, the `syncGenerator` property tells Nx to run a generator the task is run. [Sync generators](/concepts/sync-generators) are available in Nx 19.7+.
+In the same way that `dependsOn` tells Nx to run a task before this task, the `syncGenerator` property tells Nx to run a specific type of generator (aimed at keeping applicable configuration files in sync with your project graph) before the task is run. [Sync generators](/concepts/sync-generators) are available in Nx 19.7+.
 
 ```json
 {

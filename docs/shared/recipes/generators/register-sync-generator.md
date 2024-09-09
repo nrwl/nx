@@ -1,6 +1,6 @@
 # Register a Sync Generator
 
-Sync generators allow you to update code before a task is run or before code is sent to CI. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.
+Sync generators are intended to keep applicable files in sync with your project graph before a task is run. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.
 
 ## Create a Sync Generator
 

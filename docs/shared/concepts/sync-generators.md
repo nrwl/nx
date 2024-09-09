@@ -1,6 +1,6 @@
 # Sync Generators
 
-In Nx 19.7, you can use sync generators to update code before a task is run or before code is sent to CI. Sync generators are designed to perform maintenance work that is required for a particular task or for CI.
+In Nx 19.7, you can use sync generators to keep applicable files in sync with your project graph. These can be for global configuration files or scripts, or at the task level to ensure to that project level configuration files are in sync before a task is run.
 
 Sync Generator Examples:
 
@@ -10,7 +10,7 @@ Sync Generator Examples:
 
 ## Task Sync Generators
 
-Sync generators can be associated with a particular task. Nx will ensure that the sync generator is run before the task is executed. This is similar to the `dependsOn` property, but for generators instead of task dependencies.
+Sync generators can be associated with a particular task. Nx will ensure that the sync generator is run before the task is executed (unless `sync.applyChanges` is set to `false` in `nx.json`). This is similar to the `dependsOn` property, but for generators instead of task dependencies.
 
 To [register a generator](/extending-nx/recipes/register-sync-generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
 

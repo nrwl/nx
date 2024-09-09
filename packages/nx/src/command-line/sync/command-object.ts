@@ -22,7 +22,7 @@ export const yargsSyncCheckCommand: CommandModule<
   SyncArgs
 > = {
   command: 'sync:check',
-  describe: 'Check that all sync generators have been run',
+  describe: 'Check that no changes are required after running all sync generators',
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
     process.exit(
