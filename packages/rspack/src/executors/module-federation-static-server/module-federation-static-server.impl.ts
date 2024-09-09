@@ -14,7 +14,6 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { fork } from 'child_process';
 import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
-import * as process from 'node:process';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { basename, extname, join } from 'path';
 import {
@@ -228,6 +227,16 @@ export function startProxies(
       target: mappedLocationOfHost,
       changeOrigin: true,
       secure: sslCert ? false : undefined,
+      pathRewrite: (path) => {
+        let pathRewrite = path;
+        for (const app of staticRemotesConfig.remotes) {
+          if (path.endsWith(app)) {
+            pathRewrite = '/';
+            break;
+          }
+        }
+        return pathRewrite;
+      },
     })
   );
   const proxyServer = (sslCert ? https : http)
