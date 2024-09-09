@@ -63,6 +63,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs type-checking for the project.",
+                  "help": {
+                    "command": "npx tsc --build --help",
+                    "example": {
+                      "args": [
+                        "--force",
+                      ],
+                    },
+                  },
+                  "technologies": [
+                    "typescript",
+                  ],
+                },
                 "options": {
                   "cwd": ".",
                 },
@@ -136,6 +150,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -177,6 +205,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -221,6 +263,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -308,6 +364,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -354,6 +424,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -402,6 +486,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -450,6 +548,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -506,6 +618,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -587,6 +713,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -616,6 +756,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib/nested-project",
                     },
@@ -845,6 +999,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -906,6 +1074,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -957,6 +1139,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1003,6 +1199,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1100,6 +1310,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1136,6 +1360,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib/nested-project",
                     },
@@ -1187,6 +1425,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1239,6 +1491,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1404,6 +1670,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -1452,6 +1732,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -1504,6 +1798,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -1556,6 +1864,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -1609,6 +1931,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1670,6 +2006,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1736,6 +2086,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -1962,6 +2326,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2028,6 +2406,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2084,6 +2476,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2135,6 +2541,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2206,6 +2626,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2267,6 +2701,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
@@ -2324,6 +2772,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
                     "options": {
                       "cwd": "libs/my-lib",
                     },
