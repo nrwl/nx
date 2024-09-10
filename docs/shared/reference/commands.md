@@ -93,7 +93,7 @@ nx import ../inventory-app apps/inventory
 
 {% cards %}
 {% link-card title="nx import" type="API Reference" url="/nx-api/nx/documents/import" /%}
-{% link-card title="Import an Existing Project into an Nx Workspace" type="Recipe" url="/recipes/adopting-nx/import-projec" /%}
+{% link-card title="Import an Existing Project into an Nx Workspace" type="Recipe" url="/recipes/adopting-nx/import-project" /%}
 {% /cards %}
 
 ### repair
