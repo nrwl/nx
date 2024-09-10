@@ -13,7 +13,8 @@ pub fn hash_project_files(
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let _span = trace_span!("hash_project_files", project_name).entered();
-    let collected_files = collect_project_files(project_name, project_root, file_sets, project_file_map)?;
+    let collected_files =
+        collect_project_files(project_name, project_root, file_sets, project_file_map)?;
     trace!("collected_files: {:?}", collected_files.len());
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in collected_files {
