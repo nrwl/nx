@@ -375,6 +375,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
+
+      runPreVersionCommand(releaseGroup.version.groupPreVersionCommand, {
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
         releaseGroup,

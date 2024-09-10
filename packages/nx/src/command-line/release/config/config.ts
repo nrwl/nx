@@ -273,6 +273,7 @@ export async function createNxReleaseConfig(
       conventionalCommits: false,
       generator: '@nx/js:release-version',
       generatorOptions: {},
+      groupPreVersionCommand: '',
     },
     changelog: {
       createRelease: false,
@@ -355,8 +356,16 @@ export async function createNxReleaseConfig(
     );
 
   // these options are not supported at the group level, only the root/command level
-  const rootVersionWithoutGlobalOptions = { ...rootVersionConfig };
+  const rootVersionWithoutGlobalOptions = {
+    ...rootVersionConfig,
+    groupPreVersionCommand: '',
+  };
   delete rootVersionWithoutGlobalOptions.git;
+
+  if (rootVersionWithoutGlobalOptions.preVersionCommand !== '') {
+    rootVersionWithoutGlobalOptions['groupPreVersionCommand'] =
+      rootVersionWithoutGlobalOptions.preVersionCommand;
+  }
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
