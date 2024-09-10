@@ -52,11 +52,7 @@
     ]
   },
   "release": {
-    "projects": [
-      "packages/*",
-      "packages/nx/native-packages/*",
-      "packages-legacy/*"
-    ],
+    "projects": ["packages/*", "packages/nx/native-packages/*"],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
