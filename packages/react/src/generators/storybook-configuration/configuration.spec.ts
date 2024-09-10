@@ -1,5 +1,3 @@
-// TODO(katerina): Nx 19 -> remove Cypress
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -7,9 +5,7 @@ import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -20,11 +16,8 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
 
 describe('react:storybook-configuration', () => {
   let appTree;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+
   beforeEach(async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
   });
