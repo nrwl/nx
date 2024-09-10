@@ -88,9 +88,6 @@ Print the task graph to the console:
 | Option      | Type    | Description                               |
 | ----------- | ------- | ----------------------------------------- |
 | ~~`--all`~~ | boolean | **Deprecated:** Use `nx run-many` instead |
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-
 | `--base` | string | Base of the current branch (usually main). |
 | `--batch` | boolean | Run task(s) in batches for executors which support batches. (Default: `false`) |
 | `--configuration` | string | This is the configuration to use when performing tasks on projects. |
