@@ -24,6 +24,7 @@ type NormalizedSchema = Schema & {
   propertyName: string;
   projectRoot: string;
   projectSourceRoot: string;
+  project: string;
 };
 
 async function normalizeOptions(

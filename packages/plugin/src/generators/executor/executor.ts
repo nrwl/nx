@@ -24,6 +24,7 @@ interface NormalizedSchema extends Schema {
   projectRoot: string;
   filePath: string;
   directory: string;
+  project: string;
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {

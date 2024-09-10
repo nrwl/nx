@@ -179,8 +179,8 @@ describe('updateTsconfig', () => {
       importPath: '@proj/whatever-name',
     });
     await libraryGenerator(tree, {
-      name: 'nested-lib',
-      directory: 'libs/my-lib',
+      name: 'my-lib-nested-lib',
+      directory: 'libs/my-lib/nested-lib',
 
       importPath: '@proj/nested/whatever-name',
     });

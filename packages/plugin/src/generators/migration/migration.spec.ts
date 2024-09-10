@@ -29,6 +29,7 @@ describe('NxPlugin migration generator', () => {
   it('should update the workspace.json file', async () => {
     await migrationGenerator(tree, {
       project: projectName,
+      directory: 'packages/my-plugin',
       packageVersion: '1.0.0',
     });
 
@@ -70,63 +71,12 @@ describe('NxPlugin migration generator', () => {
     );
   });
 
-  it('should generate files for derived', async () => {
-    await migrationGenerator(tree, {
-      project: projectName,
-      name: 'my-migration',
-      description: 'my-migration description',
-      packageVersion: '1.0.0',
-    });
-
-    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
-    const packageJson = readJson(tree, 'packages/my-plugin/package.json');
-
-    expect(
-      tree.exists(
-        'packages/my-plugin/src/migrations/my-migration/my-migration.ts'
-      )
-    ).toBeTruthy();
-
-    expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
-    expect(migrationsJson.generators['my-migration'].description).toEqual(
-      'my-migration description'
-    );
-    expect(migrationsJson.generators['my-migration'].implementation).toEqual(
-      './src/migrations/my-migration/my-migration'
-    );
-    expect(migrationsJson.packageJsonUpdates).toBeFalsy();
-
-    expect(packageJson['nx-migrations'].migrations).toEqual(
-      './migrations.json'
-    );
-  });
-
   it('should generate files with default name', async () => {
     await migrationGenerator(tree, {
       description: 'my-migration description',
       directory: 'packages/my-plugin/src/migrations/update-1.0.0',
       packageVersion: '1.0.0',
       nameAndDirectoryFormat: 'as-provided',
-    });
-
-    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
-
-    expect(
-      tree.exists(
-        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts'
-      )
-    ).toBeTruthy();
-
-    expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
-      './src/migrations/update-1.0.0/update-1.0.0'
-    );
-  });
-
-  it('should generate files with default name for derived', async () => {
-    await migrationGenerator(tree, {
-      project: projectName,
-      description: 'my-migration description',
-      packageVersion: '1.0.0',
     });
 
     const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
