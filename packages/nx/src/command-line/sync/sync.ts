@@ -64,8 +64,6 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       getFailedSyncGeneratorsFixMessageLines(results, options.verbose);
 
     if (areAllResultsFailures) {
-      // if all sync generators failed to run we can't say for sure if the workspace is out of sync
-      // because they could have failed due to a bug, so we print a warning and exit with code 0
       output.error({
         title: `The workspace is probably out of sync because ${
           failedGeneratorsCount === 1
@@ -128,7 +126,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           e.message,
           ...(options.verbose && !!e.stack ? [`\n${e.stack}`] : []),
           '',
-          'Please make sure to run with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
+          'Please rerun with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
         ],
       });
 

@@ -271,7 +271,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const fixMessage =
     'You can manually run `nx sync` to update your workspace with the identified changes or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
   const willErrorOnCiMessage =
-    'Please note that having the workspace out of sync will result in an error on CI.';
+    'Please note that having the workspace out of sync will result in an error in CI.';
 
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
@@ -410,8 +410,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
         'The workspace was synced successfully!';
     const successSubtitle =
       nxJson.sync?.applyChanges === true
-        ? 'Please make sure to commit the changes to your repository or this will error on CI.'
-        : // The user was prompted and we already logged a message about erroring on CI
+        ? 'Please make sure to commit the changes to your repository or this will error in CI.'
+        : // The user was prompted and we already logged a message about erroring in CI
           // so here we just tell them to commit the changes.
           'Please make sure to commit the changes to your repository.';
     spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
@@ -503,7 +503,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
       ],
       footer: () =>
         chalk.dim(
-          `\nWhen running on CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
+          `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
         ),
     };
 
