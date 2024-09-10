@@ -17,7 +17,7 @@ import { nxVersion, storybookVersion } from '../../utils/versions';
 import configurationGenerator from './configuration';
 import * as variousProjects from './test-configs/various-projects.json';
 
-// nested code imports graph from the repo, which might have innacurate graph version
+// nested code imports graph from the repo, which might have inaccurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
   createProjectGraphAsync: jest
