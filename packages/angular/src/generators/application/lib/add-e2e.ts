@@ -27,8 +27,11 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
     options.name,
     options.port
   );
-  // TODO: This can call `@nx/web:static-config` generator when ready
-  addFileServerTarget(tree, options, 'serve-static', e2eWebServerInfo.e2ePort);
+  
+  if (options.e2eTestRunner) {
+    // TODO: This can call `@nx/web:static-config` generator when ready
+    addFileServerTarget(tree, options, 'serve-static', e2eWebServerInfo.e2ePort);
+  }
 
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
