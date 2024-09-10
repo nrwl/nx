@@ -383,7 +383,10 @@ To fix this you will either need to add a package.json file at that location, or
             );
 
             if (!specifier) {
-              if (projectToDependencyBumps.has(projectName)) {
+              if (
+                updateDependents !== 'never' &&
+                projectToDependencyBumps.has(projectName)
+              ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
                 specifier = updateDependentsBump;
                 logger.buffer(
