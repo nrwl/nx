@@ -9215,14 +9215,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "component-cypress-spec",
-                "path": "/nx-api/react/generators/component-cypress-spec",
-                "name": "component-cypress-spec",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "hook",
                 "path": "/nx-api/react/generators/hook",
                 "name": "hook",

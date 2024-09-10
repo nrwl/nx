@@ -612,7 +612,6 @@
       - [storybook-configuration](/nx-api/react/generators/storybook-configuration)
       - [component-story](/nx-api/react/generators/component-story)
       - [stories](/nx-api/react/generators/stories)
-      - [component-cypress-spec](/nx-api/react/generators/component-cypress-spec)
       - [hook](/nx-api/react/generators/hook)
       - [host](/nx-api/react/generators/host)
       - [remote](/nx-api/react/generators/remote)

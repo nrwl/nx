@@ -2324,15 +2324,6 @@
         "type": "generator"
       },
       {
-        "description": "Create a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/react/generators/component-cypress-spec.json",
-        "hidden": false,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/react/src/generators/component-cypress-spec/schema.json",
-        "path": "react/generators/component-cypress-spec",
-        "type": "generator"
-      },
-      {
         "description": "Create a hook.",
         "file": "generated/packages/react/generators/hook.json",
         "hidden": false,
