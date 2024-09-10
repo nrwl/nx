@@ -88,7 +88,10 @@ export async function addLinterToPlaywrightProject(
         false,
         false
       );
-      addOverrideToLintConfig(tree, projectConfig.root, { rules: {} });
+      addOverrideToLintConfig(tree, projectConfig.root, {
+        files: ['*.ts', '*.js'],
+        rules: {},
+      });
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         tree,

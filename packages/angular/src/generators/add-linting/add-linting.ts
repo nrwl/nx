@@ -65,6 +65,7 @@ export async function addLintingGenerator(
         'flat/angular-template'
       );
       addOverrideToLintConfig(tree, options.projectRoot, {
+        files: ['*.ts'],
         rules: {
           '@angular-eslint/directive-selector': [
             'error',
@@ -83,6 +84,10 @@ export async function addLintingGenerator(
             },
           ],
         },
+      });
+      addOverrideToLintConfig(tree, options.projectRoot, {
+        files: ['*.html'],
+        rules: {},
       });
 
       if (isBuildableLibraryProject(tree, options.projectName)) {

@@ -102,7 +102,10 @@ export async function addLinterToCyProject(
         false,
         false
       );
-      addOverrideToLintConfig(tree, projectConfig.root, { rules: {} });
+      addOverrideToLintConfig(tree, projectConfig.root, {
+        files: ['*.ts', '*.js'],
+        rules: {},
+      });
     } else {
       if (options.rootProject) {
         addPluginsToLintConfig(tree, projectConfig.root, '@nx');

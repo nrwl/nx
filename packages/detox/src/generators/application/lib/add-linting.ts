@@ -41,7 +41,10 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         'flat/react'
       );
       // Add an empty rules object to users know how to add/override rules
-      addOverrideToLintConfig(host, options.e2eProjectRoot, { rules: {} });
+      addOverrideToLintConfig(host, options.e2eProjectRoot, {
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        rules: {},
+      });
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         host,
