@@ -1,8 +1,11 @@
 /* eslint-disable */
 export default {
-  displayName: 'rspack-e2e',
-  preset: '../../jest.preset.js',
+  displayName: 'e2e-rspack',
+  preset: '../jest.preset.e2e.js',
+  maxWorkers: 1,
   globals: {},
+  globalSetup: '../utils/global-setup.ts',
+  globalTeardown: '../utils/global-teardown.ts',
   transform: {
     '^.+\\.[tj]s$': [
       'ts-jest',
@@ -12,5 +15,5 @@ export default {
     ],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/e2e/rspack-e2e',
+  coverageDirectory: '../../coverage/e2e/e2e-rspack',
 };
