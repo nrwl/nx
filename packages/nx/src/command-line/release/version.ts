@@ -94,6 +94,12 @@ export interface ReleaseVersionGeneratorSchema {
    * large monorepos which have a large number of projects, especially when only a subset are released together.
    */
   logUnchangedProjects?: boolean;
+  /**
+   * Whether or not to keep local dependency protocols (e.g. file:, workspace:) when updating dependencies in
+   * package.json files. This is `false` by default as not all package managers support publishing with these protocols
+   * still present in the package.json.
+   */
+  preserveLocalDependencyProtocols?: boolean;
 }
 
 export interface NxReleaseVersionResult {
