@@ -596,6 +596,7 @@
     - [executors](/nx-api/react/executors)
       - [module-federation-dev-server](/nx-api/react/executors/module-federation-dev-server)
       - [module-federation-ssr-dev-server](/nx-api/react/executors/module-federation-ssr-dev-server)
+      - [module-federation-static-server](/nx-api/react/executors/module-federation-static-server)
     - [generators](/nx-api/react/generators)
       - [init](/nx-api/react/generators/init)
       - [application](/nx-api/react/generators/application)

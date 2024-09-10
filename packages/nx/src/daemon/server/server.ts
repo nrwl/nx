@@ -524,7 +524,7 @@ export async function startServer(): Promise<Server> {
 
           if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(
-              await watchOutputFiles(handleOutputsChanges)
+              await watchOutputFiles(server, handleOutputsChanges)
             );
           }
 

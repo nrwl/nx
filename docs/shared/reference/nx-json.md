@@ -528,11 +528,11 @@ Some presets use the `extends` property to hide some default options in a separa
 
 ## Nx Cloud
 
-There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you authenticate with the Nx Cloud service using an `nxCloudAccessToken` like this:
+There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you connect to the Nx Cloud service using an `nxCloudId` like this:
 
 ```json {% fileName="nx.json" %}
 {
-  "nxCloudAccessToken": "SOMETOKEN"
+  "nxCloudId": "SOMEID"
 }
 ```
 
