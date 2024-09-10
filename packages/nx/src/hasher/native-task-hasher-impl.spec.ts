@@ -157,17 +157,17 @@ describe('native task hasher', () => {
             "env:TESTENV": "11441948532827618368",
             "parent:ProjectConfiguration": "3608670998275221195",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "15295586939211629225",
+            "parent:{projectRoot}/**/*": "17059468255294227635",
             "runtime:echo runtime123": "29846575039086708",
             "tagged:ProjectConfiguration": "8596726088057301092",
             "tagged:TsConfig": "2264969541778889434",
-            "tagged:{projectRoot}/**/*": "112200405683630828",
+            "tagged:{projectRoot}/**/*": "14666997081331501901",
             "unrelated:ProjectConfiguration": "11133337791644294114",
             "unrelated:TsConfig": "2264969541778889434",
-            "unrelated:{projectRoot}/**/*": "10505120368757496776",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "5219582320960288192",
+            "unrelated:{projectRoot}/**/*": "4127219831408253695",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
           },
-          "value": "13049022000906481001",
+          "value": "14471888706892195399",
         },
       ]
     `);
@@ -226,13 +226,13 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "710102491746666394",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "7694964870822928111",
+          "child:{projectRoot}/**/*": "3347149359534435991",
           "parent:ProjectConfiguration": "8031122597231773116",
           "parent:TsConfig": "2264969541778889434",
-          "parent:{projectRoot}/**/*": "15295586939211629225",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "5219582320960288192",
+          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
         },
-        "value": "17442516481637512275",
+        "value": "2877551238604232699",
       }
     `);
   });
@@ -305,13 +305,13 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "13051054958929525761",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "7694964870822928111",
-          "parent:!{projectRoot}/**/*.spec.ts": "7663204892242899157",
+          "child:{projectRoot}/**/*": "3347149359534435991",
+          "parent:!{projectRoot}/**/*.spec.ts": "8911122541468969799",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "4641558175996703359",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "11114659294156087056",
         },
-        "value": "3497993078654537309",
+        "value": "5146047476750743843",
       }
     `);
   });
@@ -372,22 +372,22 @@ describe('native task hasher', () => {
         {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
-            "parent:!{projectRoot}/**/*.spec.ts": "7663204892242899157",
+            "parent:!{projectRoot}/**/*.spec.ts": "8911122541468969799",
             "parent:ProjectConfiguration": "16402137858974842465",
             "parent:TsConfig": "2264969541778889434",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "4641558175996703359",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "11114659294156087056",
           },
-          "value": "10775755355957559912",
+          "value": "845448225466199915",
         },
         {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
             "parent:ProjectConfiguration": "16402137858974842465",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "15295586939211629225",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "4641558175996703359",
+            "parent:{projectRoot}/**/*": "17059468255294227635",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "11114659294156087056",
           },
-          "value": "13219368697419749776",
+          "value": "16342992587503026008",
         },
       ]
     `);
@@ -467,18 +467,18 @@ describe('native task hasher', () => {
         {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
-            "child:!{projectRoot}/**/*.spec.ts": "13790135045935437026",
+            "child:!{projectRoot}/**/*.spec.ts": "6212660753359890679",
             "child:ProjectConfiguration": "10085593111011845427",
             "child:TsConfig": "2264969541778889434",
             "env:MY_TEST_HASH_ENV": "17357374746554314488",
             "parent:ProjectConfiguration": "14398811678394411425",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "15295586939211629225",
-            "workspace:[{workspaceRoot}/global1]": "13078141817211771580",
-            "workspace:[{workspaceRoot}/global2]": "13625885481717016690",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "10897751101872977225",
+            "parent:{projectRoot}/**/*": "17059468255294227635",
+            "workspace:[{workspaceRoot}/global1]": "14542405497386871555",
+            "workspace:[{workspaceRoot}/global2]": "12932836274958677781",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "12076281115618125366",
           },
-          "value": "14298810822113951946",
+          "value": "8928030752507058",
         },
       ]
     `);
@@ -529,10 +529,10 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "8661678577354855152",
-          "parent:{projectRoot}/**/*": "15295586939211629225",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "5219582320960288192",
+          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
         },
-        "value": "10821775409399212451",
+        "value": "10182005362255577288",
       }
     `);
   });
@@ -604,13 +604,13 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "13748859057138736105",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "7694964870822928111",
+          "child:{projectRoot}/**/*": "3347149359534435991",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
-          "parent:{projectRoot}/**/*": "15295586939211629225",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "5219582320960288192",
+          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
         },
-        "value": "12197760444984597111",
+        "value": "12868980333884890989",
       }
     `);
 
@@ -626,13 +626,13 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "13748859057138736105",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "7694964870822928111",
+          "child:{projectRoot}/**/*": "3347149359534435991",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
-          "parent:{projectRoot}/**/*": "15295586939211629225",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "5219582320960288192",
+          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
         },
-        "value": "12197760444984597111",
+        "value": "12868980333884890989",
       }
     `);
   });
