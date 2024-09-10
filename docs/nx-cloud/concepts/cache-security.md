@@ -26,7 +26,7 @@ In order to keep your cache secure, there are a few steps we recommend you take:
 
 When you use a [personal access token](/ci/recipes/security/personal-access-tokens) to connect to Nx Cloud, you can control the level of access that your developers have to the cache after they authenticate by logging in. By default, all personal access tokens have read-write access to the cache. If you need to give a developer write access to the cache, you can do so in the workspace settings of the Nx Cloud UI.
 
-You can strengthen your workspace security further by revoking all access to the cache for unauthenticated users. This is done by changing the ID Access Level in your workspace settings. By default this is set to `read-write`, but you can change it to `none` to prevent all access.
+You can strengthen your workspace security further by revoking all access to the cache for unauthenticated users. This is done by changing the ID Access Level in your workspace settings. By default this is set to `read-write`, but you can change it to `read-only` to limit access or `none` to prevent all access.
 
 ### Avoid using CI Access Tokens in `nx.json`
 
