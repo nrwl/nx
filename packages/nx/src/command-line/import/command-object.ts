@@ -4,7 +4,7 @@ import { withVerbose } from '../yargs-utils/shared-options';
 import { handleErrors } from '../../utils/params';
 
 export const yargsImportCommand: CommandModule = {
-  command: 'import [sourceRepository] [destinationProjectPath]',
+  command: 'import [sourceRepository] [destinationDirectory]',
   describe: false,
   builder: (yargs) =>
     linkToNxDevAndExamples(
@@ -14,13 +14,15 @@ export const yargsImportCommand: CommandModule = {
             type: 'string',
             description: 'The remote URL of the source to import',
           })
-          .positional('destinationProjectPath', {
+          .positional('destinationDirectory', {
             type: 'string',
+            alias: 'destination',
             description:
               'The directory in the current workspace to import into',
           })
-          .option('sourceProjectPath', {
+          .option('sourceDirectory', {
             type: 'string',
+            alias: 'source',
             description:
               'The directory in the source repository to import from',
           })

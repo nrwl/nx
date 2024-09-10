@@ -44,11 +44,11 @@ export interface ImportOptions {
   /**
    * The directory in the source repo to import
    */
-  sourceProjectPath: string;
+  source: string;
   /**
    * The directory in the destination repo to import into
    */
-  destinationProjectPath: string;
+  destination: string;
   /**
    * The depth to clone the source repository (limit this for faster clone times)
    */
@@ -59,15 +59,14 @@ export interface ImportOptions {
 }
 
 export async function importHandler(options: ImportOptions) {
-  let { sourceRepository, ref, sourceProjectPath, destinationProjectPath } =
-    options;
+  let { sourceRepository, ref, source, destination } = options;
 
   output.log({
     title:
       'Nx will walk you through the process of importing code from the source repository into this repository:',
     bodyLines: [
       `1. Nx will clone the source repository into a temporary directory`,
-      `2. The project code from the sourceProjectPath will be moved to the destinationProjectPath on a temporary branch in this repository`,
+      `2. The project code from the sourceDirectory will be moved to the destinationDirectory on a temporary branch in this repository`,
       `3. The temporary branch will be merged into the current branch in this repository`,
       `4. Nx will recommend plugins to integrate any new tools used in the imported code`,
       '',
@@ -151,8 +150,8 @@ export async function importHandler(options: ImportOptions) {
     ).ref;
   }
 
-  if (!sourceProjectPath) {
-    sourceProjectPath = (
+  if (!source) {
+    source = (
       await prompt<{ source: string }>([
         {
           type: 'input',
@@ -163,22 +162,22 @@ export async function importHandler(options: ImportOptions) {
     ).source;
   }
 
-  if (!destinationProjectPath) {
-    destinationProjectPath = (
+  if (!destination) {
+    destination = (
       await prompt<{ destination: string }>([
         {
           type: 'input',
           name: 'destination',
           message: 'Where in this workspace should the code be imported into?',
           required: true,
-          initial: sourceProjectPath ? sourceProjectPath : undefined,
+          initial: source ? source : undefined,
         },
       ])
     ).destination;
   }
 
-  const absSource = join(sourceTempRepoPath, sourceProjectPath);
-  const absDestination = join(process.cwd(), destinationProjectPath);
+  const absSource = join(sourceTempRepoPath, source);
+  const absDestination = join(process.cwd(), destination);
 
   const destinationGitClient = new GitRepository(process.cwd());
   await assertDestinationEmpty(destinationGitClient, absDestination);
@@ -201,7 +200,7 @@ export async function importHandler(options: ImportOptions) {
     await stat(absSource);
   } catch (e) {
     throw new Error(
-      `The source directory ${sourceProjectPath} does not exist in ${sourceRepository}. Please double check to make sure it exists.`
+      `The source directory ${source} does not exist in ${sourceRepository}. Please double check to make sure it exists.`
     );
   }
 
@@ -218,7 +217,7 @@ export async function importHandler(options: ImportOptions) {
   await prepareSourceRepo(
     sourceGitClient,
     ref,
-    sourceProjectPath,
+    source,
     relativeDestination,
     tempImportBranch,
     sourceRepository
@@ -234,7 +233,7 @@ export async function importHandler(options: ImportOptions) {
     destinationGitClient,
     sourceRepository,
     tempImportBranch,
-    destinationProjectPath,
+    destination,
     importRemoteName,
     ref
   );

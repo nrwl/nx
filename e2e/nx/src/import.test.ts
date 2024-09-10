@@ -70,7 +70,7 @@ describe('Nx Import', () => {
     const directory = 'projects/vite-app';
 
     runCLI(
-      `import ${remote} ${directory} --ref ${ref} --sourceProjectPath ${source} --no-interactive`,
+      `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
       {
         verbose: true,
       }
@@ -122,13 +122,13 @@ describe('Nx Import', () => {
     });
 
     runCLI(
-      `import ${repoPath} packages/a --ref main --sourceProjectPath packages/a --no-interactive`,
+      `import ${repoPath} packages/a --ref main --source packages/a --no-interactive`,
       {
         verbose: true,
       }
     );
     runCLI(
-      `import ${repoPath} packages/b --ref main --sourceProjectPath packages/b --no-interactive`,
+      `import ${repoPath} packages/b --ref main --source packages/b --no-interactive`,
       {
         verbose: true,
       }
