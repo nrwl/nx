@@ -9674,6 +9674,130 @@
         "disableCollapsible": false
       },
       {
+        "id": "rspack",
+        "path": "/nx-api/rspack",
+        "name": "rspack",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/rspack/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/rspack/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "executors",
+            "path": "/nx-api/rspack/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "rspack",
+                "path": "/nx-api/rspack/executors/rspack",
+                "name": "rspack",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "dev-server",
+                "path": "/nx-api/rspack/executors/dev-server",
+                "name": "dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "ssr-dev-server",
+                "path": "/nx-api/rspack/executors/ssr-dev-server",
+                "name": "ssr-dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "module-federation-dev-server",
+                "path": "/nx-api/rspack/executors/module-federation-dev-server",
+                "name": "module-federation-dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "module-federation-ssr-dev-server",
+                "path": "/nx-api/rspack/executors/module-federation-ssr-dev-server",
+                "name": "module-federation-ssr-dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "module-federation-static-server",
+                "path": "/nx-api/rspack/executors/module-federation-static-server",
+                "name": "module-federation-static-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/rspack/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "configuration",
+                "path": "/nx-api/rspack/generators/configuration",
+                "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "init",
+                "path": "/nx-api/rspack/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "preset",
+                "path": "/nx-api/rspack/generators/preset",
+                "name": "preset",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/rspack/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "storybook",
         "path": "/nx-api/storybook",
         "name": "storybook",

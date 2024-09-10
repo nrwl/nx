@@ -3,6 +3,7 @@
   "$id": "Application",
   "title": "Application generator for React + rspack",
   "type": "object",
+  "description": "React + Rspack application generator.",
   "examples": [
     {
       "command": "nx g app myapp --directory=myorg",

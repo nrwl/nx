@@ -23,9 +23,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "remoteName"
-            ],
+            "required": ["remoteName"],
             "additionalProperties": false
           }
         ]

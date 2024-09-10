@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "version": 2,
   "title": "Rspack dev-server executor",
-  "description": "",
+  "description": "Run @rspack/dev-server to serve a project.",
   "type": "object",
   "properties": {
     "buildTarget": {
@@ -16,11 +16,7 @@
     "mode": {
       "type": "string",
       "description": "Mode to run the server in.",
-      "enum": [
-        "development",
-        "production",
-        "none"
-      ]
+      "enum": ["development", "production", "none"]
     },
     "host": {
       "type": "string",
@@ -45,7 +41,5 @@
       "description": "Public URL where the application will be served."
     }
   },
-  "required": [
-    "buildTarget"
-  ]
+  "required": ["buildTarget"]
 }

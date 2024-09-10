@@ -2489,6 +2489,19 @@
           ]
         },
         {
+          "name": "rspack",
+          "id": "rspack",
+          "description": "Rspack package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/rspack",
+              "file": "shared/packages/rspack/rspack-plugin"
+            }
+          ]
+        },
+        {
           "name": "detox",
           "id": "detox",
           "description": "Detox package.",

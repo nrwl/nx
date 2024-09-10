@@ -75,8 +75,5 @@
       "x-priority": "internal"
     }
   },
-  "required": [
-    "browserTarget",
-    "serverTarget"
-  ]
+  "required": ["browserTarget", "serverTarget"]
 }
