@@ -4,15 +4,23 @@
   "sourceRoot": "packages/rspack/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/rspack"],
+    "add-extra-dependencies": {
+      "outputs": ["{workspaceRoot}/build/packages/rspack"],
       "command": "node ./scripts/add-dependency-to-build.js rspack @nrwl/rspack"
     },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/rspack"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js rspack"
+      }
+    },
     "build-base": {
+      "dependsOn": ["^build-base"],
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/rspack",
+        "outputPath": "build/packages/rspack",
         "main": "packages/rspack/src/index.ts",
         "tsConfig": "packages/rspack/tsconfig.lib.json",
         "assets": [
@@ -34,26 +42,6 @@
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
           },
           "LICENSE"
-        ]
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "packages/rspack/jest.config.ts"
-      }
-    },
-    "publish": {
-      "executor": "nx:run-commands",
-      "options": {
-        "parallel": false,
-        "commands": [
-          "node tools/scripts/publish.mjs rspack {args.ver} {args.tag}"
         ]
       }
     }
