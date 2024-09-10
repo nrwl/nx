@@ -32,8 +32,5 @@
       "default": {}
     }
   },
-  "required": [
-    "browserTarget",
-    "serverTarget"
-  ]
+  "required": ["browserTarget", "serverTarget"]
 }

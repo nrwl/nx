@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "Rspack",
-  "title": "",
+  "title": "Nx Rspack Configuration Generator",
+  "description": "Rspack configuration generator.",
   "type": "object",
   "properties": {
     "project": {

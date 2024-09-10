@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "Preset",
   "title": "Standalone React and rspack preset",
+  "description": "React + Rspack preset generator.",
   "type": "object",
   "properties": {
     "name": {

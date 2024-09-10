@@ -1,5 +1,6 @@
 {
   "name": "@nx/rspack",
+  "description": "The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.",
   "version": "0.0.1",
   "type": "commonjs",
   "repository": {

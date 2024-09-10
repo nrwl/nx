@@ -2,16 +2,13 @@
   "$schema": "http://json-schema.org/schema",
   "version": 2,
   "title": "Rspack build executor",
-  "description": "",
+  "description": "Run Rspack via an executor for a project.",
   "type": "object",
   "properties": {
     "target": {
       "type": "string",
       "description": "The platform to target (e.g. web, node).",
-      "enum": [
-        "web",
-        "node"
-      ]
+      "enum": ["web", "node"]
     },
     "main": {
       "type": "string",
@@ -122,34 +119,21 @@
           }
         },
         "additionalProperties": false,
-        "required": [
-          "replace",
-          "with"
-        ]
+        "required": ["replace", "with"]
       },
       "default": []
     },
     "mode": {
       "type": "string",
       "description": "Mode to run the build in.",
-      "enum": [
-        "development",
-        "production",
-        "none"
-      ]
+      "enum": ["development", "production", "none"]
     },
     "generatePackageJson": {
       "type": "boolean",
       "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
     }
   },
-  "required": [
-    "target",
-    "main",
-    "outputPath",
-    "tsConfig",
-    "rspackConfig"
-  ],
+  "required": ["target", "main", "outputPath", "tsConfig", "rspackConfig"],
   "definitions": {
     "assetPattern": {
       "oneOf": [
@@ -182,11 +166,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "glob",
-            "input",
-            "output"
-          ]
+          "required": ["glob", "input", "output"]
         },
         {
           "type": "string"

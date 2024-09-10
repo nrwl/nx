@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/build/packages/{projectName}/README.md"],
-      "command": "node ./scripts/copy-readme.js remix-legacy"
+      "command": "node ./scripts/copy-readme.js rspack-legacy"
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
