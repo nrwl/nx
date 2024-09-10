@@ -82,6 +82,20 @@ nx migrate --run-migrations
 {% link-card title="Automate Updating Dependencies" type="Feature" url="/features/automate-updating-dependencies" /%}
 {% /cards %}
 
+### import
+
+Import part of another repository into this repository, preserving git history.
+
+```shell
+nx import https://github.com/myorg/inventory-app.git apps/inventory
+nx import ../inventory-app apps/inventory
+```
+
+{% cards %}
+{% link-card title="nx import" type="API Reference" url="/nx-api/nx/documents/import" /%}
+{% link-card title="Import an Existing Project into an Nx Workspace" type="Recipe" url="/recipes/adopting-nx/import-projec" /%}
+{% /cards %}
+
 ### repair
 
 Repair any configuration that is no longer supported by Nx.

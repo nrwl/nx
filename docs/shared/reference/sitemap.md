@@ -560,6 +560,7 @@
       - [repair](/nx-api/nx/documents/repair)
       - [sync](/nx-api/nx/documents/sync)
       - [sync:check](/nx-api/nx/documents/sync-check)
+      - [import](/nx-api/nx/documents/import)
       - [exec](/nx-api/nx/documents/exec)
       - [watch](/nx-api/nx/documents/watch)
       - [show](/nx-api/nx/documents/show)

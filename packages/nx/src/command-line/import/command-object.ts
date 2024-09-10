@@ -5,7 +5,8 @@ import { handleErrors } from '../../utils/params';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',
-  describe: false,
+  describe:
+    'Import part of another repository into this repository, preserving git history.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withVerbose(

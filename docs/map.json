@@ -2117,6 +2117,11 @@
               "file": "generated/cli/sync-check"
             },
             {
+              "name": "import",
+              "id": "import",
+              "file": "generated/cli/import"
+            },
+            {
               "name": "exec",
               "id": "exec",
               "file": "generated/cli/exec"
