@@ -7029,14 +7029,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "component-cypress-spec",
-                "path": "/nx-api/angular/generators/component-cypress-spec",
-                "name": "component-cypress-spec",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "component-story",
                 "path": "/nx-api/angular/generators/component-story",
                 "name": "component-story",

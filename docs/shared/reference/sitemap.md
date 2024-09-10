@@ -347,7 +347,6 @@
       - [add-linting](/nx-api/angular/generators/add-linting)
       - [application](/nx-api/angular/generators/application)
       - [component](/nx-api/angular/generators/component)
-      - [component-cypress-spec](/nx-api/angular/generators/component-cypress-spec)
       - [component-story](/nx-api/angular/generators/component-story)
       - [component-test](/nx-api/angular/generators/component-test)
       - [convert-to-application-executor](/nx-api/angular/generators/convert-to-application-executor)

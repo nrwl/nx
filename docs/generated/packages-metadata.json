@@ -177,15 +177,6 @@
         "type": "generator"
       },
       {
-        "description": "Creates a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/angular/generators/component-cypress-spec.json",
-        "hidden": true,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/angular/src/generators/component-cypress-spec/schema.json",
-        "path": "angular/generators/component-cypress-spec",
-        "type": "generator"
-      },
-      {
         "description": "Creates a stories.ts file for a component.",
         "file": "generated/packages/angular/generators/component-story.json",
         "hidden": true,

@@ -181,15 +181,6 @@
         "path": "/nx-api/angular/generators/component",
         "type": "generator"
       },
-      "/nx-api/angular/generators/component-cypress-spec": {
-        "description": "Creates a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/angular/generators/component-cypress-spec.json",
-        "hidden": true,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/angular/src/generators/component-cypress-spec/schema.json",
-        "path": "/nx-api/angular/generators/component-cypress-spec",
-        "type": "generator"
-      },
       "/nx-api/angular/generators/component-story": {
         "description": "Creates a stories.ts file for a component.",
         "file": "generated/packages/angular/generators/component-story.json",
