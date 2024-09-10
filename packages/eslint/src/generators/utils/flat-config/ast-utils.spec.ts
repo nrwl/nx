@@ -7,10 +7,13 @@ import {
   generateFlatOverride,
   generatePluginExtendsElementWithCompatFixup,
   removeCompatExtends,
+  removeImportFromFlatConfig,
   removeOverridesFromLintConfig,
   removePlugin,
+  removePredefinedConfigs,
   replaceOverride,
 } from './ast-utils';
+import { stripIndents } from '@nx/devkit';
 
 describe('ast-utils', () => {
   const printer = ts.createPrinter();
@@ -338,6 +341,32 @@ describe('ast-utils', () => {
         '@myorg/awesome-config'
       );
       expect(result).toEqual(content);
+    });
+  });
+
+  describe('removeImportFromFlatConfig', () => {
+    it('should remove existing import from config if the var name matches', () => {
+      const content = stripIndents`
+        const nx = require("@nx/eslint-plugin");
+        const thisShouldRemain = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+          playwright.configs['flat/recommended'],
+        ];
+      `;
+      const result = removeImportFromFlatConfig(
+        content,
+        'nx',
+        '@nx/eslint-plugin'
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "
+        const thisShouldRemain = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+        playwright.configs['flat/recommended'],
+        ];"
+      `);
     });
   });
 
@@ -962,6 +991,66 @@ describe('ast-utils', () => {
                  rules: {}
                 }
               ];"
+      `);
+    });
+  });
+
+  describe('removePredefinedConfigs', () => {
+    it('should remove config objects and import', () => {
+      const content = stripIndents`
+        const nx = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+          ...nx.config['flat/base'],
+          ...nx.config['flat/typescript'],
+          ...nx.config['flat/javascript'],
+          playwright.configs['flat/recommended'],
+        ];
+      `;
+
+      const result = removePredefinedConfigs(
+        content,
+        '@nx/eslint-plugin',
+        'nx',
+        ['flat/base', 'flat/typescript', 'flat/javascript']
+      );
+
+      expect(result).toMatchInlineSnapshot(`
+        "
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+        playwright.configs['flat/recommended'],
+        ];"
+      `);
+    });
+
+    it('should keep configs that are not in the list', () => {
+      const content = stripIndents`
+        const nx = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+          ...nx.config['flat/base'],
+          ...nx.config['flat/typescript'],
+          ...nx.config['flat/javascript'],
+          ...nx.config['flat/react'],
+          playwright.configs['flat/recommended'],
+        ];
+      `;
+
+      const result = removePredefinedConfigs(
+        content,
+        '@nx/eslint-plugin',
+        'nx',
+        ['flat/base', 'flat/typescript', 'flat/javascript']
+      );
+
+      expect(result).toMatchInlineSnapshot(`
+        "const nx = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+        ...nx.config['flat/react'],
+        playwright.configs['flat/recommended'],
+        ];"
       `);
     });
   });

@@ -316,6 +316,50 @@ export function addImportToFlatConfig(
 }
 
 /**
+ * Remove an import from flat config
+ */
+export function removeImportFromFlatConfig(
+  content: string,
+  variable: string,
+  imp: string
+): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+
+  const changes: StringChange[] = [];
+
+  ts.forEachChild(source, (node) => {
+    // we can only combine object binding patterns
+    if (
+      ts.isVariableStatement(node) &&
+      ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
+      ts.isIdentifier(node.declarationList.declarations[0].name) &&
+      node.declarationList.declarations[0].name.getText() === variable &&
+      ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
+      node.declarationList.declarations[0].initializer.expression.getText() ===
+        'require' &&
+      ts.isStringLiteral(
+        node.declarationList.declarations[0].initializer.arguments[0]
+      ) &&
+      node.declarationList.declarations[0].initializer.arguments[0].text === imp
+    ) {
+      changes.push({
+        type: ChangeType.Delete,
+        start: node.pos,
+        length: node.end - node.pos,
+      });
+    }
+  });
+
+  return applyChangesToString(content, changes);
+}
+
+/**
  * Injects new ts.expression to the end of the module.exports array.
  */
 export function addBlockToFlatConfigExport(
@@ -568,6 +612,52 @@ export function removeCompatExtends(
   });
 
   return applyChangesToString(content, changes);
+}
+
+export function removePredefinedConfigs(
+  content: string,
+  moduleImport: string,
+  moduleVariable: string,
+  configs: string[]
+): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const changes: StringChange[] = [];
+  let removeImport = true;
+  findAllBlocks(source).forEach((node) => {
+    if (
+      ts.isSpreadElement(node) &&
+      ts.isElementAccessExpression(node.expression) &&
+      ts.isPropertyAccessExpression(node.expression.expression) &&
+      ts.isIdentifier(node.expression.expression.expression) &&
+      node.expression.expression.expression.getText() === moduleVariable &&
+      ts.isStringLiteral(node.expression.argumentExpression)
+    ) {
+      const config = node.expression.argumentExpression.getText();
+      // Check the text without quotes
+      if (configs.includes(config.substring(1, config.length - 1))) {
+        changes.push({
+          type: ChangeType.Delete,
+          start: node.pos,
+          length: node.end - node.pos + 1, // trailing comma
+        });
+      } else {
+        // If there is still a config used, do not remove import
+        removeImport = false;
+      }
+    }
+  });
+
+  let updated = applyChangesToString(content, changes);
+  if (removeImport) {
+    updated = removeImportFromFlatConfig(updated, moduleVariable, moduleImport);
+  }
+  return updated;
 }
 
 /**
