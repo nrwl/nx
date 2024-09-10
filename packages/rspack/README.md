@@ -1,3 +1,26 @@
+<p style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
+    <img alt="Nx - Smart Monorepos · Fast CI" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+  </picture>
+</p>
+
+{{links}}
+
+<hr>
+
+# Nx: Smart Monorepos · Fast CI
+
+Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.
+
+This package is a [Rspack plugin for Nx](https://nx.dev/nx-api/rspack).
+
+{{content}}
+
+
+
+
+
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Fast and Extensible Build System"></p>
 
 <hr>
@@ -43,39 +66,6 @@ First, install the plugin:
 npm install --save-dev @nx/rspack
 ```
 
-Then, run the `rspack-project` generator:
-
-```bash
-npx nx g @nx/rspack:rspack-project --skipValidation
-```
-
-**Note:** The `--skipValidation` option allows you to overwrite existing build targets.
-
-## Workspace libraries
-
-The `@nx/rspack` executor support importing workspace libs into the app.
-
-```bash
-npx nx g @nx/react:lib mylib
-```
-
-Import the new library in your app.
-
-```typescript jsx
-// src/app/app.tsx
-import { Mylib } from '@rspack-demo/mylib';
-
-// ...
-
-export default function App() {
-  return <MyLib />;
-}
-```
-
-Now, run the dev server again to see the new library in action.
-
-```bash
-npm start
-```
+Then, r
 
 **Note:** You must restart the server if you make any changes to your library.

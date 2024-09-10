@@ -49,7 +49,10 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
   rspackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `rspack-${optionsHash}.hash`
+    );
     const targetsCache = readTargetsCache(cachePath);
     try {
       return await createNodesFromFiles(
