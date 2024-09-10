@@ -32,9 +32,11 @@ describe('Gradle', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app', { verbose: true });
+        let buildOutput = runCLI('build app', { verbose: true });
         // app depends on list and utilities
+        expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain('nx run utilities:build');
         expect(buildOutput).toContain(':utilities:classes');
 
         checkFilesExist(
@@ -43,9 +45,14 @@ describe('Gradle', () => {
           `utilities/build/libs/utilities.jar`
         );
 
-        expect(() => {
-          runCLI(`build ${gradleProjectName}`, { verbose: true });
-        }).not.toThrow();
+        buildOutput = runCLI(`build ${gradleProjectName}`, { verbose: true });
+        // root project depends on app, list and utilities
+        expect(buildOutput).toContain('nx run app:build');
+        expect(buildOutput).toContain(':app:classes');
+        expect(buildOutput).toContain('nx run list:build');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain('nx run utilities:build');
+        expect(buildOutput).toContain(':utilities:classes');
       });
 
       it('should track dependencies for new app', () => {
@@ -85,9 +92,11 @@ dependencies {
             return content;
           }
         );
-        expect(() => {
-          runCLI('build app2', { verbose: true });
-        }).not.toThrow();
+
+        let buildOutput = runCLI('build app2', { verbose: true });
+        // app2 depends on app
+        expect(buildOutput).toContain('nx run app:build');
+        expect(buildOutput).toContain(':app:classes');
       });
     }
   );
