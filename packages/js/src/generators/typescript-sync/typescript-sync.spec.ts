@@ -391,7 +391,7 @@ describe('syncGenerator()', () => {
       `);
     });
 
-    it('should not prune existing external project references that are not dependencies but are ignored', async () => {
+    it('should not prune existing external project references that are not dependencies but are git ignored', async () => {
       writeJson(tree, 'packages/b/tsconfig.json', {
         compilerOptions: {
           composite: true,
@@ -399,8 +399,8 @@ describe('syncGenerator()', () => {
         references: [
           { path: './some/thing' },
           { path: './another/one' },
-          { path: '../../some-path/dir' }, // this is not a dependency but it's ignored, should not be pruned
-          { path: '../c' }, // this is not a dependency and it's not ignored, should be pruned
+          { path: '../../some-path/dir' }, // this is not a dependency but it's git ignored, should not be pruned
+          { path: '../c' }, // this is not a dependency and it's not git ignored, should be pruned
         ],
       });
       tree.write('some-path/dir/tsconfig.json', '{}');
@@ -429,15 +429,6 @@ describe('syncGenerator()', () => {
     });
 
     it('should not prune stale project references from projects included in `nx.sync.ignoredReferences`', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.sync = {
-        generatorOptions: {
-          '@nx/js:typescript-sync': {
-            projectsToKeepStaleReferences: ['b'],
-          },
-        },
-      };
-      updateNxJson(tree, nxJson);
       writeJson(tree, 'packages/b/tsconfig.json', {
         compilerOptions: {
           composite: true,
@@ -445,7 +436,7 @@ describe('syncGenerator()', () => {
         references: [
           { path: './some/thing' },
           { path: './another/one' },
-          // this is not a dependency and it's not ignored, it would normally be pruned,
+          // this is not a dependency and it's not git ignored, it would normally be pruned,
           // but it's included in `nx.sync.ignoredReferences`, so we don't prune it
           { path: '../c' },
         ],
