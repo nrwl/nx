@@ -5,12 +5,16 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "outputs": ["{workspaceRoot}/build/packages/{projectName}/README.md"],
+      "command": "node ./scripts/copy-readme.js remix-legacy"
+    },
+    "build-base": {
       "executor": "@nrwl/js:tsc",
       "dependsOn": ["^build"],
       "options": {
         "main": "packages-legacy/rspack/index.ts",
         "tsConfig": "packages-legacy/rspack/tsconfig.json",
-        "outputPath": "dist/packages/rspack-legacy",
+        "outputPath": "build/packages/rspack-legacy",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages-legacy/rspack/*.md",
@@ -28,9 +32,6 @@
           "LICENSE"
         ]
       }
-    },
-    "publish": {
-      "command": "node tools/scripts/publish.mjs rspack-legacy {args.ver} {args.tag}"
     }
   },
   "tags": []
