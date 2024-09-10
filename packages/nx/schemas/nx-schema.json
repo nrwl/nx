@@ -693,7 +693,7 @@
               "enum": [false]
             },
             {
-              "ref": "#/definitions/CreateReleaseProviderConfiguration"
+              "$ref": "#/definitions/CreateReleaseProviderConfiguration"
             }
           ]
         },
