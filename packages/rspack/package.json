@@ -4,13 +4,17 @@
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nrwl/nx-labs.git",
+    "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/rspack"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
   },
   "keywords": [
     "Monorepo",
-    "Next",
-    "Vercel"
+    "Rspack",
+    "Bundling",
+    "Module Federation"
   ],
   "author": "Jack Hsu",
   "license": "MIT",
