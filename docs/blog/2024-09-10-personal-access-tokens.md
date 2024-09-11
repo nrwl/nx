@@ -71,7 +71,7 @@ can [find more details in our docs](/ci/recipes/security/personal-access-tokens)
    CI
    access token defined in the `nxCloudAccessToken` property. This command will replace that with `nxCloudId`, a generic
    id that references your workspace but no longer provides access to the cache.
-2. **Generate a personal access token by running `npx nx-cloud login`** - Follow the directions in your terminal to log
+2. **Generate a personal access token by running `npx nx login`** - Follow the directions in your terminal to log
    in
    to Nx Cloud. Each contributor with access to the workspace will need to complete this step.
 3. **Move CI access tokens to environment variables** - Now that the access token is no longer committed to your

@@ -297,7 +297,7 @@ nx connect
 
 ### login
 
-Connect an Nx workspace to Nx Cloud
+Login to Nx Cloud. This command is an alias for [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
 
 ```shell
 nx login
@@ -310,7 +310,7 @@ nx login
 
 ### logout
 
-Connect an Nx workspace to Nx Cloud
+Logout from Nx Cloud. This command is an alias for [`nx-cloud logout`](/ci/reference/nx-cloud-cli#npx-nxcloud-logout).
 
 ```shell
 nx logout
