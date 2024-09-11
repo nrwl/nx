@@ -168,7 +168,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
-              "preVersionCommand": "",
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           },
