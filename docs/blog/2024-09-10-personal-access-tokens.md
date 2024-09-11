@@ -38,14 +38,10 @@ platform so that they're no longer committed to your repo.
 ## What are personal access tokens?
 
 [Personal access tokens](/ci/recipes/security/personal-access-tokens) are a new type of access token that is scoped to
-an individual user. This means that this token lives and dies with that member's access to your Nx Cloud workspace.
-Users must log in to Nx Cloud and they are a member of a workspace before a personal access token can be created.
-Once created, we validate that token for access each time you use the distributed cache. As soon as a user loses access,
-the personal access token no
-longer works, and access to the cache is removed.
+an individual user, rather than the workspace. This token authenticates the user with Nx Cloud when running tasks, so that we can validate their access to the distributed cache for a workspace. As soon as a user loses access to an Nx Cloud organization, they will no longer be able to access the cache for any of the organization's workspaces. The user's token belongs to them and will still allow access to their remaining organizations.
 
 This gets even more powerful when combined with the GitHub VCS integration. When a user's GitHub access is removed from
-a GitHub-connected organization, their access to Nx Cloud is removed, and their personal access token is invalidated.
+a GitHub-connected organization, their access to your Nx Cloud organization is removed, and their access to the cache for any of the organization's workspaces is removed.
 This means that Nx Cloud can fit into existing user de-provisioning processes you already have.
 
 Open source teams also benefit from personal access tokens. You can configure your access to allow anonymous users to
