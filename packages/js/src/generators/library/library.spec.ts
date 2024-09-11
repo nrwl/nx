@@ -541,7 +541,7 @@ describe('lib', () => {
                     "error",
                     {
                       "ignoredFiles": [
-                        "**/*/*eslint*",
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
                       ],
                     },
                   ],
@@ -605,7 +605,7 @@ describe('lib', () => {
                     "error",
                     {
                       "ignoredFiles": [
-                        "**/*/*eslint*",
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
                       ],
                     },
                   ],
@@ -737,7 +737,7 @@ describe('lib', () => {
                     "error",
                     {
                       "ignoredFiles": [
-                        "**/*/*eslint*",
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
                       ],
                     },
                   ],
@@ -1503,7 +1503,10 @@ describe('lib', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/esbuild.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },
@@ -1528,7 +1531,10 @@ describe('lib', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/rollup.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },

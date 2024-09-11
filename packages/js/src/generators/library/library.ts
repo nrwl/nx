@@ -388,19 +388,22 @@ export async function addLint(
           ruleOptions = {};
         }
         if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
-          ruleOptions.ignoredFiles = [
-            '{projectRoot}/vite.config.{js,ts,mjs,mts}',
-          ];
+          ruleOptions.ignoredFiles ??= [];
+          ruleOptions.ignoredFiles.push(
+            '{projectRoot}/vite.config.{js,ts,mjs,mts}'
+          );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         } else if (options.bundler === 'rollup') {
-          ruleOptions.ignoredFiles = [
-            '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
-          ];
+          ruleOptions.ignoredFiles ??= [];
+          ruleOptions.ignoredFiles.push(
+            '{projectRoot}/rollup.config.{js,ts,mjs,mts}'
+          );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         } else if (options.bundler === 'esbuild') {
-          ruleOptions.ignoredFiles = [
-            '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
-          ];
+          ruleOptions.ignoredFiles ??= [];
+          ruleOptions.ignoredFiles.push(
+            '{projectRoot}/esbuild.config.{js,ts,mjs,mts}'
+          );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         }
         return o;

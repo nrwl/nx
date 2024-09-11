@@ -252,7 +252,7 @@ function createEsLintConfiguration(
           'error',
           {
             // With flat configs, we don't want to include imports in the eslint js/cjs/mjs files to be checked
-            ignoredFiles: ['**/*/*eslint*'],
+            ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
           },
         ],
       },

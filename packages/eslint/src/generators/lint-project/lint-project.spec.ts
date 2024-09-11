@@ -170,7 +170,7 @@ describe('@nx/eslint:lint-project', () => {
               "@nx/dependency-checks": [
                 "error",
                 {
-                  "ignoredFiles": ["**/*/*eslint*"]
+                  "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs}"]
                 }
               ]
             }
