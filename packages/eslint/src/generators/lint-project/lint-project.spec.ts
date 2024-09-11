@@ -66,7 +66,7 @@ describe('@nx/eslint:lint-project', () => {
               'error',
               {
                 enforceBuildableLibDependency: true,
-                allow: [],
+                allow: ['^.*/eslint.base.config.[cm]?js$'],
                 depConstraints: [
                   {
                     sourceTag: '*',

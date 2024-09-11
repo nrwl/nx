@@ -115,7 +115,25 @@ export const getGlobalFlatEslintConfiguration = (
   if (!rootProject) {
     content = addBlockToFlatConfigExport(
       content,
-      generateFlatOverride(moduleBoundariesOverride)
+      generateFlatOverride({
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        rules: {
+          '@nx/enforce-module-boundaries': [
+            'error',
+            {
+              enforceBuildableLibDependency: true,
+              allow: [
+                // This allows a root project to be present without causing lint errors
+                // since all projects will depend on this base file.
+                '^.*/eslint.base.config.[cm]?js$',
+              ],
+              depConstraints: [
+                { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+              ],
+            },
+          ],
+        } as Linter.RulesRecord,
+      })
     );
   }
 
