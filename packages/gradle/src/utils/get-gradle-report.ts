@@ -191,10 +191,16 @@ export function processProjectReports(
             absBuildDirPath = line.substring('buildDir: '.length);
           }
           if (line.startsWith('childProjects: ')) {
-            const childProjects = line.substring('childProjects: {'.length); // remove curly braces {} around childProjects
+            const childProjects = line.substring(
+              'childProjects: {'.length,
+              line.length - 1
+            ); // remove curly braces {} around childProjects
             gradleProjectToChildProjects.set(
               gradleProject,
-              childProjects.split(',').map((c) => c.trim().split('=')[0]) // e.g. get project name from text like "app=project ':app', mylibrary=project ':mylibrary'"
+              childProjects
+                .split(',')
+                .map((c) => c.trim().split('=')[0])
+                .filter(Boolean) // e.g. get project name from text like "app=project ':app', mylibrary=project ':mylibrary'"
             );
           }
           if (line.includes('Dir: ')) {
@@ -228,7 +234,10 @@ export function processProjectReports(
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
         gradleProjectToProjectName.set(gradleProject, projectName);
-        gradleProjectNameToProjectRootMap.set(projectName, dirname(buildFile));
+        gradleProjectNameToProjectRootMap.set(
+          gradleProject,
+          dirname(buildFile)
+        );
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
