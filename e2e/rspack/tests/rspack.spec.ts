@@ -8,6 +8,7 @@ import {
   uniq,
   updateFile,
   runCLI,
+  runCommand,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
@@ -54,10 +55,9 @@ describe('rspack e2e', () => {
     );
 
     const pm = getPackageManagerCommand();
-    execSync(
+    runCommand(
       pm.addDev +
-        ' @babel/preset-react @babel/preset-env @babel/preset-typescript',
-      { cwd: tmpProjPath() }
+        ' @babel/preset-react @babel/preset-env @babel/preset-typescript'
     );
 
     let result = runCLI(`build ${project}`, {
