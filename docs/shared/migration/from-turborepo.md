@@ -78,7 +78,7 @@ Creating the equivalent configuration with Nx yields the following files:
       "cache": true
     }
   },
-  "nxCloudAccessToken": "..."
+  "nxCloudId": "..."
 }
 ```
 

@@ -58,12 +58,12 @@ where
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
 #[cfg(target_arch = "wasm32")]
-pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
+pub fn nx_walker<P>(directory: P, use_ignores: bool) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
-    let walker = create_walker(&directory);
+    let walker = create_walker(&directory, use_ignores);
 
     let entries = walker.build();
 

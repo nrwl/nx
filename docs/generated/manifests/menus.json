@@ -9100,6 +9100,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "module-federation-static-server",
+                "path": "/nx-api/react/executors/module-federation-static-server",
+                "name": "module-federation-static-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

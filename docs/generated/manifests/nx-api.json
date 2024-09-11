@@ -2254,6 +2254,15 @@
         "originalFilePath": "/packages/react/src/executors/module-federation-ssr-dev-server/schema.json",
         "path": "/nx-api/react/executors/module-federation-ssr-dev-server",
         "type": "executor"
+      },
+      "/nx-api/react/executors/module-federation-static-server": {
+        "description": "Serve a host and its remotes statically.",
+        "file": "generated/packages/react/executors/module-federation-static-server.json",
+        "hidden": false,
+        "name": "module-federation-static-server",
+        "originalFilePath": "/packages/react/src/executors/module-federation-static-server/schema.json",
+        "path": "/nx-api/react/executors/module-federation-static-server",
+        "type": "executor"
       }
     },
     "generators": {
