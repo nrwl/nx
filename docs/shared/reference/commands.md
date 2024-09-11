@@ -84,7 +84,7 @@ nx migrate --run-migrations
 
 ### import
 
-Import part of another repository into this repository, preserving git history.
+Import code and git history from another repository into this repository.
 
 ```shell
 nx import https://github.com/myorg/inventory-app.git apps/inventory
