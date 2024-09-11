@@ -1,11 +1,11 @@
 ---
 title: 'import - CLI command'
-description: 'Import part of another repository into this repository, preserving git history.'
+description: 'Import code and git history from another repository into this repository.'
 ---
 
 # import
 
-Import part of another repository into this repository, preserving git history.
+Import code and git history from another repository into this repository.
 
 ## Usage
 
