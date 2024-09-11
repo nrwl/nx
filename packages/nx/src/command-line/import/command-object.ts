@@ -1,7 +1,7 @@
 import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',

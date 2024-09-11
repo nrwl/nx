@@ -4,7 +4,7 @@ import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   createAPI as createReleaseChangelogAPI,
   shouldCreateGitHubRelease,

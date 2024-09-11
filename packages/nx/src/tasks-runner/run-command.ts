@@ -20,7 +20,7 @@ import { isRelativePath } from '../utils/fileutils';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
-import { handleErrors } from '../utils/params';
+import { handleErrors } from '../utils/handle-errors';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,

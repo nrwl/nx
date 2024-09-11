@@ -1,6 +1,6 @@
 import { verifyOrUpdateNxCloudClient } from '../../nx-cloud/update-manager';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export interface LoginArgs {
   nxCloudUrl?: string;

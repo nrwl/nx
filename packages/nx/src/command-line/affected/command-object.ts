@@ -9,7 +9,7 @@ import {
   withRunOptions,
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',

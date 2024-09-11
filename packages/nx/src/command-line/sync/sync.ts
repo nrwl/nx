@@ -2,7 +2,7 @@ import * as ora from 'ora';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   collectAllRegisteredSyncGenerators,
   flushSyncGeneratorChanges,
