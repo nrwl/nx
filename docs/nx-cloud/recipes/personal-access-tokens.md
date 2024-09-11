@@ -46,6 +46,22 @@ To utilize personal access tokens and Nx Cloud ID with Nx <= 19.6, the nx-cloud 
 
 When you run [`npx nx login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) you will be directed to the Nx Cloud app where you will be required to create an account and login. A new personal access token will be provisioned and saved in a local configuration file in your home folder (the location of this will be displayed when login is complete and varies depending on OS).
 
+### View your Personal Access Tokens
+
+You can view your personal access tokens in the Nx Cloud app by navigating to your profile settings. Click your user icon in the top right corner of the app and select `Profile`.
+
+![Profile Settings](/nx-cloud/recipes/profile-page.avif)
+
+From there, click on the `Personal access tokens` tab.
+
+![Personal Access Tokens](/nx-cloud/recipes/personal-access-tokens-profile.avif)
+
+### Manually create a Personal Access Token
+
+Personal access tokens can also be manually created in the Nx Cloud app. Navigate to your profile settings and click on the `Personal access tokens` tab. Select `New access token`, enter a name for the token and click `Generate Token`. The token will be displayed on the screen and can be copied to your clipboard.
+
+You can then use [nx-cloud configure](/ci/reference/nx-cloud-cli#npx-nxcloud-configure) in your terminal to set the token in your local configuration file.
+
 ## Permissions
 
 There are two types of permissions that can be granted to users.
