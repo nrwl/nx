@@ -132,8 +132,12 @@ describe('Webpack Plugin', () => {
 
   it('should be able to build with NxWebpackPlugin and a standard webpack config file', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler webpack --directory=apps/${appName} --projectNameAndRootFormat=as-provided`
+    );
     updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+    updateFile(`apps/${appName}/src/foo.ts`, `console.log('Foo');\n`);
+    updateFile(`apps/${appName}/src/bar.ts`, `console.log('Bar');\n`);
 
     updateFile(
       `apps/${appName}/webpack.config.js`,
@@ -144,13 +148,20 @@ describe('Webpack Plugin', () => {
       module.exports = {
         target: 'node',
         output: {
-          path: path.join(__dirname, '../../dist/${appName}')
+          path: path.join(__dirname, '../../dist/apps/${appName}')
         },
         plugins: [
           new NxAppWebpackPlugin({
             compiler: 'tsc',
-            main: 'apps/${appName}/src/main.ts',
-            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            main: './src/main.ts',
+            additionalEntryPoints: [
+              './src/foo.ts',
+              {
+                entryName: 'bar',
+                entryPath: './src/bar.ts', 
+              }
+            ],
+            tsConfig: './tsconfig.app.json',
             outputHashing: 'none',
             optimization: false,
           })
@@ -160,8 +171,9 @@ describe('Webpack Plugin', () => {
 
     runCLI(`build ${appName}`);
 
-    let output = runCommand(`node dist/${appName}/main.js`);
-    expect(output).toMatch(/Hello/);
+    expect(runCommand(`node dist/apps/${appName}/main.js`)).toMatch(/Hello/);
+    expect(runCommand(`node dist/apps/${appName}/foo.js`)).toMatch(/Foo/);
+    expect(runCommand(`node dist/apps/${appName}/bar.js`)).toMatch(/Bar/);
   }, 500_000);
 
   it('should bundle in NX_PUBLIC_ environment variables', () => {
