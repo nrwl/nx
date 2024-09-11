@@ -17,7 +17,7 @@ There are currently two (2) types of CI Access Token for Nx Cloud's runner that 
 
 ### Read Only Access
 
-The `read-only` access tokens will only read from the remote cache. New task results will not be stored in the remote cache, but cached results can be downloaded and replayed for other machines or CI pipelines to use. This option allows for the benefit of leveraging remote cache hits and also the added security of not allowing machines without proper permissions from adding entries into the remote cache.
+The `read-only` access tokens will only read from the remote cache. New task results will not be stored in the remote cache, but cached results can be downloaded and replayed for other machines or CI pipelines to use. This option provides the benefit of remote cache hits while restricting machines without proper permissions from adding entries into the remote cache.
 
 ### Read & Write Access
 
