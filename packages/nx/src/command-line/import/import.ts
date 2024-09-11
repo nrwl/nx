@@ -1,4 +1,4 @@
-import { dirname, join, relative, resolve } from 'path';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { minimatch } from 'minimatch';
 import { existsSync, promises as fsp } from 'node:fs';
 import * as chalk from 'chalk';
@@ -177,6 +177,13 @@ export async function importHandler(options: ImportOptions) {
   }
 
   const absSource = join(sourceTempRepoPath, source);
+
+  if (isAbsolute(destination)) {
+    throw new Error(
+      `The destination directory must be a relative path in this repository.`
+    );
+  }
+
   const absDestination = join(process.cwd(), destination);
 
   const destinationGitClient = new GitRepository(process.cwd());
@@ -209,6 +216,8 @@ export async function importHandler(options: ImportOptions) {
   const originalPackageWorkspaces = await getPackagesInPackageManagerWorkspace(
     packageManager
   );
+
+  const sourceIsNxWorkspace = existsSync(join(sourceGitClient.root, 'nx.json'));
 
   const relativeDestination = relative(
     destinationGitClient.root,
@@ -309,6 +318,19 @@ export async function importHandler(options: ImportOptions) {
   }
 
   await warnOnMissingWorkspacesEntry(packageManager, pmc, relativeDestination);
+
+  if (source != destination) {
+    output.warn({
+      title: `Check configuration files`,
+      bodyLines: [
+        `The source directory (${source}) and destination directory (${destination}) are different.`,
+        `You may need to update configuration files to match the directory in this repository.`,
+        sourceIsNxWorkspace
+          ? `For example, path options in project.json such as "main", "tsConfig", and "outputPath" need to be updated.`
+          : `For example, relative paths in tsconfig.json and other tooling configuration files may need to be updated.`,
+      ],
+    });
+  }
 
   // When only a subdirectory is imported, there might be devDependencies in the root package.json file
   // that needs to be ported over as well.
