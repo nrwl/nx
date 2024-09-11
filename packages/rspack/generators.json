@@ -26,6 +26,11 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "React application generator."
+    },
+    "convert-webpack": {
+      "factory": "./src/generators/convert-webpack/convert-webpack",
+      "schema": "./src/generators/convert-webpack/schema.json",
+      "description": "Convert a webpack application to use rspack."
     }
   }
 }
