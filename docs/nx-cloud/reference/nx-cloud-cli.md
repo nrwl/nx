@@ -4,6 +4,8 @@
 
 To provision a local personal access token to access Nx Cloud features run `npx nx-cloud login`. This will open your browser to the Nx Cloud application and after signing in will generate a personal access token and save it in a configuration file locally called `nxcloud.ini`.
 
+This command is the same as running `npx nx login`
+
 {% tabs %}
 {% tab label="macOS & Linux" %}
 
