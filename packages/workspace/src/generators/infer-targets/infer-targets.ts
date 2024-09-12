@@ -1,8 +1,10 @@
 import {
   createProjectGraphAsync,
   formatFiles,
+  GeneratorCallback,
   output,
   readProjectsConfigurationFromProjectGraph,
+  runTasksInSerial,
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
@@ -67,6 +69,7 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
     return;
   }
 
+  const tasks: GeneratorCallback[] = [];
   for (const generatorCollection of generatorsToRun) {
     try {
       const generator = generatorCollectionChoices.get(generatorCollection);
@@ -77,7 +80,8 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
           skipFormat: options.skipFormat,
         });
         if (callback) {
-          await callback();
+          const task = await callback();
+          if (typeof task === 'function') tasks.push(task);
         }
         output.success({
           title: `${generatorCollection}:convert-to-inferred - Success`,
@@ -100,6 +104,8 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  return runTasksInSerial(...tasks);
 }
 
 async function getPossibleConvertToInferredGenerators() {
