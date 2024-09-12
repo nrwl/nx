@@ -59,18 +59,30 @@ if you are interested.
 
     ![Step 11](/nx-cloud/enterprise/on-premise/images/saml/azure_11.png)
 
-11. Download the certificate in **Base64**:
+    Make sure your application user profile exposes the email address under `user.mail`. This can be configured in `Users and Groups` in the Azure portal. Alternatively, you can always configure the `email` claim to use a different property under the `user` object.
+
+11. Under `SAML Certificates`, click the pencil icon to edit
 
     ![Step 12](/nx-cloud/enterprise/on-premise/images/saml/azure_12.png)
 
-12. Extract the downloaded certificate value as a one-line string:
-    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' azure_cert_file.cer`
-    2. We’ll use this in a bit to initialize an environment variable
-13. Copy the Login URL:
+    For **Signing Option**, select **Sign SAML response and assertion**
 
     ![Step 13](/nx-cloud/enterprise/on-premise/images/saml/azure_13.png)
 
-14. Then add these two env vars to your Nx Cloud cluster secrets (see [Helm config](#helm-config) below):
+    Then click **Save** and close the popover.
+
+12. Download the certificate in **Base64**:
+
+    ![Step 14](/nx-cloud/enterprise/on-premise/images/saml/azure_14.png)
+
+13. Extract the downloaded certificate value as a one-line string:
+    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' azure_cert_file.cer`
+    2. We’ll use this in a bit to initialize an environment variable
+14. Copy the Login URL:
+
+    ![Step 15](/nx-cloud/enterprise/on-premise/images/saml/azure_15.png)
+
+15. Then add these two env vars to your Nx Cloud cluster secrets (see [Helm config](#helm-config) below):
     1. `SAML_CERT=<your-cert-string-from-above>`
     2. `SAML_ENTRY_POINT=<your-login-url-from-above>`
 
