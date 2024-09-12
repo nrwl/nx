@@ -33,34 +33,64 @@ function pathResolver(root: string): (path: string) => string {
   return (path) => join(root, path.replace('schema.json', ''));
 }
 
-export function generatePackageSchemas(): Promise<void[]> {
+export function generateLocalPackageSchemas(): Promise<void[]> {
+  return generatePackageSchemas();
+}
+
+export function generateExternalPackageSchemas(): Promise<any> {
+  const sourceRepositoryRelativePath = process.env.NX_OCEAN_RELATIVE_PATH;
+  if (!sourceRepositoryRelativePath) {
+    return Promise.all([]);
+  }
+  const sourcePackagesDirectory = 'libs/nx-packages';
+  const sourcePackagesNamePrefix = 'powerpack-';
+  const sourcePackagesOutputDirectory = 'external-packages';
+  return generatePackageSchemas(
+    sourceRepositoryRelativePath,
+    sourcePackagesDirectory,
+    sourcePackagesNamePrefix,
+    sourcePackagesOutputDirectory
+  );
+}
+
+export function generatePackageSchemas(
+  sourceRepositoryRelativePath = '',
+  sourcePackagesDirectory = 'packages',
+  sourcePackagesNamePrefix = '',
+  sourcePackagesOutputDirectory = 'packages'
+): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
-
-  const packages = findPackageMetadataList(absoluteRoot, 'packages').map(
-    (packageMetadata) => {
-      const getCurrentSchemaPath = pathResolver(absoluteRoot);
-      if (!!packageMetadata.executors.length) {
-        packageMetadata.executors = packageMetadata.executors.map((item) => ({
-          ...item,
-          schema: processSchemaData(
-            item.schema as NxSchema,
-            getCurrentSchemaPath(item['path'].replace('schema.json', ''))
-          ),
-        }));
-      }
-      if (!!packageMetadata.generators.length) {
-        packageMetadata.generators = packageMetadata.generators.map((item) => ({
-          ...item,
-          schema: processSchemaData(
-            item.schema as NxSchema,
-            getCurrentSchemaPath(item['path'].replace('schema.json', ''))
-          ),
-        }));
-      }
-      return packageMetadata;
-    }
+  const sourceRepositoryRoot = resolve(
+    join(__dirname, '../../../', sourceRepositoryRelativePath)
   );
+
+  const packages = findPackageMetadataList(
+    sourceRepositoryRoot,
+    sourcePackagesDirectory,
+    sourcePackagesNamePrefix
+  ).map((packageMetadata) => {
+    const getCurrentSchemaPath = pathResolver(absoluteRoot);
+    if (!!packageMetadata.executors.length) {
+      packageMetadata.executors = packageMetadata.executors.map((item) => ({
+        ...item,
+        schema: processSchemaData(
+          item.schema as NxSchema,
+          getCurrentSchemaPath(item['path'].replace('schema.json', ''))
+        ),
+      }));
+    }
+    if (!!packageMetadata.generators.length) {
+      packageMetadata.generators = packageMetadata.generators.map((item) => ({
+        ...item,
+        schema: processSchemaData(
+          item.schema as NxSchema,
+          getCurrentSchemaPath(item['path'].replace('schema.json', ''))
+        ),
+      }));
+    }
+    return packageMetadata;
+  });
   const packagesMetadata = packages.map(
     (p): PackageMetadata => ({
       description: p.description,
@@ -114,8 +144,13 @@ export function generatePackageSchemas(): Promise<void[]> {
     })
   );
 
-  const outputPath: string = join(absoluteRoot, 'docs', 'generated');
-  const outputPackagesPath: string = join(outputPath, 'packages');
+  const outputPath: string = sourceRepositoryRelativePath
+    ? join(absoluteRoot, 'docs', 'external-generated')
+    : join(absoluteRoot, 'docs', 'generated');
+  const outputPackagesPath: string = join(
+    outputPath,
+    sourcePackagesOutputDirectory
+  );
   const fileGenerationPromises: Promise<void>[] = [];
 
   // Generates all documents and schemas into their own directories per packages.

@@ -2,7 +2,11 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 import { join, resolve } from 'path';
-import { generatePackageSchemas } from '../package-schemas/generatePackageSchemas';
+import {
+  generateExternalPackageSchemas,
+  generateLocalPackageSchemas,
+  generatePackageSchemas,
+} from '../package-schemas/generatePackageSchemas';
 import { generateCliDocumentation } from './generate-cli-data';
 import { generateCnwDocumentation } from './generate-cnw-documentation';
 import { generateDevkitDocumentation } from './generate-devkit-documentation';
@@ -26,7 +30,8 @@ async function generate() {
     await generateCliDocumentation(commandsOutputDirectory);
 
     await generateDevkitDocumentation();
-    await generatePackageSchemas();
+    await generateLocalPackageSchemas();
+    await generateExternalPackageSchemas();
 
     await generateManifests(workspaceRoot);
 
