@@ -623,6 +623,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Sync Generators",
+            "path": "/concepts/sync-generators",
+            "id": "sync-generators",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx and Turborepo",
             "path": "/concepts/turbo-and-nx",
             "id": "turbo-and-nx",
@@ -823,6 +831,14 @@
         "name": "Nx Daemon",
         "path": "/concepts/nx-daemon",
         "id": "nx-daemon",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Sync Generators",
+        "path": "/concepts/sync-generators",
+        "id": "sync-generators",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5124,6 +5140,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Create a Sync Generator",
+            "path": "/extending-nx/recipes/create-sync-generator",
+            "id": "create-sync-generator",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Write a Migration",
             "path": "/extending-nx/recipes/migration-generators",
             "id": "migration-generators",
@@ -5218,6 +5242,14 @@
         "name": "Modify Files",
         "path": "/extending-nx/recipes/modifying-files",
         "id": "modifying-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Create a Sync Generator",
+        "path": "/extending-nx/recipes/create-sync-generator",
+        "id": "create-sync-generator",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8709,6 +8741,22 @@
                 "name": "repair",
                 "path": "/nx-api/nx/documents/repair",
                 "id": "repair",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "sync",
+                "path": "/nx-api/nx/documents/sync",
+                "id": "sync",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "sync:check",
+                "path": "/nx-api/nx/documents/sync-check",
+                "id": "sync-check",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
