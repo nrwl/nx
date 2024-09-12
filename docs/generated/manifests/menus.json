@@ -10399,6 +10399,74 @@
         ],
         "isExternal": false,
         "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-conformance",
+        "path": "/nx-api/powerpack-conformance",
+        "name": "powerpack-conformance",
+        "children": [],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-license",
+        "path": "/nx-api/powerpack-license",
+        "name": "powerpack-license",
+        "children": [],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-owners",
+        "path": "/nx-api/powerpack-owners",
+        "name": "powerpack-owners",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-owners/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "sync-codeowners-file",
+                "path": "/nx-api/powerpack-owners/generators/sync-codeowners-file",
+                "name": "sync-codeowners-file",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-s3-cache",
+        "path": "/nx-api/powerpack-s3-cache",
+        "name": "powerpack-s3-cache",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-s3-cache/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/powerpack-s3-cache/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
       }
     ]
   }
