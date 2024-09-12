@@ -509,19 +509,6 @@ describe('app', () => {
     });
   });
 
-  describe('--pascalCaseFiles', () => {
-    it(`should notify that this flag doesn't do anything`, async () => {
-      await applicationGenerator(tree, {
-        name: 'my-node-app',
-        pascalCaseFiles: true,
-        addPlugin: true,
-      } as Schema);
-
-      // @TODO how to spy on context ?
-      // expect(contextLoggerSpy).toHaveBeenCalledWith('NOTE: --pascalCaseFiles is a noop')
-    });
-  });
-
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
       jest.spyOn(devkit, 'formatFiles');

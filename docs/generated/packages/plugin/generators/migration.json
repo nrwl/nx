@@ -37,13 +37,6 @@
         "x-prompt": "What version would you like to use for the migration?",
         "x-priority": "important"
       },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-      },
       "packageJsonUpdates": {
         "type": "boolean",
         "description": "Whether or not to include `package.json` updates.",

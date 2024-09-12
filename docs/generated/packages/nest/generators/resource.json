@@ -15,13 +15,6 @@
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for this resource (plural, e.g., `users`)?"
       },
-      "project": {
-        "description": "The Nest project to target.",
-        "type": "string",
-        "$default": { "$source": "projectName" },
-        "alias": "p",
-        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. It will be removed in Nx v20."
-      },
       "nameAndDirectoryFormat": {
         "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
         "type": "string",
@@ -43,12 +36,6 @@
         "type": "string",
         "enum": ["jest", "none"],
         "default": "jest"
-      },
-      "flat": {
-        "description": "Flag to indicate if a directory is created.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20.",
-        "type": "boolean",
-        "default": false
       },
       "language": {
         "description": "Nest class language.",

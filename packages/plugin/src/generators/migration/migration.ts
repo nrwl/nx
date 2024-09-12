@@ -21,6 +21,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
+  project: string;
 }
 
 async function normalizeOptions(
@@ -41,8 +42,6 @@ async function normalizeOptions(
       directory: options.directory,
       fileName: name,
     });
-
-  const { className, propertyName } = names(artifactName);
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
     readProjectConfiguration(tree, project);

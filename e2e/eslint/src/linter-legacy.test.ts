@@ -27,10 +27,13 @@ describe('Linter (legacy)', () => {
       newProject({
         packages: ['@nx/react', '@nx/js', '@nx/eslint'],
       });
-      runCLI(`generate @nx/react:app ${myapp} --tags=validtag`, {
-        env: { NX_ADD_PLUGINS: 'false' },
-      });
-      runCLI(`generate @nx/js:lib ${mylib}`, {
+      runCLI(
+        `generate @nx/react:app ${myapp} --tags=validtag --directory=apps/${myapp}`,
+        {
+          env: { NX_ADD_PLUGINS: 'false' },
+        }
+      );
+      runCLI(`generate @nx/js:lib ${mylib} --directory=apps/${mylib}`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
     });

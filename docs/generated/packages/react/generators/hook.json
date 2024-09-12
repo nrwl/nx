@@ -15,13 +15,6 @@
       }
     ],
     "properties": {
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-      },
       "name": {
         "type": "string",
         "description": "The name of the hook.",
@@ -50,32 +43,12 @@
         "type": "string",
         "enum": ["as-provided", "derived"]
       },
-      "flat": {
-        "type": "boolean",
-        "description": "Create hook at the source root rather than its own directory.",
-        "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-      },
       "export": {
         "type": "boolean",
         "description": "When true, the hook is exported from the project `index.ts` (if it exists).",
         "alias": "e",
         "default": false,
         "x-prompt": "Should this hook be exported in the project?"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case hook file name (e.g. `useHook.ts`).",
-        "alias": "P",
-        "default": false,
-        "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
-      },
-      "pascalCaseDirectory": {
-        "type": "boolean",
-        "description": "Use pascal case directory name (e.g. `useHook/useHook.ts`).",
-        "alias": "R",
-        "default": false,
-        "x-deprecated": "Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
       }
     },
     "required": ["name"],

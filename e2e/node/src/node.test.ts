@@ -71,7 +71,9 @@ describe('Node Applications', () => {
     const nodeapp = uniq('nodeapp');
     const port = getRandomPort();
     process.env.PORT = `${port}`;
-    runCLI(`generate @nx/node:app ${nodeapp} --port=${port} --linter=eslint`);
+    runCLI(
+      `generate @nx/node:app ${nodeapp} --port=${port} --directory=apps/${nodeapp} --linter=eslint`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -90,7 +92,9 @@ describe('Node Applications', () => {
   // TODO(crystal, @ndcunningham): This does not work because NxWebpackPlugin({}) outputFilename does not work.
   xit('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
+    runCLI(
+      `generate @nx/node:app ${nodeapp} --directory=apps/${nodeapp} --linter=eslint`
+    );
 
     updateJson(join('apps', nodeapp, 'project.json'), (config) => {
       config.targets.build.options.outputFileName = 'index.js';
@@ -106,7 +110,7 @@ describe('Node Applications', () => {
     const port = getRandomPort();
     process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/node:app ${nodeapp} --port=${port} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app ${nodeapp} --directory=apps/${nodeapp} --port=${port} --linter=eslint --bundler=webpack`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -188,7 +192,7 @@ module.exports = {
     const nodeapp = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`
+      `generate @nx/node:app ${nodeapp} --directory=apps/${nodeapp} --linter=eslint --bundler=webpack --framework=none`
     );
 
     updateFile('.env', `NX_FOOBAR="test foo bar"`);
@@ -246,7 +250,7 @@ module.exports = {
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/express:app ${nodeapp} --port=${port} --linter=eslint`
+      `generate @nx/express:app ${nodeapp} --directory=apps/${nodeapp} --port=${port} --linter=eslint`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -296,7 +300,9 @@ module.exports = {
   it('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     const port = 3335;
-    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+    runCLI(
+      `generate @nx/nest:app ${nestapp} --directory=apps/${nestapp} --linter=eslint`
+    );
 
     const lintResults = runCLI(`lint ${nestapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -424,7 +430,9 @@ describe('Build Node apps', () => {
   xit('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
-    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+    runCLI(
+      `generate @nx/nest:app ${nestapp} --linter=eslint --directory=apps/${nestapp}`
+    );
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
@@ -528,7 +536,9 @@ ${jslib}();
     const port = getRandomPort();
     process.env.PORT = `${port}`;
 
-    runCLI(`generate @nx/node:app ${appName} --port=${port} --no-interactive`);
+    runCLI(
+      `generate @nx/node:app ${appName} --port=${port} --no-interactive --directory=apps/${appName}`
+    );
 
     // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -583,13 +593,6 @@ ${jslib}();
     expect(appTestResult).toContain(
       `Successfully ran target test for project ${appName}`
     );
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`
-      )
-    ).toThrow();
 
     runCLI(
       `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
@@ -668,7 +671,7 @@ ${jslib}();
   describe('nest libraries', function () {
     it('should be able to generate a nest library', async () => {
       const nestlib = uniq('nestlib');
-      runCLI(`generate @nx/nest:lib ${nestlib}`);
+      runCLI(`generate @nx/nest:lib ${nestlib} --directory=libs/${nestlib}`);
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
@@ -723,7 +726,9 @@ ${jslib}();
 
     it('should have plugin output if specified in `transformers`', async () => {
       const nestlib = uniq('nestlib');
-      runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
+      runCLI(
+        `generate @nx/nest:lib ${nestlib} --buildable --directory=libs/${nestlib}`
+      );
 
       packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 

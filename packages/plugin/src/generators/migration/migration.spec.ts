@@ -28,7 +28,6 @@ describe('NxPlugin migration generator', () => {
 
   it('should update the workspace.json file', async () => {
     await migrationGenerator(tree, {
-      project: projectName,
       directory: 'packages/my-plugin',
       packageVersion: '1.0.0',
     });

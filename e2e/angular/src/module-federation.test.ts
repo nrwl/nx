@@ -274,64 +274,6 @@ test('renders remotes', async ({ page }) => {
     }
   }, 20_000_000);
 
-  it('should should support generating host and remote apps with --project-name-and-root-format=derived', async () => {
-    const hostApp = uniq('host');
-    const remoteApp = uniq('remote');
-    const hostPort = 4800;
-    const remotePort = 4801;
-
-    // generate host app
-    runCLI(
-      `generate @nx/angular:host ${hostApp} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-    // generate remote app
-    runCLI(
-      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --port=${remotePort} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    // check files are generated with the layout directory ("apps/")
-    checkFilesExist(
-      `apps/${hostApp}/src/app/app.module.ts`,
-      `apps/${remoteApp}/src/app/app.module.ts`
-    );
-
-    // check default generated host is built successfully
-    const buildOutputSwc = await runCommandUntil(`build ${hostApp}`, (output) =>
-      output.includes('Successfully ran target build')
-    );
-    await killProcessAndPorts(buildOutputSwc.pid);
-
-    const buildOutputTsNode = await runCommandUntil(
-      `build ${hostApp}`,
-      (output) => output.includes('Successfully ran target build'),
-      {
-        env: { NX_PREFER_TS_NODE: 'true' },
-      }
-    );
-    await killProcessAndPorts(buildOutputTsNode.pid);
-
-    const processSwc = await runCommandUntil(
-      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
-      (output) =>
-        !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`)
-    );
-
-    await killProcessAndPorts(processSwc.pid, hostPort, remotePort);
-
-    const processTsNode = await runCommandUntil(
-      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
-      (output) =>
-        !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`),
-      {
-        env: { NX_PREFER_TS_NODE: 'true' },
-      }
-    );
-
-    await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
-  }, 20_000_000);
-
   it('should federate a module from a library and update an existing remote', async () => {
     const lib = uniq('lib');
     const remote = uniq('remote');
