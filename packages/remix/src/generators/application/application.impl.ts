@@ -10,13 +10,22 @@ import {
   readJson,
   readProjectConfiguration,
   runTasksInSerial,
-  stripIndents,
   toJS,
   Tree,
   updateJson,
   updateProjectConfiguration,
+  visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
+import { dirname } from 'node:path';
+import {
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from 'nx/src/nx-cloud/utilities/onboarding';
+import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   eslintVersion,
   getPackageVersion,
@@ -28,18 +37,10 @@ import {
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
-import { normalizeOptions, updateUnitTestConfig, addE2E } from './lib';
-import { NxRemixGeneratorSchema } from './schema';
-import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { updateJestTestMatch } from '../../utils/testing-config-utils';
-import {
-  getNxCloudAppOnBoardingUrl,
-  createNxCloudOnboardingURLForWelcomeApp,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+import { updateDependencies } from '../utils/update-dependencies';
+import { addE2E, normalizeOptions, updateUnitTestConfig } from './lib';
+import { NxRemixGeneratorSchema } from './schema';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -241,6 +242,9 @@ export async function remixApplicationGeneratorInternal(
       '@nx/eslint',
       getPackageVersion(tree, 'nx')
     );
+    const { addIgnoresToLintConfig } = await import(
+      '@nx/eslint/src/generators/utils/eslint-file'
+    );
     const eslintTask = await lintProjectGenerator(tree, {
       linter: options.linter,
       project: options.projectName,
@@ -254,11 +258,10 @@ export async function remixApplicationGeneratorInternal(
     });
     tasks.push(eslintTask);
 
-    tree.write(
-      joinPathFragments(options.projectRoot, '.eslintignore'),
-      stripIndents`build
-    public/build`
-    );
+    addIgnoresToLintConfig(tree, options.projectRoot, [
+      'build',
+      'public/build',
+    ]);
   }
 
   if (options.js) {
@@ -318,6 +321,52 @@ export default {...nxPreset};
   }
 
   tasks.push(await addE2E(tree, options));
+
+  // If the project package.json uses type module, and the project uses flat eslint config, we need to make sure the eslint config uses an explicit .cjs extension
+  // TODO: This could be re-evaluated once we support ESM in eslint configs
+  if (
+    tree.exists(joinPathFragments(options.projectRoot, 'package.json')) &&
+    tree.exists(joinPathFragments(options.projectRoot, 'eslint.config.js'))
+  ) {
+    const pkgJson = readJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json')
+    );
+    if (pkgJson.type === 'module') {
+      tree.rename(
+        joinPathFragments(options.projectRoot, 'eslint.config.js'),
+        joinPathFragments(options.projectRoot, 'eslint.config.cjs')
+      );
+      visitNotIgnoredFiles(tree, options.projectRoot, (file) => {
+        if (file.endsWith('eslint.config.js')) {
+          // Replace any extends on the eslint config to use the .cjs extension
+          const content = tree.read(file).toString();
+          if (content.includes('eslint.config')) {
+            tree.write(
+              file,
+              content
+                .replace(/eslint\.config'/g, `eslint.config.cjs'`)
+                .replace(/eslint\.config"/g, `eslint.config.cjs"`)
+                .replace(/eslint\.config\.js/g, `eslint.config.cjs`)
+            );
+          }
+
+          // If there is no sibling package.json with type commonjs, we need to rename the .js files to .cjs
+          const siblingPackageJsonPath = joinPathFragments(
+            dirname(file),
+            'package.json'
+          );
+          if (tree.exists(siblingPackageJsonPath)) {
+            const siblingPkgJson = readJson(tree, siblingPackageJsonPath);
+            if (siblingPkgJson.type === 'module') {
+              return;
+            }
+          }
+          tree.rename(file, file.replace('.js', '.cjs'));
+        }
+      });
+    }
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

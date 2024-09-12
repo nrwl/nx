@@ -601,6 +601,38 @@ describe('app', () => {
 
   describe('--linter', () => {
     describe('default (eslint)', () => {
+      it('should add flat config as needed', async () => {
+        tree.write('eslint.config.js', '');
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          projectNameAndRootFormat: 'as-provided',
+        });
+
+        expect(tree.read(`${name}/eslint.config.js`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "const { FlatCompat } = require('@eslint/eslintrc');
+          const js = require('@eslint/js');
+          const nx = require('@nx/eslint-plugin');
+          const baseConfig = require('../eslint.config.js');
+
+          const compat = new FlatCompat({
+            baseDirectory: __dirname,
+            recommendedConfig: js.configs.recommended,
+          });
+
+          module.exports = [
+            ...compat.extends('next', 'next/core-web-vitals'),
+            ...baseConfig,
+            ...nx.configs['flat/react-typescript'],
+            { ignores: ['.next/**/*'] },
+          ];
+          "
+        `);
+      });
+
       it('should add .eslintrc.json and dependencies', async () => {
         const name = uniq();
 
@@ -659,17 +691,6 @@ describe('app', () => {
                   "*.jsx",
                 ],
                 "rules": {},
-              },
-              {
-                "env": {
-                  "jest": true,
-                },
-                "files": [
-                  "*.spec.ts",
-                  "*.spec.tsx",
-                  "*.spec.js",
-                  "*.spec.jsx",
-                ],
               },
             ],
           }

@@ -232,13 +232,25 @@ export function runCommandAsync(
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
+          logError(`Original command: ${command}`, `${stdout}\n\n${stderr}`);
           reject(err);
         }
-        resolve({
+
+        const outputs = {
           stdout: stripConsoleColors(stdout),
           stderr: stripConsoleColors(stderr),
           combinedOutput: stripConsoleColors(`${stdout}${stderr}`),
-        });
+        };
+
+        if (opts.verbose ?? isVerboseE2ERun()) {
+          output.log({
+            title: `Original command: ${command}`,
+            bodyLines: [outputs.combinedOutput],
+            color: 'green',
+          });
+        }
+
+        resolve(outputs);
       }
     );
   });
@@ -302,10 +314,11 @@ export function runCLIAsync(
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   const pm = getPackageManagerCommand();
-  return runCommandAsync(
-    `${opts.silent ? pm.runNxSilent : pm.runNx} ${command}`,
-    opts
-  );
+  const commandToRun = `${opts.silent ? pm.runNxSilent : pm.runNx} ${command} ${
+    opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+  }${opts.redirectStderr ? ' 2>&1' : ''}`;
+
+  return runCommandAsync(commandToRun, opts);
 }
 
 export function runNgAdd(

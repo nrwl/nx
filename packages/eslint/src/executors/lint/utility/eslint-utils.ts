@@ -14,7 +14,9 @@ export async function resolveAndInstantiateESLint(
       'When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files'
     );
   }
-  const ESLint = await resolveESLintClass(useFlatConfig);
+  const ESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: useFlatConfig,
+  });
 
   const eslintOptions: ESLint.Options = {
     overrideConfigFile: eslintConfigPath,

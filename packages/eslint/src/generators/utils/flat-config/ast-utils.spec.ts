@@ -1,16 +1,153 @@
 import ts = require('typescript');
 import {
   addBlockToFlatConfigExport,
-  generateAst,
+  addFlatCompatToFlatConfig,
   addImportToFlatConfig,
-  addCompatToFlatConfig,
-  removeOverridesFromLintConfig,
-  replaceOverride,
-  removePlugin,
+  generateAst,
+  generateFlatOverride,
+  generatePluginExtendsElementWithCompatFixup,
   removeCompatExtends,
+  removeImportFromFlatConfig,
+  removeOverridesFromLintConfig,
+  removePlugin,
+  removePredefinedConfigs,
+  replaceOverride,
 } from './ast-utils';
+import { stripIndents } from '@nx/devkit';
 
 describe('ast-utils', () => {
+  const printer = ts.createPrinter();
+
+  function printTsNode(node: ts.Node) {
+    return printer.printNode(
+      ts.EmitHint.Unspecified,
+      node,
+      ts.createSourceFile('test.ts', '', ts.ScriptTarget.Latest)
+    );
+  }
+
+  describe('generateFlatOverride', () => {
+    it('should create appropriate ASTs for a flat config entries based on the provided legacy eslintrc JSON override data', () => {
+      // It's easier to review the stringified result of the AST than the AST itself
+      const getOutput = (input: any) => {
+        const ast = generateFlatOverride(input);
+        return printTsNode(ast);
+      };
+
+      expect(getOutput({})).toMatchInlineSnapshot(`"{}"`);
+
+      // It should apply rules directly
+      expect(
+        getOutput({
+          rules: {
+            a: 'error',
+            b: 'off',
+            c: [
+              'error',
+              {
+                some: {
+                  rich: ['config', 'options'],
+                },
+              },
+            ],
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            rules: {
+                a: "error",
+                b: "off",
+                c: [
+                    "error",
+                    { some: { rich: [
+                                "config",
+                                "options"
+                            ] } }
+                ]
+            }
+        }"
+      `);
+
+      // It should normalize and apply files as an array
+      expect(
+        getOutput({
+          files: '*.ts', //  old single * syntax should be replaced by **/*
+        })
+      ).toMatchInlineSnapshot(`"{ files: ["**/*.ts"] }"`);
+
+      expect(
+        getOutput({
+          // It should not only nest the parser in languageOptions, but also wrap it in a require call because parsers are passed by reference in flat config
+          parser: 'jsonc-eslint-parser',
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            languageOptions: { parser: require("jsonc-eslint-parser") }
+        }"
+      `);
+
+      expect(
+        getOutput({
+          // It should nest parserOptions in languageOptions
+          parserOptions: {
+            foo: 'bar',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            languageOptions: { parserOptions: { foo: "bar" } }
+        }"
+      `);
+
+      // It should add the compat tooling for extends, and spread the rules object to allow for easier editing by users
+      expect(getOutput({ extends: ['plugin:@nx/typescript'] }))
+        .toMatchInlineSnapshot(`
+        "...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+            ...config,
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+
+      // It should add the compat tooling for plugins, and spread the rules object to allow for easier editing by users
+      expect(getOutput({ plugins: ['@nx/eslint-plugin'] }))
+        .toMatchInlineSnapshot(`
+        "...compat.config({ plugins: ["@nx/eslint-plugin"] }).map(config => ({
+            ...config,
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+
+      // It should add the compat tooling for env, and spread the rules object to allow for easier editing by users
+      expect(getOutput({ env: { jest: true } })).toMatchInlineSnapshot(`
+        "...compat.config({ env: { jest: true } }).map(config => ({
+            ...config,
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+
+      // Files for the compat tooling should be added appropriately
+      expect(getOutput({ env: { jest: true }, files: ['*.ts', '*.tsx'] }))
+        .toMatchInlineSnapshot(`
+        "...compat.config({ env: { jest: true } }).map(config => ({
+            ...config,
+            files: [
+                "**/*.ts",
+                "**/*.tsx"
+            ],
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+    });
+  });
+
   describe('addBlockToFlatConfigExport', () => {
     it('should inject block to the end of the file', () => {
       const content = `const baseConfig = require("../../eslint.config.js");
@@ -207,6 +344,32 @@ describe('ast-utils', () => {
     });
   });
 
+  describe('removeImportFromFlatConfig', () => {
+    it('should remove existing import from config if the var name matches', () => {
+      const content = stripIndents`
+        const nx = require("@nx/eslint-plugin");
+        const thisShouldRemain = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+          playwright.configs['flat/recommended'],
+        ];
+      `;
+      const result = removeImportFromFlatConfig(
+        content,
+        'nx',
+        '@nx/eslint-plugin'
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "
+        const thisShouldRemain = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+        playwright.configs['flat/recommended'],
+        ];"
+      `);
+    });
+  });
+
   describe('addCompatToFlatConfig', () => {
     it('should add compat to config', () => {
       const content = `const baseConfig = require("../../eslint.config.js");
@@ -221,17 +384,16 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
+      const result = addFlatCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const baseConfig = require("../../eslint.config.js");
            
         const compat = new FlatCompat({
-              baseDirectory: __dirname,
-              recommendedConfig: js.configs.recommended,
-            });
-          
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
          module.exports = [
               ...baseConfig,
               {
@@ -260,17 +422,16 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
+      const result = addFlatCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const baseConfig = require("../../eslint.config.js");
             const js = require("@eslint/js");
            
         const compat = new FlatCompat({
-              baseDirectory: __dirname,
-              recommendedConfig: js.configs.recommended,
-            });
-          
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
          module.exports = [
               ...baseConfig,
               {
@@ -306,7 +467,7 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
+      const result = addFlatCompatToFlatConfig(content);
       expect(result).toEqual(content);
     });
   });
@@ -831,6 +992,76 @@ describe('ast-utils', () => {
                 }
               ];"
       `);
+    });
+  });
+
+  describe('removePredefinedConfigs', () => {
+    it('should remove config objects and import', () => {
+      const content = stripIndents`
+        const nx = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+          ...nx.config['flat/base'],
+          ...nx.config['flat/typescript'],
+          ...nx.config['flat/javascript'],
+          playwright.configs['flat/recommended'],
+        ];
+      `;
+
+      const result = removePredefinedConfigs(
+        content,
+        '@nx/eslint-plugin',
+        'nx',
+        ['flat/base', 'flat/typescript', 'flat/javascript']
+      );
+
+      expect(result).toMatchInlineSnapshot(`
+        "
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+        playwright.configs['flat/recommended'],
+        ];"
+      `);
+    });
+
+    it('should keep configs that are not in the list', () => {
+      const content = stripIndents`
+        const nx = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+          ...nx.config['flat/base'],
+          ...nx.config['flat/typescript'],
+          ...nx.config['flat/javascript'],
+          ...nx.config['flat/react'],
+          playwright.configs['flat/recommended'],
+        ];
+      `;
+
+      const result = removePredefinedConfigs(
+        content,
+        '@nx/eslint-plugin',
+        'nx',
+        ['flat/base', 'flat/typescript', 'flat/javascript']
+      );
+
+      expect(result).toMatchInlineSnapshot(`
+        "const nx = require("@nx/eslint-plugin");
+        const playwright = require('eslint-plugin-playwright');
+        module.exports = [
+        ...nx.config['flat/react'],
+        playwright.configs['flat/recommended'],
+        ];"
+      `);
+    });
+  });
+
+  describe('generatePluginExtendsElementWithCompatFixup', () => {
+    it('should return spread element with fixupConfigRules call wrapping the extended plugin', () => {
+      const result = generatePluginExtendsElementWithCompatFixup('my-plugin');
+
+      expect(printTsNode(result)).toMatchInlineSnapshot(
+        `"...fixupConfigRules(compat.extends("my-plugin"))"`
+      );
     });
   });
 });

@@ -1,22 +1,26 @@
 import type { ESLint } from 'eslint';
+import { useFlatConfig } from '../utils/flat-config';
 
-export async function resolveESLintClass(
-  useFlatConfig = false
-): Promise<typeof ESLint> {
+export async function resolveESLintClass(opts?: {
+  useFlatConfigOverrideVal: boolean;
+}): Promise<typeof ESLint> {
   try {
-    // In eslint 8.57.0 (the final v8 version), a dedicated API was added for resolving the correct ESLint class.
-    const eslint = await import('eslint');
-    if (typeof (eslint as any).loadESLint === 'function') {
-      return await (eslint as any).loadESLint({ useFlatConfig });
-    }
-    // If that API is not available (an older version of v8), we need to use the old way of resolving the ESLint class.
-    if (!useFlatConfig) {
-      return eslint.ESLint;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { FlatESLint } = require('eslint/use-at-your-own-risk');
-    return FlatESLint;
+    // Explicitly use the FlatESLint and LegacyESLint classes here because the ESLint class points at a different one based on ESLint v8 vs ESLint v9
+    // But the decision on which one to use is not just based on the major version of ESLint.
+    // @ts-expect-error The may be wrong based on our installed eslint version
+    const { LegacyESLint, FlatESLint } = await import(
+      'eslint/use-at-your-own-risk'
+    );
+
+    const shouldESLintUseFlatConfig =
+      typeof opts?.useFlatConfigOverrideVal === 'boolean'
+        ? opts.useFlatConfigOverrideVal
+        : useFlatConfig();
+
+    return shouldESLintUseFlatConfig ? FlatESLint : LegacyESLint;
   } catch {
-    throw new Error('Unable to find ESLint. Ensure ESLint is installed.');
+    throw new Error(
+      'Unable to find `eslint`. Ensure a valid `eslint` version is installed.'
+    );
   }
 }

@@ -150,8 +150,7 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect un
 `;
 
 exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 5`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   transform: {

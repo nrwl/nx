@@ -60,9 +60,14 @@ describe('Nx Import', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: tempViteProjectPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: tempViteProjectPath,
-    });
+
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: tempViteProjectPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
 
     const remote = tempViteProjectPath;
     const ref = 'main';

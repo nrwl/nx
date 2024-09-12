@@ -49,5 +49,12 @@ export default {
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-empty-interface': 'error',
     '@typescript-eslint/no-explicit-any': 'warn',
+    /**
+     * During the migration to use ESLint v9 and typescript-eslint v8 for new workspaces,
+     * this rule would have created a lot of noise, so we are disabling it by default for now.
+     *
+     * TODO(v20): we should make this part of what we re-evaluate in v20
+     */
+    '@typescript-eslint/no-require-imports': 'off',
   },
 };
