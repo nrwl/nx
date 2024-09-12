@@ -1236,6 +1236,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Import an Existing Project into an Nx Workspace",
+                "path": "/recipes/adopting-nx/import-project",
+                "id": "import-project",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Preserving Git Histories",
                 "path": "/recipes/adopting-nx/preserving-git-histories",
                 "id": "preserving-git-histories",
@@ -2354,6 +2362,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Import an Existing Project into an Nx Workspace",
+            "path": "/recipes/adopting-nx/import-project",
+            "id": "import-project",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Preserving Git Histories",
             "path": "/recipes/adopting-nx/preserving-git-histories",
             "id": "preserving-git-histories",
@@ -2392,6 +2408,14 @@
         "name": "Add to any Project",
         "path": "/recipes/adopting-nx/adding-to-existing-project",
         "id": "adding-to-existing-project",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Import an Existing Project into an Nx Workspace",
+        "path": "/recipes/adopting-nx/import-project",
+        "id": "import-project",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8757,6 +8781,14 @@
                 "name": "sync:check",
                 "path": "/nx-api/nx/documents/sync-check",
                 "id": "sync-check",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "import",
+                "path": "/nx-api/nx/documents/import",
+                "id": "import",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

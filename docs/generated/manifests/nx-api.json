@@ -1924,6 +1924,17 @@
         "tags": [],
         "originalFilePath": "generated/cli/sync-check"
       },
+      "/nx-api/nx/documents/import": {
+        "id": "import",
+        "name": "import",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/import",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/import",
+        "tags": [],
+        "originalFilePath": "generated/cli/import"
+      },
       "/nx-api/nx/documents/exec": {
         "id": "exec",
         "name": "exec",
