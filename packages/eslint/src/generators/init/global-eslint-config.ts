@@ -125,7 +125,7 @@ export const getGlobalFlatEslintConfiguration = (
               allow: [
                 // This allows a root project to be present without causing lint errors
                 // since all projects will depend on this base file.
-                '^.*/eslint.base.config.[cm]?js$',
+                '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
               ],
               depConstraints: [
                 { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },

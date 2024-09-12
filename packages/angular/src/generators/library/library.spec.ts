@@ -705,7 +705,7 @@ describe('lib', () => {
                   "error",
                   {
                     "ignoredFiles": [
-                      "**/*/*eslint*"
+                      "{projectRoot}/eslint.config.{js,cjs,mjs}"
                     ]
                   }
                 ]
@@ -1367,7 +1367,7 @@ describe('lib', () => {
                     "error",
                     {
                       "ignoredFiles": [
-                        "**/*/*eslint*",
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
                       ],
                     },
                   ],
