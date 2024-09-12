@@ -19,7 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { combineOptionsForGenerator } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
@@ -52,6 +52,7 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
+import { handleErrors } from '../../utils/handle-errors';
 
 const LARGE_BUFFER = 1024 * 1000000;
 

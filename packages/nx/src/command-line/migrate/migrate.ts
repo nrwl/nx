@@ -49,7 +49,7 @@ import {
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
