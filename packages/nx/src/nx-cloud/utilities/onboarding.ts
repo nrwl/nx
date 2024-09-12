@@ -29,6 +29,11 @@ export async function getNxCloudAppOnBoardingUrl(token: string) {
 
 export function readNxCloudToken(tree: Tree) {
   const nxJson = readNxJson(tree);
-  const { accessToken } = getRunnerOptions('default', nxJson, {}, true);
-  return accessToken;
+  const { accessToken, nxCloudId } = getRunnerOptions(
+    'default',
+    nxJson,
+    {},
+    true
+  );
+  return accessToken || nxCloudId;
 }
