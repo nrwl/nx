@@ -6,6 +6,12 @@ import type {
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
 import type { AppConfig, ExternalApi } from '@nx/graph/shared';
+import {
+  ProjectDetailsEvents,
+  projectDetailsMachine,
+  ProjectDetailsState,
+} from './app/console/project-details/project-details.machine';
+import { Interpreter } from 'xstate';
 
 export declare global {
   interface Window {
@@ -23,7 +29,9 @@ export declare global {
 
     // using bundled graph components directly from outside the graph app
     __NX_RENDER_GRAPH__?: boolean;
-    renderPDV?: (data: any) => void;
+    renderPDV?: (
+      data: any
+    ) => Interpreter<ProjectDetailsState, any, ProjectDetailsEvents>;
     renderError?: (data: any) => void;
   }
 }

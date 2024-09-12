@@ -4,36 +4,55 @@ if (process.env.NODE_ENV === 'development') {
   require('preact/debug');
 }
 
+import { projectDetailsMachine } from './app/console-project-details/project-details.machine';
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import type { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { StrictMode } from 'react';
 import { inspect } from '@xstate/inspect';
 import { App } from './app/app';
 import { ExternalApiImpl } from './app/external-api-impl';
 import { render } from 'preact';
-import { ErrorToastUI, ExpandedTargetsProvider } from '@nx/graph/shared';
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
 import { ErrorPage } from './app/ui-components/error-page';
+import { ProjectDetailsApp } from './app/console-project-details/project-details.app';
+import { interpret } from 'xstate';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
-  window.renderPDV = (data: any) => {
-    const container = document.getElementById('app');
+  window.renderPDV = (data: {
+    project: ProjectGraphProjectNode;
+    sourceMap: Record<string, string[]>;
+    connectedToCloud: boolean;
+  }) => {
+    const service = interpret(projectDetailsMachine).start();
+
+    service.send({
+      type: 'loadData',
+      ...data,
+    });
+
     render(
       <StrictMode>
-        <ExpandedTargetsProvider>
-          <ProjectDetails {...data} />
-        </ExpandedTargetsProvider>
-        <ErrorToastUI errors={data.errors} />
+        <ProjectDetailsApp service={service} />
       </StrictMode>,
-      container
+      document.getElementById('app')
     );
+
+    return service;
   };
 
-  window.renderError = (data: any) => {
-    const container = document.getElementById('app');
+  window.renderError = (data: {
+    message: string;
+    stack?: string;
+    errors: GraphError[];
+  }) => {
     render(
       <StrictMode>
         <ErrorPage {...data} />
       </StrictMode>,
-      container
+      document.getElementById('app')
     );
   };
 } else {

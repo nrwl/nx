@@ -3,6 +3,7 @@
 import { ErrorRenderer } from '@nx/graph/ui-components';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
+import type { JSX } from 'react';
 
 export type ErrorPageProps = {
   message: string | JSX.Element;
