@@ -9,6 +9,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
+import { TaskHistory } from '../utils/task-history';
 
 export interface Batch {
   executorName: string;
@@ -24,12 +25,20 @@ export class TasksSchedule {
   private runningTasks = new Set<string>();
   private completedTasks = new Set<string>();
   private scheduleRequestsExecutionChain = Promise.resolve();
+  private estimatedTaskTimings: Record<string, number>;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
+    private readonly taskHistory: TaskHistory,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
+
+  public async init() {
+    this.estimatedTaskTimings = await this.taskHistory.getEstimatedTaskTimings(
+      Object.values(this.taskGraph.tasks).map((t) => t.target)
+    );
+  }
 
   public async scheduleNextTasks() {
     this.scheduleRequestsExecutionChain =

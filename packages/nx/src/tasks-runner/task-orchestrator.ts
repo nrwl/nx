@@ -39,6 +39,7 @@ export class TaskOrchestrator {
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
+    null,
     this.options
   );
 
@@ -76,7 +77,10 @@ export class TaskOrchestrator {
 
   async run() {
     // Init the ForkedProcessTaskRunner
-    await this.forkedProcessTaskRunner.init();
+    await Promise.all([
+      this.forkedProcessTaskRunner.init(),
+      this.tasksSchedule.init(),
+    ]);
 
     // initial scheduling
     await this.scheduleNextTasks();
