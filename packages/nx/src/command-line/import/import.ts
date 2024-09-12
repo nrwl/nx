@@ -59,7 +59,15 @@ export interface ImportOptions {
 }
 
 export async function importHandler(options: ImportOptions) {
+  process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination } = options;
+  const destinationGitClient = new GitRepository(process.cwd());
+
+  if (await destinationGitClient.hasUncommittedChanges()) {
+    throw new Error(
+      `You have uncommitted changes in the destination repository. Commit or revert the changes and try again.`
+    );
+  }
 
   output.log({
     title:
@@ -186,7 +194,6 @@ export async function importHandler(options: ImportOptions) {
 
   const absDestination = join(process.cwd(), destination);
 
-  const destinationGitClient = new GitRepository(process.cwd());
   await assertDestinationEmpty(destinationGitClient, absDestination);
 
   const tempImportBranch = getTempImportBranch(ref);
@@ -259,7 +266,8 @@ export async function importHandler(options: ImportOptions) {
 
   const { plugins, updatePackageScripts } = await detectPlugins(
     nxJson,
-    options.interactive
+    options.interactive,
+    true
   );
 
   if (packageManager !== sourcePackageManager) {

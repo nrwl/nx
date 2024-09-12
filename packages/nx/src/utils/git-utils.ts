@@ -45,6 +45,11 @@ export class GitRepository {
       .trim();
   }
 
+  async hasUncommittedChanges() {
+    const data = await this.execAsync(`git status --porcelain`);
+    return data.trim() !== '';
+  }
+
   async addFetchRemote(remoteName: string, branch: string) {
     return await this.execAsync(
       `git config --add remote.${remoteName}.fetch "+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}"`

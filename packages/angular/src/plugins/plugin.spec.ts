@@ -96,7 +96,7 @@ describe('@nx/angular/plugin', () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "ng run my-app:build",
+                    "command": "ng build",
                     "dependsOn": [
                       "^build",
                     ],
@@ -131,7 +131,7 @@ describe('@nx/angular/plugin', () => {
                     ],
                   },
                   "serve": {
-                    "command": "ng run my-app:serve",
+                    "command": "ng serve",
                     "configurations": {
                       "production": {
                         "command": "ng run my-app:serve:production",
@@ -157,7 +157,7 @@ describe('@nx/angular/plugin', () => {
                   },
                   "test": {
                     "cache": true,
-                    "command": "ng run my-app:test",
+                    "command": "ng test",
                     "inputs": [
                       "default",
                       "^production",
@@ -197,7 +197,7 @@ describe('@nx/angular/plugin', () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "ng run my-lib:build",
+                    "command": "ng build",
                     "dependsOn": [
                       "^build",
                     ],
@@ -233,7 +233,7 @@ describe('@nx/angular/plugin', () => {
                   },
                   "test": {
                     "cache": true,
-                    "command": "ng run my-lib:test",
+                    "command": "ng test",
                     "inputs": [
                       "default",
                       "^production",
@@ -394,7 +394,7 @@ describe('@nx/angular/plugin', () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "ng run org1-app1:build",
+                    "command": "ng build",
                     "dependsOn": [
                       "^build",
                     ],
@@ -429,7 +429,7 @@ describe('@nx/angular/plugin', () => {
                     ],
                   },
                   "serve": {
-                    "command": "ng run org1-app1:serve",
+                    "command": "ng serve",
                     "configurations": {
                       "production": {
                         "command": "ng run org1-app1:serve:production",
@@ -455,7 +455,7 @@ describe('@nx/angular/plugin', () => {
                   },
                   "test": {
                     "cache": true,
-                    "command": "ng run org1-app1:test",
+                    "command": "ng test",
                     "inputs": [
                       "default",
                       "^production",
@@ -495,7 +495,7 @@ describe('@nx/angular/plugin', () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "ng run org1-lib1:build",
+                    "command": "ng build",
                     "dependsOn": [
                       "^build",
                     ],
@@ -531,7 +531,7 @@ describe('@nx/angular/plugin', () => {
                   },
                   "test": {
                     "cache": true,
-                    "command": "ng run org1-lib1:test",
+                    "command": "ng test",
                     "inputs": [
                       "default",
                       "^production",
@@ -578,7 +578,7 @@ describe('@nx/angular/plugin', () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "ng run org2-app1:build",
+                    "command": "ng build",
                     "dependsOn": [
                       "^build",
                     ],
@@ -613,7 +613,7 @@ describe('@nx/angular/plugin', () => {
                     ],
                   },
                   "serve": {
-                    "command": "ng run org2-app1:serve",
+                    "command": "ng serve",
                     "configurations": {
                       "production": {
                         "command": "ng run org2-app1:serve:production",
@@ -639,7 +639,7 @@ describe('@nx/angular/plugin', () => {
                   },
                   "test": {
                     "cache": true,
-                    "command": "ng run org2-app1:test",
+                    "command": "ng test",
                     "inputs": [
                       "default",
                       "^production",
@@ -679,7 +679,7 @@ describe('@nx/angular/plugin', () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "ng run org2-lib1:build",
+                    "command": "ng build",
                     "dependsOn": [
                       "^build",
                     ],
@@ -715,7 +715,7 @@ describe('@nx/angular/plugin', () => {
                   },
                   "test": {
                     "cache": true,
-                    "command": "ng run org2-lib1:test",
+                    "command": "ng test",
                     "inputs": [
                       "default",
                       "^production",

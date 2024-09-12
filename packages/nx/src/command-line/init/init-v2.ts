@@ -157,7 +157,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   });
 }
 
-const npmPackageToPluginMap: Record<string, string> = {
+const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
   eslint: '@nx/eslint',
   storybook: '@nx/storybook',
@@ -181,7 +181,8 @@ const npmPackageToPluginMap: Record<string, string> = {
 
 export async function detectPlugins(
   nxJson: NxJsonConfiguration,
-  interactive: boolean
+  interactive: boolean,
+  includeAngularCli?: boolean
 ): Promise<{
   plugins: string[];
   updatePackageScripts: boolean;
@@ -214,7 +215,13 @@ export async function detectPlugins(
       ...packageJson.devDependencies,
     };
 
-    for (const [dep, plugin] of Object.entries(npmPackageToPluginMap)) {
+    const _npmPackageToPluginMap = {
+      ...npmPackageToPluginMap,
+    };
+    if (includeAngularCli) {
+      _npmPackageToPluginMap['@angular/cli'] = '@nx/angular';
+    }
+    for (const [dep, plugin] of Object.entries(_npmPackageToPluginMap)) {
       if (deps[dep]) {
         detectedPlugins.add(plugin);
       }

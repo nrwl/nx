@@ -1,15 +1,15 @@
 import {
-  createNodesFromFiles,
-  detectPackageManager,
-  getPackageManagerCommand,
-  readJsonFile,
-  writeJsonFile,
   type CreateNodesContextV2,
+  createNodesFromFiles,
   type CreateNodesResult,
   type CreateNodesV2,
+  detectPackageManager,
+  getPackageManagerCommand,
   type ProjectConfiguration,
+  readJsonFile,
   type Target,
   type TargetConfiguration,
+  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
@@ -19,6 +19,10 @@ import { dirname, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+
+export interface AngularPluginOptions {
+  targetNamePrefix?: string;
+}
 
 type AngularProjects = Record<
   string,
@@ -76,7 +80,7 @@ function writeProjectsToCache(
   writeJsonFile(cachePath, results);
 }
 
-export const createNodesV2: CreateNodesV2<{}> = [
+export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
   '**/angular.json',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -124,6 +128,7 @@ async function createNodesInternal(
 
   projectsCache[hash] ??= await buildAngularProjects(
     configFilePath,
+    options,
     angularWorkspaceRoot,
     context
   );
@@ -133,6 +138,7 @@ async function createNodesInternal(
 
 async function buildAngularProjects(
   configFilePath: string,
+  options: AngularPluginOptions,
   angularWorkspaceRoot: string,
   context: CreateNodesContextV2
 ): Promise<AngularProjects> {
@@ -156,28 +162,44 @@ async function buildAngularProjects(
 
     const namedInputs = getNamedInputs(project.root, context);
 
-    for (const [targetName, angularTarget] of Object.entries(projectTargets)) {
+    for (const [angularTargetName, angularTarget] of Object.entries(
+      projectTargets
+    )) {
+      const nxTargetName = options?.targetNamePrefix
+        ? `${options.targetNamePrefix}${angularTargetName}`
+        : angularTargetName;
       const externalDependencies = ['@angular/cli'];
 
-      targets[targetName] = {
-        command: `ng run ${projectName}:${targetName}`,
+      targets[nxTargetName] = {
+        command:
+          // For targets that are also Angular CLI commands, infer the simplified form.
+          // Otherwise, use `ng run` to support non-command targets so that they will run.
+          angularTargetName === 'build' ||
+          angularTargetName === 'deploy' ||
+          angularTargetName === 'extract-i18n' ||
+          angularTargetName === 'e2e' ||
+          angularTargetName === 'lint' ||
+          angularTargetName === 'serve' ||
+          angularTargetName === 'test'
+            ? `ng ${angularTargetName}`
+            : `ng run ${projectName}:${angularTargetName}`,
         options: { cwd: angularWorkspaceRoot },
         metadata: {
           technologies: ['angular'],
-          description: `Run the "${targetName}" target for "${projectName}".`,
+          description: `Run the "${angularTargetName}" target for "${projectName}".`,
           help: {
-            command: `${pmc.exec} ng run ${projectName}:${targetName} --help`,
+            command: `${pmc.exec} ng run ${projectName}:${angularTargetName} --help`,
             example: {},
           },
         },
       };
 
       if (knownExecutors.appShell.has(angularTarget.builder)) {
-        appShellTargets.push({ target: targetName, project: projectName });
+        appShellTargets.push({ target: nxTargetName, project: projectName });
       } else if (knownExecutors.build.has(angularTarget.builder)) {
         await updateBuildTarget(
-          targetName,
-          targets[targetName],
+          nxTargetName,
+          targets[nxTargetName],
           angularTarget,
           context,
           angularWorkspaceRoot,
@@ -185,12 +207,14 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.devServer.has(angularTarget.builder)) {
-        targets[targetName].metadata.help.example.options = { port: 4201 };
+        targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.extractI18n.has(angularTarget.builder)) {
-        targets[targetName].metadata.help.example.options = { format: 'json' };
+        targets[nxTargetName].metadata.help.example.options = {
+          format: 'json',
+        };
       } else if (knownExecutors.test.has(angularTarget.builder)) {
         updateTestTarget(
-          targets[targetName],
+          targets[nxTargetName],
           angularTarget,
           context,
           angularWorkspaceRoot,
@@ -200,7 +224,7 @@ async function buildAngularProjects(
         );
       } else if (knownExecutors.server.has(angularTarget.builder)) {
         updateServerTarget(
-          targets[targetName],
+          targets[nxTargetName],
           angularTarget,
           context,
           angularWorkspaceRoot,
@@ -208,30 +232,30 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.serveSsr.has(angularTarget.builder)) {
-        targets[targetName].metadata.help.example.options = { port: 4201 };
+        targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.prerender.has(angularTarget.builder)) {
-        prerenderTargets.push({ target: targetName, project: projectName });
+        prerenderTargets.push({ target: nxTargetName, project: projectName });
       }
 
-      if (targets[targetName].inputs?.length) {
-        targets[targetName].inputs.push({ externalDependencies });
+      if (targets[nxTargetName].inputs?.length) {
+        targets[nxTargetName].inputs.push({ externalDependencies });
       }
 
       if (angularTarget.configurations) {
         for (const configurationName of Object.keys(
           angularTarget.configurations
         )) {
-          targets[targetName].configurations = {
-            ...targets[targetName].configurations,
+          targets[nxTargetName].configurations = {
+            ...targets[nxTargetName].configurations,
             [configurationName]: {
-              command: `ng run ${projectName}:${targetName}:${configurationName}`,
+              command: `ng run ${projectName}:${angularTargetName}:${configurationName}`,
             },
           };
         }
       }
 
       if (angularTarget.defaultConfiguration) {
-        targets[targetName].defaultConfiguration =
+        targets[nxTargetName].defaultConfiguration =
           angularTarget.defaultConfiguration;
       }
     }

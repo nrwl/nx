@@ -4,6 +4,7 @@ import {
   getSelectedPackageManager,
   newProject,
   runCLI,
+  runCommand,
   updateJson,
   updateFile,
   e2eCwd,
@@ -38,7 +39,11 @@ describe('Nx Import', () => {
     try {
       rmdirSync(join(tempImportE2ERoot));
     } catch {}
+
+    runCommand(`git add .`);
+    runCommand(`git commit -am "Update" --allow-empty`);
   });
+
   afterAll(() => cleanupProject());
 
   it('should be able to import a vite app', () => {
@@ -111,7 +116,7 @@ describe('Nx Import', () => {
     });
     mkdirSync(join(repoPath, 'packages/a'), { recursive: true });
     writeFileSync(join(repoPath, 'packages/a/README.md'), `# A`);
-    execSync(`git add packages/a`, {
+    execSync(`git add .`, {
       cwd: repoPath,
     });
     execSync(`git commit -m "add package a"`, {
@@ -119,7 +124,7 @@ describe('Nx Import', () => {
     });
     mkdirSync(join(repoPath, 'packages/b'), { recursive: true });
     writeFileSync(join(repoPath, 'packages/b/README.md'), `# B`);
-    execSync(`git add packages/b`, {
+    execSync(`git add .`, {
       cwd: repoPath,
     });
     execSync(`git commit -m "add package b"`, {
