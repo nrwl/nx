@@ -80,14 +80,13 @@ You can configure your CI run by passing the following flags:
 
 ### --distribute-on
 
-Tells Nx Cloud how many agents to use (and what launch templates to use) to distribute tasks. E.g.,
+By default, `npx nx-cloud start-ci-run` is intended for use with [Nx Agents](/ci/features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Nx Agents, you can pass `--distribute-on=manual` to disable this warning.
+
+This command tells Nx Cloud how many agents to use (and what launch templates to use) to distribute tasks. E.g.,
 `npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"` will distribute CI using 8 agents that are initialized
 using the `linux-medium-js` launch template.
 
-You can use different types of launch templates as follows:
-`npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js, 3 linux-large-js"`.
-
-You can also define the configuration in a file and reference it as follows:
+You can also [define the configuration in a file](/ci/features/dynamic-agents) and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
@@ -105,16 +104,12 @@ Nx Cloud side. You can disable this by passing `--require-explicit-completion`. 
 
 ### --stop-agents-after
 
-By default, Nx Cloud won't terminate any agents until you invoke `npx nx-cloud stop-all-agents` because Nx Cloud
-doesn't know if you will need agents to run another command. This can result in agents being idle at the end of a CI
-run.
-
-You can fix it by telling Nx Cloud that it can terminate agents after it sees a certain
+You can tell Nx Cloud to terminate agents after it sees a certain
 target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
 
 The target name for `--stop-agents-after` should be the last target run within your pipeline. If not, Nx Cloud will end the CI pipeline execution, preventing the subsequent commands from running.
 
-Incorrect example:
+#### Incorrect example:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
@@ -125,7 +120,7 @@ Incorrect example:
 
 If build tasks are all cached, then all build tasks will complete immediately causing lint and test tasks to fail with an error saying the CI pipeline execution has already been completed. Instead you should re-order your targets to make sure the build target is last.
 
-Corrected example:
+#### Corrected example:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
@@ -162,7 +157,7 @@ functionality of that machine. In case of unexpected issues on Nx Agents, try fa
 
 Note: none of the values passed to Nx Agents are stored by Nx Cloud.
 
-## Enabling/Disabling Distribution
+### Enabling/Disabling Distribution
 
 Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for
 individual commands as follows:

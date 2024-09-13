@@ -16,7 +16,7 @@ This behavior can be disabled by setting the [--require-explicit-completion](/ci
 
 ### A command was issued to stop all Nx Cloud agents
 
-Nx Cloud provides two commands to forcibly stop agents, [stop-all-agents and complete-ci-run](/ci/reference/nx-cloud-cli#npx-nxcloud-stopallagents).
+Nx Cloud provides two commands to forcibly stop agents, [stop-all-agents and complete-ci-run](/ci/reference/nx-cloud-cli#npx-nxcloud-stopallagents). The two command options are functionally equivalent, but the `complete-ci-run` command is preferred.
 
 Once these commands are invoked, the current CI Pipeline Execution is closed and can no longer receive new work.
 
