@@ -11,7 +11,7 @@ export interface ProjectDetailsState {
   project: null | ProjectGraphProjectNode;
   sourceMap: null | Record<string, string[]>;
   errors?: GraphError[];
-  connectedToCloud: boolean;
+  connectedToCloud?: boolean;
 }
 
 export type ProjectDetailsEvents = {
@@ -25,8 +25,6 @@ export type ProjectDetailsEvents = {
 const initialContext: ProjectDetailsState = {
   project: null,
   sourceMap: null,
-  errors: null,
-  connectedToCloud: false,
 };
 
 export const projectDetailsMachine = createMachine<

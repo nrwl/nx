@@ -15,10 +15,10 @@ describe('graphMachine', () => {
   it('should have initial idle state', () => {
     expect(service.state.value).toEqual('idle');
     expect(service.state.context.project).toEqual(null);
-    expect(service.state.context.errors).toEqual(null);
+    expect(service.state.context.errors).toBeUndefined();
   });
 
-  it('should handle setting project and source map', () => {
+  it('should handle setting data', () => {
     service.send({
       type: 'loadData',
       project: {
@@ -29,7 +29,11 @@ describe('graphMachine', () => {
       sourceMap: {
         root: ['project.json', 'nx-core-build-project-json-nodes'],
       },
+      errors: [{ name: 'ERROR' }],
+      connectedToCloud: true,
     });
+
+    expect(service.state.value).toEqual('loaded');
 
     expect(service.state.context.project).toEqual({
       type: 'app',
@@ -39,44 +43,7 @@ describe('graphMachine', () => {
     expect(service.state.context.sourceMap).toEqual({
       root: ['project.json', 'nx-core-build-project-json-nodes'],
     });
-  });
-
-  it('should handle errors', () => {
-    const testError = {
-      message: 'test',
-      stack: 'test',
-      cause: 'test',
-      name: 'test',
-      pluginName: 'test',
-    };
-
-    service.send({
-      type: 'setErrors',
-      errors: [testError],
-    });
-    expect(service.state.value).toEqual('error');
-    expect(service.state.context.errors).toBeDefined();
-
-    service.send({ type: 'clearErrors' });
-    expect(service.state.value).toEqual('idle');
-
-    service.send({
-      type: 'setErrors',
-      errors: [testError],
-    });
-    expect(service.state.value).toEqual('error');
-    service.send({
-      type: 'loadData',
-      project: {
-        type: 'app',
-        name: 'proj',
-        data: {},
-      },
-      sourceMap: {
-        root: ['project.json', 'nx-core-build-project-json-nodes'],
-      },
-    });
-    // Still in error state
-    expect(service.state.value).toEqual('error');
+    expect(service.state.context.errors).toEqual([{ name: 'ERROR' }]);
+    expect(service.state.context.connectedToCloud).toEqual(true);
   });
 });
