@@ -10,24 +10,17 @@ import { assign } from '@xstate/immer';
 export interface ProjectDetailsState {
   project: null | ProjectGraphProjectNode;
   sourceMap: null | Record<string, string[]>;
-  errors: null | GraphError[];
+  errors?: GraphError[];
   connectedToCloud: boolean;
 }
 
-export type ProjectDetailsEvents =
-  | {
-      type: 'loadData';
-      project: ProjectGraphProjectNode;
-      sourceMap: Record<string, string[]>;
-      connectedToCloud: boolean;
-    }
-  | {
-      type: 'setErrors';
-      errors: GraphError[];
-    }
-  | {
-      type: 'clearErrors';
-    };
+export type ProjectDetailsEvents = {
+  type: 'loadData';
+  project: ProjectGraphProjectNode;
+  sourceMap: Record<string, string[]>;
+  connectedToCloud: boolean;
+  errors?: GraphError[];
+};
 
 const initialContext: ProjectDetailsState = {
   project: null,
@@ -48,53 +41,19 @@ export const projectDetailsMachine = createMachine<
   states: {
     idle: {},
     loaded: {},
-    error: {},
   },
   on: {
     loadData: [
       {
         target: 'loaded',
-        cond: (ctx, _event) => ctx.errors === null || ctx.errors.length === 0,
         actions: [
           assign((ctx, event) => {
             ctx.project = event.project;
             ctx.sourceMap = event.sourceMap;
             ctx.connectedToCloud = event.connectedToCloud;
+            ctx.errors = event.errors;
           }),
         ],
-      },
-      {
-        target: 'error',
-        cond: (ctx, _event) => ctx.errors !== null && ctx.errors.length > 0,
-        actions: [
-          assign((ctx, event) => {
-            ctx.project = event.project;
-            ctx.sourceMap = event.sourceMap;
-            ctx.connectedToCloud = event.connectedToCloud;
-          }),
-        ],
-      },
-    ],
-    setErrors: {
-      target: 'error',
-      actions: assign((ctx, event) => {
-        ctx.errors = event.errors;
-      }),
-    },
-    clearErrors: [
-      {
-        target: 'idle',
-        cond: (ctx, _event) => ctx.project === null,
-        actions: assign((ctx) => {
-          ctx.errors = null;
-        }),
-      },
-      {
-        target: 'loaded',
-        cond: (ctx, _event) => ctx.project !== null,
-        actions: assign((ctx) => {
-          ctx.errors = null;
-        }),
       },
     ],
   },

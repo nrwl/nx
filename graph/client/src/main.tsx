@@ -21,10 +21,13 @@ import { ProjectDetailsApp } from './app/console-project-details/project-details
 import { interpret } from 'xstate';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
+  window.externalApi = new ExternalApiImpl();
+
   window.renderPDV = (data: {
     project: ProjectGraphProjectNode;
     sourceMap: Record<string, string[]>;
     connectedToCloud: boolean;
+    errors?: GraphError[];
   }) => {
     const service = interpret(projectDetailsMachine).start();
 
