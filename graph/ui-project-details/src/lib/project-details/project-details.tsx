@@ -90,7 +90,7 @@ export const ProjectDetails = ({
           </div>
           {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
             <ViewInProjectGraphButton
-              callback={() =>
+              onClick={() =>
                 onViewInProjectGraph({ projectName: project.name })
               }
             />
@@ -125,7 +125,7 @@ export const ProjectDetails = ({
             {onViewInProjectGraph &&
               viewInProjectGraphPosition === 'bottom' && (
                 <ViewInProjectGraphButton
-                  callback={() =>
+                  onClick={() =>
                     onViewInProjectGraph({ projectName: project.name })
                   }
                 />
@@ -162,11 +162,11 @@ export const ProjectDetails = ({
 
 export default ProjectDetails;
 
-function ViewInProjectGraphButton({ callback }: { callback: () => void }) {
+function ViewInProjectGraphButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
-      onClick={() => callback()}
+      onClick={() => onClick()}
     >
       <EyeIcon className="h-5 w-5 "></EyeIcon>
       <span>View In Graph</span>
