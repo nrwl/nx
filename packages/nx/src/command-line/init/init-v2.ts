@@ -220,7 +220,14 @@ export async function detectPlugins(
       }
     }
   }
-  if (existsSync('gradlew') || existsSync('gradlew.bat')) {
+
+  let gradlewFiles = ['gradlew', 'gradlew.bat'].concat(
+    await globWithWorkspaceContext(process.cwd(), [
+      '**/gradlew',
+      '**/gradlew.bat',
+    ])
+  );
+  if (gradlewFiles.some((f) => existsSync(f))) {
     detectedPlugins.add('@nx/gradle');
   }
 
