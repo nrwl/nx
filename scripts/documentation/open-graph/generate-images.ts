@@ -32,9 +32,18 @@ const documents: any[] = [
     }),
 ].filter(Boolean);
 
-const packages: PackageMetadata[] = readJSONSync(
-  resolve(__dirname, '../../../', `./docs/generated/packages-metadata.json`)
-);
+const packages: PackageMetadata[] = [
+  ...readJSONSync(
+    resolve(__dirname, '../../../', `./docs/generated/packages-metadata.json`)
+  ),
+  ...readJSONSync(
+    resolve(
+      __dirname,
+      '../../../',
+      `./docs/external-generated/packages-metadata.json`
+    )
+  ),
+];
 const targetFolder: string = resolve(
   __dirname,
   '../../../',

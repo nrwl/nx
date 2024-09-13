@@ -324,6 +324,39 @@
             "disableCollapsible": false
           },
           {
+            "name": "Powerpack Features",
+            "path": "/features/powerpack-features",
+            "id": "powerpack-features",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Run Language-Agnostic Conformance Rules",
+                "path": "/features/powerpack-features/conformance",
+                "id": "conformance",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Define Code Ownership at the Project Level",
+                "path": "/features/powerpack-features/owners",
+                "id": "owners",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Change the Remote Cache Storage Location",
+                "path": "/features/powerpack-features/custom-caching",
+                "id": "custom-caching",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "CI Features",
             "path": "/features/ci-features",
             "id": "ci-features",
@@ -435,6 +468,63 @@
         "name": "Manage Releases",
         "path": "/features/manage-releases",
         "id": "manage-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Powerpack Features",
+        "path": "/features/powerpack-features",
+        "id": "powerpack-features",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Run Language-Agnostic Conformance Rules",
+            "path": "/features/powerpack-features/conformance",
+            "id": "conformance",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Define Code Ownership at the Project Level",
+            "path": "/features/powerpack-features/owners",
+            "id": "owners",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Change the Remote Cache Storage Location",
+            "path": "/features/powerpack-features/custom-caching",
+            "id": "custom-caching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Language-Agnostic Conformance Rules",
+        "path": "/features/powerpack-features/conformance",
+        "id": "conformance",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Define Code Ownership at the Project Level",
+        "path": "/features/powerpack-features/owners",
+        "id": "owners",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Change the Remote Cache Storage Location",
+        "path": "/features/powerpack-features/custom-caching",
+        "id": "custom-caching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -10404,7 +10494,25 @@
         "id": "powerpack-conformance",
         "path": "/nx-api/powerpack-conformance",
         "name": "powerpack-conformance",
-        "children": [],
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/powerpack-conformance/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-conformance/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
         "isExternal": false,
         "disableCollapsible": false
       },
@@ -10421,6 +10529,23 @@
         "path": "/nx-api/powerpack-owners",
         "name": "powerpack-owners",
         "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/powerpack-owners/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-owners/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
           {
             "id": "generators",
             "path": "/nx-api/powerpack-owners/generators",
@@ -10447,6 +10572,23 @@
         "path": "/nx-api/powerpack-s3-cache",
         "name": "powerpack-s3-cache",
         "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/powerpack-s3-cache/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-s3-cache/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
           {
             "id": "generators",
             "path": "/nx-api/powerpack-s3-cache/generators",

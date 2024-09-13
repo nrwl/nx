@@ -44,26 +44,26 @@ export function generateExternalPackageSchemas(): Promise<any> {
   }
   const sourcePackagesDirectory = 'libs/nx-packages';
   const sourcePackagesNamePrefix = 'powerpack-';
-  const sourcePackagesOutputDirectory = 'external-packages';
   return generatePackageSchemas(
     sourceRepositoryRelativePath,
     sourcePackagesDirectory,
-    sourcePackagesNamePrefix,
-    sourcePackagesOutputDirectory
+    sourcePackagesNamePrefix
   );
 }
 
 export function generatePackageSchemas(
   sourceRepositoryRelativePath = '',
   sourcePackagesDirectory = 'packages',
-  sourcePackagesNamePrefix = '',
-  sourcePackagesOutputDirectory = 'packages'
+  sourcePackagesNamePrefix = ''
 ): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
   const sourceRepositoryRoot = resolve(
     join(__dirname, '../../../', sourceRepositoryRelativePath)
   );
+  const generatedFolderName = sourceRepositoryRelativePath
+    ? 'external-generated'
+    : 'generated';
 
   const packages = findPackageMetadataList(
     sourceRepositoryRoot,
@@ -97,7 +97,13 @@ export function generatePackageSchemas(
       documents: p.documents.map((d) => ({
         ...createDocumentMetadata({
           description: d.description || p.description,
-          file: ['generated', 'packages', p.name, 'documents', d.id].join('/'),
+          file: [
+            generatedFolderName,
+            'packages',
+            p.name,
+            'documents',
+            d.id,
+          ].join('/'),
           id: d.id,
           itemList: d.itemList,
           name: d.name,
@@ -109,7 +115,7 @@ export function generatePackageSchemas(
       executors: p.executors.map((e) => ({
         description: e.description,
         file: [
-          'generated',
+          generatedFolderName,
           'packages',
           p.name,
           'executors',
@@ -124,7 +130,7 @@ export function generatePackageSchemas(
       generators: p.generators.map((g) => ({
         description: g.description,
         file: [
-          'generated',
+          generatedFolderName,
           'packages',
           p.name,
           'generators',
@@ -144,13 +150,8 @@ export function generatePackageSchemas(
     })
   );
 
-  const outputPath: string = sourceRepositoryRelativePath
-    ? join(absoluteRoot, 'docs', 'external-generated')
-    : join(absoluteRoot, 'docs', 'generated');
-  const outputPackagesPath: string = join(
-    outputPath,
-    sourcePackagesOutputDirectory
-  );
+  const outputPath: string = join(absoluteRoot, 'docs', generatedFolderName);
+  const outputPackagesPath: string = join(outputPath, 'packages');
   const fileGenerationPromises: Promise<void>[] = [];
 
   // Generates all documents and schemas into their own directories per packages.
