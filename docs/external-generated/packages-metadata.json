@@ -1,7 +1,19 @@
 [
   {
     "description": "Not intended for external use",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "Not intended for external use",
+        "file": "external-generated/packages/powerpack-conformance/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-conformance/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      }
+    ],
     "executors": [],
     "generators": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -23,12 +35,24 @@
   },
   {
     "description": "Not intended for external use",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "Not intended for external use",
+        "file": "external-generated/packages/powerpack-owners/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-owners/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+      }
+    ],
     "executors": [],
     "generators": [
       {
         "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
-        "file": "generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
+        "file": "external-generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
         "hidden": false,
         "name": "sync-codeowners-file",
         "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/schema.json",
@@ -44,12 +68,24 @@
   },
   {
     "description": "Not intended for external use",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "Not intended for external use",
+        "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-s3-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+      }
+    ],
     "executors": [],
     "generators": [
       {
         "description": "Initialize the S3 Cache",
-        "file": "generated/packages/powerpack-s3-cache/generators/init.json",
+        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
         "hidden": false,
         "name": "init",
         "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/schema.json",

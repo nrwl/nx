@@ -132,6 +132,34 @@
               "file": "shared/features/manage-releases"
             },
             {
+              "name": "Powerpack Features",
+              "id": "powerpack-features",
+              "description": "Features of Nx that are available with a powerpack license.",
+              "itemList": [
+                {
+                  "name": "Run Language-Agnostic Conformance Rules",
+                  "description": "Conformance",
+                  "id": "conformance",
+                  "tags": ["conformance"],
+                  "file": "shared/features/powerpack/conformance"
+                },
+                {
+                  "name": "Define Code Ownership at the Project Level",
+                  "description": "Owners",
+                  "id": "owners",
+                  "tags": ["owners"],
+                  "file": "shared/features/powerpack/owners"
+                },
+                {
+                  "name": "Change the Remote Cache Storage Location",
+                  "description": "Custom Caching",
+                  "id": "custom-caching",
+                  "tags": ["custom-caching"],
+                  "file": "shared/features/powerpack/custom-caching"
+                }
+              ]
+            },
+            {
               "name": "CI Features",
               "id": "ci-features",
               "description": "Features of Nx and Nx Cloud that improve CI",
@@ -2555,6 +2583,45 @@
               "name": "Overview",
               "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-owners",
+          "id": "powerpack-owners",
+          "description": "powerpack-owners package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-owners",
+              "file": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-conformance",
+          "id": "powerpack-conformance",
+          "description": "powerpack-conformance package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-conformance",
+              "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-s3-cache",
+          "id": "powerpack-s3-cache",
+          "description": "powerpack-s3-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-s3-cache",
+              "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
             }
           ]
         },
