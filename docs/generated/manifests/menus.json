@@ -10391,6 +10391,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "infer-targets",
+                "path": "/nx-api/workspace/generators/infer-targets",
+                "name": "infer-targets",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

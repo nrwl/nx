@@ -3451,6 +3451,15 @@
         "originalFilePath": "/packages/workspace/src/generators/ci-workflow/schema.json",
         "path": "workspace/generators/ci-workflow",
         "type": "generator"
+      },
+      {
+        "description": "Convert Nx projects to use inferred targets.",
+        "file": "generated/packages/workspace/generators/infer-targets.json",
+        "hidden": false,
+        "name": "infer-targets",
+        "originalFilePath": "/packages/workspace/src/generators/infer-targets/schema.json",
+        "path": "workspace/generators/infer-targets",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

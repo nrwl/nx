@@ -755,3 +755,4 @@
       - [fix-configuration](/nx-api/workspace/generators/fix-configuration)
       - [npm-package](/nx-api/workspace/generators/npm-package)
       - [ci-workflow](/nx-api/workspace/generators/ci-workflow)
+      - [infer-targets](/nx-api/workspace/generators/infer-targets)
