@@ -10,6 +10,7 @@ import {
   type ProjectGraphProjectNode,
   type Tree,
 } from '@nx/devkit';
+import ignore from 'ignore';
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
 import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
@@ -26,6 +27,11 @@ interface Tsconfig {
     rootDir?: string;
     outDir?: string;
   };
+  nx?: {
+    sync?: {
+      ignoredReferences?: string[];
+    };
+  };
 }
 
 const COMMON_RUNTIME_TS_CONFIG_FILE_NAMES = [
@@ -36,6 +42,12 @@ const COMMON_RUNTIME_TS_CONFIG_FILE_NAMES = [
   'tsconfig.esm.json',
   'tsconfig.runtime.json',
 ];
+
+type GeneratorOptions = {
+  runtimeTsConfigFileNames?: string[];
+};
+
+type NormalizedGeneratorOptions = Required<GeneratorOptions>;
 
 export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   // Ensure that the plugin has been wired up in nx.json
@@ -151,23 +163,27 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
   }
 
-  const runtimeTsConfigFileNames =
-    (nxJson.sync?.generatorOptions?.['@nx/js:typescript-sync']
-      ?.runtimeTsConfigFileNames as string[]) ??
-    COMMON_RUNTIME_TS_CONFIG_FILE_NAMES;
+  const userOptions = nxJson.sync?.generatorOptions?.[
+    '@nx/js:typescript-sync'
+  ] as GeneratorOptions | undefined;
+  const { runtimeTsConfigFileNames }: NormalizedGeneratorOptions = {
+    runtimeTsConfigFileNames:
+      userOptions?.runtimeTsConfigFileNames ??
+      COMMON_RUNTIME_TS_CONFIG_FILE_NAMES,
+  };
 
   const collectedDependencies = new Map<string, ProjectGraphProjectNode[]>();
-  for (const [name, data] of Object.entries(projectGraph.dependencies)) {
+  for (const [projectName, data] of Object.entries(projectGraph.dependencies)) {
     if (
-      !projectGraph.nodes[name] ||
-      projectGraph.nodes[name].data.root === '.' ||
+      !projectGraph.nodes[projectName] ||
+      projectGraph.nodes[projectName].data.root === '.' ||
       !data.length
     ) {
       continue;
     }
 
     // Get the source project nodes for the source and target
-    const sourceProjectNode = projectGraph.nodes[name];
+    const sourceProjectNode = projectGraph.nodes[projectName];
 
     // Find the relevant tsconfig file for the source project
     const sourceProjectTsconfigPath = joinPathFragments(
@@ -179,7 +195,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     ) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         logger.warn(
-          `Skipping project "${name}" as there is no tsconfig.json file found in the project root "${sourceProjectNode.data.root}".`
+          `Skipping project "${projectName}" as there is no tsconfig.json file found in the project root "${sourceProjectNode.data.root}".`
         );
       }
       continue;
@@ -188,7 +204,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     // Collect the dependencies of the source project
     const dependencies = collectProjectDependencies(
       tree,
-      name,
+      projectName,
       projectGraph,
       collectedDependencies
     );
@@ -299,14 +315,23 @@ function updateTsConfigReferences(
     tsConfigPath
   );
   const tsConfig = parseJson<Tsconfig>(stringifiedJsonContents);
+  const ignoredReferences = new Set(tsConfig.nx?.sync?.ignoredReferences ?? []);
 
   // We have at least one dependency so we can safely set it to an empty array if not already set
   const references = [];
   const originalReferencesSet = new Set();
   const newReferencesSet = new Set();
+
   for (const ref of tsConfig.references ?? []) {
     const normalizedPath = normalizeReferencePath(ref.path);
     originalReferencesSet.add(normalizedPath);
+    if (ignoredReferences.has(ref.path)) {
+      // we keep the user-defined ignored references
+      references.push(ref);
+      newReferencesSet.add(normalizedPath);
+      continue;
+    }
+
     // reference path is relative to the tsconfig file
     const resolvedRefPath = getTsConfigPathFromReferencePath(
       tree,
@@ -320,9 +345,10 @@ function updateTsConfigReferences(
         resolvedRefPath,
         projectRoot,
         projectRoots
-      )
+      ) ||
+      isProjectReferenceIgnored(tree, resolvedRefPath)
     ) {
-      // we keep all references within the current Nx project
+      // we keep all references within the current Nx project or that are ignored
       references.push(ref);
       newReferencesSet.add(normalizedPath);
     }
@@ -509,6 +535,22 @@ function isProjectReferenceWithinNxProject(
 
   // it's inside the project root, so it's an internal project reference
   return true;
+}
+
+function isProjectReferenceIgnored(
+  tree: Tree,
+  refTsConfigPath: string
+): boolean {
+  const ig = ignore();
+  if (tree.exists('.gitignore')) {
+    ig.add('.git');
+    ig.add(tree.read('.gitignore', 'utf-8'));
+  }
+  if (tree.exists('.nxignore')) {
+    ig.add(tree.read('.nxignore', 'utf-8'));
+  }
+
+  return ig.ignores(refTsConfigPath);
 }
 
 function getTsConfigDirName(

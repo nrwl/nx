@@ -280,23 +280,18 @@ exports[`lib should ignore test files in tsconfig.lib.json 1`] = `
 `;
 
 exports[`lib should support eslint flat config 1`] = `
-"const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
+"const vue = require('eslint-plugin-vue');
 const baseConfig = require('../eslint.config.js');
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
 module.exports = [
-  ...compat.extends(
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier/skip-formatting'
-  ),
   ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: { parser: require('@typescript-eslint/parser') },
+    },
+  },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
     rules: { 'vue/multi-word-component-names': 'off' },

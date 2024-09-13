@@ -247,6 +247,11 @@
               "file": "shared/concepts/daemon"
             },
             {
+              "name": "Sync Generators",
+              "id": "sync-generators",
+              "file": "shared/concepts/sync-generators"
+            },
+            {
               "name": "Nx and Turborepo",
               "id": "turbo-and-nx",
               "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
@@ -459,6 +464,11 @@
                   "name": "Add to any Project",
                   "id": "adding-to-existing-project",
                   "file": "shared/migration/adding-to-existing-project"
+                },
+                {
+                  "name": "Import an Existing Project into an Nx Workspace",
+                  "id": "import-project",
+                  "file": "shared/migration/import-project"
                 },
                 {
                   "name": "Preserving Git Histories",
@@ -1533,6 +1543,12 @@
               "file": "shared/recipes/generators/modifying-files"
             },
             {
+              "name": "Create a Sync Generator",
+              "id": "create-sync-generator",
+              "tags": ["generate-code"],
+              "file": "shared/recipes/generators/create-sync-generator"
+            },
+            {
               "name": "Write a Migration",
               "id": "migration-generators",
               "tags": ["create-your-own-plugin"],
@@ -2089,6 +2105,21 @@
               "name": "repair",
               "id": "repair",
               "file": "generated/cli/repair"
+            },
+            {
+              "name": "sync",
+              "id": "sync",
+              "file": "generated/cli/sync"
+            },
+            {
+              "name": "sync:check",
+              "id": "sync-check",
+              "file": "generated/cli/sync-check"
+            },
+            {
+              "name": "import",
+              "id": "import",
+              "file": "generated/cli/import"
             },
             {
               "name": "exec",

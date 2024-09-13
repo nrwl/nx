@@ -623,6 +623,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Sync Generators",
+            "path": "/concepts/sync-generators",
+            "id": "sync-generators",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx and Turborepo",
             "path": "/concepts/turbo-and-nx",
             "id": "turbo-and-nx",
@@ -823,6 +831,14 @@
         "name": "Nx Daemon",
         "path": "/concepts/nx-daemon",
         "id": "nx-daemon",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Sync Generators",
+        "path": "/concepts/sync-generators",
+        "id": "sync-generators",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1215,6 +1231,14 @@
                 "name": "Add to any Project",
                 "path": "/recipes/adopting-nx/adding-to-existing-project",
                 "id": "adding-to-existing-project",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Import an Existing Project into an Nx Workspace",
+                "path": "/recipes/adopting-nx/import-project",
+                "id": "import-project",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2338,6 +2362,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Import an Existing Project into an Nx Workspace",
+            "path": "/recipes/adopting-nx/import-project",
+            "id": "import-project",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Preserving Git Histories",
             "path": "/recipes/adopting-nx/preserving-git-histories",
             "id": "preserving-git-histories",
@@ -2376,6 +2408,14 @@
         "name": "Add to any Project",
         "path": "/recipes/adopting-nx/adding-to-existing-project",
         "id": "adding-to-existing-project",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Import an Existing Project into an Nx Workspace",
+        "path": "/recipes/adopting-nx/import-project",
+        "id": "import-project",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5124,6 +5164,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Create a Sync Generator",
+            "path": "/extending-nx/recipes/create-sync-generator",
+            "id": "create-sync-generator",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Write a Migration",
             "path": "/extending-nx/recipes/migration-generators",
             "id": "migration-generators",
@@ -5218,6 +5266,14 @@
         "name": "Modify Files",
         "path": "/extending-nx/recipes/modifying-files",
         "id": "modifying-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Create a Sync Generator",
+        "path": "/extending-nx/recipes/create-sync-generator",
+        "id": "create-sync-generator",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8714,6 +8770,30 @@
                 "disableCollapsible": false
               },
               {
+                "name": "sync",
+                "path": "/nx-api/nx/documents/sync",
+                "id": "sync",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "sync:check",
+                "path": "/nx-api/nx/documents/sync-check",
+                "id": "sync-check",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "import",
+                "path": "/nx-api/nx/documents/import",
+                "id": "import",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "exec",
                 "path": "/nx-api/nx/documents/exec",
                 "id": "exec",
@@ -10432,6 +10512,14 @@
                 "id": "ci-workflow",
                 "path": "/nx-api/workspace/generators/ci-workflow",
                 "name": "ci-workflow",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "infer-targets",
+                "path": "/nx-api/workspace/generators/infer-targets",
+                "name": "infer-targets",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

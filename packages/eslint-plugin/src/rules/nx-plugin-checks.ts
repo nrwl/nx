@@ -57,7 +57,6 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   meta: {
     docs: {
       description: 'Checks common nx-plugin configuration files for validity',
-      recommended: 'recommended',
     },
     schema: [
       {

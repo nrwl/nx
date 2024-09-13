@@ -41,6 +41,7 @@ export declare class NxTaskHistory {
   constructor(db: ExternalObject<Connection>)
   recordTaskRuns(taskRuns: Array<TaskRun>): void
   getFlakyTasks(hashes: Array<string>): Array<string>
+  getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
 export declare class RustPseudoTerminal {

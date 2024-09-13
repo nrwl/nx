@@ -1,10 +1,7 @@
 import {
-  PackageManager,
   ProjectGraphProjectNode,
   Tree,
-  detectPackageManager,
   formatFiles,
-  getPackageManagerVersion,
   joinPathFragments,
   output,
   readJson,
@@ -38,7 +35,8 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { ReleaseType, gt, inc, lt, prerelease } from 'semver';
+import { ReleaseType, gt, inc, prerelease } from 'semver';
+import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import {
@@ -383,7 +381,10 @@ To fix this you will either need to add a package.json file at that location, or
             );
 
             if (!specifier) {
-              if (projectToDependencyBumps.has(projectName)) {
+              if (
+                updateDependents !== 'never' &&
+                projectToDependencyBumps.has(projectName)
+              ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
                 specifier = updateDependentsBump;
                 logger.buffer(
@@ -761,10 +762,16 @@ To fix this you will either need to add a package.json file at that location, or
             }
           }
 
-          // Apply the new version of the dependency to the dependent
-          const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
-          json[dependentProject.dependencyCollection][dependencyPackageName] =
-            newDepVersion;
+          // Apply the new version of the dependency to the dependent (if not preserving locally linked package protocols)
+          const shouldUpdateDependency = !(
+            isLocallyLinkedPackageVersion(currentDependencyVersion) &&
+            options.preserveLocalDependencyProtocols
+          );
+          if (shouldUpdateDependency) {
+            const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
+            json[dependentProject.dependencyCollection][dependencyPackageName] =
+              newDepVersion;
+          }
 
           // Bump the dependent's version if applicable and record it in the version data
           if (forceVersionBump) {
@@ -985,43 +992,4 @@ class ProjectLogger {
       console.log(this.color.instance.bold(this.projectName) + ' ' + msg);
     });
   }
-}
-
-let pm: PackageManager | undefined;
-let pmVersion: string | undefined;
-
-const localPackageProtocols = [
-  'file:', // all package managers
-  'workspace:', // not npm
-  'portal:', // modern yarn only
-];
-
-function isLocallyLinkedPackageVersion(version: string): boolean {
-  // Not using a supported local protocol
-  if (!localPackageProtocols.some((protocol) => version.startsWith(protocol))) {
-    return false;
-  }
-  // Supported by all package managers
-  if (version.startsWith('file:')) {
-    return true;
-  }
-  // Determine specific package manager in use
-  if (!pm) {
-    pm = detectPackageManager();
-    pmVersion = getPackageManagerVersion(pm);
-  }
-  if (pm === 'npm' && version.startsWith('workspace:')) {
-    throw new Error(
-      `The "workspace:" protocol is not yet supported by npm (https://github.com/npm/rfcs/issues/765). Please ensure you have a valid setup according to your package manager before attempting to release packages.`
-    );
-  }
-  if (
-    version.startsWith('portal:') &&
-    (pm !== 'yarn' || lt(pmVersion, '2.0.0'))
-  ) {
-    throw new Error(
-      `The "portal:" protocol is only supported by yarn@2.0.0 and above. Please ensure you have a valid setup according to your package manager before attempting to release packages.`
-    );
-  }
-  return true;
 }

@@ -701,7 +701,14 @@ describe('lib', () => {
               ],
               "parser": "jsonc-eslint-parser",
               "rules": {
-                "@nx/dependency-checks": "error"
+                "@nx/dependency-checks": [
+                  "error",
+                  {
+                    "ignoredFiles": [
+                      "{projectRoot}/eslint.config.{js,cjs,mjs}"
+                    ]
+                  }
+                ]
               }
             }
           ]
@@ -1193,7 +1200,52 @@ describe('lib', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+      it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
+        tree.write('eslint.config.js', '');
+
+        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
+
+        const eslintConfig = tree.read('my-lib/eslint.config.js', 'utf-8');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          "const nx = require("@nx/eslint-plugin");
+          const baseConfig = require("../eslint.config.js");
+
+          module.exports = [
+              ...baseConfig,
+          ...nx.configs["flat/angular"],
+          ...nx.configs["flat/angular-template"],
+          {
+              files: ["**/*.ts"],
+              rules: {
+                  "@angular-eslint/directive-selector": [
+                      "error",
+                      {
+                          type: "attribute",
+                          prefix: "lib",
+                          style: "camelCase"
+                      }
+                  ],
+                  "@angular-eslint/component-selector": [
+                      "error",
+                      {
+                          type: "element",
+                          prefix: "lib",
+                          style: "kebab-case"
+                      }
+                  ]
+              }
+          },
+          {
+              files: ["**/*.html"],
+              // Override or add rules here
+              rules: {}
+          }
+          ];
+          "
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets (eslintrc)', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
@@ -1311,7 +1363,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],

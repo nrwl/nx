@@ -140,12 +140,6 @@ export async function connectToNxCloud(
   const isGitHubDetected =
     schema.github ?? (await repoUsesGithub(schema.github));
 
-  let responseFromCreateNxCloudWorkspaceV1:
-    | {
-        token: string;
-      }
-    | undefined;
-
   let responseFromCreateNxCloudWorkspaceV2:
     | {
         nxCloudId: string;

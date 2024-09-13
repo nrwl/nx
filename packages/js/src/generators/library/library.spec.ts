@@ -537,7 +537,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -594,7 +601,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -719,7 +733,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -745,8 +766,7 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-lib',
           preset: '../jest.preset.js',
           transform: {
@@ -1483,7 +1503,10 @@ describe('lib', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/esbuild.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },
@@ -1508,7 +1531,10 @@ describe('lib', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/rollup.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },

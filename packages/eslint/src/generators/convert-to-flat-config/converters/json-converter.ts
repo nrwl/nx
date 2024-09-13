@@ -2,6 +2,7 @@ import { Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import {
+  addFlatCompatToFlatConfig,
   createNodeList,
   generateAst,
   generateFlatOverride,
@@ -149,6 +150,21 @@ export function convertEslintJsonToFlatConfig(
         isFlatCompatNeeded = true;
       }
       exportElements.push(generateFlatOverride(override));
+
+      // eslint-plugin-import cannot be used with ESLint v9 yet
+      // TODO(jack): Once v9 support is released, remove this block.
+      // See: https://github.com/import-js/eslint-plugin-import/pull/2996
+      if (override.extends === 'plugin:@nx/react') {
+        exportElements.push(
+          generateFlatOverride({
+            rules: {
+              'import/first': 'off',
+              'import/no-amd': 'off',
+              'import/no-webpack-loader-syntax': 'off',
+            },
+          })
+        );
+      }
     });
   }
 
@@ -181,14 +197,14 @@ export function convertEslintJsonToFlatConfig(
   }
 
   // create the node list and print it to new file
-  const nodeList = createNodeList(
-    importsMap,
-    exportElements,
-    isFlatCompatNeeded
-  );
+  const nodeList = createNodeList(importsMap, exportElements);
+  let content = stringifyNodeList(nodeList);
+  if (isFlatCompatNeeded) {
+    content = addFlatCompatToFlatConfig(content);
+  }
 
   return {
-    content: stringifyNodeList(nodeList),
+    content,
     addESLintRC: isFlatCompatNeeded,
     addESLintJS: isESLintJSNeeded,
   };

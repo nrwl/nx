@@ -89,11 +89,14 @@ export async function getPluginCapabilities(
         pluginModule &&
         ('processProjectGraph' in pluginModule ||
           'createNodes' in pluginModule ||
+          'createNodesV2' in pluginModule ||
+          'createMetadata' in pluginModule ||
           'createDependencies' in pluginModule),
       projectInference:
         pluginModule &&
         ('projectFilePatterns' in pluginModule ||
-          'createNodes' in pluginModule),
+          'createNodes' in pluginModule ||
+          'createNodesV2' in pluginModule),
     };
   } catch {
     return null;

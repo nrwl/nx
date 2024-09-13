@@ -11,11 +11,12 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
-  addOverrideToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { eslintConfigNextVersion } from '../../../utils/versions';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLinting(
   host: Tree,
@@ -39,11 +40,34 @@ export async function addLinting(
   );
 
   if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
-    addExtendsToLintConfig(host, options.appProjectRoot, [
-      'plugin:@nx/react-typescript',
-      'next',
-      'next/core-web-vitals',
-    ]);
+    if (useFlatConfig(host)) {
+      addPredefinedConfigToFlatLintConfig(
+        host,
+        options.appProjectRoot,
+        'flat/react-typescript'
+      );
+      // Since Next.js does not support flat configs yet, we need to use compat fixup.
+      const addExtendsTask = addExtendsToLintConfig(
+        host,
+        options.appProjectRoot,
+        [
+          { name: 'next', needCompatFixup: true },
+          { name: 'next/core-web-vitals', needCompatFixup: true },
+        ]
+      );
+      tasks.push(addExtendsTask);
+    } else {
+      const addExtendsTask = addExtendsToLintConfig(
+        host,
+        options.appProjectRoot,
+        [
+          'plugin:@nx/react-typescript',
+          { name: 'next', needCompatFixup: true },
+          { name: 'next/core-web-vitals', needCompatFixup: true },
+        ]
+      );
+      tasks.push(addExtendsTask);
+    }
 
     updateOverrideInLintConfig(
       host,
@@ -65,15 +89,6 @@ export async function addLinting(
         },
       })
     );
-    // add jest specific config
-    if (options.unitTestRunner === 'jest') {
-      addOverrideToLintConfig(host, options.appProjectRoot, {
-        files: ['*.spec.ts', '*.spec.tsx', '*.spec.js', '*.spec.jsx'],
-        env: {
-          jest: true,
-        },
-      });
-    }
     addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
   }
 

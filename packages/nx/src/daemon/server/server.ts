@@ -74,12 +74,17 @@ import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { HASH_GLOB, isHandleHashGlobMessage } from '../message-types/hash-glob';
 import { handleHashGlob } from './handle-hash-glob';
 import {
+  GET_ESTIMATED_TASK_TIMINGS,
+  GET_FLAKY_TASKS,
+  isHandleGetEstimatedTaskTimings,
   isHandleGetFlakyTasksMessage,
   isHandleWriteTaskRunsToHistoryMessage,
+  RECORD_TASK_RUNS,
 } from '../message-types/task-history';
 import {
   handleRecordTaskRuns,
   handleGetFlakyTasks,
+  handleGetEstimatedTaskTimings,
 } from './handle-task-history';
 import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
 import { handleForceShutdown } from './handle-force-shutdown';
@@ -240,11 +245,15 @@ async function handleMessage(socket, data: string) {
       handleHashGlob(payload.globs, payload.exclude)
     );
   } else if (isHandleGetFlakyTasksMessage(payload)) {
-    await handleResult(socket, 'GET_TASK_HISTORY_FOR_HASHES', () =>
+    await handleResult(socket, GET_FLAKY_TASKS, () =>
       handleGetFlakyTasks(payload.hashes)
     );
+  } else if (isHandleGetEstimatedTaskTimings(payload)) {
+    await handleResult(socket, GET_ESTIMATED_TASK_TIMINGS, () =>
+      handleGetEstimatedTaskTimings(payload.targets)
+    );
   } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
-    await handleResult(socket, 'WRITE_TASK_RUNS_TO_HISTORY', () =>
+    await handleResult(socket, RECORD_TASK_RUNS, () =>
       handleRecordTaskRuns(payload.taskRuns)
     );
   } else if (isHandleForceShutdownMessage(payload)) {

@@ -16,10 +16,7 @@ describe('Jest root projects', () => {
     });
 
     it('should test root level app projects', async () => {
-      const rootProjectTestResults = await runCLIAsync(`test ${myapp}`);
-      expect(rootProjectTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
+      expect(() => runCLI(`test ${myapp}`)).not.toThrow();
     }, 300_000);
 
     it('should add lib project and tests should still work', async () => {
@@ -27,17 +24,8 @@ describe('Jest root projects', () => {
         `generate @nx/angular:lib ${mylib} --projectNameAndRootFormat as-provided --no-interactive`
       );
 
-      const libProjectTestResults = await runCLIAsync(`test ${mylib}`);
-
-      expect(libProjectTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
-
-      const rootProjectTestResults = await runCLIAsync(`test ${myapp}`);
-
-      expect(rootProjectTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
+      expect(() => runCLI(`test ${myapp}`)).not.toThrow();
     }, 300_000);
   });
 
@@ -53,11 +41,7 @@ describe('Jest root projects', () => {
     });
 
     it('should test root level app projects', async () => {
-      const rootProjectTestResults = await runCLIAsync(`test ${myapp}`);
-
-      expect(rootProjectTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
+      expect(() => runCLI(`test ${myapp}`)).not.toThrow();
     }, 300_000);
 
     it('should add lib project and tests should still work', async () => {
@@ -65,17 +49,8 @@ describe('Jest root projects', () => {
         `generate @nx/react:lib ${mylib} --unitTestRunner=jest --projectNameAndRootFormat as-provided`
       );
 
-      const libProjectTestResults = await runCLIAsync(`test ${mylib}`);
-
-      expect(libProjectTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
-
-      const rootProjectTestResults = await runCLIAsync(`test ${myapp}`);
-
-      expect(rootProjectTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
+      expect(() => runCLI(`test ${myapp}`)).not.toThrow();
     }, 300_000);
   });
 });
