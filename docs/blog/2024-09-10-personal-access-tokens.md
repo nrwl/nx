@@ -14,6 +14,8 @@ introduction of _personal access tokens_, you gain much more control over access
 from many customers, especially our [Enterprise](/enterprise) customers, and we're happy to be able to deliver this
 enhancement.
 
+Some link to: [some link](/concepts/module-federation/nx-module-federation-technical-overview#the-nxruntimelibrarycontrolplugin).
+
 ## Access Tokens and the problem of revoking access
 
 Our previous implementation of access tokens required you to commit the access token to your `nx.json` file. Typically,

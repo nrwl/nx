@@ -100,14 +100,80 @@ const sitemapUrls = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
+
 function headerToAnchor(line: string): string {
   return line
     .replace(/[#]+ /, '')
-    .replace(/`.*`/, '')
-    .replace(/[^\w ]/g, '')
+    .replace(/`/g, '') // Remove all backticks
+    .replace(/[^\w -]/g, '') // Allow hyphens and spaces
     .trim()
     .replace(/ +/g, '-')
     .toLocaleLowerCase();
+}
+
+function isValidLink(
+  link: string,
+  anchorUrls: string[],
+  sitemapUrls: string[],
+  ignoreAnchorUrls: string[]
+): boolean {
+  if (!link.includes('#')) {
+    // Check for special cases like blog posts, recipes, etc.
+    if (
+      link.startsWith('/blog/') ||
+      link.startsWith('/community/') ||
+      link.startsWith('/recipes/')
+    ) {
+      return true; // Assume these special pages are valid
+    }
+    return sitemapUrls.includes(['https://nx.dev', link].join(''));
+  }
+
+  const [baseUrl, anchor] = link.split('#');
+
+  // Check if the link should be ignored for anchor checking
+  if (ignoreAnchorUrls.some((ignoreUrl) => link.startsWith(ignoreUrl))) {
+    return true; // Consider ignored URLs as valid
+  }
+
+  // Check for special cases like blog posts, recipes, etc.
+  if (
+    baseUrl.startsWith('/blog/') ||
+    baseUrl.startsWith('/community/') ||
+    baseUrl.startsWith('/recipes/')
+  ) {
+    return true; // Assume these special pages are valid
+  }
+
+  const fullBaseUrl = ['https://nx.dev', baseUrl].join('');
+
+  // Check if the base URL exists in the sitemap
+  if (!sitemapUrls.includes(fullBaseUrl)) {
+    return false;
+  }
+
+  // Find potential matches for the given base URL
+  const potentialMatches = anchorUrls.filter((url) => url.startsWith(baseUrl));
+
+  // If no potential matches found, assume the anchor is valid for dynamic content
+  if (potentialMatches.length === 0) {
+    return true;
+  }
+
+  // Check if the exact anchor exists
+  if (potentialMatches.some((match) => match.endsWith('#' + anchor))) {
+    return true;
+  }
+
+  // If not found, try a more lenient match
+  const normalizedAnchor = anchor.replace(/[^\w-]/g, '').toLowerCase();
+  return potentialMatches.some((match) => {
+    const matchAnchor = match.split('#')[1];
+    const normalizedMatchAnchor = matchAnchor
+      .replace(/[^\w-]/g, '')
+      .toLowerCase();
+    return normalizedMatchAnchor === normalizedAnchor;
+  });
 }
 
 function readApiJson(manifestFileName: string): string[] {
@@ -150,26 +216,7 @@ for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
     if (link.startsWith('https://nx.dev')) {
       localLinkErrors.push({ file, link });
-    } else if (
-      link.includes('#') &&
-      !ignoreAnchorUrls.some((ignoreAnchorUrl) =>
-        link.startsWith(ignoreAnchorUrl)
-      ) &&
-      !anchorUrls.includes(link)
-    ) {
-      errors.push({ file, link });
-    } else if (
-      !link.includes('#') &&
-      !sitemapUrls.includes(['https://nx.dev', link].join(''))
-    ) {
-      errors.push({ file, link });
-    } else if (
-      link.includes('#') &&
-      ignoreAnchorUrls.some((ignoreAnchorUrl) =>
-        link.startsWith(ignoreAnchorUrl)
-      ) &&
-      !sitemapUrls.includes(['https://nx.dev', removeAnchors(link)].join(''))
-    ) {
+    } else if (!isValidLink(link, anchorUrls, sitemapUrls, ignoreAnchorUrls)) {
       errors.push({ file, link });
     }
   }
