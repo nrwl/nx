@@ -120,12 +120,12 @@ export async function remixApplicationGeneratorInternal(
 
   const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     tree,
-    options.nxCloudToken
+    options.nxCloudId
   );
 
   const connectCloudUrl =
     onBoardingStatus === 'unclaimed' &&
-    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudId));
 
   const vars = {
     ...options,

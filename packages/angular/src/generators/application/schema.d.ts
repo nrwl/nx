@@ -31,5 +31,5 @@ export interface Schema {
   minimal?: boolean;
   bundler?: 'webpack' | 'esbuild';
   ssr?: boolean;
-  nxCloudToken?: string;
+  nxCloudId?: string;
 }

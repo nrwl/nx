@@ -19,5 +19,5 @@ export interface Schema {
   standaloneConfig?: boolean;
   skipPackageJson?: boolean; // default is false
   addPlugin?: boolean;
-  nxCloudToken?: string;
+  nxCloudId?: string;
 }

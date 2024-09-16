@@ -19,5 +19,5 @@ export interface Schema {
   js?: boolean;
   ssr?: boolean;
   prefix?: string;
-  nxCloudToken?: string;
+  nxCloudId?: string;
 }

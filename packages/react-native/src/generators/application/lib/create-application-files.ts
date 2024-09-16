@@ -13,12 +13,12 @@ export async function createApplicationFiles(
 ) {
   const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     host,
-    options.nxCloudToken
+    options.nxCloudId
   );
 
   const connectCloudUrl =
     onBoardingStatus === 'unclaimed' &&
-    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudId));
 
   generateFiles(host, join(__dirname, '../files/app'), options.appProjectRoot, {
     ...options,

@@ -292,7 +292,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 async function createReadme(
   tree: Tree,
   { name, appName, directory, preset, nxCloud }: NormalizedSchema,
-  nxCloudToken?: string
+  nxCloudId?: string
 ) {
   const formattedNames = names(name);
 
@@ -302,8 +302,8 @@ async function createReadme(
     generateLibCmd: null,
   };
 
-  const nxCloudOnboardingUrl = nxCloudToken
-    ? await createNxCloudOnboardingURL('readme', nxCloudToken)
+  const nxCloudOnboardingUrl = nxCloudId
+    ? await createNxCloudOnboardingURL('readme', nxCloudId)
     : null;
 
   generateFiles(tree, join(__dirname, './files-readme'), directory, {

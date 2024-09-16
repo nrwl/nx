@@ -5,29 +5,32 @@ import { isWorkspaceClaimed } from './is-workspace-claimed';
 import { createNxCloudOnboardingURL } from './url-shorten';
 import { getRunnerOptions } from '../../tasks-runner/run-command';
 
+export type NxCloudTokenType = 'ciAccessToken' | 'nxCloudId';
+
 export async function createNxCloudOnboardingURLForWelcomeApp(
   tree: Tree,
-  token?: string
+  nxCloudId?: string
 ): Promise<NxCloudOnBoardingStatus> {
-  token = token || readNxCloudToken(tree);
+  const { token, type } = nxCloudId
+    ? { token: nxCloudId, type: 'nxCloudId' as NxCloudTokenType }
+    : readNxCloudToken(tree);
   if (!token) {
     return 'not-configured';
   }
-  return (await isWorkspaceClaimed(token)) ? 'claimed' : 'unclaimed';
+  return (await isWorkspaceClaimed(token, type)) ? 'claimed' : 'unclaimed';
 }
 
-export async function getNxCloudAppOnBoardingUrl(token: string) {
-  if (!token) {
+export async function getNxCloudAppOnBoardingUrl(nxCloudId: string) {
+  if (!nxCloudId) {
     return null;
   }
-  const onboardingUrl = await createNxCloudOnboardingURL(
-    'nx-welcome-app',
-    token
-  );
-  return onboardingUrl;
+  return await createNxCloudOnboardingURL('nx-welcome-app', nxCloudId);
 }
 
-export function readNxCloudToken(tree: Tree) {
+export function readNxCloudToken(tree: Tree): {
+  token: string;
+  type: NxCloudTokenType;
+} {
   const nxJson = readNxJson(tree);
   const { accessToken, nxCloudId } = getRunnerOptions(
     'default',
@@ -35,5 +38,8 @@ export function readNxCloudToken(tree: Tree) {
     {},
     true
   );
-  return accessToken || nxCloudId;
+
+  return accessToken
+    ? { token: accessToken, type: 'ciAccessToken' }
+    : { token: nxCloudId, type: 'nxCloudId' };
 }

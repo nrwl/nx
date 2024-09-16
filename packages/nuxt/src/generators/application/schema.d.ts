@@ -15,7 +15,7 @@ export interface Schema {
   rootProject?: boolean;
   setParserOptionsProject?: boolean;
   style?: 'css' | 'scss' | 'less' | 'none';
-  nxCloudToken?: string;
+  nxCloudId?: string;
 }
 
 export interface NormalizedSchema extends Schema {

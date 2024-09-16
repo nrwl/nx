@@ -41,12 +41,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     tree,
-    options.nxCloudToken
+    options.nxCloudId
   );
 
   const connectCloudUrl =
     onBoardingStatus === 'unclaimed' &&
-    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudId));
 
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,

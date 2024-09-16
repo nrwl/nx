@@ -13,5 +13,5 @@ export interface NxRemixGeneratorSchema {
   skipFormat?: boolean;
   rootProject?: boolean;
   addPlugin?: boolean;
-  nxCloudToken?: string;
+  nxCloudId?: string;
 }
