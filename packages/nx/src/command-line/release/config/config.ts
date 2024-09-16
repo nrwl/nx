@@ -19,6 +19,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { normalizePath } from '../../../utils/path';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
@@ -924,7 +925,11 @@ function isProjectPublic(
   const projectNode = projectGraph.nodes[project];
   const packageJsonPath = join(projectNode.data.root, 'package.json');
 
-  if (!projectFileMap[project]?.find((f) => f.file === packageJsonPath)) {
+  if (
+    !projectFileMap[project]?.find(
+      (f) => f.file === normalizePath(packageJsonPath)
+    )
+  ) {
     return false;
   }
 
