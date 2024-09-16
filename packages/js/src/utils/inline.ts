@@ -273,7 +273,7 @@ function buildInlineGraphExternals(
 
 function movePackage(from: string, to: string) {
   if (from === to) return;
-  cpSync(from, to, { force: true });
+  cpSync(from, to, { recursive: true });
 }
 
 function updateImports(
