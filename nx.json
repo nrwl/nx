@@ -234,5 +234,6 @@
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
   "bust": 8,
+  "run": 1,
   "defaultBase": "master"
 }
