@@ -706,6 +706,15 @@
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
     }
   ],
+  "powerpack": [
+    {
+      "description": "",
+      "file": "shared/concepts/powerpack",
+      "id": "powerpack",
+      "name": "Nx Powerpack",
+      "path": "/concepts/powerpack"
+    }
+  ],
   "repository-types": [
     {
       "description": "",
@@ -848,6 +857,13 @@
     }
   ],
   "installation": [
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/recipes/installation/activate-powerpack"
+    },
     {
       "description": "",
       "file": "shared/recipes/installation/install-non-javascript",

@@ -252,6 +252,12 @@
               "file": "shared/concepts/inferred-tasks"
             },
             {
+              "name": "Nx Powerpack",
+              "tags": ["powerpack"],
+              "id": "powerpack",
+              "file": "shared/concepts/powerpack"
+            },
+            {
               "name": "Types of Configuration",
               "tags": [],
               "id": "types-of-configuration",
@@ -382,6 +388,12 @@
               "id": "installation",
               "description": "Installing Nx",
               "itemList": [
+                {
+                  "name": "Activate Powerpack",
+                  "id": "activate-powerpack",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/activate-powerpack"
+                },
                 {
                   "name": "Install Nx in a Non-Javascript Repo",
                   "id": "install-non-javascript",
