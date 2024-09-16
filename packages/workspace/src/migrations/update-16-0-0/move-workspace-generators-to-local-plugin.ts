@@ -3,7 +3,6 @@ import {
   ensurePackage,
   formatFiles,
   getProjects,
-  getWorkspaceLayout,
   joinPathFragments,
   output,
   ProjectConfiguration,
