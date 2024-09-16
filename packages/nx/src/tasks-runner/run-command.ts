@@ -663,7 +663,9 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
   }
   if (!isNxCloudUsed(readNxJson())) {
     lifeCycles.push(
-      !IS_WASM ? new TaskHistoryLifeCycle() : new LegacyTaskHistoryLifeCycle()
+      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
+        ? new TaskHistoryLifeCycle()
+        : new LegacyTaskHistoryLifeCycle()
     );
   }
   return lifeCycles;

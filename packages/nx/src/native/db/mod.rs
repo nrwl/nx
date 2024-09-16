@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use napi::bindgen_prelude::External;
 use rusqlite::Connection;
-
+use tracing::debug;
 use crate::native::machine_id::get_machine_id;
 
 #[napi]
@@ -18,6 +18,7 @@ pub fn connect_to_nx_db(
 
     let c = create_connection(&db_path)?;
 
+    debug!("Checking if current existing database is compatible with Nx {}", nx_version);
     let db_version = c.query_row(
         "SELECT value FROM metadata WHERE key='NX_VERSION'",
         [],
@@ -30,13 +31,17 @@ pub fn connect_to_nx_db(
     let c = match db_version {
         Ok(version) if version == nx_version => c,
         _ => {
+            debug!("Disconnecting from existing incompatible database");
             c.close().map_err(|(_, error)| anyhow::Error::from(error))?;
+            debug!("Removing existing incompatible database");
             remove_file(&db_path)?;
 
+            debug!("Creating a new connection to a new database");
             create_connection(&db_path)?
         }
     };
 
+    debug!("Creating table for metadata");
     c.execute(
         "CREATE TABLE IF NOT EXISTS metadata (
             key TEXT NOT NULL PRIMARY KEY,
@@ -45,6 +50,7 @@ pub fn connect_to_nx_db(
         [],
     )?;
 
+    debug!("Recording Nx Version: {}", nx_version);
     c.execute(
         "INSERT OR REPLACE INTO metadata (key, value) VALUES ('NX_VERSION', ?)",
         [nx_version],
@@ -54,6 +60,7 @@ pub fn connect_to_nx_db(
 }
 
 fn create_connection(db_path: &PathBuf) -> anyhow::Result<Connection> {
+    debug!("Creating connection to {:?}", db_path);
     let c = Connection::open(db_path).map_err(anyhow::Error::from)?;
 
     // This allows writes at the same time as reads
