@@ -928,6 +928,17 @@
         "tags": ["inferred-tasks"]
       },
       {
+        "id": "powerpack",
+        "name": "Nx Powerpack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/powerpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/powerpack",
+        "tags": ["powerpack"]
+      },
+      {
         "id": "types-of-configuration",
         "name": "Types of Configuration",
         "description": "",
@@ -1219,6 +1230,17 @@
     "isExternal": false,
     "path": "/concepts/inferred-tasks",
     "tags": ["inferred-tasks"]
+  },
+  "/concepts/powerpack": {
+    "id": "powerpack",
+    "name": "Nx Powerpack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/powerpack",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/powerpack",
+    "tags": ["powerpack"]
   },
   "/concepts/types-of-configuration": {
     "id": "types-of-configuration",
@@ -1599,6 +1621,17 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
+          {
+            "id": "activate-powerpack",
+            "name": "Activate Powerpack",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/activate-powerpack",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/activate-powerpack",
+            "tags": ["installation"]
+          },
           {
             "id": "install-non-javascript",
             "name": "Install Nx in a Non-Javascript Repo",
@@ -2988,6 +3021,17 @@
     "file": "",
     "itemList": [
       {
+        "id": "activate-powerpack",
+        "name": "Activate Powerpack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/activate-powerpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/activate-powerpack",
+        "tags": ["installation"]
+      },
+      {
         "id": "install-non-javascript",
         "name": "Install Nx in a Non-Javascript Repo",
         "description": "",
@@ -3013,6 +3057,17 @@
     "isExternal": false,
     "path": "/recipes/installation",
     "tags": []
+  },
+  "/recipes/installation/activate-powerpack": {
+    "id": "activate-powerpack",
+    "name": "Activate Powerpack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/activate-powerpack",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/activate-powerpack",
+    "tags": ["installation"]
   },
   "/recipes/installation/install-non-javascript": {
     "id": "install-non-javascript",

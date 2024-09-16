@@ -681,6 +681,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Powerpack",
+            "path": "/concepts/powerpack",
+            "id": "powerpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Types of Configuration",
             "path": "/concepts/types-of-configuration",
             "id": "types-of-configuration",
@@ -889,6 +897,14 @@
         "name": "Inferred Tasks",
         "path": "/concepts/inferred-tasks",
         "id": "inferred-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Powerpack",
+        "path": "/concepts/powerpack",
+        "id": "powerpack",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1171,6 +1187,14 @@
             "id": "installation",
             "isExternal": false,
             "children": [
+              {
+                "name": "Activate Powerpack",
+                "path": "/recipes/installation/activate-powerpack",
+                "id": "activate-powerpack",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "Install Nx in a Non-Javascript Repo",
                 "path": "/recipes/installation/install-non-javascript",
@@ -2186,6 +2210,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Activate Powerpack",
+            "path": "/recipes/installation/activate-powerpack",
+            "id": "activate-powerpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Install Nx in a Non-Javascript Repo",
             "path": "/recipes/installation/install-non-javascript",
             "id": "install-non-javascript",
@@ -2202,6 +2234,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Activate Powerpack",
+        "path": "/recipes/installation/activate-powerpack",
+        "id": "activate-powerpack",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
