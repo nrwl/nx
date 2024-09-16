@@ -3331,7 +3331,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
-                  "groupPreVersionCommand": "nx run-many -t build",
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },

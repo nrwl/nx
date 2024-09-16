@@ -31,4 +31,4 @@ When using release groups in which the member projects are versioned together, y
 }
 ```
 
-The `groupPreVersionCommand` will run in addition of the global `preVersionCommand`.
+The `groupPreVersionCommand` will run in addition to the global `preVersionCommand`.

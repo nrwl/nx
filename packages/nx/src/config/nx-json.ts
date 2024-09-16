@@ -215,7 +215,7 @@ export interface NxReleaseConfiguration {
          * A command to run after validation of nx release configuration, but before versioning begins.
          * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
          * with the NX_DRY_RUN environment variable set to 'true'.
-         * It will run in addition of the global `preVersionCommand`
+         * It will run in addition to the global `preVersionCommand`
          */
         groupPreVersionCommand?: string;
       };
