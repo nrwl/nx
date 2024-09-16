@@ -166,10 +166,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
   "owners": {
     "**/*": ["@ahmed", "@petra"],
     "package.json": ["@ahmed"],
-    "README.md": [{
-      "owners": "@jared",
+    "README.md": {
+      "owners": ["@jared"],
       "description": "Jared is very particular about the README file"
-    }]
+    }
   },
 };
 ```
@@ -213,10 +213,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
   "owners": {
     "**/*": ["@ahmed", "@petra"],
     "package.json": ["@ahmed"],
-    "README.md": [{
-      "owners": "@jared",
+    "README.md": {
+      "owners": ["@jared"],
       "description": "Jared is very particular about the README file"
-    }]
+    }
   },
 };
 ```
@@ -268,10 +268,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
   "owners": {
     "**/*": ["@ahmed", "@petra"],
     "package.json": ["@ahmed"],
-    "README.md": [{
-      "owners": "@jared",
+    "README.md": {
+      "owners": ["@jared"],
       "description": "Jared is very particular about the README file"
-    }]
+    }
   },
 };
 ```
