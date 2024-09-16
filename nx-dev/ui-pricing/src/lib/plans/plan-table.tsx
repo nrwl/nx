@@ -322,7 +322,7 @@ export function PlanTable(): JSX.Element {
               Max 5 contributors
             </td>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
-              Max 70 contributors
+              Max 30 contributors
             </td>
             <td className="border-l border-r border-t border-slate-200 bg-slate-50/60 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800 dark:bg-slate-800/60">
               Custom
