@@ -64,13 +64,8 @@ async function getTerminalOutputLifeCycle(
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
-  const useDynamicOutput = shouldUseDynamicLifeCycle(
-    tasks,
-    runnerOptions,
-    nxArgs.outputStyle
-  );
+  const useDynamicOutput = shouldUseDynamicLifeCycle(tasks, nxArgs.outputStyle);
 
   const overridesWithoutHidden = { ...overrides };
   delete overridesWithoutHidden['__overrides_unparsed__'];
@@ -741,11 +736,7 @@ async function convertObservableToPromise(
   });
 }
 
-function shouldUseDynamicLifeCycle(
-  tasks: Task[],
-  options: any,
-  outputStyle: string
-) {
+function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
   if (
     process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||

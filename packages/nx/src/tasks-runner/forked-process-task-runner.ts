@@ -139,13 +139,13 @@ export class ForkedProcessTaskRunner {
     }
   ): Promise<{ code: number; terminalOutput: string }> {
     return pipeOutput
-      ? await this.forkProcessPipeOutputCapture(task, {
-          temporaryOutputPath,
+      ? this.forkProcessWithPrefixAndNotTTY(task, {
           streamOutput,
+          temporaryOutputPath,
           taskGraph,
           env,
         })
-      : await this.forkProcessDirectOutputCapture(task, {
+      : this.forkProcessDirectOutputCapture(task, {
           temporaryOutputPath,
           streamOutput,
           taskGraph,
@@ -158,6 +158,7 @@ export class ForkedProcessTaskRunner {
     {
       temporaryOutputPath,
       streamOutput,
+      pipeOutput,
       taskGraph,
       env,
       disablePseudoTerminal,
@@ -181,9 +182,10 @@ export class ForkedProcessTaskRunner {
       !streamOutput ||
       shouldPrefix
     ) {
-      return this.forkProcessWithPrefixAndNotTTY(task, {
+      return this.forkProcessLegacy(task, {
         temporaryOutputPath,
         streamOutput,
+        pipeOutput,
         taskGraph,
         env,
       });
@@ -249,28 +251,6 @@ export class ForkedProcessTaskRunner {
           terminalOutput,
         });
       });
-    });
-  }
-
-  private forkProcessPipeOutputCapture(
-    task: Task,
-    {
-      streamOutput,
-      temporaryOutputPath,
-      taskGraph,
-      env,
-    }: {
-      streamOutput: boolean;
-      temporaryOutputPath: string;
-      taskGraph: TaskGraph;
-      env: NodeJS.ProcessEnv;
-    }
-  ) {
-    return this.forkProcessWithPrefixAndNotTTY(task, {
-      streamOutput,
-      temporaryOutputPath,
-      taskGraph,
-      env,
     });
   }
 
