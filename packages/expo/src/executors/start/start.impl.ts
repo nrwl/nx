@@ -2,6 +2,10 @@ import * as chalk from 'chalk';
 import { ExecutorContext, logger, names } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from 'nx/src/tasks-runner/pseudo-terminal';
 
 import { ExpoStartOptions } from './schema';
 
@@ -42,32 +46,53 @@ function startAsync(
   options: ExpoStartOptions
 ): Promise<number> {
   return new Promise((resolve, reject) => {
-    childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
-      ['start', ...createStartOptions(options)],
-      {
-        cwd: pathResolve(workspaceRoot, projectRoot),
-        env: {
-          RCT_METRO_PORT: options.port.toString(),
-          ...process.env,
-        },
-      }
-    );
-
-    // Ensure the child process is killed when the parent exits
-    process.on('exit', () => childProcess.kill());
-    process.on('SIGTERM', () => childProcess.kill());
-
-    childProcess.on('error', (err) => {
-      reject(err);
-    });
-    childProcess.on('exit', (code) => {
+    const onExit = (code) => {
       if (code === 0) {
         resolve(code);
       } else {
         reject(code);
       }
-    });
+    };
+
+    if (PseudoTerminal.isSupported) {
+      const terminal = getPseudoTerminal();
+      terminal
+        .fork('expo-start', '@expo/cli/build/bin/cli', {
+          execArgv: ['start', ...createStartOptions(options)],
+          cwd: pathResolve(workspaceRoot, projectRoot),
+          jsEnv: {
+            RCT_METRO_PORT: options.port.toString(),
+            ...process.env,
+          },
+        })
+        .then((v) => {
+          v.onExit(onExit);
+
+          process.on('exit', () => v.kill());
+          process.on('SIGTERM', () => v.kill());
+        });
+    } else {
+      childProcess = fork(
+        require.resolve('@expo/cli/build/bin/cli'),
+        ['start', ...createStartOptions(options)],
+        {
+          cwd: pathResolve(workspaceRoot, projectRoot),
+          env: {
+            RCT_METRO_PORT: options.port.toString(),
+            ...process.env,
+          },
+        }
+      );
+
+      // Ensure the child process is killed when the parent exits
+      process.on('exit', () => childProcess.kill());
+      process.on('SIGTERM', () => childProcess.kill());
+
+      childProcess.on('error', (err) => {
+        reject(err);
+      });
+      childProcess.on('exit', onExit);
+    }
   });
 }
 
