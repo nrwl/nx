@@ -12,7 +12,7 @@ import {
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,

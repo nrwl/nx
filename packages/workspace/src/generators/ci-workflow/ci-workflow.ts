@@ -125,4 +125,14 @@ function addWorkflowFileToSharedGlobals(
   nxJson.namedInputs ??= {};
   nxJson.namedInputs.sharedGlobals ??= [];
   nxJson.namedInputs.sharedGlobals.push(input);
+
+  // Ensure 'default' named input exists and includes 'sharedGlobals'
+  if (!nxJson.namedInputs.default) {
+    nxJson.namedInputs.default = ['sharedGlobals'];
+  } else if (
+    Array.isArray(nxJson.namedInputs.default) &&
+    !nxJson.namedInputs.default.includes('sharedGlobals')
+  ) {
+    nxJson.namedInputs.default.push('sharedGlobals');
+  }
 }

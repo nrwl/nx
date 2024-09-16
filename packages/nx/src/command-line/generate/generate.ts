@@ -12,14 +12,13 @@ import {
 import { logger, NX_PREFIX } from '../../utils/logger';
 import {
   combineOptionsForGenerator,
-  handleErrors,
   Options,
   Schema,
 } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';

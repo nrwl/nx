@@ -6,11 +6,11 @@ import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
-import { Pill } from '../pill';
-import { TargetTechnologies } from '../target-technologies/target-technologies';
+import { TagList } from '../tag-list/tag-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
+import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
+import { TargetTechnologies } from '../target-technologies/target-technologies';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -90,28 +90,21 @@ export const ProjectDetails = ({
           </div>
           {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
             <ViewInProjectGraphButton
-              callback={() =>
+              onClick={() =>
                 onViewInProjectGraph({ projectName: project.name })
               }
             />
           )}
         </div>
         <div className="flex flex-wrap justify-between py-2">
-          <div>
+          <div className="min-w-0">
             {projectData.metadata?.description ? (
               <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
                 {projectData.metadata?.description}
               </p>
             ) : null}
             {projectData.tags && projectData.tags.length ? (
-              <p>
-                <span className="font-medium">Tags:</span>
-                {projectData.tags?.map((tag) => (
-                  <span className="ml-2 font-mono lowercase">
-                    <Pill text={tag} />
-                  </span>
-                ))}
-              </p>
+              <TagList tags={projectData.tags} />
             ) : null}
             {projectData.root ? (
               <p>
@@ -132,7 +125,7 @@ export const ProjectDetails = ({
             {onViewInProjectGraph &&
               viewInProjectGraphPosition === 'bottom' && (
                 <ViewInProjectGraphButton
-                  callback={() =>
+                  onClick={() =>
                     onViewInProjectGraph({ projectName: project.name })
                   }
                 />
@@ -169,11 +162,11 @@ export const ProjectDetails = ({
 
 export default ProjectDetails;
 
-function ViewInProjectGraphButton({ callback }: { callback: () => void }) {
+function ViewInProjectGraphButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
-      onClick={() => callback()}
+      onClick={() => onClick()}
     >
       <EyeIcon className="h-5 w-5 "></EyeIcon>
       <span>View In Graph</span>

@@ -99,11 +99,40 @@ nx release plan:check
 
 Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updatedDependents` option).
 
+<!-- Prettier will mess up the end tag of the callout causing it to capture all content that follows it -->
+<!-- prettier-ignore-start -->
+
+{% callout type="note" title="Running release plan:check in CI" %}
+As mentioned, `nx release plan:check` supports the same options as `nx affected` for determining the range of commits to consider. Therefore, in CI, you must also ensure that the base and head are set appropriately just like you would for `nx affected`.
+
+For GitHub Actions, we provide a utility action to do this for you:
+
+```yaml
+# ...other steps
+- uses: nrwl/nx-set-shas@v4
+# ...other steps including the use of `nx release plan:check`
+```
+
+For CircleCI, you can reference our custom orb as a step:
+
+```yaml
+# ...other steps
+- nx/set-shas
+# ...other steps including the use of `nx release plan:check`
+```
+
+You can read more about these utilities and why they are needed on their respective READMEs:
+
+- https://github.com/nrwl/nx-set-shas?tab=readme-ov-file#background
+- https://github.com/nrwl/nx-orb#background
+{% /callout %}
+<!-- prettier-ignore-end -->
+
 Nx release will compare the touched projects to the projects and release groups that are specified in the version plan files in the `.nx/version-plans/` directory. If a version plan file does not exist, the command will print an error message and return a non-zero exit code, which can be used to fail CI builds or other automation.
 
 By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `"ignorePatternsForPlanCheck"` property to an array of glob patterns that should be ignored when checking for version plans. For example:
 
-````jsonc
+```jsonc
 {
   "release": {
     "versionPlans": {
@@ -117,4 +146,4 @@ To see more details about the changed files that were detected and the filtering
 
 ```sh
 nx release plan:check --verbose
-````
+```

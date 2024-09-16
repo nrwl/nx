@@ -6,9 +6,6 @@ import { getModuleFederationConfig } from './utils';
 import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 
-const isVarOrWindow = (libType?: string) =>
-  libType === 'var' || libType === 'window';
-
 /**
  * @param {ModuleFederationConfig} options
  * @return {Promise<AsyncNxComposableWebpackPlugin>}
@@ -23,16 +20,12 @@ export async function withModuleFederation(
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
-  const isGlobal = isVarOrWindow(options.library?.type);
 
   return (config, ctx) => {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 
-    if (isGlobal) {
-      config.output.scriptType = 'text/javascript';
-    }
-
+    config.output.scriptType = 'text/javascript';
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: false,
@@ -46,15 +39,9 @@ export async function withModuleFederation(
       config.optimization.runtimeChunk = 'single';
     }
 
-    config.experiments = {
-      ...config.experiments,
-      outputModule: !isGlobal,
-    };
-
     config.plugins.push(
       new ModuleFederationPlugin({
         name: options.name,
-        library: options.library ?? { type: 'module' },
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,
@@ -67,7 +54,7 @@ export async function withModuleFederation(
          *  { appX: 'appX@http://localhost:3001/remoteEntry.js' }
          *  { appY: 'appY@http://localhost:3002/remoteEntry.js' }
          */
-        ...(isGlobal ? { remoteType: 'script' } : {}),
+        remoteType: 'script',
         /**
          * Apply user-defined config overrides
          */

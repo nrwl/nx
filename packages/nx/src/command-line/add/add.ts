@@ -9,7 +9,7 @@ import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { getPluginCapabilities } from '../../utils/plugins';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';

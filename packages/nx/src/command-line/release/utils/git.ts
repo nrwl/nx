@@ -122,12 +122,15 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
+  // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
+  const separator = '§§§';
+
   // https://git-scm.com/docs/pretty-formats
   const r = await execCommand('git', [
     '--no-pager',
     'log',
     range,
-    '--pretty="----%n%s|%h|%an|%ae%n%b"',
+    `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
     '--name-status',
   ]);
 
@@ -137,7 +140,7 @@ export async function getGitDiff(
     .map((line) => {
       const [firstLine, ..._body] = line.split('\n');
       const [message, shortHash, authorName, authorEmail] =
-        firstLine.split('|');
+        firstLine.split(separator);
       const r: RawGitCommit = {
         message,
         shortHash,

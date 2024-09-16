@@ -1,15 +1,16 @@
-import { getCloudUrl } from './get-cloud-options';
+import { getCloudUrl, isNxCloudId } from './get-cloud-options';
 
-export async function isWorkspaceClaimed(nxCloudAccessToken) {
-  if (!nxCloudAccessToken) return false;
+export async function isWorkspaceClaimed(accessToken: string) {
+  if (!accessToken) return false;
 
   const apiUrl = getCloudUrl();
   try {
+    const requestData = isNxCloudId(accessToken)
+      ? { nxCloudId: accessToken }
+      : { nxCloudAccessToken: accessToken };
     const response = await require('axios').post(
       `${apiUrl}/nx-cloud/is-workspace-claimed`,
-      {
-        nxCloudAccessToken,
-      }
+      requestData
     );
 
     if (response.data.message) {

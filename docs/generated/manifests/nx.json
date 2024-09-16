@@ -849,6 +849,17 @@
         "tags": []
       },
       {
+        "id": "sync-generators",
+        "name": "Sync Generators",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/sync-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/sync-generators",
+        "tags": []
+      },
+      {
         "id": "turbo-and-nx",
         "name": "Nx and Turborepo",
         "description": "",
@@ -1128,6 +1139,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-daemon",
+    "tags": []
+  },
+  "/concepts/sync-generators": {
+    "id": "sync-generators",
+    "name": "Sync Generators",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/sync-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/sync-generators",
     "tags": []
   },
   "/concepts/turbo-and-nx": {
@@ -1663,6 +1685,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/adding-to-existing-project",
+            "tags": []
+          },
+          {
+            "id": "import-project",
+            "name": "Import an Existing Project into an Nx Workspace",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/migration/import-project",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/import-project",
             "tags": []
           },
           {
@@ -3197,6 +3230,17 @@
         "tags": []
       },
       {
+        "id": "import-project",
+        "name": "Import an Existing Project into an Nx Workspace",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/migration/import-project",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/import-project",
+        "tags": []
+      },
+      {
         "id": "preserving-git-histories",
         "name": "Preserving Git Histories",
         "description": "",
@@ -3254,6 +3298,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-existing-project",
+    "tags": []
+  },
+  "/recipes/adopting-nx/import-project": {
+    "id": "import-project",
+    "name": "Import an Existing Project into an Nx Workspace",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/migration/import-project",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/import-project",
     "tags": []
   },
   "/recipes/adopting-nx/preserving-git-histories": {

@@ -15,7 +15,7 @@ import {
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';

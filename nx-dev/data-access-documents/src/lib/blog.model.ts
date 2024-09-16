@@ -17,6 +17,7 @@ export type BlogPostDataEntry = {
   podcastAmazonUrl?: string;
   podcastAppleUrl?: string;
   podcastIHeartUrl?: string;
+  published?: boolean;
 };
 
 export type BlogAuthor = {

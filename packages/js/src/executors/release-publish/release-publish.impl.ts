@@ -1,12 +1,17 @@
-import { ExecutorContext, readJsonFile } from '@nx/devkit';
+import {
+  detectPackageManager,
+  ExecutorContext,
+  readJsonFile,
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
+import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
 import { parseRegistryOptions } from '../../utils/npm-config';
+import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
-import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -26,6 +31,7 @@ export default async function runExecutor(
   options: PublishExecutorSchema,
   context: ExecutorContext
 ) {
+  const pm = detectPackageManager();
   /**
    * We need to check both the env var and the option because the executor may have been triggered
    * indirectly via dependsOn, in which case the env var will be set, but the option will not.
@@ -43,6 +49,31 @@ export default async function runExecutor(
   const packageJsonPath = join(packageRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const packageName = packageJson.name;
+
+  /**
+   * pnpm supports dynamically updating locally linked packages during its packing phase, but other package managers do not.
+   * Therefore, protect the user from publishing invalid packages by checking if it contains local dependency protocols.
+   */
+  if (pm !== 'pnpm') {
+    const depTypes = ['dependencies', 'devDependencies', 'peerDependencies'];
+    for (const depType of depTypes) {
+      const deps = packageJson[depType];
+      if (deps) {
+        for (const depName in deps) {
+          if (isLocallyLinkedPackageVersion(deps[depName])) {
+            console.error(
+              `Error: Cannot publish package "${packageName}" because it contains a local dependency protocol in its "${depType}", and your package manager is ${pm}.
+
+Please update the local dependency on "${depName}" to be a valid semantic version (e.g. using \`nx release\`) before publishing, or switch to pnpm as a package manager, which supports dynamically replacing these protocols during publishing.`
+            );
+            return {
+              success: false,
+            };
+          }
+        }
+      }
+    }
+  }
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
@@ -88,7 +119,7 @@ export default async function runExecutor(
    * request with.
    *
    * Therefore, so as to not produce misleading output in dry around dist-tags being altered, we do not
-   * perform the npm view step, and just show npm publish's dry-run output.
+   * perform the npm view step, and just show npm/pnpm publish's dry-run output.
    */
   if (!isDryRun && !options.firstRelease) {
     const currentVersion = packageJson.version;
@@ -208,27 +239,30 @@ export default async function runExecutor(
 
   /**
    * NOTE: If this is ever changed away from running the command at the workspace root and pointing at the package root (e.g. back
-   * to running from the package root directly), then special attention should be paid to the fact that npm publish will nest its
+   * to running from the package root directly), then special attention should be paid to the fact that npm/pnpm publish will nest its
    * JSON output under the name of the package in that case (and it would need to be handled below).
    */
-  const npmPublishCommandSegments = [
-    `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+  const publishCommandSegments = [
+    pm === 'pnpm'
+      ? // Unlike npm, pnpm publish does not support a custom registryConfigKey option, and will error on uncommitted changes by default if --no-git-checks is not set
+        `pnpm publish "${packageRoot}" --json --registry="${registry}" --tag=${tag} --no-git-checks`
+      : `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
   ];
 
   if (options.otp) {
-    npmPublishCommandSegments.push(`--otp=${options.otp}`);
+    publishCommandSegments.push(`--otp=${options.otp}`);
   }
 
   if (options.access) {
-    npmPublishCommandSegments.push(`--access=${options.access}`);
+    publishCommandSegments.push(`--access=${options.access}`);
   }
 
   if (isDryRun) {
-    npmPublishCommandSegments.push(`--dry-run`);
+    publishCommandSegments.push(`--dry-run`);
   }
 
   try {
-    const output = execSync(npmPublishCommandSegments.join(' '), {
+    const output = execSync(publishCommandSegments.join(' '), {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(true),
       cwd: context.root,
@@ -236,14 +270,14 @@ export default async function runExecutor(
     });
 
     /**
-     * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm will mix its publish output with the JSON output all on stdout.
+     * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm/pnpm will mix its publish output with the JSON output all on stdout.
      * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
      */
     const { beforeJsonData, jsonData, afterJsonData } =
       extractNpmPublishJsonData(output.toString());
     if (!jsonData) {
       console.error(
-        'The npm publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx'
+        `The ${pm} publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx`
       );
       return {
         success: false,
@@ -294,7 +328,7 @@ export default async function runExecutor(
     try {
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
-      console.error('npm publish error:');
+      console.error(`${pm} publish error:`);
       if (stdoutData.error?.summary) {
         console.error(stdoutData.error.summary);
       }
@@ -303,7 +337,7 @@ export default async function runExecutor(
       }
 
       if (context.isVerbose) {
-        console.error('npm publish stdout:');
+        console.error(`${pm} publish stdout:`);
         console.error(JSON.stringify(stdoutData, null, 2));
       }
 
@@ -316,7 +350,7 @@ export default async function runExecutor(
       };
     } catch (err) {
       console.error(
-        'Something unexpected went wrong when processing the npm publish output\n',
+        `Something unexpected went wrong when processing the ${pm} publish output\n`,
         err
       );
       return {

@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Remix Library Generator -projectNameAndRootFormat=as-provided --unitTestRunner should create the correct config files for testing with jest 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   setupFilesAfterEnv: ['./src/test-setup.ts'],
   displayName: 'test',
   preset: '../jest.preset.js',
@@ -80,8 +79,7 @@ exports[`Remix Library Generator -projectNameAndRootFormat=as-provided should ge
 `;
 
 exports[`Remix Library Generator -projectNameAndRootFormat=derived --unitTestRunner should create the correct config files for testing with jest 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   setupFilesAfterEnv: ['./src/test-setup.ts'],
   displayName: 'test',
   preset: '../../jest.preset.js',

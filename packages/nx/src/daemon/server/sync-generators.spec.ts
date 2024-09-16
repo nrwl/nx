@@ -1,9 +1,9 @@
-import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import type { SyncGeneratorRunResult } from '../../utils/sync-generators';
 import { _getConflictingGeneratorGroups } from './sync-generators';
 
 describe('_getConflictingGeneratorGroups', () => {
   it('should return grouped conflicting generators', () => {
-    const results: SyncGeneratorChangesResult[] = [
+    const results: SyncGeneratorRunResult[] = [
       {
         generatorName: 'a',
         changes: [

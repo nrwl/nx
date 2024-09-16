@@ -29,6 +29,7 @@ import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
+import { isCI } from '../src/utils/ci/is-ci';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -320,13 +321,13 @@ async function determineFolder(
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
   if (folderName) return folderName;
-
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
       message: `Where would you like to create your workspace?`,
       initial: 'org',
       type: 'input',
+      skip: !parsedArgs.interactive || isCI(),
     },
   ]);
 
@@ -369,6 +370,7 @@ async function determineStack(
         return 'vue';
       case Preset.Nest:
       case Preset.NodeStandalone:
+      case Preset.NodeMonorepo:
       case Preset.Express:
         return 'node';
       case Preset.Apps:
@@ -477,6 +479,7 @@ async function determineNoneOptions(
           },
         ],
         initial: 0,
+        skip: !parsedArgs.interactive || isCI(),
       },
     ]);
     js = reply.ts === 'No';
@@ -578,6 +581,7 @@ async function determineReactOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -678,6 +682,7 @@ async function determineVueOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -764,6 +769,7 @@ async function determineAngularOptions(
         name: 'bundler',
         message: `Which bundler would you like to use?`,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'esbuild',
@@ -789,6 +795,7 @@ async function determineAngularOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -819,6 +826,7 @@ async function determineAngularOptions(
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,
+        skip: !parsedArgs.interactive || isCI(),
       },
     ]);
     ssr = reply.ssr === 'Yes';
@@ -887,6 +895,7 @@ async function determineNodeOptions(
         message:
           'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'Yes',
@@ -1000,6 +1009,7 @@ async function determineAppName(
       message: `Application name`,
       type: 'input',
       initial: parsedArgs.name,
+      skip: !parsedArgs.interactive || isCI(),
     },
   ]);
   invariant(appName, {
@@ -1059,6 +1069,7 @@ async function determineReactBundler(
       name: 'bundler',
       message: `Which bundler would you like to use?`,
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'vite',
@@ -1073,6 +1084,7 @@ async function determineReactBundler(
           message: 'Rspack  [ https://www.rspack.dev/ ]',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.bundler;
@@ -1087,6 +1099,7 @@ async function determineNextAppDir(
       name: 'nextAppDir',
       message: 'Would you like to use the App Router (recommended)?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'Yes',
@@ -1110,6 +1123,7 @@ async function determineNextSrcDir(
       name: 'nextSrcDir',
       message: 'Would you like to use the src/ directory?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'Yes',
@@ -1135,6 +1149,7 @@ async function determineVueFramework(
       name: 'framework',
       message: 'What framework would you like to use?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'none',
@@ -1155,7 +1170,7 @@ async function determineVueFramework(
 async function determineNodeFramework(
   parsedArgs: yargs.Arguments<NodeArguments>
 ): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
-  if (parsedArgs.framework) return parsedArgs.framework;
+  if (!!parsedArgs.framework) return parsedArgs.framework;
   const reply = await enquirer.prompt<{
     framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   }>([
@@ -1163,6 +1178,7 @@ async function determineNodeFramework(
       message: 'What framework should be used?',
       type: 'autocomplete',
       name: 'framework',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'none',
@@ -1185,6 +1201,7 @@ async function determineNodeFramework(
           message: 'NestJs  [ https://nestjs.com/     ]',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.framework;
@@ -1203,6 +1220,7 @@ async function determineE2eTestRunner(
       message: 'Test runner to use for end to end (E2E) tests',
       type: 'autocomplete',
       name: 'e2eTestRunner',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'playwright',
@@ -1217,6 +1235,7 @@ async function determineE2eTestRunner(
           message: 'None',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.e2eTestRunner;

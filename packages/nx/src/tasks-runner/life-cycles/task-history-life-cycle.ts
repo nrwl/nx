@@ -1,9 +1,9 @@
 import { serializeTarget } from '../../utils/serialize-target';
 import { Task } from '../../config/task-graph';
 import { output } from '../../utils/output';
-import { TaskHistory } from '../../utils/task-history';
 import { LifeCycle, TaskResult } from '../life-cycle';
 import type { TaskRun as NativeTaskRun } from '../../native';
+import { getTaskHistory } from '../../utils/task-history';
 
 interface TaskRun extends NativeTaskRun {
   target: Task['target'];
@@ -12,7 +12,7 @@ interface TaskRun extends NativeTaskRun {
 export class TaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
   private taskRuns = new Map<string, TaskRun>();
-  private taskHistory = new TaskHistory();
+  private taskHistory = getTaskHistory();
 
   startTasks(tasks: Task[]): void {
     for (let task of tasks) {
