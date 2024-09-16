@@ -1,7 +1,7 @@
 import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
-import { removeSync } from 'fs-extra';
 import { sync as globSync } from 'fast-glob';
+import { rmSync } from 'node:fs';
 import { dirname, join, relative, resolve, normalize } from 'path';
 import { copyAssets } from '../../utils/assets';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -208,7 +208,7 @@ function removeTmpSwcrc(swcrcPath: string) {
     swcrcPath.includes(normalize('tmp/')) &&
     swcrcPath.includes('.generated.swcrc')
   ) {
-    removeSync(dirname(swcrcPath));
+    rmSync(dirname(swcrcPath), { recursive: true, force: true });
   }
 }
 

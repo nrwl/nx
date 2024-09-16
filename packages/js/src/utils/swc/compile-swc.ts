@@ -1,7 +1,7 @@
 import { cacheDir, ExecutorContext, logger } from '@nx/devkit';
 import { exec, execSync } from 'node:child_process';
+import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { existsSync, removeSync } from 'fs-extra';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
@@ -79,7 +79,7 @@ export async function compileSwc(
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
   if (normalizedOptions.clean) {
-    removeSync(normalizedOptions.outputPath);
+    rmSync(normalizedOptions.outputPath, { recursive: true, force: true });
   }
 
   const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
@@ -125,7 +125,7 @@ export async function* compileSwcWatch(
   let initialPostCompile = true;
 
   if (normalizedOptions.clean) {
-    removeSync(normalizedOptions.outputPath);
+    rmSync(normalizedOptions.outputPath, { recursive: true, force: true });
   }
 
   return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
