@@ -16,6 +16,7 @@ import {
   addE2e,
   addLinting,
   addProxyConfig,
+  addServeStaticTarget,
   addUnitTestRunner,
   createFiles,
   createProject,
@@ -74,7 +75,12 @@ export async function applicationGeneratorInternal(
 
   await addLinting(tree, options);
   await addUnitTestRunner(tree, options);
-  await addE2e(tree, options);
+  const e2ePort = await addE2e(tree, options);
+  addServeStaticTarget(
+    tree,
+    options,
+    options.e2eTestRunner !== 'none' ? e2ePort : options.port
+  );
   updateEditorTsConfig(tree, options);
   setGeneratorDefaults(tree, options);
 
