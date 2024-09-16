@@ -27,7 +27,8 @@ export type CachedResult = {
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
 export function getCache(options: DefaultTasksRunnerOptions) {
-  return process.env.NX_DB_CACHE === 'true'
+  return process.env.NX_DISABLE_DB !== 'true' &&
+    process.env.NX_DB_CACHE === 'true'
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(readNxJson())
