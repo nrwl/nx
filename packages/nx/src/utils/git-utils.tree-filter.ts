@@ -4,26 +4,27 @@
  * destination folder is different, this script also moves the files over.
  *
  * Example:
- * git filter-branch --tree-filter 'node git-utils.tree-filter.js <source> <destination>' --prune-empty -- --all
+ * NX_IMPORT_SOURCE=<source> NX_IMPORT_DESTINATION=<destination> git filter-branch --tree-filter 'node git-utils.tree-filter.js' --prune-empty -- --all
  */
 const { execSync } = require('child_process');
 const { existsSync, mkdirSync, renameSync, rmSync } = require('fs');
+// NOTE: The path passed to `git filter-branch` is POSIX, so we need to use the `posix` module.
 const { posix } = require('path');
 try {
-  const src = process.argv[2];
-  const dest = process.argv[3];
+  // NOTE: Using env vars because Windows PowerShell has its own handling of quotes (") messes up quotes in args, even if escaped.
+  const src = process.env.NX_IMPORT_SOURCE;
+  const dest = process.env.NX_IMPORT_DESTINATION;
   const files = execSync(`git ls-files -z ${src}`)
     .toString()
     .trim()
     .split('\x00')
     .map((s) => s.trim())
     .filter(Boolean);
-  const srcRegex = new RegExp(`^${src}`);
   for (const file of files) {
-    if (src === '' || srcRegex.test(file)) {
+    if (src === '' || file.startsWith(src)) {
       // If source and destination are the same, then keep the file as is.
       if (src === dest) continue;
-      const destFile = posix.join(dest, file.replace(srcRegex, ''));
+      const destFile = posix.join(dest, file.replace(src, ''));
       const dir = posix.dirname(destFile);
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
       renameSync(file, destFile);

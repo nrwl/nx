@@ -3,12 +3,14 @@
  * history such that only commits related to the subdirectory is kept.
  *
  * Example:
- * git filter-branch --index-filter 'node git-utils.index-filter.js "packages/foo"' --prune-empty -- --all
+ * NX_IMPORT_SOURCE=<source> git filter-branch --index-filter 'node git-utils.index-filter.js' --prune-empty -- --all
  */
 try {
   const { execSync } = require('child_process');
+  // NOTE: Using env vars because Windows PowerShell has its own handling of quotes (") messes up quotes in args, even if escaped.
+  const src = process.env.NX_IMPORT_SOURCE;
   execSync('git read-tree --empty', { stdio: 'inherit' });
-  execSync(`git reset ${process.env.GIT_COMMIT} -- "${process.argv[2]}"`, {
+  execSync(`git reset ${process.env.GIT_COMMIT} -- "${src}"`, {
     stdio: 'inherit',
   });
 } catch (error) {
