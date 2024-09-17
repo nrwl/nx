@@ -128,6 +128,11 @@ async function createNodesInternal(
     configFilePath
   );
 
+  // Do not create a project for the workspace root tsconfig files.
+  if (projectRoot === '.') {
+    return {};
+  }
+
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
   if (
