@@ -309,7 +309,7 @@ export async function gitTag({
 }: {
   tag: string;
   message?: string;
-  additionalArgs?: string;
+  additionalArgs?: string | string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
@@ -325,7 +325,11 @@ export async function gitTag({
     message || tag,
   ];
   if (additionalArgs) {
-    commandArgs.push(...additionalArgs.split(' '));
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
   }
 
   if (verbose) {

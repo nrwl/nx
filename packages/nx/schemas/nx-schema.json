@@ -650,7 +650,7 @@
           "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
         },
         "tagArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
         }
       }

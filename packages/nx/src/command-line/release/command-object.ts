@@ -33,7 +33,7 @@ interface GitCommitAndTagOptions {
   gitCommitArgs?: string | string[];
   gitTag?: boolean;
   gitTagMessage?: string;
-  gitTagArgs?: string;
+  gitTagArgs?: string | string[];
 }
 
 export type VersionOptions = NxReleaseArgs &
