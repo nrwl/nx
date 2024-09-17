@@ -348,8 +348,9 @@ export async function importHandler(options: ImportOptions) {
     title: `Merging these changes into ${getBaseRef(nxJson)}`,
     bodyLines: [
       `MERGE these changes when merging these changes.`,
-      `Do NOT squash and do NOT rebase these changes when merging these changes.`,
-      `If you would like to UNDO these changes, run "git reset HEAD~1 --hard"`,
+      `Do NOT squash these commits when merging these changes.`,
+      `If you rebase, make sure to use "--rebase-merges" to preserve merge commits.`,
+      `To UNDO these changes, run "git reset HEAD~1 --hard"`,
     ],
   });
 }
