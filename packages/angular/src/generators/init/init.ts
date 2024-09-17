@@ -1,13 +1,16 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   ensurePackage,
   formatFiles,
+  type GeneratorCallback,
   logger,
   readNxJson,
-  type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { getInstalledPackageVersion, versions } from '../utils/version-utils';
+import { createNodesV2 } from '../../plugins/plugin';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(
@@ -16,6 +19,25 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   ignoreAngularCacheDirectory(tree);
   const installTask = installAngularDevkitCoreIfMissing(tree, options);
+
+  // For Angular inference plugin, we only want it during import since our
+  // generators do not use `angular.json`, and `nx init` should split
+  // `angular.json` into multiple `project.json` files -- as this is preferred
+  // by most folks we've talked to.
+  options.addPlugin ??= process.env.NX_RUNNING_NX_IMPORT === 'true';
+
+  if (options.addPlugin) {
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/angular/plugin',
+      createNodesV2,
+      {
+        targetNamePrefix: ['', 'angular:', 'angular-'],
+      },
+      options.updatePackageScripts
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
