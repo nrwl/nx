@@ -82,7 +82,7 @@ export class TaskOrchestrator {
     ]);
 
     // initial scheduling
-    await this.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
 
     performance.mark('task-execution:start');
 
@@ -118,6 +118,7 @@ export class TaskOrchestrator {
       this.options.skipNxCache === false ||
       this.options.skipNxCache === undefined;
 
+    this.processAllScheduledTasks();
     const batch = this.tasksSchedule.nextBatch();
     if (batch) {
       const groupId = this.closeGroup();
@@ -615,17 +616,11 @@ export class TaskOrchestrator {
       })
     );
 
-    await this.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
 
     // release blocked threads
     this.waitingForTasks.forEach((f) => f(null));
     this.waitingForTasks.length = 0;
-  }
-
-  private async scheduleNextTasks() {
-    await this.tasksSchedule.scheduleNextTasks();
-
-    this.processAllScheduledTasks();
   }
 
   private complete(
