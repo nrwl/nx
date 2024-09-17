@@ -34,83 +34,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
   });
 
-  it('should create nodes for root tsconfig.json files', async () => {
+  it('should not create nodes for root tsconfig.json files', async () => {
     await applyFilesToTempFsAndContext(tempFs, context, {
       'package.json': `{}`,
       'project.json': `{}`,
       'tsconfig.json': `{}`,
-      'src/index.ts': `console.log('Hello World!');`,
-    });
-    expect(await invokeCreateNodesOnMatchingFiles(context, {}))
-      .toMatchInlineSnapshot(`
-      {
-        "projects": {
-          ".": {
-            "projectType": "library",
-            "targets": {
-              "typecheck": {
-                "cache": true,
-                "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
-                "dependsOn": [
-                  "^typecheck",
-                ],
-                "inputs": [
-                  "production",
-                  "^production",
-                  {
-                    "externalDependencies": [
-                      "typescript",
-                    ],
-                  },
-                ],
-                "metadata": {
-                  "description": "Runs type-checking for the project.",
-                  "help": {
-                    "command": "npx tsc --build --help",
-                    "example": {
-                      "args": [
-                        "--force",
-                      ],
-                    },
-                  },
-                  "technologies": [
-                    "typescript",
-                  ],
-                },
-                "options": {
-                  "cwd": ".",
-                },
-                "outputs": [
-                  "{projectRoot}/**/*.js",
-                  "{projectRoot}/**/*.cjs",
-                  "{projectRoot}/**/*.mjs",
-                  "{projectRoot}/**/*.jsx",
-                  "{projectRoot}/**/*.js.map",
-                  "{projectRoot}/**/*.jsx.map",
-                  "{projectRoot}/**/*.d.ts",
-                  "{projectRoot}/**/*.d.cts",
-                  "{projectRoot}/**/*.d.mts",
-                  "{projectRoot}/**/*.d.ts.map",
-                  "{projectRoot}/**/*.d.cts.map",
-                  "{projectRoot}/**/*.d.mts.map",
-                  "{projectRoot}/tsconfig.tsbuildinfo",
-                ],
-                "syncGenerators": [
-                  "@nx/js:typescript-sync",
-                ],
-              },
-            },
-          },
-        },
-      }
-    `);
-  });
-
-  it('should not create nodes when it is not a tsconfig.json file and there is no sibling tsconfig.json file', async () => {
-    await applyFilesToTempFsAndContext(tempFs, context, {
-      'package.json': `{}`,
-      'project.json': `{}`,
-      'tsconfig.base.json': `{}`,
       'src/index.ts': `console.log('Hello World!');`,
     });
     expect(await invokeCreateNodesOnMatchingFiles(context, {}))
