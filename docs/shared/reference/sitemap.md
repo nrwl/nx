@@ -556,6 +556,7 @@
       - [report](/nx-api/nx/documents/report)
       - [list](/nx-api/nx/documents/list)
       - [connect-to-nx-cloud](/nx-api/nx/documents/connect-to-nx-cloud)
+      - [activate-powerpack](/nx-api/nx/documents/activate-powerpack)
       - [reset](/nx-api/nx/documents/reset)
       - [repair](/nx-api/nx/documents/repair)
       - [sync](/nx-api/nx/documents/sync)
