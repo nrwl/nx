@@ -10,8 +10,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
-import { remove } from 'fs-extra';
 import { exec } from 'node:child_process';
+import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
@@ -530,7 +530,7 @@ To fix this you will either need to add a package.json file at that location, or
               (options.releaseGroup.resolvedVersionPlans || []).forEach((p) => {
                 deleteVersionPlanCallbacks.push(async (dryRun?: boolean) => {
                   if (!dryRun) {
-                    await remove(p.absolutePath);
+                    await rm(p.absolutePath, { recursive: true, force: true });
                     // the relative path is easier to digest, so use that for
                     // git operations and logging
                     return [p.relativePath];
