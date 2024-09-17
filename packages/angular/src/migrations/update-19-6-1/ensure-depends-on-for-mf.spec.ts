@@ -60,8 +60,8 @@ describe('ensure-depends-on-for-mf', () => {
           "^build",
         ],
         "inputs": [
-          "production",
-          "^production",
+          "default",
+          "^default",
           {
             "env": "NX_MF_DEV_REMOTES",
           },
