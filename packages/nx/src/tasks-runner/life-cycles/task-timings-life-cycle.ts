@@ -1,5 +1,5 @@
 import { Task } from '../../config/task-graph';
-import { LifeCycle } from '../life-cycle';
+import { LifeCycle, TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 
 export class TaskTimingsLifeCycle implements LifeCycle {
@@ -19,13 +19,7 @@ export class TaskTimingsLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: Array<{
-      task: Task;
-      status: TaskStatus;
-      code: number;
-    }>
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let tr of taskResults) {
       if (tr.task.startTime) {
         this.timings[tr.task.id].start = tr.task.startTime;

@@ -1,7 +1,7 @@
 import { output } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
-import type { LifeCycle } from '../life-cycle';
+import type { LifeCycle, TaskResult } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 
@@ -126,9 +126,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     return this.tasks.filter((t) => !this.allCompletedTasks.has(t.id));
   }
 
-  endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[]
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
       this.allCompletedTasks.set(t.task.id, t.task);
       if (t.status === 'failure') {
