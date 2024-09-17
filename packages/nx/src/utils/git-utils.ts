@@ -1,5 +1,5 @@
 import { exec, ExecOptions, execSync } from 'child_process';
-import { dirname, posix, sep } from 'path';
+import { dirname, join, posix, sep } from 'path';
 import { logger } from '../devkit-exports';
 
 function execAsync(command: string, execOptions: ExecOptions) {
@@ -140,24 +140,48 @@ export class GitRepository {
 
   // git-filter-repo is much faster than filter-branch, but needs to be installed by user
   // Use `hasFilterRepoInstalled` to check if it's installed
-  async filterRepo(subdirectory: string) {
-    // filter-repo requires POSIX path to work
-    const posixPath = subdirectory.split(sep).join(posix.sep);
-    return await this.execAsync(
-      `git filter-repo -f --subdirectory-filter ${this.quotePath(posixPath)}`
+  async filterRepo(source: string, destination: string) {
+    // NOTE: filter-repo requires POSIX path to work
+    const sourcePosixPath = source.split(sep).join(posix.sep);
+    const destinationPosixPath = destination.split(sep).join(posix.sep);
+    await this.execAsync(
+      `git filter-repo -f ${
+        source !== '' ? `--path ${this.quotePath(sourcePosixPath)}` : ''
+      } ${
+        source !== destination
+          ? `--path-rename ${this.quotePath(
+              sourcePosixPath,
+              true
+            )}:${this.quotePath(destinationPosixPath, true)}`
+          : ''
+      }`
     );
   }
 
-  async filterBranch(subdirectory: string, branchName: string) {
-    // filter-repo requires POSIX path to work
-    const posixPath = subdirectory.split(sep).join(posix.sep);
+  async filterBranch(source: string, destination: string, branchName: string) {
     // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
     await this.execAsync(`git config core.quotepath false`);
-    return await this.execAsync(
-      `git filter-branch --subdirectory-filter ${this.quotePath(
-        posixPath
-      )} -- ${branchName}`
-    );
+    // NOTE: filter-repo requires POSIX path to work
+    const sourcePosixPath = source.split(sep).join(posix.sep);
+    const destinationPosixPath = destination.split(sep).join(posix.sep);
+    // First, if the source is not a root project, then only include commits relevant to the subdirectory.
+    if (source !== '') {
+      await this.execAsync(
+        `git filter-branch -f --index-filter 'node ${join(
+          __dirname,
+          'git-utils.index-filter.js'
+        )} "${sourcePosixPath}"' --prune-empty -- ${branchName}`
+      );
+    }
+    // Then, move files to their new location if necessary.
+    if (source === '' || source !== destination) {
+      await this.execAsync(
+        `git filter-branch -f --tree-filter 'node ${join(
+          __dirname,
+          'git-utils.tree-filter.js'
+        )} "${sourcePosixPath}" "${destinationPosixPath}"' -- ${branchName}`
+      );
+    }
   }
 
   private execAsync(command: string) {
@@ -167,7 +191,11 @@ export class GitRepository {
     });
   }
 
-  private quotePath(path: string) {
+  private quotePath(_path: string, ensureTrailingSlash?: true) {
+    const path =
+      ensureTrailingSlash && _path !== '' && !_path.endsWith('/')
+        ? `${_path}/`
+        : _path;
     return process.platform === 'win32'
       ? // Windows/CMD only understands double-quotes, single-quotes are treated as part of the file name
         // Bash and other shells will substitute `$` in file names with a variable value.
