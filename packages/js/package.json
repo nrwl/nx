@@ -48,7 +48,6 @@
     "columnify": "^1.6.0",
     "detect-port": "^1.5.1",
     "fast-glob": "3.2.7",
-    "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "jsonc-parser": "3.2.0",

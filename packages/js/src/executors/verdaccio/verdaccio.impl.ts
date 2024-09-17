@@ -1,7 +1,7 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { existsSync, rmSync } from 'fs-extra';
 import { ChildProcess, execSync, fork } from 'child_process';
 import * as detectPort from 'detect-port';
+import { existsSync, rmSync } from 'node:fs';
 import { join, resolve } from 'path';
 
 import { VerdaccioExecutorSchema } from './schema';
