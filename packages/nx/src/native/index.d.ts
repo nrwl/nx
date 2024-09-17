@@ -41,6 +41,7 @@ export declare class NxTaskHistory {
   constructor(db: ExternalObject<Connection>)
   recordTaskRuns(taskRuns: Array<TaskRun>): void
   getFlakyTasks(hashes: Array<string>): Array<string>
+  getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
 export declare class RustPseudoTerminal {
@@ -149,6 +150,8 @@ export declare export function getBinaryTarget(): string
  * This is used when hashing outputs
  */
 export declare export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+
+export declare export function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 export declare export function hashArray(input: Array<string>): string
 
@@ -262,6 +265,8 @@ export interface UpdatedWorkspaceFiles {
   fileMap: FileMap
   externalReferences: NxWorkspaceFilesExternals
 }
+
+export declare export function validateOutputs(outputs: Array<string>): void
 
 export interface WatchEvent {
   path: string

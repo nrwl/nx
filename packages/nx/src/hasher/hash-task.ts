@@ -12,7 +12,7 @@ let taskDetails: TaskDetails;
 
 function getTaskDetails() {
   // TODO: Remove when wasm supports sqlite
-  if (IS_WASM) {
+  if (process.env.NX_DISABLE_DB === 'true' || IS_WASM) {
     return null;
   }
   if (!taskDetails) {
@@ -58,7 +58,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
   }
-  // TODO: Remove if when wasm supports sqlite
+  // TODO: Remove if when sqlite is always on
   if (taskDetails) {
     taskDetails.recordTaskDetails(
       tasksToHash.map((task) => ({

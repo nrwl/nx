@@ -79,17 +79,17 @@ Create a dedicated commit for each successfully completed migration. You can cus
 
 ## Options
 
-| Option                       | Type    | Description                                                                                                                          |
-| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `--commitPrefix`             | string  | Commit prefix to apply to the commit for each migration, when --create-commits is enabled (Default: `chore: [nx migration] `)        |
-| `--createCommits`            | boolean | Automatically create a git commit after each migration runs (Default: `false`)                                                       |
-| `--excludeAppliedMigrations` | boolean | Exclude migrations that should have been applied on previous updates. To be used with --from (Default: `false`)                      |
-| `--from`                     | string  | Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@16.0.0,@nx/js@16.0.0") |
-| `--help`                     | boolean | Show help                                                                                                                            |
-| `--ifExists`                 | boolean | Run migrations only if the migrations file exists, if not continues successfully (Default: `false`)                                  |
-| `--interactive`              | boolean | Enable prompts to confirm whether to collect optional package updates and migrations (Default: `false`)                              |
-| `--packageAndVersion`        | string  | The target package and version (e.g, @nx/workspace@16.0.0)                                                                           |
-| `--runMigrations`            | string  | Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)                               |
-| `--to`                       | string  | Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0")  |
-| `--verbose`                  | boolean | Prints additional information about the commands (e.g., stack traces)                                                                |
-| `--version`                  | boolean | Show version number                                                                                                                  |
+| Option                       | Type    | Description                                                                                                                           |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--commitPrefix`             | string  | Commit prefix to apply to the commit for each migration, when --create-commits is enabled. (Default: `chore: [nx migration] `)        |
+| `--createCommits`            | boolean | Automatically create a git commit after each migration runs. (Default: `false`)                                                       |
+| `--excludeAppliedMigrations` | boolean | Exclude migrations that should have been applied on previous updates. To be used with --from. (Default: `false`)                      |
+| `--from`                     | string  | Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@16.0.0,@nx/js@16.0.0"). |
+| `--help`                     | boolean | Show help.                                                                                                                            |
+| `--ifExists`                 | boolean | Run migrations only if the migrations file exists, if not continues successfully. (Default: `false`)                                  |
+| `--interactive`              | boolean | Enable prompts to confirm whether to collect optional package updates and migrations. (Default: `false`)                              |
+| `--packageAndVersion`        | string  | The target package and version (e.g, @nx/workspace@16.0.0).                                                                           |
+| `--runMigrations`            | string  | Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json).                               |
+| `--to`                       | string  | Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0").  |
+| `--verbose`                  | boolean | Prints additional information about the commands (e.g., stack traces).                                                                |
+| `--version`                  | boolean | Show version number.                                                                                                                  |

@@ -13,9 +13,9 @@ export const defaultYargsParserConfiguration: Partial<ParserConfigurationOptions
     'parse-positional-numbers': false,
   };
 
-export function withExcludeOption(yargs: Argv): Argv<ExcludeOptions> {
+export function withExcludeOption<T>(yargs: Argv<T>): Argv<T & ExcludeOptions> {
   return yargs.option('exclude', {
-    describe: 'Exclude certain projects from being processed',
+    describe: 'Exclude certain projects from being processed.',
     type: 'string',
     coerce: parseCSV,
   }) as any;
@@ -37,12 +37,13 @@ export interface RunOptions {
   batch: boolean;
   useAgents: boolean;
   excludeTaskDependencies: boolean;
+  skipSync: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
   return withVerbose(withExcludeOption(yargs))
     .option('parallel', {
-      describe: 'Max number of parallel processes [default is 3]',
+      describe: 'Max number of parallel processes [default is 3].',
       type: 'string',
     })
     .option('maxParallel', {
@@ -50,11 +51,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       hidden: true,
     })
     .options('runner', {
-      describe: 'This is the name of the tasks runner configured in nx.json',
+      describe: 'This is the name of the tasks runner configured in nx.json.',
       type: 'string',
     })
     .option('prod', {
-      describe: 'Use the production configuration',
+      describe: 'Use the production configuration.',
       type: 'boolean',
       default: false,
       hidden: true,
@@ -74,25 +75,30 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
           : value,
     })
     .option('nxBail', {
-      describe: 'Stop command execution after the first failed task',
+      describe: 'Stop command execution after the first failed task.',
       type: 'boolean',
       default: false,
     })
     .option('nxIgnoreCycles', {
-      describe: 'Ignore cycles in the task graph',
+      describe: 'Ignore cycles in the task graph.',
       type: 'boolean',
       default: false,
     })
     .options('skipNxCache', {
       describe:
-        'Rerun the tasks even when the results are available in the cache',
+        'Rerun the tasks even when the results are available in the cache.',
       type: 'boolean',
       default: false,
     })
     .options('excludeTaskDependencies', {
-      describe: 'Skips running dependent tasks first',
+      describe: 'Skips running dependent tasks first.',
       type: 'boolean',
       default: false,
+    })
+    .option('skipSync', {
+      type: 'boolean',
+      // TODO(leo): add description and make it visible once it is stable
+      hidden: true,
     })
     .options('cloud', {
       type: 'boolean',
@@ -106,7 +112,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       hidden: true,
       alias: 'agents',
-    }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
+    }) as Argv<Omit<RunOptions, 'batch'>> as any;
 }
 
 export function withTargetAndConfigurationOption(
@@ -114,7 +120,7 @@ export function withTargetAndConfigurationOption(
   demandOption = true
 ) {
   return withConfiguration(yargs).option('targets', {
-    describe: 'Tasks to run for affected projects',
+    describe: 'Tasks to run for affected projects.',
     type: 'string',
     alias: ['target', 't'],
     requiresArg: true,
@@ -127,7 +133,7 @@ export function withTargetAndConfigurationOption(
 export function withConfiguration(yargs: Argv) {
   return yargs.options('configuration', {
     describe:
-      'This is the configuration to use when performing tasks on projects',
+      'This is the configuration to use when performing tasks on projects.',
     type: 'string',
     alias: 'c',
   });
@@ -137,7 +143,7 @@ export function withVerbose<T>(yargs: Argv<T>) {
   return yargs
     .option('verbose', {
       describe:
-        'Prints additional information about the commands (e.g., stack traces)',
+        'Prints additional information about the commands (e.g., stack traces).',
       type: 'boolean',
     })
     .middleware((args) => {
@@ -150,7 +156,7 @@ export function withVerbose<T>(yargs: Argv<T>) {
 export function withBatch(yargs: Argv) {
   return yargs.options('batch', {
     type: 'boolean',
-    describe: 'Run task(s) in batches for executors which support batches',
+    describe: 'Run task(s) in batches for executors which support batches.',
     coerce: (v) => {
       return v || process.env.NX_BATCH_MODE === 'true';
     },
@@ -163,26 +169,26 @@ export function withAffectedOptions(yargs: Argv) {
     .parserConfiguration(defaultYargsParserConfiguration)
     .option('files', {
       describe:
-        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces',
+        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces.',
       type: 'string',
       requiresArg: true,
       coerce: parseCSV,
     })
     .option('uncommitted', {
-      describe: 'Uncommitted changes',
+      describe: 'Uncommitted changes.',
       type: 'boolean',
     })
     .option('untracked', {
-      describe: 'Untracked changes',
+      describe: 'Untracked changes.',
       type: 'boolean',
     })
     .option('base', {
-      describe: 'Base of the current branch (usually main)',
+      describe: 'Base of the current branch (usually main).',
       type: 'string',
       requiresArg: true,
     })
     .option('head', {
-      describe: 'Latest commit of the current branch (usually HEAD)',
+      describe: 'Latest commit of the current branch (usually HEAD).',
       type: 'string',
       requiresArg: true,
     })
@@ -221,7 +227,7 @@ export function withRunManyOptions<T>(
       alias: 'p',
       coerce: parseCSV,
       describe:
-        'Projects to run. (comma/space delimited project names and/or patterns)',
+        'Projects to run. (comma/space delimited project names and/or patterns).',
     })
     .option('all', {
       describe:
@@ -282,11 +288,11 @@ export function withRunOneOptions(yargs: Argv) {
   )
     .parserConfiguration(defaultYargsParserConfiguration)
     .option('project', {
-      describe: 'Target project',
+      describe: 'Target project.',
       type: 'string',
     })
     .option('help', {
-      describe: 'Show Help',
+      describe: 'Show Help.',
       type: 'boolean',
     });
 

@@ -35,7 +35,15 @@ export async function installAndUpdatePackageJson(
   context: ExecutorContext,
   options: ExpoInstallOptions
 ) {
-  await installAsync(context.root, options);
+  const { installAsync } = require('@expo/cli/build/src/install/installAsync');
+
+  const packages =
+    typeof options.packages === 'string'
+      ? options.packages.split(',')
+      : options.packages ?? [];
+
+  // Use force in case there are any unmet peer dependencies.
+  await installAsync(packages, createInstallOptions(options), ['--force']);
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -48,10 +56,6 @@ export async function installAndUpdatePackageJson(
 
   const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
   const projectPackageJson = readJsonFile(projectPackageJsonPath);
-  const packages =
-    typeof options.packages === 'string'
-      ? options.packages.split(',')
-      : options.packages;
   displayNewlyAddedDepsMessage(
     context.projectName,
     await syncDeps(
@@ -65,51 +69,19 @@ export async function installAndUpdatePackageJson(
   );
 }
 
-export function installAsync(
-  workspaceRoot: string,
-  options: ExpoInstallOptions
-): Promise<number> {
-  return new Promise((resolve, reject) => {
-    childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
-      ['install', ...createInstallOptions(options)],
-      { cwd: workspaceRoot, env: process.env }
-    );
-
-    // Ensure the child process is killed when the parent exits
-    process.on('exit', () => childProcess.kill());
-    process.on('SIGTERM', () => childProcess.kill());
-
-    childProcess.on('error', (err) => {
-      reject(err);
-    });
-    childProcess.on('exit', (code) => {
-      if (code === 0) {
-        resolve(code);
-      } else {
-        reject(code);
-      }
-    });
-  });
-}
-
 // options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/install/index.ts
 function createInstallOptions(options: ExpoInstallOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
-    if (k === 'packages') {
-      const packages = typeof v === 'string' ? v.split(',') : v;
-      acc.push(...packages);
-    } else {
-      if (typeof v === 'boolean') {
-        if (v === true) {
-          // when true, does not need to pass the value true, just need to pass the flag in kebob case
-          acc.push(`--${names(k).fileName}`);
-        }
-      } else {
-        acc.push(`--${names(k).fileName}`, v);
+    if (typeof v === 'boolean') {
+      if (v === true) {
+        // when true, does not need to pass the value true, just need to pass the flag in kebob case
+        acc.push(`--${names(k).fileName}`);
       }
+    } else {
+      acc.push(`--${names(k).fileName}`, v);
     }
+
     return acc;
   }, []);
 }

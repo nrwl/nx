@@ -247,6 +247,11 @@
               "file": "shared/concepts/daemon"
             },
             {
+              "name": "Sync Generators",
+              "id": "sync-generators",
+              "file": "shared/concepts/sync-generators"
+            },
+            {
               "name": "Nx and Turborepo",
               "id": "turbo-and-nx",
               "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
@@ -459,6 +464,11 @@
                   "name": "Add to any Project",
                   "id": "adding-to-existing-project",
                   "file": "shared/migration/adding-to-existing-project"
+                },
+                {
+                  "name": "Import an Existing Project into an Nx Workspace",
+                  "id": "import-project",
+                  "file": "shared/migration/import-project"
                 },
                 {
                   "name": "Preserving Git Histories",
@@ -1068,6 +1078,12 @@
                   "id": "publish-custom-dist-directory",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/publish-custom-dist-directory"
+                },
+                {
+                  "name": "Build Before Versioning",
+                  "id": "build-before-versioning",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/build-before-versioning"
                 }
               ]
             },
@@ -1527,6 +1543,12 @@
               "file": "shared/recipes/generators/modifying-files"
             },
             {
+              "name": "Create a Sync Generator",
+              "id": "create-sync-generator",
+              "tags": ["generate-code"],
+              "file": "shared/recipes/generators/create-sync-generator"
+            },
+            {
               "name": "Write a Migration",
               "id": "migration-generators",
               "tags": ["create-your-own-plugin"],
@@ -1760,9 +1782,14 @@
                   "file": "nx-cloud/recipes/google-auth"
                 },
                 {
-                  "name": "Access Tokens",
+                  "name": "CI Access Tokens",
                   "id": "access-tokens",
                   "file": "nx-cloud/recipes/access-tokens"
+                },
+                {
+                  "name": "Personal Access Tokens",
+                  "id": "personal-access-tokens",
+                  "file": "nx-cloud/recipes/personal-access-tokens"
                 },
                 {
                   "name": "Enable End to End Encryption",
@@ -2080,6 +2107,21 @@
               "file": "generated/cli/repair"
             },
             {
+              "name": "sync",
+              "id": "sync",
+              "file": "generated/cli/sync"
+            },
+            {
+              "name": "sync:check",
+              "id": "sync-check",
+              "file": "generated/cli/sync-check"
+            },
+            {
+              "name": "import",
+              "id": "import",
+              "file": "generated/cli/import"
+            },
+            {
               "name": "exec",
               "id": "exec",
               "file": "generated/cli/exec"
@@ -2110,6 +2152,16 @@
               "name": "add",
               "id": "add",
               "file": "generated/cli/add"
+            },
+            {
+              "name": "login",
+              "id": "login",
+              "file": "generated/cli/login"
+            },
+            {
+              "name": "logout",
+              "id": "logout",
+              "file": "generated/cli/logout"
             }
           ]
         },

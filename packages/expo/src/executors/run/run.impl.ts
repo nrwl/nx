@@ -7,7 +7,6 @@ import { existsSync } from 'fs-extra';
 import { ExpoRunOptions } from './schema';
 import { prebuildAsync } from '../prebuild/prebuild.impl';
 import { podInstall } from '../../utils/pod-install-task';
-import { installAsync } from '../install/install.impl';
 
 export interface ExpoRunOutput {
   success: boolean;
@@ -34,7 +33,10 @@ export default async function* runExecutor(
   }
 
   if (options.install) {
-    await installAsync(context.root, {});
+    const {
+      installAsync,
+    } = require('@expo/cli/build/src/install/installAsync');
+    await installAsync([], {});
     if (options.platform === 'ios') {
       podInstall(join(context.root, projectRoot, 'ios'));
     }

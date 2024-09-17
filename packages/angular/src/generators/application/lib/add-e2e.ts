@@ -27,8 +27,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
     options.name,
     options.port
   );
-  // TODO: This can call `@nx/web:static-config` generator when ready
-  addFileServerTarget(tree, options, 'serve-static', e2eWebServerInfo.e2ePort);
 
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
@@ -101,35 +99,8 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       );
     }
   }
-}
 
-function addFileServerTarget(
-  tree: Tree,
-  options: NormalizedSchema,
-  targetName: string,
-  e2ePort: number
-) {
-  if (!options.skipPackageJson) {
-    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
-  }
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild';
-
-  const projectConfig = readProjectConfiguration(tree, options.name);
-  projectConfig.targets[targetName] = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: `${options.name}:build`,
-      port: e2ePort,
-      staticFilePath: isUsingApplicationBuilder
-        ? joinPathFragments(options.outputPath, 'browser')
-        : undefined,
-      spa: true,
-    },
-  };
-  updateProjectConfiguration(tree, options.name, projectConfig);
+  return e2eWebServerInfo.e2ePort;
 }
 
 function getAngularE2EWebServerInfo(

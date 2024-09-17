@@ -16,10 +16,7 @@ interface ShowOptionsHelpProps {
 }
 
 const fallbackHelpExample = {
-  options: {
-    silent: true,
-  },
-  args: ['foo'],
+  args: ['foo', '--bar="baz"'],
 };
 
 export function ShowOptionsHelp({
@@ -151,10 +148,10 @@ export function ShowOptionsHelp({
                   )}
                   {helpExampleArgs && (
                     <p className="mb-2">
-                      The <code>args</code> are CLI positional arguments, such
-                      as <code>ls somedir</code>, where you would use{' '}
-                      <code>{'"args": ["somedir"]'}</code> to set it in the
-                      target configuration.
+                      The <code>args</code> are CLI flags or positional
+                      arguments, such as <code>ls -la somedir</code>, where you
+                      would use <code>{'"args": ["-la", "somedir"]'}</code> to
+                      set it in the target configuration.
                     </p>
                   )}
                 </div>

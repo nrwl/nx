@@ -147,8 +147,8 @@ describe('convert-to-flat-config generator', () => {
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "const { FlatCompat } = require('@eslint/eslintrc');
-      const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
+      const nxEslintPlugin = require('@nx/eslint-plugin');
 
       const compat = new FlatCompat({
         baseDirectory: __dirname,
@@ -201,14 +201,17 @@ describe('convert-to-flat-config generator', () => {
         ...baseConfig,
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
         },
         {
           files: ['**/*.ts', '**/*.tsx'],
+          // Override or add rules here
           rules: {},
         },
         {
           files: ['**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
         },
       ];
@@ -392,8 +395,8 @@ describe('convert-to-flat-config generator', () => {
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "const { FlatCompat } = require('@eslint/eslintrc');
-      const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
+      const nxEslintPlugin = require('@nx/eslint-plugin');
 
       const compat = new FlatCompat({
         baseDirectory: __dirname,
@@ -554,6 +557,7 @@ describe('convert-to-flat-config generator', () => {
         ...baseConfig,
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
           languageOptions: {
             parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
@@ -561,10 +565,12 @@ describe('convert-to-flat-config generator', () => {
         },
         {
           files: ['**/*.ts', '**/*.tsx'],
+          // Override or add rules here
           rules: {},
         },
         {
           files: ['**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
         },
         { ignores: ['__fixtures__/**/*'] },

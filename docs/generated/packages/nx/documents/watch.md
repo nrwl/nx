@@ -1,11 +1,11 @@
 ---
 title: 'watch - CLI command'
-description: 'Watch for changes within projects, and execute commands'
+description: 'Watch for changes within projects, and execute commands.'
 ---
 
 # watch
 
-Watch for changes within projects, and execute commands
+Watch for changes within projects, and execute commands.
 
 ## Usage
 
@@ -40,8 +40,8 @@ Watch all projects (including newly created projects) in the workspace:
 | Option                       | Type    | Description                                                                 |
 | ---------------------------- | ------- | --------------------------------------------------------------------------- |
 | `--all`                      | boolean | Watch all projects.                                                         |
-| `--help`                     | boolean | Show help                                                                   |
+| `--help`                     | boolean | Show help.                                                                  |
 | `--includeDependentProjects` | boolean | When watching selected projects, include dependent projects as well.        |
 | `--projects`                 | string  | Projects to watch (comma/space delimited).                                  |
 | `--verbose`                  | boolean | Run watch mode in verbose mode, where commands are logged before execution. |
-| `--version`                  | boolean | Show version number                                                         |
+| `--version`                  | boolean | Show version number.                                                        |

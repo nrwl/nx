@@ -22,23 +22,23 @@ function withGenerateOptions(yargs: Argv) {
     process.argv[3] && !process.argv[3].startsWith('-');
   const res = withVerbose(yargs)
     .positional('generator', {
-      describe: 'Name of the generator (e.g., @nx/js:library, library)',
+      describe: 'Name of the generator (e.g., @nx/js:library, library).',
       type: 'string',
       required: true,
     })
     .option('dryRun', {
-      describe: 'Preview the changes without updating files',
+      describe: 'Preview the changes without updating files.',
       alias: 'd',
       type: 'boolean',
       default: false,
     })
     .option('interactive', {
-      describe: 'When false disables interactive input prompts for options',
+      describe: 'When false disables interactive input prompts for options.',
       type: 'boolean',
       default: true,
     })
     .option('quiet', {
-      describe: 'Hides logs from tree operations (e.g. `CREATE package.json`)',
+      describe: 'Hides logs from tree operations (e.g. `CREATE package.json`).',
       type: 'boolean',
       conflicts: ['verbose'],
     })

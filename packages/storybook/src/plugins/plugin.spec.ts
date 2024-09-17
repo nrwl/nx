@@ -74,7 +74,7 @@ describe('@nx/storybook/plugin', () => {
       },
       cache: true,
       outputs: [
-        '{workspaceRoot}/{projectRoot}/storybook-static',
+        '{projectRoot}/storybook-static',
         '{options.output-dir}',
         '{options.outputDir}',
         '{options.o}',
@@ -127,7 +127,7 @@ describe('@nx/storybook/plugin', () => {
       },
       cache: true,
       outputs: [
-        '{workspaceRoot}/{projectRoot}/storybook-static',
+        '{projectRoot}/storybook-static',
         '{options.output-dir}',
         '{options.outputDir}',
         '{options.o}',
@@ -192,7 +192,7 @@ describe('@nx/storybook/plugin', () => {
       },
       cache: true,
       outputs: [
-        '{workspaceRoot}/{projectRoot}/storybook-static',
+        '{projectRoot}/storybook-static',
         '{options.output-dir}',
         '{options.outputDir}',
         '{options.o}',

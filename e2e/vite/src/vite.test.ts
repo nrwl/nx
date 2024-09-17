@@ -7,6 +7,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { names } from '@nx/devkit';
@@ -44,24 +45,20 @@ describe('@nx/vite/plugin', () => {
 
     describe('build and test React app', () => {
       it('should build application', () => {
-        const result = runCLI(`build ${myApp}`);
-        expect(result).toContain('Successfully ran target build');
+        expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myApp} --watch=false`);
-        expect(result).toContain('Successfully ran target test');
+        expect(() => runCLI(`test ${myApp} --watch=false`)).not.toThrow();
       }, 200_000);
     });
     describe('build and test Vue app', () => {
       it('should build application', () => {
-        const result = runCLI(`build ${myVueApp}`);
-        expect(result).toContain('Successfully ran target build');
+        expect(() => runCLI(`build ${myVueApp}`)).not.toThrow();
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myVueApp} --watch=false`);
-        expect(result).toContain('Successfully ran target test');
+        expect(() => runCLI(`test ${myVueApp} --watch=false`)).not.toThrow();
       }, 200_000);
     });
 
@@ -128,13 +125,7 @@ describe('@nx/vite/plugin', () => {
           });`
         );
 
-        const result = runCLI(`build ${myApp}`);
-        expect(result).toContain(
-          `Running target build for project ${myApp} and 1 task it depends on`
-        );
-        expect(result).toContain(
-          `Successfully ran target build for project ${myApp} and 1 task it depends on`
-        );
+        expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       });
     });
 
@@ -157,6 +148,32 @@ describe('@nx/vite/plugin', () => {
       if (process && process.pid) {
         await killProcessAndPorts(process.pid, port);
       }
+    });
+
+    it('should support importing .js and .css files in tsconfig path', () => {
+      const mylib = uniq('mylib');
+      runCLI(
+        `generate @nx/react:library ${mylib} --bundler=none --unitTestRunner=vitest --directory=libs/${mylib} --project-name-and-root-format=as-provided`
+      );
+      updateFile(`libs/${mylib}/src/styles.css`, `.foo {}`);
+      updateFile(`libs/${mylib}/src/foo.mts`, `export const foo = 'foo';`);
+      updateFile(
+        `libs/${mylib}/src/foo.spec.ts`,
+        `
+          import styles from '~/styles.css?inline';
+          import { foo } from '~/foo.mjs';
+          test('should work', () => {
+            expect(styles).toBeDefined();
+            expect(foo).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
   });
 

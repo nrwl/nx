@@ -616,6 +616,20 @@ Additionally, when using the expanded object syntax, you can specify individual 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
 
+### Sync Generators
+
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
+
+```json
+{
+  "targets": {
+    "build": {
+      "syncGenerators": ["some-plugin:my-sync-generator"]
+    }
+  }
+}
+```
+
 ### Executor/command options
 
 To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:

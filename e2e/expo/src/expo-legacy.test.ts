@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  expectTestsPass,
   getPackageManagerCommand,
   killPorts,
   newProject,
@@ -64,8 +63,8 @@ describe('@nx/expo (legacy)', () => {
       return updated;
     });
 
-    expectTestsPass(await runCLIAsync(`test ${appName}`));
-    expectTestsPass(await runCLIAsync(`test ${libName}`));
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain(

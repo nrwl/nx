@@ -116,6 +116,9 @@ describe('@nx/gradle/plugin', () => {
                         "gradle",
                       ],
                     },
+                    "options": {
+                      "cwd": ".",
+                    },
                   },
                 },
               },
@@ -199,6 +202,9 @@ describe('@nx/gradle/plugin', () => {
                       "technologies": [
                         "gradle",
                       ],
+                    },
+                    "options": {
+                      "cwd": ".",
                     },
                   },
                 },
@@ -310,6 +316,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci": {
                       "cache": true,
@@ -379,6 +388,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--bTest": {
                       "cache": true,
@@ -406,6 +418,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--cTests": {
                       "cache": true,
@@ -432,6 +447,9 @@ describe('@nx/gradle/plugin', () => {
                         "technologies": [
                           "gradle",
                         ],
+                      },
+                      "options": {
+                        "cwd": ".",
                       },
                     },
                   },

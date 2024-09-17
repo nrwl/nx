@@ -23,6 +23,7 @@ import {
   generateSpreadElement,
   removeCompatExtends,
   removePlugin,
+  removePredefinedConfigs,
 } from '../utils/flat-config/ast-utils';
 import { hasEslintPlugin } from '../utils/plugin';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
@@ -59,7 +60,7 @@ export function migrateConfigToMonorepoStyle(
         tree.exists('eslint.config.js')
           ? 'eslint.base.config.js'
           : 'eslint.config.js',
-        getGlobalFlatEslintConfiguration(unitTestRunner)
+        getGlobalFlatEslintConfiguration()
       );
     } else {
       const eslintFile = findEslintFile(tree, '.');
@@ -151,6 +152,11 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         'plugin:@nx/javascript',
         'plugin:@nrwl/typescript',
         'plugin:@nrwl/javascript',
+      ]);
+      config = removePredefinedConfigs(config, '@nx/eslint-plugin', 'nx', [
+        'flat/base',
+        'flat/typescript',
+        'flat/javascript',
       ]);
       tree.write(projectEslintPath, config);
     } else {

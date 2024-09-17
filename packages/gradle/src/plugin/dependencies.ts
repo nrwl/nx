@@ -9,11 +9,9 @@ import {
 import { readFileSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
 
-import {
-  GRADLE_BUILD_FILES,
-  getCurrentGradleReport,
-  newLineSeparator,
-} from '../utils/get-gradle-report';
+import { getCurrentGradleReport } from '../utils/get-gradle-report';
+import { GRADLE_BUILD_FILES } from '../utils/split-config-files';
+import { newLineSeparator } from '../utils/get-project-report-lines';
 
 export const createDependencies: CreateDependencies = async (
   _,

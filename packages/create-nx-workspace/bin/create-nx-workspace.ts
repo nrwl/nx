@@ -29,6 +29,7 @@ import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
+import { isCI } from '../src/utils/ci/is-ci';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -109,65 +110,67 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
       withOptions(
         yargs
           .option('name', {
-            describe: chalk.dim`Workspace name (e.g. org name)`,
+            describe: chalk.dim`Workspace name (e.g. org name).`,
             type: 'string',
           })
           .option('preset', {
+            // This describe is hard to auto-fix because of the loop in the code.
+            // eslint-disable-next-line @nx/workspace/valid-command-object
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
               .map((p) => `"${p}"`)
               .join(
                 ', '
-              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset`,
+              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset.`,
             type: 'string',
           })
           .option('interactive', {
-            describe: chalk.dim`Enable interactive mode with presets`,
+            describe: chalk.dim`Enable interactive mode with presets.`,
             type: 'boolean',
             default: true,
           })
           .option('workspaceType', {
-            describe: chalk.dim`The type of workspace to create`,
+            describe: chalk.dim`The type of workspace to create.`,
             choices: ['integrated', 'package-based', 'standalone'],
             type: 'string',
           })
           .option('appName', {
-            describe: chalk.dim`The name of the app when using a monorepo with certain stacks`,
+            describe: chalk.dim`The name of the app when using a monorepo with certain stacks.`,
             type: 'string',
           })
           .option('style', {
-            describe: chalk.dim`Stylesheet type to be used with certain stacks`,
+            describe: chalk.dim`Stylesheet type to be used with certain stacks.`,
             type: 'string',
           })
           .option('standaloneApi', {
-            describe: chalk.dim`Use Standalone Components if generating an Angular app`,
+            describe: chalk.dim`Use Standalone Components if generating an Angular app.`,
             type: 'boolean',
             default: true,
           })
           .option('routing', {
-            describe: chalk.dim`Add a routing setup for an Angular app`,
+            describe: chalk.dim`Add a routing setup for an Angular app.`,
             type: 'boolean',
             default: true,
           })
           .option('bundler', {
-            describe: chalk.dim`Bundler to be used to build the app`,
+            describe: chalk.dim`Bundler to be used to build the app.`,
             type: 'string',
           })
           .option('framework', {
-            describe: chalk.dim`Framework option to be used with certain stacks`,
+            describe: chalk.dim`Framework option to be used with certain stacks.`,
             type: 'string',
           })
           .option('docker', {
-            describe: chalk.dim`Generate a Dockerfile for the Node API`,
+            describe: chalk.dim`Generate a Dockerfile for the Node API.`,
             type: 'boolean',
           })
           .option('nextAppDir', {
-            describe: chalk.dim`Enable the App Router for Next.js`,
+            describe: chalk.dim`Enable the App Router for Next.js.`,
             type: 'boolean',
           })
           .option('nextSrcDir', {
-            describe: chalk.dim`Generate a 'src/' directory for Next.js`,
+            describe: chalk.dim`Generate a 'src/' directory for Next.js.`,
             type: 'boolean',
           })
           .option('e2eTestRunner', {
@@ -176,7 +179,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           })
           .option('ssr', {
-            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application`,
+            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.`,
             type: 'boolean',
           })
           .option('prefix', {
@@ -318,13 +321,13 @@ async function determineFolder(
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
   if (folderName) return folderName;
-
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
       message: `Where would you like to create your workspace?`,
       initial: 'org',
       type: 'input',
+      skip: !parsedArgs.interactive || isCI(),
     },
   ]);
 
@@ -367,6 +370,7 @@ async function determineStack(
         return 'vue';
       case Preset.Nest:
       case Preset.NodeStandalone:
+      case Preset.NodeMonorepo:
       case Preset.Express:
         return 'node';
       case Preset.Apps:
@@ -475,6 +479,7 @@ async function determineNoneOptions(
           },
         ],
         initial: 0,
+        skip: !parsedArgs.interactive || isCI(),
       },
     ]);
     js = reply.ts === 'No';
@@ -576,6 +581,7 @@ async function determineReactOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -676,6 +682,7 @@ async function determineVueOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -762,6 +769,7 @@ async function determineAngularOptions(
         name: 'bundler',
         message: `Which bundler would you like to use?`,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'esbuild',
@@ -787,6 +795,7 @@ async function determineAngularOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -817,6 +826,7 @@ async function determineAngularOptions(
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,
+        skip: !parsedArgs.interactive || isCI(),
       },
     ]);
     ssr = reply.ssr === 'Yes';
@@ -885,6 +895,7 @@ async function determineNodeOptions(
         message:
           'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'Yes',
@@ -998,6 +1009,7 @@ async function determineAppName(
       message: `Application name`,
       type: 'input',
       initial: parsedArgs.name,
+      skip: !parsedArgs.interactive || isCI(),
     },
   ]);
   invariant(appName, {
@@ -1057,6 +1069,7 @@ async function determineReactBundler(
       name: 'bundler',
       message: `Which bundler would you like to use?`,
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'vite',
@@ -1071,6 +1084,7 @@ async function determineReactBundler(
           message: 'Rspack  [ https://www.rspack.dev/ ]',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.bundler;
@@ -1085,6 +1099,7 @@ async function determineNextAppDir(
       name: 'nextAppDir',
       message: 'Would you like to use the App Router (recommended)?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'Yes',
@@ -1108,6 +1123,7 @@ async function determineNextSrcDir(
       name: 'nextSrcDir',
       message: 'Would you like to use the src/ directory?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'Yes',
@@ -1133,6 +1149,7 @@ async function determineVueFramework(
       name: 'framework',
       message: 'What framework would you like to use?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'none',
@@ -1153,7 +1170,7 @@ async function determineVueFramework(
 async function determineNodeFramework(
   parsedArgs: yargs.Arguments<NodeArguments>
 ): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
-  if (parsedArgs.framework) return parsedArgs.framework;
+  if (!!parsedArgs.framework) return parsedArgs.framework;
   const reply = await enquirer.prompt<{
     framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   }>([
@@ -1161,6 +1178,7 @@ async function determineNodeFramework(
       message: 'What framework should be used?',
       type: 'autocomplete',
       name: 'framework',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'none',
@@ -1183,6 +1201,7 @@ async function determineNodeFramework(
           message: 'NestJs  [ https://nestjs.com/     ]',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.framework;
@@ -1201,6 +1220,7 @@ async function determineE2eTestRunner(
       message: 'Test runner to use for end to end (E2E) tests',
       type: 'autocomplete',
       name: 'e2eTestRunner',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'playwright',
@@ -1215,6 +1235,7 @@ async function determineE2eTestRunner(
           message: 'None',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.e2eTestRunner;

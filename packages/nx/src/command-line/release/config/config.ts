@@ -19,6 +19,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { normalizePath } from '../../../utils/path';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
@@ -273,6 +274,7 @@ export async function createNxReleaseConfig(
       conventionalCommits: false,
       generator: '@nx/js:release-version',
       generatorOptions: {},
+      groupPreVersionCommand: '',
     },
     changelog: {
       createRelease: false,
@@ -355,7 +357,9 @@ export async function createNxReleaseConfig(
     );
 
   // these options are not supported at the group level, only the root/command level
-  const rootVersionWithoutGlobalOptions = { ...rootVersionConfig };
+  const rootVersionWithoutGlobalOptions = {
+    ...rootVersionConfig,
+  };
   delete rootVersionWithoutGlobalOptions.git;
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
@@ -496,7 +500,10 @@ export async function createNxReleaseConfig(
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
-        [GROUP_DEFAULTS.version, rootVersionWithoutGlobalOptions],
+        [
+          GROUP_DEFAULTS.version,
+          { ...rootVersionWithoutGlobalOptions, groupPreVersionCommand: '' },
+        ],
         releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
@@ -924,7 +931,11 @@ function isProjectPublic(
   const projectNode = projectGraph.nodes[project];
   const packageJsonPath = join(projectNode.data.root, 'package.json');
 
-  if (!projectFileMap[project]?.find((f) => f.file === packageJsonPath)) {
+  if (
+    !projectFileMap[project]?.find(
+      (f) => f.file === normalizePath(packageJsonPath)
+    )
+  ) {
     return false;
   }
 

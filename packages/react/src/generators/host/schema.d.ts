@@ -28,6 +28,7 @@ export interface Schema {
   typescriptConfiguration?: boolean;
   dynamic?: boolean;
   addPlugin?: boolean;
+  bundler?: 'rspack' | 'webpack';
 }
 
 export interface NormalizedSchema extends Schema {

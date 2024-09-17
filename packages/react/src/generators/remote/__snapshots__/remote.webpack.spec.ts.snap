@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`remote generator should create the remote with the correct config files 1`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files 1`] = `
 "const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
 const { withModuleFederation } = require('@nx/react/module-federation');
@@ -21,9 +21,9 @@ module.exports = composePlugins(withNx(), withReact(), withModuleFederation(conf
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files 2`] = `"module.exports = require('./webpack.config');"`;
+exports[`remote generator bundler=webpack should create the remote with the correct config files 2`] = `"module.exports = require('./webpack.config');"`;
 
-exports[`remote generator should create the remote with the correct config files 3`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files 3`] = `
 "module.exports = {
    name: 'test',
    
@@ -34,7 +34,7 @@ exports[`remote generator should create the remote with the correct config files
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files when --js=true 1`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 1`] = `
 "const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
 const { withModuleFederation } = require('@nx/react/module-federation');
@@ -55,9 +55,9 @@ module.exports = composePlugins(withNx(), withReact(), withModuleFederation(conf
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./webpack.config');"`;
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./webpack.config');"`;
 
-exports[`remote generator should create the remote with the correct config files when --js=true 3`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 3`] = `
 "module.exports = {
    name: 'test',
    
@@ -68,7 +68,7 @@ exports[`remote generator should create the remote with the correct config files
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
 import { withModuleFederation } from '@nx/react/module-federation';
@@ -93,12 +93,12 @@ export default composePlugins(
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
 "export default require('./webpack.config');
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
 "import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
@@ -113,7 +113,7 @@ export default config;
 "
 `;
 
-exports[`remote generator should generate correct remote with config files when using --ssr 1`] = `
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr 1`] = `
 "const {composePlugins, withNx} = require('@nx/webpack');
 const {withReact} = require('@nx/react');
 const {withModuleFederationForSSR} = require('@nx/react/module-federation');
@@ -134,7 +134,7 @@ module.exports = composePlugins(withNx(), withReact({ssr: true}), withModuleFede
 "
 `;
 
-exports[`remote generator should generate correct remote with config files when using --ssr 2`] = `
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr 2`] = `
 "module.exports = {
     name: 'test',
    exposes: {
@@ -144,7 +144,7 @@ exports[`remote generator should generate correct remote with config files when 
 "
 `;
 
-exports[`remote generator should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
 import { withModuleFederationForSSR } from '@nx/react/module-federation';
@@ -169,7 +169,7 @@ export default composePlugins(
 "
 `;
 
-exports[`remote generator should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 2`] = `
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 2`] = `
 "import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {

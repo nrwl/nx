@@ -19,7 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { combineOptionsForGenerator } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
@@ -52,6 +52,7 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
+import { handleErrors } from '../../utils/handle-errors';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -94,6 +95,12 @@ export interface ReleaseVersionGeneratorSchema {
    * large monorepos which have a large number of projects, especially when only a subset are released together.
    */
   logUnchangedProjects?: boolean;
+  /**
+   * Whether or not to keep local dependency protocols (e.g. file:, workspace:) when updating dependencies in
+   * package.json files. This is `false` by default as not all package managers support publishing with these protocols
+   * still present in the package.json.
+   */
+  preserveLocalDependencyProtocols?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -375,6 +382,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
+
+      runPreVersionCommand(releaseGroup.version.groupPreVersionCommand, {
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
         releaseGroup,
