@@ -8,6 +8,7 @@ import {
   updateFile,
   e2eCwd,
   readJson,
+  runCommand,
 } from '@nx/e2e/utils';
 import { mkdirSync, rmdirSync, writeFileSync } from 'fs';
 import { execSync } from 'node:child_process';
@@ -42,7 +43,11 @@ describe('Nx Import Gradle', () => {
       rmdirSync(tempImportE2ERoot);
     } catch {}
     mkdirSync(tempImportE2ERoot, { recursive: true });
+
+    runCommand(`git add .`);
+    runCommand(`git commit -am "update"`);
   });
+
   afterAll(() => cleanupProject());
 
   it('should be able to import a kotlin gradle app', () => {
@@ -78,9 +83,14 @@ describe('Nx Import Gradle', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: tempGraldeProjectPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: tempGraldeProjectPath,
-    });
+
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: tempGraldeProjectPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
 
     const remote = tempGraldeProjectPath;
     const ref = 'main';
@@ -109,6 +119,9 @@ describe('Nx Import Gradle', () => {
       runCLI(`show projects`);
       runCLI('build kotlin-app');
     }).not.toThrow();
+
+    runCommand(`git add .`);
+    runCommand(`git commit -am 'import kotlin project'`);
   });
 
   it('should be able to import a groovy gradle app', () => {
@@ -144,9 +157,14 @@ describe('Nx Import Gradle', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: tempGraldeProjectPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: tempGraldeProjectPath,
-    });
+
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: tempGraldeProjectPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
 
     const remote = tempGraldeProjectPath;
     const ref = 'main';
@@ -171,5 +189,8 @@ describe('Nx Import Gradle', () => {
       runCLI(`show projects`);
       runCLI('build groovy-app');
     }).not.toThrow();
+
+    runCommand(`git add .`);
+    runCommand(`git commit -am 'import groovy project'`);
   });
 });
