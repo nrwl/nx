@@ -634,7 +634,7 @@
           "description": "Custom git commit message to use when committing the changes made by this command"
         },
         "commitArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
         },
         "stageChanges": {
@@ -650,7 +650,7 @@
           "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
         },
         "tagArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
         }
       }
