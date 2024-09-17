@@ -4,7 +4,15 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "fs-extra",
+            "message": "Please use equivalent utilities from `node:fs` instead."
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
@@ -55,13 +63,6 @@
               "babel-plugin-macros",
               "babel-plugin-transform-typescript-metadata"
             ]
-          }
-        ],
-        "no-restricted-imports": [
-          "error",
-          {
-            "name": "fs-extra",
-            "message": "Please use equivalent utilities from `node:fs` instead."
           }
         ]
       }
