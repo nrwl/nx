@@ -63,7 +63,12 @@ module.exports = {
     path: join(__dirname, '../dist/my-app'),
   },
   devServer: {
-    port: 4200
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -144,7 +149,12 @@ module.exports = {
     path: join(__dirname, '../dist/my-app'),
   },
   devServer: {
-    port: 4200
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -430,7 +440,12 @@ module.exports = {
     path: join(__dirname, '../dist/my-app'),
   },
   devServer: {
-    port: 4200
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -538,7 +553,12 @@ module.exports = {
     path: join(__dirname, '../dist/my-app'),
   },
   devServer: {
-    port: 4200
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
     new NxAppWebpackPlugin({
