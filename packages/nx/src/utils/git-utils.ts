@@ -166,43 +166,62 @@ export class GitRepository {
     const destinationPosixPath = destination.split(sep).join(posix.sep);
     // First, if the source is not a root project, then only include commits relevant to the subdirectory.
     if (source !== '') {
+      const indexFilterCommand = this.quoteArg(
+        `node ${join(__dirname, 'git-utils.index-filter.js')}`
+      );
       await this.execAsync(
-        `git filter-branch -f --index-filter 'node ${join(
-          __dirname,
-          'git-utils.index-filter.js'
-        )} "${sourcePosixPath}"' --prune-empty -- ${branchName}`
+        `git filter-branch -f --index-filter ${indexFilterCommand} --prune-empty -- ${branchName}`,
+        {
+          NX_IMPORT_SOURCE: sourcePosixPath,
+          NX_IMPORT_DESTINATION: destinationPosixPath,
+        }
       );
     }
     // Then, move files to their new location if necessary.
     if (source === '' || source !== destination) {
+      const treeFilterCommand = this.quoteArg(
+        `node ${join(__dirname, 'git-utils.tree-filter.js')}`
+      );
       await this.execAsync(
-        `git filter-branch -f --tree-filter 'node ${join(
-          __dirname,
-          'git-utils.tree-filter.js'
-        )} "${sourcePosixPath}" "${destinationPosixPath}"' -- ${branchName}`
+        `git filter-branch -f --tree-filter ${treeFilterCommand} -- ${branchName}`,
+        {
+          NX_IMPORT_SOURCE: sourcePosixPath,
+          NX_IMPORT_DESTINATION: destinationPosixPath,
+        }
       );
     }
   }
 
-  private execAsync(command: string) {
+  private execAsync(command: string, env?: Record<string, string>) {
     return execAsync(command, {
       cwd: this.root,
       maxBuffer: 10 * 1024 * 1024,
+      env: {
+        ...process.env,
+        ...env,
+      },
     });
   }
 
-  private quotePath(_path: string, ensureTrailingSlash?: true) {
-    const path =
-      ensureTrailingSlash && _path !== '' && !_path.endsWith('/')
-        ? `${_path}/`
-        : _path;
+  private quotePath(path: string, ensureTrailingSlash?: true) {
+    return this.quoteArg(
+      ensureTrailingSlash && path !== '' && !path.endsWith('/')
+        ? `${path}/`
+        : path
+    );
+  }
+
+  private quoteArg(arg: string) {
     return process.platform === 'win32'
       ? // Windows/CMD only understands double-quotes, single-quotes are treated as part of the file name
         // Bash and other shells will substitute `$` in file names with a variable value.
-        `"${path}"`
+        `"${arg
+          // Need to keep two slashes for Windows or else the path will be invalid.
+          // e.g. 'C:\Users\bob\projects\repo' is invalid, but 'C:\\Users\\bob\\projects\\repo' is valid
+          .replaceAll('\\', '\\\\')}"`
       : // e.g. `git mv "$$file.txt" "libs/a/$$file.txt"` will not work since `$$` is swapped with the PID of the last process.
         // Using single-quotes prevents this substitution.
-        `'${path}'`;
+        `'${arg}'`;
   }
 }
 
