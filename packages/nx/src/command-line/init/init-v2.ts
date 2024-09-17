@@ -22,7 +22,7 @@ import {
 import { prompt } from 'enquirer';
 import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
-import { globWithWorkspaceContext } from '../../utils/workspace-context';
+import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
@@ -188,7 +188,7 @@ export async function detectPlugins(
   updatePackageScripts: boolean;
 }> {
   let files = ['package.json'].concat(
-    await globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
+    globWithWorkspaceContextSync(process.cwd(), ['**/*/package.json'])
   );
 
   const currentPlugins = new Set(
@@ -229,7 +229,7 @@ export async function detectPlugins(
   }
 
   let gradlewFiles = ['gradlew', 'gradlew.bat'].concat(
-    await globWithWorkspaceContext(process.cwd(), [
+    globWithWorkspaceContextSync(process.cwd(), [
       '**/gradlew',
       '**/gradlew.bat',
     ])
