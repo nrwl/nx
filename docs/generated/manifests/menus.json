@@ -8754,14 +8754,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "activate-powerpack",
-                "path": "/nx-api/nx/documents/activate-powerpack",
-                "id": "activate-powerpack",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "reset",
                 "path": "/nx-api/nx/documents/reset",
                 "id": "reset",
