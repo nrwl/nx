@@ -45,14 +45,17 @@ export class DbCache {
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
-  async setup() {
-    this.remoteCache = await this.getRemoteCache();
-  }
-
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
 
+  async init() {
+    // This should be cheap because we've already loaded
+    this.remoteCache = await this.getRemoteCache();
+    if (!this.remoteCache) {
+      this.assertCacheIsValid();
+    }
+  }
+
   async get(task: Task): Promise<CachedResult | null> {
-    await this.assertCacheIsValid();
     const res = this.cache.get(task.hash);
 
     if (res) {
@@ -61,7 +64,6 @@ export class DbCache {
         remote: false,
       };
     }
-    await this.setup();
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
@@ -99,7 +101,6 @@ export class DbCache {
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
-      await this.setup();
       if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
@@ -182,19 +183,17 @@ export class DbCache {
     });
   }
 
-  private async assertCacheIsValid() {
+  private assertCacheIsValid() {
     // User has customized the cache directory - this could be because they
     // are using a shared cache in the custom directory. The db cache is not
     // stored in the cache directory, and is keyed by machine ID so they would
     // hit issues. If we detect this, we can create a fallback db cache in the
     // custom directory, and check if the entries are there when the main db
     // cache misses.
-    if (!this.remoteCache && isCI() && !this.cache.checkCacheFsInSync()) {
+    if (isCI() && !this.cache.checkCacheFsInSync()) {
       const warning = [
-        `The cache directory contains artifacts from other machines.`,
-        `The content integrity of cached artifacts from other machines cannot be confirmed and restoring them would be potentially unsafe.`,
-        `Nx will not restore artifacts from other machines.`,
-        `If your machine ID has changed recently, run "nx reset" to fix this issue.`,
+        `Nx found unrecognized artifacts in the cache directory and will not be able to use them.`,
+        `Nx can only restore artifacts it has metadata about.`,
         `Read about this warning and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
         ``,
       ].join('\n');

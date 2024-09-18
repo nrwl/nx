@@ -20,6 +20,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 | Option      | Type    | Description                                                            |
 | ----------- | ------- | ---------------------------------------------------------------------- |
 | `--help`    | boolean | Show help.                                                             |
-| `--license` | string  | License Key.                                                           |
+| `--license` | string  | This is a License Key for Nx Powerpack.                                |
 | `--verbose` | boolean | Prints additional information about the commands (e.g., stack traces). |
 | `--version` | boolean | Show version number.                                                   |
