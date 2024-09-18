@@ -1,6 +1,6 @@
 # Activate Powerpack
 
-[Nx Powerpack](/concepts/powerpack) unlocks features of Nx that are particularly useful for larger organizations. The features include the ability to:
+Nx Powerpack unlocks features of Nx that are particularly useful for larger organizations. The features include the ability to:
 
 - [Run language-agnostic conformance rules](/features/powerpack-features/conformance)
 - [Define code ownership at the project level](/features/powerpack-features/owners)
