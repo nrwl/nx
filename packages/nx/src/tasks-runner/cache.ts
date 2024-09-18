@@ -17,6 +17,7 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
+import { isCI } from '../utils/is-ci';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -40,14 +41,19 @@ export function getCache(options: DefaultTasksRunnerOptions) {
 
 export class DbCache {
   private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
-  async setup() {
-    this.remoteCache = await this.getRemoteCache();
-  }
-
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+
+  async init() {
+    // This should be cheap because we've already loaded
+    this.remoteCache = await this.getRemoteCache();
+    if (!this.remoteCache) {
+      this.assertCacheIsValid();
+    }
+  }
 
   async get(task: Task): Promise<CachedResult | null> {
     const res = this.cache.get(task.hash);
@@ -58,7 +64,6 @@ export class DbCache {
         remote: false,
       };
     }
-    await this.setup();
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
@@ -92,10 +97,10 @@ export class DbCache {
     outputs: string[],
     code: number
   ) {
+    await this.assertCacheIsValid();
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
-      await this.setup();
       if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
@@ -142,7 +147,57 @@ export class DbCache {
         return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
       }
     } else {
+      return (
+        (await this.getPowerpackS3Cache()) ??
+        (await this.getPowerpackSharedCache()) ??
+        null
+      );
+    }
+  }
+
+  private async getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
+    try {
+      const { getRemoteCache } = await import(
+        this.resolvePackage('@nx/powerpack-s3-cache')
+      );
+      return getRemoteCache();
+    } catch {
       return null;
+    }
+  }
+
+  private async getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+    try {
+      const { getRemoteCache } = await import(
+        this.resolvePackage('@nx/powerpack-shared-cache')
+      );
+      return getRemoteCache();
+    } catch {
+      return null;
+    }
+  }
+
+  private resolvePackage(pkg: string) {
+    return require.resolve(pkg, {
+      paths: [process.cwd(), workspaceRoot, __dirname],
+    });
+  }
+
+  private assertCacheIsValid() {
+    // User has customized the cache directory - this could be because they
+    // are using a shared cache in the custom directory. The db cache is not
+    // stored in the cache directory, and is keyed by machine ID so they would
+    // hit issues. If we detect this, we can create a fallback db cache in the
+    // custom directory, and check if the entries are there when the main db
+    // cache misses.
+    if (isCI() && !this.cache.checkCacheFsInSync()) {
+      const warning = [
+        `Nx found unrecognized artifacts in the cache directory and will not be able to use them.`,
+        `Nx can only restore artifacts it has metadata about.`,
+        `Read about this warning and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
+        ``,
+      ].join('\n');
+      console.warn(warning);
     }
   }
 }

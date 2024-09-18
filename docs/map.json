@@ -2096,6 +2096,12 @@
               "file": "generated/cli/connect"
             },
             {
+              "name": "activate-powerpack",
+              "tags": ["cache-task-results"],
+              "id": "activate-powerpack",
+              "file": "generated/cli/activate-powerpack"
+            },
+            {
               "name": "reset",
               "id": "reset",
               "tags": ["cache-task-results"],
