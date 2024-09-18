@@ -1,43 +1,52 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
+  isWorkspacesEnabled,
   joinPathFragments,
   names,
   offsetFromRoot,
   output,
   ProjectConfiguration,
   ProjectGraphProjectNode,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
+  updateNxJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  type ProjectNameAndRootOptions,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { prompt } from 'enquirer';
+import { minimatch } from 'minimatch';
+import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { isCI } from 'nx/src/utils/is-ci';
 import { type PackageJson } from 'nx/src/utils/package-json';
-import { join } from 'path';
-import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
+import { dirname, join } from 'path';
+import type { CompilerOptions, System } from 'typescript';
+import { resolvePrettierConfigPath } from '../../utils/prettier';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
+  getRootTsConfigFileName,
 } from '../../utils/typescript/ts-config';
+import { isWorkspaceSetupWithTsSolution } from '../../utils/typescript/ts-solution-setup';
 import {
   esbuildVersion,
   nxVersion,
@@ -47,8 +56,18 @@ import {
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import setupVerdaccio from '../setup-verdaccio/generator';
+import type {
+  Bundler,
+  LibraryGeneratorSchema,
+  NormalizedLibraryGeneratorOptions,
+} from './schema';
+import {
+  ensureProjectIsExcludedFromPluginRegistrations,
+  ensureProjectIsIncludedInPluginRegistrations,
+} from './utils/plugin-registrations';
 
 const defaultOutputDirectory = 'dist';
+let ts: typeof import('typescript');
 
 export async function libraryGenerator(
   tree: Tree,
@@ -56,6 +75,9 @@ export async function libraryGenerator(
 ) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
+    linter: 'eslint',
+    unitTestRunner: schema.bundler === 'vite' ? 'vitest' : 'jest',
     ...schema,
   });
 }
@@ -65,18 +87,23 @@ export async function libraryGeneratorInternal(
   schema: LibraryGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
+
+  const options = await normalizeOptions(tree, schema);
+
   tasks.push(
     await jsInitGenerator(tree, {
-      ...schema,
+      ...options,
       skipFormat: true,
-      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+      tsConfigName: options.rootProject
+        ? 'tsconfig.json'
+        : 'tsconfig.base.json',
+      addTsConfigBase: true,
     })
   );
-  const options = await normalizeOptions(tree, schema);
 
   createFiles(tree, options);
 
-  await addProject(tree, options);
+  await configureProject(tree, options);
 
   if (!options.skipPackageJson) {
     tasks.push(addProjectDependencies(tree, options));
@@ -107,6 +134,7 @@ export async function libraryGeneratorInternal(
       skipFormat: true,
       testEnvironment: options.testEnvironment,
       addPlugin: options.addPlugin,
+      setUpPrettier: options.setUpPrettier,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -146,6 +174,7 @@ export async function libraryGeneratorInternal(
       skipFormat: true,
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
+      setUpPrettier: options.setUpPrettier,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -160,7 +189,7 @@ export async function libraryGeneratorInternal(
     );
   }
 
-  if (!schema.skipTsConfig) {
+  if (!schema.skipTsConfig && options.useProjectJson) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -168,6 +197,30 @@ export async function libraryGeneratorInternal(
         'index.' + (options.js ? 'js' : 'ts')
       ),
     ]);
+  }
+
+  if (options.isUsingTsSolutionConfig && options.unitTestRunner !== 'none') {
+    // TODO(leo): move this to the specific test generators
+    updateJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
+      (json) => {
+        const rootOffset = offsetFromRoot(options.projectRoot);
+        // ensure it extends from the root tsconfig.base.json
+        json.extends = joinPathFragments(rootOffset, 'tsconfig.base.json');
+        // ensure outDir is set to the correct value
+        json.compilerOptions ??= {};
+        json.compilerOptions.outDir = joinPathFragments(
+          rootOffset,
+          'dist/out-tsc',
+          options.projectRoot
+        );
+        // add project reference to the runtime tsconfig.lib.json file
+        json.references ??= [];
+        json.references.push({ path: './tsconfig.lib.json' });
+        return json;
+      }
+    );
   }
 
   if (!options.skipFormat) {
@@ -187,16 +240,36 @@ export async function libraryGeneratorInternal(
   return runTasksInSerial(...tasks);
 }
 
-export interface NormalizedSchema extends LibraryGeneratorSchema {
-  name: string;
-  projectNames: ProjectNameAndRootOptions['names'];
-  fileName: string;
-  projectRoot: string;
-  parsedTags: string[];
-  importPath?: string;
-}
+async function configureProject(
+  tree: Tree,
+  options: NormalizedLibraryGeneratorOptions
+) {
+  if (options.hasPlugin) {
+    const nxJson = readNxJson(tree);
+    if (options.bundler === 'none') {
+      ensureProjectIsExcludedFromPluginRegistrations(
+        nxJson,
+        options.projectRoot
+      );
+    } else {
+      ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
+    }
+    updateNxJson(tree, nxJson);
+  }
 
-async function addProject(tree: Tree, options: NormalizedSchema) {
+  if (!options.useProjectJson) {
+    if (options.name !== options.importPath) {
+      // if the name is different than the package.json name, we need to set
+      // the proper name in the configuration
+      updateProjectConfiguration(tree, options.name, {
+        name: options.name,
+        root: options.projectRoot,
+      });
+    }
+
+    return;
+  }
+
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -275,21 +348,16 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
   if (options.config === 'workspace' || options.config === 'project') {
     addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
-    addProjectConfiguration(
-      tree,
-      options.name,
-      {
-        root: projectConfiguration.root,
-        tags: projectConfiguration.tags,
-        targets: {},
-      },
-      true
-    );
+    addProjectConfiguration(tree, options.name, {
+      root: projectConfiguration.root,
+      tags: projectConfiguration.tags,
+      targets: {},
+    });
   }
 }
 
 export type AddLintOptions = Pick<
-  NormalizedSchema,
+  NormalizedLibraryGeneratorOptions,
   | 'name'
   | 'linter'
   | 'projectRoot'
@@ -407,25 +475,7 @@ export async function addLint(
   return task;
 }
 
-function updateTsConfig(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.projectRoot, 'tsconfig.json'), (json) => {
-    if (options.strict) {
-      json.compilerOptions = {
-        ...json.compilerOptions,
-        forceConsistentCasingInFileNames: true,
-        strict: true,
-        noImplicitOverride: true,
-        noPropertyAccessFromIndexSignature: true,
-        noImplicitReturns: true,
-        noFallthroughCasesInSwitch: true,
-      };
-    }
-
-    return json;
-  });
-}
-
-function addBabelRc(tree: Tree, options: NormalizedSchema) {
+function addBabelRc(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
   const filename = '.babelrc';
 
   const babelrc = {
@@ -435,12 +485,12 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   writeJson(tree, join(options.projectRoot, filename), babelrc);
 }
 
-function createFiles(tree: Tree, options: NormalizedSchema) {
+function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
   const { className, name, propertyName } = names(
     options.projectNames.projectFileName
   );
 
-  createProjectTsConfigJson(tree, options);
+  createProjectTsConfigs(tree, options);
 
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
@@ -480,7 +530,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   }
 
   if (options.bundler === 'swc' || options.bundler === 'rollup') {
-    addSwcDependencies(tree);
     addSwcConfig(
       tree,
       options.projectRoot,
@@ -550,7 +599,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     });
   } else if (
     (!options.bundler || options.bundler === 'none') &&
-    !(options.projectRoot === '.')
+    options.projectRoot !== '.' &&
+    options.useProjectJson
   ) {
     tree.delete(packageJsonPath);
   }
@@ -558,13 +608,11 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   if (options.minimal && !(options.projectRoot === '.')) {
     tree.delete(join(options.projectRoot, 'README.md'));
   }
-
-  updateTsConfig(tree, options);
 }
 
 async function addJest(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedLibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage('@nx/jest', nxVersion);
   return await configurationGenerator(tree, {
@@ -585,7 +633,10 @@ async function addJest(
   });
 }
 
-function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
+function replaceJestConfig(
+  tree: Tree,
+  options: NormalizedLibraryGeneratorOptions
+) {
   const filesDir = join(__dirname, './files/jest-config');
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
@@ -609,39 +660,129 @@ function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
   });
 }
 
+function isNonInteractive(): boolean {
+  return (
+    isCI() || !process.stdout.isTTY || process.env.NX_INTERACTIVE !== 'true'
+  );
+}
+
+async function promptWhenInteractive<T>(
+  questions: Parameters<typeof prompt>[0],
+  defaultValue: T
+): Promise<T> {
+  if (isNonInteractive()) {
+    return defaultValue;
+  }
+
+  return await prompt(questions);
+}
+
 async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
-): Promise<NormalizedSchema> {
+): Promise<NormalizedLibraryGeneratorOptions> {
   const nxJson = readNxJson(tree);
-  const addPlugin =
+
+  options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
+  const addTsPlugin =
+    options.addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
+  const hasPlugin =
+    addTsPlugin ||
+    nxJson.plugins?.some((p) =>
+      typeof p === 'string'
+        ? p === '@nx/js/typescript'
+        : p.plugin === '@nx/js/typescript'
+    );
 
-  /**
-   * We are deprecating the compiler and the buildable options.
-   * However, we want to keep the existing behavior for now.
-   *
-   * So, if the user has not provided a bundler, we will use the compiler option, if any.
-   *
-   * If the user has not provided a bundler and no compiler, but has set buildable to true,
-   * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
-   * and no compiler was provided.
-   *
-   * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
-   * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
-   *
-   * If it's publishable, we need to build the code before publishing it, so again
-   * we default to `tsc`. In the previous version of this, it would set `buildable` to true
-   * and that would default to `tsc`.
-   *
-   * In the past, the only way to get a non-buildable library was to set buildable to false.
-   * Now, the only way to get a non-buildble library is to set bundler to none.
-   * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
-   */
+  if (hasPlugin) {
+    if (options.bundler === 'esbuild' || options.bundler === 'swc') {
+      throw new Error(
+        `Cannot use the "${options.bundler}" bundler when using the @nx/js/typescript plugin.`
+      );
+    }
 
-  options.bundler = options.bundler ?? options.compiler ?? 'tsc';
+    if (options.bundler === undefined && options.compiler === undefined) {
+      options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(
+        {
+          type: 'select',
+          name: 'bundler',
+          message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
+          choices: [
+            { name: 'tsc' },
+            { name: 'rollup' },
+            { name: 'vite' },
+            { name: 'none' },
+          ],
+          initial: 0,
+        },
+        { bundler: 'tsc' }
+      ).then(({ bundler }) => bundler);
+    }
+
+    if (
+      options.setUpPrettier === undefined &&
+      !(await resolvePrettierConfigPath(tree))
+    ) {
+      options.setUpPrettier = await promptWhenInteractive<{
+        setUpPrettier: boolean;
+      }>(
+        {
+          type: 'confirm',
+          name: 'setUpPrettier',
+          message: 'Would you like to set up prettier in the workspace?',
+          initial: false,
+        },
+        { setUpPrettier: false }
+      ).then(({ setUpPrettier }) => setUpPrettier);
+    }
+  } else if (options.bundler === undefined && options.compiler === undefined) {
+    options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(
+      {
+        type: 'select',
+        name: 'bundler',
+        message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
+        choices: [
+          { name: 'swc' },
+          { name: 'tsc' },
+          { name: 'rollup' },
+          { name: 'vite' },
+          { name: 'esbuild' },
+          { name: 'none' },
+        ],
+        initial: 1,
+      },
+      { bundler: 'tsc' }
+    ).then(({ bundler }) => bundler);
+  } else {
+    /**
+     * We are deprecating the compiler and the buildable options.
+     * However, we want to keep the existing behavior for now.
+     *
+     * So, if the user has not provided a bundler, we will use the compiler option, if any.
+     *
+     * If the user has not provided a bundler and no compiler, but has set buildable to true,
+     * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
+     * and no compiler was provided.
+     *
+     * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
+     * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
+     *
+     * If it's publishable, we need to build the code before publishing it, so again
+     * we default to `tsc`. In the previous version of this, it would set `buildable` to true
+     * and that would default to `tsc`.
+     *
+     * In the past, the only way to get a non-buildable library was to set buildable to false.
+     * Now, the only way to get a non-buildble library is to set bundler to none.
+     * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
+     */
+
+    options.bundler ??= options.compiler;
+  }
+
+  options.linter ??= 'none';
+  options.unitTestRunner ??= 'none';
 
   // ensure programmatic runs have an expected default
   if (!options.config) {
@@ -665,10 +806,9 @@ async function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = ensurePackage('@nx/eslint', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
-    options.linter = Linter.None;
+    options.linter = 'none';
     options.bundler = 'none';
   }
 
@@ -677,16 +817,6 @@ async function normalizeOptions(
     options.skipTypeCheck == null
   ) {
     options.skipTypeCheck = false;
-  }
-
-  if (!options.unitTestRunner && options.bundler === 'vite') {
-    options.unitTestRunner = 'vitest';
-  } else if (!options.unitTestRunner && options.config !== 'npm-scripts') {
-    options.unitTestRunner = 'jest';
-  }
-
-  if (!options.linter && options.config !== 'npm-scripts') {
-    options.linter = Linter.EsLint;
   }
 
   const {
@@ -715,6 +845,22 @@ async function normalizeOptions(
 
   options.minimal ??= false;
 
+  // We generate a project.json file if the user has opted out of the TS plugin
+  // or if the project is not in the package manager workspaces' configuration.
+  // TODO(leo): log a warning if the user explicitly sets useProjectJson to true
+  // and the project is not in the workspaces config. Also, consider automatically
+  // adding the project to the workspaces config if it's not there.
+  options.useProjectJson ??= hasPlugin
+    ? !isProjectInPackageManagerWorkspaces(tree, projectRoot)
+    : true;
+
+  // If there is no root tsconfig file and we're meant to add the TS plugin,
+  // we'll generate a TS solution config. Otherwise, we check if the workspace
+  // is already setup with a TS solution config.
+  const isUsingTsSolutionConfig =
+    (!getRootTsConfigFileName(tree) && addTsPlugin) ||
+    isWorkspaceSetupWithTsSolution(tree);
+
   return {
     ...options,
     fileName,
@@ -723,12 +869,32 @@ async function normalizeOptions(
     projectRoot,
     parsedTags,
     importPath,
+    hasPlugin,
+    isUsingTsSolutionConfig,
   };
+}
+
+function isProjectInPackageManagerWorkspaces(
+  tree: Tree,
+  projectRoot: string
+): boolean {
+  if (!isWorkspacesEnabled(detectPackageManager(tree.root), tree.root)) {
+    return false;
+  }
+
+  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
+    tree.root,
+    (path) => readJson(tree, path, { expectComments: true })
+  );
+
+  return patterns.some((p) =>
+    minimatch(joinPathFragments(projectRoot, 'package.json'), p)
+  );
 }
 
 function addProjectDependencies(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedLibraryGeneratorOptions
 ): GeneratorCallback {
   if (options.bundler == 'esbuild') {
     return addDependenciesToPackageJson(
@@ -741,10 +907,28 @@ function addProjectDependencies(
       }
     );
   } else if (options.bundler == 'rollup') {
+    const { dependencies, devDependencies } = getSwcDependencies();
+    return addDependenciesToPackageJson(
+      tree,
+      { ...dependencies },
+      {
+        ...devDependencies,
+        '@nx/rollup': nxVersion,
+        '@types/node': typesNodeVersion,
+      }
+    );
+  } else if (options.bundler === 'tsc') {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nx/rollup': nxVersion, '@types/node': typesNodeVersion }
+      { tslib: tsLibVersion, '@types/node': typesNodeVersion }
+    );
+  } else if (options.bundler === 'swc') {
+    const { dependencies, devDependencies } = getSwcDependencies();
+    return addDependenciesToPackageJson(
+      tree,
+      { ...dependencies },
+      { ...devDependencies, '@types/node': typesNodeVersion }
     );
   } else {
     return addDependenciesToPackageJson(
@@ -776,7 +960,7 @@ function getBuildExecutor(bundler: Bundler) {
   }
 }
 
-function getOutputPath(options: NormalizedSchema) {
+function getOutputPath(options: NormalizedLibraryGeneratorOptions) {
   const parts = [defaultOutputDirectory];
   if (options.projectRoot === '.') {
     parts.push(options.name);
@@ -786,15 +970,207 @@ function getOutputPath(options: NormalizedSchema) {
   return joinPathFragments(...parts);
 }
 
-function createProjectTsConfigJson(tree: Tree, options: NormalizedSchema) {
+type CompilerOptionsEnumProps = Pick<
+  CompilerOptions,
+  | 'importsNotUsedAsValues'
+  | 'jsx'
+  | 'module'
+  | 'moduleDetection'
+  | 'moduleResolution'
+  | 'newLine'
+  | 'target'
+>;
+const optionEnumTypeMap: {
+  [key in keyof CompilerOptionsEnumProps]: keyof typeof ts;
+} = {
+  importsNotUsedAsValues: 'ImportsNotUsedAsValues',
+  jsx: 'JsxEmit',
+  module: 'ModuleKind',
+  moduleDetection: 'ModuleDetectionKind',
+  moduleResolution: 'ModuleResolutionKind',
+  newLine: 'NewLineKind',
+  target: 'ScriptTarget',
+};
+type Entries<T extends object> = { [K in keyof T]: [K, T[K]] }[keyof T];
+function reverseEnum<
+  EnumObj extends Record<keyof EnumObj, string>,
+  Result = {
+    [K in EnumObj[keyof EnumObj]]: Extract<Entries<EnumObj>, [any, K]>[0];
+  }
+>(enumObj: EnumObj): Result {
+  return Object.keys(enumObj).reduce((acc, key) => {
+    acc[enumObj[key]] = key;
+    return acc;
+  }, {} as Result);
+}
+
+// filters out the compiler options that are already set in the extended tsconfig
+function getNeededCompilerOptionOverrides(
+  tree: Tree,
+  extendedTsConfigPath: string,
+  compilerOptions: Record<keyof CompilerOptions, any>
+): Record<keyof CompilerOptions, any> {
+  if (!ts) {
+    ts = ensureTypescript();
+  }
+
+  const tsSysFromTree: System = {
+    ...ts.sys,
+    readFile: (path) => tree.read(path, 'utf-8'),
+  };
+
+  const parsed = ts.parseJsonConfigFileContent(
+    ts.readConfigFile(extendedTsConfigPath, tsSysFromTree.readFile).config,
+    tsSysFromTree,
+    dirname(extendedTsConfigPath)
+  );
+
+  // ModuleKind: { CommonJS: 'commonjs', ... } => ModuleKind: { commonjs: 'CommonJS', ... }
+  const reversedCompilerOptionsEnumValues = {
+    JsxEmit: reverseEnum(ts.server.protocol.JsxEmit),
+    ModuleKind: reverseEnum(ts.server.protocol.ModuleKind),
+    ModuleResolutionKind: reverseEnum(ts.server.protocol.ModuleResolutionKind),
+    NewLineKind: reverseEnum(ts.server.protocol.NewLineKind),
+    ScriptTarget: reverseEnum(ts.server.protocol.ScriptTarget),
+  };
+  const matchesValue = (key: keyof CompilerOptions) => {
+    return (
+      parsed.options[key] ===
+        ts[optionEnumTypeMap[key]][compilerOptions[key]] ||
+      parsed.options[key] ===
+        ts[optionEnumTypeMap[key]][
+          reversedCompilerOptionsEnumValues[optionEnumTypeMap[key]][
+            compilerOptions[key]
+          ]
+        ]
+    );
+  };
+
+  let result = {};
+  for (const key of Object.keys(compilerOptions)) {
+    if (optionEnumTypeMap[key]) {
+      if (parsed.options[key] === undefined) {
+        result[key] = compilerOptions[key];
+      } else if (!matchesValue(key)) {
+        result[key] = compilerOptions[key];
+      }
+    } else if (parsed.options[key] !== compilerOptions[key]) {
+      result[key] = compilerOptions[key];
+    }
+  }
+
+  return result;
+}
+
+function createProjectTsConfigs(
+  tree: Tree,
+  options: NormalizedLibraryGeneratorOptions
+) {
+  const rootOffset = offsetFromRoot(options.projectRoot);
+
+  let compilerOptionOverrides: Record<keyof CompilerOptions, any> = {
+    module: options.isUsingTsSolutionConfig
+      ? options.bundler === 'rollup'
+        ? 'esnext'
+        : 'nodenext'
+      : 'commonjs',
+    ...(options.isUsingTsSolutionConfig
+      ? options.bundler === 'rollup'
+        ? { moduleResolution: 'bundler' }
+        : { moduleResolution: 'nodenext' }
+      : {}),
+    ...(options.js ? { allowJs: true } : {}),
+    ...(options.strict
+      ? {
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitOverride: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+          ...(!options.isUsingTsSolutionConfig
+            ? { noPropertyAccessFromIndexSignature: true }
+            : {}),
+        }
+      : {}),
+  };
+
+  if (!options.rootProject || options.isUsingTsSolutionConfig) {
+    compilerOptionOverrides = getNeededCompilerOptionOverrides(
+      tree,
+      // must have been created by now
+      getRootTsConfigFileName(tree)!,
+      compilerOptionOverrides
+    );
+  }
+
+  // tsconfig.lib.json
+  generateFiles(
+    tree,
+    join(
+      __dirname,
+      'files/tsconfig-lib',
+      options.isUsingTsSolutionConfig ? 'ts-solution' : 'non-ts-solution'
+    ),
+    options.projectRoot,
+    {
+      ...options,
+      offsetFromRoot: rootOffset,
+      js: !!options.js,
+      compilerOptions: Object.entries(compilerOptionOverrides)
+        .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
+        .join(',\n    '),
+      tmpl: '',
+    }
+  );
+
+  // tsconfig.json
+  if (options.isUsingTsSolutionConfig) {
+    if (options.rootProject) {
+      // the root tsconfig.json is already created with the expected settings
+      // for the TS plugin, we just need to update it with the project-specific
+      // settings
+      updateJson(tree, 'tsconfig.json', (json) => {
+        json.references.push({
+          path: './tsconfig.lib.json',
+        });
+        return json;
+      });
+    } else {
+      // create a new tsconfig.json for the project
+      const tsconfig = {
+        extends: getRelativePathToRootTsConfig(tree, options.projectRoot),
+        files: [],
+        include: [],
+        references: [{ path: './tsconfig.lib.json' }],
+      };
+      writeJson(
+        tree,
+        joinPathFragments(options.projectRoot, 'tsconfig.json'),
+        tsconfig
+      );
+
+      // update root project tsconfig.json references with the new lib tsconfig
+      updateJson(tree, 'tsconfig.json', (json) => {
+        json.references ??= [];
+        json.references.push({
+          path: options.projectRoot.startsWith('./')
+            ? options.projectRoot
+            : './' + options.projectRoot,
+        });
+        return json;
+      });
+    }
+
+    return;
+  }
+
   const tsconfig = {
     extends: options.rootProject
       ? undefined
       : getRelativePathToRootTsConfig(tree, options.projectRoot),
     compilerOptions: {
       ...(options.rootProject ? tsConfigBaseOptions : {}),
-      module: 'commonjs',
-      allowJs: options.js ? true : undefined,
+      ...compilerOptionOverrides,
     },
     files: [],
     include: [],
@@ -835,14 +1211,18 @@ function determineDependencies(
 type EntryField = string | { [key: string]: EntryField };
 
 function determineEntryFields(
-  options: LibraryGeneratorSchema
+  options: NormalizedLibraryGeneratorOptions
 ): Record<string, EntryField> {
   switch (options.bundler) {
     case 'tsc':
       return {
         type: 'commonjs',
-        main: './src/index.js',
-        typings: './src/index.d.ts',
+        main: options.isUsingTsSolutionConfig
+          ? './dist/index.js'
+          : './src/index.js',
+        typings: options.isUsingTsSolutionConfig
+          ? './dist/index.d.ts'
+          : './src/index.d.ts',
       };
     case 'swc':
       return {
@@ -905,7 +1285,7 @@ function projectsConfigMatchesProject(
 
 async function addProjectToNxReleaseConfig(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedLibraryGeneratorOptions,
   projectConfiguration: ProjectConfiguration
 ) {
   const nxJson = readNxJson(tree);

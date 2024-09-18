@@ -9,4 +9,5 @@ export interface ViteConfigurationGeneratorSchema {
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
   addPlugin?: boolean;
+  setUpPrettier?: boolean;
 }

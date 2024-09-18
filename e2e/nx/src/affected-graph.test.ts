@@ -33,10 +33,12 @@ describe('Nx Affected and Graph Tests', () => {
       const mypublishablelib = uniq('mypublishablelib');
       runCLI(`generate @nx/web:app ${myapp} --directory apps/${myapp}`);
       runCLI(`generate @nx/web:app ${myapp2} --directory apps/${myapp2}`);
-      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`);
+      runCLI(
+        `generate @nx/js:lib ${mylib} --directory libs/${mylib} --unitTestRunner=jest`
+      );
       runCLI(`generate @nx/js:lib ${mylib2} --directory libs/${mylib2}`);
       runCLI(
-        `generate @nx/js:lib ${mypublishablelib} --directory libs/${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
+        `generate @nx/js:lib ${mypublishablelib} --directory libs/${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --unitTestRunner=jest --tags=ui`
       );
 
       updateFile(

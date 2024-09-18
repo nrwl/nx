@@ -248,9 +248,15 @@ describe('cache', () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');
     const child2 = uniq('child2');
-    runCLI(`generate @nx/js:lib ${parent} --directory=libs/${parent}`);
-    runCLI(`generate @nx/js:lib ${child1} --directory=libs/${child1}`);
-    runCLI(`generate @nx/js:lib ${child2} --directory=libs/${child2}`);
+    runCLI(
+      `generate @nx/js:lib ${parent} --directory=libs/${parent} --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib ${child1} --directory=libs/${child1} --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib ${child2} --directory=libs/${child2} --unitTestRunner=jest`
+    );
     updateJson(`nx.json`, (c) => {
       c.namedInputs = {
         default: ['{projectRoot}/**/*'],

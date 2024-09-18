@@ -3,7 +3,7 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'path';
-import { LibraryGeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema } from '../library/schema';
 import { libraryGenerator as jsLibraryGenerator } from '../library/library';
 import { convertToSwcGenerator } from './convert-to-swc';
 

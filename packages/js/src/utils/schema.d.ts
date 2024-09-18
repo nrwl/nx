@@ -1,39 +1,7 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { AssetGlob, FileInputOutput } from './assets/assets';
 import { TransformerEntry } from './typescript/types';
-// nx-ignore-next-line
-const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
 
 export type Compiler = 'tsc' | 'swc';
-export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
-
-export interface LibraryGeneratorSchema {
-  name: string;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
-  skipFormat?: boolean;
-  tags?: string;
-  skipTsConfig?: boolean;
-  skipPackageJson?: boolean;
-  includeBabelRc?: boolean;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
-  linter?: Linter | LinterType;
-  testEnvironment?: 'jsdom' | 'node';
-  importPath?: string;
-  js?: boolean;
-  strict?: boolean;
-  publishable?: boolean;
-  buildable?: boolean;
-  setParserOptionsProject?: boolean;
-  config?: 'workspace' | 'project' | 'npm-scripts';
-  compiler?: Compiler;
-  bundler?: Bundler;
-  skipTypeCheck?: boolean;
-  minimal?: boolean;
-  rootProject?: boolean;
-  simpleName?: boolean;
-  addPlugin?: boolean;
-}
 
 export interface ExecutorOptions {
   assets: Array<AssetGlob | string>;

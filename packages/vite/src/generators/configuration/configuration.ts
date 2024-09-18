@@ -30,6 +30,7 @@ export function viteConfigurationGenerator(
 ) {
   return viteConfigurationGeneratorInternal(host, {
     addPlugin: false,
+    setUpPrettier: true,
     ...schema,
   });
 }
@@ -163,6 +164,7 @@ export async function viteConfigurationGeneratorInternal(
       testTarget: 'test',
       skipFormat: true,
       addPlugin: schema.addPlugin,
+      setUpPrettier: schema.setUpPrettier,
     });
     tasks.push(vitestTask);
   }

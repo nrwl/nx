@@ -213,12 +213,16 @@ export async function generateWorkspaceFiles(
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.preset === Preset.NPM) {
+  if (
+    options.preset === Preset.NPM &&
+    (process.env.NX_ADD_PLUGINS === 'false' ||
+      process.env.NX_ADD_TS_PLUGIN !== 'true')
+  ) {
+    updateJson(tree, join(options.directory, 'nx.json'), (json) => {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
-    }
-    return json;
-  });
+      return json;
+    });
+  }
 }
 
 function createNxJson(

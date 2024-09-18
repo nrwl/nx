@@ -41,6 +41,7 @@
     "@babel/runtime": "^7.22.6",
     "@nx/devkit": "file:../devkit",
     "@nx/workspace": "file:../workspace",
+    "@zkochan/js-yaml": "0.0.7",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",

@@ -1,17 +1,21 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   readJson,
+  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { satisfies, valid } from 'semver';
+import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -67,6 +71,7 @@ export async function initGenerator(
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
     setUpPrettier: true,
+    addPlugin: false,
     ...schema,
   });
 }
@@ -76,12 +81,48 @@ export async function initGeneratorInternal(
   schema: InitSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
-  // add tsconfig.base.json
-  if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
-    generateFiles(tree, join(__dirname, './files'), '.', {
-      fileName: schema.tsConfigName ?? 'tsconfig.base.json',
-    });
+
+  const nxJson = readNxJson(tree);
+  schema.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  const addTsPlugin =
+    schema.addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
+
+  if (addTsPlugin) {
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/js/typescript',
+      createNodesV2,
+      {
+        typecheck: [
+          { targetName: 'typecheck' },
+          { targetName: 'tsc:typecheck' },
+          { targetName: 'tsc-typecheck' },
+        ],
+        build: [
+          { targetName: 'build', configName: 'tsconfig.lib.json' },
+          { targetName: 'tsc:build', configName: 'tsconfig.lib.json' },
+          { targetName: 'tsc-build', configName: 'tsconfig.lib.json' },
+        ],
+      },
+      schema.updatePackageScripts
+    );
   }
+
+  if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
+    if (addTsPlugin) {
+      generateFiles(tree, join(__dirname, './files/ts-solution'), '.', {
+        tmpl: '',
+      });
+    } else {
+      generateFiles(tree, join(__dirname, './files/non-ts-solution'), '.', {
+        fileName: schema.tsConfigName ?? 'tsconfig.base.json',
+      });
+    }
+  }
+
   const devDependencies = {
     '@nx/js': nxVersion,
     // When loading .ts config files (e.g. webpack.config.ts, jest.config.ts, etc.)

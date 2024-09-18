@@ -10,8 +10,8 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { LibraryGeneratorSchema } from '../../utils/schema';
-import libraryGenerator from './library';
+import { libraryGenerator } from './library';
+import type { LibraryGeneratorSchema } from './schema';
 
 describe('lib', () => {
   let tree: Tree;
@@ -1614,6 +1614,128 @@ describe('lib', () => {
       const content = tree.read('my-jsdom-lib/vite.config.ts', 'utf-8');
 
       expect(content).toContain(`environment: 'jsdom'`);
+    });
+  });
+
+  describe('--useProjectJson', () => {
+    it('should generate the nx configuration in the package.json file when using --useProjectJson=false', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        bundler: 'none',
+        useProjectJson: false,
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      expect(tree.exists('my-lib/project.json')).toBe(false);
+      expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "name": "@proj/my-lib",
+          "nx": {
+            "name": "my-lib",
+            "targets": {
+              "lint": {
+                "executor": "@nx/eslint:lint",
+              },
+              "test": {
+                "executor": "@nx/jest:jest",
+                "options": {
+                  "jestConfig": "my-lib/jest.config.ts",
+                },
+                "outputs": [
+                  "{workspaceRoot}/coverage/{projectRoot}",
+                ],
+              },
+            },
+          },
+          "private": true,
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should generate the nx configuration in the package.json file when using --useProjectJson=false and adding plugins', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        bundler: 'none',
+        useProjectJson: false,
+        addPlugin: true,
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      expect(tree.exists('my-lib/project.json')).toBe(false);
+      expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "name": "@proj/my-lib",
+          "nx": {
+            "name": "my-lib",
+          },
+          "private": true,
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should generate the nx configuration in the project.json file when using --useProjectJson=true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        bundler: 'none',
+        useProjectJson: true,
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      expect(tree.exists('my-lib/package.json')).toBe(false);
+      expect(readJson(tree, 'my-lib/project.json')).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {
+            "lint": {
+              "executor": "@nx/eslint:lint",
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "my-lib/jest.config.ts",
+              },
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}",
+              ],
+            },
+          },
+        }
+      `);
+    });
+
+    it('should generate the nx configuration in the project.json file when using --useProjectJson=true and adding plugins', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        bundler: 'none',
+        useProjectJson: true,
+        addPlugin: true,
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      expect(tree.exists('my-lib/package.json')).toBe(false);
+      expect(readJson(tree, 'my-lib/project.json')).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "// targets": "to see all targets run: nx show project my-lib --web",
+          "name": "my-lib",
+          "projectType": "library",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
   });
 });

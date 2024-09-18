@@ -55,6 +55,12 @@
       "type": "string",
       "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
       "default": "jsdom"
+    },
+    "setUpPrettier": {
+      "type": "boolean",
+      "description": "Add Prettier and corresponding configuration files.",
+      "x-priority": "internal",
+      "default": false
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

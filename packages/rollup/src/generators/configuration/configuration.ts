@@ -70,21 +70,24 @@ function createRollupConfig(tree: Tree, options: RollupProjectSchema) {
 
   tree.write(
     joinPathFragments(project.root, 'rollup.config.js'),
-    stripIndents`
-      const { withNx } = require('@nx/rollup/with-nx');
-      
-      module.exports = withNx({
-        main: '${buildOptions.main}',
-        outputPath: '${buildOptions.outputPath}',
-        tsConfig: '${buildOptions.tsConfig}',
-        compiler: '${buildOptions.compiler}',
-        format: ${JSON.stringify(options.format ?? ['esm'])},
-        assets:[{ input: '.', output: '.', glob:'*.md'}],
-      }, {
-        // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
-        // e.g. 
-        // output: { sourcemap: true },
-      });`
+    `const { withNx } = require('@nx/rollup/with-nx');
+
+module.exports = withNx(
+  {
+    main: '${buildOptions.main}',
+    outputPath: '${buildOptions.outputPath}',
+    tsConfig: '${buildOptions.tsConfig}',
+    compiler: '${buildOptions.compiler}',
+    format: ${JSON.stringify(options.format ?? ['esm'])},
+    assets: [{ input: '.', output: '.', glob:'*.md' }],
+  },
+  {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    // e.g.
+    // output: { sourcemap: true },
+  }
+);
+`
   );
 }
 
