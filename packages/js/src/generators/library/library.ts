@@ -832,6 +832,8 @@ async function normalizeOptions(
   // TODO(leo): log a warning if the user explicitly sets useProjectJson to true
   // and the project is not in the workspaces config. Also, consider automatically
   // adding the project to the workspaces config if it's not there.
+  // TODO(leo): if the library root is not in workspaces but user has workspaces enabled, this should throw or warn -- or provide a way to remedy.
+  /// We should not just add to `compilerOptions.paths`
   options.useProjectJson ??= hasPlugin
     ? !isProjectInPackageManagerWorkspaces(tree, projectRoot)
     : true;
