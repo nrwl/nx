@@ -681,14 +681,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Powerpack",
-            "path": "/concepts/powerpack",
-            "id": "powerpack",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Types of Configuration",
             "path": "/concepts/types-of-configuration",
             "id": "types-of-configuration",
@@ -897,14 +889,6 @@
         "name": "Inferred Tasks",
         "path": "/concepts/inferred-tasks",
         "id": "inferred-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Powerpack",
-        "path": "/concepts/powerpack",
-        "id": "powerpack",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

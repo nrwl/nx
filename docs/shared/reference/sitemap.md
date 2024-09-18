@@ -32,7 +32,6 @@
     - [What is a Task Pipeline](/concepts/task-pipeline-configuration)
     - [What Are Nx Plugins](/concepts/nx-plugins)
     - [Inferred Tasks](/concepts/inferred-tasks)
-    - [Nx Powerpack](/concepts/powerpack)
     - [Types of Configuration](/concepts/types-of-configuration)
     - [Executors and Configurations](/concepts/executors-and-configurations)
     - [Integrated Repos vs. Package-Based Repos vs. Standalone Apps](/concepts/integrated-vs-package-based)
