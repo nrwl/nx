@@ -103,7 +103,9 @@ export async function reportHandler() {
         powerpackLicense.workspaceCount
       } workspace${
         powerpackLicense.workspaceCount > 1 ? 's' : ''
-      } until ${new Date(powerpackLicense.expiresAt).toLocaleDateString()}`
+      } until ${new Date(
+        powerpackLicense.expiresAt * 1000
+      ).toLocaleDateString()}`
     );
     bodyLines.push('');
 
