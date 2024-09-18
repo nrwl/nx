@@ -12,7 +12,6 @@ import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getIgnoreObject } from '../../utils/ignore';
 
 import type { SupportInfo } from 'prettier';
-import * as prettier from 'prettier';
 import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import {
@@ -28,12 +27,22 @@ import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-const PRETTIER_PATH = getPrettierPath();
-
 export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
+  try {
+    require('prettier');
+  } catch {
+    output.error({
+      title: 'Prettier is not installed.',
+      bodyLines: [
+        `Please install "prettier" and try again, or don't run the "nx format:${command}" command.`,
+      ],
+    });
+    process.exit(1);
+  }
+
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',
@@ -103,7 +112,9 @@ async function getPatterns(
     // In prettier v3 the getSupportInfo result is a promise
     const supportedExtensions = new Set(
       (
-        await (prettier.getSupportInfo() as Promise<SupportInfo> | SupportInfo)
+        await (require('prettier').getSupportInfo() as
+          | Promise<SupportInfo>
+          | SupportInfo)
       ).languages
         .flatMap((language) => language.extensions)
         .filter((extension) => !!extension)
@@ -192,9 +203,10 @@ function write(patterns: string[]) {
       },
       [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
     );
+    const prettierPath = getPrettierPath();
 
     execSync(
-      `node "${PRETTIER_PATH}" --write --list-different ${regularPatterns.join(
+      `node "${prettierPath}" --write --list-different ${regularPatterns.join(
         ' '
       )}`,
       {
@@ -204,7 +216,7 @@ function write(patterns: string[]) {
 
     if (swcrcPatterns.length > 0) {
       execSync(
-        `node "${PRETTIER_PATH}" --write --list-different ${swcrcPatterns.join(
+        `node "${prettierPath}" --write --list-different ${swcrcPatterns.join(
           ' '
         )} --parser json`,
         {
@@ -219,9 +231,12 @@ async function check(patterns: string[]): Promise<string[]> {
   if (patterns.length === 0) {
     return [];
   }
+
+  const prettierPath = getPrettierPath();
+
   return new Promise((resolve) => {
     exec(
-      `node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`,
+      `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
       { encoding: 'utf-8' },
       (error, stdout) => {
         if (error) {
@@ -248,7 +263,14 @@ function sortTsConfig() {
   }
 }
 
+let prettierPath: string;
 function getPrettierPath() {
+  if (prettierPath) {
+    return prettierPath;
+  }
+
   const { bin } = readModulePackageJson('prettier').packageJson;
-  return require.resolve(path.join('prettier', bin as string));
+  prettierPath = require.resolve(path.join('prettier', bin as string));
+
+  return prettierPath;
 }
