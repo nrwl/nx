@@ -5653,6 +5653,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "GitHub Integration",
+            "path": "/ci/features/github-integration",
+            "id": "github-integration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5709,6 +5717,14 @@
         "name": "Explain With AI",
         "path": "/ci/features/explain-with-ai",
         "id": "explain-with-ai",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Integration",
+        "path": "/ci/features/github-integration",
+        "id": "github-integration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
