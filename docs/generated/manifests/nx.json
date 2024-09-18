@@ -928,17 +928,6 @@
         "tags": ["inferred-tasks"]
       },
       {
-        "id": "powerpack",
-        "name": "Nx Powerpack",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/powerpack",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/powerpack",
-        "tags": ["powerpack"]
-      },
-      {
         "id": "types-of-configuration",
         "name": "Types of Configuration",
         "description": "",
@@ -1230,17 +1219,6 @@
     "isExternal": false,
     "path": "/concepts/inferred-tasks",
     "tags": ["inferred-tasks"]
-  },
-  "/concepts/powerpack": {
-    "id": "powerpack",
-    "name": "Nx Powerpack",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/powerpack",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/powerpack",
-    "tags": ["powerpack"]
   },
   "/concepts/types-of-configuration": {
     "id": "types-of-configuration",

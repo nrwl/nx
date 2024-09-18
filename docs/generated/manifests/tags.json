@@ -706,15 +706,6 @@
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
     }
   ],
-  "powerpack": [
-    {
-      "description": "",
-      "file": "shared/concepts/powerpack",
-      "id": "powerpack",
-      "name": "Nx Powerpack",
-      "path": "/concepts/powerpack"
-    }
-  ],
   "repository-types": [
     {
       "description": "",
