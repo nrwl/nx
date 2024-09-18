@@ -21,12 +21,11 @@ export const yargsActivatePowerpackCommand: CommandModule<
       })
       .positional('license', {
         type: 'string',
-        description: 'License Key.',
-        required: true,
+        description: 'This is a License Key for Nx Powerpack.',
       })
       .example(
         '$0 activate-powerpack <license key>',
-        'Activate powerpack license'
+        'Activate a Nx Powerpack license'
       ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {

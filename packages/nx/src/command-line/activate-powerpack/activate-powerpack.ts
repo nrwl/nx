@@ -14,25 +14,26 @@ export async function handleActivatePowerpack(
       name: 'license',
       message: 'Enter your License Key',
     }));
-  const { activatePowerpack } = requirePowerpack();
+  const { activatePowerpack } = await requirePowerpack();
   activatePowerpack(workspaceRoot, license);
 }
 
-function requirePowerpack(): any {
-  try {
-    return require('@nx/powerpack-license');
-  } catch (e) {
+async function requirePowerpack(): Promise<any> {
+  // @ts-ignore
+  return import('@nx/powerpack-license').catch(async (e) => {
     if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
       try {
-        execSync(`${getPackageManagerCommand().addDev} @nx/powerpack-license`);
+        execSync(
+          `${getPackageManagerCommand().addDev} @nx/powerpack-license@latest`
+        );
 
         // @ts-ignore
-        return import('@nx/powerpack-license');
+        return await import('@nx/powerpack-license');
       } catch (e) {
         throw new Error(
           'Failed to install @nx/powerpack-license. Please install @nx/powerpack-license and try again.'
         );
       }
     }
-  }
+  });
 }

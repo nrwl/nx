@@ -49,21 +49,10 @@ export class DbCache {
     this.remoteCache = await this.getRemoteCache();
   }
 
-  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {
-    // User has customized the cache directory - this could be because they
-    // are using a shared cache in the custom directory. The db cache is not
-    // stored in the cache directory, and is keyed by machine ID so they would
-    // hit issues. If we detect this, we can create a fallback db cache in the
-    // custom directory, and check if the entries are there when the main db
-    // cache misses.
-    if (isCI() && !this.cache.checkCacheFsInSync()) {
-      if (/* { TODO: INSERT DOES NOT HAVE POWERPACK CHECK HERE } */ true) {
-        throw new Error(/* TODO: Add nx.dev link explaining cache + powerpack */);
-      }
-    }
-  }
+  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
 
   async get(task: Task): Promise<CachedResult | null> {
+    await this.assertCacheIsValid();
     const res = this.cache.get(task.hash);
 
     if (res) {
@@ -73,7 +62,6 @@ export class DbCache {
       };
     }
     await this.setup();
-    await this.assertCacheIsValid();
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
@@ -107,11 +95,11 @@ export class DbCache {
     outputs: string[],
     code: number
   ) {
+    await this.assertCacheIsValid();
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
       await this.setup();
-      await this.assertCacheIsValid();
       if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
@@ -206,7 +194,7 @@ export class DbCache {
         `The cache directory contains artifacts from other machines.`,
         `The content integrity of cached artifacts from other machines cannot be confirmed and restoring them would be potentially unsafe.`,
         `Nx will not restore artifacts from other machines.`,
-        `If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.`,
+        `If your machine ID has changed recently, run "nx reset" to fix this issue.`,
         `Read about this warning and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
         ``,
       ].join('\n');
