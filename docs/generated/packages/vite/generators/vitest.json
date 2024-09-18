@@ -55,12 +55,6 @@
       "runtimeTsconfigFileName": {
         "type": "string",
         "description": "The name of the project's tsconfig file that includes the runtime source files. If not provided, it will default to `tsconfig.lib.json` for libraries and `tsconfig.app.json` for applications."
-      },
-      "setUpPrettier": {
-        "type": "boolean",
-        "description": "Add Prettier and corresponding configuration files.",
-        "x-priority": "internal",
-        "default": false
       }
     },
     "required": ["project"],

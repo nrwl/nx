@@ -9,5 +9,4 @@ export interface VitestGeneratorSchema {
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
   addPlugin?: boolean;
   runtimeTsconfigFileName?: string;
-  setUpPrettier?: boolean;
 }

@@ -36,7 +36,6 @@ import { isCI } from 'nx/src/utils/is-ci';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { dirname, join } from 'path';
 import type { CompilerOptions, System } from 'typescript';
-import { resolvePrettierConfigPath } from '../../utils/prettier';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
@@ -98,6 +97,8 @@ export async function libraryGeneratorInternal(
         ? 'tsconfig.json'
         : 'tsconfig.base.json',
       addTsConfigBase: true,
+      // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
+      formatter: process.env.NX_ADD_TS_PLUGIN ? 'none' : 'prettier',
     })
   );
 
@@ -134,7 +135,6 @@ export async function libraryGeneratorInternal(
       skipFormat: true,
       testEnvironment: options.testEnvironment,
       addPlugin: options.addPlugin,
-      setUpPrettier: options.setUpPrettier,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -174,7 +174,6 @@ export async function libraryGeneratorInternal(
       skipFormat: true,
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
-      setUpPrettier: options.setUpPrettier,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -719,23 +718,6 @@ async function normalizeOptions(
         },
         { bundler: 'tsc' }
       ).then(({ bundler }) => bundler);
-    }
-
-    if (
-      options.setUpPrettier === undefined &&
-      !(await resolvePrettierConfigPath(tree))
-    ) {
-      options.setUpPrettier = await promptWhenInteractive<{
-        setUpPrettier: boolean;
-      }>(
-        {
-          type: 'confirm',
-          name: 'setUpPrettier',
-          message: 'Would you like to set up prettier in the workspace?',
-          initial: false,
-        },
-        { setUpPrettier: false }
-      ).then(({ setUpPrettier }) => setUpPrettier);
     }
   } else if (options.bundler === undefined && options.compiler === undefined) {
     options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(

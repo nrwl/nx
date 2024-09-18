@@ -70,7 +70,7 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
-    setUpPrettier: true,
+    formatter: 'prettier',
     addPlugin: false,
     ...schema,
   });
@@ -145,7 +145,7 @@ export async function initGeneratorInternal(
     }
   }
 
-  if (schema.setUpPrettier) {
+  if (schema.formatter === 'prettier') {
     const prettierTask = generatePrettierSetup(tree, {
       skipPackageJson: schema.skipPackageJson,
     });

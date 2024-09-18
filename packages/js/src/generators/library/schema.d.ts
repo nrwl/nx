@@ -36,7 +36,6 @@ export interface LibraryGeneratorSchema {
   simpleName?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
-  setUpPrettier?: boolean;
 }
 
 export interface NormalizedLibraryGeneratorOptions

@@ -143,10 +143,6 @@
       "useProjectJson": {
         "type": "boolean",
         "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
-      },
-      "setUpPrettier": {
-        "description": "Set up prettier configuration in the workspace if not already set up.",
-        "type": "boolean"
       }
     },
     "required": ["name"],
