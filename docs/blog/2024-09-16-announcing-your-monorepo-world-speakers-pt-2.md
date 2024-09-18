@@ -6,7 +6,7 @@ tags: [monorepo-world]
 cover_image: /blog/images/2024-09-16/mw-blog-post.avif
 ---
 
-Monorepo World](https://monorepo.world) is our two-track conference bringing together experts in developer tooling and of course, monorepos. We’re thrilled to share some of this year's speakers, including folks from Aspect Build Systems, Trunk.io, Aviator Technologies, and Postman. Without further ado, let’s meet your speakers!
+[Monorepo World](https://monorepo.world) is our two-track conference bringing together experts in developer tooling and of course, monorepos. We’re thrilled to share some of this year's speakers, including folks from Aspect Build Systems, Trunk.io, Aviator Technologies, and Postman. Without further ado, let’s meet your speakers!
 
 ## Python Monorepos with Bazel
 
