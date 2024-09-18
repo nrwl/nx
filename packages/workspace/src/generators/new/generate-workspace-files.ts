@@ -278,7 +278,9 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.RemixStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
-      : options.preset === Preset.NPM
+      : (options.preset === Preset.TS &&
+          process.env.NX_ADD_TS_PLUGIN === 'true') ||
+        options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
@@ -409,7 +411,10 @@ function normalizeOptions(options: NormalizedSchema) {
 }
 
 function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.NPM) {
+  if (
+    options.preset === Preset.NPM ||
+    (options.preset === Preset.TS && process.env.NX_ADD_TS_PLUGIN === 'true')
+  ) {
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
