@@ -75,10 +75,11 @@ export class TaskOrchestrator {
   ) {}
 
   async run() {
-    // Init the ForkedProcessTaskRunner
+    // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
       this.tasksSchedule.init(),
+      'init' in this.cache ? this.cache.init() : null,
     ]);
 
     // initial scheduling
