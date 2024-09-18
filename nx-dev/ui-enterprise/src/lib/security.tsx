@@ -1,4 +1,4 @@
-import { SectionHeading } from './temp/typography';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function Security(): JSX.Element {
   return (
