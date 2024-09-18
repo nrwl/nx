@@ -1,7 +1,7 @@
 'use client';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
-import { BlurFade } from '@nx/nx-dev/ui-animations';
+import { BlurFade, usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -141,6 +141,8 @@ export function Hero(): JSX.Element {
 function ShaderGradientElement() {
   const [theme] = useTheme();
   const [displayTheme, setDisplayTheme] = useState<Theme>('system');
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   useIsomorphicLayoutEffect(() => {
     const matchMedia: any = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -169,6 +171,10 @@ function ShaderGradientElement() {
       }
     };
   }, [theme]);
+
+  if (prefersReducedMotion) {
+    return;
+  }
 
   if (displayTheme === 'dark')
     return (
