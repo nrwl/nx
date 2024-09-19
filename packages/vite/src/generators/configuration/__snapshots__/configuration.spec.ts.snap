@@ -90,37 +90,23 @@ exports[`@nx/vite:configuration js library with --bundler=vite should add build 
     "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vite.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
 }
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 1`] = `
-"# my-lib
-
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run \`nx build my-lib\` to build the library.
-"
-`;
-
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 2`] = `
-"{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../dist/out-tsc",
-    "declaration": true,
-    "types": ["node", "vite/client"]
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
-}
-"
-`;
-
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 3`] = `
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 1`] = `
 "# my-lib
 
 This library was generated with [Nx](https://nx.dev).
@@ -135,7 +121,7 @@ Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 4`] = `
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -149,7 +135,7 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect un
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 5`] = `
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
 "export default {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
@@ -159,6 +145,30 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect un
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/my-lib',
 };
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"]
+}
 "
 `;
 
