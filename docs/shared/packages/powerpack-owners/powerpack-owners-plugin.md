@@ -16,13 +16,13 @@ In order to use `@nx/powerpack-owners`, you need to have an active Powerpack lic
 1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
 2. Install the package
 
-```shell
-nx add @nx/powerpack-owners
-```
+   ```shell
+   nx add @nx/powerpack-owners
+   ```
 
 3. Configure Ownership
 
-Configure the `@nx/powerpack-owners` plugin in the `nx.json` file and, optionally, in individual project configuration files. Consult the [Owners Configuration Reference](#owners-configuration-reference) section for more details.
+   Configure the `@nx/powerpack-owners` plugin in the `nx.json` file or in individual project configuration files. Consult the [Owners Configuration Reference](#owners-configuration-reference) section for more details.
 
 4. Configure the [Sync Generator](/concepts/sync-generators) and CI
 
@@ -48,23 +48,55 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
 ## Owners Configuration Reference
 
 {% tabs %}
-{% tab label="GitHub or Bitbucket" %}
+{% tab label="GitHub" %}
 
 ```jsonc {% fileName="nx.json" %}
 {
+  // Can be set to true instead of an object to accept all defaults
   "owners": {
-    // Can be set to true instead of an object to accept all defaults
-    "format": "github", // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
-    "outputPath": "tools/CODEOWNERS", // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
+    "format": "github",
+    // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    "outputPath": "CODEOWNERS",
+    // (Optional)
     "patterns": [
-      // (Optional)
       {
         "description": "A description of the rule",
         "owners": ["@joelovesrust"],
         // specify either projects or files, not both
-        "projects": ["my-rust-app", "rust-*", "tag:rust"], // Can be any project specifier that could be used in `nx run-many`
+        // Can be any project specifier that could be used in `nx run-many`
         // See https://nx.dev/nx-api/nx/documents/run-many
-        "files": [".github/workflows/**/*"] // File globs
+        "projects": ["my-rust-app", "rust-*", "tag:rust"],
+        // File globs
+        "files": [".github/workflows/**/*"]
+      }
+    ]
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Bitbucket" %}
+
+```jsonc {% fileName="nx.json" %}
+{
+  // Can be set to true instead of an object to accept all defaults
+  "owners": {
+    // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
+    "format": "bitbucket",
+    // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    "outputPath": "CODEOWNERS",
+    // (Optional)
+    "patterns": [
+      {
+        "description": "A description of the rule",
+        "owners": ["@joelovesrust"],
+        // specify either projects or files, not both
+        // Can be any project specifier that could be used in `nx run-many`
+        // See https://nx.dev/nx-api/nx/documents/run-many
+        "projects": ["my-rust-app", "rust-*", "tag:rust"],
+        // File globs
+        "files": [".github/workflows/**/*"]
       }
     ]
   }
@@ -78,30 +110,39 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 
 ```jsonc {% fileName="nx.json" %}
 {
+  // Can be set to true instead of an object to accept all defaults
   "owners": {
-    // Can be set to true instead of an object to accept all defaults
-    "format": "gitlab", // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
-    "outputPath": "tools/CODEOWNERS", // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
+    "format": "gitlab",
+    // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    "outputPath": "CODEOWNERS",
     // (Optional)
     "patterns": [
       {
         "description": "A description of the rule",
         "owners": ["@joelovesrust"],
         // Specify either `projects` or `files`, not both
-        "projects": ["my-rust-app", "rust-*", "tag:rust"], // Can be any project specifier that could be used in `nx run-many`
+        // Can be any project specifier that could be used in `nx run-many`
         // See https://nx.dev/nx-api/nx/documents/run-many
-        "files": [".github/workflows/**/*"] // File globs
+        "projects": ["my-rust-app", "rust-*", "tag:rust"],
+        // File globs
+        "files": [".github/workflows/**/*"]
       }
     ],
     // (Optional)
     "sections": [
       {
-        "name": "My section", // Labels the section
-        "defaultOwners": ["@cheddar"], // (Optional) The owners to use if a pattern does not specify a set of owners
+        // Labels the section
+        "name": "My section",
+        // (Optional) The owners to use if a pattern does not specify a set of owners
+        "defaultOwners": ["@cheddar"],
         // Specify either `numberOfRequiredApprovals` or `optional`, not both
-        "numberOfRequiredApprovals": 2, // (Optional) Require more than one person to approve the PR
-        "optional": true, // (Optional) Do not require any approvals, just notify the owners
-        "patterns": [] // Same format as the root patterns
+        // (Optional) Require more than one person to approve the PR
+        "numberOfRequiredApprovals": 2,
+        // (Optional) Do not require any approvals, just notify the owners
+        "optional": true,
+        // Same format as the root patterns
+        "patterns": []
       }
     ]
   }
@@ -112,9 +153,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 {
   "owners": {
     // Keys are file globs relative to the root of the project
-    "**/*": ["@ahmed", "@petra"], // Owners can be listed as a string array
+    // Owners can be listed as a string array
+    "**/*": ["@ahmed", "@petra"],
+    // Owners can be listed as an object with a description
     "README.md": {
-      // Owners can be listed as an object with a description
       "description": "Jared is very particular about the README file",
       "owners": ["@jared"]
     }
@@ -133,8 +175,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 ```jsonc {% fileName="nx.json" %}
 {
   "owners": {
-    "format": "github", // defaults to "github"
-    "outputPath": "tools/CODEOWNERS", // defaults to ".github/CODEOWNERS"
+    // defaults to "github"
+    "format": "github",
+    // defaults to ".github/CODEOWNERS"
+    "outputPath": "CODEOWNERS",
     "patterns": [
       {
         "description": "Joe should double check all changes to rust code",
@@ -181,7 +225,8 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 {
   "owners": {
     "format": "bitbucket",
-    "outputPath": "tools/CODEOWNERS", // defaults to ".bitbucket/CODEOWNERS"
+    // defaults to ".bitbucket/CODEOWNERS"
+    "outputPath": "CODEOWNERS",
     "patterns": [
       {
         "description": "Joe should double check all changes to rust code",
@@ -228,7 +273,8 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 {
   "owners": {
     "format": "gitlab",
-    "outputPath": "tools/CODEOWNERS", // defaults to ".gitlab/CODEOWNERS"
+    // defaults to ".gitlab/CODEOWNERS"
+    "outputPath": "CODEOWNERS",
     "patterns": [
       {
         "description": "Joe should double check all changes to rust code",

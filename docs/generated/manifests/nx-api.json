@@ -3558,6 +3558,15 @@
     "source": "/libs/nx-packages/powerpack-owners/src",
     "executors": {},
     "generators": {
+      "/nx-api/powerpack-owners/generators/init": {
+        "description": "Initialize Nx Powerpack Owners config",
+        "file": "external-generated/packages/powerpack-owners/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-owners/generators/init",
+        "type": "generator"
+      },
       "/nx-api/powerpack-owners/generators/sync-codeowners-file": {
         "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
         "file": "external-generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
