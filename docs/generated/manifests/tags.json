@@ -237,13 +237,6 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/activate-powerpack",
-      "id": "activate-powerpack",
-      "name": "activate-powerpack",
-      "path": "/nx-api/nx/documents/activate-powerpack"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/reset",
       "id": "reset",
       "name": "reset",

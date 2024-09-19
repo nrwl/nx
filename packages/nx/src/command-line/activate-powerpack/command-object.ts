@@ -12,7 +12,8 @@ export const yargsActivatePowerpackCommand: CommandModule<
   ActivatePowerpackOptions
 > = {
   command: 'activate-powerpack <license>',
-  describe: 'Activate a Nx Powerpack license.',
+  describe: false,
+  // describe: 'Activate a Nx Powerpack license.',
   builder: (yargs) =>
     withVerbose(yargs)
       .parserConfiguration({
