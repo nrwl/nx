@@ -8185,6 +8185,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "setup-prettier",
+                "path": "/nx-api/js/generators/setup-prettier",
+                "name": "setup-prettier",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

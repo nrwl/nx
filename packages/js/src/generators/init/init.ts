@@ -5,14 +5,14 @@ import {
   generateFiles,
   GeneratorCallback,
   readJson,
-  stripIndents,
+  runTasksInSerial,
   Tree,
-  updateJson,
-  writeJson,
 } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { join } from 'path';
 import { satisfies, valid } from 'semver';
+import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   nxVersion,
@@ -24,7 +24,6 @@ import {
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
-import { join } from 'path';
 
 async function getInstalledTypescriptVersion(
   tree: Tree
@@ -105,53 +104,10 @@ export async function initGeneratorInternal(
   }
 
   if (schema.setUpPrettier) {
-    devDependencies['prettier'] = prettierVersion;
-
-    // https://prettier.io/docs/en/configuration.html
-    const prettierrcNameOptions = [
-      '.prettierrc',
-      '.prettierrc.json',
-      '.prettierrc.yml',
-      '.prettierrc.yaml',
-      '.prettierrc.json5',
-      '.prettierrc.js',
-      '.prettierrc.cjs',
-      '.prettierrc.mjs',
-      '.prettierrc.toml',
-      'prettier.config.js',
-      'prettier.config.cjs',
-      'prettier.config.mjs',
-    ];
-
-    if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
-      writeJson(tree, '.prettierrc', {
-        singleQuote: true,
-      });
-    }
-
-    if (!tree.exists(`.prettierignore`)) {
-      tree.write(
-        '.prettierignore',
-        stripIndents`
-        # Add files here to ignore them from prettier formatting
-        /dist
-        /coverage
-        /.nx/cache
-        /.nx/workspace-data
-      `
-      );
-    }
-  }
-
-  if (tree.exists('.vscode/extensions.json')) {
-    updateJson(tree, '.vscode/extensions.json', (json) => {
-      json.recommendations ??= [];
-      const extension = 'esbenp.prettier-vscode';
-      if (!json.recommendations.includes(extension)) {
-        json.recommendations.push(extension);
-      }
-      return json;
+    const prettierTask = generatePrettierSetup(tree, {
+      skipPackageJson: schema.skipPackageJson,
     });
+    tasks.push(prettierTask);
   }
 
   const installTask = !schema.skipPackageJson
@@ -165,16 +121,12 @@ export async function initGeneratorInternal(
     : () => {};
   tasks.push(installTask);
 
-  if (schema.setUpPrettier) {
+  if (!schema.skipFormat && schema.setUpPrettier) {
     ensurePackage('prettier', prettierVersion);
-    if (!schema.skipFormat) await formatFiles(tree);
+    await formatFiles(tree);
   }
 
-  return async () => {
-    for (const task of tasks) {
-      await task();
-    }
-  };
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;
