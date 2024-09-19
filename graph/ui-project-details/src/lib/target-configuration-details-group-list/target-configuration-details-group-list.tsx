@@ -18,6 +18,7 @@ export interface TargetConfigurationGroupListProps {
   }) => void;
   onNxConnect?: () => void;
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
   className?: string;
 }
 
@@ -30,6 +31,7 @@ export function TargetConfigurationGroupList({
   onNxConnect,
   className = '',
   connectedToCloud,
+  disabledTaskSyncGenerators,
 }: TargetConfigurationGroupListProps) {
   const targetsGroup = useMemo(() => groupTargets(project), [project]);
   const hasGroups = useMemo(() => {
@@ -56,6 +58,7 @@ export function TargetConfigurationGroupList({
                       project={project}
                       sourceMap={sourceMap}
                       connectedToCloud={connectedToCloud}
+                      disabledTaskSyncGenerators={disabledTaskSyncGenerators}
                       variant={variant}
                       onRunTarget={onRunTarget}
                       onViewInTaskGraph={onViewInTaskGraph}
@@ -82,6 +85,7 @@ export function TargetConfigurationGroupList({
                   project={project}
                   sourceMap={sourceMap}
                   connectedToCloud={connectedToCloud}
+                  disabledTaskSyncGenerators={disabledTaskSyncGenerators}
                   variant={variant}
                   onRunTarget={onRunTarget}
                   onViewInTaskGraph={onViewInTaskGraph}
@@ -105,6 +109,7 @@ export function TargetConfigurationGroupList({
               project={project}
               sourceMap={sourceMap}
               connectedToCloud={connectedToCloud}
+              disabledTaskSyncGenerators={disabledTaskSyncGenerators}
               variant={variant}
               onRunTarget={onRunTarget}
               onViewInTaskGraph={onViewInTaskGraph}

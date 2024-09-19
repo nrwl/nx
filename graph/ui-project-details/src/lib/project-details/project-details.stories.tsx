@@ -83,6 +83,11 @@ export const Primary = {
               ],
             },
             configurations: {},
+            syncGenerators: [
+              '@nx/js:typescript-sync',
+              '@foo/bar:sync',
+              '@baz/qux:sync',
+            ],
           },
           build: {
             dependsOn: ['build-base', 'build-native'],
@@ -210,6 +215,7 @@ export const Primary = {
         'nx-core-build-project-json-nodes',
       ],
     },
+    disabledTaskSyncGenerators: ['@foo/bar:sync'],
   },
 };
 
