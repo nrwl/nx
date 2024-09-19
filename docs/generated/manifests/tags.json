@@ -581,7 +581,7 @@
       "file": "shared/features/powerpack/conformance",
       "id": "conformance",
       "name": "Run Language-Agnostic Conformance Rules",
-      "path": "/features/powerpack-features/conformance"
+      "path": "/features/powerpack/conformance"
     }
   ],
   "owners": [
@@ -590,7 +590,7 @@
       "file": "shared/features/powerpack/owners",
       "id": "owners",
       "name": "Define Code Ownership at the Project Level",
-      "path": "/features/powerpack-features/owners"
+      "path": "/features/powerpack/owners"
     }
   ],
   "custom-caching": [
@@ -599,7 +599,7 @@
       "file": "shared/features/powerpack/custom-caching",
       "id": "custom-caching",
       "name": "Change the Remote Cache Storage Location",
-      "path": "/features/powerpack-features/custom-caching"
+      "path": "/features/powerpack/custom-caching"
     }
   ],
   "intro": [

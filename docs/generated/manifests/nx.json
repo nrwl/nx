@@ -439,7 +439,7 @@
         "tags": ["nx-release"]
       },
       {
-        "id": "powerpack-features",
+        "id": "powerpack",
         "name": "Powerpack Features",
         "description": "Features of Nx that are available with a powerpack license.",
         "mediaImage": "",
@@ -453,7 +453,7 @@
             "file": "shared/features/powerpack/conformance",
             "itemList": [],
             "isExternal": false,
-            "path": "/features/powerpack-features/conformance",
+            "path": "/features/powerpack/conformance",
             "tags": ["conformance"]
           },
           {
@@ -464,7 +464,7 @@
             "file": "shared/features/powerpack/owners",
             "itemList": [],
             "isExternal": false,
-            "path": "/features/powerpack-features/owners",
+            "path": "/features/powerpack/owners",
             "tags": ["owners"]
           },
           {
@@ -475,12 +475,12 @@
             "file": "shared/features/powerpack/custom-caching",
             "itemList": [],
             "isExternal": false,
-            "path": "/features/powerpack-features/custom-caching",
+            "path": "/features/powerpack/custom-caching",
             "tags": ["custom-caching"]
           }
         ],
         "isExternal": false,
-        "path": "/features/powerpack-features",
+        "path": "/features/powerpack",
         "tags": []
       },
       {
@@ -643,8 +643,8 @@
     "path": "/features/manage-releases",
     "tags": ["nx-release"]
   },
-  "/features/powerpack-features": {
-    "id": "powerpack-features",
+  "/features/powerpack": {
+    "id": "powerpack",
     "name": "Powerpack Features",
     "description": "Features of Nx that are available with a powerpack license.",
     "mediaImage": "",
@@ -658,7 +658,7 @@
         "file": "shared/features/powerpack/conformance",
         "itemList": [],
         "isExternal": false,
-        "path": "/features/powerpack-features/conformance",
+        "path": "/features/powerpack/conformance",
         "tags": ["conformance"]
       },
       {
@@ -669,7 +669,7 @@
         "file": "shared/features/powerpack/owners",
         "itemList": [],
         "isExternal": false,
-        "path": "/features/powerpack-features/owners",
+        "path": "/features/powerpack/owners",
         "tags": ["owners"]
       },
       {
@@ -680,15 +680,15 @@
         "file": "shared/features/powerpack/custom-caching",
         "itemList": [],
         "isExternal": false,
-        "path": "/features/powerpack-features/custom-caching",
+        "path": "/features/powerpack/custom-caching",
         "tags": ["custom-caching"]
       }
     ],
     "isExternal": false,
-    "path": "/features/powerpack-features",
+    "path": "/features/powerpack",
     "tags": []
   },
-  "/features/powerpack-features/conformance": {
+  "/features/powerpack/conformance": {
     "id": "conformance",
     "name": "Run Language-Agnostic Conformance Rules",
     "description": "Conformance",
@@ -696,10 +696,10 @@
     "file": "shared/features/powerpack/conformance",
     "itemList": [],
     "isExternal": false,
-    "path": "/features/powerpack-features/conformance",
+    "path": "/features/powerpack/conformance",
     "tags": ["conformance"]
   },
-  "/features/powerpack-features/owners": {
+  "/features/powerpack/owners": {
     "id": "owners",
     "name": "Define Code Ownership at the Project Level",
     "description": "Owners",
@@ -707,10 +707,10 @@
     "file": "shared/features/powerpack/owners",
     "itemList": [],
     "isExternal": false,
-    "path": "/features/powerpack-features/owners",
+    "path": "/features/powerpack/owners",
     "tags": ["owners"]
   },
-  "/features/powerpack-features/custom-caching": {
+  "/features/powerpack/custom-caching": {
     "id": "custom-caching",
     "name": "Change the Remote Cache Storage Location",
     "description": "Custom Caching",
@@ -718,7 +718,7 @@
     "file": "shared/features/powerpack/custom-caching",
     "itemList": [],
     "isExternal": false,
-    "path": "/features/powerpack-features/custom-caching",
+    "path": "/features/powerpack/custom-caching",
     "tags": ["custom-caching"]
   },
   "/features/ci-features": {
