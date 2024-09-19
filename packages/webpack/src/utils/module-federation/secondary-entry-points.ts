@@ -105,6 +105,33 @@ export function recursivelyCollectSecondaryEntryPointsFromDirectory(
   }
 }
 
+function collectPackagesFromExports(
+  pkgName: string,
+  pkgVersion: string,
+  exports: any | undefined,
+  collectedPackages: {
+    name: string;
+    version: string;
+  }[]
+): void {
+  for (const [relativeEntryPoint, exportOptions] of Object.entries(exports)) {
+    if (exportOptions?.['default']?.search(/\.(js|mjs|cjs)$/)) {
+      let entryPointName = joinPathFragments(pkgName, relativeEntryPoint);
+      if (entryPointName.endsWith('.json')) {
+        entryPointName = dirname(entryPointName);
+      }
+      if (entryPointName === '.') {
+        continue;
+      }
+      if (collectedPackages.find((p) => p.name === entryPointName)) {
+        continue;
+      }
+
+      collectedPackages.push({ name: entryPointName, version: pkgVersion });
+    }
+  }
+}
+
 export function collectPackageSecondaryEntryPoints(
   pkgName: string,
   pkgVersion: string,
@@ -130,6 +157,9 @@ export function collectPackageSecondaryEntryPoints(
   }
 
   const { exports } = packageJson;
+  if (exports) {
+    collectPackagesFromExports(pkgName, pkgVersion, exports, collectedPackages);
+  }
   const subDirs = getNonNodeModulesSubDirs(pathToPackage);
   recursivelyCollectSecondaryEntryPointsFromDirectory(
     pkgName,
