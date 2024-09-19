@@ -133,7 +133,7 @@
             },
             {
               "name": "Powerpack Features",
-              "id": "powerpack-features",
+              "id": "powerpack",
               "description": "Features of Nx that are available with a powerpack license.",
               "itemList": [
                 {

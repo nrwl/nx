@@ -325,13 +325,13 @@
           },
           {
             "name": "Powerpack Features",
-            "path": "/features/powerpack-features",
-            "id": "powerpack-features",
+            "path": "/features/powerpack",
+            "id": "powerpack",
             "isExternal": false,
             "children": [
               {
                 "name": "Run Language-Agnostic Conformance Rules",
-                "path": "/features/powerpack-features/conformance",
+                "path": "/features/powerpack/conformance",
                 "id": "conformance",
                 "isExternal": false,
                 "children": [],
@@ -339,7 +339,7 @@
               },
               {
                 "name": "Define Code Ownership at the Project Level",
-                "path": "/features/powerpack-features/owners",
+                "path": "/features/powerpack/owners",
                 "id": "owners",
                 "isExternal": false,
                 "children": [],
@@ -347,7 +347,7 @@
               },
               {
                 "name": "Change the Remote Cache Storage Location",
-                "path": "/features/powerpack-features/custom-caching",
+                "path": "/features/powerpack/custom-caching",
                 "id": "custom-caching",
                 "isExternal": false,
                 "children": [],
@@ -474,13 +474,13 @@
       },
       {
         "name": "Powerpack Features",
-        "path": "/features/powerpack-features",
-        "id": "powerpack-features",
+        "path": "/features/powerpack",
+        "id": "powerpack",
         "isExternal": false,
         "children": [
           {
             "name": "Run Language-Agnostic Conformance Rules",
-            "path": "/features/powerpack-features/conformance",
+            "path": "/features/powerpack/conformance",
             "id": "conformance",
             "isExternal": false,
             "children": [],
@@ -488,7 +488,7 @@
           },
           {
             "name": "Define Code Ownership at the Project Level",
-            "path": "/features/powerpack-features/owners",
+            "path": "/features/powerpack/owners",
             "id": "owners",
             "isExternal": false,
             "children": [],
@@ -496,7 +496,7 @@
           },
           {
             "name": "Change the Remote Cache Storage Location",
-            "path": "/features/powerpack-features/custom-caching",
+            "path": "/features/powerpack/custom-caching",
             "id": "custom-caching",
             "isExternal": false,
             "children": [],
@@ -507,7 +507,7 @@
       },
       {
         "name": "Run Language-Agnostic Conformance Rules",
-        "path": "/features/powerpack-features/conformance",
+        "path": "/features/powerpack/conformance",
         "id": "conformance",
         "isExternal": false,
         "children": [],
@@ -515,7 +515,7 @@
       },
       {
         "name": "Define Code Ownership at the Project Level",
-        "path": "/features/powerpack-features/owners",
+        "path": "/features/powerpack/owners",
         "id": "owners",
         "isExternal": false,
         "children": [],
@@ -523,7 +523,7 @@
       },
       {
         "name": "Change the Remote Cache Storage Location",
-        "path": "/features/powerpack-features/custom-caching",
+        "path": "/features/powerpack/custom-caching",
         "id": "custom-caching",
         "isExternal": false,
         "children": [],
