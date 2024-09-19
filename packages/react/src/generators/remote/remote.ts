@@ -32,7 +32,7 @@ export function addModuleFederationFiles(
   options: NormalizedSchema<Schema>
 ) {
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectName),
     ...options,
     tmpl: '',
   };
@@ -113,16 +113,17 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   if (options.dynamic) {
     // Dynamic remotes generate with library { type: 'var' } by default.
     // We need to ensure that the remote name is a valid variable name.
-    const isValidRemote = isValidVariable(options.name);
+    const isValidRemote = isValidVariable(options.projectName);
     if (!isValidRemote.isValid) {
       throw new Error(
-        `Invalid remote name provided: ${options.name}. ${isValidRemote.message}`
+        `Invalid remote name provided: ${options.projectName}. ${isValidRemote.message}`
       );
     }
   }
 
   const initAppTask = await applicationGenerator(host, {
     ...options,
+    name: options.projectName,
     skipFormat: true,
   });
   tasks.push(initAppTask);
@@ -201,7 +202,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     );
     addRemoteToDynamicHost(
       host,
-      options.name,
+      options.projectName,
       options.devServerPort,
       pathToMFManifest
     );
