@@ -6678,6 +6678,17 @@
         "tags": []
       },
       {
+        "id": "custom-task-runners",
+        "name": "Custom Task Runners",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-task-runners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-task-runners",
+        "tags": []
+      },
+      {
         "id": "workspace-executors",
         "name": "Workspace Executors",
         "description": "",
@@ -6812,6 +6823,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-generators",
+    "tags": []
+  },
+  "/deprecated/custom-task-runners": {
+    "id": "custom-task-runners",
+    "name": "Custom Task Runners",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-task-runners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-task-runners",
     "tags": []
   },
   "/deprecated/workspace-executors": {

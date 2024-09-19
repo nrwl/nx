@@ -1399,6 +1399,11 @@
               "file": "shared/deprecated/workspace-generators"
             },
             {
+              "name": "Custom Task Runners",
+              "id": "custom-task-runners",
+              "file": "shared/deprecated/custom-task-runners"
+            },
+            {
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
