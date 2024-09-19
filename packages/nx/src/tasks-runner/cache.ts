@@ -18,6 +18,7 @@ import { readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isCI } from '../utils/is-ci';
+import { output } from '../utils/output';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -97,7 +98,6 @@ export class DbCache {
     outputs: string[],
     code: number
   ) {
-    await this.assertCacheIsValid();
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
@@ -191,13 +191,16 @@ export class DbCache {
     // custom directory, and check if the entries are there when the main db
     // cache misses.
     if (isCI() && !this.cache.checkCacheFsInSync()) {
-      const warning = [
+      const warningLines = [
         `Nx found unrecognized artifacts in the cache directory and will not be able to use them.`,
         `Nx can only restore artifacts it has metadata about.`,
         `Read about this warning and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
         ``,
-      ].join('\n');
-      console.warn(warning);
+      ];
+      output.warn({
+        title: 'Unrecognized Cache Artifacts',
+        bodyLines: warningLines,
+      });
     }
   }
 }
