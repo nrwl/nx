@@ -768,6 +768,7 @@
     - [documents](/nx-api/powerpack-owners/documents)
       - [Overview](/nx-api/powerpack-owners/documents/overview)
     - [generators](/nx-api/powerpack-owners/generators)
+      - [init](/nx-api/powerpack-owners/generators/init)
       - [sync-codeowners-file](/nx-api/powerpack-owners/generators/sync-codeowners-file)
   - [powerpack-s3-cache](/nx-api/powerpack-s3-cache)
     - [documents](/nx-api/powerpack-s3-cache/documents)

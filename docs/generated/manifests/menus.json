@@ -10576,6 +10576,14 @@
             "name": "generators",
             "children": [
               {
+                "id": "init",
+                "path": "/nx-api/powerpack-owners/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "sync-codeowners-file",
                 "path": "/nx-api/powerpack-owners/generators/sync-codeowners-file",
                 "name": "sync-codeowners-file",
