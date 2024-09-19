@@ -67,6 +67,7 @@ export async function hostGeneratorInternal(
 
   const initTask = await applicationGenerator(host, {
     ...options,
+    name: options.projectName,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
     skipFormat: true,
