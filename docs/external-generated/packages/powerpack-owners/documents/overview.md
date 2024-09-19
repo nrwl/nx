@@ -5,7 +5,7 @@ description: The Nx Powerpack Owners plugin provides the ability to define code 
 
 The `@nx/powerpack-owners` plugin extends the CODEOWNERS functionality to allow you to define code ownership based on projects in addition to the standard file-based definitions. It leverages the [`nx sync`](/concepts/sync-generators) command to compile `owners` configuration settings from `nx.json` and project configuration files into valid CODEOWNERS files for [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), [Bitbucket](https://support.atlassian.com/bitbucket-cloud/docs/set-up-and-use-code-owners/) or [GitLab](https://docs.gitlab.com/ee/user/project/codeowners/).
 
-With this plugin, you can specify code ownership using the same project glob syntax as [`nx run-many`](/nx-api/nx/documents/run-many#examples). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
+With this plugin, you can specify code ownership using the same project matcher syntax as [`nx run-many`](/nx-api/nx/documents/run-many#examples). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
 In order to use `@nx/powerpack-owners`, you need to have an active Powerpack license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
@@ -26,7 +26,7 @@ In order to use `@nx/powerpack-owners`, you need to have an active Powerpack lic
 
 4. Configure the [Sync Generator](/concepts/sync-generators) and CI
 
-Make sure that the `@nx/powerpack-owners:sync-codeowners-file` generators is registered as a `globalGenerator` in `nx.json`:
+The `nx add @nx/powerpack-owners` command should have registered the `@nx/powerpack-owners:sync-codeowners-file` generator as a `globalGenerator` in `nx.json`. You can double check to make sure:
 
 ```jsonc {% fileName="nx.json" %}
 {
