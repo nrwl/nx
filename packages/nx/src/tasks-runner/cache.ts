@@ -169,7 +169,7 @@ export class DbCache {
   private async getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
     try {
       const { getRemoteCache } = await import(
-        this.resolvePackage('@nx/powerpack-shared-cache')
+        this.resolvePackage('@nx/powerpack-shared-fs-cache')
       );
       return getRemoteCache();
     } catch {
