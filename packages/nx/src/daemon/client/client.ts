@@ -1,6 +1,12 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
-import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { FileHandle, open } from 'fs/promises';
 import { connect } from 'net';
 import { join } from 'path';
@@ -574,7 +580,9 @@ export class DaemonClient {
 
   async startInBackground(): Promise<ChildProcess['pid']> {
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
-    writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
+    if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
+      writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
+    }
 
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
