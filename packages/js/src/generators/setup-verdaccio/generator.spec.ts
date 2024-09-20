@@ -38,6 +38,33 @@ describe('setup-verdaccio generator', () => {
     });
   });
 
+  it('should add target to package.json if using the @nx/js:typescript plugin', async () => {
+    const originalAddTsPlugin = process.env.NX_ADD_TS_PLUGIN;
+    process.env.NX_ADD_TS_PLUGIN = 'true';
+
+    await generator(tree, options);
+
+    expect(tree.exists('project.json')).toBe(false);
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    expect(packageJson.nx).toMatchInlineSnapshot(`
+      {
+        "includedScripts": [],
+        "targets": {
+          "local-registry": {
+            "executor": "@nx/js:verdaccio",
+            "options": {
+              "config": ".verdaccio/config.yml",
+              "port": 4873,
+              "storage": "tmp/local-registry/storage",
+            },
+          },
+        },
+      }
+    `);
+
+    process.env.NX_ADD_TS_PLUGIN = originalAddTsPlugin;
+  });
+
   it('should not override existing root project settings from package.json', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.nx = {

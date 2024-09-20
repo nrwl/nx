@@ -5,6 +5,7 @@ import {
   generateFiles,
   ProjectConfiguration,
   readJson,
+  readNxJson,
   TargetConfiguration,
   Tree,
   updateJson,
@@ -37,7 +38,15 @@ export async function setupVerdaccio(
       storage: 'tmp/local-registry/storage',
     },
   };
-  if (!tree.exists('project.json')) {
+  if (isUsingTypeScriptPlugin(tree)) {
+    updateJson(tree, 'package.json', (json) => {
+      json.nx ??= {};
+      json.nx.includedScripts ??= [];
+      json.nx.targets ??= {};
+      json.nx.targets['local-registry'] ??= verdaccioTarget;
+      return json;
+    });
+  } else if (!tree.exists('project.json')) {
     const { name } = readJson(tree, 'package.json');
     updateJson(tree, 'package.json', (json) => {
       if (!json.nx) {
@@ -77,3 +86,22 @@ export async function setupVerdaccio(
 }
 
 export default setupVerdaccio;
+
+function isUsingTypeScriptPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  const addTsPlugin = addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
+  // is going to be added or it's already there
+  const hasPlugin =
+    addTsPlugin ||
+    nxJson.plugins?.some((p) =>
+      typeof p === 'string'
+        ? p === '@nx/js/typescript'
+        : p.plugin === '@nx/js/typescript'
+    );
+
+  return hasPlugin;
+}

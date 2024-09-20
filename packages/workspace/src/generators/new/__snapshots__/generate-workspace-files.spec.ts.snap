@@ -1530,7 +1530,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should
 ## Generate a library
 
 \`\`\`sh
-npx nx g @nx/js:lib pkg1 --publishable --importPath=@my-org/pkg1
+npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
 \`\`\`
 
 ## Run tasks
@@ -3799,7 +3799,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should b
 ## Generate a library
 
 \`\`\`sh
-npx nx g @nx/js:lib pkg1 --publishable --importPath=@my-org/pkg1
+npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
 \`\`\`
 
 ## Run tasks
@@ -5803,7 +5803,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be
 ## Generate a library
 
 \`\`\`sh
-npx nx g @nx/js:lib pkg1 --publishable --importPath=@my-org/pkg1
+npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
 \`\`\`
 
 ## Run tasks
