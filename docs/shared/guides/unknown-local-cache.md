@@ -46,7 +46,7 @@ access to all the previously created Nx cache artifacts. Hence, it is plausible 
 single task hash - to be accessed without leaving any trace. This is feasible due to the network drive's capability to
 allow overwrites.
 
-If you decide to use a shared network drive for your remote cache anyway, [activate powerpack](/powerpack) and use the [`@nx/powerpack-shared-fs-cache`](/nx-api/powerpack-shared-fs-cache) plugin to ensure that the task metadata and project graph information is correctly associated with the file artifacts.
+If you decide to use a shared network drive for your remote cache anyway, [activate powerpack](/recipes/installation/activate-powerpack) and use the [`@nx/powerpack-shared-fs-cache`](/nx-api/powerpack-shared-fs-cache) plugin to ensure that the task metadata and project graph information is correctly associated with the file artifacts.
 
 ## How Nx Cloud Makes Sure Sharing Cache is Safe
 
