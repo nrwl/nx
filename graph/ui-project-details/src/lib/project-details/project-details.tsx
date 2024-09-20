@@ -18,6 +18,7 @@ export interface ProjectDetailsProps {
   errors?: GraphError[];
   variant?: 'default' | 'compact';
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
   onViewInProjectGraph?: (data: { projectName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
@@ -44,6 +45,7 @@ export const ProjectDetails = ({
   onNxConnect,
   viewInProjectGraphPosition = 'top',
   connectedToCloud,
+  disabledTaskSyncGenerators,
 }: ProjectDetailsProps) => {
   const projectData = project.data;
   const isCompact = variant === 'compact';
@@ -153,6 +155,7 @@ export const ProjectDetails = ({
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
           connectedToCloud={connectedToCloud}
+          disabledTaskSyncGenerators={disabledTaskSyncGenerators}
           onNxConnect={onNxConnect}
         />
       </div>

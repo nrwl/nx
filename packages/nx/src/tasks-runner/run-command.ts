@@ -491,7 +491,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
       name: 'applyChanges',
       type: 'select',
       message:
-        'Would you like to sync the identified changes to get your worskpace up to date?',
+        'Would you like to sync the identified changes to get your workspace up to date?',
       choices: [
         {
           name: 'yes',
@@ -504,7 +504,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
       ],
       footer: () =>
         chalk.dim(
-          '\nYou can skip this prompt by setting the `sync.applyChanges` option in your `nx.json`.'
+          '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
         ),
     };
 
