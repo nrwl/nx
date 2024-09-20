@@ -180,7 +180,10 @@ function createTempWorkspace(options: NormalizedOptions) {
     'project.json',
     { recursive: true }
   );
-  rmSync(join('temp-workspace', 'apps', options.reactAppName), { recursive: true, force: true });
+  rmSync(join('temp-workspace', 'apps', options.reactAppName), {
+    recursive: true,
+    force: true,
+  });
   rmSync('node_modules', { recursive: true, force: true });
 }
 
@@ -266,7 +269,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
         f,
         options.isStandalone
           ? join('temp-workspace', f)
-          : join('temp-workspace', 'apps', options.reactAppName, f),
+          : join('temp-workspace', 'apps', options.reactAppName, f)
       );
     } catch (error) {
       if (requiredCraFiles.includes(f)) {

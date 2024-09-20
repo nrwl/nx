@@ -48,8 +48,12 @@ export class TempFs {
   }
 
   async createFile(filePath: string, content: string) {
-    const dir = joinPathFragments(this.tempDir, dirname(filePath))
-    if (!(await access(dir).then(() => true).catch(() => false))) {
+    const dir = joinPathFragments(this.tempDir, dirname(filePath));
+    if (
+      !(await access(dir)
+        .then(() => true)
+        .catch(() => false))
+    ) {
       await mkdir(dir, { recursive: true });
     }
     await writeFile(joinPathFragments(this.tempDir, filePath), content);
