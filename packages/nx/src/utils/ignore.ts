@@ -55,7 +55,7 @@ export function getIgnoreObject(
 function getIgnoredGlobsFromFile(file: string, root?: string): string[] {
   try {
     const results = [];
-    const contents = readFileSync(file, 'utf8');
+    const contents = readFileSync(file, 'utf-8');
     const lines = contents.split('\n');
     for (const line of lines) {
       const trimmed = line.trim();

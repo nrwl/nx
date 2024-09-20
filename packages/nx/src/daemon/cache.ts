@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, unlinkSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
+import { readJsonFile, writeJsonFile } from '../devkit-exports';
 
 export interface DaemonProcessJson {
   processId: number;
@@ -12,11 +12,11 @@ export const serverProcessJsonPath = join(
   'server-process.json'
 );
 
-export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
+export function readDaemonProcessJsonCache(): DaemonProcessJson | null {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return JSON.parse(await readFile(serverProcessJsonPath, 'utf8'));
+  return readJsonFile(serverProcessJsonPath);
 }
 
 export function deleteDaemonJsonProcessCache(): void {
@@ -27,16 +27,14 @@ export function deleteDaemonJsonProcessCache(): void {
   } catch {}
 }
 
-export async function writeDaemonJsonProcessCache(
+export function writeDaemonJsonProcessCache(
   daemonJson: DaemonProcessJson
-): Promise<void> {
-  // TODO: Ask about it in the PR.
-  // `fs-extra` appends an extra newline at the end when writing JSON. Do we want it here?
-  await writeFile(serverProcessJsonPath, JSON.stringify(daemonJson));
+): void {
+  writeJsonFile(serverProcessJsonPath, daemonJson, { appendNewLine: true });
 }
 
 export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> {
-  const daemonProcessJson = await readDaemonProcessJsonCache();
+  const daemonProcessJson = readDaemonProcessJsonCache();
   if (daemonProcessJson && daemonProcessJson.processId) {
     await new Promise<void>((resolve, reject) => {
       let count = 0;
@@ -61,7 +59,7 @@ export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> 
 }
 
 export async function safelyCleanUpExistingProcess(): Promise<void> {
-  const daemonProcessJson = await readDaemonProcessJsonCache();
+  const daemonProcessJson = readDaemonProcessJsonCache();
   if (daemonProcessJson && daemonProcessJson.processId) {
     try {
       process.kill(daemonProcessJson.processId);
@@ -77,9 +75,7 @@ export function getDaemonProcessIdSync(): number | null {
     return null;
   }
   try {
-    const daemonProcessJson = JSON.parse(
-      readFileSync(serverProcessJsonPath, 'utf8')
-    );
+    const daemonProcessJson = readJsonFile(serverProcessJsonPath);
     return daemonProcessJson.processId;
   } catch {
     return null;

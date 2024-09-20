@@ -9,7 +9,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'path';
 import { tmpdir } from 'os';
 import { joinPathFragments } from '../utils/path';
@@ -49,11 +49,7 @@ export class TempFs {
 
   async createFile(filePath: string, content: string) {
     const dir = joinPathFragments(this.tempDir, dirname(filePath));
-    if (
-      !(await access(dir)
-        .then(() => true)
-        .catch(() => false))
-    ) {
+    if (!existsSync(dir)) {
       await mkdir(dir, { recursive: true });
     }
     await writeFile(joinPathFragments(this.tempDir, filePath), content);

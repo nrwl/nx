@@ -504,7 +504,7 @@ export async function startServer(): Promise<Server> {
   setupWorkspaceContext(workspaceRoot);
 
   // Persist metadata about the background process so that it can be cleaned up later if needed
-  await writeDaemonJsonProcessCache({
+  writeDaemonJsonProcessCache({
     processId: process.pid,
   });
 

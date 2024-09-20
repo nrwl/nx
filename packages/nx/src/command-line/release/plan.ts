@@ -356,7 +356,7 @@ async function _promptForMessage(versionPlanName: string): Promise<string> {
       );
       writeFileSync(messageFilePath, '');
       await launchEditor(messageFilePath);
-      message = readFileSync(messageFilePath, 'utf8');
+      message = readFileSync(messageFilePath, 'utf-8');
     }
 
     message = message.trim();

@@ -7,8 +7,8 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
-import { mkdirSync } from 'node:fs';
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { existsSync, mkdirSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
@@ -301,11 +301,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
-          if (
-            await access(src)
-              .then(() => true)
-              .catch(() => false)
-          ) {
+          if (existsSync(src)) {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
@@ -343,11 +339,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (
-            await access(cached)
-              .then(() => true)
-              .catch(() => false)
-          ) {
+          if (existsSync(cached)) {
             const src = join(this.root, f);
             await this.remove(src);
             await this.copy(cached, src);
@@ -422,15 +414,14 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (
-      await access(tdCommit)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      const terminalOutput = await readFile(join(td, 'terminalOutput'), 'utf8');
+    if (existsSync(tdCommit)) {
+      const terminalOutput = await readFile(
+        join(td, 'terminalOutput'),
+        'utf-8'
+      );
       let code = 0;
       try {
-        code = Number(await readFile(join(td, 'code'), 'utf8'));
+        code = Number(await readFile(join(td, 'code'), 'utf-8'));
       } catch {}
 
       return {
