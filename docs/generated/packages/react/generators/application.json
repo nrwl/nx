@@ -181,7 +181,7 @@
         "type": "string",
         "enum": ["vite", "webpack", "rspack"],
         "x-prompt": "Which bundler do you want to use to build the application?",
-        "default": "webpack",
+        "default": "vite",
         "x-priority": "important"
       },
       "minimal": {
