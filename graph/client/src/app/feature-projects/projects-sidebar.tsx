@@ -447,6 +447,11 @@ export function ProjectsSidebar(): JSX.Element {
           decrementDepthFilter={decrementDepthFilter}
         ></SearchDepth>
 
+        <CompositeGraphPanel
+          compositeEnabled={compositeEnabled}
+          compositeEnabledChanged={compositeEnabledChanged}
+        ></CompositeGraphPanel>
+
         <ExperimentalFeature>
           <div className="mx-4 mt-8 flex flex-col gap-4 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
             <h3 className="cursor-text px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200">
@@ -456,10 +461,6 @@ export function ProjectsSidebar(): JSX.Element {
               collapseEdges={collapseEdges}
               collapseEdgesChanged={collapseEdgesChanged}
             ></CollapseEdgesPanel>
-            <CompositeGraphPanel
-              compositeEnabled={compositeEnabled}
-              compositeEnabledChanged={compositeEnabledChanged}
-            ></CompositeGraphPanel>
           </div>
         </ExperimentalFeature>
       </div>

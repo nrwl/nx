@@ -8,7 +8,7 @@ export interface CompositeGraphPanelProps {
 export const CompositeGraphPanel = memo(
   ({ compositeEnabled, compositeEnabledChanged }: CompositeGraphPanelProps) => {
     return (
-      <div className="px-4">
+      <div className="mt-4 px-4">
         <div className="flex items-start">
           <div className="flex h-5 items-center">
             <input
