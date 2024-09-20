@@ -20,9 +20,9 @@ Read the individual plugin documentation for specific set up instructions.
 
 {% cards cols="2" lgCols="2" mdCols="2" smCols="2" %}
 
-{% link-card title="AWS S3 Bucket Remote Cache" type="Nx Plugin" url="/nx-api/powerpack-s3-cache" icon="aws" /%}
+{% link-card title="AWS S3 Bucket Remote Cache" type="Nx Plugin" url="/nx-api/powerpack-s3-cache" icon="AwsIcon" /%}
 
-{% link-card title="Shared Network Drive Remote Cache" type="Nx Plugin" url="/nx-api/powerpack-s3-cache" icon="network" /%}
+{% link-card title="Shared Network Drive Remote Cache" type="Nx Plugin" url="/nx-api/powerpack-s3-cache" icon="ServerIcon" /%}
 
 {% /cards %}
 

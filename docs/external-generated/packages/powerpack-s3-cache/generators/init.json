@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/generator",
+  "factory": "./src/generators/init/generator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "Init",
@@ -22,9 +22,9 @@
     "presets": []
   },
   "description": "Initialize the S3 Cache",
-  "implementation": "/libs/nx-packages/powerpack-s3-cache/src/generators/generator.ts",
+  "implementation": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/generator.ts",
   "aliases": [],
   "hidden": false,
-  "path": "/libs/nx-packages/powerpack-s3-cache/src/generators/schema.json",
+  "path": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
   "type": "generator"
 }

@@ -10665,6 +10665,32 @@
         ],
         "isExternal": false,
         "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-shared-fs-cache",
+        "path": "/nx-api/powerpack-shared-fs-cache",
+        "name": "powerpack-shared-fs-cache",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-shared-fs-cache/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/powerpack-shared-fs-cache/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
       }
     ]
   }
