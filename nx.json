@@ -129,6 +129,9 @@
         "@nx/nx-source:lint-pnpm-lock"
       ]
     },
+    "lint-pnpm-lock": {
+      "cache": true
+    },
     "e2e": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"]
