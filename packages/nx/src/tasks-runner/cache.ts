@@ -1,5 +1,4 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
@@ -8,6 +7,8 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { mkdirSync } from 'node:fs';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
@@ -288,7 +289,7 @@ export class Cache {
       await this.remove(tdCommit);
       await this.remove(td);
 
-      await mkdir(td);
+      await mkdir(td, { recursive: true });
       await writeFile(
         join(td, 'terminalOutput'),
         terminalOutput ?? 'no terminal output'
@@ -300,7 +301,11 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
-          if (await pathExists(src)) {
+          if (
+            access(src)
+              .then(() => true)
+              .catch(() => false)
+          ) {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
@@ -338,7 +343,11 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (await pathExists(cached)) {
+          if (
+            access(cached)
+              .then(() => true)
+              .catch(() => false)
+          ) {
             const src = join(this.root, f);
             await this.remove(src);
             await this.copy(cached, src);
@@ -413,14 +422,15 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (await pathExists(tdCommit)) {
-      const terminalOutput = await readFile(
-        join(td, 'terminalOutput'),
-        'utf-8'
-      );
+    if (
+      access(tdCommit)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      const terminalOutput = await readFile(join(td, 'terminalOutput'), 'utf8');
       let code = 0;
       try {
-        code = Number(await readFile(join(td, 'code'), 'utf-8'));
+        code = Number(await readFile(join(td, 'code'), 'utf8'));
       } catch {}
 
       return {

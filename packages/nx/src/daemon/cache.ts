@@ -1,10 +1,5 @@
-import {
-  existsSync,
-  readJson,
-  readJsonSync,
-  unlinkSync,
-  writeJson,
-} from 'fs-extra';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
 
@@ -21,7 +16,7 @@ export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | 
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return await readJson(serverProcessJsonPath);
+  return JSON.parse(await readFile(serverProcessJsonPath, 'utf8'));
 }
 
 export function deleteDaemonJsonProcessCache(): void {
@@ -35,7 +30,9 @@ export function deleteDaemonJsonProcessCache(): void {
 export async function writeDaemonJsonProcessCache(
   daemonJson: DaemonProcessJson
 ): Promise<void> {
-  await writeJson(serverProcessJsonPath, daemonJson);
+  // TODO: Ask about it in the PR.
+  // `fs-extra` appends an extra newline at the end when writing JSON. Do we want it here?
+  await writeFile(serverProcessJsonPath, JSON.stringify(daemonJson));
 }
 
 export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> {
@@ -80,7 +77,9 @@ export function getDaemonProcessIdSync(): number | null {
     return null;
   }
   try {
-    const daemonProcessJson = readJsonSync(serverProcessJsonPath);
+    const daemonProcessJson = JSON.parse(
+      readFileSync(serverProcessJsonPath, 'utf8')
+    );
     return daemonProcessJson.processId;
   } catch {
     return null;

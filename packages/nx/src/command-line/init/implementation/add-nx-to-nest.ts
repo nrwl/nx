@@ -1,5 +1,5 @@
 import * as enquirer from 'enquirer';
-import { unlinkSync, writeFileSync } from 'fs-extra';
+import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { InitArgs } from '../init-v1';
 import { NxJsonConfiguration } from '../../../config/nx-json';
@@ -22,7 +22,6 @@ import {
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
 import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
-
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
 
