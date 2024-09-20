@@ -38,6 +38,10 @@ export interface LibraryGeneratorSchema {
   useProjectJson?: boolean;
 }
 
+type ProjectPackageManagerWorkspaceState =
+  | 'included'
+  | 'excluded'
+  | 'no-workspaces';
 export interface NormalizedLibraryGeneratorOptions
   extends LibraryGeneratorSchema {
   name: string;
@@ -47,5 +51,6 @@ export interface NormalizedLibraryGeneratorOptions
   parsedTags: string[];
   importPath?: string;
   hasPlugin: boolean;
-  isUsingTsSolutionConfig?: boolean;
+  isUsingTsSolutionConfig: boolean;
+  projectPackageManagerWorkspaceState: ProjectPackageManagerWorkspaceState;
 }

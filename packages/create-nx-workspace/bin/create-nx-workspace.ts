@@ -490,6 +490,10 @@ async function determineNoneOptions(
       }
     }
 
+    if (preset === Preset.TS) {
+      return { preset, formatter: 'prettier' };
+    }
+
     if (parsedArgs.js !== undefined) {
       js = parsedArgs.js;
     } else if (preset === Preset.TsStandalone) {

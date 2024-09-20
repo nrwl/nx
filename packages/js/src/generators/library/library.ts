@@ -1,20 +1,17 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
-  isWorkspacesEnabled,
   joinPathFragments,
   names,
   offsetFromRoot,
   output,
   ProjectConfiguration,
   ProjectGraphProjectNode,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -29,8 +26,6 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { prompt } from 'enquirer';
-import { minimatch } from 'minimatch';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { isCI } from 'nx/src/utils/is-ci';
 import { type PackageJson } from 'nx/src/utils/package-json';
@@ -60,6 +55,10 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
+import {
+  getProjectPackageManagerWorkspaceState,
+  getProjectPackageManagerWorkspaceStateWarningTask,
+} from './utils/package-manager-workspaces';
 import {
   ensureProjectIsExcludedFromPluginRegistrations,
   ensureProjectIsIncludedInPluginRegistrations,
@@ -186,7 +185,7 @@ export async function libraryGeneratorInternal(
     );
   }
 
-  if (!schema.skipTsConfig && options.useProjectJson) {
+  if (!schema.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -197,7 +196,6 @@ export async function libraryGeneratorInternal(
   }
 
   if (options.isUsingTsSolutionConfig && options.unitTestRunner !== 'none') {
-    // TODO(leo): move this to the specific test generators
     updateJson(
       tree,
       joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
@@ -222,6 +220,18 @@ export async function libraryGeneratorInternal(
 
   if (!options.skipFormat) {
     await formatFiles(tree);
+  }
+
+  if (
+    options.isUsingTsSolutionConfig &&
+    options.projectPackageManagerWorkspaceState !== 'included'
+  ) {
+    tasks.push(
+      getProjectPackageManagerWorkspaceStateWarningTask(
+        options.projectPackageManagerWorkspaceState,
+        tree.root
+      )
+    );
   }
 
   if (options.publishable) {
@@ -594,12 +604,6 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       };
       return json;
     });
-  } else if (
-    (!options.bundler || options.bundler === 'none') &&
-    options.projectRoot !== '.' &&
-    options.useProjectJson
-  ) {
-    tree.delete(packageJsonPath);
   }
 
   if (options.minimal && !(options.projectRoot === '.')) {
@@ -883,23 +887,18 @@ async function normalizeOptions(
 
   options.minimal ??= false;
 
-  // We generate a project.json file if the user has opted out of the TS plugin
-  // or if the project is not in the package manager workspaces' configuration.
-  // TODO(leo): log a warning if the user explicitly sets useProjectJson to true
-  // and the project is not in the workspaces config. Also, consider automatically
-  // adding the project to the workspaces config if it's not there.
-  // TODO(leo): if the library root is not in workspaces but user has workspaces enabled, this should throw or warn -- or provide a way to remedy.
-  /// We should not just add to `compilerOptions.paths`
-  options.useProjectJson ??= hasPlugin
-    ? !isProjectInPackageManagerWorkspaces(tree, projectRoot)
-    : true;
-
-  // If there is no root tsconfig file and we're meant to add the TS plugin,
-  // we'll generate a TS solution config. Otherwise, we check if the workspace
-  // is already setup with a TS solution config.
+  // If the TS plugin is used or meant to be added and there is no root tsconfig
+  // file, we'll generate it. Otherwise, we check if the workspace is already
+  // setup with a TS solution config.
   const isUsingTsSolutionConfig =
-    (!getRootTsConfigFileName(tree) && addTsPlugin) ||
-    isWorkspaceSetupWithTsSolution(tree);
+    hasPlugin &&
+    (!getRootTsConfigFileName(tree) || isWorkspaceSetupWithTsSolution(tree));
+
+  const projectPackageManagerWorkspaceState =
+    getProjectPackageManagerWorkspaceState(tree, projectRoot);
+
+  // We default to generate a project.json file if the new setup is not being used
+  options.useProjectJson ??= !isUsingTsSolutionConfig;
 
   return {
     ...options,
@@ -911,25 +910,8 @@ async function normalizeOptions(
     importPath,
     hasPlugin,
     isUsingTsSolutionConfig,
+    projectPackageManagerWorkspaceState,
   };
-}
-
-function isProjectInPackageManagerWorkspaces(
-  tree: Tree,
-  projectRoot: string
-): boolean {
-  if (!isWorkspacesEnabled(detectPackageManager(tree.root), tree.root)) {
-    return false;
-  }
-
-  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
-    tree.root,
-    (path) => readJson(tree, path, { expectComments: true })
-  );
-
-  return patterns.some((p) =>
-    minimatch(joinPathFragments(projectRoot, 'package.json'), p)
-  );
 }
 
 function addProjectDependencies(
