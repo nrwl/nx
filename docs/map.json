@@ -2637,6 +2637,19 @@
           ]
         },
         {
+          "name": "powerpack-shared-fs-cache",
+          "id": "powerpack-shared-fs-cache",
+          "description": "powerpack-shared-fs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-shared-fs-cache",
+              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+            }
+          ]
+        },
+        {
           "name": "gradle",
           "id": "gradle",
           "description": "Gradle package.",

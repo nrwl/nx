@@ -46,25 +46,11 @@ access to all the previously created Nx cache artifacts. Hence, it is plausible 
 single task hash - to be accessed without leaving any trace. This is feasible due to the network drive's capability to
 allow overwrites.
 
-Instead of sharing the network drive, we highly recommend you to implement the `RemoteCache` interface.
-
-## Implementing Remote Cache Interface
-
-This is the interface:
-
-```typescript
-interface RemoteCache {
-  retrieve(hash: string, cachePath: string);
-
-  store(hash: string, cachePath: string);
-}
-```
-
-> You will need to wrap the default tasks runner to provide the remote cache implementation.
+If you decide to use a shared network drive for your remote cache anyway, [activate powerpack](/powerpack) and use the [`@nx/powerpack-shared-fs-cache`](/nx-api/powerpack-shared-fs-cache) plugin to ensure that the task metadata and project graph information is correctly associated with the file artifacts.
 
 ## How Nx Cloud Makes Sure Sharing Cache is Safe
 
-The Nx Cloud runner provides an implementation of `RemoteCache` which does the following things making sharing the cache safe:
+The Nx Cloud runner does the following things to make sharing the cache safe:
 
 1. **Immutable Artifacts:** Nx Cloud allows you to create and store new artifacts without the ability to override the
    existing ones. This prevents any possibility of poisoning an existing artifact. This is achieved by managing the

@@ -10672,6 +10672,23 @@
         "name": "powerpack-shared-fs-cache",
         "children": [
           {
+            "id": "documents",
+            "path": "/nx-api/powerpack-shared-fs-cache/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "generators",
             "path": "/nx-api/powerpack-shared-fs-cache/generators",
             "name": "generators",

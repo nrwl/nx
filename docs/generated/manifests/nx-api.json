@@ -3618,7 +3618,19 @@
     "name": "powerpack-shared-fs-cache",
     "packageName": "@nx/powerpack-shared-fs-cache",
     "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
-    "documents": {},
+    "documents": {
+      "/nx-api/powerpack-shared-fs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+      }
+    },
     "root": "/libs/nx-packages/powerpack-shared-fs-cache",
     "source": "/libs/nx-packages/powerpack-shared-fs-cache/src",
     "executors": {},

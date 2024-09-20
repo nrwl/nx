@@ -142,7 +142,7 @@ export function LinkCard({
             (frameworkIcons[icon as Framework]?.image ||
               callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
               callIfFunction(
-                (heroIcons[icon as keyof typeof heroIcons] as any).render
+                (heroIcons[icon as keyof typeof heroIcons] as any)?.render
               ))}
         </div>
       )}

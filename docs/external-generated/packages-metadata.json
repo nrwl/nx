@@ -110,7 +110,19 @@
   },
   {
     "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+      }
+    ],
     "executors": [],
     "generators": [
       {

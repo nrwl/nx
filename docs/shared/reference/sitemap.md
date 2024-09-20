@@ -778,5 +778,7 @@
     - [generators](/nx-api/powerpack-s3-cache/generators)
       - [init](/nx-api/powerpack-s3-cache/generators/init)
   - [powerpack-shared-fs-cache](/nx-api/powerpack-shared-fs-cache)
+    - [documents](/nx-api/powerpack-shared-fs-cache/documents)
+      - [Overview](/nx-api/powerpack-shared-fs-cache/documents/overview)
     - [generators](/nx-api/powerpack-shared-fs-cache/generators)
       - [init](/nx-api/powerpack-shared-fs-cache/generators/init)

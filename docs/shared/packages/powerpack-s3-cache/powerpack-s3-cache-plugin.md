@@ -3,8 +3,10 @@ title: Overview of the Nx powerpack-s3-cache Plugin
 description: The powerpack-s3-cache Nx plugin enables you to use an AWS S3 bucket to host your remote cache instead of Nx Cloud
 ---
 
+The `@nx/powerpack-s3-cache` plugin enables you to use an AWS S3 bucket instead of Nx Cloud to host your remote cache.
+
 {% callout title="This plugin requires an active Nx Powerpack license" %}
-In order to use `@nx/powerpack-owners`, you need to have an active Powerpack license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
+In order to use `@nx/powerpack-s3-cache`, you need to have an active Powerpack license. If you don't have a license or it has expired, your cache will no longer be shared and each machine will use its local cache.
 {% /callout %}
 
 ## Setup
@@ -15,7 +17,7 @@ In order to use `@nx/powerpack-owners`, you need to have an active Powerpack lic
 2. Install the package
 
 ```shell
-nx add @nx/powerpack-owners
+nx add @nx/powerpack-s3-cache
 ```
 
 ### 2. Authenticate with AWS
