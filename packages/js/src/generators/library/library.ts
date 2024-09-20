@@ -75,8 +75,6 @@ export async function libraryGenerator(
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
     useProjectJson: true,
-    linter: 'eslint',
-    unitTestRunner: schema.bundler === 'vite' ? 'vitest' : 'jest',
     ...schema,
   });
 }
@@ -687,6 +685,7 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   const addTsPlugin =
     options.addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
+  // is going to be added or it's already there
   const hasPlugin =
     addTsPlugin ||
     nxJson.plugins?.some((p) =>
@@ -719,52 +718,109 @@ async function normalizeOptions(
         { bundler: 'tsc' }
       ).then(({ bundler }) => bundler);
     }
-  } else if (options.bundler === undefined && options.compiler === undefined) {
-    options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(
+
+    options.linter ??= await promptWhenInteractive<{
+      linter: 'none' | 'eslint';
+    }>(
       {
         type: 'select',
-        name: 'bundler',
-        message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
-        choices: [
-          { name: 'swc' },
-          { name: 'tsc' },
-          { name: 'rollup' },
-          { name: 'vite' },
-          { name: 'esbuild' },
-          { name: 'none' },
-        ],
-        initial: 1,
+        name: 'linter',
+        message: `Which linter would you like to use?`,
+        choices: [{ name: 'none' }, { name: 'eslint' }],
+        initial: 0,
       },
-      { bundler: 'tsc' }
-    ).then(({ bundler }) => bundler);
+      { linter: 'none' }
+    ).then(({ linter }) => linter);
+
+    options.unitTestRunner ??= await promptWhenInteractive<{
+      unitTestRunner: 'none' | 'jest' | 'vitest';
+    }>(
+      {
+        type: 'select',
+        name: 'linter',
+        message: `Which unit test runner would you like to use?`,
+        choices: [{ name: 'none' }, { name: 'jest' }, { name: 'vitest' }],
+        initial: 0,
+      },
+      { unitTestRunner: 'none' }
+    ).then(({ unitTestRunner }) => unitTestRunner);
   } else {
-    /**
-     * We are deprecating the compiler and the buildable options.
-     * However, we want to keep the existing behavior for now.
-     *
-     * So, if the user has not provided a bundler, we will use the compiler option, if any.
-     *
-     * If the user has not provided a bundler and no compiler, but has set buildable to true,
-     * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
-     * and no compiler was provided.
-     *
-     * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
-     * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
-     *
-     * If it's publishable, we need to build the code before publishing it, so again
-     * we default to `tsc`. In the previous version of this, it would set `buildable` to true
-     * and that would default to `tsc`.
-     *
-     * In the past, the only way to get a non-buildable library was to set buildable to false.
-     * Now, the only way to get a non-buildble library is to set bundler to none.
-     * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
-     */
+    if (options.bundler === undefined && options.compiler === undefined) {
+      options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(
+        {
+          type: 'select',
+          name: 'bundler',
+          message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
+          choices: [
+            { name: 'swc' },
+            { name: 'tsc' },
+            { name: 'rollup' },
+            { name: 'vite' },
+            { name: 'esbuild' },
+            { name: 'none' },
+          ],
+          initial: 1,
+        },
+        { bundler: 'tsc' }
+      ).then(({ bundler }) => bundler);
+    } else {
+      /**
+       * We are deprecating the compiler and the buildable options.
+       * However, we want to keep the existing behavior for now.
+       *
+       * So, if the user has not provided a bundler, we will use the compiler option, if any.
+       *
+       * If the user has not provided a bundler and no compiler, but has set buildable to true,
+       * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
+       * and no compiler was provided.
+       *
+       * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
+       * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
+       *
+       * If it's publishable, we need to build the code before publishing it, so again
+       * we default to `tsc`. In the previous version of this, it would set `buildable` to true
+       * and that would default to `tsc`.
+       *
+       * In the past, the only way to get a non-buildable library was to set buildable to false.
+       * Now, the only way to get a non-buildble library is to set bundler to none.
+       * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
+       */
 
-    options.bundler ??= options.compiler;
+      options.bundler ??= options.compiler;
+    }
+
+    options.linter ??= await promptWhenInteractive<{
+      linter: 'none' | 'eslint';
+    }>(
+      {
+        type: 'select',
+        name: 'linter',
+        message: `Which linter would you like to use?`,
+        choices: [{ name: 'eslint' }, { name: 'none' }],
+        initial: 0,
+      },
+      { linter: 'eslint' }
+    ).then(({ linter }) => linter);
+
+    options.unitTestRunner ??= await promptWhenInteractive<{
+      unitTestRunner: 'none' | 'jest' | 'vitest';
+    }>(
+      {
+        type: 'select',
+        name: 'linter',
+        message: `Which unit test runner would you like to use?`,
+        choices: [{ name: 'jest' }, { name: 'vitest' }, { name: 'none' }],
+        initial: 0,
+      },
+      { unitTestRunner: undefined }
+    ).then(({ unitTestRunner }) => unitTestRunner);
+
+    if (!options.unitTestRunner && options.bundler === 'vite') {
+      options.unitTestRunner = 'vitest';
+    } else if (!options.unitTestRunner && options.config !== 'npm-scripts') {
+      options.unitTestRunner = 'jest';
+    }
   }
-
-  options.linter ??= 'none';
-  options.unitTestRunner ??= 'none';
 
   // ensure programmatic runs have an expected default
   if (!options.config) {

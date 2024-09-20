@@ -315,6 +315,10 @@ async function createReadme(
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
     isJsStandalone: preset === Preset.TsStandalone,
+    isTsPreset: preset === Preset.TS,
+    isUsingNewTsSolutionSetup:
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      process.env.NX_ADD_TS_PLUGIN === 'true',
     isEmptyRepo: !appName,
     appName,
     generateAppCmd: presetInfo.generateAppCmd,
