@@ -302,7 +302,7 @@ export class Cache {
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
           if (
-            access(src)
+            await access(src)
               .then(() => true)
               .catch(() => false)
           ) {
@@ -344,7 +344,7 @@ export class Cache {
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
           if (
-            access(cached)
+            await access(cached)
               .then(() => true)
               .catch(() => false)
           ) {
@@ -423,7 +423,7 @@ export class Cache {
     const td = join(this.cachePath, task.hash);
 
     if (
-      access(tdCommit)
+      await access(tdCommit)
         .then(() => true)
         .catch(() => false)
     ) {

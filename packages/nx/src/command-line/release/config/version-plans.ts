@@ -54,7 +54,7 @@ const versionPlansDirectory = join('.nx', 'version-plans');
 
 export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   const versionPlansPath = getVersionPlansAbsolutePath();
-  const versionPlansPathExists = access(versionPlansPath)
+  const versionPlansPathExists = await access(versionPlansPath)
     .then(() => true)
     .catch(() => false);
   if (!versionPlansPathExists) {
