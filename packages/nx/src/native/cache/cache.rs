@@ -26,6 +26,7 @@ pub struct NxCache {
     workspace_root: PathBuf,
     cache_path: PathBuf,
     db: External<Connection>,
+    link_task_details: bool,
 }
 
 #[napi]
@@ -35,6 +36,7 @@ impl NxCache {
         workspace_root: String,
         cache_path: String,
         db_connection: External<Connection>,
+        link_task_details: Option<bool>,
     ) -> anyhow::Result<Self> {
         let cache_path = PathBuf::from(&cache_path);
 
@@ -46,6 +48,7 @@ impl NxCache {
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
+            link_task_details: link_task_details.unwrap_or(true)
         };
 
         r.setup()?;
@@ -54,9 +57,8 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        self.db
-            .execute_batch(
-                "BEGIN;
+        let query = if self.link_task_details {
+            "BEGIN;
                 CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
@@ -64,8 +66,23 @@ impl NxCache {
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (hash) REFERENCES task_details (hash)
                 );
-            COMMIT;
-            ",
+                COMMIT;
+            "
+        } else {
+            "BEGIN;
+                CREATE TABLE IF NOT EXISTS cache_outputs (
+                    hash    TEXT PRIMARY KEY NOT NULL,
+                    code   INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                COMMIT;
+            "
+        };
+
+        self.db
+            .execute_batch(
+                query,
             )
             .map_err(anyhow::Error::from)
     }
@@ -115,6 +132,7 @@ impl NxCache {
         outputs: Vec<String>,
         code: i16,
     ) -> anyhow::Result<()> {
+        trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
 
         // Remove the task directory
