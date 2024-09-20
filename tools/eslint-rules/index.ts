@@ -1,4 +1,8 @@
 import {
+  RULE_NAME as ensurePnpmLockVersionName,
+  rule as ensurePnpmLockVersion,
+} from './rules/ensure-pnpm-lock-version';
+import {
   RULE_NAME as validCommandObjectName,
   rule as validCommandObject,
 } from './rules/valid-command-object';
@@ -34,5 +38,6 @@ module.exports = {
   rules: {
     [validSchemaDescriptionName]: validSchemaDescription,
     [validCommandObjectName]: validCommandObject,
+    [ensurePnpmLockVersionName]: ensurePnpmLockVersion,
   },
 };
