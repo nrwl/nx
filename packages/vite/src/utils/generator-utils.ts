@@ -9,12 +9,13 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { isUsingTypeScriptPlugin } from '@nx/js/src/utils/typescript-plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -362,10 +363,14 @@ export function createOrEditViteConfig(
     ? `${projectRoot}/vitest.config.ts`
     : `${projectRoot}/vite.config.ts`;
 
-  const buildOutDir =
-    projectRoot === '.'
-      ? `./dist/${options.project}`
-      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
+  const isUsingTsPlugin = isUsingTypeScriptPlugin(tree);
+  const buildOutDir = isUsingTsPlugin
+    ? './dist'
+    : joinPathFragments(
+        offsetFromRoot(projectRoot),
+        'dist',
+        projectRoot === '.' ? options.project : projectRoot
+      );
 
   const buildOption = onlyVitest
     ? ''

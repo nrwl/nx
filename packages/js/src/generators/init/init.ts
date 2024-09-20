@@ -17,6 +17,7 @@ import { join } from 'path';
 import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { generatePrettierSetup } from '../../utils/prettier';
+import { isUsingTypeScriptPlugin } from '../../utils/typescript-plugin';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   nxVersion,
@@ -68,9 +69,11 @@ export async function initGenerator(
   tree: Tree,
   schema: InitSchema
 ): Promise<GeneratorCallback> {
+  const isUsingTsPlugin = isUsingTypeScriptPlugin(tree);
+  schema.formatter ??= isUsingTsPlugin ? 'none' : 'prettier';
+
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
-    formatter: 'prettier',
     ...schema,
   });
 }

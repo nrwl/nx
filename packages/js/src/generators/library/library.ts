@@ -33,6 +33,7 @@ import { dirname, join } from 'path';
 import type { CompilerOptions, System } from 'typescript';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { isUsingTypeScriptPlugin } from '../../utils/typescript-plugin';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import {
@@ -682,21 +683,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
-  const nxJson = readNxJson(tree);
-
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  const addTsPlugin =
-    options.addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
-  // is going to be added or it's already there
-  const hasPlugin =
-    addTsPlugin ||
-    nxJson.plugins?.some((p) =>
-      typeof p === 'string'
-        ? p === '@nx/js/typescript'
-        : p.plugin === '@nx/js/typescript'
-    );
+  const hasPlugin = isUsingTypeScriptPlugin(tree);
 
   if (hasPlugin) {
     if (options.bundler === 'esbuild' || options.bundler === 'swc') {
@@ -1256,16 +1243,26 @@ function determineEntryFields(
       return {
         // Since we're publishing both formats, skip the type field.
         // Bundlers or Node will determine the entry point to use.
-        main: './index.cjs',
-        module: './index.js',
+        main: options.isUsingTsSolutionConfig
+          ? './dist/index.cjs'
+          : './index.cjs',
+        module: options.isUsingTsSolutionConfig
+          ? './dist/index.js'
+          : './index.js',
       };
     case 'vite':
       return {
         // Since we're publishing both formats, skip the type field.
         // Bundlers or Node will determine the entry point to use.
-        main: './index.js',
-        module: './index.mjs',
-        typings: './index.d.ts',
+        main: options.isUsingTsSolutionConfig
+          ? './dist/index.js'
+          : './index.js',
+        module: options.isUsingTsSolutionConfig
+          ? './dist/index.mjs'
+          : './index.mjs',
+        typings: options.isUsingTsSolutionConfig
+          ? './dist/index.d.ts'
+          : './index.d.ts',
       };
     case 'esbuild':
       // For libraries intended for Node, use CJS.

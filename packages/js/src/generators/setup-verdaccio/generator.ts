@@ -5,13 +5,13 @@ import {
   generateFiles,
   ProjectConfiguration,
   readJson,
-  readNxJson,
   TargetConfiguration,
   Tree,
   updateJson,
 } from '@nx/devkit';
 import * as path from 'path';
 import { SetupVerdaccioGeneratorSchema } from './schema';
+import { isUsingTypeScriptPlugin } from '../../utils/typescript-plugin';
 import { verdaccioVersion } from '../../utils/versions';
 import { execSync } from 'child_process';
 
@@ -86,22 +86,3 @@ export async function setupVerdaccio(
 }
 
 export default setupVerdaccio;
-
-function isUsingTypeScriptPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  const addTsPlugin = addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
-  // is going to be added or it's already there
-  const hasPlugin =
-    addTsPlugin ||
-    nxJson.plugins?.some((p) =>
-      typeof p === 'string'
-        ? p === '@nx/js/typescript'
-        : p.plugin === '@nx/js/typescript'
-    );
-
-  return hasPlugin;
-}
