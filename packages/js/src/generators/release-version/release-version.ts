@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
+import { prompt } from 'enquirer';
 import { exec } from 'node:child_process';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -281,11 +282,43 @@ To fix this you will either need to add a package.json file at that location, or
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                logger.buffer(
-                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
-                );
-                currentVersion = currentVersionFromDisk;
-                currentVersionResolvedFromFallback = true;
+                if (!currentVersionFromDisk) {
+                  const unresolvableCurrentVersionError = new Error(
+                    `Unable to resolve the current version from git tag using pattern "${releaseTagPattern}" and there is no version on disk to fall back to. This is invalid with conventional commits because the new version is determined by relatively bumping the current version. To resolve this, you should set an initial git tag on a relevant commit, or set an appropriate value for "version" in ${packageJsonPath}`
+                  );
+                  if (process.env.CI === 'true') {
+                    // We can't prompt in CI, so error immediately
+                    throw unresolvableCurrentVersionError;
+                  }
+                  try {
+                    const reply = await prompt<{ useZero: boolean }>([
+                      {
+                        name: 'useZero',
+                        message: `\n${chalk.yellow(
+                          `Warning: Unable to resolve the current version for "${projectName}" from git tag using pattern "${releaseTagPattern}" and there is no version on disk to fall back to. This is invalid with conventional commits because the new version is determined by relatively bumping the current version.\n\nTo resolve this, you should set an initial git tag on a relevant commit, or set an appropriate value for "version" in ${packageJsonPath}`
+                        )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
+                        type: 'confirm',
+                        initial: false,
+                      },
+                    ]);
+                    if (!reply.useZero) {
+                      // Throw any error to skip the fallback to 0.0.0, may as well use the one we already have
+                      throw unresolvableCurrentVersionError;
+                    }
+                    currentVersion = '0.0.0';
+                    logger.buffer(
+                      `📄 Forcibly resolved the current version as "${currentVersion}" based on your response to the prompt above.`
+                    );
+                  } catch {
+                    throw unresolvableCurrentVersionError;
+                  }
+                } else {
+                  logger.buffer(
+                    `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
+                  );
+                  currentVersion = currentVersionFromDisk;
+                  currentVersionResolvedFromFallback = true;
+                }
               } else {
                 throw new Error(
                   `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
