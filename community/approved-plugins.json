@@ -498,5 +498,10 @@
     "name": "nx-github-pages",
     "description": "A small Nx plugin to make deploying static projects to GitHub Pages easy.",
     "url": "https://github.com/agentender/nx-github-pages"
+  },
+  {
+    "name": "nx-solhint",
+    "description": "Solhint generators and inferred tasks for Nx",
+    "url": "https://github.com/juliangsibecas/nx-solhint"
   }
 ]
