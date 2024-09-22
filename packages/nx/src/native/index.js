@@ -1,5 +1,5 @@
 const { join, basename } = require('path');
-const { copyFileSync, existsSync, mkdirSync } = require('fs');
+const { copyFileSync, existsSync, mkdirSync, constants } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
@@ -75,10 +75,21 @@ Module._load = function (request, parent, isMain) {
     if (existsSync(tmpFile)) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
-    if (!existsSync(nativeFileCacheLocation)) {
-      mkdirSync(nativeFileCacheLocation, { recursive: true });
+
+    mkdirSync(nativeFileCacheLocation, { recursive: true });
+
+    try {
+      copyFileSync(nativeLocation, tmpFile, constants.COPYFILE_EXCL);
+    } catch (e) {
+      if (e.code === 'EEXIST') {
+        // Another process wrote to the file at the same time.
+        // This can happen when multiple instances of the same nx versions are being installed in parallel.
+        // We can ignore this error because the other process is writing the same file content, but won over us.
+      } else {
+        throw e;
+      }
     }
-    copyFileSync(nativeLocation, tmpFile);
+    
     return originalLoad.apply(this, [tmpFile, parent, isMain]);
   } else {
     // call the original _load function for everything else
