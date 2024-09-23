@@ -115,7 +115,8 @@ function collectPackagesFromExports(
   }[]
 ): void {
   for (const [relativeEntryPoint, exportOptions] of Object.entries(exports)) {
-    if (exportOptions?.['default']?.search(/\.(js|mjs|cjs)$/)) {
+    const exportDefault = exportOptions?.['default']?.search ? exportOptions?.['default'] : exportOptions?.['default']?.['default']
+    if (exportDefault?.search(/\.(js|mjs|cjs)$/)) {
       let entryPointName = joinPathFragments(pkgName, relativeEntryPoint);
       if (entryPointName.endsWith('.json')) {
         entryPointName = dirname(entryPointName);
