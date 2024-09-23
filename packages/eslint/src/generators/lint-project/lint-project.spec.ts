@@ -50,10 +50,11 @@ describe('@nx/eslint:lint-project', () => {
       linter: Linter.EsLint,
       project: 'test-lib',
       setParserOptionsProject: false,
+      skipFormat: true,
     });
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "const nx = require('@nx/eslint-plugin');
+      "const nx = require("@nx/eslint-plugin");
 
       module.exports = [
         ...nx.configs['flat/base'],
@@ -79,12 +80,6 @@ describe('@nx/eslint:lint-project', () => {
               },
             ],
           },
-        },
-        {
-          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-          // Override or add rules here
-          rules: {},
-        },
       ];
       "
     `);

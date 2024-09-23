@@ -155,7 +155,8 @@ module.exports = [
         });
 
         module.exports = [
-        ...compat.extends("plugin:playwright/recommend"),
+            ...compat.extends("plugin:playwright/recommend"),
+
           ...baseConfig,
           {
             files: [
@@ -213,7 +214,8 @@ module.exports = [
         });
 
         module.exports = [
-        ...fixupConfigRules(compat.extends("plugin:playwright/recommend")),
+            ...fixupConfigRules(compat.extends("plugin:playwright/recommend")),
+
           ...baseConfig,
           {
             files: [
@@ -275,11 +277,16 @@ module.exports = [
         });
 
         module.exports = [
-        ...compat.extends("plugin:some-plugin1", "plugin:some-plugin2"),
-        ...fixupConfigRules(compat.extends("incompatible-plugin1")),
-        ...fixupConfigRules(compat.extends("incompatible-plugin2")),
-        ...compat.extends("plugin:some-plugin3"),
-        ...fixupConfigRules(compat.extends("incompatible-plugin3")),
+            ...compat.extends("plugin:some-plugin1", "plugin:some-plugin2"),
+
+            ...fixupConfigRules(compat.extends("incompatible-plugin1")),
+
+            ...fixupConfigRules(compat.extends("incompatible-plugin2")),
+
+            ...compat.extends("plugin:some-plugin3"),
+
+            ...fixupConfigRules(compat.extends("incompatible-plugin3")),
+
           ...baseConfig,
           {
             files: [
@@ -336,7 +343,8 @@ module.exports = [
         });
 
         module.exports = [
-        ...compat.extends("plugin:playwright/recommend"),
+            ...compat.extends("plugin:playwright/recommend"),
+
           ...baseConfig,
           {
             files: [
@@ -433,39 +441,39 @@ module.exports = [
 
         module.exports = [
           ...baseConfig,
-        ...compat.config({ extends: [
-                "plugin:@nx/angular",
-                "plugin:@angular-eslint/template/process-inline-templates"
-            ] }).map(config => ({
-            ...config,
-            files: ["**/*.ts"],
-            rules: {
-                ...config.rules,
-                "@angular-eslint/directive-selector": [
-                    "error",
-                    {
-                        type: "attribute",
-                        prefix: "myOrg",
-                        style: "camelCase"
-                    }
-                ],
-                "@angular-eslint/component-selector": [
-                    "error",
-                    {
-                        type: "element",
-                        prefix: "my-org",
-                        style: "kebab-case"
-                    }
-                ]
-            }
-        })),
-        ...compat.config({ extends: ["plugin:@nx/angular-template"] }).map(config => ({
-            ...config,
-            files: ["**/*.html"],
-            rules: {
-                ...config.rules
-            }
-        })),
+            ...compat.config({ extends: [
+                    "plugin:@nx/angular",
+                    "plugin:@angular-eslint/template/process-inline-templates"
+                ] }).map(config => ({
+                ...config,
+                files: ["**/*.ts"],
+                rules: {
+                    ...config.rules,
+                    "@angular-eslint/directive-selector": [
+                        "error",
+                        {
+                            type: "attribute",
+                            prefix: "myOrg",
+                            style: "camelCase"
+                        }
+                    ],
+                    "@angular-eslint/component-selector": [
+                        "error",
+                        {
+                            type: "element",
+                            prefix: "my-org",
+                            style: "kebab-case"
+                        }
+                    ]
+                }
+            })),
+            ...compat.config({ extends: ["plugin:@nx/angular-template"] }).map(config => ({
+                ...config,
+                files: ["**/*.html"],
+                rules: {
+                    ...config.rules
+                }
+            })),
         ];"
       `);
     });
