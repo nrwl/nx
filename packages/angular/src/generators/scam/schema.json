@@ -90,12 +90,6 @@
       "default": true,
       "x-priority": "important"
     },
-    "flat": {
-      "type": "boolean",
-      "description": "Create the new files at the top level of the current project.",
-      "default": false,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-    },
     "selector": {
       "type": "string",
       "format": "html-selector",

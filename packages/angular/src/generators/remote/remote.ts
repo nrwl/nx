@@ -14,14 +14,7 @@ import type { Schema } from './schema';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
-export async function remote(tree: Tree, options: Schema) {
-  return await remoteInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
-
-export async function remoteInternal(tree: Tree, schema: Schema) {
+export async function remote(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 
@@ -38,7 +31,6 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
       projectType: 'application',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/angular:remote',
     });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 

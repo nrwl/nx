@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
 import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
 import {
@@ -24,10 +24,10 @@ import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { join, relative } from 'path';
 
-const BUILD_WATCH_FAILED = `[ ${chalk.red(
+const BUILD_WATCH_FAILED = `[ ${pc.red(
   'watch'
 )} ] build finished with errors (see above), watching for changes...`;
-const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
+const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 

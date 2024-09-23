@@ -12,7 +12,6 @@ import { ensureDependencies } from './lib/ensure-dependencies';
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }

@@ -18,7 +18,6 @@ export async function normalizeOptions(
       projectType: 'library',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/remix:library',
     });
 
   const nxJson = readNxJson(tree);

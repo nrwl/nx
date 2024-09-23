@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';

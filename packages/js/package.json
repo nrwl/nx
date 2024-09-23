@@ -47,6 +47,7 @@
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
     "detect-port": "^1.5.1",
+    "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",

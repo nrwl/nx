@@ -421,43 +421,6 @@ describe('MF Remote App Generator', () => {
     });
   });
 
-  describe('--project-name-and-root-format=derived', () => {
-    it('should generate remote', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-      await generateTestRemoteApplication(tree, {
-        name: 'test',
-        port: 4201,
-        projectNameAndRootFormat: 'derived',
-        typescriptConfiguration: false,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      expect(tree.exists('apps/test/webpack.config.js')).toBe(true);
-      expect(readProjectConfiguration(tree, 'test').root).toBe('apps/test');
-    });
-
-    it('should generate remote in a directory', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-      await generateTestRemoteApplication(tree, {
-        name: 'test',
-        port: 4201,
-        directory: 'shared',
-        projectNameAndRootFormat: 'derived',
-        typescriptConfiguration: false,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      expect(tree.exists('apps/shared/test/webpack.config.js')).toBe(true);
-      expect(readProjectConfiguration(tree, 'shared-test').root).toBe(
-        'apps/shared/test'
-      );
-    });
-  });
-
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     let initialPackageJson;

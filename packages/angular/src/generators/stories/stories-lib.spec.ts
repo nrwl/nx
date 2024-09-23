@@ -64,8 +64,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
-        project: libName,
-        path: `${libName}/secondary-entry-point/src/lib`,
+        directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
         skipFormat: true,
       });
 
@@ -181,7 +180,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for scam component', async () => {
       await scamGenerator(tree, {
         name: 'my-scam',
-        project: libName,
+        directory: `${libName}/src/lib/my-scam`,
         skipFormat: true,
       });
 
@@ -195,7 +194,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for inline scam component', async () => {
       await scamGenerator(tree, {
         name: 'my-scam',
-        project: libName,
+        directory: `${libName}/src/lib/my-scam`,
         inlineScam: true,
         skipFormat: true,
       });
@@ -211,7 +210,7 @@ describe('angularStories generator: libraries', () => {
       // add standalone component
       await componentGenerator(tree, {
         name: 'standalone',
-        project: libName,
+        directory: `${libName}/src/lib/standalone`,
         standalone: true,
         skipFormat: true,
       });
@@ -225,8 +224,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-standalone',
-        project: libName,
-        path: `${libName}/secondary-entry-point/src/lib`,
+        directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
         standalone: true,
         skipFormat: true,
       });
@@ -268,8 +266,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
-        project: libName,
-        path: `${libName}/secondary-entry-point/src/lib`,
+        directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
         skipFormat: true,
       });
 

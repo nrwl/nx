@@ -34,7 +34,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       standalone: false,
     });
 
@@ -80,7 +80,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       skipTests: true,
       standalone: false,
       skipFormat: true,
@@ -116,7 +116,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       inlineTemplate: true,
       standalone: false,
       skipFormat: true,
@@ -155,7 +155,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       inlineStyle: true,
       standalone: false,
       skipFormat: true,
@@ -194,7 +194,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       style: 'none',
       standalone: false,
       skipFormat: true,
@@ -241,7 +241,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       export: true,
       standalone: false,
       skipFormat: true,
@@ -282,7 +282,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       export: true,
       skipFormat: true,
     });
@@ -324,7 +324,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       export: false,
       standalone: false,
       skipFormat: true,
@@ -367,7 +367,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       export: false,
       skipFormat: true,
     });
@@ -409,7 +409,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       skipImport: true,
       standalone: false,
       skipFormat: true,
@@ -451,7 +451,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       export: true,
       standalone: false,
       skipFormat: true,
@@ -492,7 +492,7 @@ describe('component Generator', () => {
     // ACT
     await componentGenerator(tree, {
       name: 'example',
-      project: 'lib1',
+      directory: 'libs/lib1/src/lib/example',
       export: true,
       standalone: false,
       skipFormat: true,
@@ -501,174 +501,6 @@ describe('component Generator', () => {
     // ASSERT
     const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
     expect(indexSource).toBe('');
-  });
-
-  describe('--flat', () => {
-    it('should create the component correctly and export it in the entry point', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      addProjectConfiguration(tree, 'lib1', {
-        projectType: 'library',
-        sourceRoot: 'libs/lib1/src',
-        root: 'libs/lib1',
-      });
-      tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
-        `
-    import { NgModule } from '@angular/core';
-    
-    @NgModule({
-      declarations: [],
-      exports: []
-    })
-    export class LibModule {}`
-      );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
-
-      // ACT
-      await componentGenerator(tree, {
-        name: 'example',
-        project: 'lib1',
-        flat: true,
-        export: true,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      // ASSERT
-      const componentSource = tree.read(
-        'libs/lib1/src/lib/example.component.ts',
-        'utf-8'
-      );
-      expect(componentSource).toMatchSnapshot();
-
-      const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
-      expect(indexSource).toContain(`export * from './lib/example.component';`);
-    });
-
-    it('should create the component correctly and not export it when "export=false"', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      addProjectConfiguration(tree, 'lib1', {
-        projectType: 'library',
-        sourceRoot: 'libs/lib1/src',
-        root: 'libs/lib1',
-      });
-      tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
-        `
-    import { NgModule } from '@angular/core';
-    
-    @NgModule({
-      declarations: [],
-      exports: []
-    })
-    export class LibModule {}`
-      );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
-
-      // ACT
-      await componentGenerator(tree, {
-        name: 'example',
-        project: 'lib1',
-        flat: true,
-        export: false,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      // ASSERT
-      const componentSource = tree.read(
-        'libs/lib1/src/lib/example.component.ts',
-        'utf-8'
-      );
-      expect(componentSource).toMatchSnapshot();
-
-      const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
-      expect(indexSource).not.toContain(
-        `export * from "./lib/example.component";`
-      );
-    });
-  });
-
-  describe('--path', () => {
-    it('should create the component correctly and export it in the entry point', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      addProjectConfiguration(tree, 'lib1', {
-        projectType: 'library',
-        sourceRoot: 'libs/lib1/src',
-        root: 'libs/lib1',
-      });
-      tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
-        `
-    import { NgModule } from '@angular/core';
-    
-    @NgModule({
-      declarations: [],
-      exports: []
-    })
-    export class LibModule {}`
-      );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
-
-      // ACT
-      await componentGenerator(tree, {
-        name: 'example',
-        project: 'lib1',
-        path: 'libs/lib1/src/lib/mycomp',
-        export: true,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      // ASSERT
-      const componentSource = tree.read(
-        'libs/lib1/src/lib/mycomp/example/example.component.ts',
-        'utf-8'
-      );
-      expect(componentSource).toMatchSnapshot();
-
-      const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
-      expect(indexSource).toContain(
-        `export * from './lib/mycomp/example/example.component';`
-      );
-    });
-
-    it('should throw if the path specified is not under the project root', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      addProjectConfiguration(tree, 'lib1', {
-        projectType: 'library',
-        sourceRoot: 'libs/lib1/src',
-        root: 'libs/lib1',
-      });
-      tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
-        `
-    import { NgModule } from '@angular/core';
-    
-    @NgModule({
-      declarations: [],
-      exports: []
-    })
-    export class LibModule {}`
-      );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
-
-      // ACT & ASSERT
-      await expect(
-        componentGenerator(tree, {
-          name: 'example',
-          project: 'lib1',
-          path: 'apps/app1/src/mycomp',
-          export: false,
-          standalone: false,
-          skipFormat: true,
-        })
-      ).rejects.toThrow();
-    });
   });
 
   describe('--module', () => {
@@ -708,7 +540,7 @@ describe('component Generator', () => {
         // ACT
         await componentGenerator(tree, {
           name: 'example',
-          project: 'lib1',
+          directory: 'libs/lib1/src/lib/example',
           module,
           export: true,
           standalone: false,
@@ -751,9 +583,8 @@ export class LibModule {}
       // ACT
       await componentGenerator(tree, {
         name: 'example',
-        project: 'shared-ui',
+        directory: 'libs/shared/ui/src/lib/example',
         export: true,
-        flat: false,
         standalone: false,
         skipFormat: true,
       });
@@ -801,7 +632,7 @@ export class LibModule {}
       // ACT
       await componentGenerator(tree, {
         name: 'example',
-        project: 'lib1',
+        directory: 'libs/lib1/src/lib/example',
         module: 'not-exported',
         export: true,
         standalone: false,
@@ -839,8 +670,7 @@ export class LibModule {}
       await expect(
         componentGenerator(tree, {
           name: 'example',
-          project: 'lib1',
-          path: 'libs/lib1/src/lib',
+          directory: 'libs/lib1/src/lib/example',
           module: 'not-found',
           standalone: false,
           skipFormat: true,
@@ -883,8 +713,7 @@ export class LibModule {}
       await expect(
         componentGenerator(tree, {
           name: 'example',
-          project: 'lib1',
-          path: 'libs/lib1/src/lib',
+          directory: 'libs/lib1/src/lib/example',
           standalone: false,
           skipFormat: true,
         })
@@ -1039,8 +868,7 @@ export class LibModule {}
       // ACT
       await componentGenerator(tree, {
         name: 'example',
-        project: 'lib1',
-        path: 'libs/lib1/secondary/src/lib',
+        directory: 'libs/lib1/secondary/src/lib/example',
         export: true,
         standalone: false,
         skipFormat: true,
@@ -1101,7 +929,7 @@ export class LibModule {}
       // ACT
       await componentGenerator(tree, {
         name: 'example',
-        project: 'lib1',
+        directory: 'libs/lib1/secondary/src/lib/example',
         export: true,
         standalone: false,
         skipFormat: true,
@@ -1139,7 +967,7 @@ export class LibModule {}
 
       await componentGenerator(tree, {
         name: 'example',
-        project: 'lib1',
+        directory: 'libs/lib1/src/lib/example',
         inlineStyle: true,
         standalone: false,
         skipFormat: true,

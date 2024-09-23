@@ -31,7 +31,7 @@ describe('component', () => {
   it('should generate component in components directory for application', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      project: appName,
+      directory: `${appName}/components/hello`,
       style: 'css',
     });
 
@@ -45,7 +45,7 @@ describe('component', () => {
   it('should generate component in default directory for library', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      project: libName,
+      directory: `${libName}/src/lib/hello`,
       style: 'css',
     });
 
@@ -57,14 +57,12 @@ describe('component', () => {
   it('should allow directory override', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      project: appName,
-      directory: 'foo',
+      directory: `${appName}/foo/hello`,
       style: 'css',
     });
     await componentGenerator(tree, {
       name: 'world',
-      project: libName,
-      directory: 'bar',
+      directory: `${libName}/src/bar/world`,
       style: 'css',
     });
 
@@ -92,7 +90,6 @@ describe('component', () => {
   it('should work with directory as a part of the component name', async () => {
     await componentGenerator(tree, {
       name: `${libName}/src/btn/btn`,
-      project: appName,
       style: 'css',
       nameAndDirectoryFormat: 'as-provided',
     });

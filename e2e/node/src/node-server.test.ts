@@ -80,19 +80,21 @@ describe('Node Applications + webpack', () => {
     const nestApp = uniq('nest');
 
     beforeAll(() => {
-      runCLI(`generate @nx/node:lib ${testLib1}`);
-      runCLI(`generate @nx/node:lib ${testLib2} --importPath=@acme/test2`);
+      runCLI(`generate @nx/node:lib ${testLib1} --directory=libs/${testLib1}`);
       runCLI(
-        `generate @nx/node:app ${expressApp} --framework=express --port=7000 --no-interactive`
+        `generate @nx/node:lib ${testLib2} --directory=libs/${testLib2} --importPath=@acme/test2`
       );
       runCLI(
-        `generate @nx/node:app ${fastifyApp} --framework=fastify --port=7001 --no-interactive`
+        `generate @nx/node:app ${expressApp} --directory=apps/${expressApp} --framework=express --port=7000 --no-interactive`
       );
       runCLI(
-        `generate @nx/node:app ${koaApp} --framework=koa --port=7002 --no-interactive`
+        `generate @nx/node:app ${fastifyApp} --directory=apps/${fastifyApp} --framework=fastify --port=7001 --no-interactive`
       );
       runCLI(
-        `generate @nx/node:app ${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive`
+        `generate @nx/node:app ${koaApp} --directory=apps/${koaApp} --framework=koa --port=7002 --no-interactive`
+      );
+      runCLI(
+        `generate @nx/node:app ${nestApp} --directory=apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive`
       );
 
       addLibImport(expressApp, testLib1);
@@ -165,7 +167,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = 'docker-express-app'; // needs to be consistent for the Dockerfile snapshot
 
     runCLI(
-      `generate @nx/node:app ${expressApp} --framework=express --docker --no-interactive`
+      `generate @nx/node:app ${expressApp} --framework=express --directory=apps/${expressApp} --docker --no-interactive`
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
@@ -179,10 +181,10 @@ describe('Node Applications + webpack', () => {
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive --port=4444`
+      `generate @nx/node:app ${nodeApp1} --directory=apps/${nodeApp1} --framework=none --no-interactive --port=4444`
     );
     runCLI(
-      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive --port=4445`
+      `generate @nx/node:app ${nodeApp2} --directory=apps/${nodeApp2} --framework=none --no-interactive --port=4445`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];

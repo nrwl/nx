@@ -5,10 +5,5 @@
     "declaration": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"<% if (js) { %>, "src/**/*.js"<% } %>],
-  "exclude": [
-    <% if (hasUnitTestRunner && unitTestRunner === 'jest') { %>"jest.config.ts", 
-    <% } else if (hasUnitTestRunner) { %>"vite.config.ts", 
-    <% } %>"src/**/*.spec.ts", "src/**/*.test.ts"<% if (js) { %>, "src/**/*.spec.js", "src/**/*.test.js"<% } %>
-  ]
+  "include": ["src/**/*.ts"<% if (js) { %>, "src/**/*.js"<% } %>]
 }

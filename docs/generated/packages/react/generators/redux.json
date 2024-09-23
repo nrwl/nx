@@ -1,6 +1,6 @@
 {
   "name": "redux",
-  "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
+  "factory": "./src/generators/redux/redux",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -14,13 +14,6 @@
         "description": "Redux slice name.",
         "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project to add the slice to. If it is an application, then the store configuration will be updated too.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
       },
       "directory": {
         "type": "string",
@@ -50,7 +43,7 @@
   },
   "description": "Create a Redux slice for a project.",
   "aliases": ["slice"],
-  "implementation": "/packages/react/src/generators/redux/redux#reduxGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/redux/redux.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/redux/schema.json",
   "type": "generator"

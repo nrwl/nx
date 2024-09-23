@@ -23,7 +23,6 @@ describe('lib', () => {
     linter: 'eslint',
     testEnvironment: 'jsdom',
     js: false,
-    pascalCaseFiles: false,
     strict: true,
     config: 'project',
   };
@@ -447,31 +446,6 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@acme/core']).toBeDefined();
-      });
-    });
-
-    describe('--pascalCaseFiles', () => {
-      it('should generate files with upper case names', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          pascalCaseFiles: true,
-          projectNameAndRootFormat: 'as-provided',
-        });
-        expect(tree.exists('my-lib/src/lib/MyLib.ts')).toBeTruthy();
-        expect(tree.exists('my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      });
-
-      it('should generate files with upper case names for nested libs as well', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          directory: 'my-dir/my-lib',
-          pascalCaseFiles: true,
-          projectNameAndRootFormat: 'as-provided',
-        });
-        expect(tree.exists('my-dir/my-lib/src/lib/MyLib.ts')).toBeTruthy();
-        expect(tree.exists('my-dir/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
       });
     });
   });

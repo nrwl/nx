@@ -31,7 +31,7 @@ describe('componentCypressSpec generator', () => {
     });
     await componentGenerator(tree, {
       name: 'test-button',
-      project: appName,
+      directory: `${appName}/src/app/test-button`,
       skipFormat: true,
     });
 
