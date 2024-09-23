@@ -16,7 +16,9 @@ describe('Cache', () => {
       force: true,
     });
 
-    const dbConnection = getDbConnection(join(__dirname, 'temp-db'));
+    const dbConnection = getDbConnection({
+      directory: join(__dirname, 'temp-db'),
+    });
 
     taskDetails = new TaskDetails(dbConnection);
 

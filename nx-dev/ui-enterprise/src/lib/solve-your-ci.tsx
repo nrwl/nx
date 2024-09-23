@@ -12,9 +12,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
-import { SectionHeading } from './temp/typography';
 import { BentoGrid, BentoGridItem } from './bento-grid';
 import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function SolveYourCi(): JSX.Element {
   return (

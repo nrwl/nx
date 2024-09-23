@@ -78,6 +78,7 @@ export interface ProjectGraphClientResponse {
   isPartial: boolean;
   errors?: GraphError[];
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
 }
 
 export interface TaskGraphClientResponse {
@@ -773,13 +774,16 @@ async function createProjectGraphAndSourceMapClientResponse(
   let isPartial = false;
   let errors: GraphError[] | undefined;
   let connectedToCloud: boolean | undefined;
+  let disabledTaskSyncGenerators: string[] | undefined;
   try {
     const projectGraphAndSourceMaps =
       await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     projectGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
 
-    connectedToCloud = isNxCloudUsed(readNxJson());
+    const nxJson = readNxJson();
+    connectedToCloud = isNxCloudUsed(nxJson);
+    disabledTaskSyncGenerators = nxJson.sync?.disabledTaskSyncGenerators;
   } catch (e) {
     if (e instanceof ProjectGraphError) {
       projectGraph = e.getPartialProjectGraph();
@@ -820,6 +824,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       sourceMaps,
       errors,
       connectedToCloud,
+      disabledTaskSyncGenerators,
     })
   );
 
@@ -851,6 +856,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       isPartial,
       errors,
       connectedToCloud,
+      disabledTaskSyncGenerators,
     },
     sourceMapResponse: sourceMaps,
   };

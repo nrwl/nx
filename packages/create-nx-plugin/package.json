@@ -30,7 +30,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "create-nx-workspace": "file:../create-nx-workspace",
-    "chalk": "^4.1.0",
+    "picocolors": "^1.1.0",
     "enquirer": "~2.3.6",
     "tslib": "^2.3.0",
     "yargs": "^17.6.2"

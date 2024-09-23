@@ -691,6 +691,9 @@
             {
               "type": "boolean",
               "enum": [false]
+            },
+            {
+              "$ref": "#/definitions/CreateReleaseProviderConfiguration"
             }
           ]
         },
@@ -723,6 +726,24 @@
           "$ref": "#/definitions/ChangelogRenderOptions"
         }
       }
+    },
+    "CreateReleaseProviderConfiguration": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["github-enterprise-server"]
+        },
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the VCS provider instance, e.g. github.example.com"
+        },
+        "apiBaseUrl": {
+          "type": "string",
+          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3`"
+        }
+      },
+      "required": ["provider", "hostname"]
     },
     "NxReleaseVersionPlansConfiguration": {
       "type": "object",

@@ -64,6 +64,16 @@
         ],
         "@nx/workspace/valid-command-object": "error"
       }
+    },
+    {
+      "files": ["pnpm-lock.yaml"],
+      "parser": "./tools/eslint-rules/raw-file-parser.js",
+      "rules": {
+        "@nx/workspace/ensure-pnpm-lock-version": [
+          "error",
+          { "version": "9.0" }
+        ]
+      }
     }
   ]
 }

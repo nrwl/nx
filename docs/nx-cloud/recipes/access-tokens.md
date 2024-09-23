@@ -27,7 +27,7 @@ The `read-write` access tokens allows task results to be stored in the remote ca
 
 You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over any authentication method in your `nx.json`.
 
-The following example shows how to set the `NX_CLOUD_ACCESS_TOKEN` environment variable in a GitHub Actions workflow. You will need to add the `secrets.NX_CLOUD_ACCESS_TOKEN` secret to your repository based on instructions provided by your CI provider.
+The following example shows how to set the `NX_CLOUD_ACCESS_TOKEN` environment variable in a GitHub Actions workflow. You will need to add the `secrets.NX_CLOUD_ACCESS_TOKEN` secret to your repository based on instructions provided by your CI provider (see [GitHub Actions](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) or [GitLab](https://docs.gitlab.com/ee/ci/variables/#define-a-cicd-variable-in-the-ui) instructions).
 
 ```yml {% fileName=".github/workflows/ci.yml" highlightLines=["29-32"] %}
 name: CI

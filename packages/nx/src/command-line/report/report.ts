@@ -23,6 +23,7 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { ProjectGraphError } from '../../project-graph/error-types';
+import { getPowerpackLicenseInformation } from '../../utils/powerpack';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -39,6 +40,7 @@ export const packagesWeCareAbout = [
 
 export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
   ...packagesWeCareAbout,
+  new RegExp('@nx/powerpack*'),
   '@schematics/angular',
   new RegExp('@angular/*'),
   '@nestjs/schematics',
@@ -58,7 +60,9 @@ export async function reportHandler() {
   const {
     pm,
     pmVersion,
+    powerpackLicense,
     localPlugins,
+    powerpackPlugins,
     communityPlugins,
     registeredPlugins,
     packageVersionsWeCareAbout,
@@ -87,6 +91,38 @@ export async function reportHandler() {
       `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
     );
   });
+
+  if (powerpackLicense) {
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(chalk.green('Nx Powerpack'));
+
+    bodyLines.push(
+      `Licensed to ${powerpackLicense.organizationName} for ${
+        powerpackLicense.seatCount
+      } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
+        powerpackLicense.workspaceCount
+      } workspace${
+        powerpackLicense.workspaceCount > 1 ? 's' : ''
+      } until ${new Date(
+        powerpackLicense.expiresAt * 1000
+      ).toLocaleDateString()}`
+    );
+    bodyLines.push('');
+
+    padding =
+      Math.max(
+        ...powerpackPlugins.map(
+          (powerpackPlugin) => powerpackPlugin.name.length
+        )
+      ) + 1;
+    for (const powerpackPlugin of powerpackPlugins) {
+      bodyLines.push(
+        `${chalk.green(powerpackPlugin.name.padEnd(padding))} : ${chalk.bold(
+          powerpackPlugin.version
+        )}`
+      );
+    }
+  }
 
   if (registeredPlugins.length) {
     bodyLines.push(LINE_SEPARATOR);
@@ -147,6 +183,9 @@ export async function reportHandler() {
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
+  // TODO(@FrozenPandaz): Provide the right type here.
+  powerpackLicense: any | null;
+  powerpackPlugins: PackageJson[];
   localPlugins: string[];
   communityPlugins: PackageJson[];
   registeredPlugins: string[];
@@ -174,6 +213,7 @@ export async function getReportData(): Promise<ReportData> {
 
   const nxJson = readNxJson();
   const localPlugins = await findLocalPlugins(graph, nxJson);
+  const powerpackPlugins = findInstalledPowerpackPlugins();
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
 
@@ -193,8 +233,15 @@ export async function getReportData(): Promise<ReportData> {
 
   const native = isNativeAvailable();
 
+  let powerpackLicense = null;
+  try {
+    powerpackLicense = await getPowerpackLicenseInformation();
+  } catch {}
+
   return {
     pm,
+    powerpackLicense,
+    powerpackPlugins,
     pmVersion,
     localPlugins,
     communityPlugins,
@@ -292,6 +339,13 @@ export function findMisalignedPackagesForPackage(
         migrateTarget: `${base.name}@${migrateTarget}`,
       }
     : undefined;
+}
+
+export function findInstalledPowerpackPlugins(): PackageJson[] {
+  const installedPlugins = findInstalledPlugins();
+  return installedPlugins.filter((dep) =>
+    new RegExp('@nx/powerpack*').test(dep.name)
+  );
 }
 
 export function findInstalledCommunityPlugins(): PackageJson[] {

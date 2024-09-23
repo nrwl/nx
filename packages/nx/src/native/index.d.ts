@@ -28,13 +28,14 @@ export declare class ImportResult {
 
 export declare class NxCache {
   cacheDirectory: string
-  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<Connection>)
+  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<Connection>, linkTaskDetails?: boolean | undefined | null)
   get(hash: string): CachedResult | null
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
   applyRemoteCacheResults(hash: string, result: CachedResult): void
   getTaskOutputsPath(hash: string): string
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): void
   removeOldCacheRecords(): void
+  checkCacheFsInSync(): boolean
 }
 
 export declare class NxTaskHistory {
@@ -96,7 +97,7 @@ export interface CachedResult {
   outputsPath: string
 }
 
-export declare export function connectToNxDb(cacheDir: string, nxVersion: string): ExternalObject<Connection>
+export declare export function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<Connection>
 
 export declare export function copy(src: string, dest: string): void
 
