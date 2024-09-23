@@ -20,8 +20,7 @@ export class TasksSchedule {
   private notScheduledTaskGraph = this.taskGraph;
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
   private reverseProjectGraph = reverse(this.projectGraph);
-  private taskHistory: TaskHistory =
-    process.env.NX_DISABLE_DB !== 'true' ? getTaskHistory() : null;
+  private taskHistory: TaskHistory | null = getTaskHistory();
 
   private scheduledBatches: Batch[] = [];
   private scheduledTasks: string[] = [];
