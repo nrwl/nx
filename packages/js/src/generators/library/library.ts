@@ -145,6 +145,7 @@ export async function libraryGeneratorInternal(
       coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: options.testEnvironment,
+      runtimeTsconfigFileName: 'tsconfig.lib.json',
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -601,6 +602,7 @@ async function addJest(
         : options.bundler === 'rollup'
         ? 'swc'
         : undefined,
+    runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
 
