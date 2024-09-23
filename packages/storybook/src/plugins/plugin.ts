@@ -187,7 +187,9 @@ function buildTarget(
           externalDependencies: [
             'storybook',
             '@storybook/angular',
-            '@storybook/test-runner',
+            isStorybookTestRunnerInstalled()
+              ? '@storybook/test-runner'
+              : undefined,
           ],
         },
       ],
@@ -203,7 +205,12 @@ function buildTarget(
           ? ['production', '^production']
           : ['default', '^default']),
         {
-          externalDependencies: ['storybook', '@storybook/test-runner'],
+          externalDependencies: [
+            'storybook',
+            isStorybookTestRunnerInstalled()
+              ? '@storybook/test-runner'
+              : undefined,
+          ],
         },
       ],
     };
@@ -241,7 +248,12 @@ function testTarget(projectRoot: string) {
     options: { cwd: projectRoot },
     inputs: [
       {
-        externalDependencies: ['storybook', '@storybook/test-runner'],
+        externalDependencies: [
+          'storybook',
+          isStorybookTestRunnerInstalled()
+            ? '@storybook/test-runner'
+            : undefined,
+        ],
       },
     ],
   };
