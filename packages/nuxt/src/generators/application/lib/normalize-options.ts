@@ -13,8 +13,7 @@ export function normalizeDirectory(options: Schema) {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
-  callingGenerator = '@nx/nuxt:application'
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,
@@ -26,7 +25,6 @@ export async function normalizeOptions(
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator,
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;

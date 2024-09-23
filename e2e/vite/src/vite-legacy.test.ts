@@ -275,7 +275,9 @@ export default App;
       const lib = uniq('my-default-lib');
       beforeAll(() => {
         proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
       });
 
       it('should collect coverage when --coverage is set', () => {
@@ -316,7 +318,9 @@ export default App;
       });
 
       it('should be able to run tests', async () => {
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
         expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
 
         const result = await runCLIAsync(`test ${lib}`);
@@ -333,7 +337,9 @@ export default App;
       }, 100_000);
 
       it('should collect coverage', () => {
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
         updateFile(`libs/${lib}/vite.config.ts`, () => {
           return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -383,7 +389,9 @@ export default App;
       it('should not delete the project directory when coverage is enabled', async () => {
         // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
         // from the @nx/vite:test executor options, vite will delete the project root directory
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
         updateFile(`libs/${lib}/vite.config.ts`, () => {
           return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -438,7 +446,7 @@ export default defineConfig({
 
       it('should be able to run tests with inSourceTests set to true', async () => {
         runCLI(
-          `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest --inSourceTests`
         );
         expect(
           exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
@@ -465,7 +473,6 @@ export default defineConfig({
   describe('ESM-only apps', () => {
     beforeAll(() => {
       newProject({
-        unsetProjectNameAndRootFormat: false,
         packages: ['@nx/react'],
       });
     });

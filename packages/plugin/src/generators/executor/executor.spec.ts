@@ -54,30 +54,9 @@ describe('NxPlugin Executor Generator', () => {
     await executorGenerator(tree, {
       name: 'my-executor',
       unitTestRunner: 'jest',
+      directory: 'my-plugin/src/executors/my-executor',
       includeHasher: false,
       nameAndDirectoryFormat: 'as-provided',
-    });
-
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.json')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
-    ).toBeTruthy();
-  });
-
-  it('should generate files for derived', async () => {
-    await executorGenerator(tree, {
-      project: projectName,
-      name: 'my-executor',
-      unitTestRunner: 'jest',
-      includeHasher: false,
     });
 
     expect(
@@ -118,8 +97,8 @@ describe('NxPlugin Executor Generator', () => {
 
   it('should update executors.json for derived', async () => {
     await executorGenerator(tree, {
-      project: projectName,
       name: 'my-executor',
+      directory: 'my-plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
     });

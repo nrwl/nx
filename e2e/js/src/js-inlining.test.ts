@@ -23,22 +23,22 @@ describe('inlining', () => {
     async (bundler) => {
       const parent = uniq('parent');
       runCLI(
-        `generate @nx/js:lib ${parent} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${parent} --directory=libs/${parent} --bundler=${bundler} --no-interactive`
       );
 
       const buildable = uniq('buildable');
       runCLI(
-        `generate @nx/js:lib ${buildable} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${buildable} --directory=libs/${buildable} --bundler=${bundler} --no-interactive`
       );
 
       const buildableTwo = uniq('buildabletwo');
       runCLI(
-        `generate @nx/js:lib ${buildableTwo} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${buildableTwo} --directory=libs/${buildableTwo} --bundler=${bundler} --no-interactive`
       );
 
       const nonBuildable = uniq('nonbuildable');
       runCLI(
-        `generate @nx/js:lib ${nonBuildable} --bundler=none --no-interactive`
+        `generate @nx/js:lib ${nonBuildable} --directory=libs/${nonBuildable} --bundler=none --no-interactive`
       );
 
       updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
@@ -102,13 +102,19 @@ describe('inlining', () => {
 
   it('should inline nesting libraries', async () => {
     const parent = uniq('parent');
-    runCLI(`generate @nx/js:lib ${parent} --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib ${parent} --directory=libs/${parent} --no-interactive`
+    );
 
     const child = uniq('child');
-    runCLI(`generate @nx/js:lib ${child} --bundler=none --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib ${child} --directory=libs/${child} --bundler=none --no-interactive`
+    );
 
     const grandChild = uniq('grandchild');
-    runCLI(`generate @nx/js:lib ${grandChild} --bundler=none --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib ${grandChild} --directory=libs/${grandChild} --bundler=none --no-interactive`
+    );
 
     updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
       return `
@@ -151,7 +157,9 @@ describe('inlining', () => {
 
   it('should allow inlining to be enabled without imports', async () => {
     const parent = uniq('parent');
-    runCLI(`generate @nx/js:lib ${parent} --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib ${parent} --directory=libs/${parent} --no-interactive`
+    );
 
     updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
       return `

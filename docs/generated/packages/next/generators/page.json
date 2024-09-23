@@ -1,6 +1,6 @@
 {
   "name": "page",
-  "factory": "./src/generators/page/page#pageGeneratorInternal",
+  "factory": "./src/generators/page/page",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -103,7 +103,7 @@
     "presets": []
   },
   "description": "Create a page.",
-  "implementation": "/packages/next/src/generators/page/page#pageGeneratorInternal.ts",
+  "implementation": "/packages/next/src/generators/page/page.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/next/src/generators/page/schema.json",

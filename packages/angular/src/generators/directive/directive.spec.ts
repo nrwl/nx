@@ -53,8 +53,7 @@ describe('directive generator', () => {
 
     // ACT
     await generateDirectiveWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-directives',
+      directory: 'test/src/app/my-directives/test',
       skipTests: true,
     });
 
@@ -90,12 +89,11 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the directive correctly when flat=false', async () => {
+    it('should import the directive correctly', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
         standalone: false,
       });
 
@@ -111,13 +109,12 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the directive correctly when flat=false and path is nested deeper', async () => {
+    it('should import the directive correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        directory: 'test/src/app/my-directives/test',
         standalone: false,
       });
 
@@ -136,13 +133,12 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should export the directive correctly when flat=false and path is nested deeper', async () => {
+    it('should export the directive correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        directory: 'test/src/app/my-directives/test',
         export: true,
         standalone: false,
       });
@@ -158,8 +154,7 @@ describe('directive generator', () => {
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        directory: 'test/src/app/my-directives',
         skipImport: true,
         standalone: false,
       });
@@ -260,8 +255,7 @@ async function generateDirectiveWithDefaultOptions(
 ) {
   await directiveGenerator(tree, {
     name: 'test',
-    project: 'test',
-    flat: true,
+    directory: 'test/src/app',
     skipFormat: true,
     ...overrides,
   });

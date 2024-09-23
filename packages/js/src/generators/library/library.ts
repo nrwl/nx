@@ -56,9 +56,6 @@ export async function libraryGenerator(
 ) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -723,15 +720,13 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
-  const fileName = getCaseAwareFileName({
-    fileName: options.simpleName
+  const fileName = names(
+    options.simpleName
       ? projectNames.projectSimpleName
-      : projectNames.projectFileName,
-    pascalCaseFiles: options.pascalCaseFiles,
-  });
+      : projectNames.projectFileName
+  ).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -748,15 +743,6 @@ async function normalizeOptions(
     parsedTags,
     importPath,
   };
-}
-
-function getCaseAwareFileName(options: {
-  pascalCaseFiles: boolean;
-  fileName: string;
-}) {
-  const normalized = names(options.fileName);
-
-  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
 }
 
 function addProjectDependencies(

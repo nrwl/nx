@@ -72,12 +72,6 @@
       "default": false,
       "x-deprecated": "Use --swcJest instead for faster compilation"
     },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case file names.",
-      "alias": "P",
-      "default": false
-    },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",

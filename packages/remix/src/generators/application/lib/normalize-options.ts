@@ -23,7 +23,6 @@ export async function normalizeOptions(
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
       rootProject: options.rootProject,
-      callingGenerator: '@nx/remix:application',
     });
   options.rootProject = projectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;

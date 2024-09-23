@@ -12,7 +12,7 @@ import { v2MetaGenerator } from './v2.impl';
 describe('meta v2', () => {
   let tree: Tree;
 
-  test.each([['apps/demo/app/routes/example.tsx', 'example', 'example.tsx']])(
+  test.each([['apps/demo/app/routes/example.tsx']])(
     'add meta using route path "%s"',
     async (path) => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -24,10 +24,12 @@ describe('meta v2', () => {
         })
       );
 
-      await applicationGenerator(tree, { name: 'demo' });
+      await applicationGenerator(tree, {
+        name: 'demo',
+        directory: 'apps/demo',
+      });
       await routeGenerator(tree, {
-        path: 'example',
-        project: 'demo',
+        path: 'apps/demo/app/routes/example.tsx',
         style: 'none',
         loader: false,
         action: false,
@@ -37,7 +39,6 @@ describe('meta v2', () => {
 
       await v2MetaGenerator(tree, {
         path,
-        project: 'demo',
       });
 
       const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');

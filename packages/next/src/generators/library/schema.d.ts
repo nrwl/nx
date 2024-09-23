@@ -10,7 +10,6 @@ export interface Schema {
   skipTsConfig?: boolean;
   skipFormat?: boolean;
   tags?: string;
-  pascalCaseFiles?: boolean;
   routing?: boolean;
   appProject?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';

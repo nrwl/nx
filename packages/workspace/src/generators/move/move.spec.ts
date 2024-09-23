@@ -137,32 +137,4 @@ describe('move', () => {
       '../../node_modules/nx/schemas/project-schema.json'
     );
   });
-
-  it('should move project correctly when --project-name-and-root-format=derived', async () => {
-    await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'derived',
-    });
-
-    await moveGenerator(tree, {
-      projectName: 'my-lib',
-      importPath: '@proj/shared-mylib',
-      updateImportPath: true,
-      destination: 'shared/my-lib-new',
-      projectNameAndRootFormat: 'derived',
-    });
-
-    const projectJson = readJson(tree, 'libs/shared/my-lib-new/project.json');
-    expect(projectJson['$schema']).toEqual(
-      '../../../node_modules/nx/schemas/project-schema.json'
-    );
-    const afterJestConfig = tree.read(
-      'libs/shared/my-lib-new/jest.config.ts',
-      'utf-8'
-    );
-    expect(afterJestConfig).toContain("preset: '../../../jest.preset.js'");
-    expect(afterJestConfig).toContain(
-      "coverageDirectory: '../../../coverage/libs/shared/my-lib-new'"
-    );
-  });
 });

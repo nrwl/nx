@@ -91,7 +91,7 @@ describe('monorepo generator', () => {
 
     await libraryGenerator(tree, {
       name: 'my-lib',
-      directory: 'inner',
+      directory: 'inner/my-lib',
       style: 'css',
       bundler: 'vite',
       unitTestRunner: 'none',

@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library#libraryGeneratorInternal",
+  "factory": "./src/generators/library/library",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorAngularLibrary",
@@ -210,7 +210,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Creates an Angular library.",
-  "implementation": "/packages/angular/src/generators/library/library#libraryGeneratorInternal.ts",
+  "implementation": "/packages/angular/src/generators/library/library.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/library/schema.json",
   "type": "generator"

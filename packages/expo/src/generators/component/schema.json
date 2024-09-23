@@ -6,24 +6,15 @@
   "type": "object",
   "examples": [
     {
-      "command": "g @nx/expo:component my-component --project=mylib",
+      "command": "g @nx/expo:component my-component --directory=mylib/my-component",
       "description": "Generate a component in the mylib library"
     },
     {
-      "command": "g @nx/expo:component my-component --project=mylib --classComponent",
+      "command": "g @nx/expo:component my-component --directory=mylib/my-component --classComponent",
       "description": "Generate a class component in the mylib library"
     }
   ],
   "properties": {
-    "project": {
-      "type": "string",
-      "description": "The name of the project.",
-      "alias": "p",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
     "name": {
       "type": "string",
       "description": "The name of the component.",
@@ -59,25 +50,12 @@
       "type": "string",
       "enum": ["as-provided", "derived"]
     },
-    "flat": {
-      "type": "boolean",
-      "description": "Create component at the source root rather than its own directory.",
-      "default": false,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19."
-    },
     "export": {
       "type": "boolean",
       "description": "When true, the component is exported from the project index.ts (if it exists).",
       "alias": "e",
       "default": false,
       "x-prompt": "Should this component be exported in the project?"
-    },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
-      "alias": "P",
-      "default": false,
-      "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
     },
     "classComponent": {
       "type": "boolean",

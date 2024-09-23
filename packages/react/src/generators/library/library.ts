@@ -31,7 +31,6 @@ import { setDefaults } from './lib/set-defaults';
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -194,8 +193,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     const componentTask = await componentGenerator(host, {
       nameAndDirectoryFormat: 'as-provided',
       name: relativeCwd ? relative(relativeCwd, name) : name,
-      project: options.name,
-      flat: true,
       style: options.style,
       skipTests:
         options.unitTestRunner === 'none' ||
@@ -203,7 +200,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       export: true,
       routing: options.routing,
       js: options.js,
-      pascalCaseFiles: options.pascalCaseFiles,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       globalCss: options.globalCss,

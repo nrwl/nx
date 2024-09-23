@@ -23,16 +23,10 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/expo:component',
     name: options.name,
     directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
-    pascalCaseFile: options.pascalCaseFiles,
   });
 
   const project = getProjects(host).get(projectName);

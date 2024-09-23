@@ -33,7 +33,6 @@ async function normalizeOptions(
       projectType: 'library',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/workspace:npm-package',
     }
   );
 
@@ -57,14 +56,7 @@ function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
   generateFiles(tree, join(__dirname, './files'), projectRoot, {});
 }
 
-export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
-  return await npmPackageGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
-
-export async function npmPackageGeneratorInternal(
+export async function npmPackageGenerator(
   tree: Tree,
   _options: ProjectOptions
 ) {

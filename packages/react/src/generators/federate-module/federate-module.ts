@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { Schema } from './schema';
 
-import { remoteGeneratorInternal } from '../remote/remote';
+import { remoteGenerator } from '../remote/remote';
 import { addPathToExposes, checkRemoteExists } from './lib/utils';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
@@ -31,7 +31,7 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
 
   if (!remote) {
     // create remote
-    const remoteGenerator = await remoteGeneratorInternal(tree, {
+    const remoteGeneratorTask = await remoteGenerator(tree, {
       name: schema.remote,
       directory: schema.remoteDirectory,
       e2eTestRunner: schema.e2eTestRunner,
@@ -40,19 +40,18 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
       style: schema.style,
       unitTestRunner: schema.unitTestRunner,
       host: schema.host,
-      projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
       bundler: schema.bundler ?? 'rspack',
+      projectNameAndRootFormat: schema.projectNameAndRootFormat,
     });
 
-    tasks.push(remoteGenerator);
+    tasks.push(remoteGeneratorTask);
 
     const { projectName, projectRoot: remoteRoot } =
       await determineProjectNameAndRootOptions(tree, {
         name: schema.remote,
         directory: schema.remoteDirectory,
         projectType: 'application',
-        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
-        callingGenerator: '@nx/react:federate-module',
+        projectNameAndRootFormat: schema.projectNameAndRootFormat,
       });
 
     projectRoot = remoteRoot;

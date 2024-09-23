@@ -23,27 +23,14 @@ describe('resource route', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
-  });
-
-  it('should not create a component', async () => {
-    await resourceRouteGenerator(tree, {
-      project: 'demo',
-      path: '/example/',
-      action: false,
-      loader: true,
-      skipChecks: false,
-    });
-    const fileContents = tree.read('apps/demo/app/routes/example.ts', 'utf-8');
-    expect(fileContents).not.toMatch('export default function');
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
   });
 
   it('should throw an error if loader and action are both false', async () => {
     await expect(
       async () =>
         await resourceRouteGenerator(tree, {
-          project: 'demo',
-          path: 'example',
+          path: 'apps/demo/app/routes/example.ts',
           action: false,
           loader: false,
           skipChecks: false,
@@ -53,22 +40,11 @@ describe('resource route', () => {
     );
   });
 
-  describe.each([
-    ['derived', 'apps/demo/app/routes/example.ts', 'demo'],
-    ['derived', 'example', 'demo'],
-    ['derived', 'example.ts', 'demo'],
-    ['as-provided', 'apps/demo/app/routes/example', ''],
-    ['as-provided', 'apps/demo/app/routes/example.ts', ''],
-  ])(
+  describe.each([['as-provided', 'apps/demo/app/routes/example.ts', '']])(
     '--nameAndDirectoryFormat=%s',
-    (
-      nameAndDirectoryFormat: NameAndDirectoryFormat,
-      path: string,
-      project: string
-    ) => {
+    (nameAndDirectoryFormat: NameAndDirectoryFormat, path: string) => {
       it(`should create correct file for path ${path}`, async () => {
         await resourceRouteGenerator(tree, {
-          project,
           path,
           action: false,
           loader: true,
@@ -83,7 +59,6 @@ describe('resource route', () => {
         expect.assertions(3);
 
         await resourceRouteGenerator(tree, {
-          project,
           path: `${dirname(path)}/route1/.ts`, // route.$withParams.tsx => route..tsx
           loader: true,
           action: true,
@@ -92,7 +67,6 @@ describe('resource route', () => {
         }).catch((e) => expect(e).toMatchSnapshot());
 
         await resourceRouteGenerator(tree, {
-          project,
           path: `${dirname(path)}/route2//index.ts`, // route/$withParams/index.tsx => route//index.tsx
           loader: true,
           action: true,
@@ -105,7 +79,6 @@ describe('resource route', () => {
         );
 
         await resourceRouteGenerator(tree, {
-          project,
           path: `${dirname(path)}/route3/.ts`, // route/$withParams.tsx => route/.tsx
           loader: true,
           action: true,
@@ -123,7 +96,6 @@ describe('resource route', () => {
           dirname(path) === '' ? '' : `${dirname(path)}/`
         ).replace(basePath, '');
         await resourceRouteGenerator(tree, {
-          project,
           path: `${normalizedPath}route1/..ts`, // route.$withParams.tsx => route..tsx
           loader: true,
           action: true,
@@ -136,7 +108,6 @@ describe('resource route', () => {
         );
 
         await resourceRouteGenerator(tree, {
-          project,
           path: `${normalizedPath}route2//index.ts`, // route/$withParams/index.tsx => route//index.tsx
           loader: true,
           action: true,
@@ -149,7 +120,6 @@ describe('resource route', () => {
         ).toBe(true);
 
         await resourceRouteGenerator(tree, {
-          project,
           path: `${normalizedPath}route3/.ts`, // route/$withParams.tsx => route/.tsx
           loader: true,
           action: true,
