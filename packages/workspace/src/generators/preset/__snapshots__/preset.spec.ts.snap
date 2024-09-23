@@ -103,7 +103,7 @@ export default defineConfig({
   // },
 
   build: {
-    outDir: './dist/proj',
+    outDir: 'dist/proj',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -246,7 +246,7 @@ export default defineConfig({
   // },
 
   build: {
-    outDir: './dist/proj',
+    outDir: 'dist/proj',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
