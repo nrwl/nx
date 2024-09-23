@@ -375,8 +375,7 @@ export function createOrEditViteConfig(
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
-    ? `
-  // Configuration for building your library.
+    ? `  // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '${buildOutDir}',
@@ -399,16 +398,14 @@ export function createOrEditViteConfig(
       external: [${options.rollupOptionsExternal ?? ''}]
     },
   },`
-    : `
-  build: {
+    : `  build: {
     outDir: '${buildOutDir}',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-  },
-    `;
+  },`;
 
   const imports: string[] = options.imports ? options.imports : [];
 
@@ -437,7 +434,7 @@ export function createOrEditViteConfig(
       : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
   const testOption = options.includeVitest
-    ? `test: {
+    ? `  test: {
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
@@ -458,7 +455,7 @@ export function createOrEditViteConfig(
     : '';
 
   const defineOption = options.inSourceTests
-    ? `define: {
+    ? `  define: {
     'import.meta.vitest': undefined
   },`
     : '';
@@ -467,8 +464,7 @@ export function createOrEditViteConfig(
     ? ''
     : options.includeLib
     ? ''
-    : `
-  server:{
+    : `  server:{
     port: 4200,
     host: 'localhost',
   },`;
@@ -477,14 +473,12 @@ export function createOrEditViteConfig(
     ? ''
     : options.includeLib
     ? ''
-    : `
-  preview:{
+    : `  preview:{
     port: 4300,
     host: 'localhost',
   },`;
 
-  const workerOption = `
-  // Uncomment this if you are using workers.
+  const workerOption = `  // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },`;
@@ -523,21 +517,24 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
-  ${cacheDir}
-${devServerOption}
-${previewServerOption}
-
-  plugins: [
-    ${plugins.join(',\n    ')}
-  ],
-${workerOption}
-${buildOption}
-${defineOption}
-${testOption}
+  ${printOptions(
+    cacheDir,
+    devServerOption,
+    previewServerOption,
+    `  plugins: [${plugins.join(', ')}],`,
+    workerOption,
+    buildOption,
+    defineOption,
+    testOption
+  )}
 });
 `.replace(/\s+(?=(\n|$))/gm, '\n');
 
   tree.write(viteConfigPath, viteConfigContent);
+}
+
+function printOptions(...options: string[]): string {
+  return options.filter(Boolean).join('\n');
 }
 
 export function normalizeViteConfigFilePathWithTree(
