@@ -24,7 +24,7 @@
     - [Powerpack Features](/features/powerpack)
       - [Run Language-Agnostic Conformance Rules](/features/powerpack/conformance)
       - [Define Code Ownership at the Project Level](/features/powerpack/owners)
-      - [Change the Remote Cache Storage Location](/features/powerpack/custom-caching)
+      - [Self-Host the Remote Cache](/features/powerpack/custom-caching)
     - [CI Features](/features/ci-features)
   - [Concepts](/concepts)
     - [Mental Model](/concepts/mental-model)

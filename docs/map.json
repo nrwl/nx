@@ -151,7 +151,7 @@
                   "file": "shared/features/powerpack/owners"
                 },
                 {
-                  "name": "Change the Remote Cache Storage Location",
+                  "name": "Self-Host the Remote Cache",
                   "description": "Custom Caching",
                   "id": "custom-caching",
                   "tags": ["custom-caching"],

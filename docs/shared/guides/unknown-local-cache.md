@@ -46,11 +46,9 @@ access to all the previously created Nx cache artifacts. Hence, it is plausible 
 single task hash - to be accessed without leaving any trace. This is feasible due to the network drive's capability to
 allow overwrites.
 
-If you decide to use a shared network drive for your remote cache anyway, [activate powerpack](/recipes/installation/activate-powerpack) and use the [`@nx/powerpack-shared-fs-cache`](/nx-api/powerpack-shared-fs-cache) plugin to ensure that the task metadata and project graph information is correctly associated with the file artifacts.
+## How Nx Replay Makes Sure Sharing Cache is Safe
 
-## How Nx Cloud Makes Sure Sharing Cache is Safe
-
-The Nx Cloud runner does the following things to make sharing the cache safe:
+[Nx Replay](/ci/features/remote-cache), the Nx Cloud hosted remote cache, does the following things to make sharing the cache safe:
 
 1. **Immutable Artifacts:** Nx Cloud allows you to create and store new artifacts without the ability to override the
    existing ones. This prevents any possibility of poisoning an existing artifact. This is achieved by managing the
@@ -67,6 +65,15 @@ The Nx Cloud runner does the following things to make sharing the cache safe:
    an access token gets compromised it can be easily removed, in turn deleting all the cache artifacts that were created
    using it.
 
-Nx Cloud is not the only remote cache you can use. If you are using a different remote cache or using your
+Nx Replay is not the only remote cache you can use. If you are using a different remote cache or using your
 own implementation, we would highly recommend ensuring that the same safety mechanisms as Nx Cloud have been put in
 place.
+
+## Self-Hosted Remote Cache
+
+If you can't use Nx Replay, Nx provides plugins that enable you to [self-host the remote cache](/features/powerpack/custom-caching). These plugins are available as part of the [Nx Powerpack](), which you can unlock by [activating your license](/recipes/installation/activate-powerpack). There are plugins to self-host your remote cache in the following locations:
+
+- [AWS S3 Bucket](/nx-api/powerpack-s3-cache)
+- [Shared File System](/nx-api/powerpack-shared-fs-cache)
+
+These plugins will ensure that the task metadata and project graph information are correctly associated with the file artifacts in your cache.

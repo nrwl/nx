@@ -6,7 +6,7 @@ description: The powerpack-shared-fs-cache Nx plugin enables you to use an share
 The `@nx/powerpack-shared-fs-cache` plugin enables you to use an shared file system directory instead of Nx Cloud to host your remote cache. You are responsible for the sharing mechanism for the directory, but the plugin ensures that Nx correctly associates task metadata with the file artifacts.
 
 {% callout type="warning" title="Potential Cache Poisoning" %}
-Using a shared file system folder for the remote cache opens you up to the possibility of cache poisoning. To avoid this, use [Nx Replay](/ci/features/remote-cache) or share your cache with an AWS S3 bucket using [`@nx/powerpack-s3-cache`](/nx-api/powerpack-s3-cache).
+Using a shared file system folder for the remote cache opens you up to the possibility of [cache poisoning](/troubleshooting/unknown-local-cache). To avoid this, use [Nx Replay](/ci/features/remote-cache) or share your cache with an AWS S3 bucket using [`@nx/powerpack-s3-cache`](/nx-api/powerpack-s3-cache).
 {% /callout %}
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
@@ -30,12 +30,4 @@ The `@nx/powerpack-shared-fs-cache` plugin treats your local cache directory as 
 
 ### 3. Share the Cache Directory
 
-The `@nx/powerpack-shared-fs-cache` plugin does not actually share the cache directory across your organization. If you want that functionality, use [Nx Replay](/ci/features/remote-cache) instead. Here are a few ways you could manually share the cache directory.
-
-#### Restore an Nx Cache Locally from a Remote Cache provided by a CI Provider
-
-Many CI providers allow users to restore files and directories from their cache. You can restore this folder on subsequent CI runs or use an API to download that cache folder to local developer machines. The mechanism for doing this will differ based on your CI provider.
-
-#### Share an Nx Cache With a Network Drive
-
-It is also possible to share an Nx Cache by storing it on a mounted network drive. You are responsible for ensuring that CI machines and local developer machines have access to the network drive in a consistent way. If the network drive will be mounted on different paths, you can overwrite the default `cacheDirectory` with machine specific `NX_CACHE_DIRECTORY` environment variables.
+The `@nx/powerpack-shared-fs-cache` plugin does not actually share the cache directory across your organization. If you want that functionality, use [Nx Replay](/ci/features/remote-cache) instead. Your shared file system directory might be a directory that is saved and restored by a CI provider or it could be a shared network drive.

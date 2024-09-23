@@ -598,7 +598,7 @@
       "description": "Custom Caching",
       "file": "shared/features/powerpack/custom-caching",
       "id": "custom-caching",
-      "name": "Change the Remote Cache Storage Location",
+      "name": "Self-Host the Remote Cache",
       "path": "/features/powerpack/custom-caching"
     }
   ],

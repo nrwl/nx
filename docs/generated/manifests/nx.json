@@ -469,7 +469,7 @@
           },
           {
             "id": "custom-caching",
-            "name": "Change the Remote Cache Storage Location",
+            "name": "Self-Host the Remote Cache",
             "description": "Custom Caching",
             "mediaImage": "",
             "file": "shared/features/powerpack/custom-caching",
@@ -674,7 +674,7 @@
       },
       {
         "id": "custom-caching",
-        "name": "Change the Remote Cache Storage Location",
+        "name": "Self-Host the Remote Cache",
         "description": "Custom Caching",
         "mediaImage": "",
         "file": "shared/features/powerpack/custom-caching",
@@ -712,7 +712,7 @@
   },
   "/features/powerpack/custom-caching": {
     "id": "custom-caching",
-    "name": "Change the Remote Cache Storage Location",
+    "name": "Self-Host the Remote Cache",
     "description": "Custom Caching",
     "mediaImage": "",
     "file": "shared/features/powerpack/custom-caching",

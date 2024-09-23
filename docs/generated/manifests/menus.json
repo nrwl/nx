@@ -346,7 +346,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Change the Remote Cache Storage Location",
+                "name": "Self-Host the Remote Cache",
                 "path": "/features/powerpack/custom-caching",
                 "id": "custom-caching",
                 "isExternal": false,
@@ -495,7 +495,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Change the Remote Cache Storage Location",
+            "name": "Self-Host the Remote Cache",
             "path": "/features/powerpack/custom-caching",
             "id": "custom-caching",
             "isExternal": false,
@@ -522,7 +522,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Change the Remote Cache Storage Location",
+        "name": "Self-Host the Remote Cache",
         "path": "/features/powerpack/custom-caching",
         "id": "custom-caching",
         "isExternal": false,
