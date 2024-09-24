@@ -18,6 +18,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
+import { output } from './output';
 import { updateContextWithChangedFiles } from './workspace-context';
 import { workspaceRoot } from './workspace-root';
 import chalk = require('chalk');
@@ -42,6 +43,8 @@ export type SyncGeneratorRunSuccessResult = {
 type SerializableSimpleError = {
   message: string;
   stack: string | undefined;
+  title?: string;
+  bodyLines?: string[];
 };
 
 export type SyncGeneratorRunErrorResult = {
@@ -65,6 +68,13 @@ type FlushSyncGeneratorChangesFailure = {
 export type FlushSyncGeneratorChangesResult =
   | FlushSyncGeneratorChangesSuccess
   | FlushSyncGeneratorChangesFailure;
+
+export class SyncError extends Error {
+  constructor(public title: string, public bodyLines: string[]) {
+    super(title);
+    this.name = this.constructor.name;
+  }
+}
 
 export async function getSyncGeneratorChanges(
   generators: string[]
@@ -154,7 +164,7 @@ export async function runSyncGenerator(
   } catch (e) {
     return {
       generatorName: generatorSpecifier,
-      error: { message: e.message, stack: e.stack },
+      error: toSerializableError(e),
     };
   }
 }
@@ -273,15 +283,19 @@ export function getFailedSyncGeneratorsFixMessageLines(
 ): string[] {
   const messageLines: string[] = [];
   const generators: string[] = [];
+  let isFirst = true;
   for (const result of results) {
     if ('error' in result) {
+      if (!isFirst) {
+        messageLines.push('');
+      }
+      isFirst = false;
       messageLines.push(
         `The ${chalk.bold(
           result.generatorName
-        )} sync generator reported the following error:
-${chalk.bold(result.error.message)}${
-          verbose && result.error.stack ? '\n' + result.error.stack : ''
-        }`
+        )} sync generator reported the following error:`,
+        '',
+        errorToString(result.error, verbose)
       );
       generators.push(result.generatorName);
     }
@@ -300,14 +314,18 @@ export function getFlushFailureMessageLines(
 ): string[] {
   const messageLines: string[] = [];
   const generators: string[] = [];
+  let isFirst = true;
   for (const failure of result.generatorFailures) {
+    if (!isFirst) {
+      messageLines.push('');
+    }
+    isFirst = false;
     messageLines.push(
       `The ${chalk.bold(
         failure.generator
-      )} sync generator failed to apply its changes with the following error:
-${chalk.bold(failure.error.message)}${
-        verbose && failure.error.stack ? '\n' + failure.error.stack : ''
-      }`
+      )} sync generator failed to apply its changes with the following error:`,
+      '',
+      errorToString(failure.error, verbose)
     );
     generators.push(failure.generator);
   }
@@ -412,7 +430,7 @@ async function flushSyncGeneratorChangesToDisk(
     } catch (e) {
       generatorFailures.push({
         generator: result.generatorName,
-        error: { message: e.message, stack: e.stack },
+        error: toSerializableError(e),
       });
     }
   }
@@ -434,7 +452,7 @@ async function flushSyncGeneratorChangesToDisk(
   } catch (e) {
     return {
       generatorFailures,
-      generalFailure: { message: e.message, stack: e.stack },
+      generalFailure: toSerializableError(e),
     };
   }
 
@@ -469,4 +487,34 @@ function getFailedSyncGeneratorsMessageLines(
   }
 
   return messageLines;
+}
+
+function errorToString(error: SerializableSimpleError, verbose: boolean) {
+  if (error.title) {
+    let message = `  ${chalk.red(error.title)}`;
+    if (error.bodyLines?.length) {
+      message += `
+
+  ${error.bodyLines
+    .map((bodyLine) => `${bodyLine.split('\n').join('\n  ')}`)
+    .join('\n  ')}`;
+
+      return message;
+    }
+  }
+
+  return `  ${chalk.bold(error.message)}${
+    verbose && error.stack ? '\n  ' + error.stack : ''
+  }`;
+}
+
+function toSerializableError(error: Error): SerializableSimpleError {
+  return error instanceof SyncError
+    ? {
+        title: error.title,
+        bodyLines: error.bodyLines,
+        message: error.message,
+        stack: error.stack,
+      }
+    : { message: error.message, stack: error.stack };
 }
