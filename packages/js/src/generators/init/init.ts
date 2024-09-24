@@ -175,7 +175,12 @@ export async function initGeneratorInternal(
     : () => {};
   tasks.push(installTask);
 
-  if (!schema.skipPackageJson && schema.setUpPrettier) {
+  if (
+    !schema.skipPackageJson &&
+    // For `create-nx-workspace` or `nx g @nx/js:init`, we want to make sure users didn't set formatter to none.
+    // For programmatic usage, the formatter is normally undefined, and we want prettier to continue to be ensured, even if not ultimately installed.
+    schema.formatter !== 'none'
+  ) {
     ensurePackage('prettier', prettierVersion);
   }
 
