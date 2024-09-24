@@ -683,6 +683,12 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPlugin;
+
   const hasPlugin = isUsingTypeScriptPlugin(tree);
 
   if (hasPlugin) {
