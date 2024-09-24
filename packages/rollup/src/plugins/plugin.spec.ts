@@ -1,5 +1,5 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 // Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
@@ -11,7 +11,7 @@ jest.mock('rollup/loadConfigFile', () => {
 });
 
 describe('@nx/rollup/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let cwd = process.cwd();
 
@@ -77,7 +77,7 @@ describe('@nx/rollup/plugin', () => {
     it('should create nodes', async () => {
       // ACT
       const nodes = await createNodesFunction(
-        'rollup.config.js',
+        ['rollup.config.js'],
         {
           buildTargetName: 'build',
         },
@@ -154,7 +154,7 @@ describe('@nx/rollup/plugin', () => {
     it('should create nodes', async () => {
       // ACT
       const nodes = await createNodesFunction(
-        'mylib/rollup.config.js',
+        ['mylib/rollup.config.js'],
         {
           buildTargetName: 'build',
         },
