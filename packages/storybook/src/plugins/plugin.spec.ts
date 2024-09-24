@@ -2,10 +2,10 @@ import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from '@storybook/types';
 import { join } from 'node:path';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 
 describe('@nx/storybook/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
 
@@ -54,7 +54,7 @@ describe('@nx/storybook/plugin', () => {
     });
 
     const nodes = await createNodesFunction(
-      'my-app/.storybook/main.ts',
+      ['my-app/.storybook/main.ts'],
       {
         buildStorybookTargetName: 'build-storybook',
         staticStorybookTargetName: 'static-storybook',
@@ -64,9 +64,10 @@ describe('@nx/storybook/plugin', () => {
       context
     );
 
-    expect(nodes?.['projects']?.['my-app']?.targets).toBeDefined();
+    expect(nodes.at(0)?.[0]).toStrictEqual('my-app/.storybook/main.ts');
+    expect(nodes.at(0)?.[1]?.['projects']?.['my-app']?.targets).toBeDefined();
     expect(
-      nodes?.['projects']?.['my-app']?.targets?.['build-storybook']
+      nodes.at(0)?.[1]?.['projects']?.['my-app']?.targets['build-storybook']
     ).toMatchObject({
       command: 'storybook build',
       options: {
@@ -86,7 +87,7 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-app']?.targets?.['serve-storybook']
+      nodes.at(0)?.[1]?.['projects']?.['my-app']?.targets['serve-storybook']
     ).toMatchObject({
       command: 'storybook dev',
     });
@@ -104,7 +105,7 @@ describe('@nx/storybook/plugin', () => {
     });
 
     const nodes = await createNodesFunction(
-      'my-ng-app/.storybook/main.ts',
+      ['my-ng-app/.storybook/main.ts'],
       {
         buildStorybookTargetName: 'build-storybook',
         staticStorybookTargetName: 'static-storybook',
@@ -114,9 +115,14 @@ describe('@nx/storybook/plugin', () => {
       context
     );
 
-    expect(nodes?.['projects']?.['my-ng-app']?.targets).toBeDefined();
+    expect(nodes.at(0)?.[0]).toStrictEqual('my-ng-app/.storybook/main.ts');
     expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['build-storybook']
+      nodes.at(0)?.[1]?.['projects']?.['my-ng-app']?.targets
+    ).toBeDefined();
+    expect(
+      nodes.at(0)?.[1]?.['projects']?.['my-ng-app']?.targets?.[
+        'build-storybook'
+      ]
     ).toMatchObject({
       executor: '@storybook/angular:build-storybook',
       options: {
@@ -141,7 +147,9 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['serve-storybook']
+      nodes.at(0)?.[1]?.['projects']?.['my-ng-app']?.targets?.[
+        'serve-storybook'
+      ]
     ).toMatchObject({
       executor: '@storybook/angular:start-storybook',
       options: {
@@ -168,7 +176,7 @@ describe('@nx/storybook/plugin', () => {
     });
 
     const nodes = await createNodesFunction(
-      'my-react-lib/.storybook/main.js',
+      ['my-react-lib/.storybook/main.js'],
       {
         buildStorybookTargetName: 'build-storybook',
         staticStorybookTargetName: 'static-storybook',
@@ -178,9 +186,14 @@ describe('@nx/storybook/plugin', () => {
       context
     );
 
-    expect(nodes?.['projects']?.['my-react-lib']?.targets).toBeDefined();
+    expect(nodes.at(0)?.[0]).toStrictEqual('my-react-lib/.storybook/main.js');
     expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['build-storybook']
+      nodes.at(0)?.[1]?.['projects']?.['my-react-lib']?.targets
+    ).toBeDefined();
+    expect(
+      nodes.at(0)?.[1]?.['projects']?.['my-react-lib']?.targets?.[
+        'build-storybook'
+      ]
     ).toMatchObject({
       command: 'storybook build',
       options: {
@@ -200,7 +213,9 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['serve-storybook']
+      nodes.at(0)?.[1]?.['projects']?.['my-react-lib']?.targets?.[
+        'serve-storybook'
+      ]
     ).toMatchObject({
       command: 'storybook dev',
     });
