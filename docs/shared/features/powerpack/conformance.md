@@ -1,12 +1,12 @@
 # Run Language-Agnostic Conformance Rules
 
-The `@nx/powerpack-conformance` plugin allows [Nx Powerpack]() users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
+The [`@nx/powerpack-conformance`](/nx-api/powerpack-conformance) plugin allows [Nx Powerpack]() users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
 
-The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Unlike ESLint, the rules are **applied to the whole workspace**, instead of one file at a time. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
+The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Conformance rules are intended to complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
 
 The plugin also provides the following pre-written rules:
 
-- **Enforce Module Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from typescript imports or `package.json` dependencies.
+- **Enforce Module Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - **Ensure Owners**: Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
 ## Conformance Plugin Requires Nx Powerpack
@@ -17,7 +17,7 @@ The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to funct
 
 ## Configure Conformance Rules
 
-Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/nx-api/powerpack-conformance#custom-conformance-rules).
+Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/nx-api/powerpack-conformance#custom-conformance-rules). See the [plugin documentation](/nx-api/powerpack-conformance) for more details.
 
 ```jsonc {% fileName="nx.json" %}
 {
@@ -50,9 +50,25 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
 
 The `@nx/powerpack-conformance` plugin enables the `nx conformance` command which checks all the configured rules. This command should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
 
+{% tabs %}
+{% tab label="Without Nx Cloud" %}
+
 ```yaml
 - name: Enforce all conformance rules
   run: npx nx conformance
 ```
+
+{% /tab %}
+{% tab label="Using Nx Cloud" %}
+
+```yaml
+- name: Enforce all conformance rules
+  run: npx nx-cloud record -- npx nx conformance
+```
+
+Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx Cloud dashboard.
+
+{% /tab %}
+{% /tabs %}
 
 If there is not a valid Powerpack license in the workspace, the `nx conformance` command will fail without checking any rules.

@@ -5,11 +5,11 @@ description: The Nx Powerpack Conformance plugin provides the ability to write a
 
 The `@nx/powerpack-conformance` plugin allows [Nx Powerpack]() users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
 
-The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Unlike ESLint, the rules are applied to the whole workspace, instead of one file at a time. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
+The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Conformance rules are intended to complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
 
 The plugin also provides the following pre-written rules:
 
-- [**Enforce Module Boundaries**](#enforce-module-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from typescript imports or `package.json` dependencies.
+- [**Enforce Module Boundaries**](#enforce-module-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - [**Ensure Owners**](#ensure-owners): Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
@@ -33,10 +33,26 @@ In order to use `@nx/powerpack-conformance`, you need to have an active Powerpac
 
 Add `nx conformance` to the beginning of the CI process.
 
+{% tabs %}
+{% tab label="Without Nx Cloud" %}
+
 ```yaml
 - name: Enforce all conformance rules
   run: npx nx conformance
 ```
+
+{% /tab %}
+{% tab label="Using Nx Cloud" %}
+
+```yaml
+- name: Enforce all conformance rules
+  run: npx nx-cloud record -- npx nx conformance
+```
+
+Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx Cloud dashboard.
+
+{% /tab %}
+{% /tabs %}
 
 ## Conformance Configuration Reference
 
@@ -68,7 +84,7 @@ The following rules are provided by Nx along with the `@nx/powerpack-conformance
 
 ### Enforce Module Boundaries
 
-This rule is similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from typescript imports or `package.json` dependencies.
+This rule is similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 
 Set the `rule` property to: `@nx/powerpack-conformance/enforce-module-boundaries`
 
@@ -150,7 +166,7 @@ Set the `rule` property to: `@nx/powerpack-conformance/ensure-owners`
 
 ## Custom Conformance Rules
 
-To write your own conformance rule, specify a relative path to a typescript file as the rule name:
+To write your own conformance rule, specify a relative path to a TypeScript or JavaScript file as the rule name:
 
 ```json {% fileName="nx.json" %}
 {
@@ -170,9 +186,10 @@ The rule definition file should look like this:
 import type {
   ConformanceRule,
   ConformanceRuleResult,
+  createConformanceRule,
 } from '@nx/powerpack-conformance';
 
-const rule: ConformanceRule<any> = {
+const rule = createConformanceRule({
   name: 'local-conformance-rule-example',
   category: 'security', // `consistency`, `maintainability`, `reliability` or `security`
   reporter: 'project-reporter', // `project-reporter` or `project-files-reporter`
@@ -192,7 +209,7 @@ const rule: ConformanceRule<any> = {
       },
     };
   },
-};
+});
 
 export default rule;
 ```
