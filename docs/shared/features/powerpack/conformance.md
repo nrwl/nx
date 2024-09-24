@@ -9,11 +9,23 @@ The plugin also provides the following pre-written rules:
 - **Enforce Module Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - **Ensure Owners**: Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
-## Conformance Plugin Requires Nx Powerpack
+## Setup
 
 The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/recipes/installation/activate-powerpack) is a simple process.
 
 {% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://nx.app/nx-powerpack/purchase" /%}
+
+Then, add the Conformance plugin to your workspace.
+
+{% cards cols="1" lgCols="3" mdCols="1" smCols="1" %}
+
+&nbsp;
+
+{% link-card title="Conformance" type="Nx Plugin" url="/nx-api/powerpack-conformance" icon="CheckBadgeIcon" /%}
+
+&nbsp;
+
+{% /cards %}
 
 ## Configure Conformance Rules
 

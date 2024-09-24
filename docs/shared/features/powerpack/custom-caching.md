@@ -8,15 +8,13 @@ The recommended way to enable the [remote cache](/ci/features/remote-cache) is t
 
 The options range from fully opting in to Nx's management of the remote cache to fully managing the configuration and security of your own remote cache.
 
-## Self-Hosted Remote Cache Plugins Require Nx Powerpack
+## Setup
 
 The `@nx/powerpack-s3-cache` and `@nx/powerpack-shared-fs-cache` plugins require an Nx Powerpack license to function. [Activating Powerpack](/recipes/installation/activate-powerpack) is a simple process.
 
 {% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of the Nx CLI" url="https://nx.app/nx-powerpack/purchase" /%}
 
-## Choose Your Storage Solution
-
-Read the individual plugin documentation for specific set up instructions.
+Then, choose the appropriate cache plugin for your situation.
 
 {% cards cols="2" lgCols="2" mdCols="2" smCols="2" %}
 
