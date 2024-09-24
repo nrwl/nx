@@ -17,15 +17,7 @@ The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to funct
 
 Then, add the Conformance plugin to your workspace.
 
-{% cards cols="1" lgCols="3" mdCols="1" smCols="1" %}
-
-&nbsp;
-
 {% link-card title="Conformance" type="Nx Plugin" url="/nx-api/powerpack-conformance" icon="CheckBadgeIcon" /%}
-
-&nbsp;
-
-{% /cards %}
 
 ## Configure Conformance Rules
 
