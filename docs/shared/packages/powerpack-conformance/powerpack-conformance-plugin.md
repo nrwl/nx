@@ -213,3 +213,5 @@ const rule = createConformanceRule({
 
 export default rule;
 ```
+
+Note that the severity of the error is defined by the rule author and can be adjusted based on the specific violations that are found.
