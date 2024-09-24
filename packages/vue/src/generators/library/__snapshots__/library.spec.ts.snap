@@ -12,7 +12,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     vue(),
     nxViteTsPaths(),
@@ -22,12 +21,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -51,7 +48,6 @@ export default defineConfig({
       external: [],
     },
   },
-
   test: {
     watch: false,
     globals: true,
@@ -107,7 +103,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     vue(),
     nxViteTsPaths(),
@@ -117,12 +112,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -146,7 +139,6 @@ export default defineConfig({
       external: [],
     },
   },
-
   test: {
     watch: false,
     globals: true,
