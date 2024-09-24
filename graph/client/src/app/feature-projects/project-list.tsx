@@ -27,6 +27,7 @@ import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate, useNavigation } from 'react-router-dom';
 import { useRouteConstructor } from '@nx/graph/shared';
 import { CompositeNode } from '../interfaces';
+import { useMemo } from 'react';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphProjectNode;
@@ -249,6 +250,15 @@ function CompositeNodeListItem({
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
 
+  const label = useMemo(() => {
+    if (compositeNode.parent) {
+      return `${compositeNode.parent.replace('composite-', '')}/${
+        compositeNode.label
+      }`;
+    }
+    return compositeNode.label;
+  }, [compositeNode]);
+
   function toggleProject() {
     if (compositeNode.state !== 'hidden') {
       projectGraphService.send({
@@ -312,9 +322,7 @@ function CompositeNodeListItem({
           data-active={compositeNode.state !== 'hidden'}
           onClick={toggleProject}
         >
-          {compositeNode.parent
-            ? `${compositeNode.label} (${compositeNode.parent})`
-            : compositeNode.label}
+          {label}
         </label>
       </div>
 

@@ -240,7 +240,12 @@ export function ProjectsSidebar(): JSX.Element {
   useEffect(() => {
     return graphService.listen((event) => {
       if (event.type === 'CompositeNodeDblClick') {
-        projectGraphService.send({ type: 'expandCompositeNode', id: event.id });
+        projectGraphService.send({
+          type: event.data.expanded
+            ? 'collapseCompositeNode'
+            : 'expandCompositeNode',
+          id: event.id,
+        });
       }
     });
   }, []);
