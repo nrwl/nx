@@ -24,7 +24,10 @@ async function requirePowerpack(): Promise<any> {
     if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
       try {
         execSync(
-          `${getPackageManagerCommand().addDev} @nx/powerpack-license@latest`
+          `${getPackageManagerCommand().addDev} @nx/powerpack-license@latest`,
+          {
+            windowsHide: true,
+          }
         );
 
         // @ts-ignore

@@ -21,8 +21,11 @@ export async function setupVerdaccio(
   if (!tree.exists('.verdaccio/config.yml')) {
     generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {
       npmUplinkRegistry:
-        execSync('npm config get registry')?.toString()?.trim() ??
-        'https://registry.npmjs.org',
+        execSync('npm config get registry', {
+          windowsHide: true,
+        })
+          ?.toString()
+          ?.trim() ?? 'https://registry.npmjs.org',
     });
   }
 
