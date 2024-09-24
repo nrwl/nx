@@ -25,7 +25,7 @@ export async function mergeCustomWebpackConfig(
   // for instance: `module.exports = async config => { ... }`.
   let newConfig: any;
   if (typeof config === 'function') {
-    newConfig = config(baseWebpackConfig, options, target);
+    newConfig = await config(baseWebpackConfig, options, target);
   } else {
     newConfig = merge(baseWebpackConfig, config);
   }
