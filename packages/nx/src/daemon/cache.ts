@@ -58,17 +58,6 @@ export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> 
   }
 }
 
-export async function safelyCleanUpExistingProcess(): Promise<void> {
-  const daemonProcessJson = readDaemonProcessJsonCache();
-  if (daemonProcessJson && daemonProcessJson.processId) {
-    try {
-      process.kill(daemonProcessJson.processId);
-      // we wait for the process to actually shut down before returning
-      await waitForDaemonToExitAndCleanupProcessJson();
-    } catch {}
-  }
-}
-
 // Must be sync for the help output use case
 export function getDaemonProcessIdSync(): number | null {
   if (!existsSync(serverProcessJsonPath)) {
