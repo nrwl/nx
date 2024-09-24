@@ -43,19 +43,25 @@ async function installPackage(
   if (existsSync('package.json')) {
     const pmc = getPackageManagerCommand();
     await new Promise<void>((resolve) =>
-      exec(`${pmc.addDev} ${pkgName}@${version}`, (error, stdout) => {
-        if (error) {
-          spinner.fail();
-          output.addNewline();
-          logger.error(stdout);
-          output.error({
-            title: `Failed to install ${pkgName}. Please check the error above for more details.`,
-          });
-          process.exit(1);
-        }
+      exec(
+        `${pmc.addDev} ${pkgName}@${version}`,
+        {
+          windowsHide: true,
+        },
+        (error, stdout) => {
+          if (error) {
+            spinner.fail();
+            output.addNewline();
+            logger.error(stdout);
+            output.error({
+              title: `Failed to install ${pkgName}. Please check the error above for more details.`,
+            });
+            process.exit(1);
+          }
 
-        return resolve();
-      })
+          return resolve();
+        }
+      )
     );
   } else {
     nxJson.installation.plugins ??= {};
