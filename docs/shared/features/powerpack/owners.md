@@ -14,7 +14,7 @@ Then, add the Owners plugin to your workspace.
 
 &nbsp;
 
-{% link-card title="Owners" type="Nx Plugin" url="/nx-api/powerpack-owners" icon="UsersIcon" /%}
+{% link-card title="Owners" type="Nx Plugin" url="/nx-api/powerpack-owners" icon="UserGroupIcon" /%}
 
 &nbsp;
 

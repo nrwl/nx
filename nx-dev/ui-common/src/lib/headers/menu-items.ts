@@ -15,7 +15,6 @@ import {
   GlobeAltIcon,
   MicrophoneIcon,
   VideoCameraIcon,
-  UsersIcon,
   CheckBadgeIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
@@ -99,7 +98,7 @@ export const featuresItems: MenuItem[] = [
     name: 'Define Project Owners',
     description: null,
     href: '/features/powerpack/owners',
-    icon: UsersIcon,
+    icon: UserGroupIcon,
     isNew: false,
     isHighlight: false,
   },
