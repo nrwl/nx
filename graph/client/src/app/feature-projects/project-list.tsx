@@ -318,7 +318,7 @@ function CompositeNodeListItem({
         <label
           className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
           data-project={compositeNode.id}
-          title={compositeNode.label}
+          title={label}
           data-active={compositeNode.state !== 'hidden'}
           onClick={toggleProject}
         >
