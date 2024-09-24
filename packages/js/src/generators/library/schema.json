@@ -70,12 +70,6 @@
       "description": "The test environment to use if unitTestRunner is set to jest or vitest.",
       "default": "node"
     },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case file names.",
-      "alias": "P",
-      "default": false
-    },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",

@@ -41,7 +41,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      project: projectName,
+      directory: `${projectName}/src/lib/hello`,
     });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -61,7 +61,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      project: projectName,
+      directory: `${projectName}/src/lib/hello`,
       globalCss: true,
     });
 
@@ -81,7 +81,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      project: 'my-app',
+      directory: 'my-app/src/app/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -95,7 +95,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      project: 'my-app',
+      directory: 'my-app/src/app/hello',
       globalCss: true,
     });
 
@@ -110,7 +110,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         classComponent: true,
       });
 
@@ -127,7 +127,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         export: true,
       });
 
@@ -140,7 +140,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        project: 'my-app',
+        directory: 'my-lib/src/app/hello',
         export: true,
       });
 
@@ -166,50 +166,11 @@ describe('component', () => {
     });
   });
 
-  describe('--pascalCaseFiles', () => {
-    it('should generate component files with upper case names', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        style: 'css',
-        project: projectName,
-        pascalCaseFiles: true,
-      });
-      expect(appTree.exists('my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
-      expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx')
-      ).toBeTruthy();
-      expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.module.css')
-      ).toBeTruthy();
-    });
-  });
-
-  describe('--pascalCaseDirectory', () => {
-    it('should generate component files with pascal case directories', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello-world',
-        style: 'css',
-        project: projectName,
-        pascalCaseFiles: true,
-        pascalCaseDirectory: true,
-      });
-      expect(
-        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.tsx')
-      ).toBeTruthy();
-      expect(
-        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.spec.tsx')
-      ).toBeTruthy();
-      expect(
-        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.module.css')
-      ).toBeTruthy();
-    });
-  });
-
   describe('--style none', () => {
     it('should generate component files without styles', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: 'none',
       });
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -243,7 +204,7 @@ describe('component', () => {
     it('should use styled-components as the styled API library', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: 'styled-components',
       });
 
@@ -260,7 +221,7 @@ describe('component', () => {
     it('should add dependencies to package.json', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: 'styled-components',
       });
 
@@ -273,7 +234,7 @@ describe('component', () => {
     it('should use @emotion/styled as the styled API library', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: '@emotion/styled',
       });
 
@@ -290,7 +251,7 @@ describe('component', () => {
     it('should add dependencies to package.json', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: '@emotion/styled',
       });
 
@@ -304,7 +265,7 @@ describe('component', () => {
     it('should use styled-jsx as the styled API library', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: 'styled-jsx',
       });
 
@@ -321,7 +282,7 @@ describe('component', () => {
     it('should add dependencies to package.json', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         style: 'styled-jsx',
       });
 
@@ -335,7 +296,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        project: projectName,
+        directory: `${projectName}/src/lib/hello`,
         routing: true,
       });
 
@@ -354,8 +315,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        project: projectName,
-        directory: 'components',
+        directory: `${projectName}/src/components/hello`,
       });
 
       expect(appTree.exists('/my-lib/src/components/hello/hello.tsx'));
@@ -365,46 +325,20 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'helloWorld',
         style: 'css',
-        project: projectName,
-        directory: 'lib/foo',
+        directory: `${projectName}/src/lib/foo/hello-world`,
       });
 
-      expect(appTree.exists('/my-lib/src/lib/foo/hello-world/hello-world.tsx'));
+      expect(appTree.exists('/my-lib/src/lib/foo/hello-world/helloWorld.tsx'));
     });
 
     it('should create directory when the path is provided as the component name', async () => {
       await componentGenerator(appTree, {
         name: `my-lib/src/btn/btn`,
-        project: projectName,
         style: 'css',
         nameAndDirectoryFormat: 'as-provided',
       });
 
       expect(appTree.exists('my-lib/src/btn/btn.tsx')).toBeTruthy();
-    });
-  });
-
-  describe('--flat', () => {
-    it('should create in project directory rather than in its own folder', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        style: 'css',
-        project: projectName,
-        flat: true,
-      });
-
-      expect(appTree.exists('/my-lib/src/lib/hello.tsx'));
-    });
-    it('should work with custom directory path', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        style: 'css',
-        project: projectName,
-        flat: true,
-        directory: 'components',
-      });
-
-      expect(appTree.exists('/my-lib/src/components/hello.tsx'));
     });
   });
 });

@@ -251,7 +251,6 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -612,7 +611,6 @@ async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(host);

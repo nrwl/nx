@@ -13,6 +13,7 @@ describe('Storybook Configuration', () => {
 
       await libraryGenerator(tree, {
         name: 'storybook-test',
+        directory: 'libs/storybook-test',
         style: 'css',
         unitTestRunner,
         addPlugin: true,
@@ -21,7 +22,6 @@ describe('Storybook Configuration', () => {
       // ACT
       await storybookConfigurationGenerator(tree, {
         project: 'storybook-test',
-        configureCypress: false,
         configureStaticServe: false,
         generateStories: true,
         addPlugin: true,

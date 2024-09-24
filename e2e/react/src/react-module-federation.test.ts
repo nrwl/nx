@@ -44,16 +44,16 @@ describe('React Module Federation', () => {
         );
 
         checkFilesExist(
-          `apps/${shell}/module-federation.config.${js ? 'js' : 'ts'}`
+          `${shell}/module-federation.config.${js ? 'js' : 'ts'}`
         );
         checkFilesExist(
-          `apps/${remote1}/module-federation.config.${js ? 'js' : 'ts'}`
+          `${remote1}/module-federation.config.${js ? 'js' : 'ts'}`
         );
         checkFilesExist(
-          `apps/${remote2}/module-federation.config.${js ? 'js' : 'ts'}`
+          `${remote2}/module-federation.config.${js ? 'js' : 'ts'}`
         );
         checkFilesExist(
-          `apps/${remote3}/module-federation.config.${js ? 'js' : 'ts'}`
+          `${remote3}/module-federation.config.${js ? 'js' : 'ts'}`
         );
 
         await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
@@ -63,7 +63,7 @@ describe('React Module Federation', () => {
         });
 
         updateFile(
-          `apps/${shell}-e2e/src/integration/app.spec.${js ? 'js' : 'ts'}`,
+          `${shell}-e2e/src/integration/app.spec.${js ? 'js' : 'ts'}`,
           stripIndents`
         import { getGreeting } from '../support/app.po';
 
@@ -133,7 +133,7 @@ describe('React Module Federation', () => {
       const remote3 = uniq('remote3');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
       );
 
       checkFilesExist(`apps/${shell}/module-federation.config.ts`);
@@ -201,7 +201,7 @@ describe('React Module Federation', () => {
         const remote3 = uniq('remote3');
 
         await runCLIAsync(
-          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat`
         );
 
         expect(readPort(shell)).toEqual(4200);
@@ -211,8 +211,8 @@ describe('React Module Federation', () => {
 
         [shell, remote1, remote2, remote3].forEach((app) => {
           checkFilesExist(
-            `apps/${app}/module-federation.config.ts`,
-            `apps/${app}/module-federation.server.config.ts`
+            `${app}/module-federation.config.ts`,
+            `${app}/module-federation.server.config.ts`
           );
           ['build', 'server'].forEach((target) => {
             ['development', 'production'].forEach(async (configuration) => {
@@ -232,7 +232,7 @@ describe('React Module Federation', () => {
         const remote3 = uniq('remote3');
 
         await runCLIAsync(
-          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+          `generate @nx/react:host ${shell} --ssr --bundler=webpack --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
         );
 
         const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
@@ -249,13 +249,13 @@ describe('React Module Federation', () => {
         const remote3 = uniq('remote3');
 
         await runCLIAsync(
-          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+          `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
         );
 
         const capitalize = (s: string) =>
           s.charAt(0).toUpperCase() + s.slice(1);
 
-        updateFile(`apps/${shell}-e2e/src/e2e/app.cy.ts`, (content) => {
+        updateFile(`${shell}-e2e/src/e2e/app.cy.ts`, (content) => {
           return `
         describe('${shell}-e2e', () => {
           beforeEach(() => cy.visit('/'));

@@ -16,7 +16,6 @@ export interface Schema {
   /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js?: boolean;
-  pascalCaseFiles?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   bundler?: 'esbuild' | 'webpack';

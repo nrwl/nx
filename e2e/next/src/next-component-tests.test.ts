@@ -187,11 +187,11 @@ describe(Button.name, () => {
 
 function createLibWithCt(libName: string, buildable: boolean) {
   runCLI(
-    `generate @nx/next:lib ${libName} --buildable=${buildable} --no-interactive`
+    `generate @nx/next:lib ${libName} --directory=libs/${libName} --buildable=${buildable} --no-interactive`
   );
 
   runCLI(
-    `generate @nx/next:component button --project=${libName} --flat --export --no-interactive`
+    `generate @nx/next:component button --directory=libs/${libName}/src/lib --export --no-interactive`
   );
   updateFile(`libs/${libName}/src/lib/button.tsx`, (content) => {
     return `import { useEffect, useState } from 'react';

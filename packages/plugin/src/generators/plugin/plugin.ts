@@ -74,13 +74,6 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 }
 
 export async function pluginGenerator(host: Tree, schema: Schema) {
-  return await pluginGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
 

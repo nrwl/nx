@@ -5,7 +5,7 @@ import {
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
 import { ExecutorContext, joinPathFragments, logger } from '@nx/devkit';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 import * as esbuild from 'esbuild';
 import { readTsConfig } from '@nx/js';
 
@@ -28,12 +28,12 @@ export function normalizeOptions(
 
   if (!options.bundle && options.thirdParty) {
     logger.info(
-      chalk.yellow(
-        `Your build has conflicting options, ${chalk.bold(
+      pc.yellow(
+        `Your build has conflicting options, ${pc.bold(
           'bundle:false'
-        )} and ${chalk.bold(
+        )} and ${pc.bold(
           'thirdParty:true'
-        )}. Your package.json depedencies might not be generated correctly so we added an update ${chalk.bold(
+        )}. Your package.json depedencies might not be generated correctly so we added an update ${pc.bold(
           'thirdParty:false'
         )}`
       )
@@ -55,12 +55,12 @@ export function normalizeOptions(
 
   if (options.skipTypeCheck && declaration) {
     logger.info(
-      chalk.yellow(
-        `Your build has conflicting options, ${chalk.bold(
+      pc.yellow(
+        `Your build has conflicting options, ${pc.bold(
           'skipTypeCheck:true'
-        )} and ${chalk.bold(
+        )} and ${pc.bold(
           'declaration:true'
-        )}. Your declarations won't be generated so we added an update ${chalk.bold(
+        )}. Your declarations won't be generated so we added an update ${pc.bold(
           'skipTypeCheck:false'
         )}`
       )

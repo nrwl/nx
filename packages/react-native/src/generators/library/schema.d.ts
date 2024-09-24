@@ -11,7 +11,6 @@ export interface Schema {
   skipTsConfig: boolean;
   skipFormat: boolean;
   tags?: string;
-  pascalCaseFiles?: boolean;
   unitTestRunner: 'jest' | 'none';
   linter: Linter | LinterType;
   publishable?: boolean;

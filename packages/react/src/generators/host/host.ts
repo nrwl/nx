@@ -29,19 +29,9 @@ export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return hostGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function hostGeneratorInternal(
-  host: Tree,
-  schema: Schema
-): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
+    ...(await normalizeOptions<Schema>(host, schema)),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
       ? false

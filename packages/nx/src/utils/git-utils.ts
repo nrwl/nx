@@ -40,6 +40,7 @@ export class GitRepository {
   getGitRootPath(cwd: string) {
     return execSync('git rev-parse --show-toplevel', {
       cwd,
+      windowsHide: true,
     })
       .toString()
       .trim();
@@ -237,6 +238,7 @@ export function getGithubSlugOrNull(): string | null {
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
+      windowsHide: true,
     }).toString();
     // If there are no remotes, we default to github
     if (!gitRemote || gitRemote.length === 0) {
@@ -302,6 +304,7 @@ export function commitChanges(
       stdio: 'pipe',
       input: commitMessage,
       cwd: directory,
+      windowsHide: true,
     });
   } catch (err) {
     if (directory) {
@@ -323,6 +326,7 @@ export function getLatestCommitSha(): string | null {
     return execSync('git rev-parse HEAD', {
       encoding: 'utf8',
       stdio: 'pipe',
+      windowsHide: true,
     }).trim();
   } catch {
     return null;

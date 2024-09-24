@@ -23,14 +23,12 @@ describe('Migration to update target and add useDefineForClassFields', () => {
     await generateTestApplication(tree, {
       name: 'test',
       bundler: 'webpack',
-      projectNameAndRootFormat: 'derived',
       skipFormat: true,
     });
     await generateTestApplication(tree, {
       name: 'karma',
       unitTestRunner: UnitTestRunner.None,
       bundler: 'webpack',
-      projectNameAndRootFormat: 'derived',
       skipFormat: true,
     });
 

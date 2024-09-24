@@ -1,29 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`component Generator --flat should create the component correctly and export it in the entry point 1`] = `
-"import { Component } from '@angular/core';
-
-@Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrl: './example.component.css'
-})
-export class ExampleComponent {}
-"
-`;
-
-exports[`component Generator --flat should create the component correctly and not export it when "export=false" 1`] = `
-"import { Component } from '@angular/core';
-
-@Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrl: './example.component.css'
-})
-export class ExampleComponent {}
-"
-`;
-
 exports[`component Generator --module should import the component correctly to the module file when flat is false 1`] = `
 "
 import { NgModule } from '@angular/core';
@@ -34,18 +10,6 @@ import { ExampleComponent } from './example/example.component';
   exports: [ExampleComponent]
 })
 export class LibModule {}
-"
-`;
-
-exports[`component Generator --path should create the component correctly and export it in the entry point 1`] = `
-"import { Component } from '@angular/core';
-
-@Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrl: './example.component.css'
-})
-export class ExampleComponent {}
 "
 `;
 

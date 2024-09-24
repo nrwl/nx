@@ -24,7 +24,7 @@
       "description": "Create a React Native library."
     },
     "component": {
-      "factory": "./src/generators/component/component#reactNativeComponentGeneratorInternal",
+      "factory": "./src/generators/component/component",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React Native component.",
       "aliases": ["c"]

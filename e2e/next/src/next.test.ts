@@ -74,8 +74,8 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
     );
 
-    checkFilesDoNotExist(`apps/${appName}/.next/build-manifest.json`);
-    checkFilesDoNotExist(`apps/${appName}/.nx-helpers/with-nx.js`);
+    checkFilesDoNotExist(`${appName}/.next/build-manifest.json`);
+    checkFilesDoNotExist(`${appName}/.nx-helpers/with-nx.js`);
 
     expect(() => {
       runCLI(`build ${appName} --configuration=development`);
@@ -89,7 +89,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --js --appDir=false --e2eTestRunner=playwright`
     );
 
-    checkFilesExist(`apps/${appName}/src/pages/index.js`);
+    checkFilesExist(`${appName}/src/pages/index.js`);
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -105,7 +105,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
-    const mainPath = `apps/${appName}/src/pages/index.js`;
+    const mainPath = `${appName}/src/pages/index.js`;
     updateFile(
       mainPath,
       `import '@${proj}/${libName}';\n` + readFile(mainPath)
@@ -113,7 +113,7 @@ describe('Next.js Applications', () => {
 
     // Update lib to use css modules
     updateFile(
-      `libs/${libName}/src/lib/${libName}.js`,
+      `${libName}/src/lib/${libName}.js`,
       `
           import styles from './style.module.css';
           export function Test() {
@@ -122,7 +122,7 @@ describe('Next.js Applications', () => {
         `
     );
     updateFile(
-      `libs/${libName}/src/lib/style.module.css`,
+      `${libName}/src/lib/style.module.css`,
       `
           .container {}
         `
@@ -142,7 +142,7 @@ describe('Next.js Applications', () => {
     runCLI(`generate @nx/next:app ${appName} --no-interactive --no-swc`);
 
     // Next.js enables SWC when custom .babelrc is not provided.
-    checkFilesExist(`apps/${appName}/.babelrc`);
+    checkFilesExist(`${appName}/.babelrc`);
 
     await checkApp(appName, {
       checkUnitTest: false,
@@ -157,11 +157,11 @@ describe('Next.js Applications', () => {
 
     runCLI(`generate @nx/next:app ${appName} --no-interactive --custom-server`);
 
-    checkFilesExist(`apps/${appName}/server/main.ts`);
+    checkFilesExist(`${appName}/server/main.ts`);
 
     const result = runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/apps/${appName}/server/main.js`);
+    checkFilesExist(`dist/${appName}/server/main.js`);
 
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`
@@ -175,11 +175,11 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server`
     );
 
-    checkFilesExist(`apps/${appName}/server/main.ts`);
+    checkFilesExist(`${appName}/server/main.ts`);
 
     const result = runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/apps/${appName}/server/main.js`);
+    checkFilesExist(`dist/${appName}/server/main.js`);
 
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`

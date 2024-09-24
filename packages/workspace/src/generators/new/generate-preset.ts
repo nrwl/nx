@@ -36,6 +36,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     shell: true,
     cwd: join(host.root, opts.directory),
+    windowsHide: true,
   };
   const pmc = getPackageManagerCommand();
   const executable = `${pmc.exec} nx`;

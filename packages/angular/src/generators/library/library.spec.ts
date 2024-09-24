@@ -1790,47 +1790,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--project-name-and-root-format=derived', () => {
-    it('should generate correctly when no directory is provided', async () => {
-      await runLibraryGeneratorWithOpts({
-        projectNameAndRootFormat: 'derived',
-      });
-
-      const json = readProjectConfiguration(tree, 'my-lib');
-      expect(json.root).toEqual('libs/my-lib');
-      const tsconfigBaseJson = readJson(tree, '/tsconfig.base.json');
-      expect(tsconfigBaseJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts',
-      ]);
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../tsconfig.base.json');
-      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
-    });
-
-    it('should generate correctly when directory is provided', async () => {
-      await runLibraryGeneratorWithOpts({
-        directory: 'myDir',
-        projectNameAndRootFormat: 'derived',
-      });
-
-      const json = readProjectConfiguration(tree, 'my-dir-my-lib');
-      expect(json.root).toEqual('libs/my-dir/my-lib');
-      const tsconfigBaseJson = readJson(tree, '/tsconfig.base.json');
-      expect(
-        tsconfigBaseJson.compilerOptions.paths['@proj/my-dir/my-lib']
-      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
-      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../../tsconfig.base.json');
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
-      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(
-        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
-      ).toBeTruthy();
-    });
-  });
-
   describe('angular compat support', () => {
     beforeEach(() => {
       updateJson(tree, 'package.json', (json) => ({

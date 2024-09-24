@@ -1,6 +1,6 @@
 {
   "name": "host",
-  "factory": "./src/generators/host/host#hostGeneratorInternal",
+  "factory": "./src/generators/host/host",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactHost",
@@ -107,12 +107,6 @@
         "description": "Add tags to the application (used for linting).",
         "alias": "t"
       },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case component file name (e.g. App.tsx).",
-        "alias": "P",
-        "default": false
-      },
       "classComponent": {
         "type": "boolean",
         "description": "Use class components instead of functional component.",
@@ -193,7 +187,7 @@
   },
   "x-type": "application",
   "description": "Generate a host react application",
-  "implementation": "/packages/react/src/generators/host/host#hostGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/host/host.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/host/schema.json",

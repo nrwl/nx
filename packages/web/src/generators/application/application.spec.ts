@@ -9,9 +9,11 @@ import {
 } from '@nx/devkit';
 import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import * as devkitExports from 'nx/src/devkit-exports';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -21,6 +23,7 @@ jest.mock('@nx/devkit', () => {
     ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
   };
 });
+
 describe('app', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -28,6 +31,9 @@ describe('app', () => {
   > = installedCypressVersion as never;
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
+    jest
+      .spyOn(devkitExports, 'getPackageManagerCommand')
+      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
 
     tree = createTreeWithEmptyWorkspace();
   });

@@ -80,6 +80,7 @@ export async function playwrightExecutor(
     execSync(`${pmc.exec} playwright install`, {
       cwd: workspaceRoot,
       stdio: 'inherit',
+      windowsHide: true,
     });
   }
 

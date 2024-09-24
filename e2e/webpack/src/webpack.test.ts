@@ -21,7 +21,9 @@ describe('Webpack Plugin', () => {
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
@@ -100,7 +102,9 @@ describe('Webpack Plugin', () => {
 
   it('should use either BABEL_ENV or NODE_ENV value for Babel environment configuration', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
@@ -178,7 +182,11 @@ describe('Webpack Plugin', () => {
 
   it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
+    );
+
+    checkFilesExist(`apps/${appName}/src/main.ts`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
@@ -202,9 +210,11 @@ describe('Webpack Plugin', () => {
   it('should support babel + core-js to polyfill JS features', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler webpack --compiler=babel`
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack --compiler=babel`
     );
     packageInstall('core-js', undefined, '3.26.1', 'prod');
+
+    checkFilesExist(`apps/${appName}/src/main.ts`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
@@ -230,7 +240,11 @@ describe('Webpack Plugin', () => {
 
   it('should allow options to be passed from the executor', async () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
+    );
+
+    checkFilesExist(`apps/${appName}/project.json`);
     updateJson(`apps/${appName}/project.json`, (json) => {
       json.targets.build = {
         executor: '@nx/webpack:webpack',
@@ -243,6 +257,8 @@ describe('Webpack Plugin', () => {
       };
       return json;
     });
+
+    checkFilesExist(`apps/${appName}/webpack.config.js`);
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
@@ -273,7 +289,9 @@ describe('Webpack Plugin', () => {
 
   it('should resolve assets from executors as relative to workspace root', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
+    );
     updateFile('shared/docs/TEST.md', 'TEST');
     updateJson(`apps/${appName}/project.json`, (json) => {
       json.targets.build = {
@@ -303,9 +321,13 @@ describe('Webpack Plugin', () => {
     const appName = uniq('app');
     const myPkg = uniq('my-pkg');
 
-    runCLI(`generate @nx/web:application ${appName}`);
+    runCLI(
+      `generate @nx/web:application ${appName} --directory=apps/${appName}`
+    );
 
-    runCLI(`generate @nx/js:lib ${myPkg} --importPath=@${appName}/${myPkg}`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --importPath=@${appName}/${myPkg}`
+    );
 
     updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
 
@@ -353,7 +375,7 @@ describe('Webpack Plugin', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel`
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler=webpack --compiler=babel`
     );
 
     updateFile(

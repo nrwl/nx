@@ -28,22 +28,11 @@ export async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/plugin:plugin',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
   options.rootProject = projectRoot === '.';
 
-  let projectDirectory = projectRoot;
-  if (options.projectNameAndRootFormat === 'derived') {
-    let { layoutDirectory } = extractLayoutDirectory(options.directory);
-    if (!layoutDirectory) {
-      const { libsDir } = getWorkspaceLayout(host);
-      layoutDirectory = libsDir;
-    }
-    if (projectRoot.startsWith(`${layoutDirectory}/`)) {
-      projectDirectory = projectRoot.replace(`${layoutDirectory}/`, '');
-    }
-  }
+  const projectDirectory = projectRoot;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

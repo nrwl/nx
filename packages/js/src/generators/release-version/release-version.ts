@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
+import { prompt } from 'enquirer';
 import { exec } from 'node:child_process';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -210,6 +211,9 @@ To fix this you will either need to add a package.json file at that location, or
               currentVersion = await new Promise<string>((resolve, reject) => {
                 exec(
                   `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
+                  {
+                    windowsHide: true,
+                  },
                   (error, stdout, stderr) => {
                     if (error) {
                       return reject(error);
@@ -231,11 +235,26 @@ To fix this you will either need to add a package.json file at that location, or
               spinner.stop();
 
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                logger.buffer(
-                  `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
-                );
-                currentVersion = currentVersionFromDisk;
-                currentVersionResolvedFromFallback = true;
+                if (
+                  !currentVersionFromDisk &&
+                  (options.specifierSource === 'conventional-commits' ||
+                    options.specifierSource === 'version-plans')
+                ) {
+                  currentVersion = await handleNoAvailableDiskFallback({
+                    logger,
+                    projectName,
+                    packageJsonPath,
+                    specifierSource: options.specifierSource,
+                    currentVersionSourceMessage: `from the registry ${registry}`,
+                    resolutionSuggestion: `you should publish an initial version to the registry`,
+                  });
+                } else {
+                  logger.buffer(
+                    `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
+                  );
+                  currentVersion = currentVersionFromDisk;
+                  currentVersionResolvedFromFallback = true;
+                }
               } else {
                 throw new Error(
                   `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
@@ -259,7 +278,7 @@ To fix this you will either need to add a package.json file at that location, or
           currentVersion = currentVersionFromDisk;
           if (!currentVersion) {
             throw new Error(
-              `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}`
+              `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}, please ensure that the "version" field is set within the file`
             );
           }
           logger.buffer(
@@ -281,11 +300,26 @@ To fix this you will either need to add a package.json file at that location, or
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                logger.buffer(
-                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
-                );
-                currentVersion = currentVersionFromDisk;
-                currentVersionResolvedFromFallback = true;
+                if (
+                  !currentVersionFromDisk &&
+                  (options.specifierSource === 'conventional-commits' ||
+                    options.specifierSource === 'version-plans')
+                ) {
+                  currentVersion = await handleNoAvailableDiskFallback({
+                    logger,
+                    projectName,
+                    packageJsonPath,
+                    specifierSource: options.specifierSource,
+                    currentVersionSourceMessage: `from git tag using pattern "${releaseTagPattern}"`,
+                    resolutionSuggestion: `you should set an initial git tag on a relevant commit`,
+                  });
+                } else {
+                  logger.buffer(
+                    `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
+                  );
+                  currentVersion = currentVersionFromDisk;
+                  currentVersionResolvedFromFallback = true;
+                }
               } else {
                 throw new Error(
                   `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
@@ -991,5 +1025,60 @@ class ProjectLogger {
     this.logs.forEach((msg) => {
       console.log(this.color.instance.bold(this.projectName) + ' ' + msg);
     });
+  }
+}
+
+/**
+ * Allow users to be unblocked when locally running releases for the very first time with certain combinations that require an initial
+ * version in order to function (e.g. a relative semver bump derived via conventional commits or version plans) by providing an interactive
+ * prompt to let them opt into using 0.0.0 as the implied current version.
+ */
+async function handleNoAvailableDiskFallback({
+  logger,
+  projectName,
+  packageJsonPath,
+  specifierSource,
+  currentVersionSourceMessage,
+  resolutionSuggestion,
+}: {
+  logger: ProjectLogger;
+  projectName: string;
+  packageJsonPath: string;
+  specifierSource: Exclude<
+    ReleaseVersionGeneratorSchema['specifierSource'],
+    'prompt'
+  >;
+  currentVersionSourceMessage: string;
+  resolutionSuggestion: string;
+}): Promise<string> {
+  const unresolvableCurrentVersionError = new Error(
+    `Unable to resolve the current version ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version. To resolve this, ${resolutionSuggestion}, or set an appropriate value for "version" in ${packageJsonPath}`
+  );
+  if (process.env.CI === 'true') {
+    // We can't prompt in CI, so error immediately
+    throw unresolvableCurrentVersionError;
+  }
+  try {
+    const reply = await prompt<{ useZero: boolean }>([
+      {
+        name: 'useZero',
+        message: `\n${chalk.yellow(
+          `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate value for "version" in ${packageJsonPath}`
+        )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
+        type: 'confirm',
+        initial: false,
+      },
+    ]);
+    if (!reply.useZero) {
+      // Throw any error to skip the fallback to 0.0.0, may as well use the one we already have
+      throw unresolvableCurrentVersionError;
+    }
+    const currentVersion = '0.0.0';
+    logger.buffer(
+      `📄 Forcibly resolved the current version as "${currentVersion}" based on your response to the prompt above.`
+    );
+    return currentVersion;
+  } catch {
+    throw unresolvableCurrentVersionError;
   }
 }

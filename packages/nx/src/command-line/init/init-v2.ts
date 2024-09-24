@@ -55,10 +55,11 @@ export function installPlugins(
     execSync(
       `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
         updatePackageScripts ? '--updatePackageScripts' : ''
-      } --no-interactive`,
+      }`,
       {
         stdio: [0, 1, 2],
         cwd: repoRoot,
+        windowsHide: true,
       }
     );
   }

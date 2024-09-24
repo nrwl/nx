@@ -22,7 +22,6 @@ export async function normalizeSchema(
     projectType: 'library',
     directory: schema.directory,
     projectNameAndRootFormat: schema.projectNameAndRootFormat,
-    callingGenerator: '@nx/plugin:create-package',
   });
   schema.projectNameAndRootFormat = projectNameAndRootFormat;
 
