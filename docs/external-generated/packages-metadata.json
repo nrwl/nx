@@ -97,7 +97,7 @@
         "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
         "hidden": false,
         "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/schema.json",
+        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
         "path": "powerpack-s3-cache/generators/init",
         "type": "generator"
       }
@@ -107,5 +107,38 @@
     "packageName": "@nx/powerpack-s3-cache",
     "root": "/libs/nx-packages/powerpack-s3-cache",
     "source": "/libs/nx-packages/powerpack-s3-cache/src"
+  },
+  {
+    "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Add the shared fs cache",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/schema.json",
+        "path": "powerpack-shared-fs-cache/generators/init",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-shared-fs-cache",
+    "packageName": "@nx/powerpack-shared-fs-cache",
+    "root": "/libs/nx-packages/powerpack-shared-fs-cache",
+    "source": "/libs/nx-packages/powerpack-shared-fs-cache/src"
   }
 ]

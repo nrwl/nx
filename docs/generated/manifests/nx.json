@@ -469,7 +469,7 @@
           },
           {
             "id": "custom-caching",
-            "name": "Change the Remote Cache Storage Location",
+            "name": "Self-Host the Remote Cache",
             "description": "Custom Caching",
             "mediaImage": "",
             "file": "shared/features/powerpack/custom-caching",
@@ -674,7 +674,7 @@
       },
       {
         "id": "custom-caching",
-        "name": "Change the Remote Cache Storage Location",
+        "name": "Self-Host the Remote Cache",
         "description": "Custom Caching",
         "mediaImage": "",
         "file": "shared/features/powerpack/custom-caching",
@@ -712,7 +712,7 @@
   },
   "/features/powerpack/custom-caching": {
     "id": "custom-caching",
-    "name": "Change the Remote Cache Storage Location",
+    "name": "Self-Host the Remote Cache",
     "description": "Custom Caching",
     "mediaImage": "",
     "file": "shared/features/powerpack/custom-caching",
@@ -6678,6 +6678,17 @@
         "tags": []
       },
       {
+        "id": "custom-task-runners",
+        "name": "Custom Task Runners",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-task-runners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-task-runners",
+        "tags": []
+      },
+      {
         "id": "workspace-executors",
         "name": "Workspace Executors",
         "description": "",
@@ -6812,6 +6823,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-generators",
+    "tags": []
+  },
+  "/deprecated/custom-task-runners": {
+    "id": "custom-task-runners",
+    "name": "Custom Task Runners",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-task-runners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-task-runners",
     "tags": []
   },
   "/deprecated/workspace-executors": {

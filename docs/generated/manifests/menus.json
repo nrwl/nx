@@ -346,7 +346,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Change the Remote Cache Storage Location",
+                "name": "Self-Host the Remote Cache",
                 "path": "/features/powerpack/custom-caching",
                 "id": "custom-caching",
                 "isExternal": false,
@@ -495,7 +495,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Change the Remote Cache Storage Location",
+            "name": "Self-Host the Remote Cache",
             "path": "/features/powerpack/custom-caching",
             "id": "custom-caching",
             "isExternal": false,
@@ -522,7 +522,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Change the Remote Cache Storage Location",
+        "name": "Self-Host the Remote Cache",
         "path": "/features/powerpack/custom-caching",
         "id": "custom-caching",
         "isExternal": false,
@@ -4877,6 +4877,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Custom Task Runners",
+            "path": "/deprecated/custom-task-runners",
+            "id": "custom-task-runners",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Workspace Executors",
             "path": "/deprecated/workspace-executors",
             "id": "workspace-executors",
@@ -4971,6 +4979,14 @@
         "name": "Workspace Generators",
         "path": "/deprecated/workspace-generators",
         "id": "workspace-generators",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom Task Runners",
+        "path": "/deprecated/custom-task-runners",
+        "id": "custom-task-runners",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -10629,6 +10645,49 @@
               {
                 "id": "init",
                 "path": "/nx-api/powerpack-s3-cache/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-shared-fs-cache",
+        "path": "/nx-api/powerpack-shared-fs-cache",
+        "name": "powerpack-shared-fs-cache",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/powerpack-shared-fs-cache/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-shared-fs-cache/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/powerpack-shared-fs-cache/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,

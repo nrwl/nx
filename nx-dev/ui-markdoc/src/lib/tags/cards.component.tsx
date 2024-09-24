@@ -5,6 +5,8 @@ import {
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
+import * as nxDevIcons from '@nx/nx-dev/ui-icons';
+import * as heroIcons from '@heroicons/react/24/outline';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
@@ -99,6 +101,13 @@ export function Cards({
   );
 }
 
+function callIfFunction(fn: any) {
+  if (typeof fn === 'function') {
+    return fn({});
+  }
+  return fn;
+}
+
 export function LinkCard({
   title,
   type,
@@ -129,7 +138,12 @@ export function LinkCard({
             }
           )}
         >
-          {icon && frameworkIcons[icon as Framework]?.image}
+          {icon &&
+            (frameworkIcons[icon as Framework]?.image ||
+              callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
+              callIfFunction(
+                (heroIcons[icon as keyof typeof heroIcons] as any)?.render
+              ))}
         </div>
       )}
       <div

@@ -151,7 +151,7 @@
                   "file": "shared/features/powerpack/owners"
                 },
                 {
-                  "name": "Change the Remote Cache Storage Location",
+                  "name": "Self-Host the Remote Cache",
                   "description": "Custom Caching",
                   "id": "custom-caching",
                   "tags": ["custom-caching"],
@@ -1399,6 +1399,11 @@
               "file": "shared/deprecated/workspace-generators"
             },
             {
+              "name": "Custom Task Runners",
+              "id": "custom-task-runners",
+              "file": "shared/deprecated/custom-task-runners"
+            },
+            {
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
@@ -2628,6 +2633,19 @@
               "id": "overview",
               "path": "/nx-api/powerpack-s3-cache",
               "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-shared-fs-cache",
+          "id": "powerpack-shared-fs-cache",
+          "description": "powerpack-shared-fs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-shared-fs-cache",
+              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
             }
           ]
         },
