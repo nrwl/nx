@@ -20,6 +20,7 @@ export function runNxSync(
   } else {
     options ??= {};
     options.cwd ??= process.cwd();
+    options.windowsHide ??= true;
     const offsetFromRoot = relative(
       options.cwd,
       workspaceRootInner(options.cwd, null)
@@ -43,6 +44,7 @@ export async function runNxAsync(
   } else {
     options ??= {};
     options.cwd ??= process.cwd();
+    options.windowsHide ??= true;
     const offsetFromRoot = relative(
       options.cwd,
       workspaceRootInner(options.cwd, null)
