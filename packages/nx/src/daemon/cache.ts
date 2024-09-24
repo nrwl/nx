@@ -1,12 +1,11 @@
-import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
 import {
   readJsonFile,
   readJsonFileAsync,
-  writeJsonFile,
   writeJsonFileAsync,
-} from '../devkit-exports';
+} from '../utils/fileutils';
 
 export interface DaemonProcessJson {
   processId: number;

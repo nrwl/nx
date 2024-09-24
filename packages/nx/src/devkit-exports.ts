@@ -196,12 +196,7 @@ export type { JsonParseOptions, JsonSerializeOptions } from './utils/json';
 /**
  * @category Utils
  */
-export {
-  readJsonFile,
-  readJsonFileAsync,
-  writeJsonFile,
-  writeJsonFileAsync,
-} from './utils/fileutils';
+export { readJsonFile, writeJsonFile } from './utils/fileutils';
 
 /**
  * @category Utils
