@@ -107,7 +107,7 @@ describe('nx release pre-version command', () => {
     const result4 = runCLI(`release patch -d -g ${groupName} --first-release`);
 
     expect(result4).toContain(
-      `NX   Executing release group pre-version command for ${groupName}`
+      `NX   Executing release group pre-version command for "${groupName}"`
     );
 
     updateJson(`nx.json`, (json) => {
