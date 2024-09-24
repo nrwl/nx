@@ -141,7 +141,7 @@ async function initializePlugin(
   } catch (e) {
     spinner.fail();
     output.addNewline();
-    logger.error(e.message);
+    logger.error(e);
     output.error({
       title: `Failed to initialize ${pkgName}. Please check the error above for more details.`,
     });
