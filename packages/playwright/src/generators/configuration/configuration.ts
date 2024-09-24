@@ -161,7 +161,10 @@ function getBrowsersInstallTask() {
       bodyLines: ['use --skipInstall to skip installation.'],
     });
     const pmc = getPackageManagerCommand();
-    execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+    execSync(`${pmc.exec} playwright install`, {
+      cwd: workspaceRoot,
+      windowsHide: true,
+    });
   };
 }
 

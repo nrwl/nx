@@ -26,7 +26,9 @@ let registeredGlobalSyncGenerators = new Set<string>();
 const scheduledGenerators = new Set<string>();
 
 let waitPeriod = 100;
-let registeredSyncGenerators: Set<string> | undefined;
+let registeredSyncGenerators:
+  | { globalGenerators: Set<string>; taskGenerators: Set<string> }
+  | undefined;
 let scheduledTimeoutId: NodeJS.Timeout | undefined;
 let storedProjectGraphHash: string | undefined;
 let storedNxJsonHash: string | undefined;
@@ -100,12 +102,19 @@ export function collectAndScheduleSyncGenerators(
   // make sure to schedule all the collected generators
   scheduledGenerators.clear();
 
-  if (!registeredSyncGenerators.size) {
+  if (
+    !registeredSyncGenerators.globalGenerators.size &&
+    !registeredSyncGenerators.taskGenerators.size
+  ) {
     // there are no generators to run
     return;
   }
 
-  for (const generator of registeredSyncGenerators) {
+  const uniqueSyncGenerators = new Set<string>([
+    ...registeredSyncGenerators.globalGenerators,
+    ...registeredSyncGenerators.taskGenerators,
+  ]);
+  for (const generator of uniqueSyncGenerators) {
     scheduledGenerators.add(generator);
   }
 
@@ -141,9 +150,12 @@ export function collectAndScheduleSyncGenerators(
   }, waitPeriod);
 }
 
-export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
+export async function getCachedRegisteredSyncGenerators(): Promise<{
+  globalGenerators: string[];
+  taskGenerators: string[];
+}> {
   log('get registered sync generators');
-  if (!registeredSyncGenerators) {
+  if (!registeredGlobalSyncGenerators && !registeredTaskSyncGenerators) {
     log('no registered sync generators, collecting them');
     const { projectGraph } = await getCachedSerializedProjectGraphPromise();
     collectAllRegisteredSyncGenerators(projectGraph);
@@ -151,7 +163,10 @@ export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
     log('registered sync generators already collected, returning them');
   }
 
-  return [...registeredSyncGenerators];
+  return {
+    globalGenerators: [...registeredGlobalSyncGenerators],
+    taskGenerators: [...registeredTaskSyncGenerators],
+  };
 }
 
 async function getFromCacheOrRunGenerators(
@@ -398,26 +413,36 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
     log('nx.json hash is the same, not collecting global sync generators');
   }
 
-  const generators = new Set([
-    ...registeredTaskSyncGenerators,
-    ...registeredGlobalSyncGenerators,
-  ]);
-
   if (!registeredSyncGenerators) {
-    registeredSyncGenerators = generators;
+    registeredSyncGenerators = {
+      globalGenerators: registeredGlobalSyncGenerators,
+      taskGenerators: registeredTaskSyncGenerators,
+    };
     return;
   }
 
-  for (const generator of registeredSyncGenerators) {
-    if (!generators.has(generator)) {
-      registeredSyncGenerators.delete(generator);
+  for (const generator of registeredSyncGenerators.globalGenerators) {
+    if (!registeredGlobalSyncGenerators.has(generator)) {
+      registeredSyncGenerators.globalGenerators.delete(generator);
+      syncGeneratorsCacheResultPromises.delete(generator);
+    }
+  }
+  for (const generator of registeredSyncGenerators.taskGenerators) {
+    if (!registeredTaskSyncGenerators.has(generator)) {
+      registeredSyncGenerators.taskGenerators.delete(generator);
       syncGeneratorsCacheResultPromises.delete(generator);
     }
   }
 
-  for (const generator of generators) {
-    if (!registeredSyncGenerators.has(generator)) {
-      registeredSyncGenerators.add(generator);
+  for (const generator of registeredGlobalSyncGenerators) {
+    if (!registeredSyncGenerators.globalGenerators.has(generator)) {
+      registeredSyncGenerators.globalGenerators.add(generator);
+    }
+  }
+
+  for (const generator of registeredTaskSyncGenerators) {
+    if (!registeredSyncGenerators.taskGenerators.has(generator)) {
+      registeredSyncGenerators.taskGenerators.add(generator);
     }
   }
 }

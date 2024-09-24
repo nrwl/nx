@@ -153,7 +153,11 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   tasks.push(() => {
     try {
-      execSync(`npx -y nuxi prepare`, { cwd: options.appProjectRoot });
+      execSync(`npx -y nuxi prepare`, {
+        cwd: options.appProjectRoot,
+
+        windowsHide: true,
+      });
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
