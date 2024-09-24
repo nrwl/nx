@@ -148,7 +148,6 @@ It only uses language primitives and immutable objects
 - [readCachedProjectGraph](../../devkit/documents/readCachedProjectGraph)
 - [readJson](../../devkit/documents/readJson)
 - [readJsonFile](../../devkit/documents/readJsonFile)
-- [readJsonFileAsync](../../devkit/documents/readJsonFileAsync)
 - [readNxJson](../../devkit/documents/readNxJson)
 - [readProjectConfiguration](../../devkit/documents/readProjectConfiguration)
 - [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph)
@@ -172,4 +171,3 @@ It only uses language primitives and immutable objects
 - [workspaceLayout](../../devkit/documents/workspaceLayout)
 - [writeJson](../../devkit/documents/writeJson)
 - [writeJsonFile](../../devkit/documents/writeJsonFile)
-- [writeJsonFileAsync](../../devkit/documents/writeJsonFileAsync)
