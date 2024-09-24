@@ -366,11 +366,9 @@ export function createOrEditViteConfig(
   const isUsingTsPlugin = isUsingTypeScriptPlugin(tree);
   const buildOutDir = isUsingTsPlugin
     ? './dist'
-    : joinPathFragments(
-        offsetFromRoot(projectRoot),
-        'dist',
-        projectRoot === '.' ? options.project : projectRoot
-      );
+    : projectRoot === '.'
+    ? `./dist/${options.project}`
+    : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
 
   const buildOption = onlyVitest
     ? ''
