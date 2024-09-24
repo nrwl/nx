@@ -18,7 +18,6 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
-import { output } from './output';
 import { updateContextWithChangedFiles } from './workspace-context';
 import { workspaceRoot } from './workspace-root';
 import chalk = require('chalk');
@@ -70,7 +69,7 @@ export type FlushSyncGeneratorChangesResult =
   | FlushSyncGeneratorChangesFailure;
 
 export class SyncError extends Error {
-  constructor(public title: string, public bodyLines: string[]) {
+  constructor(public title: string, public bodyLines?: string[]) {
     super(title);
     this.name = this.constructor.name;
   }
@@ -113,12 +112,20 @@ export async function flushSyncGeneratorChanges(
 export async function collectAllRegisteredSyncGenerators(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
-): Promise<string[]> {
+): Promise<{
+  globalGenerators: string[];
+  taskGenerators: string[];
+}> {
   if (!daemonClient.enabled()) {
-    return [
-      ...collectEnabledTaskSyncGeneratorsFromProjectGraph(projectGraph, nxJson),
-      ...collectRegisteredGlobalSyncGenerators(),
-    ];
+    return {
+      globalGenerators: [...collectRegisteredGlobalSyncGenerators()],
+      taskGenerators: [
+        ...collectEnabledTaskSyncGeneratorsFromProjectGraph(
+          projectGraph,
+          nxJson
+        ),
+      ],
+    };
   }
 
   return await daemonClient.getRegisteredSyncGenerators();
@@ -279,10 +286,12 @@ export function getSyncGeneratorSuccessResultsMessageLines(
 
 export function getFailedSyncGeneratorsFixMessageLines(
   results: SyncGeneratorRunResult[],
-  verbose: boolean
+  verbose: boolean,
+  globalGeneratorSet: Set<string> = new Set()
 ): string[] {
   const messageLines: string[] = [];
-  const generators: string[] = [];
+  const globalGenerators: string[] = [];
+  const taskGenerators: string[] = [];
   let isFirst = true;
   for (const result of results) {
     if ('error' in result) {
@@ -297,12 +306,21 @@ export function getFailedSyncGeneratorsFixMessageLines(
         '',
         errorToString(result.error, verbose)
       );
-      generators.push(result.generatorName);
+
+      if (globalGeneratorSet.has(result.generatorName)) {
+        globalGenerators.push(result.generatorName);
+      } else {
+        taskGenerators.push(result.generatorName);
+      }
     }
   }
 
   messageLines.push(
-    ...getFailedSyncGeneratorsMessageLines(generators, verbose)
+    ...getFailedSyncGeneratorsMessageLines(
+      taskGenerators,
+      globalGenerators,
+      verbose
+    )
   );
 
   return messageLines;
@@ -310,10 +328,12 @@ export function getFailedSyncGeneratorsFixMessageLines(
 
 export function getFlushFailureMessageLines(
   result: FlushSyncGeneratorChangesFailure,
-  verbose: boolean
+  verbose: boolean,
+  globalGeneratorSet: Set<string> = new Set()
 ): string[] {
   const messageLines: string[] = [];
-  const generators: string[] = [];
+  const globalGenerators: string[] = [];
+  const taskGenerators: string[] = [];
   let isFirst = true;
   for (const failure of result.generatorFailures) {
     if (!isFirst) {
@@ -327,11 +347,20 @@ export function getFlushFailureMessageLines(
       '',
       errorToString(failure.error, verbose)
     );
-    generators.push(failure.generator);
+
+    if (globalGeneratorSet.has(failure.generator)) {
+      globalGenerators.push(failure.generator);
+    } else {
+      taskGenerators.push(failure.generator);
+    }
   }
 
   messageLines.push(
-    ...getFailedSyncGeneratorsMessageLines(generators, verbose)
+    ...getFailedSyncGeneratorsMessageLines(
+      taskGenerators,
+      globalGenerators,
+      verbose
+    )
   );
 
   if (result.generalFailure) {
@@ -462,28 +491,53 @@ async function flushSyncGeneratorChangesToDisk(
 }
 
 function getFailedSyncGeneratorsMessageLines(
-  generators: string[],
+  taskGenerators: string[],
+  globalGenerators: string[],
   verbose: boolean
 ): string[] {
   const messageLines: string[] = [];
 
-  if (generators.length === 1) {
+  if (taskGenerators.length + globalGenerators.length === 1) {
     messageLines.push(
       '',
       verbose
         ? 'Please check the error above and address the issue.'
-        : 'Please check the error above and address the issue. You can provide the `--verbose` flag to get more details.',
-      `If needed, you can disable the failing sync generator by setting \`sync.disabledTaskSyncGenerators: ["${generators[0]}"]\` in your \`nx.json\`.`
+        : 'Please check the error above and address the issue. You can provide the `--verbose` flag to get more details.'
     );
-  } else if (generators.length > 1) {
-    const generatorsString = generators.map((g) => `"${g}"`).join(', ');
+    if (taskGenerators.length === 1) {
+      messageLines.push(
+        `If needed, you can disable the failing sync generator by setting \`sync.disabledTaskSyncGenerators: ["${taskGenerators[0]}"]\` in your \`nx.json\`.`
+      );
+    } else {
+      messageLines.push(
+        `If needed, you can remove the failing global sync generator "${globalGenerators[0]}" from the \`sync.globalGenerators\` array in your \`nx.json\`.`
+      );
+    }
+  } else if (taskGenerators.length + globalGenerators.length > 1) {
     messageLines.push(
       '',
       verbose
         ? 'Please check the errors above and address the issues.'
-        : 'Please check the errors above and address the issues. You can provide the `--verbose` flag to get more details.',
-      `If needed, you can disable the failing sync generators by setting \`sync.disabledTaskSyncGenerators: [${generatorsString}]\` in your \`nx.json\`.`
+        : 'Please check the errors above and address the issues. You can provide the `--verbose` flag to get more details.'
     );
+    if (taskGenerators.length > 0) {
+      const generatorsString = taskGenerators.map((g) => `"${g}"`).join(', ');
+      messageLines.push(
+        `If needed, you can disable the failing task sync generators by setting \`sync.disabledTaskSyncGenerators: [${generatorsString}]\` in your \`nx.json\`.`
+      );
+    }
+    if (globalGenerators.length > 0) {
+      const lastGenerator = globalGenerators.pop();
+      const generatorsString =
+        globalGenerators.length > 0
+          ? `${globalGenerators
+              .map((g) => `"${g}"`)
+              .join(', ')} and "${lastGenerator}"`
+          : `"${lastGenerator}"`;
+      messageLines.push(
+        `If needed, you can remove the failing global sync generators ${generatorsString} from the \`sync.globalGenerators\` array in your \`nx.json\`.`
+      );
+    }
   }
 
   return messageLines;
@@ -503,7 +557,7 @@ function errorToString(error: SerializableSimpleError, verbose: boolean) {
     }
   }
 
-  return `  ${chalk.bold(error.message)}${
+  return `  ${chalk.red(error.message)}${
     verbose && error.stack ? '\n  ' + error.stack : ''
   }`;
 }
