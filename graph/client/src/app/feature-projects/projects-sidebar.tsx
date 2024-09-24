@@ -44,9 +44,11 @@ import { useCurrentPath } from '../hooks/use-current-path';
 import { ProjectDetailsModal } from '../ui-components/project-details-modal';
 import { CompositeGraphPanel } from './panels/composite-graph-panel';
 import { CompositeContextPanel } from '../ui-components/composite-context-panel';
+import { getGraphService } from '../machines/graph.service';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
+  const graphService = getGraphService();
   const projectGraphService = getProjectGraphService();
   const focusedProject = useProjectGraphSelector(focusedProjectNameSelector);
   const searchDepthInfo = useProjectGraphSelector(searchDepthSelector);
@@ -60,6 +62,7 @@ export function ProjectsSidebar(): JSX.Element {
   const compositeEnabled = useProjectGraphSelector(
     compositeGraphEnabledSelector
   );
+
   const compositeContext = useProjectGraphSelector(compositeContextSelector);
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
@@ -166,14 +169,16 @@ export function ProjectsSidebar(): JSX.Element {
   }
 
   function compositeEnabledChanged(checked: boolean) {
-    setSearchParams((currentSearchParams) => {
-      if (checked) {
-        currentSearchParams.set('composite', 'true');
-      } else {
-        currentSearchParams.delete('composite');
-      }
-      return currentSearchParams;
-    });
+    navigate(
+      routeConstructor('/projects', (searchParams) => {
+        if (checked) {
+          searchParams.set('composite', 'true');
+        } else {
+          searchParams.delete('composite');
+        }
+        return searchParams;
+      })
+    );
   }
 
   function incrementDepthFilter() {
@@ -231,6 +236,14 @@ export function ProjectsSidebar(): JSX.Element {
       return searchParams;
     });
   }
+
+  useEffect(() => {
+    return graphService.listen((event) => {
+      if (event.type === 'CompositeNodeDblClick') {
+        projectGraphService.send({ type: 'expandCompositeNode', id: event.id });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     projectGraphService.send({

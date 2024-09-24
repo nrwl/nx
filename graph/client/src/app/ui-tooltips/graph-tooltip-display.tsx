@@ -80,7 +80,12 @@ export function TooltipDisplay() {
           navigate(
             routeConstructor(
               `/projects/trace/${encodeURIComponent(start)}/${action.id}`,
-              true
+              (searchParams) => {
+                if (searchParams.has('composite')) {
+                  searchParams.delete('composite');
+                }
+                return searchParams;
+              }
             )
           );
           break;

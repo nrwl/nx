@@ -312,7 +312,9 @@ function CompositeNodeListItem({
           data-active={compositeNode.state !== 'hidden'}
           onClick={toggleProject}
         >
-          {compositeNode.label}
+          {compositeNode.parent
+            ? `${compositeNode.label} (${compositeNode.parent})`
+            : compositeNode.label}
         </label>
       </div>
 

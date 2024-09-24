@@ -25,13 +25,26 @@ export const compositeGraphStateConfig: ProjectGraphStateNodeConfig = {
     ),
   ],
   exit: [
-    send(() => ({ type: 'notifyGraphDisableCompositeGraph' }), {
-      to: (ctx) => ctx.graphActor,
-    }),
     assign((ctx) => {
       ctx.compositeGraph.enabled = false;
       ctx.compositeGraph.context = undefined;
     }),
+    send(
+      (ctx) => ({
+        type: 'notifyGraphUpdateGraph',
+        projects: ctx.projects,
+        dependencies: ctx.dependencies,
+        fileMap: ctx.fileMap,
+        affectedProjects: ctx.affectedProjects,
+        workspaceLayout: ctx.workspaceLayout,
+        groupByFolder: ctx.groupByFolder,
+        selectedProjects: ctx.selectedProjects,
+        composite: ctx.compositeGraph,
+      }),
+      {
+        to: (ctx) => ctx.graphActor,
+      }
+    ),
   ],
   on: {
     selectAll: {
