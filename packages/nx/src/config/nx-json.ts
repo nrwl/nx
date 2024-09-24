@@ -514,6 +514,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Enable the new experimental db based cache
+   */
+  enableDbCache?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

@@ -31,9 +31,10 @@ import {
 import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export class TaskOrchestrator {
-  private cache = getCache(this.options);
+  private cache = getCache(this.nxJson, this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
@@ -68,6 +69,7 @@ export class TaskOrchestrator {
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
+    private readonly nxJson: NxJsonConfiguration,
     private readonly options: DefaultTasksRunnerOptions,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
