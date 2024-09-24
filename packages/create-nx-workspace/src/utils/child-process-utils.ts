@@ -36,7 +36,7 @@ export function execAndWait(command: string, cwd: string) {
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
     exec(
       command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
+      { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: true },
       (error, stdout, stderr) => {
         if (error) {
           const logFile = join(cwd, 'error.log');

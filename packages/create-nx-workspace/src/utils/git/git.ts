@@ -43,6 +43,7 @@ export async function initializeGitRepo(
             }
           : {}),
       },
+      windowsHide: true,
     };
     return new Promise<void>((resolve, reject) => {
       spawn('git', args, spawnOptions).on('close', (code) => {
