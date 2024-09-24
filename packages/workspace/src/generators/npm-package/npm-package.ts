@@ -5,17 +5,13 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  type ProjectNameAndRootFormat,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
   name: string;
   directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
 }
 
 interface NormalizedProjectOptions extends ProjectOptions {
@@ -32,7 +28,6 @@ async function normalizeOptions(
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
     }
   );
 

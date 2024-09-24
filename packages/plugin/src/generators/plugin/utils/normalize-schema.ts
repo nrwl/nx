@@ -20,16 +20,13 @@ export async function normalizeOptions(
     projectName,
     projectRoot,
     importPath: npmPackageName,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   options.rootProject = projectRoot === '.';
 
   const projectDirectory = projectRoot;

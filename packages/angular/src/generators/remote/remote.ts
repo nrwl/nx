@@ -25,14 +25,12 @@ export async function remote(tree: Tree, schema: Schema) {
     );
   }
 
-  const { projectName: remoteProjectName, projectNameAndRootFormat } =
+  const { projectName: remoteProjectName } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
     });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const port = options.port ?? findNextAvailablePort(tree);
 

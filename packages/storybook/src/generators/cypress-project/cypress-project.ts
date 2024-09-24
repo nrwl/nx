@@ -14,10 +14,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Linter, LinterType } from '@nx/eslint';
-import {
-  determineProjectNameAndRootOptions,
-  type ProjectNameAndRootFormat,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 
 import { safeFileDelete } from '../../utils/utilities';
@@ -31,7 +28,6 @@ export interface CypressConfigureSchema {
   standaloneConfig?: boolean;
   ciTargetName?: string;
   skipFormat?: boolean;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
 }
 
 export async function cypressProjectGenerator(
@@ -52,7 +48,6 @@ export async function cypressProjectGenerator(
       name: e2eName,
       projectType: 'application',
       directory: schema.directory,
-      projectNameAndRootFormat: schema.projectNameAndRootFormat,
     }
   );
   const libConfig = readProjectConfiguration(tree, schema.name);
@@ -77,8 +72,7 @@ export async function cypressProjectGenerator(
   const generatedCypressProjectName = getE2eProjectName(
     schema.name,
     libRoot,
-    schema.directory,
-    schema.projectNameAndRootFormat
+    schema.directory
   );
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
 
@@ -217,16 +211,6 @@ function updateAngularJsonBuilder(
     },
   };
   updateProjectConfiguration(tree, opts.e2eProjectName, project);
-}
-
-function projectAlreadyHasCypress(tree: Tree): boolean {
-  const packageJsonContents = readJson(tree, 'package.json');
-  return (
-    (packageJsonContents?.['devDependencies']?.['@nx/cypress'] ||
-      packageJsonContents?.['dependencies']?.['@nx/cypress']) &&
-    (packageJsonContents?.['devDependencies']?.['cypress'] ||
-      packageJsonContents?.['dependencies']?.['cypress'])
-  );
 }
 
 export default cypressProjectGenerator;

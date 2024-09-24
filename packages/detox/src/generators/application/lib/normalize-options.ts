@@ -20,7 +20,6 @@ export async function normalizeOptions(
       name: options.e2eName,
       projectType: 'application',
       directory: options.e2eDirectory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
     });
   const nxJson = readNxJson(host);
   const addPlugin =

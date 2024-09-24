@@ -1,4 +1,4 @@
-import { type Tree, readNxJson } from '@nx/devkit';
+import { readNxJson, type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import type { NxRemixGeneratorSchema } from '../schema';
@@ -12,13 +12,14 @@ export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<RemixLibraryOptions> {
-  const { projectName, projectRoot, projectNameAndRootFormat } =
-    await determineProjectNameAndRootOptions(tree, {
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-    });
+    }
+  );
 
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -34,6 +35,5 @@ export async function normalizeOptions(
     importPath,
     projectName,
     projectRoot,
-    projectNameAndRootFormat,
   };
 }

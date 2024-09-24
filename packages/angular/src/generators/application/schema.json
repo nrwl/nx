@@ -6,18 +6,18 @@
   "type": "object",
   "cli": "nx",
   "properties": {
-    "name": {
-      "description": "The name of the application.",
+    "directory": {
+      "description": "The directory of the new application.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z][^:]*$"
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "directory": {
-      "description": "The directory of the new application.",
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
       "x-priority": "important"
     },

@@ -8,19 +8,14 @@ export async function normalizeOptions(
   tree: Tree,
   options: ApplicationGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(tree, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-  });
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const nxJson = readNxJson(tree);
   const addPlugin =

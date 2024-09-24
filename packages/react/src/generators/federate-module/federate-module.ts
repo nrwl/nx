@@ -41,7 +41,6 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
       unitTestRunner: schema.unitTestRunner,
       host: schema.host,
       bundler: schema.bundler ?? 'rspack',
-      projectNameAndRootFormat: schema.projectNameAndRootFormat,
     });
 
     tasks.push(remoteGeneratorTask);
@@ -51,7 +50,6 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
         name: schema.remote,
         directory: schema.remoteDirectory,
         projectType: 'application',
-        projectNameAndRootFormat: schema.projectNameAndRootFormat,
       });
 
     projectRoot = remoteRoot;

@@ -10,21 +10,14 @@ export async function normalizeOptions(
   host: Tree,
   options: Partial<Schema>
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-  });
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
-
-  const nxJson = readNxJson(host);
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;

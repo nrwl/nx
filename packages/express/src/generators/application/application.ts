@@ -102,17 +102,12 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-  });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+    });
   const nxJson = readNxJson(host);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&

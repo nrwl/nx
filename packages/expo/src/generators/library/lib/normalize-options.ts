@@ -1,4 +1,4 @@
-import { Tree, readNxJson } from '@nx/devkit';
+import { readNxJson, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 
@@ -25,7 +25,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
   const nxJson = readNxJson(host);
   const addPluginDefault =

@@ -16,14 +16,11 @@ export async function normalizeSchema(
     projectName,
     names: projectNames,
     projectRoot,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: schema.name,
     projectType: 'library',
     directory: schema.directory,
-    projectNameAndRootFormat: schema.projectNameAndRootFormat,
   });
-  schema.projectNameAndRootFormat = projectNameAndRootFormat;
 
   return {
     ...schema,

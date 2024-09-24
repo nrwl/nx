@@ -91,15 +91,12 @@ async function normalizeOptions(
     names: projectNames,
     projectRoot,
     importPath,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const nxJson = readNxJson(tree);
   const addPluginDefault =

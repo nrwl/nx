@@ -22,7 +22,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
 
   const fileName = projectNames.projectFileName;

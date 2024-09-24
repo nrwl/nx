@@ -47,17 +47,12 @@ export async function host(tree: Tree, schema: Schema) {
     });
   }
 
-  const {
-    projectName: hostProjectName,
-    projectNameAndRootFormat,
-    projectRoot: appRoot,
-  } = await determineProjectNameAndRootOptions(tree, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-  });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
+  const { projectName: hostProjectName, projectRoot: appRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+    });
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,

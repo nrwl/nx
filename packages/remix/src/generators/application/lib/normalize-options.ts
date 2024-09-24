@@ -2,7 +2,6 @@ import { readNxJson, type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { type NxRemixGeneratorSchema } from '../schema';
 import { Linter } from '@nx/eslint';
-import { RemixPluginOptions } from '../../../plugins/plugin';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -16,16 +15,16 @@ export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<NormalizedSchema> {
-  const { projectName, projectRoot, projectNameAndRootFormat } =
-    await determineProjectNameAndRootOptions(tree, {
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
       rootProject: options.rootProject,
-    });
+    }
+  );
   options.rootProject = projectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

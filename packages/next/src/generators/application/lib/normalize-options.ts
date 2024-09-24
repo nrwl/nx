@@ -3,7 +3,6 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
-import { NextPluginOptions } from '../../../plugins/plugin';
 
 export interface NormalizedSchema extends Schema {
   projectName: string;
@@ -21,19 +20,14 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-  });
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const nxJson = readNxJson(host);
   const addPlugin =

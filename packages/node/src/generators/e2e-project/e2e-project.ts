@@ -189,9 +189,6 @@ async function normalizeOptions(
       name: options.name ?? `${options.project}-e2e`,
       projectType: 'library',
       directory: options.rootProject ? 'e2e' : options.directory,
-      projectNameAndRootFormat: options.rootProject
-        ? 'as-provided'
-        : options.projectNameAndRootFormat,
     });
 
   const nxJson = readNxJson(tree);

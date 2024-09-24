@@ -1,30 +1,25 @@
 import {
   joinPathFragments,
   normalizePath,
-  readJson,
-  workspaceRoot,
   type ProjectType,
+  readJson,
   type Tree,
+  workspaceRoot,
 } from 'nx/src/devkit-exports';
-import { join, relative } from 'path';
-
-// TODO(leo): remove in a follow up
-export type ProjectNameAndRootFormat = 'as-provided';
+import { relative } from 'path';
 
 export type ProjectGenerationOptions = {
-  name: string;
+  directory: string;
+  name?: string;
   projectType: ProjectType;
-  directory?: string;
   importPath?: string;
   rootProject?: boolean;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
 };
 
 export type ProjectNameAndRootOptions = {
   /**
    * Normalized full project name, including scope if name was provided with
-   * scope (e.g., `@scope/name`, only available when `projectNameAndRootFormat`
-   * is `as-provided`).
+   * scope (e.g., `@scope/name`)
    */
   projectName: string;
   /**
@@ -52,104 +47,43 @@ export type ProjectNameAndRootOptions = {
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
-): Promise<
-  ProjectNameAndRootOptions & {
-    // TODO(leo): remove in a follow up
-    projectNameAndRootFormat: ProjectNameAndRootFormat;
-  }
-> {
-  validateName(options.name);
-  const projectNameAndRootOptions = getProjectNameAndRootOptions(tree, options);
+): Promise<ProjectNameAndRootOptions> {
+  validateOptions(options);
 
-  return {
-    ...projectNameAndRootOptions,
-    projectNameAndRootFormat: 'as-provided',
-  };
-}
+  const directory = normalizePath(options.directory);
+  const name =
+    options.name ??
+    directory.match(/(@[^@/]+(\/[^@/]+)+)/)?.[1] ??
+    directory.substring(directory.lastIndexOf('/') + 1);
 
-function validateName(name: string): void {
-  /**
-   * Matches two types of project names:
-   *
-   * 1. Valid npm package names (e.g., '@scope/name' or 'name').
-   * 2. Names starting with a letter and can contain any character except whitespace and ':'.
-   *
-   * The second case is to support the legacy behavior (^[a-zA-Z].*$) with the difference
-   * that it doesn't allow the ":" character. It was wrong to allow it because it would
-   * conflict with the notation for tasks.
-   */
-  const pattern =
-    '(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$';
-  const validationRegex = new RegExp(pattern);
-  if (!validationRegex.test(name)) {
-    throw new Error(
-      `The project name should match the pattern "${pattern}". The provided value "${name}" does not match.`
-    );
-  }
-}
-
-function getProjectNameAndRootOptions(
-  tree: Tree,
-  options: ProjectGenerationOptions
-): ProjectNameAndRootOptions {
-  const directory = options.directory
-    ? normalizePath(options.directory.replace(/^\.?\//, ''))
-    : undefined;
-
-  const { name: asProvidedParsedName, directory: asProvidedParsedDirectory } =
-    parseNameForAsProvided(options.name);
-
-  if (asProvidedParsedDirectory && directory) {
-    throw new Error(
-      `You can't specify both a directory (${options.directory}) and a name with a directory path (${options.name}). ` +
-        `Please specify either a directory or a name with a directory path.`
-    );
-  }
-
-  const asProvidedOptions = getAsProvidedOptions(tree, {
-    ...options,
-    directory: directory ?? asProvidedParsedDirectory,
-    name: asProvidedParsedName,
-  });
-
-  return asProvidedOptions;
-}
-
-function getAsProvidedOptions(
-  tree: Tree,
-  options: ProjectGenerationOptions
-): ProjectNameAndRootOptions {
   let projectSimpleName: string;
   let projectFileName: string;
-  if (options.name.startsWith('@')) {
-    const [_scope, ...rest] = options.name.split('/');
+  if (name.startsWith('@')) {
+    const [_scope, ...rest] = name.split('/');
     projectFileName = rest.join('-');
     projectSimpleName = rest.pop();
   } else {
-    projectSimpleName = options.name;
-    projectFileName = options.name;
+    projectSimpleName = name;
+    projectFileName = name;
   }
 
   let projectRoot: string;
   const relativeCwd = getRelativeCwd();
 
-  if (options.directory) {
+  if (directory) {
     // append the directory to the current working directory if it doesn't start with it
-    if (
-      options.directory === relativeCwd ||
-      options.directory.startsWith(`${relativeCwd}/`)
-    ) {
-      projectRoot = options.directory;
+    if (directory === relativeCwd || directory.startsWith(`${relativeCwd}/`)) {
+      projectRoot = directory;
     } else {
-      projectRoot = joinPathFragments(relativeCwd, options.directory);
+      projectRoot = joinPathFragments(relativeCwd, directory);
     }
   } else if (options.rootProject) {
     projectRoot = '.';
   } else {
     projectRoot = relativeCwd;
     // append the project name to the current working directory if it doesn't end with it
-    if (!relativeCwd.endsWith(options.name)) {
-      projectRoot = joinPathFragments(relativeCwd, options.name);
+    if (!relativeCwd.endsWith(name)) {
+      projectRoot = joinPathFragments(relativeCwd, name);
     }
   }
 
@@ -158,21 +92,21 @@ function getAsProvidedOptions(
     importPath = options.importPath;
 
     if (!importPath) {
-      if (options.name.startsWith('@')) {
-        importPath = options.name;
+      if (name.startsWith('@')) {
+        importPath = name;
       } else {
         const npmScope = getNpmScope(tree);
         importPath =
           projectRoot === '.'
             ? readJson<{ name?: string }>(tree, 'package.json').name ??
-              getImportPath(npmScope, options.name)
-            : getImportPath(npmScope, options.name);
+              getImportPath(npmScope, name)
+            : getImportPath(npmScope, name);
       }
     }
   }
 
   return {
-    projectName: options.name,
+    projectName: name,
     names: {
       projectSimpleName,
       projectFileName,
@@ -180,6 +114,41 @@ function getAsProvidedOptions(
     importPath,
     projectRoot,
   };
+}
+
+function validateOptions(options: ProjectGenerationOptions): void {
+  if (options.directory === '.') {
+    /**
+     * Root projects must provide name option
+     */
+    if (!options.name) {
+      throw new Error(`Root projects must also specify name option.`);
+    }
+  } else {
+    /**
+     * Both directory and name (if present) must match one of two cases:
+     *
+     * 1. Valid npm package names (e.g., '@scope/name' or 'name').
+     * 2. Names starting with a letter and can contain any character except whitespace and ':'.
+     *
+     * The second case is to support the legacy behavior (^[a-zA-Z].*$) with the difference
+     * that it doesn't allow the ":" character. It was wrong to allow it because it would
+     * conflict with the notation for tasks.
+     */
+    const pattern =
+      '(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$';
+    const validationRegex = new RegExp(pattern);
+    if (options.name && !validationRegex.test(options.name)) {
+      throw new Error(
+        `The name should match the pattern "${pattern}". The provided value "${options.name}" does not match.`
+      );
+    }
+    if (!validationRegex.test(options.directory)) {
+      throw new Error(
+        `The directory should match the pattern "${pattern}". The provided value "${options.directory}" does not match.`
+      );
+    }
+  }
 }
 
 function getImportPath(npmScope: string | undefined, name: string) {
@@ -208,39 +177,4 @@ function getCwd(): string {
 
 function getRelativeCwd(): string {
   return normalizePath(relative(workspaceRoot, getCwd())).replace(/\/$/, '');
-}
-
-/**
- * Function for setting cwd during testing
- */
-export function setCwd(path: string): void {
-  process.env.INIT_CWD = join(workspaceRoot, path);
-}
-
-function parseNameForAsProvided(rawName: string): {
-  name: string;
-  directory: string | undefined;
-} {
-  const directory = normalizePath(rawName);
-
-  if (rawName.includes('@')) {
-    const index = directory.lastIndexOf('@');
-
-    if (index === 0) {
-      return { name: rawName, directory: undefined };
-    }
-
-    const name = directory.substring(index);
-
-    return { name, directory };
-  }
-
-  if (rawName.includes('/')) {
-    const index = directory.lastIndexOf('/');
-    const name = directory.substring(index + 1);
-
-    return { name, directory };
-  }
-
-  return { name: rawName, directory: undefined };
 }

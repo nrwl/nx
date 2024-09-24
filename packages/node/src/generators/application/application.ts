@@ -531,19 +531,14 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-  });
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   options.bundler = options.bundler ?? 'esbuild';
   options.e2eTestRunner = options.e2eTestRunner ?? 'jest';
