@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`lib --publishable should add build targets 1`] = `
+exports[`library --publishable should add build targets 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -68,9 +68,9 @@ export default defineConfig({
 "
 `;
 
-exports[`lib --unit-test-runner none should not generate test configuration 1`] = `null`;
+exports[`library --unit-test-runner none should not generate test configuration 1`] = `null`;
 
-exports[`lib nested should create a local tsconfig.json 1`] = `
+exports[`library nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
@@ -96,7 +96,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
 }
 `;
 
-exports[`lib should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `
+exports[`library should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -164,7 +164,7 @@ export default defineConfig({
 "
 `;
 
-exports[`lib should add vue, vite and vitest to package.json 1`] = `
+exports[`library should add vue, vite and vitest to package.json 1`] = `
 {
   "dependencies": {
     "vue": "^3.3.4",
@@ -203,7 +203,7 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
 }
 `;
 
-exports[`lib should add vue, vite and vitest to package.json 2`] = `
+exports[`library should add vue, vite and vitest to package.json 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -212,16 +212,18 @@ exports[`lib should add vue, vite and vitest to package.json 2`] = `
   },
   "exclude": [
     "src/**/__tests__/*",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.tsx",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.js",
-    "src/**/*.test.js",
-    "src/**/*.spec.jsx",
-    "src/**/*.test.jsx",
     "src/**/*.spec.vue",
-    "src/**/*.test.vue"
+    "src/**/*.test.vue",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
   ],
   "include": [
     "src/**/*.js",
@@ -234,7 +236,7 @@ exports[`lib should add vue, vite and vitest to package.json 2`] = `
 "
 `;
 
-exports[`lib should generate files 1`] = `
+exports[`library should generate files 1`] = `
 {
   "extends": [
     "plugin:vue/vue3-essential",
@@ -263,23 +265,25 @@ exports[`lib should generate files 1`] = `
 }
 `;
 
-exports[`lib should ignore test files in tsconfig.lib.json 1`] = `
+exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 [
   "src/**/__tests__/*",
-  "src/**/*.spec.ts",
-  "src/**/*.test.ts",
-  "src/**/*.spec.tsx",
-  "src/**/*.test.tsx",
-  "src/**/*.spec.js",
-  "src/**/*.test.js",
-  "src/**/*.spec.jsx",
-  "src/**/*.test.jsx",
   "src/**/*.spec.vue",
   "src/**/*.test.vue",
+  "vite.config.ts",
+  "vitest.config.ts",
+  "src/**/*.test.ts",
+  "src/**/*.spec.ts",
+  "src/**/*.test.tsx",
+  "src/**/*.spec.tsx",
+  "src/**/*.test.js",
+  "src/**/*.spec.js",
+  "src/**/*.test.jsx",
+  "src/**/*.spec.jsx",
 ]
 `;
 
-exports[`lib should support eslint flat config 1`] = `
+exports[`library should support eslint flat config 1`] = `
 "const vue = require('eslint-plugin-vue');
 const baseConfig = require('../eslint.config.js');
 

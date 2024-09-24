@@ -49,7 +49,7 @@ describe('Cypress E2E Test runner (legacy)', () => {
         { env: { NX_ADD_PLUGINS: 'false' } }
       );
       runCLI(
-        `generate @nx/react:component btn --project=${appName} --no-interactive`,
+        `generate @nx/react:component btn --directory=${appName}/src/app/btn --no-interactive`,
         { env: { NX_ADD_PLUGINS: 'false' } }
       );
       runCLI(

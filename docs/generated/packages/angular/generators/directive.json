@@ -27,13 +27,6 @@
         "type": "string",
         "enum": ["as-provided", "derived"]
       },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-      },
       "prefix": {
         "type": "string",
         "description": "A prefix to apply to generated selectors.",
@@ -62,12 +55,6 @@
         "description": "Whether the generated directive is standalone.",
         "type": "boolean",
         "default": true
-      },
-      "flat": {
-        "type": "boolean",
-        "description": "When true (the default), creates the new files at the top level of the current project.",
-        "default": true,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
       },
       "module": {
         "type": "string",

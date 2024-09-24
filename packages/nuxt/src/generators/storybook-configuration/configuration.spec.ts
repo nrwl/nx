@@ -95,7 +95,7 @@ export async function createTestApp(
 
   await componentGenerator(appTree, {
     name: 'my-component',
-    project: appName,
+    directory: `${appName}/src/components`,
   });
 
   return appTree;

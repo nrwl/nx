@@ -1,6 +1,6 @@
 {
   "name": "host",
-  "factory": "./src/generators/host/host#hostInternal",
+  "factory": "./src/generators/host/host",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxMFHost",
@@ -183,7 +183,7 @@
   },
   "x-type": "application",
   "description": "Generate a Host Angular Module Federation Application.",
-  "implementation": "/packages/angular/src/generators/host/host#hostInternal.ts",
+  "implementation": "/packages/angular/src/generators/host/host.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/generators/host/schema.json",

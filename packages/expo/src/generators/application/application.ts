@@ -27,7 +27,6 @@ export async function expoApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await expoApplicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }

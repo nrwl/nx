@@ -18,7 +18,7 @@ describe('renameWebpackServer', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
       name: 'remote',
-      projectNameAndRootFormat: 'derived',
+      directory: 'apps/remote',
       skipFormat: true,
     });
 

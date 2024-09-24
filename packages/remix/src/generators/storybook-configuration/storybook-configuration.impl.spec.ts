@@ -13,6 +13,7 @@ describe('Storybook Configuration', () => {
 
       await libraryGenerator(tree, {
         name: 'storybook-test',
+        directory: 'libs/storybook-test',
         style: 'css',
         unitTestRunner,
         addPlugin: true,

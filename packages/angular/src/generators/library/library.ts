@@ -35,18 +35,6 @@ export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return await libraryGeneratorInternal(tree, {
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function libraryGeneratorInternal(
-  tree: Tree,
-  schema: Schema
-): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);

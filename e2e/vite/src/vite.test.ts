@@ -34,9 +34,11 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/react', '@nx/vue'],
       });
       runCLI(
-        `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+        `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
       );
-      runCLI(`generate @nx/vue:app ${myVueApp} --unitTestRunner=vitest`);
+      runCLI(
+        `generate @nx/vue:app ${myVueApp} --directory=apps/${myVueApp} --unitTestRunner=vitest`
+      );
     });
 
     afterAll(() => {
@@ -66,12 +68,12 @@ describe('@nx/vite/plugin', () => {
       it('should build the library and application successfully', () => {
         const myApp = uniq('myapp');
         runCLI(
-          `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+          `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
         );
 
         const myBuildableLib = uniq('mybuildablelib');
         runCLI(
-          `generate @nx/react:library ${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
+          `generate @nx/react:library ${myBuildableLib} --directory=libs/${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
         );
 
         const exportedLibraryComponent = names(myBuildableLib).className;

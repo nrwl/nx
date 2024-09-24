@@ -136,7 +136,7 @@ function createApp(appName: string) {
     `generate @nx/angular:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component fancy-component --project=${appName} --no-interactive`
+    `generate @nx/angular:component fancy-component --directory=${appName}/src/lib/fancy-component --no-interactive`
   );
 }
 
@@ -145,10 +145,10 @@ function createLib(projectName: string, appName: string, libName: string) {
     `generate @nx/angular:lib ${libName} --project-name-and-root-format=as-provided --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component btn --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
+    `generate @nx/angular:component btn --directory=${libName}/src/lib/btn --inlineTemplate --inlineStyle --export --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component btn-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
+    `generate @nx/angular:component btn-standalone --directory=${libName}/src/lib/btn-standalone --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   updateFile(
     `${libName}/src/lib/btn/btn.component.ts`,
@@ -191,11 +191,11 @@ function createBuildableLib(projectName: string, libName: string) {
   );
   // create cmp for lib
   runCLI(
-    `generate @nx/angular:component input --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
+    `generate @nx/angular:component input --directory=${libName}/src/lib/input --inlineTemplate --inlineStyle --export --no-interactive`
   );
   // create standlone cmp for lib
   runCLI(
-    `generate @nx/angular:component input-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
+    `generate @nx/angular:component input-standalone --directory=${libName}/src/lib/input-standalone --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   // update cmp implmentation to use tailwind clasasserting in tests
   updateFile(

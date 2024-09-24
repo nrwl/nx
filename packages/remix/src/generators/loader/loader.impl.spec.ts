@@ -22,10 +22,9 @@ describe('loader', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      path: 'example',
-      project: 'demo',
+      path: 'apps/demo/app/routes/example.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -38,18 +37,11 @@ describe('loader', () => {
     {
       path: 'apps/demo/app/routes/example.tsx',
     },
-    {
-      path: 'example',
-    },
-    {
-      path: 'example.tsx',
-    },
   ].forEach((config) => {
     describe(`add loader using route path "${config.path}"`, () => {
       beforeEach(async () => {
         await loaderGenerator(tree, {
           path: config.path,
-          project: 'demo',
         });
       });
 

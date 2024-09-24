@@ -131,23 +131,6 @@ describe('react:storybook-configuration', () => {
       )
     ).toMatchSnapshot();
   });
-
-  it('should generate stories for components without interaction tests', async () => {
-    appTree = await createTestAppLib('test-ui-app');
-    await storybookConfigurationGenerator(appTree, {
-      project: 'test-ui-app',
-      generateStories: true,
-      interactionTests: false,
-      addPlugin: true,
-    });
-
-    expect(
-      appTree.read(
-        'test-ui-app/src/app/my-component/my-component.stories.tsx',
-        'utf-8'
-      )
-    ).toMatchSnapshot();
-  });
 });
 
 export async function createTestUILib(
@@ -190,8 +173,7 @@ export async function createTestAppLib(
 
   await componentGenerator(appTree, {
     name: 'my-component',
-    project: libName,
-    directory: 'app',
+    directory: `${libName}/src/app/my-component`,
     style: 'css',
   });
 

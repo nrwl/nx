@@ -11,7 +11,6 @@ export interface Schema {
   skipTsConfig: boolean; // default is false
   skipFormat: boolean; // default is false
   tags?: string;
-  pascalCaseFiles?: boolean;
   unitTestRunner: 'jest' | 'none';
   linter: Linter | LinterType; // default is eslint
   publishable?: boolean;

@@ -20,8 +20,7 @@ export function normalizeProjectName(options: Schema) {
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
-  options: Schema,
-  callingGenerator = '@nx/react:application'
+  options: Schema
 ): Promise<NormalizedSchema<T>> {
   const {
     projectName: appProjectName,
@@ -33,7 +32,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator,
   });
 
   const nxJson = readNxJson(host);
@@ -53,7 +51,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const fileName = options.pascalCaseFiles ? 'App' : 'app';
+  const fileName = 'app';
 
   const styledModule = /^(css|scss|less|tailwind|none)$/.test(options.style)
     ? null

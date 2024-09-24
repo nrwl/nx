@@ -41,7 +41,6 @@ export async function expoLibraryGenerator(
 ): Promise<GeneratorCallback> {
   return await expoLibraryGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }

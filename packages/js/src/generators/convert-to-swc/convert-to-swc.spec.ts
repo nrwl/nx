@@ -17,7 +17,6 @@ describe('convert to swc', () => {
     linter: 'eslint',
     testEnvironment: 'jsdom',
     js: false,
-    pascalCaseFiles: false,
     strict: true,
     config: 'project',
     bundler: 'tsc',

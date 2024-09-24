@@ -30,7 +30,7 @@
       "projectNameAndRootFormat": {
         "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "enum": ["as-provided"]
       },
       "linter": {
         "description": "The tool to use for running lint checks.",

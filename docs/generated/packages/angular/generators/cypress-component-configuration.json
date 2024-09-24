@@ -1,6 +1,6 @@
 {
   "name": "cypress-component-configuration",
-  "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
+  "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxAngularCypressComponentConfigurationGenerator",
@@ -41,7 +41,7 @@
     "presets": []
   },
   "description": "Setup Cypress component testing for a project.",
-  "implementation": "/packages/angular/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal.ts",
+  "implementation": "/packages/angular/src/generators/cypress-component-configuration/cypress-component-configuration.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/generators/cypress-component-configuration/schema.json",

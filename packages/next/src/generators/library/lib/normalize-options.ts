@@ -18,7 +18,6 @@ export async function normalizeOptions(
       directory: options.directory,
       importPath: options.importPath,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/next:library',
     });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
