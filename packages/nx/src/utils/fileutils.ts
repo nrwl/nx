@@ -9,7 +9,8 @@ import {
   mkdirSync,
   statSync,
   existsSync,
-} from 'fs';
+} from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';
@@ -42,6 +43,29 @@ export function readJsonFile<T extends object = any>(
   options?: JsonReadOptions
 ): T {
   const content = readFileSync(path, 'utf-8');
+  if (options) {
+    options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
+  }
+  try {
+    return parseJson<T>(content, options);
+  } catch (e) {
+    e.message = e.message.replace('JSON', path);
+    throw e;
+  }
+}
+
+/**
+ * Reads a JSON file asynchronously and returns the object the JSON content represents.
+ *
+ * @param path A path to a file.
+ * @param options JSON parse options
+ * @returns Object the JSON content of the file represents
+ */
+export async function readJsonFileAsync<T extends object = any>(
+  path: string,
+  options?: JsonReadOptions
+): Promise<T> {
+  const content = await readFile(path, 'utf-8');
   if (options) {
     options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
   }
@@ -93,6 +117,26 @@ export function writeJsonFile<T extends object = object>(
     ? `${serializedJson}\n`
     : serializedJson;
   writeFileSync(path, content, { encoding: 'utf-8' });
+}
+
+/**
+ * Serializes the given data to JSON and writes it to a file asynchronously.
+ *
+ * @param path A path to a file.
+ * @param data data which should be serialized to JSON and written to the file
+ * @param options JSON serialize options
+ */
+export async function writeJsonFileAsync<T extends object = object>(
+  path: string,
+  data: T,
+  options?: JsonWriteOptions
+): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  const serializedJson = serializeJson(data, options);
+  const content = options?.appendNewLine
+    ? `${serializedJson}\n`
+    : serializedJson;
+  await writeFile(path, content, { encoding: 'utf-8' });
 }
 
 /**

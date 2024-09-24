@@ -1,7 +1,12 @@
 import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
-import { readJsonFile, writeJsonFile } from '../devkit-exports';
+import {
+  readJsonFile,
+  readJsonFileAsync,
+  writeJsonFile,
+  writeJsonFileAsync,
+} from '../devkit-exports';
 
 export interface DaemonProcessJson {
   processId: number;
@@ -12,11 +17,11 @@ export const serverProcessJsonPath = join(
   'server-process.json'
 );
 
-export function readDaemonProcessJsonCache(): DaemonProcessJson | null {
+export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return readJsonFile(serverProcessJsonPath);
+  return await readJsonFileAsync(serverProcessJsonPath);
 }
 
 export function deleteDaemonJsonProcessCache(): void {
@@ -27,14 +32,16 @@ export function deleteDaemonJsonProcessCache(): void {
   } catch {}
 }
 
-export function writeDaemonJsonProcessCache(
+export async function writeDaemonJsonProcessCache(
   daemonJson: DaemonProcessJson
-): void {
-  writeJsonFile(serverProcessJsonPath, daemonJson, { appendNewLine: true });
+): Promise<void> {
+  await writeJsonFileAsync(serverProcessJsonPath, daemonJson, {
+    appendNewLine: true,
+  });
 }
 
 export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> {
-  const daemonProcessJson = readDaemonProcessJsonCache();
+  const daemonProcessJson = await readDaemonProcessJsonCache();
   if (daemonProcessJson && daemonProcessJson.processId) {
     await new Promise<void>((resolve, reject) => {
       let count = 0;
