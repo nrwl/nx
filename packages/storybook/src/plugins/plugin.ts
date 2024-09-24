@@ -23,8 +23,6 @@ import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from '@storybook/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 
-const pmc = getPackageManagerCommand();
-
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
   serveStorybookTargetName?: string;
