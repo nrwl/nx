@@ -22,12 +22,6 @@
       "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
-    "component-cypress-spec": {
-      "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
-      "schema": "./src/generators/component-cypress-spec/schema.json",
-      "description": "Creates a Cypress spec for a UI component that has a story.",
-      "hidden": true
-    },
     "component-story": {
       "factory": "./src/generators/component-story/component-story",
       "schema": "./src/generators/component-story/schema.json",

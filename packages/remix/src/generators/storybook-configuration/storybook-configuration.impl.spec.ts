@@ -22,7 +22,6 @@ describe('Storybook Configuration', () => {
       // ACT
       await storybookConfigurationGenerator(tree, {
         project: 'storybook-test',
-        configureCypress: false,
         configureStaticServe: false,
         generateStories: true,
         addPlugin: true,
