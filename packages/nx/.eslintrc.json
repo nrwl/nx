@@ -111,7 +111,8 @@
               "@nx/nx-linux-arm64-musl",
               "@nx/nx-linux-arm-gnueabihf",
               "@nx/nx-win32-arm64-msvc",
-              "@nx/nx-freebsd-x64"
+              "@nx/nx-freebsd-x64",
+              "@nx/powerpack-license"
             ]
           }
         ]
