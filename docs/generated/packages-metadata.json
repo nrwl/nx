@@ -1273,6 +1273,15 @@
         "originalFilePath": "/packages/js/src/generators/typescript-sync/schema.json",
         "path": "js/generators/typescript-sync",
         "type": "generator"
+      },
+      {
+        "description": "Setup Prettier as the formatting tool.",
+        "file": "generated/packages/js/generators/setup-prettier.json",
+        "hidden": false,
+        "name": "setup-prettier",
+        "originalFilePath": "/packages/js/src/generators/setup-prettier/schema.json",
+        "path": "js/generators/setup-prettier",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
