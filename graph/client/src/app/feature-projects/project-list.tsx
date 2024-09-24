@@ -250,14 +250,9 @@ function CompositeNodeListItem({
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
 
-  const label = useMemo(() => {
-    if (compositeNode.parent) {
-      return `${compositeNode.parent.replace('composite-', '')}/${
-        compositeNode.label
-      }`;
-    }
-    return compositeNode.label;
-  }, [compositeNode]);
+  const label = compositeNode.parent
+    ? `${compositeNode.parent}/${compositeNode.label}`
+    : compositeNode.label;
 
   function toggleProject() {
     if (compositeNode.state !== 'hidden') {
