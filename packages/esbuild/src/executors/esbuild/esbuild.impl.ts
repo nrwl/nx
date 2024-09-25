@@ -13,7 +13,6 @@ import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
-import { removeSync, writeJsonSync } from 'fs-extra';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
@@ -22,6 +21,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import { rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${pc.red(
@@ -43,7 +43,8 @@ export async function* esbuildExecutor(
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
   const options = normalizeOptions(_options, context);
-  if (options.deleteOutputPath) removeSync(options.outputPath);
+  if (options.deleteOutputPath)
+    rmSync(options.outputPath, { recursive: true, force: true });
 
   const assetsResult = await copyAssets(options, context);
 
@@ -190,9 +191,9 @@ export async function* esbuildExecutor(
           options.format.length === 1
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
-        writeJsonSync(
+        writeFileSync(
           joinPathFragments(options.outputPath, filename),
-          buildResult.metafile
+          `${JSON.stringify(buildResult.metafile, null, 2)}\n`
         );
       }
 
