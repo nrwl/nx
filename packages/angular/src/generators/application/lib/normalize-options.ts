@@ -1,5 +1,8 @@
 import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
@@ -10,6 +13,7 @@ export async function normalizeOptions(
   host: Tree,
   options: Partial<Schema>
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options as Schema, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
       name: options.name,
