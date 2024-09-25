@@ -260,10 +260,18 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
 
 function _getLatestVersionOfNx(): string {
   try {
-    return execSync('npm view nx@latest version').toString().trim();
+    return execSync('npm view nx@latest version', {
+      windowsHide: true,
+    })
+      .toString()
+      .trim();
   } catch {
     try {
-      return execSync('pnpm view nx@latest version').toString().trim();
+      return execSync('pnpm view nx@latest version', {
+        windowsHide: true,
+      })
+        .toString()
+        .trim();
     } catch {
       return null;
     }

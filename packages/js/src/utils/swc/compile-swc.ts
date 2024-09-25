@@ -85,6 +85,7 @@ export async function compileSwc(
   const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
     encoding: 'utf8',
     cwd: normalizedOptions.swcCliOptions.swcCwd,
+    windowsHide: true,
   });
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
@@ -137,6 +138,7 @@ export async function* compileSwcWatch(
 
       const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
         cwd: normalizedOptions.swcCliOptions.swcCwd,
+        windowsHide: true,
       });
 
       processOnExit = () => {

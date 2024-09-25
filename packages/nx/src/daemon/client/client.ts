@@ -398,7 +398,10 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getRegisteredSyncGenerators(): Promise<string[]> {
+  getRegisteredSyncGenerators(): Promise<{
+    globalGenerators: string[];
+    taskGenerators: string[];
+  }> {
     const message: HandleGetRegisteredSyncGeneratorsMessage = {
       type: GET_REGISTERED_SYNC_GENERATORS,
     };

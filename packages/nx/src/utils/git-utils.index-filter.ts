@@ -9,9 +9,10 @@ try {
   const { execSync } = require('child_process');
   // NOTE: Using env vars because Windows PowerShell has its own handling of quotes (") messes up quotes in args, even if escaped.
   const src = process.env.NX_IMPORT_SOURCE;
-  execSync('git read-tree --empty', { stdio: 'inherit' });
+  execSync('git read-tree --empty', { stdio: 'inherit', windowsHide: true });
   execSync(`git reset ${process.env.GIT_COMMIT} -- "${src}"`, {
     stdio: 'inherit',
+    windowsHide: true,
   });
 } catch (error) {
   console.error(`Error executing Git commands: ${error}`);
