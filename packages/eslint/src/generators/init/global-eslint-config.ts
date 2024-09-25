@@ -112,6 +112,11 @@ export const getGlobalFlatEslintConfiguration = (
     generateFlatPredefinedConfig('flat/javascript')
   );
 
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatOverride({ ignores: ['**/dist'] })
+  );
+
   if (!rootProject) {
     content = addBlockToFlatConfigExport(
       content,

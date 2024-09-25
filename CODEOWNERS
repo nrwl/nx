@@ -10,7 +10,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
-/docs/nx-cloud @StalkAltan @rarmatei @nrwl/nx-docs-reviewers
+/docs/nx-cloud @StalkAltan @rarmatei @nixallover @nrwl/nx-docs-reviewers
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers

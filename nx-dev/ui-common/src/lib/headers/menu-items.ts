@@ -15,6 +15,7 @@ import {
   GlobeAltIcon,
   MicrophoneIcon,
   VideoCameraIcon,
+  CheckBadgeIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -82,6 +83,22 @@ export const featuresItems: MenuItem[] = [
     description: null,
     href: '/features/manage-releases',
     icon: CubeIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Run Conformance Rules',
+    description: null,
+    href: '/features/powerpack/conformance',
+    icon: CheckBadgeIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Define Project Owners',
+    description: null,
+    href: '/features/powerpack/owners',
+    icon: UserGroupIcon,
     isNew: false,
     isHighlight: false,
   },
