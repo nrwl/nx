@@ -439,6 +439,51 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "powerpack",
+        "name": "Powerpack Features",
+        "description": "Features of Nx that are available with a powerpack license.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "conformance",
+            "name": "Run Language-Agnostic Conformance Rules",
+            "description": "Conformance",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/conformance",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/features/powerpack/conformance",
+            "tags": ["conformance"]
+          },
+          {
+            "id": "owners",
+            "name": "Define Code Ownership at the Project Level",
+            "description": "Owners",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/owners",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/features/powerpack/owners",
+            "tags": ["owners"]
+          },
+          {
+            "id": "custom-caching",
+            "name": "Self-Host the Remote Cache",
+            "description": "Custom Caching",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/custom-caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/features/powerpack/custom-caching",
+            "tags": ["custom-caching"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/features/powerpack",
+        "tags": []
+      },
+      {
         "id": "ci-features",
         "name": "CI Features",
         "description": "Features of Nx and Nx Cloud that improve CI",
@@ -597,6 +642,84 @@
     "isExternal": false,
     "path": "/features/manage-releases",
     "tags": ["nx-release"]
+  },
+  "/features/powerpack": {
+    "id": "powerpack",
+    "name": "Powerpack Features",
+    "description": "Features of Nx that are available with a powerpack license.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "conformance",
+        "name": "Run Language-Agnostic Conformance Rules",
+        "description": "Conformance",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/conformance",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/powerpack/conformance",
+        "tags": ["conformance"]
+      },
+      {
+        "id": "owners",
+        "name": "Define Code Ownership at the Project Level",
+        "description": "Owners",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/owners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/powerpack/owners",
+        "tags": ["owners"]
+      },
+      {
+        "id": "custom-caching",
+        "name": "Self-Host the Remote Cache",
+        "description": "Custom Caching",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/custom-caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/powerpack/custom-caching",
+        "tags": ["custom-caching"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/features/powerpack",
+    "tags": []
+  },
+  "/features/powerpack/conformance": {
+    "id": "conformance",
+    "name": "Run Language-Agnostic Conformance Rules",
+    "description": "Conformance",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/conformance",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/powerpack/conformance",
+    "tags": ["conformance"]
+  },
+  "/features/powerpack/owners": {
+    "id": "owners",
+    "name": "Define Code Ownership at the Project Level",
+    "description": "Owners",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/owners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/powerpack/owners",
+    "tags": ["owners"]
+  },
+  "/features/powerpack/custom-caching": {
+    "id": "custom-caching",
+    "name": "Self-Host the Remote Cache",
+    "description": "Custom Caching",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/custom-caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/powerpack/custom-caching",
+    "tags": ["custom-caching"]
   },
   "/features/ci-features": {
     "id": "ci-features",
@@ -1476,6 +1599,17 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
+          {
+            "id": "activate-powerpack",
+            "name": "Activate Powerpack",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/activate-powerpack",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/activate-powerpack",
+            "tags": ["installation"]
+          },
           {
             "id": "install-non-javascript",
             "name": "Install Nx in a Non-Javascript Repo",
@@ -2865,6 +2999,17 @@
     "file": "",
     "itemList": [
       {
+        "id": "activate-powerpack",
+        "name": "Activate Powerpack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/activate-powerpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/activate-powerpack",
+        "tags": ["installation"]
+      },
+      {
         "id": "install-non-javascript",
         "name": "Install Nx in a Non-Javascript Repo",
         "description": "",
@@ -2890,6 +3035,17 @@
     "isExternal": false,
     "path": "/recipes/installation",
     "tags": []
+  },
+  "/recipes/installation/activate-powerpack": {
+    "id": "activate-powerpack",
+    "name": "Activate Powerpack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/activate-powerpack",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/activate-powerpack",
+    "tags": ["installation"]
   },
   "/recipes/installation/install-non-javascript": {
     "id": "install-non-javascript",
@@ -6522,6 +6678,17 @@
         "tags": []
       },
       {
+        "id": "custom-task-runners",
+        "name": "Custom Task Runners",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-task-runners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-task-runners",
+        "tags": []
+      },
+      {
         "id": "workspace-executors",
         "name": "Workspace Executors",
         "description": "",
@@ -6656,6 +6823,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-generators",
+    "tags": []
+  },
+  "/deprecated/custom-task-runners": {
+    "id": "custom-task-runners",
+    "name": "Custom Task Runners",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-task-runners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-task-runners",
     "tags": []
   },
   "/deprecated/workspace-executors": {
