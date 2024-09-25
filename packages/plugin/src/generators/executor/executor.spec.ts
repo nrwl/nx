@@ -18,7 +18,7 @@ describe('NxPlugin Executor Generator', () => {
     setCwd('');
 
     await pluginGenerator(tree, {
-      name: projectName,
+      directory: projectName,
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
       compiler: 'tsc',
@@ -134,7 +134,7 @@ describe('NxPlugin Executor Generator', () => {
 
   it('should create executors.json if it is not present', async () => {
     await jsLibraryGenerator(tree, {
-      name: 'test-js-lib',
+      directory: 'test-js-lib',
       bundler: 'tsc',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
