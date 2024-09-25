@@ -54,29 +54,6 @@ export function readJsonFile<T extends object = any>(
   }
 }
 
-/**
- * Reads a JSON file asynchronously and returns the object the JSON content represents.
- *
- * @param path A path to a file.
- * @param options JSON parse options
- * @returns Object the JSON content of the file represents
- */
-export async function readJsonFileAsync<T extends object = any>(
-  path: string,
-  options?: JsonReadOptions
-): Promise<T> {
-  const content = await readFile(path, 'utf-8');
-  if (options) {
-    options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
-  }
-  try {
-    return parseJson<T>(content, options);
-  } catch (e) {
-    e.message = e.message.replace('JSON', path);
-    throw e;
-  }
-}
-
 interface YamlReadOptions {
   /**
    * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
