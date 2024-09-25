@@ -9,7 +9,8 @@ const appDirAbsolutePath = join(workspaceDir, appDir);
 
 describe('ensureNodeModulesSymlink', () => {
   beforeEach(() => {
-    if (existsSync(workspaceDir)) rmSync(workspaceDir, { recursive: true, force: true });
+    if (existsSync(workspaceDir))
+      rmSync(workspaceDir, { recursive: true, force: true });
     mkdirSync(workspaceDir, { recursive: true });
     mkdirSync(appDirAbsolutePath, { recursive: true });
     mkdirSync(appDirAbsolutePath, { recursive: true });
@@ -35,7 +36,8 @@ describe('ensureNodeModulesSymlink', () => {
   });
 
   afterEach(() => {
-    if (existsSync(workspaceDir)) rmSync(workspaceDir, { recursive: true, force: true });
+    if (existsSync(workspaceDir))
+      rmSync(workspaceDir, { recursive: true, force: true });
   });
 
   it('should create symlinks', () => {
