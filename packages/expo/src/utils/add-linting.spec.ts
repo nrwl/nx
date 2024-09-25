@@ -12,7 +12,7 @@ describe('Add Linting', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.None,
     });
   });

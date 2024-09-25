@@ -13,7 +13,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
-      name: 'my-app',
+      directory: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
@@ -25,6 +25,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       appProjectRoot: 'my-app',
       className: 'MyApp',
+      directory: 'my-app',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
       name: 'my-app',
@@ -43,7 +44,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
-      name: 'myApp',
+      directory: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
@@ -55,6 +56,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       appProjectRoot: 'myApp',
       className: 'MyApp',
+      directory: 'myApp',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
       name: 'myApp',
@@ -105,7 +107,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
-      name: 'directory/my-app',
+      directory: 'directory/my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
@@ -116,9 +118,10 @@ describe('Normalize Options', () => {
     expect(options).toEqual({
       addPlugin: true,
       appProjectRoot: 'directory/my-app',
-      className: 'DirectoryMyApp',
-      displayName: 'DirectoryMyApp',
-      lowerCaseName: 'directorymyapp',
+      className: 'MyApp',
+      directory: 'directory/my-app',
+      displayName: 'MyApp',
+      lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
@@ -135,7 +138,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options with display name', async () => {
     const schema: Schema = {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'My App',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -147,6 +150,7 @@ describe('Normalize Options', () => {
     expect(options).toEqual({
       addPlugin: true,
       appProjectRoot: 'my-app',
+      directory: 'my-app',
       className: 'MyApp',
       displayName: 'My App',
       lowerCaseName: 'myapp',

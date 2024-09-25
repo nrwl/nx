@@ -21,7 +21,7 @@ describe('app', () => {
 
   it('should update workspace', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -36,7 +36,7 @@ describe('app', () => {
 
   it('should update nx.json', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
       linter: Linter.EsLint,
@@ -54,7 +54,7 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -73,7 +73,7 @@ describe('app', () => {
 
   it('should generate js files', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -155,7 +155,7 @@ describe('app', () => {
 
     it('should create e2e app without directory', async () => {
       await expoApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         js: false,
@@ -215,7 +215,7 @@ describe('app', () => {
 
     it('should create e2e app with display name', async () => {
       await expoApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         displayName: 'my app name',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',

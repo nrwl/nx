@@ -29,7 +29,7 @@ describe('component', () => {
     };
 
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
@@ -37,7 +37,7 @@ describe('component', () => {
       unitTestRunner: 'jest',
     });
     await expoLibraryGenerator(appTree, {
-      name: projectName,
+      directory: projectName,
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
