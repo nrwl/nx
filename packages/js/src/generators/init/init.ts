@@ -21,6 +21,7 @@ import {
   swcCoreVersion,
   swcHelpersVersion,
   swcNodeVersion,
+  tsLibVersion,
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
@@ -152,6 +153,16 @@ export async function initGeneratorInternal(
       }
       return json;
     });
+  }
+
+  const rootTsConfigFileName = getRootTsConfigFileName(tree);
+  // If the root tsconfig file uses `importHelpers` then we must install tslib
+  // in order to run tsc for build and typecheck.
+  if (rootTsConfigFileName) {
+    const rootTsConfig = readJson(tree, rootTsConfigFileName);
+    if (rootTsConfig.compilerOptions?.importHelpers) {
+      devDependencies['tslib'] = tsLibVersion;
+    }
   }
 
   const installTask = !schema.skipPackageJson

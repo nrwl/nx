@@ -172,10 +172,6 @@ export async function libraryGeneratorInternal(
     ]);
   }
 
-  if (options.bundler !== 'none') {
-    addBundlerDependencies(tree, options);
-  }
-
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -411,23 +407,6 @@ export async function addLint(
     );
   }
   return task;
-}
-
-function addBundlerDependencies(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
-    if (options.bundler === 'tsc') {
-      json.dependencies = {
-        ...json.dependencies,
-        tslib: tsLibVersion,
-      };
-    } else if (options.bundler === 'swc') {
-      json.dependencies = {
-        ...json.dependencies,
-        '@swc/helpers': swcHelpersVersion,
-      };
-    }
-    return json;
-  });
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
