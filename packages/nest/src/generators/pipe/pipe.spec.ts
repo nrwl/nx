@@ -5,15 +5,15 @@ import { pipeGenerator } from './pipe';
 
 describe('pipe generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: PipeGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 

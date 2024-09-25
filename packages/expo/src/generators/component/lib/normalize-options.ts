@@ -18,14 +18,12 @@ export async function normalizeOptions(
 
   const {
     artifactName: name,
-    directory,
     fileName,
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    path: options.path,
     fileExtension: 'tsx',
   });
 
@@ -45,7 +43,6 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    directory,
     className,
     fileName,
     filePath,
@@ -60,8 +57,8 @@ function assertValidOptions(options: Schema) {
     if (options.name.indexOf(s) !== -1) {
       const [name, ...rest] = options.name.split(s).reverse();
       let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
+      if (options.path) {
+        suggestion = `${options.path}${s}${suggestion}`;
       }
       throw new Error(
         `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`

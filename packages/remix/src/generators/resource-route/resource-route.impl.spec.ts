@@ -49,7 +49,6 @@ describe('resource route', () => {
           action: false,
           loader: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         });
 
         expect(tree.exists('apps/demo/app/routes/example.ts')).toBeTruthy();
@@ -63,7 +62,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         }).catch((e) => expect(e).toMatchSnapshot());
 
         await resourceRouteGenerator(tree, {
@@ -71,7 +69,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         }).catch((e) =>
           expect(e).toMatchInlineSnapshot(
             `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`
@@ -83,7 +80,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         }).catch((e) => expect(e).toMatchSnapshot());
       });
 
@@ -100,7 +96,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: true,
-          nameAndDirectoryFormat,
         });
 
         expect(tree.exists(`${basePath}/${normalizedPath}route1/..ts`)).toBe(
@@ -112,7 +107,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: true,
-          nameAndDirectoryFormat,
         });
 
         expect(
@@ -124,7 +118,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: true,
-          nameAndDirectoryFormat,
         });
 
         expect(tree.exists(`${basePath}/${normalizedPath}route3/.ts`)).toBe(

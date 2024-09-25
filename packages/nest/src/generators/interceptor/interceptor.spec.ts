@@ -5,15 +5,15 @@ import { interceptorGenerator } from './interceptor';
 
 describe('interceptor generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: InterceptorGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 

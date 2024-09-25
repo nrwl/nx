@@ -50,7 +50,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
   const componentTests = getComponentTests(options);
-  generateFiles(host, join(__dirname, './files'), options.directory, {
+  generateFiles(host, join(__dirname, './files'), options.path, {
     ...options,
     componentTests,
     inSourceVitestTests: getInSourceVitestTestsTemplate(componentTests),

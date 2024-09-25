@@ -23,9 +23,8 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     fileExtension: 'tsx',
   });
 

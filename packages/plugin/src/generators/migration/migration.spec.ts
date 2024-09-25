@@ -28,7 +28,7 @@ describe('NxPlugin migration generator', () => {
 
   it('should update the workspace.json file', async () => {
     await migrationGenerator(tree, {
-      directory: 'packages/my-plugin',
+      path: 'packages/my-plugin',
       packageVersion: '1.0.0',
     });
 
@@ -44,9 +44,8 @@ describe('NxPlugin migration generator', () => {
   it('should generate files', async () => {
     await migrationGenerator(tree, {
       name: 'my-migration',
-      directory: 'packages/my-plugin/migrations/1.0.0',
+      path: 'packages/my-plugin/migrations/1.0.0',
       packageVersion: '1.0.0',
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
@@ -73,9 +72,8 @@ describe('NxPlugin migration generator', () => {
   it('should generate files with default name', async () => {
     await migrationGenerator(tree, {
       description: 'my-migration description',
-      directory: 'packages/my-plugin/src/migrations/update-1.0.0',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0',
       packageVersion: '1.0.0',
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
@@ -94,9 +92,8 @@ describe('NxPlugin migration generator', () => {
   it('should generate files with default description', async () => {
     await migrationGenerator(tree, {
       name: 'my-migration',
-      directory: 'packages/my-plugin/src/migrations/update-1.0.0',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0',
       packageVersion: '1.0.0',
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
@@ -109,10 +106,9 @@ describe('NxPlugin migration generator', () => {
   it('should generate files with package.json updates', async () => {
     await migrationGenerator(tree, {
       name: 'my-migration',
-      directory: 'packages/my-plugin/src/migrations/update-1.0.0',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0',
       packageVersion: '1.0.0',
       packageJsonUpdates: true,
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');

@@ -5,14 +5,14 @@ import { moduleGenerator } from './module';
 
 describe('module generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: ModuleGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 

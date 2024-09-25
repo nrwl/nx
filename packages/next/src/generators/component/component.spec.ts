@@ -31,7 +31,7 @@ describe('component', () => {
   it('should generate component in components directory for application', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      directory: `${appName}/components/hello`,
+      path: `${appName}/components/hello`,
       style: 'css',
     });
 
@@ -45,7 +45,7 @@ describe('component', () => {
   it('should generate component in default directory for library', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      directory: `${libName}/src/lib/hello`,
+      path: `${libName}/src/lib/hello`,
       style: 'css',
     });
 
@@ -57,12 +57,12 @@ describe('component', () => {
   it('should allow directory override', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      directory: `${appName}/foo/hello`,
+      path: `${appName}/foo/hello`,
       style: 'css',
     });
     await componentGenerator(tree, {
       name: 'world',
-      directory: `${libName}/src/bar/world`,
+      path: `${libName}/src/bar/world`,
       style: 'css',
     });
 
@@ -77,8 +77,7 @@ describe('component', () => {
   it('should work with path as-provided', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      directory: 'my-lib/src/foo',
-      nameAndDirectoryFormat: 'as-provided',
+      path: 'my-lib/src/foo',
       style: 'css',
     });
 
@@ -87,11 +86,10 @@ describe('component', () => {
     expect(tree.exists('my-lib/src/foo/hello.module.css')).toBeTruthy();
   });
 
-  it('should work with directory as a part of the component name', async () => {
+  it('should work with path as a part of the component name', async () => {
     await componentGenerator(tree, {
-      name: `${libName}/src/btn/btn`,
+      path: `${libName}/src/btn`,
       style: 'css',
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     expect(tree.exists(`${libName}/src/btn/btn.tsx`)).toBeTruthy();

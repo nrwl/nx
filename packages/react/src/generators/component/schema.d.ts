@@ -2,10 +2,10 @@ import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
-  name: string;
+  path: string;
+  name?: string;
   style: SupportedStyles;
   skipTests?: boolean;
-  directory?: string;
   export?: boolean;
   classComponent?: boolean;
   routing?: boolean;
@@ -14,7 +14,6 @@ export interface Schema {
   fileName?: string;
   inSourceTests?: boolean;
   skipFormat?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   // Used by Next.js to determine how React should generate the page
   isNextPage?: boolean;
 }

@@ -25,7 +25,7 @@ describe('component', () => {
   it('should generate files with vitest', async () => {
     await componentGenerator(appTree, {
       name: 'hello',
-      directory: `${libName}/src/lib/hello`,
+      path: `${libName}/src/lib/hello`,
     });
 
     expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
@@ -59,7 +59,7 @@ describe('component', () => {
   it('should have correct component name based on directory', async () => {
     await componentGenerator(appTree, {
       name: 'hello-world',
-      directory: `${libName}/src/foo/bar/hello-world`,
+      path: `${libName}/src/foo/bar/hello-world`,
     });
 
     expect(
@@ -73,7 +73,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await componentGenerator(appTree, {
       name: 'hello',
-      directory: `${appName}/src/app/hello`,
+      path: `${appName}/src/app/hello`,
     });
 
     expect(
@@ -88,7 +88,7 @@ describe('component', () => {
     it('should add to index.ts barrel', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        directory: `${libName}/src/lib/hello`,
+        path: `${libName}/src/lib/hello`,
         export: true,
       });
       expect(appTree.read(`${libName}/src/index.ts`, 'utf-8'))
@@ -101,7 +101,7 @@ describe('component', () => {
     it('should not export from an app', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        directory: `${appName}/src/app/hello`,
+        path: `${appName}/src/app/hello`,
         export: true,
       });
 

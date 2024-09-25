@@ -38,15 +38,10 @@ export async function reduxGenerator(host: Tree, schema: Schema) {
 }
 
 function generateReduxFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(
-    host,
-    joinPathFragments(__dirname, './files'),
-    options.directory,
-    {
-      ...options,
-      tmpl: '',
-    }
-  );
+  generateFiles(host, joinPathFragments(__dirname, './files'), options.path, {
+    ...options,
+    tmpl: '',
+  });
 
   if (options.js) {
     toJS(host);
@@ -83,8 +78,8 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       true
     );
 
-    const statePath = options.directory
-      ? `./lib/${options.directory}/${options.fileName}`
+    const statePath = options.path
+      ? `./lib/${options.path}/${options.fileName}`
       : `./lib/${options.fileName}`;
     const changes = applyChangesToString(
       indexSource,
@@ -152,9 +147,8 @@ async function normalizeOptions(
     fileName,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     fileExtension: 'tsx',
   });
 
@@ -171,8 +165,8 @@ async function normalizeOptions(
     : {};
   const modulePath =
     projectType === 'application'
-      ? options.directory
-        ? `./app/${options.directory}/${extraNames.fileName}.slice`
+      ? options.path
+        ? `./app/${options.path}/${extraNames.fileName}.slice`
         : `./app/${extraNames.fileName}.slice`
       : Object.keys(tsPaths).find((k) =>
           tsPaths[k].some((s) => s.includes(sourceRoot))
@@ -206,7 +200,7 @@ async function normalizeOptions(
     ...extraNames,
     fileName,
     constantName: names(options.name).constantName.toUpperCase(),
-    directory,
+    projectDirectory: directory,
     projectType,
     projectSourcePath: sourceRoot,
     projectModulePath: modulePath,

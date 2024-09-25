@@ -17,10 +17,19 @@ export type NameAndDirectoryFormat = 'as-provided';
 
 export type ArtifactGenerationOptions = {
   name: string;
-  directory?: string;
+  directory?: string; // Deprecated in favor of path
+  path?: string;
   fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
   fileName?: string;
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
+  suffix?: string;
+};
+
+export type ArtifactGenerationOptionsV2 = {
+  path: string;
+  name?: string;
+  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
+  fileName?: string;
   suffix?: string;
 };
 
@@ -47,13 +56,13 @@ export type NameAndDirectoryOptions = {
   project: string;
 };
 
-export async function determineArtifactNameAndDirectoryOptions(
+export async function determineArtifactNameAndDirectoryOptionsV2(
   tree: Tree,
   options: ArtifactGenerationOptions
 ): Promise<
   NameAndDirectoryOptions & {
     // TODO(leo): remove in a follow up
-    nameAndDirectoryFormat: NameAndDirectoryFormat;
+    nameAndDirectoryFormat: 'as-provided';
   }
 > {
   const nameAndDirectoryOptions = getNameAndDirectoryOptions(tree, options);
@@ -71,6 +80,34 @@ export async function determineArtifactNameAndDirectoryOptions(
   };
 }
 
+export async function determineArtifactNameAndDirectoryOptions(
+  tree: Tree,
+  options: ArtifactGenerationOptionsV2
+): Promise<NameAndDirectoryOptions> {
+  return { ...getNameAndDirectoryOptionsV2(tree, options) };
+}
+
+// TODO(nicholas): Rename to `getArtifactNameAndDirectoryOptions` after testing
+function getNameAndDirectoryOptionsV2(
+  tree: Tree,
+  options: ArtifactGenerationOptionsV2
+) {
+  const path = options.path
+    ? normalizePath(options.path.replace(/^\.?\//, ''))
+    : undefined;
+  const fileExtension = options.fileExtension ?? 'ts';
+  const { name: extractedName, directory } =
+    extractNameAndDirectoryFromPath(path);
+
+  return getAsProvidedOptions(tree, {
+    ...options,
+    fileExtension,
+    directory: options.name ? path : directory,
+    name: options.name ?? extractedName,
+  });
+}
+
+// TODO(nicholas): Remove after testing
 function getNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
@@ -128,7 +165,6 @@ function getAsProvidedOptions(
     asProvidedDirectory,
     `${asProvidedFileName}.${options.fileExtension}`
   );
-
   return {
     artifactName: options.name,
     directory: asProvidedDirectory,
@@ -199,6 +235,17 @@ function extractNameAndDirectoryFromName(rawName: string): {
   const parsedName = normalizePath(rawName).split('/');
   const name = parsedName.pop();
   const directory = parsedName.length ? parsedName.join('/') : undefined;
+
+  return { name, directory };
+}
+
+function extractNameAndDirectoryFromPath(path: string): {
+  name: string;
+  directory: string;
+} {
+  const parsedPath = normalizePath(path).split('/');
+  const name = parsedPath.pop();
+  const directory = parsedPath.join('/');
 
   return { name, directory };
 }

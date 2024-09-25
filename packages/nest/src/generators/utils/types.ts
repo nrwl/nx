@@ -26,10 +26,9 @@ export type TransportLayer =
   | 'ws';
 
 export type NestGeneratorOptions = {
-  name: string;
-  directory?: string;
+  path: string;
+  name?: string;
   skipFormat?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 };
 
 export type NestGeneratorWithLanguageOption = NestGeneratorOptions & {

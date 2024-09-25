@@ -50,7 +50,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -72,7 +71,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path,
-          nameAndDirectoryFormat,
           style: 'none',
           loader: true,
           action: true,
@@ -92,7 +90,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path: `/${path}/`,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -111,7 +108,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path: `${path}.tsx`,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -134,7 +130,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path: `/${path}/$withParam.tsx`,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -158,7 +153,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route1/.tsx`, // route.$withParams.tsx => route..tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -168,7 +162,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route2//index.tsx`, // route/$withParams/index.tsx => route//index.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -178,7 +171,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route3/.tsx`, // route/$withParams.tsx => route/.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -195,7 +187,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route1/..tsx`, // route.$withParams.tsx => route..tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -209,7 +200,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route2//index.tsx`, // route/$withParams/index.tsx => route//index.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -223,7 +213,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route3/.tsx`, // route/$withParams.tsx => route/.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -240,7 +229,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${standalonePath}/route.tsx`,
-          nameAndDirectoryFormat,
           style: 'none',
           loader: true,
           action: true,

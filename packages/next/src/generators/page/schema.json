@@ -6,35 +6,21 @@
   "description": "Create a Page for Next.",
   "type": "object",
   "properties": {
-    "project": {
+    "path": {
       "type": "string",
-      "description": "The name of the project.",
-      "alias": "p",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
-    "name": {
-      "type": "string",
-      "description": "The name of the component.",
+      "description": "Path where the page will be generated.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the component?",
+      "x-prompt": "Where should the page be generated?",
       "x-priority": "important"
     },
-    "directory": {
+    "name": {
       "type": "string",
-      "description": "The directory at which to create the page file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-      "alias": "dir",
+      "description": "The name of the page.",
+      "x-prompt": "What name would you like to use for the page?",
       "x-priority": "important"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",

@@ -20,7 +20,7 @@ describe('component', () => {
     appTree.write('.gitignore', '');
     defaultSchema = {
       name: 'hello',
-      directory: 'my-lib/src/lib/hello',
+      path: 'my-lib/src/lib/hello',
       skipTests: false,
       export: false,
       classComponent: false,
@@ -65,7 +65,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await expoComponentGenerator(appTree, {
       ...defaultSchema,
-      directory: 'my-app/src/app/hello',
+      path: 'my-app/src/app/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -87,7 +87,7 @@ describe('component', () => {
     it('should not export from an app', async () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
-        directory: 'my-lib/src/app/my-app',
+        path: 'my-lib/src/app/my-app',
         export: true,
       });
 
@@ -101,7 +101,7 @@ describe('component', () => {
     it('should create component under the directory', async () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
-        directory: 'my-lib/src/components/hello',
+        path: 'my-lib/src/components/hello',
       });
 
       expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
@@ -111,7 +111,7 @@ describe('component', () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
         name: 'helloWorld',
-        directory: 'my-lib/src/lib/foo/hello-world',
+        path: 'my-lib/src/lib/foo/hello-world',
       });
 
       expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));

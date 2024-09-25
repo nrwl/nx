@@ -4,11 +4,11 @@ import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-
  * Same as the @nx/react library schema, except it removes keys: style, routing, globalCss
  */
 export interface Schema {
-  name: string;
+  path: string;
+  name?: string;
   skipTests?: boolean;
   directory?: string;
   export?: boolean;
   classComponent?: boolean;
   js?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }
