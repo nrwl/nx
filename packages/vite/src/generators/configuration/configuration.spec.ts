@@ -252,7 +252,7 @@ describe('@nx/vite:configuration', () => {
   });
 
   describe('js library with --bundler=vite', () => {
-    const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
+    const defaultOptions: Omit<LibraryGeneratorSchema, 'directory'> = {
       skipTsConfig: false,
       includeBabelRc: false,
       unitTestRunner: 'jest',
@@ -271,7 +271,7 @@ describe('@nx/vite:configuration', () => {
     it('should add build and test targets with vite and vitest', async () => {
       await jsLibraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'vite',
         unitTestRunner: 'vitest',
       });
@@ -306,7 +306,7 @@ describe('@nx/vite:configuration', () => {
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'vite',
           unitTestRunner,
         });
