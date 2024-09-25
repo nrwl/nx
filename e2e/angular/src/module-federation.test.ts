@@ -283,12 +283,10 @@ test('renders remotes', async ({ page }) => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    runCLI(
-      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
     // Federate Module
     runCLI(
@@ -357,12 +355,10 @@ test('renders remotes', async ({ page }) => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    runCLI(
-      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
     // Federate Module
     runCLI(

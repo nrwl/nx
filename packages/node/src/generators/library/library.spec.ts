@@ -14,7 +14,6 @@ import { libraryGenerator } from './library';
 const baseLibraryConfig = {
   name: 'my-lib',
   compiler: 'tsc' as const,
-  projectNameAndRootFormat: 'as-provided' as const,
   addPlugin: true,
 };
 
@@ -511,7 +510,6 @@ describe('lib', () => {
         name: 'my-lib',
         directory: 'my-dir/my-lib',
         js: true,
-        projectNameAndRootFormat: 'as-provided',
       } as Schema);
       expect(tree.exists(`my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.js')).toBeTruthy();

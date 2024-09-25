@@ -606,7 +606,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
-    projectNameAndRootFormat: 'as-provided',
   });
 
   const currentWorkspaceJson = getProjects(appTree);

@@ -19,7 +19,6 @@ describe('react app generator (legacy)', () => {
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: false,
   };
   let mockedInstalledCypressVersion: jest.Mock<

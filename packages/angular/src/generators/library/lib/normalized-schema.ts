@@ -3,12 +3,12 @@ import type { Linter, LinterType } from '@nx/eslint';
 
 export interface NormalizedSchema {
   libraryOptions: {
-    name: string;
+    directory: string;
+    name?: string;
     addTailwind?: boolean;
     skipFormat?: boolean;
     simpleName?: boolean;
     addModuleSpec?: boolean;
-    directory?: string;
     sourceDir?: string;
     buildable?: boolean;
     publishable?: boolean;

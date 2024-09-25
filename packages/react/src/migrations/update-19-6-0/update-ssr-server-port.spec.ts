@@ -17,7 +17,6 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       unitTestRunner: 'none',
       ssr: true,
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
       style: 'css',
       remotes: ['product'],
       bundler: 'webpack',
@@ -133,7 +132,6 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       unitTestRunner: 'none',
       ssr: true,
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
       style: 'css',
       bundler: 'webpack',
     });
@@ -185,7 +183,6 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       unitTestRunner: 'none',
       ssr: false,
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
       style: 'css',
       bundler: 'webpack',
     });

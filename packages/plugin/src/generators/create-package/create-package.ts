@@ -86,6 +86,7 @@ async function createCliPackage(
   pluginPackageName: string
 ) {
   await jsLibraryGenerator(host, {
+    directory: options.name,
     ...options,
     rootProject: false,
     config: 'project',

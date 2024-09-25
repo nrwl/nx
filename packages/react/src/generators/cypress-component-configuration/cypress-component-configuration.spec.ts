@@ -70,7 +70,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -80,7 +79,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -128,7 +126,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -138,7 +135,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     // --build-target still needs to build the graph in order for readTargetOptions to work
     projectGraph = {
@@ -197,7 +193,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -207,7 +202,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -265,7 +259,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'webpack',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -275,7 +268,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -332,7 +324,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -342,7 +333,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'jest',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
@@ -379,7 +369,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -389,7 +378,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'jest',
       js: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await componentGenerator(tree, {
       name: 'some-cmp',
@@ -436,7 +424,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       name: 'some-lib',
@@ -445,7 +432,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       linter: Linter.None,
       skipFormat: false,
       skipTsConfig: false,
-      projectNameAndRootFormat: 'as-provided',
     });
     const appConfig = readProjectConfiguration(tree, 'my-app');
     appConfig.targets['build'].executor = 'something/else';
@@ -494,7 +480,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       name: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -504,7 +489,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {

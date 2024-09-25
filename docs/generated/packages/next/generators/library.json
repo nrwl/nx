@@ -9,24 +9,18 @@
     "description": "Create a React Library for an Nx workspace.",
     "type": "object",
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "Library name",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
-        "x-priority": "important"
-      },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
         "alias": "dir",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+        "x-prompt": "Which directory do you want to create the library in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "description": "Library name",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -143,7 +137,7 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
+    "required": ["directory"],
     "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create a new lib\" %}\n\n```shell\nnx g lib libs/my-lib\n```\n\n{% /tab %}\n{% tab label=\"Create a new lib under a directory\" %}\n\nThe following will create a library at `libs/shared/my-lib`.\n\n```shell\nnx g lib libs/shared/my-lib\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },

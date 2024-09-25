@@ -6,27 +6,21 @@
   "description": "Create Module Federation configuration files for given React Remote Application.",
   "type": "object",
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "The name of the remote application to generate the Module Federation configuration",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What name would you like to use as the remote application?",
-      "pattern": "^[a-zA-Z][^:]*$",
-      "x-priority": "important"
-    },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
       "alias": "dir",
-      "x-priority": "important"
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "description": "The name of the remote application to generate the Module Federation configuration",
+      "x-priority": "important"
     },
     "dynamic": {
       "type": "boolean",
@@ -186,6 +180,6 @@
       "x-priority": "important"
     }
   },
-  "required": ["name"],
+  "required": ["directory"],
   "additionalProperties": false
 }

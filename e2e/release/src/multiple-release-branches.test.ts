@@ -61,7 +61,6 @@ describe('nx release multiple release branches', () => {
 
   beforeEach(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

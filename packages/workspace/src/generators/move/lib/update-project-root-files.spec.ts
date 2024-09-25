@@ -28,7 +28,6 @@ describe('updateProjectRootFiles', () => {
     const testFilePath = 'subfolder/my-destination/jest.config.js';
     await libraryGenerator(tree, {
       name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(testFilePath, testFile);
@@ -63,7 +62,6 @@ export default defineConfig({
     await libraryGenerator(tree, {
       name: 'e2e',
       root: 'e2e',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'e2e');
     tree.write(cypressConfigPath, cypressConfigContents);

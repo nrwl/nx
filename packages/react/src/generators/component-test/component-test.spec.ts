@@ -202,7 +202,6 @@ export function AnotherCmp() {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -246,7 +245,6 @@ export function AnotherCmp2() {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -292,7 +290,6 @@ export function AnotherCmp2() {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -332,7 +329,6 @@ export function AnotherCmp(props: AnotherCmpProps) {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -368,7 +364,6 @@ export function AnotherCmp(props: AnotherCmpProps) {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -405,7 +400,6 @@ export function AnotherCmp(props: AnotherCmpProps) {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -427,7 +421,6 @@ export function AnotherCmp(props: AnotherCmpProps) {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -466,7 +459,6 @@ export default function AnotherCmp(props: AnotherCmpProps) {
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(

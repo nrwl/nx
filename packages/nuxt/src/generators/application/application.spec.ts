@@ -18,7 +18,6 @@ describe('app', () => {
         it('should not add targets', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -33,7 +32,6 @@ describe('app', () => {
         it('should create all new files in the correct location', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -44,7 +42,6 @@ describe('app', () => {
         it('should add nuxt entries in .gitignore', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -54,7 +51,6 @@ describe('app', () => {
         it('should configure nuxt correctly', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -68,7 +64,6 @@ describe('app', () => {
 
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -80,7 +75,6 @@ describe('app', () => {
         it('should configure eslint correctly (eslintrc)', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -92,7 +86,6 @@ describe('app', () => {
         it('should configure vitest correctly', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -110,7 +103,6 @@ describe('app', () => {
         it('should configure tsconfig and project.json correctly', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -121,7 +113,6 @@ describe('app', () => {
         it('should add the nuxt and vitest plugins', async () => {
           await applicationGenerator(tree, {
             name,
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'vitest',
           });
 
@@ -164,7 +155,6 @@ describe('app', () => {
         it('should configure css', async () => {
           await applicationGenerator(tree, {
             name: 'myapp1',
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'none',
             style: 'css',
           });
@@ -175,7 +165,6 @@ describe('app', () => {
         it('should configure scss', async () => {
           await applicationGenerator(tree, {
             name: 'myapp2',
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'none',
             style: 'scss',
           });
@@ -186,7 +175,6 @@ describe('app', () => {
         it('should configure less', async () => {
           await applicationGenerator(tree, {
             name: 'myapp3',
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'none',
             style: 'less',
           });
@@ -197,7 +185,6 @@ describe('app', () => {
         it('should not configure styles', async () => {
           await applicationGenerator(tree, {
             name: 'myapp4',
-            projectNameAndRootFormat: 'as-provided',
             unitTestRunner: 'none',
             style: 'none',
           });

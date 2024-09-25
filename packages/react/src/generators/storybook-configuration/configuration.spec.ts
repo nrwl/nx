@@ -140,7 +140,6 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   });
   return appTree;
@@ -160,7 +159,6 @@ export async function createTestAppLib(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   });
 

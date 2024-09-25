@@ -19,7 +19,6 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -31,7 +30,6 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
@@ -51,7 +49,6 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -63,7 +60,6 @@ describe('Normalize Options', () => {
       name: 'myApp',
       parsedTags: [],
       projectName: 'myApp',
-      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
@@ -84,7 +80,6 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -97,7 +92,6 @@ describe('Normalize Options', () => {
       directory: 'directory',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
@@ -117,7 +111,6 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -129,7 +122,6 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
@@ -150,7 +142,6 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -162,7 +153,6 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,

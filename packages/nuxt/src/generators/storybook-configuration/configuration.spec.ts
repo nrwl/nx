@@ -90,7 +90,6 @@ export async function createTestApp(
     unitTestRunner: 'none',
     name: appName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {

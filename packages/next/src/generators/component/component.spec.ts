@@ -15,7 +15,6 @@ describe('component', () => {
     await applicationGenerator(tree, {
       name: appName,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       name: libName,
@@ -24,7 +23,6 @@ describe('component', () => {
       skipFormat: true,
       skipTsConfig: false,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 

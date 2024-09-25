@@ -18,7 +18,6 @@ describe('updateStorybookConfig', () => {
   it('should handle storybook config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
@@ -44,7 +43,6 @@ describe('updateStorybookConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookMainPath, storybookMain);
@@ -73,7 +71,6 @@ describe('updateStorybookConfig', () => {
       'namespace/my-destination/.storybook/webpack.config.js';
     await libraryGenerator(tree, {
       name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
@@ -114,7 +111,6 @@ describe('updateStorybookConfig', () => {
 
       await libraryGenerator(tree, {
         name: 'my-source',
-        projectNameAndRootFormat: 'as-provided',
       });
       const projectConfig = readProjectConfiguration(tree, 'my-source');
       tree.write(storybookMainPath, storybookMain);
@@ -158,7 +154,6 @@ describe('updateStorybookConfig', () => {
 
       await libraryGenerator(tree, {
         name: 'my-source',
-        projectNameAndRootFormat: 'as-provided',
       });
       const projectConfig = readProjectConfiguration(tree, 'my-source');
       tree.write(storybookWebpackConfigPath, storybookWebpackConfig);

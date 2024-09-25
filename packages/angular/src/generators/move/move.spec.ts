@@ -57,7 +57,6 @@ describe('@nx/angular:move', () => {
       newProjectName: 'mynewlib',
       destination: 'mynewlib',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -76,7 +75,6 @@ describe('@nx/angular:move', () => {
       projectName: 'mylib2',
       destination: 'mynewlib2',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -102,7 +100,6 @@ describe('@nx/angular:move', () => {
       newProjectName: 'mynewlib2',
       destination: 'mynewlib2',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -122,7 +119,6 @@ describe('@nx/angular:move', () => {
       projectName: 'my-lib',
       destination: 'my/lib',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -187,7 +183,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -226,7 +221,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -250,7 +244,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -289,7 +282,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -312,7 +304,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -336,7 +327,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -366,7 +356,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 

@@ -10,8 +10,8 @@ import { join } from 'path';
 import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
-  name: string;
-  directory?: string;
+  directory: string;
+  name?: string;
 }
 
 interface NormalizedProjectOptions extends ProjectOptions {

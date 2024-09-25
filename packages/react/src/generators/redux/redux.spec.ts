@@ -19,7 +19,6 @@ describe('redux', () => {
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 
@@ -55,7 +54,6 @@ describe('redux', () => {
         style: 'css',
         unitTestRunner: 'none',
         name: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
       await reduxGenerator(appTree, {
         name: 'my-slice',

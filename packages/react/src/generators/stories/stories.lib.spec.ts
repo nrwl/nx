@@ -240,7 +240,6 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
-    projectNameAndRootFormat: 'as-provided',
   });
 
   return appTree;

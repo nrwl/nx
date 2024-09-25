@@ -602,12 +602,8 @@ describe('Linter', () => {
         const reactLib = uniq('react-lib');
         const jsLib = uniq('js-lib');
 
-        runCLI(
-          `generate @nx/react:lib ${reactLib} --directory=${reactLib} --projectNameAndRootFormat=as-provided`
-        );
-        runCLI(
-          `generate @nx/js:lib ${jsLib} --directory=${jsLib} --projectNameAndRootFormat=as-provided`
-        );
+        runCLI(`generate @nx/react:lib ${reactLib} --directory=${reactLib}`);
+        runCLI(`generate @nx/js:lib ${jsLib} --directory=${jsLib}`);
 
         checkFilesExist(
           `${reactLib}/eslint.config.js`,

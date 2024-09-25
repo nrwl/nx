@@ -16,13 +16,11 @@ describe('component', () => {
       name: projectName,
       style: 'css',
       appDir: false,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     await applicationGenerator(tree, {
       name: appRouterProjectName,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 

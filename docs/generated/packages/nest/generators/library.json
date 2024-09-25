@@ -15,23 +15,15 @@
       }
     ],
     "properties": {
-      "name": {
-        "description": "Library name.",
-        "type": "string",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
-      },
       "directory": {
         "description": "A directory where the library is placed.",
         "type": "string",
-        "alias": "dir"
+        "alias": "dir",
+        "$default": { "$source": "argv", "index": 0 },
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+        "x-prompt": "Which directory do you want to create the library in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided"]
-      },
+      "name": { "description": "Library name.", "type": "string" },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
@@ -143,7 +135,7 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "aliases": ["lib"],

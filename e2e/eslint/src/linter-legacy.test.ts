@@ -138,18 +138,12 @@ describe('Linter (legacy)', () => {
         bundler: 'vite',
         e2eTestRunner: 'none',
       });
-      runCLI(
-        `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`,
-        {
-          env: { NX_ADD_PLUGINS: 'false' },
-        }
-      );
-      runCLI(
-        `generate @nx/js:lib ${mylib2} --directory libs/${mylib2} --projectNameAndRootFormat as-provided`,
-        {
-          env: { NX_ADD_PLUGINS: 'false' },
-        }
-      );
+      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`, {
+        env: { NX_ADD_PLUGINS: 'false' },
+      });
+      runCLI(`generate @nx/js:lib ${mylib2} --directory libs/${mylib2}`, {
+        env: { NX_ADD_PLUGINS: 'false' },
+      });
 
       // migrate to flat structure
       runCLI(`generate @nx/eslint:convert-to-flat-config`, {

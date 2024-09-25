@@ -35,7 +35,6 @@ describe('component', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
     await expoLibraryGenerator(appTree, {
       name: projectName,
@@ -45,7 +44,6 @@ describe('component', () => {
       unitTestRunner: 'jest',
       strict: true,
       js: false,
-      projectNameAndRootFormat: 'as-provided',
     });
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});

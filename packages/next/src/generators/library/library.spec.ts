@@ -22,7 +22,6 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     };
     const appTree = createTreeWithEmptyWorkspace();
 
@@ -45,7 +44,6 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     };
 
     const appTree = createTreeWithEmptyWorkspace();
@@ -79,7 +77,6 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(appTree.read('my-lib/src/index.ts', 'utf-8')).toContain(
@@ -107,7 +104,6 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: false,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(

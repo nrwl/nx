@@ -187,7 +187,7 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/vite', '@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
       );
     });
 

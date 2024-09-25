@@ -489,7 +489,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       projectType: options.framework === 'none' ? 'cli' : 'server',
       name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
       directory: options.rootProject ? 'e2e' : `${options.appProjectRoot}-e2e`,
-      projectNameAndRootFormat: 'as-provided',
       project: options.name,
       port: options.port,
       isNest: options.isNest,

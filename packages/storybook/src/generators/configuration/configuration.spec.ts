@@ -34,7 +34,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         addPlugin: true,
       });
@@ -401,7 +400,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       writeJson(tree, 'package.json', {
@@ -481,7 +479,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -513,7 +510,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -591,7 +587,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         addPlugin: true,
       });

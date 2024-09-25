@@ -14,7 +14,6 @@ describe('Add Linting', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.None,
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 

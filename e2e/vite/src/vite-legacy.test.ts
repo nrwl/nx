@@ -49,7 +49,7 @@ describe('Vite Plugin', () => {
       beforeAll(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp}`
         );
       });
 
@@ -97,7 +97,7 @@ describe('Vite Plugin', () => {
       beforeEach(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp}`
         );
       });
       it('should build application', async () => {
@@ -189,22 +189,22 @@ describe('Vite Plugin', () => {
         packages: ['@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app} --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app}`
       );
 
       // only this project will be directly used from dist
       runCLI(
-        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable`
       );
 
       runCLI(
-        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib} --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib}`
       );
 
       // because the default js lib builds as cjs it cannot be loaded from dist
       // so the paths plugin should always resolve to the libs source
       runCLI(
-        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js --projectNameAndRootFormat=as-provided`
+        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js`
       );
       const buildableLibCmp = names(`${lib}-buildable`).className;
       const nonBuildableLibCmp = names(lib).className;

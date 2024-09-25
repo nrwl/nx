@@ -155,7 +155,7 @@ export default defineConfig({
     async () => {
       const appName = uniq('next-cy-app');
       runCLI(
-        `generate @nx/next:app ${appName} --directory=apps/${appName} --e2eTestRunner=none --no-interactive  --projectNameAndRootFormat=as-provided`
+        `generate @nx/next:app ${appName} --directory=apps/${appName} --e2eTestRunner=none --no-interactive `
       );
       runCLI(
         `generate @nx/next:component btn --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`

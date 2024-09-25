@@ -47,7 +47,6 @@ describe('nx release - private JS packages', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

@@ -12,7 +12,6 @@ import {
 describe('Vite ESM tests', () => {
   beforeAll(() =>
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/react'],
     })
   );

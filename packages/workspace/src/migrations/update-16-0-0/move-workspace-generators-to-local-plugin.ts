@@ -208,7 +208,6 @@ function moveGeneratedPlugin(
       newProjectName: PROJECT_NAME,
       updateImportPath: true,
       importPath: importPath,
-      projectNameAndRootFormat: 'as-provided',
     });
   }
 }

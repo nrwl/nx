@@ -82,7 +82,6 @@ export async function hostGenerator(
         devServerPort: remotePort,
         ssr: options.ssr,
         skipFormat: true,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
         js: options.js,
         dynamic: options.dynamic,

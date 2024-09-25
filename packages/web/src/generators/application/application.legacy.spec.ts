@@ -39,7 +39,6 @@ describe('web app generator (legacy)', () => {
   it('should setup webpack configuration', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
     });
     const project = readProjectConfiguration(tree, 'my-app');
     expect(project).toMatchInlineSnapshot(`

@@ -21,7 +21,6 @@ describe('lib', () => {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   };
 

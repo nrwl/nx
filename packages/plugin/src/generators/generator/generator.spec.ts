@@ -23,7 +23,6 @@ describe('NxPlugin Generator Generator', () => {
     setCwd('');
     await pluginGenerator(tree, {
       name: projectName,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
       compiler: 'tsc',
@@ -193,7 +192,6 @@ describe('NxPlugin Generator Generator', () => {
     await jsLibraryGenerator(tree, {
       name: 'test-js-lib',
       bundler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
     await generatorGenerator(tree, {

@@ -12,14 +12,20 @@
     }
   ],
   "properties": {
-    "name": {
+    "directory": {
+      "description": "The directory of the new application.",
       "type": "string",
-      "description": "The name to give to the remote Angular app.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "pattern": "^[a-zA-Z][^:]*$"
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-prompt": "Which directory do you want to create the application in?"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name to give to the remote Angular app.",
+      "x-priority": "important"
     },
     "host": {
       "type": "string",
@@ -30,15 +36,6 @@
     "port": {
       "type": "number",
       "description": "The port on which this app should be served."
-    },
-    "directory": {
-      "description": "The directory of the new application.",
-      "type": "string"
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -174,5 +171,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["directory"]
 }

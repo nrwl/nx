@@ -495,12 +495,10 @@ describe('React Rspack Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
-      runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
-      );
+      runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
       // Federate Module
       runCLI(
@@ -596,12 +594,10 @@ describe('React Rspack Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
-      runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
-      );
+      runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
       // Federate Module
       runCLI(
@@ -704,7 +700,7 @@ describe('React Rspack Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
       );
 
       // Update remote to be loaded via script
@@ -838,11 +834,11 @@ describe('React Rspack Module Federation', () => {
       const lib = uniq('lib');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);

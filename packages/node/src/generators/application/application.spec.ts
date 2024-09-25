@@ -28,7 +28,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
@@ -96,7 +95,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         tags: 'one,two',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
@@ -110,7 +108,6 @@ describe('app', () => {
     it('should generate files', async () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
@@ -187,7 +184,6 @@ describe('app', () => {
 
       await applicationGenerator(tree, {
         name: 'my-node-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -201,7 +197,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         directory: 'my-dir/my-node-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');

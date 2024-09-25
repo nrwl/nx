@@ -15,7 +15,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
       customServer: true,
     });
 
@@ -33,7 +32,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
       customServer: true,
       swc: true,
     });

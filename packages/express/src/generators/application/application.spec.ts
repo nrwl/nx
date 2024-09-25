@@ -13,7 +13,6 @@ describe('app', () => {
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
       name: 'my-node-app',
-      projectNameAndRootFormat: 'as-provided',
     } as Schema);
 
     const mainFile = appTree.read('my-node-app/src/main.ts').toString();
@@ -80,7 +79,6 @@ describe('app', () => {
   it('should add types to the tsconfig.app.json', async () => {
     await applicationGenerator(appTree, {
       name: 'my-node-app',
-      projectNameAndRootFormat: 'as-provided',
     } as Schema);
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.types).toContain('express');
@@ -112,7 +110,6 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         name: 'my-node-app',
         js: true,
-        projectNameAndRootFormat: 'as-provided',
       } as Schema);
 
       expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();

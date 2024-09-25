@@ -251,7 +251,6 @@ export async function createTestUIApp(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }

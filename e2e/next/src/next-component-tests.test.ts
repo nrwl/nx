@@ -118,7 +118,7 @@ function addBabelSupport(path: string) {
 
 function createAppWithCt(appName: string) {
   runCLI(
-    `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false --projectNameAndRootFormat=as-provided`
+    `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false`
   );
   runCLI(
     `generate @nx/next:component button --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
@@ -213,9 +213,7 @@ export default Button;
 }
 
 function createLibWithCtCypress(libName: string) {
-  runCLI(
-    `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`
-  );
+  runCLI(`generate @nx/next:lib ${libName} --no-interactive`);
 
   runCLI(
     `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`

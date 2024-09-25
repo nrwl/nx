@@ -25,7 +25,6 @@ describe('app', () => {
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     });
@@ -42,7 +41,6 @@ describe('app', () => {
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     });
@@ -60,7 +58,6 @@ describe('app', () => {
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'jest',
       bundler: 'vite',
     });
@@ -106,7 +103,6 @@ describe('app', () => {
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'jest',
       bundler: 'vite',
     });
@@ -123,7 +119,6 @@ describe('app', () => {
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     });
@@ -140,7 +135,6 @@ describe('app', () => {
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'vite',
         unitTestRunner: 'none',
       });
@@ -192,7 +186,6 @@ describe('app', () => {
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'vite',
         unitTestRunner: 'none',
       });
@@ -249,7 +242,6 @@ describe('app', () => {
         e2eTestRunner: 'none',
         install: false,
         skipPackageJson: true,
-        projectNameAndRootFormat: 'as-provided',
         unitTestRunner: 'none',
         bundler: 'webpack',
       });

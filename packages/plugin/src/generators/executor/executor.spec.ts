@@ -22,7 +22,6 @@ describe('NxPlugin Executor Generator', () => {
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
       compiler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 
@@ -137,7 +136,6 @@ describe('NxPlugin Executor Generator', () => {
     await jsLibraryGenerator(tree, {
       name: 'test-js-lib',
       bundler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
 

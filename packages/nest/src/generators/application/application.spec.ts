@@ -16,7 +16,6 @@ describe('application generator', () => {
   it('should generate project configurations', async () => {
     await applicationGenerator(tree, {
       name: appName,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectConfigurations = devkit.getProjects(tree);
@@ -28,7 +27,6 @@ describe('application generator', () => {
   it('should generate files', async () => {
     await applicationGenerator(tree, {
       name: appName,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
@@ -48,7 +46,6 @@ describe('application generator', () => {
   it('should configure tsconfig correctly', async () => {
     await applicationGenerator(tree, {
       name: appName,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
@@ -65,7 +62,6 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       name: appName,
       strict: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
 
@@ -84,7 +80,6 @@ describe('application generator', () => {
 
       await applicationGenerator(tree, {
         name: appName,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
@@ -96,7 +91,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         name: appName,
         skipFormat: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
@@ -108,7 +102,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         name: appName,
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const projectConfigurations = devkit.getProjects(tree);

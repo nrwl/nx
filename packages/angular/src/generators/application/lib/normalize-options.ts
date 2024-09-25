@@ -45,6 +45,7 @@ export async function normalizeOptions(
     linter: Linter.EsLint,
     strict: true,
     standalone: true,
+    directory: appProjectRoot,
     ...options,
     prefix: options.prefix || 'app',
     name: appProjectName,

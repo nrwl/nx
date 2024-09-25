@@ -6,40 +6,35 @@
   "description": "Create a React application for Nx.",
   "examples": [
     {
-      "command": "nx g app myapp --directory=myorg",
+      "command": "nx g app apps/myorg/myapp",
       "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
     },
     {
-      "command": "nx g app myapp --classComponent",
+      "command": "nx g app apps/myapp --classComponent",
       "description": "Use class components instead of functional components"
     },
     {
-      "command": "nx g app myapp --routing",
+      "command": "nx g app apps/myapp --routing",
       "description": "Set up React Router"
     }
   ],
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the application.",
-      "type": "string",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z][^:]*$"
-    },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
       "alias": "dir",
-      "x-priority": "important"
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "x-priority": "important"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -190,6 +185,6 @@
       "default": false
     }
   },
-  "required": ["name"],
+  "required": ["directory"],
   "examplesFile": "../../../docs/application-examples.md"
 }

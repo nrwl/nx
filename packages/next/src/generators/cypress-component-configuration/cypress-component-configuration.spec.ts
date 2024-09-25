@@ -18,7 +18,6 @@ describe('cypress-component-configuration generator', () => {
     await applicationGenerator(tree, {
       name: 'demo',
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,
@@ -109,7 +108,6 @@ describe('cypress-component-configuration generator', () => {
     await applicationGenerator(tree, {
       name: 'demo',
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await setupTailwindGenerator(tree, { project: 'demo' });
     await cypressComponentConfiguration(tree, {
@@ -137,7 +135,6 @@ describe('cypress-component-configuration generator', () => {
       style: 'css',
       unitTestRunner: 'jest',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,

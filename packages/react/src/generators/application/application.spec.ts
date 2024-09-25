@@ -29,7 +29,6 @@ describe('app', () => {
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   };
   let mockedInstalledCypressVersion: jest.Mock<

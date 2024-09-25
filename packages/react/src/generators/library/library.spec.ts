@@ -464,13 +464,11 @@ describe('lib', () => {
         routing: true,
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -492,13 +490,11 @@ describe('lib', () => {
         name: 'my-app',
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');

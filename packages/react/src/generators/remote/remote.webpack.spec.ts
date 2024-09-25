@@ -110,7 +110,6 @@ describe('remote generator', () => {
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -143,7 +142,6 @@ describe('remote generator', () => {
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         js: true,
         bundler: 'webpack',
@@ -177,7 +175,6 @@ describe('remote generator', () => {
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'webpack',
       });
@@ -205,7 +202,6 @@ describe('remote generator', () => {
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
       });
 
@@ -223,7 +219,6 @@ describe('remote generator', () => {
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
       });
 
@@ -243,7 +238,6 @@ describe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
       });
 
@@ -264,7 +258,6 @@ describe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -294,7 +287,6 @@ describe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'webpack',
       });
@@ -326,7 +318,6 @@ describe('remote generator', () => {
           style: 'css',
           unitTestRunner: 'jest',
           ssr: true,
-          projectNameAndRootFormat: 'as-provided',
           typescriptConfiguration: true,
           bundler: 'webpack',
         })

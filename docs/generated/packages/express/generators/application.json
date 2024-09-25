@@ -9,21 +9,16 @@
     "description": "Nx Application Options Schema.",
     "type": "object",
     "properties": {
-      "name": {
-        "description": "The name of the application.",
-        "type": "string",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the node application?",
-        "pattern": "^[a-zA-Z][^:]*$"
-      },
       "directory": {
         "description": "The directory of the new application.",
-        "type": "string"
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "$default": { "$source": "argv", "index": 0 },
+        "pattern": "^[a-zA-Z][^:]*$",
+        "x-prompt": "Which directory do you want to create the application in?"
+      },
+      "name": {
+        "description": "The name of the application.",
+        "type": "string"
       },
       "skipFormat": {
         "description": "Skip formatting files.",
@@ -71,19 +66,13 @@
         "description": "Generate JavaScript files rather than TypeScript files.",
         "default": false
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "setParserOptionsProject": {
         "type": "boolean",
         "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
         "default": false
       }
     },
-    "required": [],
+    "required": ["directory"],
     "presets": []
   },
   "aliases": ["app"],

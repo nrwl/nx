@@ -570,7 +570,6 @@ describe('Host App Generator', () => {
         name: 'myhostapp',
         remotes: [remote],
         dynamic: true,
-        projectNameAndRootFormat: 'as-provided',
         e2eTestRunner: E2eTestRunner.None,
         linter: Linter.None,
         style: 'css',

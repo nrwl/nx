@@ -24,7 +24,6 @@ describe('move', () => {
   it('should update jest config when moving down directories', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     await moveGenerator(tree, {
@@ -32,7 +31,6 @@ describe('move', () => {
       importPath: '@proj/shared-mylib',
       updateImportPath: true,
       destination: 'shared/my-lib-new',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const jestConfigPath = 'shared/my-lib-new/jest.config.ts';
@@ -47,7 +45,6 @@ describe('move', () => {
   it('should make sure build targets are correct when moving', async () => {
     await libraryGenerator(tree, {
       name: 'one',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const myLibConfig = readProjectConfiguration(tree, 'one');
@@ -73,7 +70,6 @@ describe('move', () => {
       newProjectName: 'two',
       updateImportPath: true,
       destination: 'shared/two',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const myLibNewConfig = readProjectConfiguration(tree, 'two');
@@ -93,7 +89,6 @@ describe('move', () => {
     await libraryGenerator(tree, {
       name: 'shared-my-lib',
       directory: 'shared/my-lib',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     await moveGenerator(tree, {
@@ -101,7 +96,6 @@ describe('move', () => {
       importPath: '@proj/mylib',
       updateImportPath: true,
       destination: 'my-lib-new',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const jestConfigPath = 'my-lib-new/jest.config.ts';
@@ -116,7 +110,6 @@ describe('move', () => {
   it('should update $schema path when move', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     let projectJson = readJson(tree, 'my-lib/project.json');
@@ -129,7 +122,6 @@ describe('move', () => {
       importPath: '@proj/shared-mylib',
       updateImportPath: true,
       destination: 'shared/my-lib-new',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectJson = readJson(tree, 'shared/my-lib-new/project.json');

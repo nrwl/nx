@@ -19,7 +19,6 @@ describe('setupDockerGenerator', () => {
         framework: 'express',
         e2eTestRunner: 'none',
         docker: true,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -48,7 +47,6 @@ describe('setupDockerGenerator', () => {
         framework: 'fastify',
         rootProject: true,
         docker: true,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 

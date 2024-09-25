@@ -24,7 +24,6 @@ describe('node app generator (legacy)', () => {
     await applicationGenerator(tree, {
       name: 'my-node-app',
       bundler: 'webpack',
-      projectNameAndRootFormat: 'as-provided',
       addPlugin: false,
     });
     const project = readProjectConfiguration(tree, 'my-node-app');

@@ -23,7 +23,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.exists(`${name}/public/.gitkeep`)).toBe(true);
@@ -35,7 +34,6 @@ describe('app', () => {
       name,
       style: 'css',
       tags: 'one,two',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const projects = Object.fromEntries(getProjects(tree));
@@ -58,7 +56,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const tsConfig = readJson(tree, `${name}/tsconfig.json`);
@@ -71,7 +68,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: 'css',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsConfig = readJson(tree, `${name}/tsconfig.json`);
@@ -100,7 +96,6 @@ describe('app', () => {
         style: 'css',
         appDir: true,
         rootProject: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsConfig = readJson(tree, 'tsconfig.json');
@@ -122,7 +117,6 @@ describe('app', () => {
         style: 'none',
         appDir: true,
         rootProject: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const content = tree.read('src/app/page.tsx').toString();
@@ -141,7 +135,6 @@ describe('app', () => {
         style: 'css',
         appDir: false,
         src: false,
-        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`${name}/tsconfig.json`)).toBeTruthy();
       expect(tree.exists(`${name}/pages/index.tsx`)).toBeTruthy();
@@ -154,7 +147,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: 'css',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(readProjectConfiguration(tree, name).root).toEqual(name);
@@ -170,7 +162,6 @@ describe('app', () => {
         style: 'none',
         appDir: false,
         src: false,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const content = tree.read(`${name}/pages/index.tsx`).toString();
@@ -187,7 +178,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: 'scss',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`${name}/src/app/page.module.scss`)).toBeTruthy();
@@ -226,7 +216,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: 'less',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`${name}/src/app/page.module.less`)).toBeTruthy();
@@ -265,7 +254,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: 'styled-components',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
@@ -349,7 +337,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: '@emotion/styled',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
@@ -371,7 +358,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: '@emotion/styled',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsconfigJson = readJson(tree, `${name}/tsconfig.json`);
@@ -389,7 +375,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name,
         style: 'styled-jsx',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
@@ -454,7 +439,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
@@ -468,7 +452,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
@@ -482,7 +465,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
@@ -520,7 +502,6 @@ describe('app', () => {
         name,
         style: 'css',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeFalsy();
@@ -535,7 +516,6 @@ describe('app', () => {
         name,
         style: 'css',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`${name}-e2e`)).toBeFalsy();
     });
@@ -549,7 +529,6 @@ describe('app', () => {
         name,
         style: 'css',
         e2eTestRunner: 'cypress',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
@@ -571,7 +550,6 @@ describe('app', () => {
         name,
         style: 'css',
         e2eTestRunner: 'playwright',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
@@ -591,7 +569,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const appContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
@@ -608,7 +585,6 @@ describe('app', () => {
         await applicationGenerator(tree, {
           name,
           style: 'css',
-          projectNameAndRootFormat: 'as-provided',
         });
 
         expect(tree.read(`${name}/eslint.config.js`, 'utf-8'))
@@ -640,7 +616,6 @@ describe('app', () => {
         await applicationGenerator(tree, {
           name,
           style: 'css',
-          projectNameAndRootFormat: 'as-provided',
         });
 
         const packageJson = readJson(tree, '/package.json');
@@ -708,7 +683,6 @@ describe('app', () => {
           style: 'css',
           appDir: true,
           rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
         });
 
         const eslintJSON = readJson(tree, '.eslintrc.json');
@@ -733,7 +707,6 @@ describe('app', () => {
           style: 'css',
           appDir: true,
           rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
           src: true,
         });
 
@@ -758,7 +731,6 @@ describe('app', () => {
           style: 'css',
           appDir: true,
           rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
           src: false,
         });
 
@@ -783,7 +755,6 @@ describe('app', () => {
           style: 'css',
           appDir: false,
           rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
           src: false,
         });
 
@@ -834,7 +805,6 @@ describe('app (legacy)', () => {
     unitTestRunner: 'jest',
     style: 'css',
     e2eTestRunner: 'cypress',
-    projectNameAndRootFormat: 'as-provided',
   };
 
   beforeAll(() => {

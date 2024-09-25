@@ -33,7 +33,6 @@ describe('convert to swc', () => {
       ...defaultLibGenerationOptions,
       name: 'tsc-lib',
       bundler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(

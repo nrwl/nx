@@ -27,7 +27,6 @@ describe('updateEslint', () => {
       fileName: 'index',
       e2eTestRunner: 'cypress',
       styledModule: null,
-      projectNameAndRootFormat: 'as-provided',
     };
     tree = createTreeWithEmptyWorkspace();
     const project: ProjectConfiguration = {

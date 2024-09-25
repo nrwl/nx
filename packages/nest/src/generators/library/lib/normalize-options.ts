@@ -74,7 +74,6 @@ export function toJsLibraryGeneratorOptions(
     unitTestRunner: options.unitTestRunner,
     config: options.standaloneConfig ? 'project' : 'workspace',
     setParserOptionsProject: options.setParserOptionsProject,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     addPlugin: options.addPlugin,
   };
 }

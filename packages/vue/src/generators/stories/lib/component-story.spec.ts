@@ -117,7 +117,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'vitest',
-    projectNameAndRootFormat: 'as-provided',
   });
 
   const currentWorkspaceJson = getProjects(appTree);

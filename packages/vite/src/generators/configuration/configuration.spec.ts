@@ -274,7 +274,6 @@ describe('@nx/vite:configuration', () => {
         name: 'my-lib',
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
@@ -310,7 +309,6 @@ describe('@nx/vite:configuration', () => {
           name: 'my-lib',
           bundler: 'vite',
           unitTestRunner,
-          projectNameAndRootFormat: 'as-provided',
         });
 
         expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
