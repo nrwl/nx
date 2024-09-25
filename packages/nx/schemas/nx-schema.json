@@ -152,25 +152,7 @@
                 ]
               },
               "version": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
-                  },
-                  {
-                    "allOf": [
-                      {
-                        "not": {
-                          "required": ["git"]
-                        }
-                      },
-                      {
-                        "not": {
-                          "required": ["preVersionCommand"]
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "$ref": "#/definitions/NxReleaseGroupVersionConfiguration"
               },
               "changelog": {
                 "oneOf": [
@@ -675,9 +657,32 @@
         },
         "preVersionCommand": {
           "type": "string",
-          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         }
-      }
+      },
+      "additionalProperties": false
+    },
+    "NxReleaseGroupVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "groupPreVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration AND after the release.version.preVersionCommand (if any), but before versioning begins for this specific group. Useful for preparing build artifacts for the group. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+        }
+      },
+      "additionalProperties": false
     },
     "NxReleaseChangelogConfiguration": {
       "type": "object",

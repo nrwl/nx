@@ -7029,14 +7029,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "component-cypress-spec",
-                "path": "/nx-api/angular/generators/component-cypress-spec",
-                "name": "component-cypress-spec",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "component-story",
                 "path": "/nx-api/angular/generators/component-story",
                 "name": "component-story",
@@ -8185,6 +8177,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "setup-prettier",
+                "path": "/nx-api/js/generators/setup-prettier",
+                "name": "setup-prettier",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9210,14 +9210,6 @@
                 "id": "stories",
                 "path": "/nx-api/react/generators/stories",
                 "name": "stories",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "component-cypress-spec",
-                "path": "/nx-api/react/generators/component-cypress-spec",
-                "name": "component-cypress-spec",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

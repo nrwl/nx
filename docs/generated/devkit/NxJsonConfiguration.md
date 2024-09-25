@@ -23,6 +23,7 @@ Nx.json configuration
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
 - [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
+- [enableDbCache](../../devkit/documents/NxJsonConfiguration#enabledbcache): boolean
 - [extends](../../devkit/documents/NxJsonConfiguration#extends): string
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
@@ -95,6 +96,14 @@ Default value for --base used by `nx affected` and `nx format`.
 
 Default project. When project isn't provided, the default project
 will be used. Convenient for small workspaces with one main application.
+
+---
+
+### enableDbCache
+
+• `Optional` **enableDbCache**: `boolean`
+
+Enable the new experimental db based cache
 
 ---
 

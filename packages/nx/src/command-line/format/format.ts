@@ -211,6 +211,7 @@ function write(patterns: string[]) {
       )}`,
       {
         stdio: [0, 1, 2],
+        windowsHide: true,
       }
     );
 
@@ -221,6 +222,7 @@ function write(patterns: string[]) {
         )} --parser json`,
         {
           stdio: [0, 1, 2],
+          windowsHide: true,
         }
       );
     }
@@ -237,7 +239,7 @@ async function check(patterns: string[]): Promise<string[]> {
   return new Promise((resolve) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
-      { encoding: 'utf-8' },
+      { encoding: 'utf-8', windowsHide: true },
       (error, stdout) => {
         if (error) {
           // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.

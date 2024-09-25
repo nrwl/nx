@@ -70,6 +70,7 @@ function installDependencies(options: NormalizedOptions) {
 
   execSync(`${options.pmc.addDev} ${dependencies.join(' ')}`, {
     stdio: [0, 1, 2],
+    windowsHide: true,
   });
 }
 
@@ -86,7 +87,9 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
     ...packageJson.devDependencies,
   };
   const isCRA5 = /^[^~]?5/.test(deps['react-scripts']);
-  const npmVersion = execSync('npm -v').toString();
+  const npmVersion = execSync('npm -v', {
+    windowsHide: true,
+  }).toString();
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
   const isVite = options.vite;
@@ -126,8 +129,14 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   output.log({ title: '🧶  Updating .gitignore file' });
 
-  execSync(`echo "node_modules" >> .gitignore`, { stdio: [0, 1, 2] });
-  execSync(`echo "dist" >> .gitignore`, { stdio: [0, 1, 2] });
+  execSync(`echo "node_modules" >> .gitignore`, {
+    stdio: [0, 1, 2],
+    windowsHide: true,
+  });
+  execSync(`echo "dist" >> .gitignore`, {
+    stdio: [0, 1, 2],
+    windowsHide: true,
+  });
 
   process.chdir('..');
 
@@ -168,7 +177,7 @@ function createTempWorkspace(options: NormalizedOptions) {
     } ${
       options.addE2e ? '--e2eTestRunner=playwright' : '--e2eTestRunner=none'
     }`,
-    { stdio: [0, 1, 2] }
+    { stdio: [0, 1, 2], windowsHide: true }
   );
 
   output.log({ title: '👋 Welcome to Nx!' });
@@ -311,7 +320,10 @@ async function addBundler(options: NormalizedOptions) {
       title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
     });
 
-    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, { stdio: [0, 1, 2] });
+    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, {
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    });
   }
 }
 

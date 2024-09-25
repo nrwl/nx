@@ -211,6 +211,9 @@ To fix this you will either need to add a package.json file at that location, or
               currentVersion = await new Promise<string>((resolve, reject) => {
                 exec(
                   `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
+                  {
+                    windowsHide: true,
+                  },
                   (error, stdout, stderr) => {
                     if (error) {
                       return reject(error);
