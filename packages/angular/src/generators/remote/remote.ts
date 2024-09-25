@@ -5,7 +5,10 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import { setupMf } from '../setup-mf/setup-mf';
@@ -25,6 +28,7 @@ export async function remote(tree: Tree, schema: Schema) {
     );
   }
 
+  await ensureProjectName(tree, options, 'application');
   const { projectName: remoteProjectName } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,

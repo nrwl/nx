@@ -34,7 +34,7 @@ describe('@nx/angular:move', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       buildable: false,
       linter: Linter.EsLint,
       publishable: false,
@@ -65,7 +65,7 @@ describe('@nx/angular:move', () => {
 
   it('should update ng-package.json dest property', async () => {
     await generateTestLibrary(tree, {
-      name: 'mylib2',
+      directory: 'mylib2',
       buildable: true,
       skipFormat: true,
     });
@@ -84,7 +84,7 @@ describe('@nx/angular:move', () => {
 
   it('should update secondary entry points readme file', async () => {
     await generateTestLibrary(tree, {
-      name: 'mylib2',
+      directory: 'mylib2',
       buildable: true,
       skipFormat: true,
     });
@@ -130,7 +130,7 @@ describe('@nx/angular:move', () => {
   describe('move to subfolder', () => {
     beforeEach(async () => {
       await generateTestLibrary(tree, {
-        name: 'my-lib2',
+        directory: 'my-lib2',
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
@@ -257,7 +257,7 @@ describe('@nx/angular:move', () => {
   describe('rename', () => {
     beforeEach(async () => {
       await generateTestLibrary(tree, {
-        name: 'my-importer',
+        directory: 'my-importer',
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
@@ -340,7 +340,7 @@ describe('@nx/angular:move', () => {
       // create different project whose main module name starts with the same
       // name of the project we're moving
       await generateTestLibrary(tree, {
-        name: 'my-lib-demo',
+        directory: 'my-lib-demo',
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,

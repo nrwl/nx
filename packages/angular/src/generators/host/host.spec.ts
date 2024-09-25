@@ -20,7 +20,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'test',
+      directory: 'test',
       typescriptConfiguration: false,
       standalone: false,
       skipFormat: true,
@@ -35,7 +35,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'test',
+      directory: 'test',
       typescriptConfiguration: true,
       standalone: false,
       skipFormat: true,
@@ -50,7 +50,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestRemoteApplication(tree, {
-      name: 'remote',
+      directory: 'remote',
       typescriptConfiguration: false,
       standalone: false,
       skipFormat: true,
@@ -58,7 +58,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'test',
+      directory: 'test',
       remotes: ['remote'],
       typescriptConfiguration: false,
       standalone: false,
@@ -74,7 +74,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestRemoteApplication(tree, {
-      name: 'remote',
+      directory: 'remote',
       typescriptConfiguration: true,
       standalone: false,
       skipFormat: true,
@@ -82,7 +82,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'test',
+      directory: 'test',
       remotes: ['remote'],
       typescriptConfiguration: true,
       standalone: false,
@@ -101,7 +101,7 @@ describe('Host App Generator', () => {
     // ACT
 
     await generateTestHostApplication(tree, {
-      name: 'host-app',
+      directory: 'host-app',
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: false,
       standalone: false,
@@ -133,7 +133,7 @@ describe('Host App Generator', () => {
     // ACT
 
     await generateTestHostApplication(tree, {
-      name: 'host-app',
+      directory: 'host-app',
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: true,
       standalone: false,
@@ -162,7 +162,7 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       typescriptConfiguration: false,
       standalone: false,
       skipFormat: true,
@@ -170,7 +170,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'host-app',
+      directory: 'host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
       standalone: false,
@@ -190,7 +190,7 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       typescriptConfiguration: true,
       standalone: false,
       skipFormat: true,
@@ -198,7 +198,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'host-app',
+      directory: 'host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
       standalone: false,
@@ -218,7 +218,7 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       typescriptConfiguration: false,
       standalone: false,
       skipFormat: true,
@@ -226,7 +226,6 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'host-app',
       directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
@@ -247,7 +246,7 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       typescriptConfiguration: true,
       standalone: false,
       skipFormat: true,
@@ -255,7 +254,6 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'host-app',
       directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
@@ -278,7 +276,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'host',
+      directory: 'host',
       remotes: ['remote1'],
       skipFormat: true,
     });
@@ -297,7 +295,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'host',
+      directory: 'host',
       remotes: ['remote1'],
       skipFormat: true,
     });
@@ -314,7 +312,6 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'dashboard',
       remotes: ['remote1'],
       directory: 'test/dashboard',
       skipFormat: true,
@@ -332,7 +329,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'dashboard',
+      directory: 'dashboard',
       remotes: ['remote1'],
       e2eTestRunner: E2eTestRunner.None,
       standalone: false,
@@ -352,7 +349,7 @@ describe('Host App Generator', () => {
 
       // ACT
       await generateTestHostApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: false,
         standalone: false,
@@ -388,7 +385,7 @@ describe('Host App Generator', () => {
 
       // ACT
       await generateTestHostApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: true,
         standalone: false,
@@ -425,7 +422,7 @@ describe('Host App Generator', () => {
 
       // ACT
       await generateTestHostApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: false,
       });
@@ -464,7 +461,7 @@ describe('Host App Generator', () => {
 
       // ACT
       await generateTestHostApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: true,
         skipFormat: true,
@@ -509,7 +506,7 @@ describe('Host App Generator', () => {
         }));
 
         await generateTestHostApplication(tree, {
-          name: 'test',
+          directory: 'test',
           ssr: true,
           skipFormat: true,
         });
@@ -527,7 +524,7 @@ describe('Host App Generator', () => {
         }));
 
         await generateTestHostApplication(tree, {
-          name: 'host',
+          directory: 'host',
           remotes: ['remote1'],
           skipFormat: true,
         });
@@ -551,7 +548,7 @@ describe('Host App Generator', () => {
     });
 
     await generateTestHostApplication(tree, {
-      name: 'test',
+      directory: 'test',
       ssr: true,
       skipFormat: true,
       skipPackageJson: true,
@@ -567,7 +564,7 @@ describe('Host App Generator', () => {
 
     await expect(
       generateTestHostApplication(tree, {
-        name: 'myhostapp',
+        directory: 'myhostapp',
         remotes: [remote],
         dynamic: true,
         e2eTestRunner: E2eTestRunner.None,
