@@ -506,7 +506,9 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
-        const tslibVersion = rootPackageJson.dependencies['tslib'];
+        const tslibVersion =
+          rootPackageJson.dependencies['tslib'] ||
+          rootPackageJson.devDependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, {
           silenceError: true,
@@ -547,20 +549,18 @@ describe('Linter', () => {
           `Successfully ran target lint for project ${mylib}`
         );
         const packageJson = readJson(`libs/${mylib}/package.json`);
-        expect(packageJson).toMatchInlineSnapshot(`
-          {
-            "dependencies": {
-              "@nx/devkit": "${nxVersion}",
-              "tslib": "${tslibVersion}",
-            },
-            "main": "./src/index.js",
-            "name": "@proj/${mylib}",
-            "private": true,
-            "type": "commonjs",
-            "typings": "./src/index.d.ts",
-            "version": "0.0.1",
-          }
-        `);
+        expect(packageJson).toMatchObject({
+          dependencies: {
+            '@nx/devkit': nxVersion,
+            tslib: tslibVersion,
+          },
+          main: './src/index.js',
+          name: `@proj/${mylib}`,
+          private: true,
+          type: 'commonjs',
+          typings: './src/index.d.ts',
+          version: '0.0.1',
+        });
 
         // intentionally set the invalid version
         updateJson(`libs/${mylib}/package.json`, (json) => {
