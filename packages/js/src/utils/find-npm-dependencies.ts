@@ -15,6 +15,7 @@ import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from 'nx/src/hasher/task-hasher';
+import { getRootTsConfigFileName } from '@nx/js';
 
 /**
  * Finds all npm dependencies and their expected versions for a given project.
@@ -221,6 +222,23 @@ function collectHelperDependencies(
     ) {
       npmDeps['@swc/helpers'] =
         projectGraph.externalNodes['npm:@swc/helpers'].data.version;
+    }
+  }
+
+  // For inferred targets or manually added run-commands, check if user is using `tsc` in build target.
+  if (
+    target.executor === 'nx:run-commands' &&
+    /\btsc\b/.test(target.options.command)
+  ) {
+    const tsConfigFileName = getRootTsConfigFileName();
+    if (tsConfigFileName) {
+      const tsConfig = readTsConfig(join(workspaceRoot, tsConfigFileName));
+      if (
+        tsConfig?.options['importHelpers'] &&
+        projectGraph.externalNodes['npm:tslib']?.type === 'npm'
+      ) {
+        npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
+      }
     }
   }
 }

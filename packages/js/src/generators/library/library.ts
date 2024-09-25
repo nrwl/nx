@@ -1099,6 +1099,7 @@ function createProjectTsConfigs(
       ? {
           forceConsistentCasingInFileNames: true,
           strict: true,
+          importHelpers: true,
           noImplicitOverride: true,
           noImplicitReturns: true,
           noFallthroughCasesInSwitch: true,
