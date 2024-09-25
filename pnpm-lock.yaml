@@ -147,9 +147,6 @@ importers:
       string-width:
         specifier: ^4.2.3
         version: 4.2.3
-      strong-log-transformer:
-        specifier: ^2.1.0
-        version: 2.1.0
       tailwind-merge:
         specifier: ^2.4.0
         version: 2.5.2
