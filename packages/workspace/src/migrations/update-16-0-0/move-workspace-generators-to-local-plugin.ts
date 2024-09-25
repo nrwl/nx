@@ -176,7 +176,7 @@ async function createNewPlugin(tree: Tree) {
 
   await pluginGenerator(tree, {
     minimal: true,
-    name: PROJECT_NAME,
+    directory: PROJECT_NAME,
     importPath: importPath,
     skipTsConfig: false,
     compiler: 'tsc',

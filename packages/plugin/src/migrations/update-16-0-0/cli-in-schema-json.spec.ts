@@ -253,7 +253,7 @@ describe('updateCliPropsForPlugins', () => {
 
 async function createPlugin(tree: Tree) {
   await pluginGenerator(tree, {
-    name: 'my-plugin',
+    directory: 'my-plugin',
     compiler: 'tsc',
     linter: Linter.EsLint,
     unitTestRunner: 'jest',

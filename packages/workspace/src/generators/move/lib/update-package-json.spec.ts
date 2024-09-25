@@ -24,7 +24,7 @@ describe('updatePackageJson', () => {
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
   });
 

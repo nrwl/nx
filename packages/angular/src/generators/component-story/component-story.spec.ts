@@ -16,7 +16,7 @@ describe('componentStory generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestLibrary(tree, { name: libName, skipFormat: true });
+    await generateTestLibrary(tree, { directory: libName, skipFormat: true });
     await componentGenerator(tree, {
       name: 'test-button',
       directory: `${libName}/src/lib/test-button`,

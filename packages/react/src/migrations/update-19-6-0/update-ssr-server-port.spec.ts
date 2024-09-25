@@ -3,6 +3,7 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import hostGenerator from '../../generators/host/host';
 import { Linter } from '@nx/eslint';
 import updateSsrServerPort from './update-ssr-server-port';
+
 describe('update-19-6-0 update-ssr-server-port migration', () => {
   let tree: Tree;
 
@@ -12,7 +13,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
 
   it('should update host and remote port server files', async () => {
     await hostGenerator(tree, {
-      name: 'shell',
+      directory: 'shell',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: true,
@@ -127,7 +128,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
 
   it('should update a host project server file', async () => {
     await hostGenerator(tree, {
-      name: 'host',
+      directory: 'host',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: true,
@@ -178,7 +179,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
 
   it('should not update a mfe project that is not ssr', async () => {
     await hostGenerator(tree, {
-      name: 'shell-not-ssr',
+      directory: 'shell-not-ssr',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: false,

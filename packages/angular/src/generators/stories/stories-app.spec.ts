@@ -15,7 +15,7 @@ describe('angularStories generator: applications', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
-      name: appName,
+      directory: appName,
       skipFormat: true,
     });
   });

@@ -27,7 +27,7 @@ describe('updateProjectRootFiles', () => {
     };`;
     const testFilePath = 'subfolder/my-destination/jest.config.js';
     await libraryGenerator(tree, {
-      name: 'my-source',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(testFilePath, testFile);
@@ -60,7 +60,7 @@ export default defineConfig({
 `;
     const cypressConfigPath = 'apps/my-app-e2e/cypress.config.ts';
     await libraryGenerator(tree, {
-      name: 'e2e',
+      directory: 'e2e',
       root: 'e2e',
     });
     const projectConfig = readProjectConfiguration(tree, 'e2e');

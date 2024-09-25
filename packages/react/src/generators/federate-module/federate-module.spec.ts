@@ -13,6 +13,7 @@ describe('federate-module', () => {
   let schema: Schema = {
     name: 'my-federated-module',
     remote: 'my-remote',
+    remoteDirectory: 'my-remote',
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
     skipFormat: true,
@@ -77,7 +78,7 @@ describe('federate-module', () => {
 
   describe('with remote', () => {
     let remoteSchema: remoteSchma = {
-      directory: 'my-remote',
+      directory: 'my-existing-remote',
       e2eTestRunner: 'none',
       skipFormat: false,
       linter: Linter.EsLint,
@@ -93,7 +94,7 @@ describe('federate-module', () => {
 
     it('should append the new path to the module federation config', async () => {
       let content = tree.read(
-        `${remoteSchema.name}/module-federation.config.ts`,
+        `${remoteSchema.directory}/module-federation.config.ts`,
         'utf-8'
       );
 
@@ -103,11 +104,11 @@ describe('federate-module', () => {
 
       await federateModuleGenerator(tree, {
         ...schema,
-        remote: remoteSchema.name,
+        remoteDirectory: remoteSchema.directory,
       });
 
       content = tree.read(
-        `${remoteSchema.name}/module-federation.config.ts`,
+        `${remoteSchema.directory}/module-federation.config.ts`,
         'utf-8'
       );
       expect(content).toContain(
@@ -116,9 +117,7 @@ describe('federate-module', () => {
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths[
-          `${remoteSchema.name}/my-federated-module`
-        ]
+        tsconfig.compilerOptions.paths[`${schema.remote}/my-federated-module`]
       ).toEqual(['my-remote/src/my-federated-module.ts']);
     });
   });

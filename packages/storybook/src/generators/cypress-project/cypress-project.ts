@@ -69,11 +69,7 @@ export async function cypressProjectGenerator(
     skipFormat: true,
   });
 
-  const generatedCypressProjectName = getE2eProjectName(
-    schema.name,
-    libRoot,
-    schema.directory
-  );
+  const generatedCypressProjectName = projectName;
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
 
   const project = readProjectConfiguration(tree, generatedCypressProjectName);

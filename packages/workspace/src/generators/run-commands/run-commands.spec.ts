@@ -19,7 +19,7 @@ describe('run-commands', () => {
     };
 
     await libraryGenerator(tree, {
-      name: 'lib',
+      directory: 'lib',
     });
 
     await runCommands(tree, opts);
