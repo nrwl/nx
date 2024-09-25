@@ -18,6 +18,9 @@ Once you've completed the purchase, you will receive a license key.
 
 ## 2. Register the License Key
 
+{% tabs %}
+{% tab label="Closed Source Repository" %}
+
 To register the license key in your repository, run the `nx activate-powerpack` command.
 
 ```shell
@@ -25,3 +28,15 @@ nx activate-powerpack YOUR_LICENSE_KEY
 ```
 
 The license will be saved in your repository and should be committed so that every developer has access to the Powerpack features.
+
+{% /tab %}
+{% tab label="Open Source Repository" %}
+
+Register the license key as an environment variable that is not committed to the repository.
+
+```{% fileName=".env" %}
+NX_POWERPACK_LICENSE=YOUR_LICENSE_KEY
+```
+
+{% /tab %}
+{% /tabs %}
