@@ -71,7 +71,7 @@ export default async function buildExecutor(
   }
 
   if (!directoryExists(options.outputPath)) {
-    mkdirSync(options.outputPath);
+    await mkdir(options.outputPath, { recursive; true });
   }
 
   const builtPackageJson = createPackageJson(
