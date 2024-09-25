@@ -23,7 +23,6 @@ describe('lib', () => {
     linter: 'eslint',
     testEnvironment: 'jsdom',
     js: false,
-    pascalCaseFiles: false,
     strict: true,
     config: 'project',
   };
@@ -449,31 +448,6 @@ describe('lib', () => {
         expect(tsconfigJson.compilerOptions.paths['@acme/core']).toBeDefined();
       });
     });
-
-    describe('--pascalCaseFiles', () => {
-      it('should generate files with upper case names', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          pascalCaseFiles: true,
-          projectNameAndRootFormat: 'as-provided',
-        });
-        expect(tree.exists('my-lib/src/lib/MyLib.ts')).toBeTruthy();
-        expect(tree.exists('my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      });
-
-      it('should generate files with upper case names for nested libs as well', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          directory: 'my-dir/my-lib',
-          pascalCaseFiles: true,
-          projectNameAndRootFormat: 'as-provided',
-        });
-        expect(tree.exists('my-dir/my-lib/src/lib/MyLib.ts')).toBeTruthy();
-        expect(tree.exists('my-dir/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      });
-    });
   });
 
   describe('--linter', () => {
@@ -537,7 +511,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -594,7 +575,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -719,7 +707,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -745,8 +740,7 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-lib',
           preset: '../jest.preset.js',
           transform: {
@@ -1483,7 +1477,10 @@ describe('lib', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/esbuild.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },
@@ -1508,7 +1505,10 @@ describe('lib', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/rollup.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },

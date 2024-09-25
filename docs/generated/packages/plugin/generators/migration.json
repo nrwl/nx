@@ -1,6 +1,6 @@
 {
   "name": "migration",
-  "factory": "./src/generators/migration/migration#migrationGeneratorInternal",
+  "factory": "./src/generators/migration/migration",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -37,13 +37,6 @@
         "x-prompt": "What version would you like to use for the migration?",
         "x-priority": "important"
       },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-      },
       "packageJsonUpdates": {
         "type": "boolean",
         "description": "Whether or not to include `package.json` updates.",
@@ -66,7 +59,7 @@
     "presets": []
   },
   "description": "Create a migration for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/migration/migration#migrationGeneratorInternal.ts",
+  "implementation": "/packages/plugin/src/generators/migration/migration.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/migration/schema.json",

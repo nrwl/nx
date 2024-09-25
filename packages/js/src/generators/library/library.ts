@@ -56,9 +56,6 @@ export async function libraryGenerator(
 ) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -148,6 +145,7 @@ export async function libraryGeneratorInternal(
       coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: options.testEnvironment,
+      runtimeTsconfigFileName: 'tsconfig.lib.json',
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -347,7 +345,13 @@ export async function addLint(
       files: ['*.json'],
       parser: 'jsonc-eslint-parser',
       rules: {
-        '@nx/dependency-checks': 'error',
+        '@nx/dependency-checks': [
+          'error',
+          {
+            // With flat configs, we don't want to include imports in the eslint js/cjs/mjs files to be checked
+            ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
+          },
+        ],
       },
     });
   }
@@ -382,19 +386,22 @@ export async function addLint(
           ruleOptions = {};
         }
         if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
-          ruleOptions.ignoredFiles = [
-            '{projectRoot}/vite.config.{js,ts,mjs,mts}',
-          ];
+          ruleOptions.ignoredFiles ??= [];
+          ruleOptions.ignoredFiles.push(
+            '{projectRoot}/vite.config.{js,ts,mjs,mts}'
+          );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         } else if (options.bundler === 'rollup') {
-          ruleOptions.ignoredFiles = [
-            '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
-          ];
+          ruleOptions.ignoredFiles ??= [];
+          ruleOptions.ignoredFiles.push(
+            '{projectRoot}/rollup.config.{js,ts,mjs,mts}'
+          );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         } else if (options.bundler === 'esbuild') {
-          ruleOptions.ignoredFiles = [
-            '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
-          ];
+          ruleOptions.ignoredFiles ??= [];
+          ruleOptions.ignoredFiles.push(
+            '{projectRoot}/esbuild.config.{js,ts,mjs,mts}'
+          );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         }
         return o;
@@ -595,6 +602,7 @@ async function addJest(
         : options.bundler === 'rollup'
         ? 'swc'
         : undefined,
+    runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
 
@@ -714,15 +722,13 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
-  const fileName = getCaseAwareFileName({
-    fileName: options.simpleName
+  const fileName = names(
+    options.simpleName
       ? projectNames.projectSimpleName
-      : projectNames.projectFileName,
-    pascalCaseFiles: options.pascalCaseFiles,
-  });
+      : projectNames.projectFileName
+  ).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -739,15 +745,6 @@ async function normalizeOptions(
     parsedTags,
     importPath,
   };
-}
-
-function getCaseAwareFileName(options: {
-  pascalCaseFiles: boolean;
-  fileName: string;
-}) {
-  const normalized = names(options.fileName);
-
-  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
 }
 
 function addProjectDependencies(

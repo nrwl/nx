@@ -13,7 +13,6 @@ export interface Schema {
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   linter: Linter | LinterType;
-  pascalCaseFiles?: boolean;
   classComponent?: boolean;
   routing?: boolean;
   skipNxJson?: boolean;
@@ -37,11 +36,6 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2eCiWebServerTarget: string;
-  e2eCiBaseUrl: string;
-  e2ePort: number;
   parsedTags: string[];
   fileName: string;
   styledModule: null | SupportedStyles;

@@ -1,16 +1,7 @@
-import { useInView } from 'framer-motion';
-import { ComponentRef, ReactNode, useEffect, useRef } from 'react';
+import { motion, useInView, useMotionValue, useTransform } from 'framer-motion';
+import { ComponentRef, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { cx } from '@nx/nx-dev/ui-primitives';
 
-/**
- * Resizes the text to fit within its container.
- *
- * @param {Object} props - The component's properties.
- * @param {ReactNode} props.children - The content to be displayed within the component.
- * @param {string} [props.className=''] - The additional className to be applied to the component.
- *
- * @return {JSX.Element} - The rendered component.
- */
 export function FitText({
   children,
   className = '',
@@ -21,23 +12,14 @@ export function FitText({
   const containerRef = useRef<ComponentRef<'div'>>(null);
   const textRef = useRef<ComponentRef<'span'>>(null);
   const isInView = useInView(containerRef);
+  const fontSize = useMotionValue(16);
+  const scaledFontSize = useTransform(fontSize, (size) => `${size}px`);
 
-  useEffect(() => {
-    if (!isInView) return;
-    resizeText();
-    window.addEventListener('resize', resizeText);
-    return () => {
-      window.removeEventListener('resize', resizeText);
-    };
-  }, [isInView, children]);
-
-  const resizeText = () => {
+  const resizeText = useCallback(() => {
     const container = containerRef.current;
     const text = textRef.current;
 
-    if (!container || !text) {
-      return;
-    }
+    if (!container || !text) return;
 
     const containerWidth = container.offsetWidth;
     let min = 1;
@@ -54,23 +36,34 @@ export function FitText({
       }
     }
 
-    text.style.fontSize = max + 'px';
-  };
+    fontSize.set(max);
+  }, [fontSize]);
+
+  useEffect(() => {
+    if (!isInView) return;
+    resizeText();
+    window.addEventListener('resize', resizeText);
+
+    return () => {
+      window.removeEventListener('resize', resizeText);
+    };
+  }, [isInView, resizeText]);
 
   return (
     <span
       className="relative grid h-full w-full grid-cols-1 place-items-center"
       ref={containerRef}
     >
-      <span
+      <motion.span
         className={cx(
           'transform whitespace-nowrap text-center font-bold',
           className
         )}
         ref={textRef}
+        style={{ fontSize: scaledFontSize }}
       >
         {children}
-      </span>
+      </motion.span>
     </span>
   );
 }

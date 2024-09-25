@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  expectTestsPass,
   getPackageManagerCommand,
   killPorts,
   newProject,
@@ -41,10 +40,10 @@ describe('@nx/expo (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/expo:application ${appName} --e2eTestRunner=cypress --no-interactive`
+      `generate @nx/expo:application ${appName} --directory=apps/${appName} --e2eTestRunner=cypress --no-interactive`
     );
     runCLI(
-      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+      `generate @nx/expo:library ${libName} --directory=libs/${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
   });
   afterAll(() => {
@@ -56,7 +55,7 @@ describe('@nx/expo (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/expo:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/expo:component ${componentName} --directory=libs/${libName}/src/${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -64,8 +63,8 @@ describe('@nx/expo (legacy)', () => {
       return updated;
     });
 
-    expectTestsPass(await runCLIAsync(`test ${appName}`));
-    expectTestsPass(await runCLIAsync(`test ${libName}`));
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain(
@@ -223,13 +222,6 @@ describe('@nx/expo (legacy)', () => {
     expect(appTestResult).toContain(
       `Successfully ran target test for project ${appName}`
     );
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=derived`
-      )
-    ).toThrow();
 
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=as-provided`

@@ -12,8 +12,6 @@ import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
-import { gt } from 'semver';
-import { nxVersion } from '../utils/versions';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.

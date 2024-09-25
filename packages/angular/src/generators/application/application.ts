@@ -16,6 +16,7 @@ import {
   addE2e,
   addLinting,
   addProxyConfig,
+  addServeStaticTarget,
   addUnitTestRunner,
   createFiles,
   createProject,
@@ -29,16 +30,6 @@ import type { Schema } from './schema';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(
-  tree: Tree,
-  schema: Partial<Schema>
-): Promise<GeneratorCallback> {
-  return await applicationGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function applicationGeneratorInternal(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
@@ -74,7 +65,12 @@ export async function applicationGeneratorInternal(
 
   await addLinting(tree, options);
   await addUnitTestRunner(tree, options);
-  await addE2e(tree, options);
+  const e2ePort = await addE2e(tree, options);
+  addServeStaticTarget(
+    tree,
+    options,
+    options.e2eTestRunner !== 'none' ? e2ePort : options.port
+  );
   updateEditorTsConfig(tree, options);
   setGeneratorDefaults(tree, options);
 

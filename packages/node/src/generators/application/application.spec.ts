@@ -290,7 +290,7 @@ describe('app', () => {
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
-        'my-dir-my-node-app': {
+        'my-node-app': {
           tags: ['one', 'two'],
         },
       });
@@ -304,7 +304,7 @@ describe('app', () => {
       };
       await applicationGenerator(tree, {
         name: 'my-node-app',
-        directory: 'myDir',
+        directory: 'my-dir/my-node-app/',
         addPlugin: true,
       });
 
@@ -403,23 +403,6 @@ describe('app', () => {
         '/billing-api': { target: 'http://localhost:3000', secure: false },
       });
     });
-
-    it('should work with unnormalized project names', async () => {
-      await angularApplicationGenerator(tree, {
-        name: 'myFrontend',
-      });
-
-      await applicationGenerator(tree, {
-        name: 'my-node-app',
-        frontendProject: 'myFrontend',
-        addPlugin: true,
-      });
-
-      expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
-      const project = readProjectConfiguration(tree, 'my-frontend');
-      const serve = project.targets.serve;
-      expect(serve.options.proxyConfig).toEqual('my-frontend/proxy.conf.json');
-    });
   });
 
   describe('--swcJest', () => {
@@ -433,8 +416,7 @@ describe('app', () => {
 
       expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-node-app',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -460,8 +442,7 @@ describe('app', () => {
 
       expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-node-app',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -496,7 +477,7 @@ describe('app', () => {
       const tsConfigApp = readJson(tree, 'my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['src/**/*.ts', 'src/**/*.js']);
       expect(tsConfigApp.exclude).toEqual([
-        'jest.config.ts',
+        'jest.config.js',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
         'src/**/*.spec.js',
@@ -519,25 +500,12 @@ describe('app', () => {
     it('should generate js files for nested libs as well', async () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
-        directory: 'myDir',
+        directory: 'my-dir/my-node-app/',
         js: true,
         addPlugin: true,
       } as Schema);
       expect(tree.exists(`my-dir/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('my-dir/my-node-app/src/main.js')).toBeTruthy();
-    });
-  });
-
-  describe('--pascalCaseFiles', () => {
-    it(`should notify that this flag doesn't do anything`, async () => {
-      await applicationGenerator(tree, {
-        name: 'my-node-app',
-        pascalCaseFiles: true,
-        addPlugin: true,
-      } as Schema);
-
-      // @TODO how to spy on context ?
-      // expect(contextLoggerSpy).toHaveBeenCalledWith('NOTE: --pascalCaseFiles is a noop')
     });
   });
 

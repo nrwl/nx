@@ -25,7 +25,7 @@ describe('js e2e', () => {
   it('should create libs with npm scripts', () => {
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(
-      `generate @nx/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
+      `generate @nx/js:lib ${npmScriptsLib} --directory=libs/${npmScriptsLib} --config=npm-scripts --no-interactive`
     );
     const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
     expect(libPackageJson.scripts.test).toBeDefined();
@@ -42,7 +42,9 @@ describe('js e2e', () => {
     const libName = uniq('mylib');
     const dirName = uniq('dir');
 
-    runCLI(`generate @nx/js:lib ${libName} --directory ${dirName}`);
+    runCLI(
+      `generate @nx/js:lib ${dirName}-${libName} --directory libs/${dirName}/${libName}`
+    );
 
     checkFilesExist(
       `libs/${dirName}/${libName}/src/index.ts`,
@@ -65,11 +67,15 @@ describe('js e2e', () => {
   it('should be able to add build to non-buildable projects', () => {
     const nonBuildable = uniq('nonbuildable');
 
-    runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${nonBuildable} --directory=libs/${nonBuildable} --bundler=none`
+    );
     expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
     checkFilesDoNotExist(`dist/libs/${nonBuildable}/src/index.js`);
 
-    runCLI(`generate @nx/js:setup-build ${nonBuildable} --bundler=tsc`);
+    runCLI(
+      `generate @nx/js:setup-build ${nonBuildable} --directory=libs/${nonBuildable} --bundler=tsc`
+    );
     runCLI(`build ${nonBuildable}`);
     checkFilesExist(`dist/libs/${nonBuildable}/src/index.js`);
   });
@@ -77,8 +83,12 @@ describe('js e2e', () => {
   it('should build buildable libraries using the task graph and handle more scenarios than current implementation', () => {
     const lib1 = uniq('lib1');
     const lib2 = uniq('lib2');
-    runCLI(`generate @nx/js:lib ${lib1} --bundler=tsc --no-interactive`);
-    runCLI(`generate @nx/js:lib ${lib2} --bundler=tsc --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib ${lib1} --directory=libs/${lib1} --bundler=tsc --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib ${lib2} --directory=libs/${lib2} --bundler=tsc --no-interactive`
+    );
 
     // add dep between lib1 and lib2
     updateFile(
@@ -164,13 +174,6 @@ describe('js e2e', () => {
 
   it('should support generating with a scoped project name when --project-name-and-root-format=as-provided', async () => {
     const scopedLib = uniq('@my-org/lib1');
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=derived`
-      )
-    ).toThrow();
 
     runCLI(
       `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=as-provided`

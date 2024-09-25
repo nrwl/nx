@@ -13,7 +13,6 @@ export interface Schema {
   js?: boolean;
   linter: Linter | LinterType;
   name: string;
-  pascalCaseFiles?: boolean;
   remotes?: string[];
   setParserOptionsProject?: boolean;
   skipFormat?: boolean;
@@ -28,6 +27,7 @@ export interface Schema {
   typescriptConfiguration?: boolean;
   dynamic?: boolean;
   addPlugin?: boolean;
+  bundler?: 'rspack' | 'webpack';
 }
 
 export interface NormalizedSchema extends Schema {

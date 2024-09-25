@@ -66,7 +66,6 @@ server.on('error', console.error);
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -112,7 +111,6 @@ async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/express:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(host);

@@ -690,7 +690,7 @@ describe('defaultChangelogRenderer()', () => {
 
         - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
-        #### ⚠️  Breaking Changes
+        ### ⚠️  Breaking Changes
 
         - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
@@ -742,7 +742,7 @@ describe('defaultChangelogRenderer()', () => {
 
         - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
-        #### ⚠️  Breaking Changes
+        ### ⚠️  Breaking Changes
 
         - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead.
 

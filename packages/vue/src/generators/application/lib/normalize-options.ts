@@ -1,11 +1,10 @@
-import { Tree, extractLayoutDirectory, names } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
-  callingGenerator = '@nx/vue:application'
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,
@@ -17,7 +16,6 @@ export async function normalizeOptions(
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator,
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;

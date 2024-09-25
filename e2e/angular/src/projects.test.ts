@@ -127,8 +127,7 @@ describe('Angular Projects', () => {
 
     // check e2e tests
     if (runE2ETests('playwright')) {
-      const e2eResults = runCLI(`e2e ${app1}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e for project');
+      expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
       expect(await killPort(4200)).toBeTruthy();
     }
 
@@ -160,10 +159,7 @@ describe('Angular Projects', () => {
     );
 
     if (runE2ETests('playwright')) {
-      const e2eResults = runCLI(`e2e ${app}-e2e`);
-      expect(e2eResults).toContain(
-        `Successfully ran target e2e for project ${app}-e2e`
-      );
+      expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(4200)).toBeTruthy();
     }
   }, 1000000);
@@ -495,7 +491,7 @@ describe('Angular Projects', () => {
     updateFile(`${lib}/src/lib/${lib}.module.ts`, moduleContent);
 
     // ACT
-    const buildOutput = runCLI(`build ${lib}`);
+    const buildOutput = runCLI(`build ${lib}`, { env: { CI: 'false' } });
 
     // ASSERT
     expect(buildOutput).toContain(`Building entry point '@${proj}/${lib}'`);
@@ -505,55 +501,8 @@ describe('Angular Projects', () => {
     expect(buildOutput).toContain('Successfully ran target build');
   });
 
-  it('should support generating projects with --project-name-and-root-format=derived', () => {
-    const appName = uniq('app1');
-    const libName = uniq('lib1');
-
-    runCLI(
-      `generate @nx/angular:app ${appName} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    // check files are generated with the layout directory ("apps/")
-    checkFilesExist(`apps/${appName}/src/app/app.module.ts`);
-    // check build works
-    expect(runCLI(`build ${appName}`)).toContain(
-      `Successfully ran target build for project ${appName}`
-    );
-    // check tests pass
-    const appTestResult = runCLI(`test ${appName}`);
-    expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
-    );
-
-    runCLI(
-      `generate @nx/angular:lib ${libName} --standalone --buildable --project-name-and-root-format=derived`
-    );
-
-    // check files are generated with the layout directory ("libs/")
-    checkFilesExist(
-      `libs/${libName}/src/index.ts`,
-      `libs/${libName}/src/lib/${libName}/${libName}.component.ts`
-    );
-    // check build works
-    expect(runCLI(`build ${libName}`)).toContain(
-      `Successfully ran target build for project ${libName}`
-    );
-    // check tests pass
-    const libTestResult = runCLI(`test ${libName}`);
-    expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
-    );
-  }, 500_000);
-
   it('should support generating libraries with a scoped name when --project-name-and-root-format=as-provided', () => {
     const libName = uniq('@my-org/lib1');
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=derived`
-      )
-    ).toThrow();
 
     runCLI(
       `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`
@@ -568,14 +517,9 @@ describe('Angular Projects', () => {
       }.component.ts`
     );
     // check build works
-    expect(runCLI(`build ${libName}`)).toContain(
-      `Successfully ran target build for project ${libName}`
-    );
+    expect(() => runCLI(`build ${libName}`)).not.toThrow();
     // check tests pass
-    const libTestResult = runCLI(`test ${libName}`);
-    expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
-    );
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
   }, 500_000);
 
   it('should support generating applications with SSR and converting targets with webpack-based executors to use the application executor', async () => {

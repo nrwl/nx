@@ -6,7 +6,7 @@ import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { Linter } from '@nx/eslint';
-import { remoteGeneratorInternal } from '../remote/remote';
+import remoteGeneratorInternal from '../remote/remote';
 
 describe('federate-module', () => {
   let tree: Tree;
@@ -16,6 +16,7 @@ describe('federate-module', () => {
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
     skipFormat: true,
+    bundler: 'webpack',
   };
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
@@ -82,6 +83,7 @@ describe('federate-module', () => {
       linter: Linter.EsLint,
       style: 'css',
       unitTestRunner: 'none',
+      bundler: 'webpack',
     };
 
     beforeEach(async () => {

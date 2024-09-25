@@ -25,13 +25,6 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 let tsModule: typeof import('typescript');
 
 export async function reduxGenerator(host: Tree, schema: Schema) {
-  return reduxGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function reduxGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   generateReduxFiles(host, options);
   addExportsToBarrel(host, options);
@@ -159,14 +152,9 @@ async function normalizeOptions(
     fileName,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'slice',
-    callingGenerator: '@nx/react:redux',
     name: options.name,
     directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: true,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
   });
 

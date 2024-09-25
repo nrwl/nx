@@ -34,6 +34,9 @@ describe('@nx/gradle/plugin', () => {
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
       gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     cwd = process.cwd();
@@ -113,6 +116,9 @@ describe('@nx/gradle/plugin', () => {
                         "gradle",
                       ],
                     },
+                    "options": {
+                      "cwd": ".",
+                    },
                   },
                 },
               },
@@ -136,6 +142,9 @@ describe('@nx/gradle/plugin', () => {
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
       gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     await tempFs.createFiles({
@@ -194,6 +203,9 @@ describe('@nx/gradle/plugin', () => {
                         "gradle",
                       ],
                     },
+                    "options": {
+                      "cwd": ".",
+                    },
                   },
                 },
               },
@@ -218,6 +230,9 @@ describe('@nx/gradle/plugin', () => {
           ['proj', new Map([['test', 'Test']])],
         ]),
         gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+        gradleProjectNameToProjectRootMap: new Map<string, string>([
+          ['proj', 'proj'],
+        ]),
         gradleProjectToChildProjects: new Map<string, string[]>(),
       };
       await tempFs.createFiles({
@@ -301,6 +316,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci": {
                       "cache": true,
@@ -370,6 +388,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--bTest": {
                       "cache": true,
@@ -397,6 +418,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--cTests": {
                       "cache": true,
@@ -423,6 +447,9 @@ describe('@nx/gradle/plugin', () => {
                         "technologies": [
                           "gradle",
                         ],
+                      },
+                      "options": {
+                        "cwd": ".",
                       },
                     },
                   },

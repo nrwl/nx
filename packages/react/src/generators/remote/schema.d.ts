@@ -15,7 +15,6 @@ export interface Schema {
   js?: boolean;
   linter: Linter | LinterType;
   name: string;
-  pascalCaseFiles?: boolean;
   routing?: boolean;
   setParserOptionsProject?: boolean;
   skipFormat: boolean;
@@ -28,6 +27,7 @@ export interface Schema {
   unitTestRunner: 'jest' | 'vitest' | 'none';
   typescriptConfiguration?: boolean;
   dynamic?: boolean;
+  bundler?: 'rspack' | 'webpack';
 }
 
 export interface NormalizedSchema extends ApplicationNormalizedSchema {

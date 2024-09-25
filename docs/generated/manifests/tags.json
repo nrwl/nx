@@ -338,6 +338,13 @@
       "path": "/extending-nx/recipes/modifying-files"
     },
     {
+      "description": "",
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/generate",
       "id": "generate",
@@ -552,6 +559,13 @@
       "id": "publish-custom-dist-directory",
       "name": "Publish a Custom Dist Directory",
       "path": "/recipes/nx-release/publish-custom-dist-directory"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/build-before-versioning",
+      "id": "build-before-versioning",
+      "name": "Build Before Versioning",
+      "path": "/recipes/nx-release/build-before-versioning"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

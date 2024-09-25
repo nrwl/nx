@@ -16,7 +16,6 @@ export interface Schema {
   js?: boolean;
   linter: Linter | LinterType;
   name: string;
-  pascalCaseFiles?: boolean;
   publishable?: boolean;
   routing?: boolean;
   setParserOptionsProject?: boolean;

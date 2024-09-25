@@ -1,8 +1,10 @@
 import { major } from 'semver';
 import { ChangelogChange } from '../../src/command-line/release/changelog';
 import { NxReleaseConfig } from '../../src/command-line/release/config/config';
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
 import { GitCommit } from '../../src/command-line/release/utils/git';
 import {
+  GithubRepoData,
   RepoSlug,
   formatReferences,
 } from '../../src/command-line/release/utils/github';
@@ -41,10 +43,11 @@ export type DependencyBump = {
  * @param {string | false} config.entryWhenNoChanges The (already interpolated) string to use as the changelog entry when there are no changes, or `false` if no entry should be generated
  * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
  * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the commit data
+ * @param {GithubRepoData} config.repoData Resolved data for the current GitHub repository
  */
 export type ChangelogRenderer = (config: {
   projectGraph: ProjectGraph;
-  // TODO: remove 'commits' and make 'changes' whenever we make the next breaking change to this API
+  // TODO(v20): remove 'commits' and make 'changes' required
   commits?: GitCommit[];
   changes?: ChangelogChange[];
   releaseVersion: string;
@@ -52,8 +55,12 @@ export type ChangelogRenderer = (config: {
   entryWhenNoChanges: string | false;
   changelogRenderOptions: DefaultChangelogRenderOptions;
   dependencyBumps?: DependencyBump[];
+  // TODO(v20): remove repoSlug in favour of repoData
   repoSlug?: RepoSlug;
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
+  repoData?: GithubRepoData;
+  // TODO(v20): Evaluate if there is a cleaner way to configure this when breaking changes are allowed
+  // null if version plans are being used to generate the changelog
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
 }) => Promise<string> | string;
 
 /**
@@ -98,10 +105,9 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   dependencyBumps,
   repoSlug,
   conventionalCommitsConfig,
+  repoData,
 }): Promise<string> => {
-  const changeTypes = conventionalCommitsConfig.types;
   const markdownLines: string[] = [];
-  const breakingChanges = [];
 
   // If the current range of changes contains both a commit and its revert, we strip them both from the final list. Changes from version plans are unaffected, as they have no hashes.
   for (const change of changes) {
@@ -119,11 +125,48 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   }
 
   let relevantChanges = changes;
+  const breakingChanges = [];
+
+  // For now to keep the interface of the changelog renderer non-breaking for v19 releases we have a somewhat indirect check for whether or not we are generating a changelog for version plans
+  const isVersionPlans = !conventionalCommitsConfig;
+
+  // Only applicable for version plans
+  const additionalChangesForAuthorsSection = [];
+
+  // Provide a default configuration for version plans to allow most of the subsequent logic to work in the same way it would for conventional commits
+  // NOTE: The one exception is breaking/major changes, where we do not follow the same structure and instead only show the changes once
+  if (isVersionPlans) {
+    conventionalCommitsConfig = {
+      types: {
+        feat: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat,
+        fix: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix,
+      },
+    };
+    // Trim down "relevant changes" to only include non-breaking ones so that we can render them differently under version plans,
+    // but keep track of the changes for the purposes of the authors section
+    // TODO(v20): Clean this abstraction up as part of the larger overall refactor of changelog rendering
+    for (let i = 0; i < relevantChanges.length; i++) {
+      if (relevantChanges[i].isBreaking) {
+        const change = relevantChanges[i];
+        additionalChangesForAuthorsSection.push(change);
+        const line = formatChange(
+          change,
+          changelogRenderOptions,
+          isVersionPlans,
+          repoData
+        );
+        breakingChanges.push(line);
+        relevantChanges.splice(i, 1);
+      }
+    }
+  }
+
+  const changeTypes = conventionalCommitsConfig.types;
 
   // workspace root level changelog
   if (project === null) {
     // No changes for the workspace
-    if (relevantChanges.length === 0) {
+    if (relevantChanges.length === 0 && breakingChanges.length === 0) {
       if (dependencyBumps?.length) {
         applyAdditionalDependencyBumps({
           markdownLines,
@@ -180,7 +223,12 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       for (const scope of scopesSortedAlphabetically) {
         const changes = changesGroupedByScope[scope];
         for (const change of changes) {
-          const line = formatChange(change, changelogRenderOptions, repoSlug);
+          const line = formatChange(
+            change,
+            changelogRenderOptions,
+            isVersionPlans,
+            repoData
+          );
           markdownLines.push(line);
           if (change.isBreaking) {
             const breakingChangeExplanation = extractBreakingChangeExplanation(
@@ -206,7 +254,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     );
 
     // Generating for a named project, but that project has no relevant changes in the current set of commits, exit early
-    if (relevantChanges.length === 0) {
+    if (relevantChanges.length === 0 && breakingChanges.length === 0) {
       if (dependencyBumps?.length) {
         applyAdditionalDependencyBumps({
           markdownLines,
@@ -248,7 +296,12 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
       const changesInChronologicalOrder = group.reverse();
       for (const change of changesInChronologicalOrder) {
-        const line = formatChange(change, changelogRenderOptions, repoSlug);
+        const line = formatChange(
+          change,
+          changelogRenderOptions,
+          isVersionPlans,
+          repoData
+        );
         markdownLines.push(line + '\n');
         if (change.isBreaking) {
           const breakingChangeExplanation = extractBreakingChangeExplanation(
@@ -267,7 +320,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   }
 
   if (breakingChanges.length > 0) {
-    markdownLines.push('', '#### ⚠️  Breaking Changes', '', ...breakingChanges);
+    markdownLines.push('', '### ⚠️  Breaking Changes', '', ...breakingChanges);
   }
 
   if (dependencyBumps?.length) {
@@ -281,7 +334,11 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
   if (changelogRenderOptions.authors) {
     const _authors = new Map<string, { email: Set<string>; github?: string }>();
-    for (const change of relevantChanges) {
+
+    for (const change of [
+      ...relevantChanges,
+      ...additionalChangesForAuthorsSection,
+    ]) {
       if (!change.author) {
         continue;
       }
@@ -298,7 +355,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
 
     // Try to map authors to github usernames
-    if (repoSlug && changelogRenderOptions.mapAuthorsToGitHubUsernames) {
+    if (repoData && changelogRenderOptions.mapAuthorsToGitHubUsernames) {
       await Promise.all(
         [..._authors.keys()].map(async (authorName) => {
           const meta = _authors.get(authorName);
@@ -402,7 +459,8 @@ function groupBy(items: any[], key: string) {
 function formatChange(
   change: ChangelogChange,
   changelogRenderOptions: DefaultChangelogRenderOptions,
-  repoSlug?: RepoSlug
+  isVersionPlans: boolean,
+  repoData?: GithubRepoData
 ): string {
   let description = change.description;
   let extraLines = [];
@@ -417,13 +475,18 @@ function formatChange(
       .join('\n');
   }
 
+  /**
+   * In version plans changelogs:
+   * - don't repeat the breaking change icon
+   * - don't render the scope
+   */
   let changeLine =
     '- ' +
-    (change.isBreaking ? '⚠️  ' : '') +
-    (change.scope ? `**${change.scope.trim()}:** ` : '') +
+    (!isVersionPlans && change.isBreaking ? '⚠️  ' : '') +
+    (!isVersionPlans && change.scope ? `**${change.scope.trim()}:** ` : '') +
     description;
-  if (repoSlug && changelogRenderOptions.commitReferences) {
-    changeLine += formatReferences(change.githubReferences, repoSlug);
+  if (repoData && changelogRenderOptions.commitReferences) {
+    changeLine += formatReferences(change.githubReferences, repoData);
   }
   if (extraLinesStr) {
     changeLine += '\n\n' + extraLinesStr;

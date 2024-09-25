@@ -42,49 +42,49 @@ function withMigrationOptions(yargs: Argv) {
 
   return withVerbose(yargs)
     .positional('packageAndVersion', {
-      describe: `The target package and version (e.g, @nx/workspace@16.0.0)`,
+      describe: `The target package and version (e.g, @nx/workspace@16.0.0).`,
       type: 'string',
     })
     .option('runMigrations', {
-      describe: `Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)`,
+      describe: `Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json).`,
       type: 'string',
     })
     .option('ifExists', {
-      describe: `Run migrations only if the migrations file exists, if not continues successfully`,
+      describe: `Run migrations only if the migrations file exists, if not continues successfully.`,
       type: 'boolean',
       default: false,
     })
     .option('from', {
       describe:
-        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@16.0.0,@nx/js@16.0.0")',
+        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nx/react@16.0.0,@nx/js@16.0.0").',
       type: 'string',
     })
     .option('to', {
       describe:
-        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0")',
+        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0").',
       type: 'string',
     })
     .option('createCommits', {
-      describe: 'Automatically create a git commit after each migration runs',
+      describe: 'Automatically create a git commit after each migration runs.',
       type: 'boolean',
       alias: ['C'],
       default: false,
     })
     .option('commitPrefix', {
       describe:
-        'Commit prefix to apply to the commit for each migration, when --create-commits is enabled',
+        'Commit prefix to apply to the commit for each migration, when --create-commits is enabled.',
       type: 'string',
       default: defaultCommitPrefix,
     })
     .option('interactive', {
       describe:
-        'Enable prompts to confirm whether to collect optional package updates and migrations',
+        'Enable prompts to confirm whether to collect optional package updates and migrations.',
       type: 'boolean',
       default: false,
     })
     .option('excludeAppliedMigrations', {
       describe:
-        'Exclude migrations that should have been applied on previous updates. To be used with --from',
+        'Exclude migrations that should have been applied on previous updates. To be used with --from.',
       type: 'boolean',
       default: false,
     })
@@ -128,6 +128,7 @@ function runMigration() {
       }
       execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
+        windowsHide: true,
       });
     }
   } else {
@@ -155,12 +156,14 @@ function nxCliPath() {
       execSync(pmc.preInstall, {
         cwd: tmpDir,
         stdio: ['ignore', 'ignore', 'ignore'],
+        windowsHide: true,
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
         execSync('yarn config set nodeLinker node-modules', {
           cwd: tmpDir,
           stdio: ['ignore', 'ignore', 'ignore'],
+          windowsHide: true,
         });
       }
     }
@@ -168,6 +171,7 @@ function nxCliPath() {
     execSync(pmc.install, {
       cwd: tmpDir,
       stdio: ['ignore', 'ignore', 'ignore'],
+      windowsHide: true,
     });
 
     // Set NODE_PATH so that these modules can be used for module resolution

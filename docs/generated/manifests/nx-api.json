@@ -181,15 +181,6 @@
         "path": "/nx-api/angular/generators/component",
         "type": "generator"
       },
-      "/nx-api/angular/generators/component-cypress-spec": {
-        "description": "Creates a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/angular/generators/component-cypress-spec.json",
-        "hidden": true,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/angular/src/generators/component-cypress-spec/schema.json",
-        "path": "/nx-api/angular/generators/component-cypress-spec",
-        "type": "generator"
-      },
       "/nx-api/angular/generators/component-story": {
         "description": "Creates a stories.ts file for a component.",
         "file": "generated/packages/angular/generators/component-story.json",
@@ -1291,6 +1282,15 @@
         "originalFilePath": "/packages/js/src/generators/typescript-sync/schema.json",
         "path": "/nx-api/js/generators/typescript-sync",
         "type": "generator"
+      },
+      "/nx-api/js/generators/setup-prettier": {
+        "description": "Setup Prettier as the formatting tool.",
+        "file": "generated/packages/js/generators/setup-prettier.json",
+        "hidden": false,
+        "name": "setup-prettier",
+        "originalFilePath": "/packages/js/src/generators/setup-prettier/schema.json",
+        "path": "/nx-api/js/generators/setup-prettier",
+        "type": "generator"
       }
     },
     "path": "/nx-api/js"
@@ -1902,6 +1902,39 @@
         "tags": [],
         "originalFilePath": "generated/cli/repair"
       },
+      "/nx-api/nx/documents/sync": {
+        "id": "sync",
+        "name": "sync",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/sync",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/sync",
+        "tags": [],
+        "originalFilePath": "generated/cli/sync"
+      },
+      "/nx-api/nx/documents/sync-check": {
+        "id": "sync-check",
+        "name": "sync:check",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/sync-check",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/sync-check",
+        "tags": [],
+        "originalFilePath": "generated/cli/sync-check"
+      },
+      "/nx-api/nx/documents/import": {
+        "id": "import",
+        "name": "import",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/import",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/import",
+        "tags": [],
+        "originalFilePath": "generated/cli/import"
+      },
       "/nx-api/nx/documents/exec": {
         "id": "exec",
         "name": "exec",
@@ -1967,6 +2000,28 @@
         "path": "/nx-api/nx/documents/add",
         "tags": [],
         "originalFilePath": "generated/cli/add"
+      },
+      "/nx-api/nx/documents/login": {
+        "id": "login",
+        "name": "login",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/login",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/login",
+        "tags": [],
+        "originalFilePath": "generated/cli/login"
+      },
+      "/nx-api/nx/documents/logout": {
+        "id": "logout",
+        "name": "logout",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/logout",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/logout",
+        "tags": [],
+        "originalFilePath": "generated/cli/logout"
       }
     },
     "root": "/packages/nx",
@@ -2210,6 +2265,15 @@
         "originalFilePath": "/packages/react/src/executors/module-federation-ssr-dev-server/schema.json",
         "path": "/nx-api/react/executors/module-federation-ssr-dev-server",
         "type": "executor"
+      },
+      "/nx-api/react/executors/module-federation-static-server": {
+        "description": "Serve a host and its remotes statically.",
+        "file": "generated/packages/react/executors/module-federation-static-server.json",
+        "hidden": false,
+        "name": "module-federation-static-server",
+        "originalFilePath": "/packages/react/src/executors/module-federation-static-server/schema.json",
+        "path": "/nx-api/react/executors/module-federation-static-server",
+        "type": "executor"
       }
     },
     "generators": {
@@ -2283,15 +2347,6 @@
         "name": "stories",
         "originalFilePath": "/packages/react/src/generators/stories/schema.json",
         "path": "/nx-api/react/generators/stories",
-        "type": "generator"
-      },
-      "/nx-api/react/generators/component-cypress-spec": {
-        "description": "Create a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/react/generators/component-cypress-spec.json",
-        "hidden": false,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/react/src/generators/component-cypress-spec/schema.json",
-        "path": "/nx-api/react/generators/component-cypress-spec",
         "type": "generator"
       },
       "/nx-api/react/generators/hook": {
@@ -3422,6 +3477,15 @@
         "name": "ci-workflow",
         "originalFilePath": "/packages/workspace/src/generators/ci-workflow/schema.json",
         "path": "/nx-api/workspace/generators/ci-workflow",
+        "type": "generator"
+      },
+      "/nx-api/workspace/generators/infer-targets": {
+        "description": "Convert Nx projects to use inferred targets.",
+        "file": "generated/packages/workspace/generators/infer-targets.json",
+        "hidden": false,
+        "name": "infer-targets",
+        "originalFilePath": "/packages/workspace/src/generators/infer-targets/schema.json",
+        "path": "/nx-api/workspace/generators/infer-targets",
         "type": "generator"
       }
     },

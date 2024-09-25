@@ -21,11 +21,10 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
+import { existsSync, writeFileSync } from 'node:fs';
 import { basename, join, parse } from 'path';
-import { writeFileSync } from 'fs-extra';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { existsSync } from 'fs';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';

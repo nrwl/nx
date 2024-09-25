@@ -11,8 +11,8 @@ antBuilderFactory: org.gradle.api.internal.project.DefaultAntBuilderFactory@5a5e
 artifacts: org.gradle.api.internal.artifacts.dsl.DefaultArtifactHandler_Decorated@3793af5a
 asDynamicObject: DynamicObject for root project 'My Application'
 baseClassLoaderScope: org.gradle.api.internal.initialization.DefaultClassLoaderScope@4dc8adab
-buildDir: /Users/emily/code/tmp/nx-android/build
-buildFile: /Users/emily/code/tmp/nx-android/build.gradle
+buildDir: /tmp/nx-android/build
+buildFile: /tmp/nx-android/build.gradle
 buildPath: :
 buildScriptSource: org.gradle.groovy.scripts.TextResourceScriptSource@622acc87
 buildTreePath: :
@@ -73,13 +73,13 @@ plugins: [org.gradle.api.plugins.HelpTasksPlugin$Inject@611c939a, org.gradle.bui
 processOperations: org.gradle.process.internal.DefaultExecActionFactory$DecoratingExecActionFactory@2bcbdbd2
 project: root project 'My Application'
 projectConfigurator: org.gradle.api.internal.project.BuildOperationCrossProjectConfigurator@e136ccb
-projectDir: /Users/emily/code/tmp/nx-android
+projectDir: /tmp/nx-android
 projectEvaluationBroadcaster: ProjectEvaluationListener broadcast
 projectEvaluator: org.gradle.configuration.project.LifecycleProjectEvaluator@4d3e0414
 projectPath: :
 projectReport: task ':projectReport'
 projectReportAll: task ':projectReportAll'
-projectReportDir: /Users/emily/code/tmp/nx-android/build/reports/project
+projectReportDir: /tmp/nx-android/build/reports/project
 projectReportDirName: project
 projects: [root project 'My Application']
 properties: {...}
@@ -89,7 +89,7 @@ publicType: org.gradle.api.plugins.ProjectReportsPluginConvention
 reporting: extension 'reporting'
 repositories: repository container
 resources: org.gradle.api.internal.resources.DefaultResourceHandler@3bfc23c4
-rootDir: /Users/emily/code/tmp/nx-android
+rootDir: /tmp/nx-android
 rootProject: root project 'My Application'
 rootScript: false
 script: false

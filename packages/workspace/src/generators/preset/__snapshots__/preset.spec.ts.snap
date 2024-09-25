@@ -46,6 +46,11 @@ module.exports = {
   },
   devServer: {
     port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -133,6 +138,11 @@ module.exports = {
   },
   devServer: {
     port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
     new NxAppWebpackPlugin({

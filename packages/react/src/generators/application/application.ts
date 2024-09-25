@@ -38,11 +38,14 @@ import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { addE2e } from './lib/add-e2e';
 import {
   addExtendsToLintConfig,
+  addOverrideToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -62,7 +65,25 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     tasks.push(lintTask);
 
     if (isEslintConfigSupported(host)) {
-      addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+      if (useFlatConfig(host)) {
+        addPredefinedConfigToFlatLintConfig(
+          host,
+          options.appProjectRoot,
+          'flat/react'
+        );
+        // Add an empty rules object to users know how to add/override rules
+        addOverrideToLintConfig(host, options.appProjectRoot, {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          rules: {},
+        });
+      } else {
+        const addExtendsTask = addExtendsToLintConfig(
+          host,
+          options.appProjectRoot,
+          { name: 'plugin:@nx/react', needCompatFixup: true }
+        );
+        tasks.push(addExtendsTask);
+      }
     }
 
     if (!options.skipPackageJson) {
@@ -84,7 +105,6 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -211,7 +231,13 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       main: joinPathFragments(
         options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`)
+        maybeJs(
+          {
+            js: options.js,
+            useJsx: true,
+          },
+          `src/main.tsx`
+        )
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       target: 'web',

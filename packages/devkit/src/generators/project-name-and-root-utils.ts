@@ -1,32 +1,23 @@
-import { prompt } from 'enquirer';
-import { join, relative } from 'path';
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-} from '../utils/get-workspace-layout';
-import { names } from '../utils/names';
-
 import {
   joinPathFragments,
-  logger,
   normalizePath,
-  output,
-  ProjectType,
   readJson,
-  stripIndents,
-  Tree,
   workspaceRoot,
+  type ProjectType,
+  type Tree,
 } from 'nx/src/devkit-exports';
+import { join, relative } from 'path';
 
-export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
+// TODO(leo): remove in a follow up
+export type ProjectNameAndRootFormat = 'as-provided';
+
 export type ProjectGenerationOptions = {
   name: string;
   projectType: ProjectType;
-  callingGenerator: string | null;
   directory?: string;
   importPath?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   rootProject?: boolean;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
 };
 
 export type ProjectNameAndRootOptions = {
@@ -58,52 +49,25 @@ export type ProjectNameAndRootOptions = {
   importPath?: string;
 };
 
-type ProjectNameAndRootFormats = {
-  'as-provided': ProjectNameAndRootOptions;
-  derived?: ProjectNameAndRootOptions;
-};
-
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
 ): Promise<
   ProjectNameAndRootOptions & {
+    // TODO(leo): remove in a follow up
     projectNameAndRootFormat: ProjectNameAndRootFormat;
   }
 > {
-  if (
-    !options.projectNameAndRootFormat &&
-    (process.env.NX_INTERACTIVE !== 'true' || !isTTY())
-  ) {
-    options.projectNameAndRootFormat = 'derived';
-  }
-
-  validateName(options.name, options.projectNameAndRootFormat);
-  const formats = getProjectNameAndRootFormats(tree, options);
-
-  const format =
-    options.projectNameAndRootFormat ?? (await determineFormat(formats));
-
-  if (format === 'derived' && options.callingGenerator) {
-    logDeprecationMessage(options.callingGenerator, formats);
-  }
+  validateName(options.name);
+  const projectNameAndRootOptions = getProjectNameAndRootOptions(tree, options);
 
   return {
-    ...formats[format],
-    projectNameAndRootFormat: format,
+    ...projectNameAndRootOptions,
+    projectNameAndRootFormat: 'as-provided',
   };
 }
 
-function validateName(
-  name: string,
-  projectNameAndRootFormat?: ProjectNameAndRootFormat
-): void {
-  if (projectNameAndRootFormat === 'derived' && name.startsWith('@')) {
-    throw new Error(
-      `The project name "${name}" cannot start with "@" when the "projectNameAndRootFormat" is "derived".`
-    );
-  }
-
+function validateName(name: string): void {
   /**
    * Matches two types of project names:
    *
@@ -124,64 +88,10 @@ function validateName(
   }
 }
 
-function logDeprecationMessage(
-  callingGenerator: string,
-  formats: ProjectNameAndRootFormats
-) {
-  logger.warn(stripIndents`
-    In Nx 20, generating projects will no longer derive the name and root.
-    Please provide the exact project name and root in the future.
-    Example: nx g ${callingGenerator} ${formats['derived'].projectName} --directory ${formats['derived'].projectRoot}
-  `);
-}
-
-async function determineFormat(
-  formats: ProjectNameAndRootFormats
-): Promise<ProjectNameAndRootFormat> {
-  if (!formats.derived) {
-    return 'as-provided';
-  }
-
-  const asProvidedDescription = `As provided:
-    Name: ${formats['as-provided'].projectName}
-    Root: ${formats['as-provided'].projectRoot}`;
-  const asProvidedSelectedValue = `${formats['as-provided'].projectName} @ ${formats['as-provided'].projectRoot}`;
-  const derivedDescription = `Derived:
-    Name: ${formats['derived'].projectName}
-    Root: ${formats['derived'].projectRoot}`;
-  const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot}`;
-
-  if (asProvidedSelectedValue === derivedSelectedValue) {
-    return 'as-provided';
-  }
-
-  const result = await prompt<{ format: ProjectNameAndRootFormat }>({
-    type: 'select',
-    name: 'format',
-    message:
-      'What should be the project name and where should it be generated?',
-    choices: [
-      {
-        message: asProvidedDescription,
-        name: asProvidedSelectedValue,
-      },
-      {
-        message: derivedDescription,
-        name: derivedSelectedValue,
-      },
-    ],
-    initial: 0,
-  }).then(({ format }) =>
-    format === asProvidedSelectedValue ? 'as-provided' : 'derived'
-  );
-
-  return result;
-}
-
-function getProjectNameAndRootFormats(
+function getProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
-): ProjectNameAndRootFormats {
+): ProjectNameAndRootOptions {
   const directory = options.directory
     ? normalizePath(options.directory.replace(/^\.?\//, ''))
     : undefined;
@@ -202,46 +112,7 @@ function getProjectNameAndRootFormats(
     name: asProvidedParsedName,
   });
 
-  if (options.projectNameAndRootFormat === 'as-provided') {
-    return {
-      'as-provided': asProvidedOptions,
-      derived: undefined,
-    };
-  }
-
-  if (asProvidedOptions.projectName.startsWith('@')) {
-    if (!options.projectNameAndRootFormat) {
-      output.warn({
-        title: `The provided name "${options.name}" contains a scoped project name and this is not supported by the "${options.callingGenerator}" when using the "derived" format.`,
-        bodyLines: [
-          `The generator will try to generate the project "${asProvidedOptions.projectName}" using the "as-provided" format at "${asProvidedOptions.projectRoot}".`,
-        ],
-      });
-
-      return {
-        'as-provided': asProvidedOptions,
-        derived: undefined,
-      };
-    }
-
-    throw new Error(
-      `The provided name "${options.name}" contains a scoped project name and this is not supported by the "${options.callingGenerator}" when using the "derived" format. ` +
-        `Please provide a name without "@" or use the "as-provided" format.`
-    );
-  }
-
-  const { name: derivedParsedName, directory: derivedParsedDirectory } =
-    parseNameForDerived(options.name);
-  const derivedOptions = getDerivedOptions(tree, {
-    ...options,
-    directory: directory ?? derivedParsedDirectory,
-    name: derivedParsedName,
-  });
-
-  return {
-    'as-provided': asProvidedOptions,
-    derived: derivedOptions,
-  };
+  return asProvidedOptions;
 }
 
 function getAsProvidedOptions(
@@ -311,74 +182,6 @@ function getAsProvidedOptions(
   };
 }
 
-function getDerivedOptions(
-  tree: Tree,
-  options: ProjectGenerationOptions
-): ProjectNameAndRootOptions {
-  const name = names(options.name).fileName;
-  let { projectDirectory, layoutDirectory } = getDirectories(
-    tree,
-    options.directory,
-    options.projectType
-  );
-  const projectDirectoryWithoutLayout = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : options.rootProject
-    ? '.'
-    : name;
-  // the project name uses the directory without the layout directory
-  const projectName =
-    projectDirectoryWithoutLayout === '.'
-      ? name
-      : projectDirectoryWithoutLayout.replace(/\//g, '-');
-  const projectSimpleName = name;
-  let projectRoot = projectDirectoryWithoutLayout;
-  if (projectDirectoryWithoutLayout !== '.') {
-    // prepend the layout directory
-    projectRoot = joinPathFragments(layoutDirectory, projectRoot);
-  }
-
-  let importPath: string;
-  if (options.projectType === 'library') {
-    importPath = options.importPath;
-    if (!importPath) {
-      const npmScope = getNpmScope(tree);
-      importPath =
-        projectRoot === '.'
-          ? readJson<{ name?: string }>(tree, 'package.json').name ??
-            getImportPath(npmScope, projectName)
-          : getImportPath(npmScope, projectDirectoryWithoutLayout);
-    }
-  }
-
-  return {
-    projectName,
-    names: {
-      projectSimpleName,
-      projectFileName: projectName,
-    },
-    importPath,
-    projectRoot,
-  };
-}
-
-function getDirectories(
-  tree: Tree,
-  directory: string | undefined,
-  projectType: ProjectType
-): {
-  projectDirectory: string;
-  layoutDirectory: string;
-} {
-  let { projectDirectory, layoutDirectory } = extractLayoutDirectory(directory);
-  if (!layoutDirectory) {
-    const { appsDir, libsDir } = getWorkspaceLayout(tree);
-    layoutDirectory = projectType === 'application' ? appsDir : libsDir;
-  }
-
-  return { projectDirectory, layoutDirectory };
-}
-
 function getImportPath(npmScope: string | undefined, name: string) {
   return npmScope ? `${npmScope === '@' ? '' : '@'}${npmScope}/${name}` : name;
 }
@@ -389,10 +192,6 @@ function getNpmScope(tree: Tree): string | undefined {
     : { name: null };
 
   return name?.startsWith('@') ? name.split('/')[0].substring(1) : undefined;
-}
-
-function isTTY(): boolean {
-  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }
 
 /**
@@ -444,15 +243,4 @@ function parseNameForAsProvided(rawName: string): {
   }
 
   return { name: rawName, directory: undefined };
-}
-
-function parseNameForDerived(rawName: string): {
-  name: string;
-  directory: string | undefined;
-} {
-  const parsedName = normalizePath(rawName).split('/');
-  const name = parsedName.pop();
-  const directory = parsedName.length ? parsedName.join('/') : undefined;
-
-  return { name, directory };
 }

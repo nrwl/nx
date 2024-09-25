@@ -1,5 +1,10 @@
 # Use Remote Caching (Nx Replay)
 
+{% youtube
+src="https://youtu.be/NF1__N_snog"
+title="Remote Caching with Nx Replay"
+ /%}
+
 Repeatedly rebuilding and retesting the same code is costly — not just in terms of wasted resources, but also in terms of developer time. To solve this, Nx includes a sophisticated computation caching system that ensures **code is never rebuilt twice**, saving you both time and resources.
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](/shared/images/dte/distributed-caching.svg)
@@ -14,7 +19,7 @@ Nx **restores terminal output, along with the files and artifacts** created from
 
 ## Configure Remote Caching
 
-To use **Nx Replay**, you need to connect your workspace to Nx Cloud.
+To use **Nx Replay**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
 npx nx connect

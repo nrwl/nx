@@ -21,6 +21,8 @@ import {
 } from '../utils/ast-utils';
 import {
   checkCircularPath,
+  circularPathHasPair,
+  expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
 } from '../utils/graph-utils';
@@ -56,6 +58,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
+    ignoredCircularDependencies: Array<[string, string]>;
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
@@ -88,7 +91,6 @@ export default ESLintUtils.RuleCreator(
     type: 'suggestion',
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [
@@ -100,6 +102,15 @@ export default ESLintUtils.RuleCreator(
           checkDynamicDependenciesExceptions: {
             type: 'array',
             items: { type: 'string' },
+          },
+          ignoredCircularDependencies: {
+            type: 'array',
+            items: {
+              type: 'array',
+              items: { type: 'string' },
+              minItems: 2,
+              maxItems: 2,
+            },
           },
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
@@ -194,6 +205,7 @@ export default ESLintUtils.RuleCreator(
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       checkDynamicDependenciesExceptions: [],
+      ignoredCircularDependencies: [],
       banTransitiveDependencies: false,
       checkNestedExternalImports: false,
     },
@@ -208,6 +220,7 @@ export default ESLintUtils.RuleCreator(
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         checkDynamicDependenciesExceptions,
+        ignoredCircularDependencies,
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
@@ -233,6 +246,12 @@ export default ESLintUtils.RuleCreator(
     }
 
     const workspaceLayout = (global as any).workspaceLayout;
+
+    const expandedIgnoreCircularDependencies =
+      expandIgnoredCircularDependencies(
+        ignoredCircularDependencies,
+        projectGraph
+      );
 
     function run(
       node:
@@ -383,7 +402,13 @@ export default ESLintUtils.RuleCreator(
 
       // we only allow relative paths within the same project
       // and if it's not a secondary entrypoint in an angular lib
-      if (sourceProject === targetProject) {
+      if (
+        sourceProject === targetProject &&
+        !circularPathHasPair(
+          [sourceProject, targetProject],
+          expandedIgnoreCircularDependencies
+        )
+      ) {
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
@@ -509,7 +534,10 @@ export default ESLintUtils.RuleCreator(
         sourceProject,
         targetProject
       );
-      if (circularPath.length !== 0) {
+      if (
+        circularPath.length !== 0 &&
+        !circularPathHasPair(circularPath, expandedIgnoreCircularDependencies)
+      ) {
         const circularFilePath = findFilesInCircularPath(
           projectFileMap,
           circularPath

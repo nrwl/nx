@@ -8,9 +8,4 @@ export interface Schema {
   packageJsonUpdates?: boolean;
   skipFormat?: boolean;
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
-
-  /**
-   * @deprecated Provide the `directory` option instead. The project will be determined from the directory provided. It will be removed in Nx v20.
-   */
-  project?: string;
 }

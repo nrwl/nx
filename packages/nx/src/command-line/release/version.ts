@@ -19,7 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { combineOptionsForGenerator } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
@@ -52,6 +52,7 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
+import { handleErrors } from '../../utils/handle-errors';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -94,6 +95,12 @@ export interface ReleaseVersionGeneratorSchema {
    * large monorepos which have a large number of projects, especially when only a subset are released together.
    */
   logUnchangedProjects?: boolean;
+  /**
+   * Whether or not to keep local dependency protocols (e.g. file:, workspace:) when updating dependencies in
+   * package.json files. This is `false` by default as not all package managers support publishing with these protocols
+   * still present in the package.json.
+   */
+  preserveLocalDependencyProtocols?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -187,10 +194,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
     if (!args.specifier) {
       const rawVersionPlans = await readRawVersionPlans();
-      setResolvedVersionPlansOnGroups(
+      await setResolvedVersionPlansOnGroups(
         rawVersionPlans,
         releaseGroups,
-        Object.keys(projectGraph.nodes)
+        Object.keys(projectGraph.nodes),
+        args.verbose
       );
     } else {
       if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {
@@ -374,6 +382,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
+
+      runPreVersionCommand(
+        releaseGroup.version.groupPreVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        releaseGroup
+      );
+
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
         releaseGroup,
@@ -713,13 +731,18 @@ function resolveGeneratorData({
 }
 function runPreVersionCommand(
   preVersionCommand: string,
-  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
+  releaseGroup?: ReleaseGroupWithName
 ) {
   if (!preVersionCommand) {
     return;
   }
 
-  output.logSingleLine(`Executing pre-version command`);
+  output.logSingleLine(
+    releaseGroup
+      ? `Executing release group pre-version command for "${releaseGroup.name}"`
+      : `Executing pre-version command`
+  );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);
     console.log(preVersionCommand);
@@ -739,6 +762,7 @@ function runPreVersionCommand(
       maxBuffer: LARGE_BUFFER,
       stdio,
       env,
+      windowsHide: true,
     });
   } catch (e) {
     const title = verbose

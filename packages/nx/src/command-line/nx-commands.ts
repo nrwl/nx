@@ -1,6 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
+import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -37,6 +38,8 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import { yargsLoginCommand } from './login/command-object';
+import { yargsLogoutCommand } from './logout/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
@@ -61,6 +64,7 @@ export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
+  .command(yargsActivatePowerpackCommand)
   .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
@@ -94,9 +98,29 @@ export const commandsObject = yargs
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
   .command(yargsNxInfixCommand)
+  .command(yargsLoginCommand)
+  .command(yargsLogoutCommand)
+  .command(resolveConformanceCommandObject())
   .scriptName('nx')
   .help()
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
   // so that it shows up in help. The default yargs implementation of --version is not
   // hit, as the implementation in nx.ts is hit first and calls process.exit(0).
   .version();
+
+function resolveConformanceCommandObject() {
+  try {
+    const { yargsConformanceCommand } = require('@nx/powerpack-conformance');
+    return yargsConformanceCommand;
+  } catch (e) {
+    return {
+      command: 'conformance',
+      // Hide from --help output in the common case of not having the plugin installed
+      describe: false,
+      handler: () => {
+        // TODO: Add messaging to help with learning more about powerpack and conformance
+        process.exit(1);
+      },
+    };
+  }
+}

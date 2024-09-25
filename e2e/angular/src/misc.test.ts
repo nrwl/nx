@@ -41,7 +41,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.spec.json`);
-    expect(moveOutput).toContain(`CREATE ${newPath}/.eslintrc.json`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/eslint.config.js`);
     expect(moveOutput).toContain(`CREATE ${newPath}/public/favicon.ico`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/index.html`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/main.ts`);
@@ -146,62 +146,6 @@ describe('Move Angular Project', () => {
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
       `import { ${newModule} } from '@${proj}/shared-${lib1}';`
-    );
-    expect(lib2File).toContain(`extends ${newModule}`);
-  });
-
-  it('should move projects correctly with --project-name-and-root-format=derived', () => {
-    const lib1 = uniq('mylib');
-    const lib2 = uniq('mylib');
-    runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    /**
-     * Create a library which imports the module from the other lib
-     */
-
-    runCLI(
-      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    updateFile(
-      `libs/${lib2}/src/lib/${lib2}.module.ts`,
-      `import { ${classify(lib1)}Module } from '@${proj}/${lib1}';
-  
-          export class ExtendedModule extends ${classify(lib1)}Module { }`
-    );
-
-    const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --project-name-and-root-format=derived`
-    );
-
-    const newPath = `libs/shared/${lib1}`;
-    const newModule = `Shared${classify(lib1)}Module`;
-
-    const testSetupPath = `${newPath}/src/test-setup.ts`;
-    expect(moveOutput).toContain(`CREATE ${testSetupPath}`);
-    checkFilesExist(testSetupPath);
-
-    const modulePath = `${newPath}/src/lib/shared-${lib1}.module.ts`;
-    expect(moveOutput).toContain(`CREATE ${modulePath}`);
-    checkFilesExist(modulePath);
-    const moduleFile = readFile(modulePath);
-    expect(moduleFile).toContain(`export class ${newModule}`);
-
-    const indexPath = `${newPath}/src/index.ts`;
-    expect(moveOutput).toContain(`CREATE ${indexPath}`);
-    checkFilesExist(indexPath);
-    const index = readFile(indexPath);
-    expect(index).toContain(`export * from './lib/shared-${lib1}.module'`);
-
-    /**
-     * Check that the import in lib2 has been updated
-     */
-    const lib2FilePath = `libs/${lib2}/src/lib/${lib2}.module.ts`;
-    const lib2File = readFile(lib2FilePath);
-    expect(lib2File).toContain(
-      `import { ${newModule} } from '@${proj}/shared/${lib1}';`
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });

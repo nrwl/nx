@@ -9,11 +9,11 @@ import {
   withRunOptions,
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
-  describe: 'Run target for affected projects',
+  describe: 'Run target for affected projects.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(

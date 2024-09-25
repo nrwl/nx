@@ -76,6 +76,7 @@ export async function initGeneratorInternal(
           'vite:serve-static',
           'vite-serve-static',
         ],
+        typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
       },
       schema.updatePackageScripts
     );

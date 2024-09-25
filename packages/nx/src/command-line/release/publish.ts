@@ -15,7 +15,7 @@ import {
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
@@ -173,6 +173,9 @@ async function runPublishOnProjects(
   }
   if (args.otp) {
     overrides.otp = args.otp;
+  }
+  if (args.access) {
+    overrides.access = args.access;
   }
   if (args.dryRun) {
     overrides.dryRun = args.dryRun;

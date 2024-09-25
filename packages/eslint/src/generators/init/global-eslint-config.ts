@@ -2,10 +2,9 @@ import { Linter } from 'eslint';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
-  addPluginsToExportsBlock,
   createNodeList,
-  generateAst,
   generateFlatOverride,
+  generateFlatPredefinedConfig,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
 
@@ -93,40 +92,61 @@ export const getGlobalEsLintConfiguration = (
 };
 
 export const getGlobalFlatEslintConfiguration = (
-  unitTestRunner?: string,
   rootProject?: boolean
 ): string => {
-  const nodeList = createNodeList(new Map(), [], true);
+  const nodeList = createNodeList(new Map(), []);
   let content = stringifyNodeList(nodeList);
-  content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
-  content = addPluginsToExportsBlock(content, [
-    { name: '@nx', varName: 'nxPlugin', imp: '@nx/eslint-plugin' },
-  ]);
+  content = addImportToFlatConfig(content, 'nx', '@nx/eslint-plugin');
+
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatPredefinedConfig('flat/base'),
+    { insertAtTheEnd: false }
+  );
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatPredefinedConfig('flat/typescript')
+  );
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatPredefinedConfig('flat/javascript')
+  );
+
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatOverride({ ignores: ['**/dist'] })
+  );
+
   if (!rootProject) {
     content = addBlockToFlatConfigExport(
       content,
-      generateFlatOverride(moduleBoundariesOverride)
+      generateFlatOverride({
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        rules: {
+          '@nx/enforce-module-boundaries': [
+            'error',
+            {
+              enforceBuildableLibDependency: true,
+              allow: [
+                // This allows a root project to be present without causing lint errors
+                // since all projects will depend on this base file.
+                '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
+              ],
+              depConstraints: [
+                { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+              ],
+            },
+          ],
+        } as Linter.RulesRecord,
+      })
     );
   }
+
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatOverride(typeScriptOverride)
-  );
-  content = addBlockToFlatConfigExport(
-    content,
-    generateFlatOverride(javaScriptOverride)
-  );
-  if (unitTestRunner === 'jest') {
-    content = addBlockToFlatConfigExport(
-      content,
-      generateFlatOverride(jestOverride)
-    );
-  }
-  // add ignore for .nx folder
-  content = addBlockToFlatConfigExport(
-    content,
-    generateAst({
-      ignores: ['.nx'],
+    generateFlatOverride({
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+      rules: {},
     })
   );
 

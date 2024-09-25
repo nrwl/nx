@@ -9,9 +9,11 @@ import {
 } from '@nx/devkit';
 import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import * as devkitExports from 'nx/src/devkit-exports';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -21,6 +23,7 @@ jest.mock('@nx/devkit', () => {
     ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
   };
 });
+
 describe('app', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -28,6 +31,9 @@ describe('app', () => {
   > = installedCypressVersion as never;
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
+    jest
+      .spyOn(devkitExports, 'getPackageManagerCommand')
+      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
 
     tree = createTreeWithEmptyWorkspace();
   });
@@ -192,10 +198,10 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: 'nx run cool-app:serve',
-                production: 'nx run cool-app:preview',
+                default: 'npx nx run cool-app:serve',
+                production: 'npx nx run cool-app:preview',
               },
-              ciWebServerCommand: 'nx run cool-app:preview',
+              ciWebServerCommand: 'npx nx run cool-app:preview',
               ciBaseUrl: 'http://localhost:4300',
             }),
             baseUrl: 'http://localhost:4200',
@@ -225,10 +231,11 @@ describe('app', () => {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
               webServerCommands: {
-                default: 'nx run cool-app:serve',
-                production: 'nx run cool-app:preview',
+                default: 'npx nx run cool-app:serve',
+                production: 'npx nx run cool-app:serve-static',
               },
-              ciWebServerCommand: 'nx run cool-app:serve-static',
+              ciWebServerCommand: 'npx nx run cool-app:serve-static',
+              ciBaseUrl: 'http://localhost:4200',
             }),
             baseUrl: 'http://localhost:4200',
           },
@@ -620,8 +627,7 @@ describe('app', () => {
 
       expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -648,8 +654,7 @@ describe('app', () => {
 
       expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-app',
           preset: '../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

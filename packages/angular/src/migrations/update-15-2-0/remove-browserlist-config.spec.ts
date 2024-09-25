@@ -18,7 +18,6 @@ describe('Migration to delete Browserslist configurations', () => {
       .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
       name: 'test',
-      projectNameAndRootFormat: 'derived',
       skipFormat: true,
     });
   });

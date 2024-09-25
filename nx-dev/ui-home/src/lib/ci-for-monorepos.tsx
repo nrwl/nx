@@ -328,8 +328,8 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
         </div>
         <div className="mt-8 text-center">
           <ButtonLink
-            href="https://cloud.nx.app?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_connect_now"
-            title="Get started"
+            href="https://cloud.nx.app/create-nx-workspace?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_connect_now"
+            title="Get started with Nx Cloud"
             variant="primary"
             size="large"
             target="_blank"
@@ -408,7 +408,7 @@ export function IntegratesToYouCurrentCiProvider(): JSX.Element {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/intro/connect-to-cloud?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/ci/intro/connect-to-nx-cloud?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add Nx Cloud to your CI workflow"
               prefetch={false}
               className="group font-semibold leading-6 text-slate-950 dark:text-white"

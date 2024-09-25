@@ -21,6 +21,14 @@ npm list --global nx
 {% /tab %}
 {% tab label="yarn" %}
 
+**yarn 2+**
+
+```shell
+yarn dlx list nx
+```
+
+yarn 1.x
+
 ```shell
 yarn global list nx
 ```

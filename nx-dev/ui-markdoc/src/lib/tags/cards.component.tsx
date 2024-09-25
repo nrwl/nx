@@ -132,7 +132,9 @@ export function LinkCard({
           {icon && frameworkIcons[icon as Framework]?.image}
         </div>
       )}
-      <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>
+      <div
+        className={cx({ 'pt-4': !!icon }, { 'pt-2': appearance === 'small' })}
+      >
         {appearance === 'small' && type ? null : (
           <div className="mb-1 text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
             {type}

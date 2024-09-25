@@ -31,9 +31,9 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "chalk": "^4.1.0",
     "detect-port": "^1.5.1",
     "http-server": "^14.1.0",
+    "picocolors": "^1.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js"

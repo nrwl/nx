@@ -18,8 +18,6 @@ export async function addE2e(
         styledModule: null,
         hasStyles: false,
         unitTestRunner: 'none',
-        e2eCiWebServerTarget: options.e2eWebServerTarget,
-        e2eCiBaseUrl: options.e2eWebServerAddress,
       });
     case 'playwright':
       return addE2eReact(host, {
@@ -29,8 +27,6 @@ export async function addE2e(
         styledModule: null,
         hasStyles: false,
         unitTestRunner: 'none',
-        e2eCiWebServerTarget: options.e2eWebServerTarget,
-        e2eCiBaseUrl: options.e2eWebServerAddress,
       });
     case 'detox':
       const { detoxApplicationGenerator } = ensurePackage<

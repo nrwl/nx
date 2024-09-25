@@ -43,38 +43,11 @@ Clears the workspace data directory. Used by Nx to store cached data about the c
 
 ## Options
 
-### help
-
-Type: `boolean`
-
-Show help
-
-### onlyCache
-
-Type: `boolean`
-
-Clears the Nx cache directory. This will remove all local cache entries for tasks, but will not affect the remote cache.
-
-### onlyCloud
-
-Type: `boolean`
-
-Resets the Nx Cloud client. NOTE: Does not clear the remote cache.
-
-### onlyDaemon
-
-Type: `boolean`
-
-Stops the Nx Daemon, it will be restarted fresh when the next Nx command is run.
-
-### onlyWorkspaceData
-
-Type: `boolean`
-
-Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc)
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option                | Type    | Description                                                                                                                                     |
+| --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--help`              | boolean | Show help.                                                                                                                                      |
+| `--onlyCache`         | boolean | Clears the Nx cache directory. This will remove all local cache entries for tasks, but will not affect the remote cache.                        |
+| `--onlyCloud`         | boolean | Resets the Nx Cloud client. NOTE: Does not clear the remote cache.                                                                              |
+| `--onlyDaemon`        | boolean | Stops the Nx Daemon, it will be restarted fresh when the next Nx command is run.                                                                |
+| `--onlyWorkspaceData` | boolean | Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc). |
+| `--version`           | boolean | Show version number.                                                                                                                            |

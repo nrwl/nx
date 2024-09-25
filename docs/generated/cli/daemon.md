@@ -1,11 +1,11 @@
 ---
 title: 'daemon - CLI command'
-description: 'Prints information about the Nx Daemon process or starts a daemon process'
+description: 'Prints information about the Nx Daemon process or starts a daemon process.'
 ---
 
 # daemon
 
-Prints information about the Nx Daemon process or starts a daemon process
+Prints information about the Nx Daemon process or starts a daemon process.
 
 ## Usage
 
@@ -17,26 +17,9 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-### help
-
-Type: `boolean`
-
-Show help
-
-### start
-
-Type: `boolean`
-
-Default: `false`
-
-### stop
-
-Type: `boolean`
-
-Default: `false`
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option      | Type    | Description          |
+| ----------- | ------- | -------------------- |
+| `--help`    | boolean | Show help.           |
+| `--start`   | boolean | (Default: `false`)   |
+| `--stop`    | boolean | (Default: `false`)   |
+| `--version` | boolean | Show version number. |

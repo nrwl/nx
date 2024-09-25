@@ -83,6 +83,7 @@ describe('@nx/vite:init', () => {
                 "serveStaticTargetName": "serve-static",
                 "serveTargetName": "serve",
                 "testTargetName": "test",
+                "typecheckTargetName": "typecheck",
               },
               "plugin": "@nx/vite/plugin",
             },

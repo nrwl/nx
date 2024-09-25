@@ -18,7 +18,6 @@ export interface Schema {
   rootDir?: string;
   babelJest?: boolean;
   js?: boolean;
-  pascalCaseFiles?: boolean;
   strict?: boolean;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;

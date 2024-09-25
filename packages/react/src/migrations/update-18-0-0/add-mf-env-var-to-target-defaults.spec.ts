@@ -24,6 +24,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "@nx/webpack:webpack": {
+          "cache": true,
           "dependsOn": [
             "^build",
           ],
@@ -109,6 +110,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "@nx/webpack:webpack": {
+          "cache": true,
           "dependsOn": [
             "^build",
           ],

@@ -5,7 +5,7 @@ import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { Cache, DbCache } from './cache';
+import { getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
@@ -31,19 +31,10 @@ import {
 import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { readNxJson } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export class TaskOrchestrator {
-  private cache =
-    process.env.NX_DB_CACHE === 'true'
-      ? new DbCache({
-          // Remove this in Nx 21
-          nxCloudRemoteCache: isNxCloudUsed(readNxJson())
-            ? this.options.remoteCache
-            : null,
-        })
-      : new Cache(this.options);
+  private cache = getCache(this.nxJson, this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
@@ -78,17 +69,23 @@ export class TaskOrchestrator {
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
+    private readonly nxJson: NxJsonConfiguration,
     private readonly options: DefaultTasksRunnerOptions,
     private readonly bail: boolean,
-    private readonly daemon: DaemonClient
+    private readonly daemon: DaemonClient,
+    private readonly outputStyle: string
   ) {}
 
   async run() {
-    // Init the ForkedProcessTaskRunner
-    await this.forkedProcessTaskRunner.init();
+    // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
+    await Promise.all([
+      this.forkedProcessTaskRunner.init(),
+      this.tasksSchedule.init(),
+      'init' in this.cache ? this.cache.init() : null,
+    ]);
 
     // initial scheduling
-    await this.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
 
     performance.mark('task-execution:start');
 
@@ -124,6 +121,7 @@ export class TaskOrchestrator {
       this.options.skipNxCache === false ||
       this.options.skipNxCache === undefined;
 
+    this.processAllScheduledTasks();
     const batch = this.tasksSchedule.nextBatch();
     if (batch) {
       const groupId = this.closeGroup();
@@ -360,7 +358,10 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput =
+      this.outputStyle === 'static'
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
 
     let env = pipeOutput
       ? getEnvVariablesForTask(
@@ -618,17 +619,11 @@ export class TaskOrchestrator {
       })
     );
 
-    await this.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
 
     // release blocked threads
     this.waitingForTasks.forEach((f) => f(null));
     this.waitingForTasks.length = 0;
-  }
-
-  private async scheduleNextTasks() {
-    await this.tasksSchedule.scheduleNextTasks();
-
-    this.processAllScheduledTasks();
   }
 
   private complete(

@@ -27,7 +27,9 @@ describe('EsBuild Plugin', () => {
 
   it('should setup and build projects using build', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
     updateJson(join('libs', myPkg, 'project.json'), (json) => {
       json.targets.build.options.assets = [`libs/${myPkg}/assets/*`];
@@ -125,8 +127,12 @@ describe('EsBuild Plugin', () => {
     packageInstall('lodash', undefined, '~4.14.0', 'prod');
     const parentLib = uniq('parent-lib');
     const childLib = uniq('child-lib');
-    runCLI(`generate @nx/js:lib ${parentLib} --bundler=esbuild`);
-    runCLI(`generate @nx/js:lib ${childLib} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${parentLib} --directory=libs/${parentLib} --bundler=esbuild`
+    );
+    runCLI(
+      `generate @nx/js:lib ${childLib} --directory=libs/${childLib} --bundler=none`
+    );
     updateFile(
       `libs/${parentLib}/src/index.ts`,
       `
@@ -162,6 +168,7 @@ describe('EsBuild Plugin', () => {
     expect(
       readJson(`dist/libs/${parentLib}/package.json`).dependencies
     ).toEqual({
+      'jsonc-eslint-parser': expect.any(String),
       // Don't care about the versions, just that they exist
       rambda: expect.any(String),
       lodash: expect.any(String),
@@ -173,7 +180,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support non-bundle builds', () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(`libs/${myPkg}/src/lib/${myPkg}.ts`, `console.log('Hello');\n`);
     updateFile(`libs/${myPkg}/src/index.ts`, `import './lib/${myPkg}.cjs';\n`);
 
@@ -193,7 +202,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support additional entry points', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
     updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
     updateJson(join('libs', myPkg, 'project.json'), (json) => {
@@ -219,7 +230,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support external esbuild.config.js file', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(
       `libs/${myPkg}/esbuild.config.js`,
       `console.log('custom config loaded');\nmodule.exports = {};\n`
@@ -236,21 +249,24 @@ describe('EsBuild Plugin', () => {
 
   it('should bundle in non-sensitive NX_ environment variables', () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`, {});
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`,
+      {}
+    );
 
     updateFile(
       `libs/${myPkg}/src/index.ts`,
       `
-      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
-      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
+      console.log(process.env['NX_SOME_SECRET']);
+      console.log(process.env['NX_SOME_TOKEN']);
       console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
     runCLI(`build ${myPkg} --platform=browser`, {
       env: {
-        NX_CLOUD_ENCRYPTION_KEY: 'secret',
-        NX_CLOUD_ACCESS_TOKEN: 'secret',
+        NX_SOME_SECRET: 'secret',
+        NX_SOME_TOKEN: 'secret',
         NX_PUBLIC_TEST: 'foobar',
       },
     });
@@ -264,7 +280,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support declaration builds', () => {
     const declarationPkg = uniq('declaration-pkg');
-    runCLI(`generate @nx/js:lib ${declarationPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${declarationPkg} --directory=libs/${declarationPkg} --bundler=esbuild`
+    );
     createFile(
       `libs/${declarationPkg}/src/lib/testDir/sub.ts`,
       `

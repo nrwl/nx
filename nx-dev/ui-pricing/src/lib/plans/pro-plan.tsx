@@ -9,7 +9,7 @@ const features = [
   '300k credits included',
   'Max 1m runs per month',
   'Max 70 concurrent CI connections',
-  'Max 70 contributors',
+  'Max 30 contributors',
   'Unlimited private workspaces per organization',
   'High-priority support',
 ];

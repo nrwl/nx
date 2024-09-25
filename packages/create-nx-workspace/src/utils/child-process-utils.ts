@@ -11,7 +11,13 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
     const childProcess = spawn(command, args, {
       cwd,
       stdio: 'inherit',
-      env: { ...process.env, NX_DAEMON: 'false' },
+      env: {
+        ...process.env,
+        NX_DAEMON: 'false',
+        // This is the same environment variable that ESLint uses to determine if it should use a flat config.
+        // Default to true for all new workspaces.
+        ESLINT_USE_FLAT_CONFIG: process.env.ESLINT_USE_FLAT_CONFIG ?? 'true',
+      },
       shell: true,
       windowsHide: true,
     });
@@ -30,7 +36,7 @@ export function execAndWait(command: string, cwd: string) {
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
     exec(
       command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
+      { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: true },
       (error, stdout, stderr) => {
         if (error) {
           const logFile = join(cwd, 'error.log');

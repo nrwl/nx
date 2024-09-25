@@ -701,7 +701,14 @@ describe('lib', () => {
               ],
               "parser": "jsonc-eslint-parser",
               "rules": {
-                "@nx/dependency-checks": "error"
+                "@nx/dependency-checks": [
+                  "error",
+                  {
+                    "ignoredFiles": [
+                      "{projectRoot}/eslint.config.{js,cjs,mjs}"
+                    ]
+                  }
+                ]
               }
             }
           ]
@@ -1193,7 +1200,52 @@ describe('lib', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+      it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
+        tree.write('eslint.config.js', '');
+
+        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
+
+        const eslintConfig = tree.read('my-lib/eslint.config.js', 'utf-8');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          "const nx = require("@nx/eslint-plugin");
+          const baseConfig = require("../eslint.config.js");
+
+          module.exports = [
+              ...baseConfig,
+          ...nx.configs["flat/angular"],
+          ...nx.configs["flat/angular-template"],
+          {
+              files: ["**/*.ts"],
+              rules: {
+                  "@angular-eslint/directive-selector": [
+                      "error",
+                      {
+                          type: "attribute",
+                          prefix: "lib",
+                          style: "camelCase"
+                      }
+                  ],
+                  "@angular-eslint/component-selector": [
+                      "error",
+                      {
+                          type: "element",
+                          prefix: "lib",
+                          style: "kebab-case"
+                      }
+                  ]
+              }
+          },
+          {
+              files: ["**/*.html"],
+              // Override or add rules here
+              rules: {}
+          }
+          ];
+          "
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets (eslintrc)', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
@@ -1311,7 +1363,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                      ],
+                    },
+                  ],
                 },
               },
             ],
@@ -1728,47 +1787,6 @@ describe('lib', () => {
       expect(
         tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
       ).toMatchSnapshot();
-    });
-  });
-
-  describe('--project-name-and-root-format=derived', () => {
-    it('should generate correctly when no directory is provided', async () => {
-      await runLibraryGeneratorWithOpts({
-        projectNameAndRootFormat: 'derived',
-      });
-
-      const json = readProjectConfiguration(tree, 'my-lib');
-      expect(json.root).toEqual('libs/my-lib');
-      const tsconfigBaseJson = readJson(tree, '/tsconfig.base.json');
-      expect(tsconfigBaseJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'libs/my-lib/src/index.ts',
-      ]);
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../tsconfig.base.json');
-      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
-    });
-
-    it('should generate correctly when directory is provided', async () => {
-      await runLibraryGeneratorWithOpts({
-        directory: 'myDir',
-        projectNameAndRootFormat: 'derived',
-      });
-
-      const json = readProjectConfiguration(tree, 'my-dir-my-lib');
-      expect(json.root).toEqual('libs/my-dir/my-lib');
-      const tsconfigBaseJson = readJson(tree, '/tsconfig.base.json');
-      expect(
-        tsconfigBaseJson.compilerOptions.paths['@proj/my-dir/my-lib']
-      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
-      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../../tsconfig.base.json');
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
-      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(
-        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
-      ).toBeTruthy();
     });
   });
 

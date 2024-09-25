@@ -80,7 +80,6 @@ async function setup(tree: Tree, name: string) {
   await generateTestApplication(tree, {
     name,
     skipPackageJson: true,
-    projectNameAndRootFormat: 'derived',
     skipFormat: true,
   });
 

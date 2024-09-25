@@ -81,7 +81,8 @@ pipelines:
 
             - npm ci --legacy-peer-deps
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
@@ -312,7 +313,8 @@ pipelines:
 
             - bun install --no-cache
 
-            - bun nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # bun nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
 
@@ -569,7 +571,8 @@ pipelines:
 
             - npm ci --legacy-peer-deps
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
 
@@ -827,7 +830,8 @@ pipelines:
 
             - pnpm install --frozen-lockfile
 
-            - pnpm exec nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # pnpm exec nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
 
@@ -916,7 +920,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -962,7 +966,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -1096,7 +1100,8 @@ pipelines:
 
             - yarn install --frozen-lockfile
 
-            - yarn nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # yarn nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
 
@@ -1351,7 +1356,8 @@ pipelines:
 
             - npm ci --legacy-peer-deps
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
@@ -1588,7 +1594,8 @@ pipelines:
 
             - bun install --no-cache
 
-            - bun nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # bun nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
 
@@ -1852,7 +1859,8 @@ pipelines:
 
             - npm ci --legacy-peer-deps
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
 
@@ -2117,7 +2125,8 @@ pipelines:
 
             - pnpm install --frozen-lockfile
 
-            - pnpm exec nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # pnpm exec nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
 
@@ -2208,7 +2217,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -2255,7 +2264,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -2393,7 +2402,8 @@ pipelines:
 
             - yarn install --frozen-lockfile
 
-            - yarn nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # yarn nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
 

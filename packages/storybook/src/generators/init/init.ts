@@ -57,7 +57,7 @@ function addCacheableOperation(tree: Tree) {
   const cacheableOperations: string[] | null =
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
-  if (cacheableOperations && cacheableOperations.includes('build-storybook')) {
+  if (cacheableOperations && !cacheableOperations.includes('build-storybook')) {
     nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
       'build-storybook'
     );

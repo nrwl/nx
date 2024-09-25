@@ -5,15 +5,15 @@ import { serviceGenerator } from './service';
 
 describe('service generator', () => {
   let tree: Tree;
-  const project = 'api';
+  const directory = 'api';
   const options: ServiceGeneratorOptions = {
     name: 'test',
-    project,
+    directory,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(directory);
     jest.clearAllMocks();
   });
 

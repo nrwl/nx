@@ -17,14 +17,21 @@ describe('nx release - custom npm registries', () => {
   const verdaccioPort = 7191;
   const customRegistryUrl = `http://localhost:${verdaccioPort}`;
   const scope = 'scope';
+  let previousPackageManager: string;
 
   beforeAll(async () => {
+    previousPackageManager = process.env.SELECTED_PM;
+    // We are testing some more advanced scoped registry features that only npm has within this file
+    process.env.SELECTED_PM = 'npm';
     newProject({
       unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
   }, 60000);
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    cleanupProject();
+    process.env.SELECTED_PM = previousPackageManager;
+  });
 
   it('should respect registry configuration for each package', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {

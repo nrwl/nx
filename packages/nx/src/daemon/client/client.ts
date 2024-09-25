@@ -28,7 +28,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun } from '../../native';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -44,7 +44,9 @@ import {
 } from '../message-types/get-files-in-directory';
 import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
 import {
+  GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
+  HandleGetEstimatedTaskTimings,
   HandleGetFlakyTasks,
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
@@ -54,7 +56,10 @@ import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
-import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import type {
+  FlushSyncGeneratorChangesResult,
+  SyncGeneratorRunResult,
+} from '../../utils/sync-generators';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
@@ -354,6 +359,17 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  async getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>> {
+    const message: HandleGetEstimatedTaskTimings = {
+      type: GET_ESTIMATED_TASK_TIMINGS,
+      targets,
+    };
+
+    return this.sendToDaemonViaQueue(message);
+  }
+
   recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
     const message: HandleRecordTaskRunsMessage = {
       type: RECORD_TASK_RUNS,
@@ -364,7 +380,7 @@ export class DaemonClient {
 
   getSyncGeneratorChanges(
     generators: string[]
-  ): Promise<SyncGeneratorChangesResult[]> {
+  ): Promise<SyncGeneratorRunResult[]> {
     const message: HandleGetSyncGeneratorChangesMessage = {
       type: GET_SYNC_GENERATOR_CHANGES,
       generators,
@@ -372,7 +388,9 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+  flushSyncGeneratorChangesToDisk(
+    generators: string[]
+  ): Promise<FlushSyncGeneratorChangesResult> {
     const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
       type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
       generators,
@@ -380,7 +398,10 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getRegisteredSyncGenerators(): Promise<string[]> {
+  getRegisteredSyncGenerators(): Promise<{
+    globalGenerators: string[];
+    taskGenerators: string[];
+  }> {
     const message: HandleGetRegisteredSyncGeneratorsMessage = {
       type: GET_REGISTERED_SYNC_GENERATORS,
     };

@@ -25,13 +25,14 @@ import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { interpolate } from '../../tasks-runner/utils';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChangelogOptions } from './command-object';
 import {
   NxReleaseConfig,
   createNxReleaseConfig,
+  defaultCreateReleaseProvider,
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
@@ -56,8 +57,9 @@ import {
   gitPush,
   gitTag,
   parseCommits,
+  parseGitCommit,
 } from './utils/git';
-import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
+import { createOrUpdateGithubRelease, getGitHubRepoData } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printAndFlushChanges } from './utils/print-changes';
@@ -95,6 +97,7 @@ export interface ChangelogChange {
   body?: string;
   isBreaking?: boolean;
   githubReferences?: Reference[];
+  // TODO(v20): This should be an array of one or more authors (Co-authored-by is supported at the commit level and should have been supported here)
   author?: { name: string; email: string };
   shortHash?: string;
   revertedHashes?: string[];
@@ -175,10 +178,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
     const rawVersionPlans = await readRawVersionPlans();
-    setResolvedVersionPlansOnGroups(
+    await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
-      Object.keys(projectGraph.nodes)
+      Object.keys(projectGraph.nodes),
+      args.verbose
     );
 
     if (args.deleteVersionPlans === undefined) {
@@ -282,6 +286,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               const releaseType = versionPlanSemverReleaseTypeToChangelogType(
                 vp.groupVersionBump
               );
+              let githubReferences = [];
+              let author = undefined;
+              const parsedCommit = vp.commit
+                ? parseGitCommit(vp.commit, true)
+                : null;
+              if (parsedCommit) {
+                githubReferences = parsedCommit.references;
+                author = parsedCommit.author;
+              }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
                   ? {
@@ -290,7 +303,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       description: vp.message,
                       body: '',
                       isBreaking: releaseType.isBreaking,
-                      githubReferences: [],
+                      githubReferences,
+                      author,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -299,9 +313,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         scope: project,
                         description: vp.message,
                         body: '',
-                        // TODO: what about github references?
                         isBreaking: releaseType.isBreaking,
-                        githubReferences: [],
+                        githubReferences,
+                        author,
                         affectedProjects: [project],
                       };
                     });
@@ -398,6 +412,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         output.logSingleLine(`Creating GitHub Release`);
 
         await createOrUpdateGithubRelease(
+          nxReleaseConfig.changelog.workspaceChangelog
+            ? nxReleaseConfig.changelog.workspaceChangelog.createRelease
+            : defaultCreateReleaseProvider,
           workspaceChangelog.releaseVersion,
           workspaceChangelog.contents,
           latestCommit,
@@ -498,6 +515,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 }
                 const releaseType =
                   versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
+                let githubReferences = [];
+                let author = undefined;
+                const parsedCommit = vp.commit
+                  ? parseGitCommit(vp.commit, true)
+                  : null;
+                if (parsedCommit) {
+                  githubReferences = parsedCommit.references;
+                  author = parsedCommit.author;
+                }
                 return {
                   type: releaseType.type,
                   scope: project.name,
@@ -505,8 +531,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   body: '',
                   isBreaking: releaseType.isBreaking,
                   affectedProjects: Object.keys(vp.projectVersionBumps),
-                  // TODO: can we include github references when using version plans?
-                  githubReferences: [],
+                  githubReferences,
+                  author,
                 };
               })
               .filter(Boolean);
@@ -622,6 +648,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 output.logSingleLine(`Creating GitHub Release`);
 
                 await createOrUpdateGithubRelease(
+                  releaseGroup.changelog
+                    ? releaseGroup.changelog.createRelease
+                    : defaultCreateReleaseProvider,
                   projectChangelog.releaseVersion,
                   projectChangelog.contents,
                   latestCommit,
@@ -642,6 +671,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               const releaseType = versionPlanSemverReleaseTypeToChangelogType(
                 vp.groupVersionBump
               );
+              let githubReferences = [];
+              let author = undefined;
+              const parsedCommit = vp.commit
+                ? parseGitCommit(vp.commit, true)
+                : null;
+              if (parsedCommit) {
+                githubReferences = parsedCommit.references;
+                author = parsedCommit.author;
+              }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
                   ? {
@@ -650,7 +688,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       description: vp.message,
                       body: '',
                       isBreaking: releaseType.isBreaking,
-                      githubReferences: [],
+                      githubReferences,
+                      author,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -659,9 +698,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         scope: project,
                         description: vp.message,
                         body: '',
-                        // TODO: what about github references?
                         isBreaking: releaseType.isBreaking,
-                        githubReferences: [],
+                        githubReferences,
+                        author,
                         affectedProjects: [project],
                       };
                     });
@@ -765,6 +804,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               output.logSingleLine(`Creating GitHub Release`);
 
               await createOrUpdateGithubRelease(
+                releaseGroup.changelog
+                  ? releaseGroup.changelog.createRelease
+                  : defaultCreateReleaseProvider,
                 projectChangelog.releaseVersion,
                 projectChangelog.contents,
                 latestCommit,
@@ -914,12 +956,23 @@ async function applyChangesAndExit(
   const changedFiles: string[] = changes.map((f) => f.path);
 
   let deletedFiles: string[] = [];
-  if (args.deleteVersionPlans && !args.dryRun) {
+  if (args.deleteVersionPlans) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
       if (group.resolvedVersionPlans) {
         group.resolvedVersionPlans.forEach((plan) => {
-          removeSync(plan.absolutePath);
+          if (!args.dryRun) {
+            removeSync(plan.absolutePath);
+            if (args.verbose) {
+              console.log(`Removing ${plan.relativePath}`);
+            }
+          } else {
+            if (args.verbose) {
+              console.log(
+                `Would remove ${plan.relativePath}, but --dry-run was set`
+              );
+            }
+          }
           planFiles.add(plan.relativePath);
         });
       }
@@ -1067,7 +1120,7 @@ async function generateChangelogForWorkspace({
     });
   }
 
-  const githubRepoSlug = getGitHubRepoSlug(gitRemote);
+  const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
 
   let contents = await changelogRenderer({
     projectGraph,
@@ -1075,7 +1128,8 @@ async function generateChangelogForWorkspace({
     commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
-    repoSlug: githubRepoSlug,
+    repoSlug: githubRepoData?.slug,
+    repoData: githubRepoData,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
@@ -1207,10 +1261,7 @@ async function generateChangelogForProjects({
       });
     }
 
-    const githubRepoSlug =
-      config.createRelease === 'github'
-        ? getGitHubRepoSlug(gitRemote)
-        : undefined;
+    const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
 
     let contents = await changelogRenderer({
       projectGraph,
@@ -1218,7 +1269,8 @@ async function generateChangelogForProjects({
       commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
-      repoSlug: githubRepoSlug,
+      repoSlug: githubRepoData?.slug,
+      repoData: githubRepoData,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
           ? interpolate(config.entryWhenNoChanges, {
@@ -1228,7 +1280,9 @@ async function generateChangelogForProjects({
             })
           : false,
       changelogRenderOptions: config.renderOptions,
-      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
+      conventionalCommitsConfig: releaseGroup.versionPlans
+        ? null
+        : nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
     });
 
@@ -1364,7 +1418,7 @@ export function shouldCreateGitHubRelease(
     return createReleaseArg === 'github';
   }
 
-  return (changelogConfig || {}).createRelease === 'github';
+  return (changelogConfig || {}).createRelease !== false;
 }
 
 async function promptForGitHubRelease(): Promise<boolean> {

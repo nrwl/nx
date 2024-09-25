@@ -6,8 +6,4 @@ export interface RemixRouteSchema {
   action: boolean;
   loader: boolean;
   skipChecks: boolean;
-  /**
-   * @deprecated Provide the `path` option instead. The project will be determined from the path provided. It will be removed in Nx v20.
-   */
-  project?: string;
 }

@@ -104,7 +104,7 @@ function buildExpoTargets(
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
-      options: { cwd: projectRoot },
+      options: { cwd: projectRoot, args: ['--clear'] },
     },
     [options.runIosTargetName]: {
       command: `expo run:ios`,
@@ -116,7 +116,7 @@ function buildExpoTargets(
     },
     [options.exportTargetName]: {
       command: `expo export`,
-      options: { cwd: projectRoot },
+      options: { cwd: projectRoot, args: ['--clear'] },
       cache: true,
       dependsOn: [`^${options.exportTargetName}`],
       inputs: getInputs(namedInputs),
@@ -129,8 +129,7 @@ function buildExpoTargets(
       executor: `@nx/expo:prebuild`,
     },
     [options.buildTargetName]: {
-      command: `eas build`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:build`,
     },
     [options.submitTargetName]: {
       command: `eas submit`,

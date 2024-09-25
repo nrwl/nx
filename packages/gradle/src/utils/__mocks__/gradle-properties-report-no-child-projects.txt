@@ -1,0 +1,160 @@
+
+------------------------------------------------------------
+Project ':app'
+------------------------------------------------------------
+
+allprojects: [project ':app']
+ant: org.gradle.api.internal.project.DefaultAntBuilder@505598eb
+antBuilderFactory: org.gradle.api.internal.project.DefaultAntBuilderFactory@259d836f
+application: extension 'application'
+applicationDefaultJvmArgs: []
+applicationDistribution: org.gradle.api.internal.file.copy.DefaultCopySpec_Decorated@3978059a
+applicationName: app
+archivesBaseName: app
+artifacts: org.gradle.api.internal.artifacts.dsl.DefaultArtifactHandler_Decorated@32167ebb
+asDynamicObject: DynamicObject for project ':app'
+assemble: task ':app:assemble'
+assembleDist: task ':app:assembleDist'
+autoTargetJvmDisabled: false
+base: extension 'base'
+baseClassLoaderScope: org.gradle.api.internal.initialization.DefaultClassLoaderScope@3c4c27d8
+build: task ':app:build'
+buildDependents: task ':app:buildDependents'
+buildDir: /private/tmp/nx-e2e/nx/proj9912426/app/build
+buildEnvironment: task ':app:buildEnvironment'
+buildFile: /private/tmp/nx-e2e/nx/proj9912426/app/build.gradle
+buildNeeded: task ':app:buildNeeded'
+buildPath: :
+buildScriptSource: org.gradle.groovy.scripts.TextResourceScriptSource@4ef82ad2
+buildTreePath: :app
+buildscript: org.gradle.api.internal.initialization.DefaultScriptHandler_Decorated@7b75e99
+check: task ':app:check'
+childProjects: {}
+childProjectsUnchecked: {}
+class: class org.gradle.api.internal.project.DefaultProject_Decorated
+classLoaderScope: org.gradle.api.internal.initialization.DefaultClassLoaderScope@7e1acf20
+classes: task ':app:classes'
+clean: task ':app:clean'
+compileGroovy: task ':app:compileGroovy'
+compileJava: task ':app:compileJava'
+compileTestGroovy: task ':app:compileTestGroovy'
+compileTestJava: task ':app:compileTestJava'
+components: SoftwareComponent container
+configurationActions: org.gradle.configuration.project.DefaultProjectConfigurationActionContainer@7f7885fe
+configurationTargetIdentifier: org.gradle.configuration.ConfigurationTargetIdentifier$1@70598e79
+configurations: configuration container
+convention: org.gradle.internal.extensibility.DefaultConvention@4d27557d
+conventionMapping: org.gradle.internal.extensibility.ConventionAwareHelper@65ecf036
+crossProjectModelAccess: org.gradle.api.internal.project.DefaultCrossProjectModelAccess@7665f252
+defaultArtifacts: extension 'defaultArtifacts'
+defaultTasks: []
+deferredProjectConfiguration: org.gradle.api.internal.project.DeferredProjectConfiguration@5e80ce00
+dependencies: org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler_Decorated@6216b9ef
+dependencyFactory: org.gradle.api.internal.artifacts.DefaultDependencyFactory@15ed846d
+dependencyInsight: task ':app:dependencyInsight'
+dependencyLocking: org.gradle.internal.locking.DefaultDependencyLockingHandler_Decorated@1702aba6
+dependencyMetaDataProvider: org.gradle.internal.service.scopes.ProjectScopeServices$ProjectBackedModuleMetaDataProvider@4f2a8788
+dependencyReport: task ':app:dependencyReport'
+dependentComponents: task ':app:dependentComponents'
+depth: 1
+description: null
+detachedState: false
+displayName: project ':app'
+distTar: task ':app:distTar'
+distZip: task ':app:distZip'
+distributions: Distribution container
+distsDirName: distributions
+distsDirectory: extension 'base' property 'distsDirectory'
+docsDir: /private/tmp/nx-e2e/nx/proj9912426/app/build/docs
+docsDirName: docs
+executableDir: bin
+ext: org.gradle.internal.extensibility.DefaultExtraPropertiesExtension@18249643
+extensions: org.gradle.internal.extensibility.DefaultConvention@4d27557d
+fileOperations: org.gradle.api.internal.file.DefaultFileOperations@6193a7c6
+fileResolver: org.gradle.api.internal.file.BaseDirFileResolver@634e7fc9
+gradle: build 'my-gradle-project5165026'
+groovyRuntime: extension 'groovyRuntime'
+groovydoc: task ':app:groovydoc'
+group: my-gradle-project5165026
+help: task ':app:help'
+htmlDependencyReport: task ':app:htmlDependencyReport'
+identityPath: :app
+inheritedScope: org.gradle.internal.extensibility.ExtensibleDynamicObject$InheritedDynamicObject@7843a2ef
+installDist: task ':app:installDist'
+internalStatus: property(java.lang.Object, fixed(class java.lang.String, integration))
+jar: task ':app:jar'
+java: extension 'java'
+javaToolchains: extension 'javaToolchains'
+javadoc: task ':app:javadoc'
+layout: org.gradle.api.internal.file.DefaultProjectLayout@38b897f6
+libsDirName: libs
+libsDirectory: extension 'base' property 'libsDirectory'
+listenerBuildOperationDecorator: org.gradle.configuration.internal.DefaultListenerBuildOperationDecorator@58c7b14b
+logger: org.gradle.internal.logging.slf4j.OutputEventListenerBackedLogger@2fb55781
+logging: org.gradle.internal.logging.services.DefaultLoggingManager@2818071f
+mainClassName: null
+model: project ':app'
+modelIdentityDisplayName: null
+modelRegistry: org.gradle.model.internal.registry.DefaultModelRegistry@4d299c29
+name: app
+normalization: org.gradle.normalization.internal.DefaultInputNormalizationHandler_Decorated@4460a043
+objects: org.gradle.api.internal.model.DefaultObjectFactory@381b881e
+outgoingVariants: task ':app:outgoingVariants'
+owner: project ':app'
+parent: root project 'my-gradle-project5165026'
+parentIdentifier: root project 'my-gradle-project5165026'
+path: :app
+pluginContext: false
+pluginManager: org.gradle.api.internal.plugins.DefaultPluginManager_Decorated@505350fd
+plugins: [org.gradle.api.plugins.ReportingBasePlugin$Inject@363d344c, org.gradle.api.plugins.ProjectReportsPlugin$Inject@4ecb0bf4, org.gradle.api.plugins.HelpTasksPlugin$Inject@55c1f1c, org.gradle.buildinit.plugins.BuildInitPlugin$Inject@5154243b, org.gradle.buildinit.plugins.WrapperPlugin$Inject@4186a206, org.gradle.language.base.plugins.LifecycleBasePlugin$Inject@63b97a85, org.gradle.api.plugins.BasePlugin$Inject@46c915ee, org.gradle.api.plugins.JvmEcosystemPlugin$Inject@26901290, org.gradle.api.plugins.JvmToolchainsPlugin$Inject@1047a16b, org.gradle.api.plugins.JavaBasePlugin$Inject@219fc174, org.gradle.api.plugins.GroovyBasePlugin$Inject@cc0c00e, org.gradle.testing.base.plugins.TestSuiteBasePlugin$Inject@afcdb52, org.gradle.api.plugins.JvmTestSuitePlugin$Inject@4f2802e1, org.gradle.api.plugins.JavaPlugin$Inject@457c77b1, org.gradle.api.plugins.GroovyPlugin$Inject@6bea0b65, BuildlogicGroovyCommonConventionsPlugin@340f0f12, org.gradle.api.distribution.plugins.DistributionPlugin$Inject@41c5c0a5, org.gradle.api.plugins.ApplicationPlugin$Inject@4e797fdb, BuildlogicGroovyApplicationConventionsPlugin@502595f2]
+processOperations: org.gradle.process.internal.DefaultExecActionFactory$DecoratingExecActionFactory@511a460a
+processResources: task ':app:processResources'
+processTestResources: task ':app:processTestResources'
+project: project ':app'
+projectConfigurator: org.gradle.api.internal.project.BuildOperationCrossProjectConfigurator@21331883
+projectDir: /private/tmp/nx-e2e/nx/proj9912426/app
+projectEvaluationBroadcaster: ProjectEvaluationListener broadcast
+projectEvaluator: org.gradle.configuration.project.LifecycleProjectEvaluator@f6c3829
+projectPath: :app
+projectReport: task ':app:projectReport'
+projectReportDir: /private/tmp/nx-e2e/nx/proj9912426/app/build/reports/project
+projectReportDirName: project
+projects: [project ':app']
+properties: {...}
+propertyReport: task ':app:propertyReport'
+providers: org.gradle.api.internal.provider.DefaultProviderFactory_Decorated@1eb7e486
+publicType: org.gradle.api.plugins.ProjectReportsPluginConvention
+reporting: extension 'reporting'
+repositories: repository container
+resolvableConfigurations: task ':app:resolvableConfigurations'
+resources: org.gradle.api.internal.resources.DefaultResourceHandler@103986d2
+rootDir: /private/tmp/nx-e2e/nx/proj9912426
+rootProject: root project 'my-gradle-project5165026'
+rootScript: false
+run: task ':app:run'
+script: false
+scriptHandlerFactory: org.gradle.api.internal.initialization.DefaultScriptHandlerFactory@191cd667
+scriptPluginFactory: org.gradle.configuration.ScriptPluginFactorySelector@775f081d
+serviceRegistryFactory: org.gradle.internal.service.scopes.BuildScopeServiceRegistryFactory@566d51a4
+services: Project services
+sourceCompatibility: 21
+sourceSets: SourceSet container
+standardOutputCapture: org.gradle.internal.logging.services.DefaultLoggingManager@2818071f
+startScripts: task ':app:startScripts'
+state: project state 'EXECUTED'
+status: integration
+subprojects: []
+targetCompatibility: 21
+taskDependencyFactory: org.gradle.api.internal.tasks.DefaultTaskDependencyFactory@7486b7b3
+taskReport: task ':app:taskReport'
+taskThatOwnsThisObject: null
+tasks: task set
+test: task ':app:test'
+testClasses: task ':app:testClasses'
+testReportDir: /private/tmp/nx-e2e/nx/proj9912426/app/build/reports/tests
+testReportDirName: tests
+testResultsDir: /private/tmp/nx-e2e/nx/proj9912426/app/build/test-results
+testResultsDirName: test-results
+testing: extension 'testing'
+version: unspecified
+versionCatalogs: extension 'versionCatalogs'

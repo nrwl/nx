@@ -35,7 +35,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     // when creating a CLI package, the plugin will be in the packages folder
     directory:
       options.createPackageName && options.createPackageName !== 'false'
-        ? 'packages'
+        ? `packages/${pluginProjectName}`
         : undefined,
     rootProject: options.createPackageName ? false : true,
   });
@@ -46,7 +46,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   if (options.createPackageName) {
     const e2eProject = `${options.pluginName}-e2e`;
     const cliTask = await createPackageGenerator(tree, {
-      directory: 'packages',
+      directory: `packages/${options.createPackageName}`,
       name: options.createPackageName,
       e2eProject: e2eProject,
       project: options.pluginName,

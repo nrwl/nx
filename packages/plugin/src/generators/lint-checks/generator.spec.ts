@@ -37,13 +37,13 @@ describe('lint-checks generator', () => {
     });
     await generatorGenerator(tree, {
       name: 'my-generator',
-      project: 'plugin',
+      directory: 'plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
       skipLintChecks: true,
     });
     await executorGenerator(tree, {
       name: 'my-executor',
-      project: 'plugin',
+      directory: 'plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
       skipLintChecks: true,
@@ -156,7 +156,14 @@ describe('lint-checks generator', () => {
           ],
           "parser": "jsonc-eslint-parser",
           "rules": {
-            "@nx/dependency-checks": "error",
+            "@nx/dependency-checks": [
+              "error",
+              {
+                "ignoredFiles": [
+                  "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                ],
+              },
+            ],
           },
         },
         {

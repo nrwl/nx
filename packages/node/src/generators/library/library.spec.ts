@@ -440,8 +440,7 @@ describe('lib', () => {
 
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-lib',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -518,33 +517,6 @@ describe('lib', () => {
       expect(tree.exists('my-dir/my-lib/src/index.js')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.js')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
-    });
-  });
-
-  describe('--pascalCaseFiles', () => {
-    it('should generate files with upper case names', async () => {
-      await libraryGenerator(tree, {
-        name: 'my-lib',
-        pascalCaseFiles: true,
-        projectNameAndRootFormat: 'as-provided',
-      } as Schema);
-      expect(tree.exists('my-lib/src/lib/MyLib.ts')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.ts')).toBeFalsy();
-    });
-
-    it('should generate files with upper case names for nested libs as well', async () => {
-      await libraryGenerator(tree, {
-        name: 'my-lib',
-        directory: 'my-dir/my-lib',
-        pascalCaseFiles: true,
-        projectNameAndRootFormat: 'as-provided',
-      } as Schema);
-      expect(tree.exists('my-dir/my-lib/src/lib/MyLib.ts')).toBeTruthy();
-      expect(tree.exists('my-dir/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
     });
   });
 });

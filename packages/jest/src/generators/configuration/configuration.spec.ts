@@ -357,8 +357,7 @@ describe('jestProject', () => {
         project: 'my-project',
       });
       expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-project',
           preset: './jest.preset.js',
           coverageDirectory: './coverage/my-project',
@@ -389,8 +388,7 @@ describe('jestProject', () => {
         js: true,
       });
       expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        module.exports = {
+        "module.exports = {
           displayName: 'my-project',
           preset: './jest.preset.js',
           coverageDirectory: './coverage/my-project',
@@ -424,8 +422,7 @@ describe('jestProject', () => {
       // ASSERT
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'lib1',
           preset: '../../jest.preset.cjs',
           coverageDirectory: '../../coverage/libs/lib1',
@@ -451,8 +448,7 @@ describe('jestProject', () => {
       expect(tree.exists('jest.preset.cjs')).toBeTruthy();
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'lib1',
           preset: '../../jest.preset.cjs',
           coverageDirectory: '../../coverage/libs/lib1',

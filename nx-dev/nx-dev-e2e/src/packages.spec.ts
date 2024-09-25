@@ -16,10 +16,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/angular/generators/component',
   },
   {
-    title: '@nx/angular:component-cypress-spec',
-    path: '/packages/angular/generators/component-cypress-spec',
-  },
-  {
     title: '@nx/angular:component-story',
     path: '/packages/angular/generators/component-story',
   },
@@ -297,10 +293,6 @@ const pages: Array<{ title: string; path: string }> = [
   {
     title: '@nx/react:stories',
     path: '/packages/react/generators/stories',
-  },
-  {
-    title: '@nx/react:component-cypress-spec',
-    path: '/packages/react/generators/component-cypress-spec',
   },
   { title: '@nx/react:hook', path: '/packages/react/generators/hook' },
   { title: '@nx/react:host', path: '/packages/react/generators/host' },
