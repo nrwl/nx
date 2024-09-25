@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": false,
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "incremental": true,
     "isolatedModules": true,
     "lib": ["es2022"],

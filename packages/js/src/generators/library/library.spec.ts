@@ -155,6 +155,7 @@ describe('lib', () => {
           {
             "compilerOptions": {
               "forceConsistentCasingInFileNames": true,
+              "importHelpers": true,
               "module": "commonjs",
               "noFallthroughCasesInSwitch": true,
               "noImplicitOverride": true,
