@@ -54,6 +54,7 @@ import {
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import setupVerdaccio from '../setup-verdaccio/generator';
+import { ensureProjectName } from '../../utils/ensure-project-name';
 import type {
   Bundler,
   LibraryGeneratorSchema,
@@ -690,6 +691,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
+  await ensureProjectName(tree, options, 'library');
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&

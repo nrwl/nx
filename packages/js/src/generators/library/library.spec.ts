@@ -15,7 +15,7 @@ import type { LibraryGeneratorSchema } from './schema';
 
 describe('lib', () => {
   let tree: Tree;
-  const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
+  const defaultOptions: Partial<LibraryGeneratorSchema> = {
     skipTsConfig: false,
     includeBabelRc: false,
     unitTestRunner: 'jest',
@@ -37,7 +37,7 @@ describe('lib', () => {
     it('should generate an empty ts lib using --config=npm-scripts', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         config: 'npm-scripts',
       });
       expect(readJson(tree, '/my-lib/package.json')).toEqual({
@@ -62,7 +62,7 @@ describe('lib', () => {
     it('should generate an empty ts lib using --config=project', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         config: 'project',
       });
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -72,7 +72,7 @@ describe('lib', () => {
     it('should generate an empty ts lib using --config=workspace', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         config: 'workspace',
       });
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -85,7 +85,7 @@ describe('lib', () => {
       it('should update tags', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           tags: 'one,two',
         });
         const projects = Object.fromEntries(getProjects(tree));
@@ -99,7 +99,7 @@ describe('lib', () => {
       it('should update root tsconfig.base.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
@@ -112,7 +112,7 @@ describe('lib', () => {
 
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
 
         const tsconfigJson = readJson(tree, 'tsconfig.json');
@@ -129,7 +129,7 @@ describe('lib', () => {
 
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
@@ -140,7 +140,7 @@ describe('lib', () => {
       it('should create a local tsconfig.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
         const tsconfigJson = readJson(tree, 'my-lib/tsconfig.json');
         expect(tsconfigJson).toMatchInlineSnapshot(`
@@ -175,7 +175,7 @@ describe('lib', () => {
 
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
 
         const tsconfigJson = readJson(tree, 'my-lib/tsconfig.json');
@@ -321,7 +321,7 @@ describe('lib', () => {
       it('should update the projects tsconfig with strict false', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           strict: false,
         });
         const tsconfigJson = readJson(tree, '/my-lib/tsconfig.json');
@@ -347,7 +347,7 @@ describe('lib', () => {
       it('should default to strict true', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
         const tsconfigJson = readJson(tree, '/my-lib/tsconfig.json');
 
@@ -378,14 +378,14 @@ describe('lib', () => {
       it('should fail if the same importPath has already been used', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'myLib1',
+          directory: 'myLib1',
           importPath: '@myorg/lib',
         });
 
         try {
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'myLib2',
+            directory: 'myLib2',
             importPath: '@myorg/lib',
           });
         } catch (e) {
@@ -400,7 +400,7 @@ describe('lib', () => {
       it('should provide a default import path using npm scope', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
 
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
@@ -416,8 +416,8 @@ describe('lib', () => {
         });
         await libraryGenerator(tree, {
           ...defaultOptions,
-          rootProject: true,
           name: 'my-lib',
+          directory: '.',
         });
 
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
@@ -430,7 +430,7 @@ describe('lib', () => {
     it('should add eslint dependencies', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -443,7 +443,7 @@ describe('lib', () => {
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
 
         const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
@@ -568,7 +568,7 @@ describe('lib', () => {
       it('should generate js files instead of ts files', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           js: true,
         });
         expect(tree.exists(`my-lib/jest.config.js`)).toBeTruthy();
@@ -580,7 +580,7 @@ describe('lib', () => {
       it('should update tsconfig.json with compilerOptions.allowJs: true', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           js: true,
         });
         expect(
@@ -591,7 +591,7 @@ describe('lib', () => {
       it('should update tsconfig.lib.json include with src/**/*.js glob', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           js: true,
         });
         expect(readJson(tree, 'my-lib/tsconfig.lib.json').include).toEqual([
@@ -603,7 +603,7 @@ describe('lib', () => {
       it('should update root tsconfig.json with a js file path', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           js: true,
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
@@ -695,7 +695,7 @@ describe('lib', () => {
     it('should generate test configuration', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         unitTestRunner: 'jest',
       });
 
@@ -724,7 +724,7 @@ describe('lib', () => {
     it('should generate test configuration with swc and js', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         unitTestRunner: 'jest',
         bundler: 'swc',
         js: true,
@@ -744,7 +744,7 @@ describe('lib', () => {
       it('should NOT generate the build target if bundler is none', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'none',
         });
 
@@ -755,7 +755,7 @@ describe('lib', () => {
       it('should still generate the build target if bundler is undefined', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
@@ -765,7 +765,7 @@ describe('lib', () => {
       it('should generate the build target', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'tsc',
         });
 
@@ -785,7 +785,7 @@ describe('lib', () => {
       it('should generate the build target for swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'swc',
         });
 
@@ -805,7 +805,7 @@ describe('lib', () => {
       it('should generate swcrc for swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'swc',
         });
 
@@ -815,7 +815,7 @@ describe('lib', () => {
       it('should setup jest project using swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'swc',
         });
 
@@ -826,7 +826,7 @@ describe('lib', () => {
       it('should generate a package.json file', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'tsc',
         });
 
@@ -838,7 +838,7 @@ describe('lib', () => {
       it('should generate the build target', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           buildable: true,
           compiler: 'tsc',
         });
@@ -859,7 +859,7 @@ describe('lib', () => {
       it('should generate the build target for swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           buildable: true,
           compiler: 'swc',
         });
@@ -880,7 +880,7 @@ describe('lib', () => {
       it('should generate swcrc for swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           buildable: true,
           compiler: 'swc',
         });
@@ -891,7 +891,7 @@ describe('lib', () => {
       it('should setup jest project using swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           buildable: true,
           compiler: 'swc',
         });
@@ -903,7 +903,7 @@ describe('lib', () => {
       it('should generate a package.json file', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           buildable: true,
           compiler: 'tsc',
         });
@@ -916,7 +916,7 @@ describe('lib', () => {
       it('should generate correct options for build', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'rollup',
         });
 
@@ -927,7 +927,7 @@ describe('lib', () => {
       it('should always set compiler to swc if bundler is rollup', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'rollup',
         });
       });
@@ -937,7 +937,7 @@ describe('lib', () => {
       it('should generate the build target', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           publishable: true,
           importPath: '@proj/my-lib',
           bundler: 'tsc',
@@ -959,7 +959,7 @@ describe('lib', () => {
       it('should update the nx-release-publish target to specify dist/{projectRoot} as the package root', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           publishable: true,
           importPath: '@proj/my-lib',
           bundler: 'tsc',
@@ -986,7 +986,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1008,7 +1008,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1040,7 +1040,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1068,7 +1068,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1095,7 +1095,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1122,7 +1122,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1178,7 +1178,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1205,7 +1205,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1240,7 +1240,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1281,7 +1281,7 @@ describe('lib', () => {
 
           await libraryGenerator(tree, {
             ...defaultOptions,
-            name: 'my-lib',
+            directory: 'my-lib',
             publishable: true,
             importPath: '@proj/my-lib',
             bundler: 'tsc',
@@ -1312,7 +1312,7 @@ describe('lib', () => {
       it('should generate a .babelrc when flag is set to true', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           includeBabelRc: true,
         });
 
@@ -1322,7 +1322,7 @@ describe('lib', () => {
       it('should not generate a .babelrc when flag is set to false', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           includeBabelRc: false,
         });
 
@@ -1332,7 +1332,7 @@ describe('lib', () => {
       it('should not generate a .babelrc when bundler is swc (even if flag is set to true)', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'swc',
           includeBabelRc: true,
         });
@@ -1348,7 +1348,7 @@ describe('lib', () => {
 
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           includeBabelRc: true,
         });
 
@@ -1380,7 +1380,7 @@ describe('lib', () => {
 
         await libraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           includeBabelRc: undefined,
         });
 
@@ -1393,7 +1393,7 @@ describe('lib', () => {
     it('should add build with esbuild', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'esbuild',
         unitTestRunner: 'none',
       });
@@ -1424,7 +1424,7 @@ describe('lib', () => {
     it('should add build with rollup', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'rollup',
         unitTestRunner: 'none',
       });
@@ -1451,7 +1451,7 @@ describe('lib', () => {
     it('should generate a README.md when minimal is set to false', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         minimal: false,
       });
 
@@ -1461,7 +1461,7 @@ describe('lib', () => {
     it('should not generate a README.md when minimal is set to true', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         minimal: true,
       });
 
@@ -1471,7 +1471,7 @@ describe('lib', () => {
     it('should generate a README.md and add it to the build assets when buildable is true and minimal is false', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'tsc',
         minimal: false,
       });
@@ -1487,7 +1487,7 @@ describe('lib', () => {
     it('should not generate a README.md when both bundler and minimal are set', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'tsc',
         minimal: true,
       });
@@ -1519,7 +1519,7 @@ describe('lib', () => {
     it('should generate a vite config with testEnvironment set to node', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-node-lib',
+        directory: 'my-node-lib',
         unitTestRunner: 'vitest',
         testEnvironment: 'node',
       });
@@ -1532,7 +1532,7 @@ describe('lib', () => {
     it('should generate a vite config with testEnvironment set to jsdom by default', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-jsdom-lib',
+        directory: 'my-jsdom-lib',
         unitTestRunner: 'vitest',
         testEnvironment: undefined,
       });
