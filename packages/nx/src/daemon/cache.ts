@@ -3,7 +3,6 @@ import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
 import {
   readJsonFile,
-  readJsonFileAsync,
   writeJsonFileAsync,
 } from '../utils/fileutils';
 
@@ -16,11 +15,11 @@ export const serverProcessJsonPath = join(
   'server-process.json'
 );
 
-export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
+export function readDaemonProcessJsonCache(): DaemonProcessJson | null {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return await readJsonFileAsync(serverProcessJsonPath);
+  return readJsonFile(serverProcessJsonPath);
 }
 
 export function deleteDaemonJsonProcessCache(): void {
@@ -40,7 +39,7 @@ export async function writeDaemonJsonProcessCache(
 }
 
 export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> {
-  const daemonProcessJson = await readDaemonProcessJsonCache();
+  const daemonProcessJson = readDaemonProcessJsonCache();
   if (daemonProcessJson && daemonProcessJson.processId) {
     await new Promise<void>((resolve, reject) => {
       let count = 0;
