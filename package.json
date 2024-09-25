@@ -396,6 +396,7 @@
           "{workspaceRoot}/packages/**",
           "{workspaceRoot}/docs/**",
           "{workspaceRoot}/scripts/documentation/**",
+          "!{workspaceRoot}/docs/external-generated",
           "!{workspaceRoot}/docs/generated",
           "!{workspaceRoot}/packages/**/*.spec.ts",
           "!{workspaceRoot}/packages/**/project.json",
@@ -407,6 +408,7 @@
         ]
       },
       "outputs": [
+        "{workspaceRoot}/docs/external-generated",
         "{workspaceRoot}/docs/generated"
       ]
     }
