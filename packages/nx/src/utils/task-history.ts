@@ -47,7 +47,12 @@ export function getTaskHistory(): TaskHistory | null {
   }
 
   if (!taskHistory) {
-    taskHistory = new TaskHistory();
+    try {
+      taskHistory = new TaskHistory();
+    } catch (e) {
+      console.error('Error initializing TaskHistory', e);
+      return null;
+    }
   }
   return taskHistory;
 }

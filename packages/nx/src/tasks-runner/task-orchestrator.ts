@@ -5,7 +5,7 @@ import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { getCache } from './cache';
+import { Cache, DbCache, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
@@ -34,7 +34,7 @@ import { combineOptionsForExecutor } from '../utils/params';
 import { NxJsonConfiguration } from '../config/nx-json';
 
 export class TaskOrchestrator {
-  private cache = getCache(this.nxJson, this.options);
+  private cache: DbCache | Cache;
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
@@ -81,8 +81,8 @@ export class TaskOrchestrator {
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
       this.tasksSchedule.init(),
-      'init' in this.cache ? this.cache.init() : null,
     ]);
+    this.cache = await getCache(this.nxJson, this.options);
 
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
@@ -106,6 +106,7 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
+
     this.cache.removeOldCacheRecords();
 
     return this.completedTasks;

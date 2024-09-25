@@ -29,19 +29,32 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function getCache(
+export async function getCache(
   nxJson: NxJsonConfiguration,
   options: DefaultTasksRunnerOptions
-) {
-  return process.env.NX_DISABLE_DB !== 'true' &&
+): Promise<Cache | DbCache> {
+  let cache: Cache | DbCache;
+  if (
+    process.env.NX_DISABLE_DB !== 'true' &&
     (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
-    ? new DbCache({
-        // Remove this in Nx 21
+  ) {
+    try {
+      cache = new DbCache({
+        // Remove this inx Nx 21
         nxCloudRemoteCache: isNxCloudUsed(readNxJson())
           ? options.remoteCache
           : null,
-      })
-    : new Cache(options);
+      });
+      await cache.init();
+    } catch (e) {
+      console.error('Error initializing DbCache', e);
+    }
+  }
+  if (!cache) {
+    cache = new Cache(options);
+  }
+
+  return cache;
 }
 
 export class DbCache {
