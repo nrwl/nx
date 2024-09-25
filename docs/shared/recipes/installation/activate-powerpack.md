@@ -10,9 +10,9 @@ Activating Powerpack is a two step process.
 
 ## 1. Purchase a License
 
-You'll need to [purchase a license](https://nx.app/nx-powerpack/purchase) online. The license cost depends on the
+You'll need to [purchase a license](https://nx.app/powerpack/purchase) online. The license cost depends on the
 
-{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://nx.app/nx-powerpack/purchase" /%}
+{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://nx.app/powerpack/purchase" /%}
 
 Once you've completed the purchase, you will receive a license key.
 
