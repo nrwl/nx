@@ -23,7 +23,7 @@ describe('move', () => {
 
   it('should update jest config when moving down directories', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
 
     await moveGenerator(tree, {
@@ -44,7 +44,7 @@ describe('move', () => {
 
   it('should make sure build targets are correct when moving', async () => {
     await libraryGenerator(tree, {
-      name: 'one',
+      directory: 'one',
     });
 
     const myLibConfig = readProjectConfiguration(tree, 'one');
@@ -109,7 +109,7 @@ describe('move', () => {
 
   it('should update $schema path when move', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
 
     let projectJson = readJson(tree, 'my-lib/project.json');

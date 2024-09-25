@@ -5,7 +5,10 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 import { getImportPath } from '../../utilities/get-import-path';
 
@@ -22,6 +25,7 @@ async function normalizeOptions(
   tree: Tree,
   options: ProjectOptions
 ): Promise<NormalizedProjectOptions> {
+  await ensureProjectName(tree, options, 'library');
   const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
     tree,
     {
