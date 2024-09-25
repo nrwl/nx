@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import applicationGenerator from '../application/application';
 import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 
@@ -244,18 +243,5 @@ export async function createTestUILib(
     projectNameAndRootFormat: 'as-provided',
   });
 
-  // create some Nx app that we'll use to generate the cypress
-  // spec into it. We don't need a real Cypress setup
-
-  await applicationGenerator(appTree, {
-    e2eTestRunner: 'none',
-    linter: Linter.EsLint,
-    skipFormat: true,
-    style: 'css',
-    unitTestRunner: 'none',
-    name: `${libName}-e2e`,
-    js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
-  });
   return appTree;
 }
