@@ -15,7 +15,7 @@ describe('next library', () => {
   > = installedCypressVersion as never;
   it('should use @nx/next images.d.ts file', async () => {
     const baseOptions: Schema = {
-      name: '',
+      directory: '',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
@@ -27,7 +27,7 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib',
+      directory: 'my-lib',
     });
     const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
       .compilerOptions.types;
@@ -37,7 +37,7 @@ describe('next library', () => {
 
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
     const baseOptions: Schema = {
-      name: '',
+      directory: '',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
@@ -50,11 +50,11 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib',
+      directory: 'my-lib',
     });
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib2',
+      directory: 'my-lib2',
       style: '@emotion/styled',
     });
 
@@ -70,7 +70,7 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
@@ -97,7 +97,7 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,

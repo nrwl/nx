@@ -13,7 +13,7 @@ describe('app', () => {
     const name = uniq('custom-server');
 
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
       customServer: true,
     });
@@ -30,7 +30,7 @@ describe('app', () => {
     const name = uniq('custom-server-swc');
 
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
       customServer: true,
       swc: true,

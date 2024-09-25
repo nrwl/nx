@@ -13,11 +13,11 @@ describe('component', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
-      name: appName,
+      directory: appName,
       style: 'css',
     });
     await libraryGenerator(tree, {
-      name: libName,
+      directory: libName,
       linter: Linter.EsLint,
       style: 'css',
       skipFormat: true,
