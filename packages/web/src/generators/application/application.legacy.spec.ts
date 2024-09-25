@@ -38,7 +38,7 @@ describe('web app generator (legacy)', () => {
 
   it('should setup webpack configuration', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
+      directory: 'my-app',
     });
     const project = readProjectConfiguration(tree, 'my-app');
     expect(project).toMatchInlineSnapshot(`
@@ -144,7 +144,7 @@ describe('web app generator (legacy)', () => {
 
   it('should add targets for vite', async () => {
     await applicationGenerator(tree, {
-      name: 'my-vite-app',
+      directory: 'my-vite-app',
       bundler: 'vite',
     });
     const projects = getProjects(tree);
