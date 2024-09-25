@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
-import { join } from 'path';
+import { cpSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
+import { dirname, join } from 'path';
 import { InitArgs } from '../../init-v1';
 import {
   fileExists,
@@ -163,7 +163,7 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 }
 
 function createTempWorkspace(options: NormalizedOptions) {
-  removeSync('temp-workspace');
+  rmSync('temp-workspace', { recursive: true, force: true });
 
   execSync(
     `npx ${
@@ -184,12 +184,16 @@ function createTempWorkspace(options: NormalizedOptions) {
 
   output.log({ title: '🧹 Clearing unused files' });
 
-  copySync(
+  cpSync(
     join('temp-workspace', 'apps', options.reactAppName, 'project.json'),
-    'project.json'
+    'project.json',
+    { recursive: true }
   );
-  removeSync(join('temp-workspace', 'apps', options.reactAppName));
-  removeSync('node_modules');
+  rmSync(join('temp-workspace', 'apps', options.reactAppName), {
+    recursive: true,
+    force: true,
+  });
+  rmSync('node_modules', { recursive: true, force: true });
 }
 
 function copyPackageJsonDepsFromTempWorkspace() {
@@ -239,6 +243,13 @@ function overridePackageDeps(
   return base;
 }
 
+function moveSync(src: string, dest: string) {
+  const destParentDir = dirname(dest);
+  mkdirSync(destParentDir, { recursive: true });
+  rmSync(dest, { recursive: true, force: true });
+  return renameSync(src, dest);
+}
+
 function moveFilesToTempWorkspace(options: NormalizedOptions) {
   output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
 
@@ -267,10 +278,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
         f,
         options.isStandalone
           ? join('temp-workspace', f)
-          : join('temp-workspace', 'apps', options.reactAppName, f),
-        {
-          overwrite: true,
-        }
+          : join('temp-workspace', 'apps', options.reactAppName, f)
       );
     } catch (error) {
       if (requiredCraFiles.includes(f)) {
@@ -331,7 +339,7 @@ function copyFromTempWorkspaceToRoot() {
   output.log({ title: '🚚 Folder restructuring.' });
 
   readdirSync('temp-workspace').forEach((f) => {
-    moveSync(join('temp-workspace', f), f, { overwrite: true });
+    moveSync(join('temp-workspace', f), f);
   });
 }
 
@@ -345,6 +353,6 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
   setupTsConfig(options.reactAppName, options.isStandalone);
 
   if (options.isStandalone) {
-    removeSync('apps');
+    rmSync('apps', { recursive: true, force: true });
   }
 }

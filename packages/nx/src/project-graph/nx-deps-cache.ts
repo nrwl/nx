@@ -1,5 +1,4 @@
-import { existsSync } from 'fs';
-import { ensureDirSync, renameSync } from 'fs-extra';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
@@ -39,7 +38,7 @@ export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 export function ensureCacheDirectory(): void {
   try {
     if (!existsSync(workspaceDataDirectory)) {
-      ensureDirSync(workspaceDataDirectory);
+      mkdirSync(workspaceDataDirectory, { recursive: true });
     }
   } catch (e) {
     /*
