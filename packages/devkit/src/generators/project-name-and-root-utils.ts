@@ -1,3 +1,4 @@
+import { prompt } from 'enquirer';
 import {
   joinPathFragments,
   normalizePath,
@@ -114,6 +115,27 @@ export async function determineProjectNameAndRootOptions(
     importPath,
     projectRoot,
   };
+}
+
+export async function ensureProjectName(
+  tree: Tree,
+  options: Omit<ProjectGenerationOptions, 'projectType'>,
+  projectType: 'application' | 'library'
+): Promise<void> {
+  if (!options.name) {
+    if (options.directory === '.' && getRelativeCwd() === '') {
+      const result = await prompt<{ name: string }>({
+        type: 'string',
+        name: 'name',
+        message: `What do you want to name the ${projectType}?`,
+      }).then(({ name }) => (options.name = name));
+    }
+    const { projectName } = await determineProjectNameAndRootOptions(tree, {
+      ...options,
+      projectType,
+    });
+    options.name = projectName;
+  }
 }
 
 function validateOptions(options: ProjectGenerationOptions): void {
