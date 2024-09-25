@@ -42,8 +42,14 @@ export async function installAndUpdatePackageJson(
       ? options.packages.split(',')
       : options.packages ?? [];
 
-  // Use force in case there are any unmet peer dependencies.
-  await installAsync(packages, createInstallOptions(options), ['--force']);
+  await installAsync(
+    packages,
+    createInstallOptions({
+      fix: options.fix,
+      check: options.check,
+    }),
+    createInstallOptions({ force: options.force })
+  );
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;

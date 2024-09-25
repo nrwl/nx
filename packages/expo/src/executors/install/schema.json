@@ -29,6 +29,11 @@
       "type": "boolean",
       "description": "Automatically update any invalid package versions",
       "default": false
+    },
+    "force": {
+      "type": "boolean",
+      "description": "Force the installation of a package, even if it is already installed",
+      "default": false
     }
   }
 }
