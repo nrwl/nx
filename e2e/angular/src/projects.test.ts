@@ -500,8 +500,8 @@ describe('Angular Projects', () => {
     );
     expect(buildOutput).toContain('Successfully ran target build');
 
-    expect(() => runCLI(`lint ${lib}`)).not.toThrow();
-    expect(() => runCLI(`lint ${childLib}`)).not.toThrow();
+    expect(() => runCLI(`lint ${lib} --fix`)).not.toThrow();
+    expect(() => runCLI(`lint ${childLib} --fix`)).not.toThrow();
   });
 
   it('should support generating libraries with a scoped name when --project-name-and-root-format=as-provided', () => {
