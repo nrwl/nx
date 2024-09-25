@@ -22,6 +22,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
+  parseNameForAsProvided,
   type ProjectNameAndRootOptions,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
@@ -47,6 +48,8 @@ import {
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
 import setupVerdaccio from '../setup-verdaccio/generator';
+import { prompt } from 'enquirer';
+import { ensureLibraryName } from '@nx/js/src/utils/ensure-library-name';
 
 const defaultOutputDirectory = 'dist';
 
@@ -634,6 +637,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedSchema> {
+  await ensureLibraryName(options);
   const nxJson = readNxJson(tree);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&

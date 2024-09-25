@@ -217,7 +217,7 @@ export function setCwd(path: string): void {
   process.env.INIT_CWD = join(workspaceRoot, path);
 }
 
-function parseNameForAsProvided(rawName: string): {
+export function parseNameForAsProvided(rawName: string): {
   name: string;
   directory: string | undefined;
 } {
