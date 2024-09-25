@@ -599,7 +599,7 @@ describe('react:component-story', () => {
 export async function createTestUILib(libName: string): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
   await libraryGenerator(appTree, {
-    name: libName,
+    directory: libName,
     linter: Linter.EsLint,
     component: true,
     skipFormat: true,

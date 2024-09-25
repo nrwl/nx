@@ -24,6 +24,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
 import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export async function hostGenerator(
   host: Tree,
@@ -55,6 +56,7 @@ export async function hostGenerator(
     });
   }
 
+  await ensureProjectName(host, options, 'application');
   const initTask = await applicationGenerator(host, {
     ...options,
     name: options.projectName,

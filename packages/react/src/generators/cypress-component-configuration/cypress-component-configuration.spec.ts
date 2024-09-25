@@ -68,12 +68,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -124,12 +124,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -191,12 +191,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -257,12 +257,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'webpack',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -322,12 +322,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -367,12 +367,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -422,11 +422,11 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      name: 'some-lib',
+      directory: 'some-lib',
       style: 'scss',
       unitTestRunner: 'none',
       linter: Linter.None,
@@ -478,12 +478,12 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',

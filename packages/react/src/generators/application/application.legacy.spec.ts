@@ -15,7 +15,7 @@ describe('react app generator (legacy)', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    name: 'my-app',
+    directory: 'my-app',
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
@@ -33,7 +33,7 @@ describe('react app generator (legacy)', () => {
   it('should setup webpack config that is compatible without project targets', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'webpack',
     });
 
@@ -132,7 +132,7 @@ describe('react app generator (legacy)', () => {
   it('should setup vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-vite-app',
+      directory: 'my-vite-app',
       bundler: 'vite',
       skipFormat: true,
     });

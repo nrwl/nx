@@ -77,7 +77,7 @@ describe('federate-module', () => {
 
   describe('with remote', () => {
     let remoteSchema: remoteSchma = {
-      name: 'my-remote',
+      directory: 'my-remote',
       e2eTestRunner: 'none',
       skipFormat: false,
       linter: Linter.EsLint,

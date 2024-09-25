@@ -107,7 +107,7 @@ describe('hostGenerator', () => {
   describe('bundler=webpack', () => {
     it('should generate host files and configs when --js=true', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
@@ -127,7 +127,7 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs when --js=false', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
@@ -145,7 +145,7 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs when --typescriptConfiguration=true', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
@@ -170,7 +170,7 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs when --typescriptConfiguration=false', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
@@ -195,7 +195,7 @@ describe('hostGenerator', () => {
     it('should install @nx/web for the file-server executor', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
@@ -210,7 +210,7 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs for SSR', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         style: 'css',
         linter: Linter.None,
@@ -256,7 +256,7 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs for SSR when --typescriptConfiguration=true', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         style: 'css',
         linter: Linter.None,
@@ -304,7 +304,6 @@ describe('hostGenerator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await hostGenerator(tree, {
-        name: 'host-app',
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
@@ -327,7 +326,6 @@ describe('hostGenerator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await hostGenerator(tree, {
-        name: 'host-app',
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
         e2eTestRunner: 'none',
@@ -352,7 +350,7 @@ describe('hostGenerator', () => {
 
       await expect(
         hostGenerator(tree, {
-          name: 'myhostapp',
+          directory: 'myhostapp',
           remotes: [remote],
           dynamic: true,
           e2eTestRunner: 'none',

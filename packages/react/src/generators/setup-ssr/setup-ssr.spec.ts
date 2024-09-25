@@ -112,7 +112,7 @@ describe('setupSsrGenerator', () => {
     tree = createTreeWithEmptyWorkspace();
 
     applicationGenerator(tree, {
-      name: appName,
+      directory: appName,
       style: 'css',
       linter: Linter.None,
       unitTestRunner: 'none',

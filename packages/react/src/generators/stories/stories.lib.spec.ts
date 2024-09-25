@@ -239,7 +239,7 @@ export async function createTestUILib(
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
   });
 
   return appTree;

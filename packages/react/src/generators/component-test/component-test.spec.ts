@@ -20,7 +20,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -40,7 +40,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -61,7 +61,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -83,7 +83,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -103,7 +103,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -124,7 +124,7 @@ describe(componentTestGenerator.name, () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -164,7 +164,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -196,7 +196,7 @@ export function AnotherCmp() {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -239,7 +239,7 @@ export function AnotherCmp2() {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -284,7 +284,7 @@ export function AnotherCmp2() {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -323,7 +323,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -358,7 +358,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -394,7 +394,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -415,7 +415,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -453,7 +453,7 @@ export default function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',

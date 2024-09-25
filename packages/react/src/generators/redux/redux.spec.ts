@@ -13,7 +13,7 @@ describe('redux', () => {
   beforeEach(async () => {
     appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: true,
       skipTsConfig: false,
@@ -53,7 +53,7 @@ describe('redux', () => {
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'none',
-        name: 'my-app',
+        directory: 'my-app',
       });
       await reduxGenerator(appTree, {
         name: 'my-slice',
