@@ -146,7 +146,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
   });
   return appTree;
 }
@@ -163,7 +163,7 @@ export async function createTestAppLib(
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
     js: plainJS,
   });
 
