@@ -1,5 +1,8 @@
 import { readNxJson, type Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { type NxRemixGeneratorSchema } from '../schema';
 import { Linter } from '@nx/eslint';
 
@@ -15,6 +18,7 @@ export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(tree, options, 'application');
   const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
     tree,
     {

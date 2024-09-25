@@ -24,7 +24,6 @@ describe('Remix Application', () => {
       await applicationGenerator(tree, {
         name: 'test',
         directory: '.',
-        rootProject: true,
         addPlugin: true,
       });
 
