@@ -8,9 +8,9 @@ import {
 } from '@nx/devkit';
 import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
 import { join, resolve as pathResolve } from 'path';
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, writeFileSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { gte } from 'semver';
-import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
 import { updatePackageJson } from './lib/update-package-json';
@@ -70,9 +70,7 @@ export default async function buildExecutor(
     }
   }
 
-  if (!directoryExists(options.outputPath)) {
-    await mkdir(options.outputPath, { recursive; true });
-  }
+  await mkdir(options.outputPath, { recursive: true });
 
   const builtPackageJson = createPackageJson(
     context.projectName,

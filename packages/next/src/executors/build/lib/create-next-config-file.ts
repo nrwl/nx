@@ -79,9 +79,7 @@ export function createNextConfigFile(
       join(context.root, options.outputPath, moduleFile)
     );
 
-    if (!existsSync(moduleFileDir)) {
-      mkdirSync(moduleFileDir, { recursive: true });
-    }
+    mkdirSync(moduleFileDir, { recursive: true });
 
     // We already generate a build version of package.json in the dist folder.
     if (moduleFile !== 'package.json') {
