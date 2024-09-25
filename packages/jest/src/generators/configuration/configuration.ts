@@ -14,8 +14,13 @@ import {
   readProjectConfiguration,
   readNxJson,
   runTasksInSerial,
+  readJson,
+  logger,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
+import {
+  getRootTsConfigFileName,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { JestPluginOptions } from '../../plugins/plugin';
 import { getPresetExt } from '../../utils/config/config-file';
 
@@ -118,7 +123,29 @@ export async function configurationGeneratorInternal(
     await formatFiles(tree);
   }
 
+  logWarningForUnsupportedModuleResolution(tree);
+
   return runTasksInSerial(...tasks);
+}
+
+/**
+ * For Jest < 30, there is no way to load jest.config.ts file if the tsconfig.json/tsconfig.base.json sets moduleResolution to bundler or nodenext.
+ * Jest uses ts-node in a way that is not compatible, so until this is fixed we need to log a warning.
+ * See: https://github.com/jestjs/jest/blob/main/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L145-L153
+ */
+function logWarningForUnsupportedModuleResolution(tree: Tree) {
+  const tsConfigFileName = getRootTsConfigFileName(tree);
+  if (tsConfigFileName) {
+    const json = readJson(tree, tsConfigFileName);
+    if (
+      json.compilerOptions.moduleResolution !== 'node' &&
+      json.compilerOptions.moduleResolution !== 'node10'
+    ) {
+      logger.warn(
+        `Compiler option 'moduleResolution' in ${tsConfigFileName} must be 'node' or 'node10' for Jest to work properly.\nNOTE: You can use the environment variable \`TS_NODE_COMPILER_OPTIONS='{"moduleResolution": "node10"}'\` to override Jest's usage of ts-node.`
+      );
+    }
+  }
 }
 
 export default configurationGenerator;
