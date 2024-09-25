@@ -21,7 +21,7 @@ export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | 
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return await readJson(serverProcessJsonPath);
+  return readJsonSync(serverProcessJsonPath);
 }
 
 export function deleteDaemonJsonProcessCache(): void {
