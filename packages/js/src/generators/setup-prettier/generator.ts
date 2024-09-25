@@ -16,10 +16,11 @@ export async function setupPrettierGenerator(
     skipPackageJson: options.skipPackageJson,
   });
 
+  if (!options.skipPackageJson) {
+    ensurePackage('prettier', prettierVersion);
+  }
+
   if (!options.skipFormat) {
-    if (!options.skipPackageJson) {
-      ensurePackage('prettier', prettierVersion);
-    }
     // even if skipPackageJson === true, we can safely run formatFiles, prettier might
     // have been installed earlier and if not, the formatFiles function still handles it
     await formatFiles(tree);

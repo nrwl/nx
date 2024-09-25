@@ -23,7 +23,11 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { ProjectGraphError } from '../../project-graph/error-types';
-import { getPowerpackLicenseInformation } from '../../utils/powerpack';
+import {
+  getPowerpackLicenseInformation,
+  NxPowerpackNotInstalledError,
+} from '../../utils/powerpack';
+import type { PowerpackLicense } from '@nx/powerpack-license';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -61,6 +65,7 @@ export async function reportHandler() {
     pm,
     pmVersion,
     powerpackLicense,
+    powerpackError,
     localPlugins,
     powerpackPlugins,
     communityPlugins,
@@ -93,6 +98,7 @@ export async function reportHandler() {
   });
 
   if (powerpackLicense) {
+    bodyLines.push('');
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(chalk.green('Nx Powerpack'));
 
@@ -122,6 +128,13 @@ export async function reportHandler() {
         )}`
       );
     }
+    bodyLines.push('');
+  } else if (powerpackError) {
+    bodyLines.push('');
+    bodyLines.push(chalk.red('Nx Powerpack'));
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(powerpackError.message);
+    bodyLines.push('');
   }
 
   if (registeredPlugins.length) {
@@ -183,8 +196,8 @@ export async function reportHandler() {
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
-  // TODO(@FrozenPandaz): Provide the right type here.
-  powerpackLicense: any | null;
+  powerpackLicense: PowerpackLicense | null;
+  powerpackError: Error | null;
   powerpackPlugins: PackageJson[];
   localPlugins: string[];
   communityPlugins: PackageJson[];
@@ -234,13 +247,19 @@ export async function getReportData(): Promise<ReportData> {
   const native = isNativeAvailable();
 
   let powerpackLicense = null;
+  let powerpackError = null;
   try {
     powerpackLicense = await getPowerpackLicenseInformation();
-  } catch {}
+  } catch (e) {
+    if (!(e instanceof NxPowerpackNotInstalledError)) {
+      powerpackError = e;
+    }
+  }
 
   return {
     pm,
     powerpackLicense,
+    powerpackError,
     powerpackPlugins,
     pmVersion,
     localPlugins,

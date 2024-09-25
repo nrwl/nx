@@ -15,7 +15,7 @@ import { machineId } from 'node-machine-id';
 import { NxCache, CachedResult as NativeCacheResult } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { readNxJson } from '../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isCI } from '../utils/is-ci';
@@ -29,9 +29,12 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function getCache(options: DefaultTasksRunnerOptions) {
+export function getCache(
+  nxJson: NxJsonConfiguration,
+  options: DefaultTasksRunnerOptions
+) {
   return process.env.NX_DISABLE_DB !== 'true' &&
-    process.env.NX_DB_CACHE === 'true'
+    (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(readNxJson())
@@ -156,26 +159,22 @@ export class DbCache {
     }
   }
 
-  private async getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
-    try {
-      const { getRemoteCache } = await import(
-        this.resolvePackage('@nx/powerpack-s3-cache')
-      );
-      return getRemoteCache();
-    } catch {
-      return null;
-    }
+  private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-s3-cache');
   }
 
-  private async getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+  private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  }
+
+  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
+    let getRemoteCache = null;
     try {
-      const { getRemoteCache } = await import(
-        this.resolvePackage('@nx/powerpack-shared-fs-cache')
-      );
-      return getRemoteCache();
+      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
     } catch {
       return null;
     }
+    return getRemoteCache();
   }
 
   private resolvePackage(pkg: string) {
