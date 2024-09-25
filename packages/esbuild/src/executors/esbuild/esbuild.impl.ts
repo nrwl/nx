@@ -1,6 +1,12 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
-import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
+import {
+  cacheDir,
+  joinPathFragments,
+  logger,
+  stripIndents,
+  writeJsonFile,
+} from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -21,7 +27,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import { rmSync, writeFileSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${pc.red(
@@ -191,9 +197,9 @@ export async function* esbuildExecutor(
           options.format.length === 1
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
-        writeFileSync(
+        writeJsonFile(
           joinPathFragments(options.outputPath, filename),
-          `${JSON.stringify(buildResult.metafile, null, 2)}\n`
+          buildResult.metafile
         );
       }
 
