@@ -5,7 +5,6 @@ import { applicationGenerator } from './application';
 
 describe('application generator', () => {
   let tree: Tree;
-  const appName = 'my-node-app';
   const appDirectory = 'my-node-app';
 
   beforeEach(() => {
@@ -15,7 +14,7 @@ describe('application generator', () => {
 
   it('should generate project configurations', async () => {
     await applicationGenerator(tree, {
-      name: appName,
+      directory: appDirectory,
     });
 
     const projectConfigurations = devkit.getProjects(tree);
@@ -26,7 +25,7 @@ describe('application generator', () => {
 
   it('should generate files', async () => {
     await applicationGenerator(tree, {
-      name: appName,
+      directory: appDirectory,
     });
 
     expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
@@ -45,7 +44,7 @@ describe('application generator', () => {
 
   it('should configure tsconfig correctly', async () => {
     await applicationGenerator(tree, {
-      name: appName,
+      directory: appDirectory,
     });
 
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
@@ -60,7 +59,7 @@ describe('application generator', () => {
 
   it('should add strict checks with --strict', async () => {
     await applicationGenerator(tree, {
-      name: appName,
+      directory: appDirectory,
       strict: true,
     });
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
@@ -79,7 +78,7 @@ describe('application generator', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await applicationGenerator(tree, {
-        name: appName,
+        directory: appDirectory,
       });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
@@ -89,7 +88,7 @@ describe('application generator', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await applicationGenerator(tree, {
-        name: appName,
+        directory: appDirectory,
         skipFormat: true,
       });
 
@@ -100,7 +99,7 @@ describe('application generator', () => {
   describe('--e2e-test-runner none', () => {
     it('should not generate e2e test project', async () => {
       await applicationGenerator(tree, {
-        name: appName,
+        directory: appDirectory,
         e2eTestRunner: 'none',
       });
 
