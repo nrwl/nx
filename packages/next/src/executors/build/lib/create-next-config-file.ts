@@ -80,7 +80,7 @@ export function createNextConfigFile(
     );
 
     if (!existsSync(moduleFileDir)) {
-      mkdirSync(moduleFileDir);
+      mkdirSync(moduleFileDir, { recursive: true });
     }
 
     // We already generate a build version of package.json in the dist folder.
