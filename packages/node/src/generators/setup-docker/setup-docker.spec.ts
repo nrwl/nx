@@ -15,7 +15,7 @@ describe('setupDockerGenerator', () => {
       const projectName = 'integreated-api';
 
       await applicationGenerator(tree, {
-        name: projectName,
+        directory: projectName,
         framework: 'express',
         e2eTestRunner: 'none',
         docker: true,
@@ -44,8 +44,8 @@ describe('setupDockerGenerator', () => {
 
       await applicationGenerator(tree, {
         name: projectName,
+        directory: '.',
         framework: 'fastify',
-        rootProject: true,
         docker: true,
         addPlugin: true,
       });

@@ -184,9 +184,10 @@ async function normalizeOptions(
 ): Promise<
   Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
 > {
+  options.directory = options.directory ?? `${options.project}-e2e`;
   const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
     await determineProjectNameAndRootOptions(tree, {
-      name: options.name ?? `${options.project}-e2e`,
+      name: options.name,
       projectType: 'library',
       directory: options.rootProject ? 'e2e' : options.directory,
     });

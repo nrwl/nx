@@ -22,7 +22,7 @@ describe('node app generator (legacy)', () => {
 
   it('should not skip the build target', async () => {
     await applicationGenerator(tree, {
-      name: 'my-node-app',
+      directory: 'my-node-app',
       bundler: 'webpack',
       addPlugin: false,
     });

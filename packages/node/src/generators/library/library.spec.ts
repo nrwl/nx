@@ -12,7 +12,7 @@ import { Schema } from './schema.d';
 import { libraryGenerator } from './library';
 
 const baseLibraryConfig = {
-  name: 'my-lib',
+  directory: 'my-lib',
   compiler: 'tsc' as const,
   addPlugin: true,
 };
@@ -377,7 +377,7 @@ describe('lib', () => {
     it('should update package.json', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
-        name: 'mylib',
+        directory: 'mylib',
         publishable: true,
         importPath: '@proj/mylib',
       });
@@ -408,7 +408,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
-        name: 'my-lib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -416,7 +416,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(tree, {
           ...baseLibraryConfig,
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -433,7 +433,7 @@ describe('lib', () => {
   describe(`--babelJest`, () => {
     it('should use babel for jest', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         babelJest: true,
       } as Schema);
 
@@ -456,7 +456,7 @@ describe('lib', () => {
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         js: true,
       } as Schema);
 
@@ -483,7 +483,7 @@ describe('lib', () => {
     });
 
     it('should update root tsconfig.json with a js file path', async () => {
-      await libraryGenerator(tree, { name: 'my-lib', js: true } as Schema);
+      await libraryGenerator(tree, { directory: 'my-lib', js: true } as Schema);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'my-lib/src/index.js',
@@ -492,7 +492,7 @@ describe('lib', () => {
 
     it('should update architect builder when --buildable', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         buildable: true,
         js: true,
       } as Schema);

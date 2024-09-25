@@ -13,7 +13,7 @@ describe('e2eProjectGenerator', () => {
 
   it('should generate default spec for server app (integrated)', async () => {
     await applicationGenerator(tree, {
-      name: 'api',
+      directory: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
       addPlugin: true,
@@ -29,7 +29,7 @@ describe('e2eProjectGenerator', () => {
 
   it('should generate default spec for server app (standalone)', async () => {
     await applicationGenerator(tree, {
-      name: 'api',
+      directory: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
       rootProject: true,
@@ -47,7 +47,7 @@ describe('e2eProjectGenerator', () => {
 
   it('should generate cli project', async () => {
     await applicationGenerator(tree, {
-      name: 'api',
+      directory: 'api',
       framework: 'none',
       e2eTestRunner: 'none',
       addPlugin: true,

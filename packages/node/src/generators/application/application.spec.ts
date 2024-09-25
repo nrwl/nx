@@ -26,7 +26,7 @@ describe('app', () => {
   describe('not nested', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         bundler: 'webpack',
         addPlugin: true,
       });
@@ -93,7 +93,7 @@ describe('app', () => {
 
     it('should update tags', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         tags: 'one,two',
         addPlugin: true,
       });
@@ -107,7 +107,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         addPlugin: true,
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
@@ -183,7 +183,7 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         addPlugin: true,
       });
 
@@ -195,7 +195,6 @@ describe('app', () => {
   describe('nested', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
         directory: 'my-dir/my-node-app',
         addPlugin: true,
       });
@@ -344,7 +343,7 @@ describe('app', () => {
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         unitTestRunner: 'none',
         addPlugin: true,
       });
@@ -359,11 +358,11 @@ describe('app', () => {
   describe('--frontendProject', () => {
     it('should configure proxy', async () => {
       await angularApplicationGenerator(tree, {
-        name: 'my-frontend',
+        directory: 'my-frontend',
       });
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         frontendProject: 'my-frontend',
         addPlugin: true,
       });
@@ -376,17 +375,17 @@ describe('app', () => {
 
     it('should configure proxies for multiple node projects with the same frontend app', async () => {
       await angularApplicationGenerator(tree, {
-        name: 'my-frontend',
+        directory: 'my-frontend',
       });
 
       await applicationGenerator(tree, {
-        name: 'cart',
+        directory: 'cart',
         frontendProject: 'my-frontend',
         addPlugin: true,
       });
 
       await applicationGenerator(tree, {
-        name: 'billing',
+        directory: 'billing',
         frontendProject: 'my-frontend',
         addPlugin: true,
       });
@@ -403,7 +402,7 @@ describe('app', () => {
   describe('--swcJest', () => {
     it('should use @swc/jest for jest', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         tags: 'one,two',
         swcJest: true,
         addPlugin: true,
@@ -429,7 +428,7 @@ describe('app', () => {
   describe('--babelJest (deprecated)', () => {
     it('should use babel for jest', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         tags: 'one,two',
         babelJest: true,
         addPlugin: true,
@@ -455,7 +454,7 @@ describe('app', () => {
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         js: true,
         addPlugin: true,
       } as Schema);
@@ -482,7 +481,7 @@ describe('app', () => {
 
     it('should add project config', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         js: true,
         addPlugin: true,
       } as Schema);
@@ -509,7 +508,7 @@ describe('app', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         addPlugin: true,
       });
 
@@ -520,7 +519,7 @@ describe('app', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         skipFormat: true,
         addPlugin: true,
       });
@@ -537,7 +536,7 @@ describe('app', () => {
   ])('--unitTestRunner', (framework, checkSpecFile) => {
     it('should generate test target and spec file by default', async () => {
       await applicationGenerator(tree, {
-        name: 'api',
+        directory: 'api',
         framework,
         addPlugin: true,
       });
