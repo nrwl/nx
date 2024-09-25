@@ -10,17 +10,18 @@ import { convertToSwcGenerator } from './convert-to-swc';
 describe('convert to swc', () => {
   let tree: Tree;
 
-  const defaultLibGenerationOptions: Omit<LibraryGeneratorSchema, 'name'> = {
-    skipTsConfig: false,
-    unitTestRunner: 'jest',
-    skipFormat: false,
-    linter: 'eslint',
-    testEnvironment: 'jsdom',
-    js: false,
-    strict: true,
-    config: 'project',
-    bundler: 'tsc',
-  };
+  const defaultLibGenerationOptions: Omit<LibraryGeneratorSchema, 'directory'> =
+    {
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      skipFormat: false,
+      linter: 'eslint',
+      testEnvironment: 'jsdom',
+      js: false,
+      strict: true,
+      config: 'project',
+      bundler: 'tsc',
+    };
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -31,7 +32,7 @@ describe('convert to swc', () => {
   it('should convert tsc to swc', async () => {
     await jsLibraryGenerator(tree, {
       ...defaultLibGenerationOptions,
-      name: 'tsc-lib',
+      directory: 'tsc-lib',
       bundler: 'tsc',
     });
 
