@@ -88,7 +88,7 @@ export async function createTestApp(
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
+    directory: appName,
     js: plainJS,
   });
 
