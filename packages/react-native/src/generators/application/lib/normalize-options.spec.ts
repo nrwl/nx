@@ -13,7 +13,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
-      name: 'my-app',
+      directory: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
@@ -27,6 +27,7 @@ describe('Normalize Options', () => {
       appProjectRoot: 'my-app',
       fileName: 'my-app',
       className: 'MyApp',
+      directory: 'my-app',
       displayName: 'MyApp',
       iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',
@@ -47,7 +48,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
-      name: 'myApp',
+      directory: 'myApp',
       e2eTestRunner: 'none',
       install: false,
       linter: Linter.None,
@@ -61,6 +62,7 @@ describe('Normalize Options', () => {
       appProjectRoot: 'myApp',
       className: 'MyApp',
       fileName: 'my-app',
+      directory: 'myApp',
       displayName: 'MyApp',
       iosProjectRoot: 'myApp/ios',
       lowerCaseName: 'myapp',
@@ -96,11 +98,11 @@ describe('Normalize Options', () => {
       appProjectRoot: 'directory/my-app',
       className: 'MyApp',
       fileName: 'my-app',
+      directory: 'directory/my-app',
       displayName: 'MyApp',
       iosProjectRoot: 'directory/my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
-      directory: 'directory/my-app',
       parsedTags: [],
       projectName: 'my-app',
       entryFile: 'src/main.tsx',
@@ -117,7 +119,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
-      name: 'directory/my-app',
+      directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
       linter: Linter.None,
@@ -129,11 +131,12 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
-      className: 'DirectoryMyApp',
-      fileName: 'directory/my-app',
-      displayName: 'DirectoryMyApp',
+      className: 'MyApp',
+      directory: 'directory/my-app',
+      fileName: 'my-app',
+      displayName: 'MyApp',
       iosProjectRoot: 'directory/my-app/ios',
-      lowerCaseName: 'directorymyapp',
+      lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
@@ -151,7 +154,7 @@ describe('Normalize Options', () => {
 
   it('should normalize options with display name', async () => {
     const schema: Schema = {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'My App',
       e2eTestRunner: 'none',
       install: false,
@@ -166,6 +169,7 @@ describe('Normalize Options', () => {
       appProjectRoot: 'my-app',
       className: 'MyApp',
       fileName: 'my-app',
+      directory: 'my-app',
       displayName: 'My App',
       iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',

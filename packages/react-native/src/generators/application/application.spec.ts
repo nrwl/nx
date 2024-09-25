@@ -20,7 +20,7 @@ describe('app', () => {
 
   it('should update configuration', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -35,7 +35,7 @@ describe('app', () => {
 
   it('should update nx.json', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
       linter: Linter.EsLint,
@@ -53,7 +53,7 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -98,7 +98,7 @@ describe('app', () => {
 
   it('should generate targets', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -114,7 +114,7 @@ describe('app', () => {
     appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
@@ -182,7 +182,7 @@ describe('app', () => {
 
     it('should create e2e app without directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
@@ -236,7 +236,7 @@ describe('app', () => {
       const packageJsonBefore = readJson(appTree, 'package.json');
 
       await reactNativeApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         displayName: 'myApp',
         linter: Linter.EsLint,
         e2eTestRunner: 'none',
