@@ -1,10 +1,31 @@
 'use client';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import { ReactElement, useState, Fragment } from 'react';
+import { ReactElement, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+
+const MOBILE_BREAKPOINT = 768;
+const YOUTUBE_URL = 'https://youtu.be/KZ0nh2lj8zE?si=D1hkyP3vy36e-VZt';
 
 export function Hero(): ReactElement {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    const checkMobile = () =>
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isMobile) {
+      window.open(YOUTUBE_URL, '_blank');
+    } else {
+      setIsOpen(true);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -26,11 +47,8 @@ export function Hero(): ReactElement {
             Get Powerpack
           </ButtonLink>
           <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsOpen(true);
-            }}
+            href={YOUTUBE_URL}
+            onClick={handleVideoClick}
             className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
           >
             Watch the video{' '}
@@ -44,52 +62,31 @@ export function Hero(): ReactElement {
         </div>
       </div>
 
-      {/* Video Modal */}
-      <Transition appear show={isOpen} as={Fragment}>
+      {!isMobile && (
         <Dialog
           as="div"
           open={isOpen}
           onClose={() => setIsOpen(false)}
           className="relative z-10"
         >
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
-          </Transition.Child>
+          <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
-                  <iframe
-                    width="812"
-                    height="456"
-                    src="https://www.youtube.com/embed/KZ0nh2lj8zE?si=D1hkyP3vy36e-VZt"
-                    title="Introducing Nx Powerpack"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="max-w-full"
-                  />
-                </Dialog.Panel>
-              </Transition.Child>
+              <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
+                <iframe
+                  width="812"
+                  height="456"
+                  src="https://www.youtube.com/embed/KZ0nh2lj8zE?si=D1hkyP3vy36e-VZt"
+                  title="Introducing Nx Powerpack"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="max-w-full"
+                />
+              </Dialog.Panel>
             </div>
           </div>
         </Dialog>
-      </Transition>
+      )}
     </div>
   );
 }
