@@ -206,7 +206,7 @@ async function normalizeOptions(
     ...options,
     ...extraNames,
     fileName,
-    constantName: names(options.name).constantName.toUpperCase(),
+    constantName: names(name).constantName.toUpperCase(),
     projectDirectory: directory,
     projectType,
     projectSourcePath: sourceRoot,

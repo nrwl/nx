@@ -43,13 +43,13 @@ describe('React Cypress Component Tests', () => {
     }));
 
     runCLI(
-      `generate @nx/react:component fancy-cmp --directory=apps/${appName}/src/app/fancy-cmp --no-interactive`
+      `generate @nx/react:component apps/${appName}/src/app/fancy-cmp/fancy-cmp --no-interactive`
     );
     runCLI(
       `generate @nx/react:lib ${usedInAppLibName} --directory=libs/${usedInAppLibName} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component btn --directory=libs/${usedInAppLibName}/src/lib/btn --export --no-interactive`
+      `generate @nx/react:component libs/${usedInAppLibName}/src/lib/btn/btn --export --no-interactive`
     );
     // makes sure custom webpack is loading
     createFile(

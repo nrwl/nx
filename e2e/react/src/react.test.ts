@@ -113,7 +113,7 @@ describe('React Applications', () => {
         `generate @nx/react:lib ${libName} --directory=libs${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`
       );
       runCLI(
-        `generate @nx/react:lib ${libWithNoComponents} --directory=libs${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat`
+        `generate @nx/react:lib ${libWithNoComponents} --directory=libs/${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat`
       );
 
       // Libs should not include package.json by default
@@ -219,13 +219,13 @@ describe('React Applications', () => {
         `g @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --no-interactive --skipFormat`
       );
       runCLI(
-        `g @nx/react:redux lemon --directory=apps/${appName}/src/app/lemon --skipFormat`
+        `g @nx/react:redux apps/${appName}/src/app/lemon/lemon --skipFormat`
       );
       runCLI(
         `g @nx/react:lib ${libName} --directory=libs/${libName} --unit-test-runner=jest --no-interactive --skipFormat`
       );
       runCLI(
-        `g @nx/react:redux orange --directory=libs/${libName}/src/lib/orange --skipFormat`
+        `g @nx/react:redux libs/${libName}/src/lib/orange/orange --skipFormat`
       );
 
       let lintResults = runCLI(`lint ${appName}`);
