@@ -21,6 +21,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [cli](../../devkit/documents/Workspace#cli): Object
 - [defaultBase](../../devkit/documents/Workspace#defaultbase): string
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
+- [enableDbCache](../../devkit/documents/Workspace#enabledbcache): boolean
 - [extends](../../devkit/documents/Workspace#extends): string
 - [generators](../../devkit/documents/Workspace#generators): Object
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
@@ -115,6 +116,18 @@ will be used. Convenient for small workspaces with one main application.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject)
+
+---
+
+### enableDbCache
+
+• `Optional` **enableDbCache**: `boolean`
+
+Enable the new experimental db based cache
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[enableDbCache](../../devkit/documents/NxJsonConfiguration#enabledbcache)
 
 ---
 

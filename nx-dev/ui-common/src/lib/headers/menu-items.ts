@@ -15,6 +15,7 @@ import {
   GlobeAltIcon,
   MicrophoneIcon,
   VideoCameraIcon,
+  CheckBadgeIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -86,6 +87,22 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
+    name: 'Run Conformance Rules',
+    description: null,
+    href: '/features/powerpack/conformance',
+    icon: CheckBadgeIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Define Project Owners',
+    description: null,
+    href: '/features/powerpack/owners',
+    icon: UserGroupIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
     name: 'Use Remote Caching (Nx Replay)',
     description: 'Zero-config, fast & secure remote cache solution.',
     href: '/ci/features/remote-cache',
@@ -103,12 +120,21 @@ export const featuresItems: MenuItem[] = [
     isHighlight: true,
   },
 ];
-export const plans: MenuItem[] = [
+export const solutions: MenuItem[] = [
   {
     name: 'Nx Cloud',
     description:
       'End-to-end solution for smart, efficient and maintainable CI.',
     href: '/nx-cloud',
+    icon: null,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Nx Powerpack',
+    description:
+      'A suite of paid extensions for the Nx CLI specifically designed for enterprises.',
+    href: '/powerpack',
     icon: null,
     isNew: false,
     isHighlight: false,
@@ -261,7 +287,7 @@ export const companyItems: MenuItem[] = [
   },
 ];
 export const solutionsMenuItems = {
-  'Helping you grow': plans,
+  'Helping you grow': solutions,
   // 'Use cases': useCaseItems
 };
 export const resourceMenuItems = {

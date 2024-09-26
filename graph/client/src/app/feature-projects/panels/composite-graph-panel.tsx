@@ -8,7 +8,7 @@ export interface CompositeGraphPanelProps {
 export const CompositeGraphPanel = memo(
   ({ compositeEnabled, compositeEnabledChanged }: CompositeGraphPanelProps) => {
     return (
-      <div className="px-4">
+      <div className="mt-4 px-4">
         <div className="flex items-start">
           <div className="flex h-5 items-center">
             <input
@@ -16,7 +16,7 @@ export const CompositeGraphPanel = memo(
               name="composite"
               value="composite"
               type="checkbox"
-              className="h-4 w-4 accent-purple-500"
+              className="h-4 w-4 accent-blue-500 dark:accent-sky-500"
               onChange={(event) =>
                 compositeEnabledChanged(event.target.checked)
               }

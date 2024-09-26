@@ -20,6 +20,7 @@ export function runNxSync(
   } else {
     options ??= {};
     options.cwd ??= process.cwd();
+    options.windowsHide ??= true;
     const offsetFromRoot = relative(
       options.cwd,
       workspaceRootInner(options.cwd, null)
@@ -36,13 +37,14 @@ export function runNxSync(
 export async function runNxAsync(
   cmd: string,
   options?: ExecOptions & { cwd?: string; silent?: boolean }
-) {
+): Promise<void> {
   let baseCmd: string;
   if (existsSync(join(workspaceRoot, 'package.json'))) {
     baseCmd = `${getPackageManagerCommand().exec} nx`;
   } else {
     options ??= {};
     options.cwd ??= process.cwd();
+    options.windowsHide ??= true;
     const offsetFromRoot = relative(
       options.cwd,
       workspaceRootInner(options.cwd, null)
@@ -57,15 +59,15 @@ export async function runNxAsync(
   if (options?.silent) {
     delete options.silent;
   }
-  await new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const child = exec(
       `${baseCmd} ${cmd}`,
       options,
       (error, stdout, stderr) => {
         if (error) {
-          reject(error);
+          reject(stderr || stdout || error.message);
         } else {
-          resolve(stdout);
+          resolve();
         }
       }
     );

@@ -54,12 +54,6 @@
       "description": "Create stories/specs for all components declared in an app or library.",
       "hidden": false
     },
-    "component-cypress-spec": {
-      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator",
-      "schema": "./src/generators/component-cypress-spec/schema.json",
-      "description": "Create a Cypress spec for a UI component that has a story.",
-      "hidden": false
-    },
     "hook": {
       "factory": "./src/generators/hook/hook",
       "schema": "./src/generators/hook/schema.json",

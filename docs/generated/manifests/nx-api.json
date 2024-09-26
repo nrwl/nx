@@ -181,15 +181,6 @@
         "path": "/nx-api/angular/generators/component",
         "type": "generator"
       },
-      "/nx-api/angular/generators/component-cypress-spec": {
-        "description": "Creates a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/angular/generators/component-cypress-spec.json",
-        "hidden": true,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/angular/src/generators/component-cypress-spec/schema.json",
-        "path": "/nx-api/angular/generators/component-cypress-spec",
-        "type": "generator"
-      },
       "/nx-api/angular/generators/component-story": {
         "description": "Creates a stories.ts file for a component.",
         "file": "generated/packages/angular/generators/component-story.json",
@@ -1291,6 +1282,15 @@
         "originalFilePath": "/packages/js/src/generators/typescript-sync/schema.json",
         "path": "/nx-api/js/generators/typescript-sync",
         "type": "generator"
+      },
+      "/nx-api/js/generators/setup-prettier": {
+        "description": "Setup Prettier as the formatting tool.",
+        "file": "generated/packages/js/generators/setup-prettier.json",
+        "hidden": false,
+        "name": "setup-prettier",
+        "originalFilePath": "/packages/js/src/generators/setup-prettier/schema.json",
+        "path": "/nx-api/js/generators/setup-prettier",
+        "type": "generator"
       }
     },
     "path": "/nx-api/js"
@@ -2347,15 +2347,6 @@
         "name": "stories",
         "originalFilePath": "/packages/react/src/generators/stories/schema.json",
         "path": "/nx-api/react/generators/stories",
-        "type": "generator"
-      },
-      "/nx-api/react/generators/component-cypress-spec": {
-        "description": "Create a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/react/generators/component-cypress-spec.json",
-        "hidden": false,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/react/src/generators/component-cypress-spec/schema.json",
-        "path": "/nx-api/react/generators/component-cypress-spec",
         "type": "generator"
       },
       "/nx-api/react/generators/hook": {
@@ -3499,5 +3490,152 @@
       }
     },
     "path": "/nx-api/workspace"
+  },
+  "powerpack-conformance": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-conformance",
+    "packageName": "@nx/powerpack-conformance",
+    "description": "Not intended for external use",
+    "documents": {
+      "/nx-api/powerpack-conformance/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "Not intended for external use",
+        "file": "external-generated/packages/powerpack-conformance/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-conformance/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-conformance",
+    "source": "/libs/nx-packages/powerpack-conformance/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-conformance"
+  },
+  "powerpack-license": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-license",
+    "packageName": "@nx/powerpack-license",
+    "description": "Not intended for external use",
+    "documents": {},
+    "root": "/libs/nx-packages/powerpack-license",
+    "source": "/libs/nx-packages/powerpack-license/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-license"
+  },
+  "powerpack-owners": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-owners",
+    "packageName": "@nx/powerpack-owners",
+    "description": "Not intended for external use",
+    "documents": {
+      "/nx-api/powerpack-owners/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "Not intended for external use",
+        "file": "external-generated/packages/powerpack-owners/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-owners/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-owners",
+    "source": "/libs/nx-packages/powerpack-owners/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/powerpack-owners/generators/init": {
+        "description": "Initialize Nx Powerpack Owners config",
+        "file": "external-generated/packages/powerpack-owners/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-owners/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/powerpack-owners/generators/sync-codeowners-file": {
+        "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
+        "file": "external-generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
+        "hidden": false,
+        "name": "sync-codeowners-file",
+        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/schema.json",
+        "path": "/nx-api/powerpack-owners/generators/sync-codeowners-file",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/powerpack-owners"
+  },
+  "powerpack-s3-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-s3-cache",
+    "packageName": "@nx/powerpack-s3-cache",
+    "description": "Not intended for external use",
+    "documents": {
+      "/nx-api/powerpack-s3-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "Not intended for external use",
+        "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-s3-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-s3-cache",
+    "source": "/libs/nx-packages/powerpack-s3-cache/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/powerpack-s3-cache/generators/init": {
+        "description": "Initialize the S3 Cache",
+        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-s3-cache/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/powerpack-s3-cache"
+  },
+  "powerpack-shared-fs-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-shared-fs-cache",
+    "packageName": "@nx/powerpack-shared-fs-cache",
+    "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+    "documents": {
+      "/nx-api/powerpack-shared-fs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-shared-fs-cache",
+    "source": "/libs/nx-packages/powerpack-shared-fs-cache/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/powerpack-shared-fs-cache/generators/init": {
+        "description": "Add the shared fs cache",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-shared-fs-cache/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/powerpack-shared-fs-cache"
   }
 }

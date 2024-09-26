@@ -1,9 +1,13 @@
+import {
+  addDependenciesToPackageJson,
+  stripIndents,
+  updateJson,
+  writeJson,
+  type GeneratorCallback,
+  type Tree,
+} from '@nx/devkit';
 import type { Options } from 'prettier';
-
-let prettier: typeof import('prettier');
-try {
-  prettier = require('prettier');
-} catch {}
+import { prettierVersion } from './versions';
 
 export interface ExistingPrettierConfig {
   sourceFilepath: string;
@@ -11,9 +15,13 @@ export interface ExistingPrettierConfig {
 }
 
 export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierConfig | null> {
-  if (!prettier) {
+  let prettier: typeof import('prettier');
+  try {
+    prettier = require('prettier');
+  } catch {
     return null;
   }
+
   try {
     const filepath = await prettier.resolveConfigFile();
     if (!filepath) {
@@ -35,4 +43,56 @@ export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrett
   } catch {
     return null;
   }
+}
+
+export function generatePrettierSetup(
+  tree: Tree,
+  options: { skipPackageJson?: boolean }
+): GeneratorCallback {
+  // https://prettier.io/docs/en/configuration.html
+  const prettierrcNameOptions = [
+    '.prettierrc',
+    '.prettierrc.json',
+    '.prettierrc.yml',
+    '.prettierrc.yaml',
+    '.prettierrc.json5',
+    '.prettierrc.js',
+    '.prettierrc.cjs',
+    '.prettierrc.mjs',
+    '.prettierrc.toml',
+    'prettier.config.js',
+    'prettier.config.cjs',
+    'prettier.config.mjs',
+  ];
+
+  if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
+    writeJson(tree, '.prettierrc', { singleQuote: true });
+  }
+
+  if (!tree.exists('.prettierignore')) {
+    tree.write(
+      '.prettierignore',
+      stripIndents`# Add files here to ignore them from prettier formatting
+        /dist
+        /coverage
+        /.nx/cache
+        /.nx/workspace-data
+      `
+    );
+  }
+
+  if (tree.exists('.vscode/extensions.json')) {
+    updateJson(tree, '.vscode/extensions.json', (json) => {
+      json.recommendations ??= [];
+      const extension = 'esbenp.prettier-vscode';
+      if (!json.recommendations.includes(extension)) {
+        json.recommendations.push(extension);
+      }
+      return json;
+    });
+  }
+
+  return options.skipPackageJson
+    ? () => {}
+    : addDependenciesToPackageJson(tree, {}, { prettier: prettierVersion });
 }
