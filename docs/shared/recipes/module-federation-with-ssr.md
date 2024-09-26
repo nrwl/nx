@@ -61,7 +61,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="Angular" %}
 
-```{% command="npx nx g @nx/angular:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nx/angular:host apps/store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 
@@ -69,7 +69,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="React" %}
 
-```{% command="npx nx g @nx/react:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nx/react:host apps/store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 

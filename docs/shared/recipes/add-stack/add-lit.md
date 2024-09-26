@@ -68,7 +68,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 We'll start with a node application and then tweak the settings to match what we need. Add a new node application to your workspace with the following command:
 
 ```shell
-nx g @nx/node:app my-lit-app --directory=apps/my-lit-app
+nx g @nx/node:app apps/my-lit-app
 ```
 
 Choose `none` for the node framework, since we won't be using this as a node app.
@@ -192,7 +192,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 Let's create a library that our Lit application is going to consume. To create a new library, install the `@nx/js` package and run:
 
 ```shell
-nx g @nx/js:lib my-lib --directory=libs/my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.
