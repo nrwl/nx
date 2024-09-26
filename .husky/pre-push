@@ -1,4 +1,4 @@
-pnpm check-lock-files &&
-    pnpm check-commit &&
-    pnpm documentation &&
-    pretty-quick --check
+pnpm check-lock-files
+pnpm check-commit
+pnpm documentation
+pretty-quick --check
