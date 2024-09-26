@@ -14,21 +14,21 @@ export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 
 
 let watcherInstance: Watcher | undefined;
 
-export function storeWatcherInstance(instance: Watcher) {
+export function storeWatcherInstance(instance: Watcher | null) {
   watcherInstance = instance;
 }
 
-export function getWatcherInstance() {
+export function getWatcherInstance(): Watcher | undefined {
   return watcherInstance;
 }
 
 let outputWatcherInstance: Watcher | undefined;
 
-export function storeOutputWatcherInstance(instance: Watcher) {
+export function storeOutputWatcherInstance(instance: Watcher | null) {
   outputWatcherInstance = instance;
 }
 
-export function getOutputWatcherInstance() {
+export function getOutputWatcherInstance(): Watcher | undefined {
   return outputWatcherInstance;
 }
 
