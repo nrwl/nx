@@ -26,6 +26,7 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
     'pnpm-lock.yaml',
     'pnpm-lock.yml',
     'bun.lockb',
+    'bun.lock',
   ];
 
   if (fileChanges.some((f) => lockFiles.includes(f.file))) {

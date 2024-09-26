@@ -383,6 +383,7 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
     join(workspaceRoot, 'bun.lockb'),
+    join(workspaceRoot, 'bun.lock'),
   ]
     .filter((file) => existsSync(file))
     .map((file) => hashFile(file));

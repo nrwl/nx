@@ -119,11 +119,12 @@ async function createNodesInternal(
     return {};
   }
 
+  const pm = detectPackageManager(context.workspaceRoot);
   const hash = await calculateHashForCreateNodes(
     angularWorkspaceRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    getLockFileName(pm).filter((lock) => siblingFiles.includes(lock))
   );
 
   projectsCache[hash] ??= await buildAngularProjects(

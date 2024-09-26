@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  checkOneOfFilesExist,
   cleanupProject,
   e2eCwd,
   expectCodeIsFormatted,
@@ -110,7 +111,8 @@ describe('create-nx-workspace', () => {
       packageManager,
     });
 
-    checkFilesExist('package.json', packageManagerLockFile[packageManager]);
+    checkFilesExist('package.json');
+    checkOneOfFilesExist(``, ...packageManagerLockFile[packageManager]);
 
     expectNoAngularDevkit();
   });
@@ -402,11 +404,11 @@ describe('create-nx-workspace', () => {
     if (packageManager === 'npm') {
       it('should use npm when invoked with npx', () => {
         setupProject('npm');
-        checkFilesExist(packageManagerLockFile['npm']);
+        checkOneOfFilesExist(``, ...packageManagerLockFile['npm']);
         checkFilesDoNotExist(
-          packageManagerLockFile['yarn'],
-          packageManagerLockFile['pnpm'],
-          packageManagerLockFile['bun']
+          ...packageManagerLockFile['yarn'],
+          ...packageManagerLockFile['pnpm'],
+          ...packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -415,11 +417,11 @@ describe('create-nx-workspace', () => {
     if (packageManager === 'pnpm') {
       it('should use pnpm when invoked with pnpx', () => {
         setupProject('pnpm');
-        checkFilesExist(packageManagerLockFile['pnpm']);
+        checkOneOfFilesExist(``, ...packageManagerLockFile['pnpm']);
         checkFilesDoNotExist(
-          packageManagerLockFile['yarn'],
-          packageManagerLockFile['npm'],
-          packageManagerLockFile['bun']
+          ...packageManagerLockFile['yarn'],
+          ...packageManagerLockFile['npm'],
+          ...packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -428,11 +430,11 @@ describe('create-nx-workspace', () => {
     if (packageManager === 'bun') {
       it('should use bun when invoked with bunx', () => {
         setupProject('bun');
-        checkFilesExist(packageManagerLockFile['bun']);
+        checkOneOfFilesExist(``, ...packageManagerLockFile['bun']);
         checkFilesDoNotExist(
-          packageManagerLockFile['yarn'],
-          packageManagerLockFile['npm'],
-          packageManagerLockFile['pnpm']
+          ...packageManagerLockFile['yarn'],
+          ...packageManagerLockFile['npm'],
+          ...packageManagerLockFile['pnpm']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -442,11 +444,11 @@ describe('create-nx-workspace', () => {
     if (packageManager === 'yarn') {
       xit('should use yarn when invoked with yarn create', () => {
         setupProject('yarn');
-        checkFilesExist(packageManagerLockFile['yarn']);
+        checkOneOfFilesExist(``, ...packageManagerLockFile['yarn']);
         checkFilesDoNotExist(
-          packageManagerLockFile['pnpm'],
-          packageManagerLockFile['npm'],
-          packageManagerLockFile['bun']
+          ...packageManagerLockFile['pnpm'],
+          ...packageManagerLockFile['npm'],
+          ...packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);

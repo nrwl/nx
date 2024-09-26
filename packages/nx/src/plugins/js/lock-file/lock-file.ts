@@ -45,18 +45,21 @@ import {
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
 const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
-const BUN_LOCK_FILE = 'bun.lockb';
+const BUN_LOCK_FILE = ['bun.lockb', 'bun.lock'];
 export const LOCKFILES = [
   YARN_LOCK_FILE,
   NPM_LOCK_FILE,
   PNPM_LOCK_FILE,
-  BUN_LOCK_FILE,
+  ...BUN_LOCK_FILE,
 ];
 
 const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
 const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
 const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
-const BUN_LOCK_PATH = join(workspaceRoot, BUN_LOCK_FILE);
+const BUN_LOCK_PATH = [
+  join(workspaceRoot, BUN_LOCK_FILE[0]),
+  join(workspaceRoot, BUN_LOCK_FILE[1]),
+];
 
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
@@ -143,7 +146,7 @@ export function lockFileExists(packageManager: PackageManager): boolean {
     return existsSync(NPM_LOCK_PATH);
   }
   if (packageManager === 'bun') {
-    return existsSync(BUN_LOCK_PATH);
+    return existsSync(BUN_LOCK_PATH[0]) || existsSync(BUN_LOCK_PATH[1]);
   }
   throw new Error(
     `Unknown package manager ${packageManager} or lock file missing`
@@ -155,15 +158,15 @@ export function lockFileExists(packageManager: PackageManager): boolean {
  * @param packageManager
  * @returns
  */
-export function getLockFileName(packageManager: PackageManager): string {
+export function getLockFileName(packageManager: PackageManager): string[] {
   if (packageManager === 'yarn') {
-    return YARN_LOCK_FILE;
+    return [YARN_LOCK_FILE];
   }
   if (packageManager === 'pnpm') {
-    return PNPM_LOCK_FILE;
+    return [PNPM_LOCK_FILE];
   }
   if (packageManager === 'npm') {
-    return NPM_LOCK_FILE;
+    return [NPM_LOCK_FILE];
   }
   if (packageManager === 'bun') {
     return BUN_LOCK_FILE;
@@ -171,15 +174,15 @@ export function getLockFileName(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
-function getLockFilePath(packageManager: PackageManager): string {
+function getLockFilePath(packageManager: PackageManager): string[] {
   if (packageManager === 'yarn') {
-    return YARN_LOCK_PATH;
+    return [YARN_LOCK_PATH];
   }
   if (packageManager === 'pnpm') {
-    return PNPM_LOCK_PATH;
+    return [PNPM_LOCK_PATH];
   }
   if (packageManager === 'npm') {
-    return NPM_LOCK_PATH;
+    return [NPM_LOCK_PATH];
   }
   if (packageManager === 'bun') {
     return BUN_LOCK_PATH;
@@ -201,26 +204,35 @@ export function createLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
-  const content = readFileSync(getLockFilePath(packageManager), 'utf8');
+  let content: string;
 
   try {
     if (packageManager === 'yarn') {
+      content = readFileSync(getLockFilePath(packageManager)[0], 'utf8');
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
+      content = readFileSync(getLockFilePath(packageManager)[0], 'utf8');
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'npm') {
+      content = readFileSync(getLockFilePath(packageManager)[0], 'utf8');
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'bun') {
-      output.log({
-        title:
-          "Unable to create bun lock files. Run bun install it's just as quick",
-      });
+      if (existsSync(getLockFilePath(packageManager)[0])) {
+        content = getLockFilePath(packageManager)[0];
+        output.log({
+          title: 'Unable to create bun.lockb, Moving to bun.lock',
+        });
+      }
+      // bun uses yarn format so we can just use the yarn lock file here.
+      content = getLockFilePath(packageManager)[1];
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {

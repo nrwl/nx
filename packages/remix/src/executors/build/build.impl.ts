@@ -89,13 +89,14 @@ export default async function buildExecutor(
       context.projectGraph,
       packageManager
     );
-    writeFileSync(
-      `${options.outputPath}/${getLockFileName(packageManager)}`,
-      lockFile,
-      {
-        encoding: 'utf-8',
-      }
-    );
+    // we force uses to bun.lock files
+    const lockFileName =
+      packageManager === 'bun'
+        ? getLockFileName(packageManager)[1]
+        : getLockFileName(packageManager)[0];
+    writeFileSync(`${options.outputPath}/${lockFileName}`, lockFile, {
+      encoding: 'utf-8',
+    });
   }
 
   // If output path is different from source path, then copy over the config and public files.

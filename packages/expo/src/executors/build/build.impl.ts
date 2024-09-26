@@ -129,7 +129,14 @@ function copyPackageJsonAndLock(
   const packageJsonProject = pathResolve(projectRoot, 'package.json');
   const projectPackageJson = readJsonFile<PackageJson>(packageJsonProject);
 
-  const lockFile = getLockFileName(detectPackageManager(workspaceRoot));
+  const pm = detectPackageManager(workspaceRoot);
+  const lockFiles = getLockFileName(detectPackageManager(workspaceRoot));
+  const lockFile =
+    pm === 'bun'
+      ? existsSync(pathResolve(workspaceRoot, lockFiles[0]))
+        ? lockFiles[0]
+        : lockFiles[1]
+      : lockFiles[0];
   const lockFileProject = pathResolve(projectRoot, lockFile);
 
   const rootPackageJsonDependencies = rootPackageJson.dependencies;

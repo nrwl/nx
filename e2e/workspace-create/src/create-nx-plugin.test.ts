@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  checkOneOfFilesExist,
   cleanupProject,
   getSelectedPackageManager,
   packageManagerLockFile,
@@ -23,11 +24,9 @@ describe('create-nx-plugin', () => {
       extraArgs: `--createPackageName=false`,
     });
 
-    checkFilesExist(
-      'package.json',
-      packageManagerLockFile[packageManager],
-      `project.json`
-    );
+    checkFilesExist('package.json', `project.json`);
+
+    checkOneOfFilesExist(``, ...packageManagerLockFile[packageManager]);
 
     runCLI(`build ${pluginName}`);
 

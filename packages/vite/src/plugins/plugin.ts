@@ -106,12 +106,13 @@ async function createNodesInternal(
 
   // We do not want to alter how the hash is calculated, so appending the config file path to the hash
   // to prevent vite/vitest files overwriting the target cache created by the other
+  const pm = detectPackageManager(context.workspaceRoot);
   const hash =
     (await calculateHashForCreateNodes(
       projectRoot,
-      normalizedOptions,
+      options,
       context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+      getLockFileName(pm).filter((lock) => siblingFiles.includes(lock))
     )) + configFilePath;
 
   const { isLibrary, ...viteTargets } = await buildViteTargets(

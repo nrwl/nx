@@ -3,6 +3,7 @@ import { joinPathFragments } from '@nx/devkit';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  checkOneOfFilesExist,
   cleanupProject,
   createFile,
   detectPackageManager,
@@ -437,10 +438,9 @@ describe('Build Node apps', () => {
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
-    checkFilesExist(
-      `dist/apps/${nestapp}/${getLockFileName(
-        detectPackageManager(tmpProjPath())
-      )}`
+    checkOneOfFilesExist(
+      `dist/apps/${nestapp}/`,
+      ...getLockFileName(detectPackageManager(tmpProjPath()))
     );
     const rootPackageJson = JSON.parse(readFile(`package.json`));
     const packageJson = JSON.parse(
@@ -485,9 +485,11 @@ describe('Build Node apps', () => {
       )
     ).toBeTruthy();
 
-    checkFilesExist(
-      `dist/apps/${nestapp}/${packageManagerLockFile[packageManager]}`
+    checkOneOfFilesExist(
+      `dist/apps/${nestapp}/`,
+      ...packageManagerLockFile[packageManager]
     );
+
     runCommand(`${getPackageManagerCommand().ciInstall}`, {
       cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nestapp),
     });

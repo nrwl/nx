@@ -107,10 +107,10 @@ export function getLatestLernaVersion(): string {
 }
 
 export const packageManagerLockFile = {
-  npm: 'package-lock.json',
-  yarn: 'yarn.lock',
-  pnpm: 'pnpm-lock.yaml',
-  bun: 'bun.lockb',
+  npm: ['package-lock.json'],
+  yarn: ['yarn.lock'],
+  pnpm: ['pnpm-lock.yaml'],
+  bun: ['bun.lockb', 'bun.lock'],
 };
 
 export function ensureCypressInstallation() {

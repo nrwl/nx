@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  checkOneOfFilesExist,
   cleanupProject,
   createFile,
   detectPackageManager,
@@ -45,12 +46,11 @@ describe('js:tsc executor', () => {
     );
 
     runCLI(`build ${lib} --generateLockfile=true`);
-    checkFilesExist(
-      `dist/libs/${lib}/package.json`,
-      `dist/libs/${lib}/${
-        packageManagerLockFile[detectPackageManager(tmpProjPath())]
-      }`
-    );
+
+    const pm = detectPackageManager(tmpProjPath());
+    checkFilesExist(`dist/libs/${lib}/package.json`);
+
+    checkOneOfFilesExist(`dist/libs/${lib}/`, ...packageManagerLockFile[pm]);
 
     updateJson(`libs/${lib}/project.json`, (json) => {
       json.targets.build.options.assets.push({

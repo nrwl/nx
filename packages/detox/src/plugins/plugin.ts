@@ -52,11 +52,12 @@ export const createNodes: CreateNodes<DetoxPluginOptions> = [
       return {};
     }
 
+    const pm = detectPackageManager(context.workspaceRoot);
     const hash = await calculateHashForCreateNodes(
       projectRoot,
       options,
       context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+      getLockFileName(pm).filter((lock) => siblingFiles.includes(lock))
     );
 
     targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context);

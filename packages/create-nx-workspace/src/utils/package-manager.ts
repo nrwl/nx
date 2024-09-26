@@ -14,6 +14,8 @@ export type PackageManager = (typeof packageManagerList)[number];
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
+    : existsSync(join(dir, 'bun.lock'))
+    ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))

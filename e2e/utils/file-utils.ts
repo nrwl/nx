@@ -116,6 +116,23 @@ export function getSize(filePath: string): number {
   return statSync(filePath).size;
 }
 
+export function checkOneOfFilesExist(
+  basePath: string,
+  ...fileArrays: string[]
+): void {
+  for (const fileArray of fileArrays) {
+    for (const file of fileArray) {
+      const fullPath = file.startsWith('/') ? file : path.join(basePath, file);
+      if (exists(fullPath)) {
+        return;
+      }
+    }
+  }
+  throw new Error(
+    `None of the specified files exist in any of the provided arrays`
+  );
+}
+
 export function tmpBackupProjPath(path?: string) {
   return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
 }

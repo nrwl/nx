@@ -138,14 +138,18 @@ export async function* viteBuildExecutor(
       builtPackageJson
     );
     const packageManager = detectPackageManager(context.root);
-
     const lockFile = createLockFile(
       builtPackageJson,
       context.projectGraph,
       packageManager
     );
+    // we force uses to bun.lock files
+    const lockFileName =
+      packageManager === 'bun'
+        ? getLockFileName(packageManager)[1]
+        : getLockFileName(packageManager)[0];
     writeFileSync(
-      `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
+      `${outDirRelativeToWorkspaceRoot}/${lockFileName}`,
       lockFile,
       {
         encoding: 'utf-8',

@@ -119,24 +119,19 @@ export function updatePackageJson(
 
   if (options.generateLockfile) {
     const packageManager = detectPackageManager(context.root);
-    if (packageManager === 'bun') {
-      logger.warn(
-        `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
-      );
-    } else {
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager
-      );
-      writeFileSync(
-        `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
-        {
-          encoding: 'utf-8',
-        }
-      );
-    }
+    const lockFile = createLockFile(
+      packageJson,
+      context.projectGraph,
+      packageManager
+    );
+    // we force uses to bun.lock files
+    const lockFileName =
+      packageManager === 'bun'
+        ? getLockFileName(packageManager)[1]
+        : getLockFileName(packageManager)[0];
+    writeFileSync(`${options.outputPath}/${lockFileName}`, lockFile, {
+      encoding: 'utf-8',
+    });
   }
 }
 

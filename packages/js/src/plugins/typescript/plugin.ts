@@ -150,11 +150,12 @@ async function createNodesInternal(
     return {};
   }
 
+  const pm = detectPackageManager(context.workspaceRoot);
   const nodeHash = await calculateHashForCreateNodes(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    getLockFileName(pm).filter((lock) => siblingFiles.includes(lock))
   );
   // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
   const cacheKey = `${nodeHash}_${configFilePath}`;

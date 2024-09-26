@@ -117,10 +117,14 @@ async function createNodesInternal(
     return {};
   }
 
+  const pm = detectPackageManager(context.workspaceRoot);
   const hash =
-    (await calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ])) + configFilePath;
+    (await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      getLockFileName(pm).filter((lock) => siblingFiles.includes(lock))
+    )) + configFilePath;
 
   targetsCache[hash] ??= await buildRemixTargets(
     configFilePath,

@@ -17,11 +17,11 @@ export async function createApplicationFiles(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const packageManagerLockFile: Record<PackageManager, string> = {
-    npm: 'package-lock.json',
-    yarn: 'yarn.lock',
-    pnpm: 'pnpm-lock.yaml',
-    bun: 'bun.lockb',
+  const packageManagerLockFile: Record<PackageManager, string[]> = {
+    npm: ['package-lock.json'],
+    yarn: ['yarn.lock'],
+    pnpm: ['pnpm-lock.yaml'],
+    bun: ['bun.lockb', 'bun.lock'],
   };
   const packageManager = detectPackageManager(host.root);
   const packageLockFile = packageManagerLockFile[packageManager];
@@ -43,7 +43,8 @@ export async function createApplicationFiles(
       ...options,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       packageManager,
-      packageLockFile,
+      packageLockFile:
+        packageManager === 'bun' ? packageLockFile[1] : packageLockFile[0],
     }
   );
 
@@ -56,7 +57,8 @@ export async function createApplicationFiles(
       connectCloudUrl,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       packageManager,
-      packageLockFile,
+      packageLockFile:
+        packageManager === 'bun' ? packageLockFile[1] : packageLockFile[0],
     }
   );
 

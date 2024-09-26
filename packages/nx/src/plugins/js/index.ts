@@ -46,7 +46,7 @@ export const createNodes: CreateNodes = [
     const packageManager = detectPackageManager(workspaceRoot);
 
     // Only process the correct lockfile
-    if (lockFile !== getLockFileName(packageManager)) {
+    if (getLockFileName(packageManager).includes(lockFile)) {
       return {};
     }
 
@@ -96,9 +96,17 @@ export const createDependencies: CreateDependencies = (
     lockFileExists(packageManager) &&
     parsedLockFile.externalNodes
   ) {
-    const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
+    const lockFileName = getLockFileName(packageManager);
+    // this referrs to the bun.lock file not the bun.lockb
+    const bunLockFile =
+      packageManager === 'bun'
+        ? existsSync(join(workspaceRoot, lockFileName[1]))
+        : false;
+    const lockFilePath = bunLockFile
+      ? join(workspaceRoot, lockFileName[1])
+      : join(workspaceRoot, lockFileName[0]);
     const lockFileContents =
-      packageManager !== 'bun'
+      packageManager !== 'bun' || bunLockFile
         ? readFileSync(lockFilePath).toString()
         : execSync(`bun ${lockFilePath}`, {
             maxBuffer: 1024 * 1024 * 10,

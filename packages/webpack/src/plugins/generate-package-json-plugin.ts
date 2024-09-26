@@ -12,6 +12,8 @@ import {
   type ProjectGraph,
   serializeJson,
 } from '@nx/devkit';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -76,8 +78,11 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             new sources.RawSource(serializeJson(packageJson))
           );
           const packageManager = detectPackageManager(this.options.root);
+          const lockFile = getLockFileName(packageManager).find((lock) =>
+            existsSync(join(this.options.root, lock))
+          );
           compilation.emitAsset(
-            getLockFileName(packageManager),
+            lockFile,
             new sources.RawSource(
               createLockFile(
                 packageJson,

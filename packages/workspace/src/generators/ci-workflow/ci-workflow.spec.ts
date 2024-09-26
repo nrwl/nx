@@ -38,6 +38,7 @@ jest.mock('fs', () => {
     existsSync: (p) =>
       p.endsWith('yarn.lock') ||
       p.endsWith('pnpm-lock.yaml') ||
+      p.endsWith('bun.lock') ||
       p.endsWith('bun.lockb')
         ? memFs.existsSync(p)
         : actualFs.existsSync(p),

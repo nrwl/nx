@@ -263,10 +263,12 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
     options.packageManager === 'yarn' ? 'yarn.lock' : null,
     options.packageManager === 'pnpm' ? 'pnpm-lock.yaml' : null,
     options.packageManager === 'npm' ? 'package-lock.json' : null,
-    options.packageManager === 'bun' ? 'bun.lockb' : null,
   ];
 
-  const optionalCraFiles = ['README.md'];
+  const optionalCraFiles = [
+    'README.md',
+    ...(options.packageManager === 'bun' ? ['bun.lockb', 'bun.lock'] : []),
+  ];
 
   const filesToMove = [...requiredCraFiles, ...optionalCraFiles].filter(
     Boolean
