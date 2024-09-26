@@ -75,9 +75,9 @@ describe('React Applications', () => {
       );
 
       // Library generated with Vite
-      checkFilesExist(`libs/${libName}/vite.config.ts`);
+      checkFilesExist(`${libName}/vite.config.ts`);
 
-      const mainPath = `apps/${appName}/src/main.tsx`;
+      const mainPath = `${appName}/src/main.tsx`;
       updateFile(
         mainPath,
         `
@@ -88,7 +88,7 @@ describe('React Applications', () => {
 
       runCLI(`build ${appName}`);
 
-      checkFilesExist(`dist/apps/${appName}/index.html`);
+      checkFilesExist(`dist/${appName}/index.html`);
 
       if (runE2ETests()) {
         // TODO(Colum): investigate why webkit is failing
