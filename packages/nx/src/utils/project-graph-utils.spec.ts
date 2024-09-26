@@ -1,5 +1,8 @@
 import { ProjectGraph } from '../config/project-graph';
-import { getSourceDirOfDependentProjects } from './project-graph-utils';
+import {
+  getSourceDirOfDependentProjects,
+  resetCache,
+} from './project-graph-utils';
 
 describe('project graph utils', () => {
   describe('getSourceDirOfDependentProjects', () => {
@@ -61,6 +64,11 @@ describe('project graph utils', () => {
         ],
       },
     } as any;
+
+    afterEach(() => {
+      resetCache();
+    });
+
     it('should correctly gather the source root dirs of the dependent projects', () => {
       const [paths] = getSourceDirOfDependentProjects('demo-app', projGraph);
 

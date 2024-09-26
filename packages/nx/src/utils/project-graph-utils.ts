@@ -61,57 +61,69 @@ export function findAllProjectNodeDependencies(
   projectGraph = readCachedProjectGraph(),
   includeExternalDependencies = false
 ): string[] {
-  const dependencyNodeNames = new Set<string>();
-
-  collectDependentProjectNodesNames(
+  const deps = collectDependentProjectNodesNames(
     projectGraph as ProjectGraph,
-    dependencyNodeNames,
     parentNodeName,
     includeExternalDependencies
   );
 
-  return Array.from(dependencyNodeNames);
+  return Array.from(deps);
+}
+
+const seen = new Set<string>();
+const depsCache = new Map<string, Set<string>>();
+
+/**
+ * This is for Testing
+ */
+export function resetCache() {
+  depsCache.clear();
+  seen.clear();
 }
 
 // Recursively get all the dependencies of the node
 function collectDependentProjectNodesNames(
   nxDeps: ProjectGraph,
-  dependencyNodeNames: Set<string>,
   parentNodeName: string,
   includeExternalDependencies: boolean
-) {
+): Set<string> {
+  seen.add(parentNodeName);
+  const deps = new Set<string>();
   const dependencies = nxDeps.dependencies[parentNodeName];
   if (!dependencies) {
     // no dependencies for the given node, so silently return,
     // as we probably wouldn't want to throw here
-    return;
+    return deps;
   }
 
   for (const dependency of dependencies) {
     const dependencyName = dependency.target;
 
     // skip dependencies already added (avoid circular dependencies)
-    if (dependencyNodeNames.has(dependencyName)) {
+    if (seen.has(dependencyName)) {
       continue;
     }
 
     // we're only interested in internal nodes, not external
     if (nxDeps.externalNodes?.[dependencyName]) {
       if (includeExternalDependencies) {
-        dependencyNodeNames.add(dependencyName);
+        deps.add(dependencyName);
       } else {
         continue;
       }
     }
 
-    dependencyNodeNames.add(dependencyName);
+    deps.add(dependencyName);
 
     // Get the dependencies of the dependencies
-    collectDependentProjectNodesNames(
+    for (const dep of collectDependentProjectNodesNames(
       nxDeps,
-      dependencyNodeNames,
       dependencyName,
       includeExternalDependencies
-    );
+    )) {
+      deps.add(dep);
+    }
   }
+  depsCache.set(parentNodeName, deps);
+  return deps;
 }
