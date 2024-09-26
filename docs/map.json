@@ -134,7 +134,7 @@
             {
               "name": "Powerpack Features",
               "id": "powerpack",
-              "description": "Features of Nx that are available with a powerpack license.",
+              "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
               "itemList": [
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
