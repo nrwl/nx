@@ -441,7 +441,7 @@
       {
         "id": "powerpack",
         "name": "Powerpack Features",
-        "description": "Features of Nx that are available with a powerpack license.",
+        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
         "mediaImage": "",
         "file": "",
         "itemList": [
@@ -646,7 +646,7 @@
   "/features/powerpack": {
     "id": "powerpack",
     "name": "Powerpack Features",
-    "description": "Features of Nx that are available with a powerpack license.",
+    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
     "mediaImage": "",
     "file": "",
     "itemList": [

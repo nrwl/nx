@@ -76,6 +76,7 @@ export * from './lib/editors/visual-studio-code';
 
 // OTHERS
 export * from './lib/monorepo-world';
+export * from './lib/others/amazon-s3';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';
