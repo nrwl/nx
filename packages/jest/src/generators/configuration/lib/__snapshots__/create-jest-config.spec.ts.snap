@@ -10,7 +10,7 @@ export default async () => ({
 
 exports[`createJestConfig should generate files  2`] = `
 "const nxPreset = require('@nx/jest/preset').default;
-  
+
 module.exports = { ...nxPreset };"
 `;
 
@@ -24,6 +24,6 @@ module.exports = async () => ({
 
 exports[`createJestConfig should generate files with --js flag 2`] = `
 "const nxPreset = require('@nx/jest/preset').default;
-  
+
 module.exports = { ...nxPreset };"
 `;

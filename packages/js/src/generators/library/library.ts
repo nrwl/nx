@@ -29,13 +29,13 @@ import { prompt } from 'enquirer';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { isCI } from 'nx/src/utils/is-ci';
 import { type PackageJson } from 'nx/src/utils/package-json';
-import { dirname, join } from 'path';
-import type { CompilerOptions, System } from 'typescript';
+import { join } from 'path';
+import type { CompilerOptions } from 'typescript';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { isUsingTypeScriptPlugin } from '../../utils/typescript-plugin';
+import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
@@ -66,7 +66,6 @@ import {
 } from './utils/plugin-registrations';
 
 const defaultOutputDirectory = 'dist';
-let ts: typeof import('typescript');
 
 export async function libraryGenerator(
   tree: Tree,
@@ -985,98 +984,6 @@ function getOutputPath(options: NormalizedLibraryGeneratorOptions) {
   return joinPathFragments(...parts);
 }
 
-type CompilerOptionsEnumProps = Pick<
-  CompilerOptions,
-  | 'importsNotUsedAsValues'
-  | 'jsx'
-  | 'module'
-  | 'moduleDetection'
-  | 'moduleResolution'
-  | 'newLine'
-  | 'target'
->;
-const optionEnumTypeMap: {
-  [key in keyof CompilerOptionsEnumProps]: keyof typeof ts;
-} = {
-  importsNotUsedAsValues: 'ImportsNotUsedAsValues',
-  jsx: 'JsxEmit',
-  module: 'ModuleKind',
-  moduleDetection: 'ModuleDetectionKind',
-  moduleResolution: 'ModuleResolutionKind',
-  newLine: 'NewLineKind',
-  target: 'ScriptTarget',
-};
-type Entries<T extends object> = { [K in keyof T]: [K, T[K]] }[keyof T];
-function reverseEnum<
-  EnumObj extends Record<keyof EnumObj, string>,
-  Result = {
-    [K in EnumObj[keyof EnumObj]]: Extract<Entries<EnumObj>, [any, K]>[0];
-  }
->(enumObj: EnumObj): Result {
-  return Object.keys(enumObj).reduce((acc, key) => {
-    acc[enumObj[key]] = key;
-    return acc;
-  }, {} as Result);
-}
-
-// filters out the compiler options that are already set in the extended tsconfig
-function getNeededCompilerOptionOverrides(
-  tree: Tree,
-  extendedTsConfigPath: string,
-  compilerOptions: Record<keyof CompilerOptions, any>
-): Record<keyof CompilerOptions, any> {
-  if (!ts) {
-    ts = ensureTypescript();
-  }
-
-  const tsSysFromTree: System = {
-    ...ts.sys,
-    readFile: (path) => tree.read(path, 'utf-8'),
-  };
-
-  const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(extendedTsConfigPath, tsSysFromTree.readFile).config,
-    tsSysFromTree,
-    dirname(extendedTsConfigPath)
-  );
-
-  // ModuleKind: { CommonJS: 'commonjs', ... } => ModuleKind: { commonjs: 'CommonJS', ... }
-  const reversedCompilerOptionsEnumValues = {
-    JsxEmit: reverseEnum(ts.server.protocol.JsxEmit),
-    ModuleKind: reverseEnum(ts.server.protocol.ModuleKind),
-    ModuleResolutionKind: reverseEnum(ts.server.protocol.ModuleResolutionKind),
-    NewLineKind: reverseEnum(ts.server.protocol.NewLineKind),
-    ScriptTarget: reverseEnum(ts.server.protocol.ScriptTarget),
-  };
-  const matchesValue = (key: keyof CompilerOptions) => {
-    return (
-      parsed.options[key] ===
-        ts[optionEnumTypeMap[key]][compilerOptions[key]] ||
-      parsed.options[key] ===
-        ts[optionEnumTypeMap[key]][
-          reversedCompilerOptionsEnumValues[optionEnumTypeMap[key]][
-            compilerOptions[key]
-          ]
-        ]
-    );
-  };
-
-  let result = {};
-  for (const key of Object.keys(compilerOptions)) {
-    if (optionEnumTypeMap[key]) {
-      if (parsed.options[key] === undefined) {
-        result[key] = compilerOptions[key];
-      } else if (!matchesValue(key)) {
-        result[key] = compilerOptions[key];
-      }
-    } else if (parsed.options[key] !== compilerOptions[key]) {
-      result[key] = compilerOptions[key];
-    }
-  }
-
-  return result;
-}
-
 function createProjectTsConfigs(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
@@ -1111,11 +1018,12 @@ function createProjectTsConfigs(
   };
 
   if (!options.rootProject || options.isUsingTsSolutionConfig) {
+    // filter out options already set with the same value in root tsconfig file that we're going to extend from
     compilerOptionOverrides = getNeededCompilerOptionOverrides(
       tree,
+      compilerOptionOverrides,
       // must have been created by now
-      getRootTsConfigFileName(tree)!,
-      compilerOptionOverrides
+      getRootTsConfigFileName(tree)!
     );
   }
 

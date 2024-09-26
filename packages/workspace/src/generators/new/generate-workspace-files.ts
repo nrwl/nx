@@ -213,11 +213,7 @@ export async function generateWorkspaceFiles(
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
-  if (
-    options.preset === Preset.NPM &&
-    (process.env.NX_ADD_PLUGINS === 'false' ||
-      process.env.NX_ADD_TS_PLUGIN !== 'true')
-  ) {
+  if (options.preset === Preset.NPM) {
     updateJson(tree, join(options.directory, 'nx.json'), (json) => {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       return json;

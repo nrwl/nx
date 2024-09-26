@@ -9,10 +9,5 @@
     <%- compilerOptions %>,<% } %>
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"<% if (js) { %>, "src/**/*.js"<% } %>]<% if (unitTestRunner !== 'none') { %>,
-  "exclude": [
-    <% if (unitTestRunner === 'jest') { %>"jest.config.ts", 
-    <% } else if (unitTestRunner === 'vitest') { %>"vite.config.ts", 
-    <% } %>"src/**/*.spec.ts", "src/**/*.test.ts"<% if (js) { %>, "src/**/*.spec.js", "src/**/*.test.js"<% } %>
-  ]<% } %>
+  "include": ["src/**/*.ts"<% if (js) { %>, "src/**/*.js"<% } %>]
 }
