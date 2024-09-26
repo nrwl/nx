@@ -9,7 +9,7 @@ The conformance plugin allows you to encode your own organization's standards so
 
 The plugin also provides the following pre-written rules:
 
-- [**Enforce Project Boundaries**](#enforce-project-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-project-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- [**Enforce Project Boundaries**](#enforce-project-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - [**Ensure Owners**](#ensure-owners): Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
@@ -84,7 +84,7 @@ The following rules are provided by Nx along with the `@nx/powerpack-conformance
 
 ### Enforce Project Boundaries
 
-This rule is similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-project-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+This rule is similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 
 Set the `rule` property to: `@nx/powerpack-conformance/enforce-project-boundaries`
 
