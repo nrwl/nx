@@ -38,7 +38,7 @@ export function PowerpackFeatures(): ReactElement {
                   variant="secondary"
                   size="default"
                 >
-                  Learn more about self-hosted cache storage
+                  Learn self-hosted cache storage
                 </ButtonLink>
               </div>
             </div>
