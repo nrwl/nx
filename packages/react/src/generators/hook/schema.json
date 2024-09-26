@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g hook my-hook --project=mylib",
+      "command": "nx g hook libs/mylib/src/lib/my-hook",
       "description": "Generate a hook in the `mylib` library"
     }
   ],

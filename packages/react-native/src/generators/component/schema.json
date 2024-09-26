@@ -7,11 +7,11 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/react-native:component my-component --directory=mylib/src/lib/my-component",
+      "command": "nx g @nx/react-native:component mylib/src/lib/my-component/my-component",
       "description": "Generate a component in the `mylib` library"
     },
     {
-      "command": "nx g @nx/react-native:component my-component --directory=mylib/src/lib/my-component --classComponent",
+      "command": "nx g @nx/react-native:component mylib/src/lib/my-component/my-component --classComponent",
       "description": "Generate a class component in the `mylib` library"
     }
   ],

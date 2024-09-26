@@ -7,8 +7,8 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g generator my-generator --project=my-plugin",
-      "description": "Generate `libs/my-plugin/src/generators/my-generator`"
+      "command": "nx g generator libs/my-plugin/src/generators/my-generator",
+      "description": "Generate my-generator at `libs/my-plugin/src/generators/my-generator/generator.ts`"
     }
   ],
   "properties": {

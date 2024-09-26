@@ -6,7 +6,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/angular:scam-directive my-sample --directory=my-lib/src/lib/my-sample",
+      "command": "nx g @nx/angular:scam-directive my-lib/src/lib/my-sample/my-sample",
       "description": "Generate a `MySampleDirective` directive in a `my-sample` folder in the `my-lib` library"
     }
   ],

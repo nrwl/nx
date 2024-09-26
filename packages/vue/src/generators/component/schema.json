@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/vue:component --directory=my-app/src/app/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest",
+      "command": "nx g @nx/vue:component my-app/src/app/one/one --unitTestRunner=vitest",
       "description": "Generate a component in the `my-app` application"
     }
   ],

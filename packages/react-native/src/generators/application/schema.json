@@ -6,11 +6,11 @@
   "description": "Create a React Application for Nx.",
   "examples": [
     {
-      "command": "nx g @nx/react-native:app myapp --directory=nested",
+      "command": "nx g @nx/react-native:app apps/nested/myapp",
       "description": "Generate `apps/nested/myapp`"
     },
     {
-      "command": "nx g @nx/react-native:app myapp --classComponent",
+      "command": "nx g @nx/react-native:app apps/myapp --classComponent",
       "description": "Use class components instead of functional components"
     }
   ],

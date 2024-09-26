@@ -6,15 +6,15 @@
   "description": "Create a React application for Nx.",
   "examples": [
     {
-      "command": "nx g app myapp --directory=myorg",
+      "command": "nx g app apps/myorg/myapp",
       "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
     },
     {
-      "command": "nx g app myapp --classComponent",
+      "command": "nx g app apps/myapp --classComponent",
       "description": "Use class components instead of functional components"
     },
     {
-      "command": "nx g app myapp --routing",
+      "command": "nx g app apps/myapp --routing",
       "description": "Set up React Router"
     }
   ],

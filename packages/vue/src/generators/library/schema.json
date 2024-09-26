@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g lib mylib --directory=libs/mylib",
+      "command": "nx g lib libs/mylib",
       "description": "Generate `libs/mylib`"
     },
     {

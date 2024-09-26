@@ -6,7 +6,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/angular:scam my-sample --directory=my-lib/src/lib/my-sample",
+      "command": "nx g @nx/angular:scam my-lib/src/lib/my-sample/my-sample",
       "description": "Generate a `MySampleComponent` component in the `my-lib` library."
     }
   ],

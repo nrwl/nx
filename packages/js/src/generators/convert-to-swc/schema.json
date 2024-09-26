@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g swc mylib",
+      "command": "nx g swc libs/mylib",
       "description": "Convert `libs/myapp/mylib` to SWC."
     }
   ],

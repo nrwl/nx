@@ -8,8 +8,8 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g executor my-executor --project=my-plugin",
-      "description": "Generate `libs/my-plugin/src/executors/my-executor`"
+      "command": "nx g executor libs/my-plugin/src/executors/my-executor",
+      "description": "Generate my-executor at `libs/my-plugin/src/executors/my-executor/executor.ts`"
     }
   ],
   "properties": {

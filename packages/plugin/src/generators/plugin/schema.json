@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin",
+      "command": "nx g plugin libs/plugins/my-plugin --importPath=@myorg/my-plugin",
       "description": "Generates an Nx plugin project called `plugins-my-plugin` at `libs/plugins/my-plugin`. The project will have an npm package name and import path of `@myorg/my-plugin`."
     }
   ],

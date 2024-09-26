@@ -6,11 +6,11 @@
   "description": "Create a Vue application for Nx.",
   "examples": [
     {
-      "command": "nx g app myapp --directory=myorg/myapp",
+      "command": "nx g app apps/myorg/myapp",
       "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
     },
     {
-      "command": "nx g app myapp --routing",
+      "command": "nx g app apps/myapp --routing",
       "description": "Set up Vue Router"
     }
   ],

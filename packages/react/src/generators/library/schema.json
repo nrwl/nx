@@ -7,11 +7,11 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g lib mylib --directory=myapp",
-      "description": "Generate `libs/myapp/mylib`"
+      "command": "nx g lib libs/nested/mylib",
+      "description": "Generate `libs/nested/mylib`"
     },
     {
-      "command": "nx g lib mylib --appProject=myapp",
+      "command": "nx g lib libs/mylib --appProject=myapp",
       "description": "Generate a library with routes and add them to `myapp`"
     }
   ],
