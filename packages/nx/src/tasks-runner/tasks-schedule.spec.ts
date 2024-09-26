@@ -6,6 +6,7 @@ import * as nxJsonUtils from '../config/nx-json';
 import * as executorUtils from '../command-line/run/executor-utils';
 import * as taskHistoryUtils from '../utils/task-history';
 import type { LifeCycle } from './life-cycle';
+import { resetCache } from '../utils/project-graph-utils';
 
 function createMockTask(id: string, parallelism: boolean = true): Task {
   const [project, target] = id.split(':');
@@ -37,6 +38,8 @@ describe('TasksSchedule', () => {
       recordTaskRuns: jest.fn(),
     };
     jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(taskHistory);
+
+    resetCache();
   });
 
   afterEach(() => {
