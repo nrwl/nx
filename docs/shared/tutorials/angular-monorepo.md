@@ -203,7 +203,7 @@ NX   Capabilities in @nx/angular:
    component-story : Creates a stories.ts file for a component.
    component-test : Creates a cypress component test file for a component.
    convert-tslint-to-eslint : Converts a project from TSLint to ESLint.
-   init : Initializes the `@nrwl/angular` plugin.
+   init : Initializes the `@nx/angular` plugin.
    library : Creates an Angular library.
    library-secondary-entry-point : Creates a secondary entry point for an Angular publishable library.
    remote : Generate a Remote Angular Module Federation Application.
@@ -214,7 +214,7 @@ NX   Capabilities in @nx/angular:
 
    delegate-build : Delegates the build to a different target while supporting incremental builds.
    ng-packagr-lite : Builds a library with support for incremental builds.
-This executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:
+This executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but with some key differences:
 - It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).
 - It only produces ESM2020 bundles.
 - It doesn't generate package exports in the `package.json`.

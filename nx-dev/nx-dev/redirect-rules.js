@@ -1045,6 +1045,7 @@ const troubleshootingOutOfRecipes = {
  * Removed deprecated URLs
  */
 const removedDeprecatedUrls = {
+  '/recipes/other/rescope': '/deprecated/rescope', // Removed in Nx 20
   '/nx-api/nx/documents/affected-dep-graph': '/deprecated/affected-graph', // nx affected:graph was removed in Nx 19
   '/cli/affected-dep-graph': '/deprecated/affected-graph',
   '/nx/affected-dep-graph': '/deprecated/affected-graph',
