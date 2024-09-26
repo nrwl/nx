@@ -9,5 +9,6 @@
     <%- compilerOptions %>,<% } %>
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"<% if (js) { %>, "src/**/*.js"<% } %>]
+  "include": ["src/**/*.ts"<% if (js) { %>, "src/**/*.js"<% } %>],
+  "references": []
 }
