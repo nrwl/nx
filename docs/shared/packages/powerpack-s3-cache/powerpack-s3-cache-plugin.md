@@ -15,7 +15,7 @@ Using your own Amazon S3 bucket to host the remote cache opens you up to the pos
 In order to use `@nx/powerpack-s3-cache`, you need to have an active Powerpack license. If you don't have a license or it has expired, your cache will no longer be shared and each machine will use its local cache.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-s3-cache
 
 ### 1. Install the Package
 

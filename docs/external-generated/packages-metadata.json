@@ -1,11 +1,11 @@
 [
   {
-    "description": "Not intended for external use",
+    "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "Not intended for external use",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
         "file": "external-generated/packages/powerpack-conformance/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -23,7 +23,7 @@
     "source": "/libs/nx-packages/powerpack-conformance/src"
   },
   {
-    "description": "Not intended for external use",
+    "description": "Package to provide the ability to activate and read licenses for Nx Powerpack.",
     "documents": [],
     "executors": [],
     "generators": [],
@@ -34,12 +34,12 @@
     "source": "/libs/nx-packages/powerpack-license/src"
   },
   {
-    "description": "Not intended for external use",
+    "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "Not intended for external use",
+        "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
         "file": "external-generated/packages/powerpack-owners/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -76,12 +76,12 @@
     "source": "/libs/nx-packages/powerpack-owners/src"
   },
   {
-    "description": "Not intended for external use",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "Not intended for external use",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
         "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -109,12 +109,12 @@
     "source": "/libs/nx-packages/powerpack-s3-cache/src"
   },
   {
-    "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+    "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+        "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
         "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
         "itemList": [],
         "isExternal": false,

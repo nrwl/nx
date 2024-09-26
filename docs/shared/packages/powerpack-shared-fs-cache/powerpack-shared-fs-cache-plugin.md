@@ -15,7 +15,7 @@ Using a shared file system folder for the remote cache opens you up to the possi
 In order to use `@nx/powerpack-shared-fs-cache`, you need to have an active Powerpack license. If you don't have a license or it has expired, your cache will no longer be shared and each machine will use its local cache.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-shared-fs-cache
 
 ### 1. Install the Package
 

@@ -77,7 +77,7 @@ Nx Replay is not the only remote cache you can use. You can also use one of the 
 
 ## Self-Hosted Remote Cache
 
-If you can't use Nx Replay, Nx provides plugins that enable you to [self-host the remote cache](/features/powerpack/custom-caching). These plugins are available as part of the [Nx Powerpack](), which you can unlock by [activating your license](/recipes/installation/activate-powerpack). There are plugins to self-host your remote cache in the following locations:
+If you can't use Nx Replay, Nx provides plugins that enable you to [self-host the remote cache](/features/powerpack/custom-caching). These plugins are available as part of the [Nx Powerpack](/powerpack), which you can unlock by [activating your license](/recipes/installation/activate-powerpack). There are plugins to self-host your remote cache in the following locations:
 
 - [AWS S3 Bucket](/nx-api/powerpack-s3-cache)
 - [Shared File System](/nx-api/powerpack-shared-fs-cache)
