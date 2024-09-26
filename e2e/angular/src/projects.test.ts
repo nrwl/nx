@@ -70,12 +70,12 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --no-interactive`
+      `generate @nx/angular:app my-dir/${standaloneApp} --bundler=webpack --no-interactive`
     );
 
     const esbuildStandaloneApp = uniq('esbuild-app');
     runCLI(
-      `generate @nx/angular:app ${esbuildStandaloneApp} --bundler=esbuild --directory=my-dir/${esbuildStandaloneApp} --no-interactive`
+      `generate @nx/angular:app my-dir/${esbuildStandaloneApp} --bundler=esbuild --no-interactive`
     );
 
     updateFile(

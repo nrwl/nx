@@ -31,7 +31,9 @@ describe('Jest root projects', () => {
       newProject({
         packages: ['@nx/react'],
       });
-      runCLI(`generate @nx/react:app ${myapp} --directory . --rootProject`);
+      runCLI(
+        `generate @nx/react:app --name=${myapp} --directory . --rootProject`
+      );
     });
 
     it('should test root level app projects', async () => {

@@ -17,7 +17,6 @@
         "type": "string",
         "description": "A directory where the project is placed relative current working directory (CWD).",
         "$default": { "$source": "argv", "index": 0 },
-        "pattern": "^[a-zA-Z][^:]*$",
         "x-prompt": "Which directory do you want to create the E2E project in?"
       },
       "e2eName": {

@@ -167,7 +167,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
-      `generate @nx/react:app ${reactApp} --rootProject=true --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/react:app --name=${reactApp} --directory="." --rootProject=true --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
     );
 
     runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive');
@@ -395,7 +395,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib --name=${lib3} --unitTestRunner=jest`);
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -518,7 +518,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib --name=${lib3} --unitTestRunner=jest`);
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [lib1];

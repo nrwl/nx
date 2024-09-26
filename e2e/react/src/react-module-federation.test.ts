@@ -375,7 +375,7 @@ describe('React Module Federation', () => {
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${remote} --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${remote} --remoteDirectory=${remote} --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -474,7 +474,7 @@ describe('React Module Federation', () => {
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${childRemote} --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --no-interactive --skipFormat`
       );
 
       updateFile(

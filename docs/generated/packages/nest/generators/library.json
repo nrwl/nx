@@ -20,10 +20,13 @@
         "type": "string",
         "alias": "dir",
         "$default": { "$source": "argv", "index": 0 },
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
         "x-prompt": "Which directory do you want to create the library in?"
       },
-      "name": { "description": "Library name.", "type": "string" },
+      "name": {
+        "description": "Library name.",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+        "type": "string"
+      },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",

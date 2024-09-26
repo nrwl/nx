@@ -24,7 +24,6 @@
         "description": "A directory where the lib is placed.",
         "alias": "dir",
         "$default": { "$source": "argv", "index": 0 },
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
         "x-prompt": "Which directory do you want to create the library in?"
       },
       "name": {

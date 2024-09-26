@@ -19,12 +19,12 @@
         "$source": "argv",
         "index": 0
       },
-      "pattern": "^[a-zA-Z][^:]*$",
       "x-prompt": "Which directory do you want to create the application in?"
     },
     "name": {
       "type": "string",
       "description": "The name to give to the remote Angular app.",
+      "pattern": "^[a-zA-Z][^:]*$",
       "x-priority": "important"
     },
     "host": {

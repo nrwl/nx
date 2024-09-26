@@ -125,7 +125,7 @@ export async function ensureProjectName(
   if (!options.name) {
     if (options.directory === '.' && getRelativeCwd() === '') {
       const result = await prompt<{ name: string }>({
-        type: 'string',
+        type: 'input',
         name: 'name',
         message: `What do you want to name the ${projectType}?`,
       }).then(({ name }) => (options.name = name));

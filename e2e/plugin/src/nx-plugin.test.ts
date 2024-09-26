@@ -438,7 +438,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin}`
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --verbose`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -458,7 +458,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --verbose`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);

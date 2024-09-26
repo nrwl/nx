@@ -24,12 +24,12 @@
         "$source": "argv",
         "index": 0
       },
-      "pattern": "^[a-zA-Z][^:]*$",
       "x-prompt": "Which directory do you want to create the application in?"
     },
     "name": {
       "description": "The name of the application.",
       "type": "string",
+      "pattern": "^[a-zA-Z][^:]*$",
       "x-priority": "important"
     },
     "style": {

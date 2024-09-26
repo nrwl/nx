@@ -23,11 +23,12 @@
         "description": "The directory of the new application.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
-        "pattern": "^[a-zA-Z][^:]*$",
+        "pattern": "^[a-zA-Z./][a-zA-Z0-9./_-]*$",
         "x-prompt": "Which directory do you want to create the application in?"
       },
       "name": {
         "description": "The name of the application.",
+        "pattern": "^[a-zA-Z][^:]*$",
         "type": "string"
       },
       "displayName": {

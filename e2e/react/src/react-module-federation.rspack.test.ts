@@ -500,7 +500,7 @@ describe('React Rspack Module Federation', () => {
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --bundler=rspack --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --remoteDirectory=${remote} --bundler=rspack --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -599,7 +599,7 @@ describe('React Rspack Module Federation', () => {
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --bundler=rspack --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --bundler=rspack --no-interactive --skipFormat`
       );
 
       updateFile(
