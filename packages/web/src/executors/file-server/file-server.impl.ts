@@ -1,5 +1,5 @@
 import { execFileSync, fork } from 'child_process';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import {
   ExecutorContext,
   output,
@@ -176,7 +176,7 @@ export default async function* fileServerExecutor(
           });
         } catch {
           throw new Error(
-            `Build target failed: ${chalk.bold(options.buildTarget)}`
+            `Build target failed: ${pc.bold(options.buildTarget)}`
           );
         } finally {
           process.env.NX_SERVE_STATIC_BUILD_RUNNING = undefined;

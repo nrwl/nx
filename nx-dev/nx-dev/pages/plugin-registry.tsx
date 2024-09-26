@@ -77,11 +77,11 @@ export default function Browse(props: BrowseProps): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx Plugin Listing"
+        title="Nx Plugin Registry"
         description="Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Plugin Listing',
+          title: 'Nx Plugin Registry',
           description:
             'Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins.',
           images: [
@@ -127,7 +127,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
                     Are you a plugin author? You can{' '}
                     <a
                       className="underline"
-                      href="/extending-nx/tutorials/tooling-plugin#list-your-nx-plugin"
+                      href="/extending-nx/recipes/publish-plugin#list-your-nx-plugin"
                     >
                       add your plugin to the registry
                     </a>{' '}

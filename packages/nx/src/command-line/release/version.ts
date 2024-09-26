@@ -383,10 +383,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
 
-      runPreVersionCommand(releaseGroup.version.groupPreVersionCommand, {
-        dryRun: args.dryRun,
-        verbose: args.verbose,
-      });
+      runPreVersionCommand(
+        releaseGroup.version.groupPreVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        releaseGroup
+      );
 
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
@@ -727,13 +731,18 @@ function resolveGeneratorData({
 }
 function runPreVersionCommand(
   preVersionCommand: string,
-  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
+  releaseGroup?: ReleaseGroupWithName
 ) {
   if (!preVersionCommand) {
     return;
   }
 
-  output.logSingleLine(`Executing pre-version command`);
+  output.logSingleLine(
+    releaseGroup
+      ? `Executing release group pre-version command for "${releaseGroup.name}"`
+      : `Executing pre-version command`
+  );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);
     console.log(preVersionCommand);
@@ -753,6 +762,7 @@ function runPreVersionCommand(
       maxBuffer: LARGE_BUFFER,
       stdio,
       env,
+      windowsHide: true,
     });
   } catch (e) {
     const title = verbose

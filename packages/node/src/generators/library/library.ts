@@ -35,7 +35,6 @@ export interface NormalizedSchema extends Schema {
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -99,7 +98,6 @@ async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/node:library',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
@@ -110,12 +108,11 @@ async function normalizeOptions(
 
   options.addPlugin ??= addPluginDefault;
 
-  const fileName = getCaseAwareFileName({
-    fileName: options.simpleModuleName
+  const fileName = names(
+    options.simpleModuleName
       ? projectNames.projectSimpleName
-      : projectNames.projectFileName,
-    pascalCaseFiles: options.pascalCaseFiles,
-  });
+      : projectNames.projectFileName
+  ).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -129,15 +126,6 @@ async function normalizeOptions(
     parsedTags,
     importPath,
   };
-}
-
-function getCaseAwareFileName(options: {
-  pascalCaseFiles: boolean;
-  fileName: string;
-}) {
-  const normalized = names(options.fileName);
-
-  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {

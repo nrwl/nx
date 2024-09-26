@@ -39,7 +39,6 @@ export async function reactNativeLibraryGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }

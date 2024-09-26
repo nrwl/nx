@@ -177,15 +177,6 @@
         "type": "generator"
       },
       {
-        "description": "Creates a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/angular/generators/component-cypress-spec.json",
-        "hidden": true,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/angular/src/generators/component-cypress-spec/schema.json",
-        "path": "angular/generators/component-cypress-spec",
-        "type": "generator"
-      },
-      {
         "description": "Creates a stories.ts file for a component.",
         "file": "generated/packages/angular/generators/component-story.json",
         "hidden": true,
@@ -1273,6 +1264,15 @@
         "originalFilePath": "/packages/js/src/generators/typescript-sync/schema.json",
         "path": "js/generators/typescript-sync",
         "type": "generator"
+      },
+      {
+        "description": "Setup Prettier as the formatting tool.",
+        "file": "generated/packages/js/generators/setup-prettier.json",
+        "hidden": false,
+        "name": "setup-prettier",
+        "originalFilePath": "/packages/js/src/generators/setup-prettier/schema.json",
+        "path": "js/generators/setup-prettier",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2321,15 +2321,6 @@
         "name": "stories",
         "originalFilePath": "/packages/react/src/generators/stories/schema.json",
         "path": "react/generators/stories",
-        "type": "generator"
-      },
-      {
-        "description": "Create a Cypress spec for a UI component that has a story.",
-        "file": "generated/packages/react/generators/component-cypress-spec.json",
-        "hidden": false,
-        "name": "component-cypress-spec",
-        "originalFilePath": "/packages/react/src/generators/component-cypress-spec/schema.json",
-        "path": "react/generators/component-cypress-spec",
         "type": "generator"
       },
       {

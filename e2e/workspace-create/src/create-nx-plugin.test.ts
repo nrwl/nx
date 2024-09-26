@@ -37,10 +37,10 @@ describe('create-nx-plugin', () => {
     );
 
     runCLI(
-      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
+      `generate @nx/plugin:generator ${generatorName} --directory=${pluginName}/src/generators/${generatorName}`
     );
     runCLI(
-      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
+      `generate @nx/plugin:executor ${executorName} --directory=${pluginName}/src/executors/${executorName}`
     );
 
     runCLI(`build ${pluginName}`);

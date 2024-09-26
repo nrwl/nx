@@ -39,10 +39,10 @@ describe('@nx/react-native (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --directory=apps/${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
     );
     runCLI(
-      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --directory=libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
   afterAll(() => {
@@ -57,7 +57,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should test and lint', async () => {
     const componentName = uniq('Component');
     runCLI(
-      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/react-native:component ${componentName} --directory=libs/${libName}/src/lib/${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -189,7 +189,7 @@ describe('@nx/react-native (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nx/react-native:component ${componentName} --directory=libs/${libName}/src/lib/${componentName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);
@@ -274,13 +274,6 @@ describe('@nx/react-native (legacy)', () => {
     // check tests pass
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
 
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=derived`
-      )
-    ).toThrow();
-
     runCLI(
       `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=as-provided`
     );
@@ -295,7 +288,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {

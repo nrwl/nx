@@ -9,8 +9,5 @@ export interface StorybookConfigureSchema {
   linter?: Linter | LinterType;
   ignorePaths?: string[];
   configureStaticServe?: boolean;
-  configureCypress?: boolean;
-  generateCypressSpecs?: boolean;
-  cypressDirectory?: string;
   addPlugin?: boolean;
 }

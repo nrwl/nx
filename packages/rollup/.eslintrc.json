@@ -33,8 +33,6 @@
               "nx",
               "typescript",
               "@swc/core", // Installed to workspace and only used in swc() plugin
-              // Used in require.resolve calls
-              "babel-plugin-transform-async-to-promises",
               "postcss"
             ]
           }

@@ -499,47 +499,13 @@ describe('Angular Projects', () => {
       `Building entry point '@${proj}/${lib}/${entryPoint}'`
     );
     expect(buildOutput).toContain('Successfully ran target build');
+
+    expect(() => runCLI(`lint ${lib} --fix`)).not.toThrow();
+    expect(() => runCLI(`lint ${childLib} --fix`)).not.toThrow();
   });
-
-  it('should support generating projects with --project-name-and-root-format=derived', () => {
-    const appName = uniq('app1');
-    const libName = uniq('lib1');
-
-    runCLI(
-      `generate @nx/angular:app ${appName} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    // check files are generated with the layout directory ("apps/")
-    checkFilesExist(`apps/${appName}/src/app/app.module.ts`);
-    // check build works
-    expect(() => runCLI(`build ${appName}`)).not.toThrow();
-    // check tests pass
-    expect(() => runCLI(`test ${appName}`)).not.toThrow();
-
-    runCLI(
-      `generate @nx/angular:lib ${libName} --standalone --buildable --project-name-and-root-format=derived`
-    );
-
-    // check files are generated with the layout directory ("libs/")
-    checkFilesExist(
-      `libs/${libName}/src/index.ts`,
-      `libs/${libName}/src/lib/${libName}/${libName}.component.ts`
-    );
-    // check build works
-    expect(() => runCLI(`build ${libName}`)).not.toThrow();
-    // check tests pass
-    expect(() => runCLI(`test ${libName}`)).not.toThrow();
-  }, 500_000);
 
   it('should support generating libraries with a scoped name when --project-name-and-root-format=as-provided', () => {
     const libName = uniq('@my-org/lib1');
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=derived`
-      )
-    ).toThrow();
 
     runCLI(
       `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`

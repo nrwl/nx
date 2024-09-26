@@ -10,7 +10,6 @@ export interface Schema {
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
   unitTestRunner: 'jest' | 'none'; // default is jest
-  pascalCaseFiles?: boolean;
   classComponent?: boolean;
   js: boolean; // default is false
   linter: Linter | LinterType; // default is eslint

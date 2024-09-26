@@ -84,7 +84,7 @@ describe('NxPlugin Generator Generator', () => {
 
   it('should generate files for derived', async () => {
     await generatorGenerator(tree, {
-      project: projectName,
+      directory: `${projectName}/src/generators/my-generator`,
       name: 'my-generator',
       unitTestRunner: 'jest',
     });
@@ -126,7 +126,7 @@ describe('NxPlugin Generator Generator', () => {
 
   it('should update generators.json for derived', async () => {
     await generatorGenerator(tree, {
-      project: projectName,
+      directory: 'my-plugin/src/generators/my-generator',
       name: 'my-generator',
       unitTestRunner: 'jest',
     });
@@ -153,7 +153,7 @@ describe('NxPlugin Generator Generator', () => {
     });
     expect(
       generatorGenerator(tree, {
-        project: projectName,
+        directory: 'my-plugin/src/generators/my-generator',
         name: 'my-generator',
         unitTestRunner: 'jest',
       })
@@ -250,7 +250,7 @@ describe('NxPlugin Generator Generator', () => {
   describe('preset generator', () => {
     it('should default to standalone layout: true', async () => {
       await generatorGenerator(tree, {
-        project: projectName,
+        directory: 'my-plugin/src/generators/preset',
         name: 'preset',
         unitTestRunner: 'none',
       });

@@ -891,7 +891,9 @@ export function overrideNeedsCompat(
  * based on a given legacy eslintrc JSON override object
  */
 export function generateFlatOverride(
-  _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+  _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
+    ignores?: Linter.FlatConfig['ignores'];
+  }
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   const override = mapFilePaths(_override);
 
@@ -906,6 +908,10 @@ export function generateFlatOverride(
     const flatConfigOverride: Linter.FlatConfig = {
       files,
     };
+
+    if (override.ignores) {
+      flatConfigOverride.ignores = override.ignores;
+    }
 
     if (override.rules) {
       flatConfigOverride.rules = override.rules;
@@ -1074,10 +1080,10 @@ export function generateFlatPredefinedConfig(
   return spread ? ts.factory.createSpreadElement(node) : node;
 }
 
-export function mapFilePaths(
-  _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
-) {
-  const override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> = {
+export function mapFilePaths<
+  T extends Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+>(_override: T) {
+  const override: T = {
     ..._override,
   };
   if (override.files) {

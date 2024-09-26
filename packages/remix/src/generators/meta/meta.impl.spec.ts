@@ -21,10 +21,9 @@ describe('meta', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      path: 'example',
-      project: 'demo',
+      path: 'apps/demo/app/routes/example.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -35,8 +34,7 @@ describe('meta', () => {
 
   it('should use v2 when specified', async () => {
     await metaGenerator(tree, {
-      path: 'example',
-      project: 'demo',
+      path: 'apps/demo/app/routes/example.tsx',
     });
 
     const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');

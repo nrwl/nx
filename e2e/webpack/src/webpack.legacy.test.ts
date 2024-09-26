@@ -74,10 +74,12 @@ describe('Webpack Plugin (legacy)', () => {
   it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
-    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+
+    checkFilesExist(`${appName}/src/main.ts`);
+    updateFile(`${appName}/src/main.ts`, `console.log('Hello');\n`);
 
     updateFile(
-      `apps/${appName}/webpack.config.js`,
+      `${appName}/webpack.config.js`,
       `
         const { composePlugins, withNx, withWeb } = require('@nx/webpack');
         module.exports = composePlugins(withNx(), withWeb(), (config) => {

@@ -21,7 +21,6 @@ export interface LibraryGeneratorSchema {
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;
-  pascalCaseFiles?: boolean;
   strict?: boolean;
   publishable?: boolean;
   buildable?: boolean;

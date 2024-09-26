@@ -1,5 +1,4 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
@@ -8,13 +7,15 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { existsSync, mkdirSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
 import { NxCache, CachedResult as NativeCacheResult } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { readNxJson } from '../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isCI } from '../utils/is-ci';
@@ -28,9 +29,12 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function getCache(options: DefaultTasksRunnerOptions) {
+export function getCache(
+  nxJson: NxJsonConfiguration,
+  options: DefaultTasksRunnerOptions
+) {
   return process.env.NX_DISABLE_DB !== 'true' &&
-    process.env.NX_DB_CACHE === 'true'
+    (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(readNxJson())
@@ -155,26 +159,22 @@ export class DbCache {
     }
   }
 
-  private async getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
-    try {
-      const { getRemoteCache } = await import(
-        this.resolvePackage('@nx/powerpack-s3-cache')
-      );
-      return getRemoteCache();
-    } catch {
-      return null;
-    }
+  private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-s3-cache');
   }
 
-  private async getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+  private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  }
+
+  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
+    let getRemoteCache = null;
     try {
-      const { getRemoteCache } = await import(
-        this.resolvePackage('@nx/powerpack-shared-fs-cache')
-      );
-      return getRemoteCache();
+      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
     } catch {
       return null;
     }
+    return getRemoteCache();
   }
 
   private resolvePackage(pkg: string) {
@@ -230,6 +230,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
+          windowsHide: true,
         });
         p.unref();
       } catch (e) {
@@ -288,7 +289,7 @@ export class Cache {
       await this.remove(tdCommit);
       await this.remove(td);
 
-      await mkdir(td);
+      await mkdir(td, { recursive: true });
       await writeFile(
         join(td, 'terminalOutput'),
         terminalOutput ?? 'no terminal output'
@@ -300,7 +301,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
-          if (await pathExists(src)) {
+          if (existsSync(src)) {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
@@ -338,7 +339,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (await pathExists(cached)) {
+          if (existsSync(cached)) {
             const src = join(this.root, f);
             await this.remove(src);
             await this.copy(cached, src);
@@ -413,7 +414,7 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (await pathExists(tdCommit)) {
+    if (existsSync(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
         'utf-8'

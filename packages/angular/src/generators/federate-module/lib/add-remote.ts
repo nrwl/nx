@@ -17,7 +17,7 @@ export async function addRemote(tree: Tree, schema: Schema) {
       directory: schema.remoteDirectory,
       host: schema.host,
       standalone: schema.standalone,
-      projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
+      projectNameAndRootFormat: schema.projectNameAndRootFormat,
       unitTestRunner: schema.unitTestRunner ?? UnitTestRunner.Jest,
       e2eTestRunner: schema.e2eTestRunner ?? E2eTestRunner.Cypress,
       skipFormat: true,
@@ -29,8 +29,7 @@ export async function addRemote(tree: Tree, schema: Schema) {
         name: schema.remote,
         directory: schema.remoteDirectory,
         projectType: 'application',
-        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
-        callingGenerator: '@nx/angular:federate-module',
+        projectNameAndRootFormat: schema.projectNameAndRootFormat,
       });
 
     projectRoot = remoteRoot;

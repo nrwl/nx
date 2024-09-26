@@ -1,6 +1,6 @@
 {
   "name": "npm-package",
-  "factory": "./src/generators/npm-package/npm-package#npmPackageGeneratorInternal",
+  "factory": "./src/generators/npm-package/npm-package#npmPackageGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceNpmPackage",
@@ -32,7 +32,7 @@
   },
   "description": "Create a minimal NPM package.",
   "x-type": "library",
-  "implementation": "/packages/workspace/src/generators/npm-package/npm-package#npmPackageGeneratorInternal.ts",
+  "implementation": "/packages/workspace/src/generators/npm-package/npm-package#npmPackageGenerator.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/workspace/src/generators/npm-package/schema.json",

@@ -1,4 +1,3 @@
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
 import { readJson, writeJson } from '@nx/devkit';
 import { Linter } from '@nx/eslint/src/generators/utils/linter';
@@ -11,10 +10,7 @@ import {
 import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
 
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
-// nested code imports graph from the repo, which might have innacurate graph version
+// nested code imports graph from the repo, which might have inaccurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
   createProjectGraphAsync: jest
@@ -36,12 +32,8 @@ function listFiles(tree: Tree): string[] {
 describe('StorybookConfiguration generator', () => {
   let tree: Tree;
   const libName = 'test-ui-lib';
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
 
   beforeEach(async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
     tree = await createStorybookTestWorkspaceForLib(libName);
 
     jest.resetModules();
@@ -117,7 +109,7 @@ describe('StorybookConfiguration generator', () => {
     // add standalone component
     await componentGenerator(tree, {
       name: 'standalone',
-      project: libName,
+      directory: `${libName}/src/lib/standalone`,
       standalone: true,
       skipFormat: true,
     });
@@ -131,16 +123,14 @@ describe('StorybookConfiguration generator', () => {
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-button',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
       export: true,
       skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
       standalone: true,
       export: true,
       skipFormat: true,
@@ -159,7 +149,7 @@ describe('StorybookConfiguration generator', () => {
     // add standalone component
     await componentGenerator(tree, {
       name: 'standalone',
-      project: libName,
+      directory: `${libName}/src/lib/standalone`,
       standalone: true,
       skipFormat: true,
     });
@@ -173,16 +163,14 @@ describe('StorybookConfiguration generator', () => {
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-button',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
       export: true,
       skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
       standalone: true,
       export: true,
       skipFormat: true,

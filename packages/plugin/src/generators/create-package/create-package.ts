@@ -26,16 +26,6 @@ export async function createPackageGenerator(
   host: Tree,
   schema: CreatePackageSchema
 ) {
-  return await createPackageGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function createPackageGeneratorInternal(
-  host: Tree,
-  schema: CreatePackageSchema
-) {
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeSchema(host, schema);

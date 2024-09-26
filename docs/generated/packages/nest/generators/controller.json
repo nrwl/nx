@@ -1,6 +1,6 @@
 {
   "name": "controller",
-  "factory": "./src/generators/controller/controller#controllerGeneratorInternal",
+  "factory": "./src/generators/controller/controller",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestControllerGenerator",
@@ -14,13 +14,6 @@
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use?"
-      },
-      "project": {
-        "description": "The Nest project to target.",
-        "type": "string",
-        "$default": { "$source": "projectName" },
-        "alias": "p",
-        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. It will be removed in Nx v20."
       },
       "nameAndDirectoryFormat": {
         "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
@@ -44,12 +37,6 @@
         "enum": ["jest", "none"],
         "default": "jest"
       },
-      "flat": {
-        "description": "Flag to indicate if a directory is created.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20.",
-        "type": "boolean",
-        "default": false
-      },
       "language": {
         "description": "Nest controller language.",
         "type": "string",
@@ -70,7 +57,7 @@
     "presets": []
   },
   "description": "Run the `controller` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/controller/controller#controllerGeneratorInternal.ts",
+  "implementation": "/packages/nest/src/generators/controller/controller.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/controller/schema.json",

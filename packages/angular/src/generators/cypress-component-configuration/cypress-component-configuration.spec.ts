@@ -64,7 +64,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        directory: 'fancy-lib/src/lib/fancy-cmp',
         export: true,
         skipFormat: true,
       });
@@ -130,7 +130,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        directory: 'fancy-lib/src/lib/fancy-cmp/',
         export: true,
         skipFormat: true,
       });
@@ -196,7 +196,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        directory: 'fancy-lib/src/lib/fancy-cmp/',
         export: true,
         skipFormat: true,
       });
@@ -252,7 +252,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-app',
+        directory: 'fancy-app/src/lib/fancy-cmp',
         export: true,
         skipFormat: true,
       });
@@ -300,7 +300,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        directory: 'fancy-app/src/app/fancy-lib',
         export: true,
         skipFormat: true,
       });
@@ -424,7 +424,7 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await componentGenerator(tree, {
       name: 'fancy-cmp',
-      project: 'fancy-app',
+      directory: 'fancy-app/src/app/fancy-cmp',
       export: true,
       skipFormat: true,
     });
@@ -695,17 +695,13 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await componentGenerator(tree, {
       name: 'fancy-button',
-      path: 'secondary/src/lib/button',
-      project: 'secondary',
-      flat: true,
+      directory: 'secondary/src/lib/button/',
       skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'standalone-fancy-button',
-      path: 'secondary/src/lib/button',
-      project: 'secondary',
+      directory: 'secondary/src/lib/button',
       standalone: true,
-      flat: true,
       skipFormat: true,
     });
     projectGraph = {
@@ -819,14 +815,12 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await componentGenerator(tree, {
       name: 'cmp-one',
-      project: 'multiple-components',
-      flat: true,
+      directory: 'multiple-components/src/lib',
       skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'cmp-two',
-      project: 'multiple-components',
-      flat: true,
+      directory: 'multiple-components/src/lib',
       skipFormat: true,
     });
     tree.write(
@@ -914,7 +908,7 @@ async function setup(
     `${options.name}-three`,
   ]) {
     await componentGenerator(tree, {
-      project: options.project,
+      directory: `${options.project}/src/lib/${name}`,
       name,
       skipFormat: true,
     });

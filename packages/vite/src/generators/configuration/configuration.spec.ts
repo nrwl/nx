@@ -10,7 +10,6 @@ import {
   mockReactAppGenerator,
   mockReactLibNonBuildableJestTestRunnerGenerator,
   mockReactLibNonBuildableVitestRunnerGenerator,
-  mockReactMixedAppGenerator,
   mockUnknownAppGenerator,
   mockWebAppGenerator,
 } from '../../utils/test-utils';
@@ -261,7 +260,6 @@ describe('@nx/vite:configuration', () => {
       linter: 'eslint',
       testEnvironment: 'jsdom',
       js: false,
-      pascalCaseFiles: false,
       strict: true,
       config: 'project',
     };
@@ -305,7 +303,7 @@ describe('@nx/vite:configuration', () => {
       ${'none'}      | ${undefined}
       ${'jest'}      | ${'my-lib/jest.config.ts'}
     `(
-      'should respect unitTestRunner if passed',
+      'should respect provided unitTestRunner="$unitTestRunner"',
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,

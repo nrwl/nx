@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "SchematicsAngularComponent",
@@ -26,13 +26,6 @@
         "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
         "type": "string",
         "enum": ["as-provided", "derived"]
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
       },
       "prefix": {
         "type": "string",
@@ -92,12 +85,6 @@
         "description": "Do not create `spec.ts` test files for the new component.",
         "default": false
       },
-      "flat": {
-        "type": "boolean",
-        "description": "Create the new files at the top level of the current project.",
-        "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-      },
       "skipImport": {
         "type": "boolean",
         "description": "Do not import this component into the owning NgModule.",
@@ -137,7 +124,7 @@
   },
   "aliases": ["c"],
   "description": "Generate an Angular Component.",
-  "implementation": "/packages/angular/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/angular/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/component/schema.json",
   "type": "generator"

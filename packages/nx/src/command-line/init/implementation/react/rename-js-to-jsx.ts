@@ -1,4 +1,4 @@
-import { readFileSync, renameSync } from 'fs-extra';
+import { readFileSync, renameSync } from 'node:fs';
 import { globWithWorkspaceContext } from '../../../../utils/workspace-context';
 import { fileExists } from '../../../../utils/fileutils';
 

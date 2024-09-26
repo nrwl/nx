@@ -91,12 +91,6 @@
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
     },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case component file name (e.g. `App.tsx`).",
-      "alias": "P",
-      "default": false
-    },
     "routing": {
       "type": "boolean",
       "description": "Generate library with routes."

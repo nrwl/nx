@@ -20,13 +20,11 @@ describe('component', () => {
     appTree.write('.gitignore', '');
     defaultSchema = {
       name: 'hello',
-      project: projectName,
+      directory: 'my-lib/src/lib/hello',
       skipTests: false,
       export: false,
-      pascalCaseFiles: false,
       classComponent: false,
       js: false,
-      flat: false,
       skipFormat: true,
     };
 
@@ -67,7 +65,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await expoComponentGenerator(appTree, {
       ...defaultSchema,
-      project: 'my-app',
+      directory: 'my-app/src/app/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -89,7 +87,7 @@ describe('component', () => {
     it('should not export from an app', async () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
-        project: 'my-app',
+        directory: 'my-lib/src/app/my-app',
         export: true,
       });
 
@@ -99,24 +97,11 @@ describe('component', () => {
     });
   });
 
-  describe('--pascalCaseFiles', () => {
-    it('should generate component files with upper case names', async () => {
-      await expoComponentGenerator(appTree, {
-        ...defaultSchema,
-        pascalCaseFiles: true,
-      });
-      expect(appTree.exists('my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
-      expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx')
-      ).toBeTruthy();
-    });
-  });
-
   describe('--directory', () => {
     it('should create component under the directory', async () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
-        directory: 'components',
+        directory: 'my-lib/src/components/hello',
       });
 
       expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
@@ -126,30 +111,10 @@ describe('component', () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
         name: 'helloWorld',
-        directory: 'lib/foo',
+        directory: 'my-lib/src/lib/foo/hello-world',
       });
 
       expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));
-    });
-  });
-
-  describe('--flat', () => {
-    it('should create in project directory rather than in its own folder', async () => {
-      await expoComponentGenerator(appTree, {
-        ...defaultSchema,
-        flat: true,
-      });
-
-      expect(appTree.exists('my-lib/src/lib/hello.tsx'));
-    });
-    it('should work with custom directory path', async () => {
-      await expoComponentGenerator(appTree, {
-        ...defaultSchema,
-        flat: true,
-        directory: 'components',
-      });
-
-      expect(appTree.exists('my-lib/src/components/hello.tsx'));
     });
   });
 });

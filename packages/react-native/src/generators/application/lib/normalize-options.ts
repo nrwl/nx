@@ -33,7 +33,6 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/react-native:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(host);

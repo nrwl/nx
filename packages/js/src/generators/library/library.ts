@@ -56,9 +56,6 @@ export async function libraryGenerator(
 ) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -148,6 +145,7 @@ export async function libraryGeneratorInternal(
       coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: options.testEnvironment,
+      runtimeTsconfigFileName: 'tsconfig.lib.json',
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -170,10 +168,6 @@ export async function libraryGeneratorInternal(
         'index.' + (options.js ? 'js' : 'ts')
       ),
     ]);
-  }
-
-  if (options.bundler !== 'none') {
-    addBundlerDependencies(tree, options);
   }
 
   if (!options.skipFormat) {
@@ -413,23 +407,6 @@ export async function addLint(
   return task;
 }
 
-function addBundlerDependencies(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
-    if (options.bundler === 'tsc') {
-      json.dependencies = {
-        ...json.dependencies,
-        tslib: tsLibVersion,
-      };
-    } else if (options.bundler === 'swc') {
-      json.dependencies = {
-        ...json.dependencies,
-        '@swc/helpers': swcHelpersVersion,
-      };
-    }
-    return json;
-  });
-}
-
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, join(options.projectRoot, 'tsconfig.json'), (json) => {
     if (options.strict) {
@@ -604,6 +581,7 @@ async function addJest(
         : options.bundler === 'rollup'
         ? 'swc'
         : undefined,
+    runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
 
@@ -723,15 +701,13 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
-  const fileName = getCaseAwareFileName({
-    fileName: options.simpleName
+  const fileName = names(
+    options.simpleName
       ? projectNames.projectSimpleName
-      : projectNames.projectFileName,
-    pascalCaseFiles: options.pascalCaseFiles,
-  });
+      : projectNames.projectFileName
+  ).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -748,15 +724,6 @@ async function normalizeOptions(
     parsedTags,
     importPath,
   };
-}
-
-function getCaseAwareFileName(options: {
-  pascalCaseFiles: boolean;
-  fileName: string;
-}) {
-  const normalized = names(options.fileName);
-
-  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
 }
 
 function addProjectDependencies(
