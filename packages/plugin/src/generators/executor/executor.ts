@@ -153,8 +153,7 @@ async function normalizeOptions(
   const { project, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       name: options.name,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      directory: options.directory,
+      path: options.directory,
       fileName: 'executor',
     });
 
