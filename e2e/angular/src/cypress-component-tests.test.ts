@@ -133,7 +133,7 @@ describe('Angular Cypress Component Tests', () => {
 
 function createApp(appName: string) {
   runCLI(
-    `generate @nx/angular:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+    `generate @nx/angular:app ${appName} --bundler=webpack --no-interactive`
   );
   runCLI(
     `generate @nx/angular:component fancy-component --directory=${appName}/src/lib/fancy-component --no-interactive`
@@ -141,9 +141,7 @@ function createApp(appName: string) {
 }
 
 function createLib(projectName: string, appName: string, libName: string) {
-  runCLI(
-    `generate @nx/angular:lib ${libName} --project-name-and-root-format=as-provided --no-interactive`
-  );
+  runCLI(`generate @nx/angular:lib ${libName} --no-interactive`);
   runCLI(
     `generate @nx/angular:component btn --directory=${libName}/src/lib/btn --inlineTemplate --inlineStyle --export --no-interactive`
   );
@@ -186,9 +184,7 @@ export class BtnStandaloneComponent {
 
 function createBuildableLib(projectName: string, libName: string) {
   // create lib
-  runCLI(
-    `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
-  );
+  runCLI(`generate @nx/angular:lib ${libName} --buildable --no-interactive`);
   // create cmp for lib
   runCLI(
     `generate @nx/angular:component input --directory=${libName}/src/lib/input --inlineTemplate --inlineStyle --export --no-interactive`

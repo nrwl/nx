@@ -34,14 +34,12 @@ describe('Angular Projects', () => {
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/angular'] });
     runCLI(
-      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --no-interactive`
     );
-    runCLI(
-      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:lib ${lib1} --no-interactive`);
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
       `${app1}/src/app/app.component.html`
@@ -72,12 +70,12 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --no-interactive`
     );
 
     const esbuildStandaloneApp = uniq('esbuild-app');
     runCLI(
-      `generate @nx/angular:app ${esbuildStandaloneApp} --bundler=esbuild --directory=my-dir/${esbuildStandaloneApp} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildStandaloneApp} --bundler=esbuild --directory=my-dir/${esbuildStandaloneApp} --no-interactive`
     );
 
     updateFile(
@@ -155,7 +153,7 @@ describe('Angular Projects', () => {
     const app = uniq('app');
 
     runCLI(
-      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --no-interactive`
     );
 
     if (runE2ETests('playwright')) {
@@ -219,10 +217,10 @@ describe('Angular Projects', () => {
     const buildableChildLib = uniq('buildlib2');
 
     runCLI(
-      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -463,14 +461,14 @@ describe('Angular Projects', () => {
     const entryPoint = uniq('entrypoint');
 
     runCLI(
-      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
     );
 
     runCLI(
-      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
@@ -504,12 +502,10 @@ describe('Angular Projects', () => {
     expect(() => runCLI(`lint ${childLib} --fix`)).not.toThrow();
   });
 
-  it('should support generating libraries with a scoped name when --project-name-and-root-format=as-provided', () => {
+  it('should support generating libraries with a scoped name when', () => {
     const libName = uniq('@my-org/lib1');
 
-    runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/angular:lib ${libName} --buildable --standalone`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -530,7 +526,7 @@ describe('Angular Projects', () => {
     const webpackApp = uniq('webpack-app');
 
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --no-interactive`
     );
 
     // check build produces both the browser and server bundles
@@ -541,7 +537,7 @@ describe('Angular Projects', () => {
     );
 
     runCLI(
-      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --no-interactive`
     );
 
     // check build only produces the browser bundle
