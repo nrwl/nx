@@ -73,7 +73,7 @@ allow overwrites.
    an access token gets compromised it can be easily removed, in turn deleting all the cache artifacts that were created
    using it.
 
-Nx Replay is not the only remote cache you can use. You can also use one of the [Powerpack self-hosted remote cache plugins](/features/powerpack/custom-caching). These plugins offer the performance benefits of a remote cache, but not have the same security guarantees.
+Nx Replay is not the only remote cache you can use. You can also use one of the [Powerpack self-hosted remote cache plugins](/features/powerpack/custom-caching). These plugins offer the performance benefits of a remote cache, but do not have the same security guarantees as Nx Replay.
 
 ## Self-Hosted Remote Cache
 
