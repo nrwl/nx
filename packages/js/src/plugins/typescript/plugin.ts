@@ -545,6 +545,11 @@ function resolveInternalProjectReferences(
       continue;
     }
 
+    if (!existsSync(refConfigPath)) {
+      // the referenced tsconfig doesn't exist, ignore it
+      continue;
+    }
+
     if (isExternalProjectReference(refConfigPath, workspaceRoot, projectRoot)) {
       continue;
     }
@@ -582,6 +587,11 @@ function hasExternalProjectReferences(
     let refConfigPath = ref.path;
     if (seen.has(refConfigPath)) {
       // Already seen
+      continue;
+    }
+
+    if (!existsSync(refConfigPath)) {
+      // the referenced tsconfig doesn't exist, ignore it
       continue;
     }
 
