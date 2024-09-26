@@ -1,5 +1,3 @@
-import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
 export interface ComponentGeneratorSchema {
   path: string;
   name?: string;
@@ -13,6 +11,7 @@ export interface ComponentGeneratorSchema {
 }
 
 export interface NormalizedSchema extends ComponentGeneratorSchema {
+  directory: string;
   projectName: string;
   projectSourceRoot: string;
   fileName: string;

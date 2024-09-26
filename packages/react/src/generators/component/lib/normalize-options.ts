@@ -54,6 +54,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    directory,
     projectName,
     styledModule,
     hasStyles: options.style !== 'none',

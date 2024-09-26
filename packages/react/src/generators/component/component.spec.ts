@@ -41,7 +41,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      path: `${projectName}/src/lib/hello`,
+      path: `${projectName}/src/lib/hello/hello`,
     });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -61,7 +61,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      path: `${projectName}/src/lib/hello`,
+      path: `${projectName}/src/lib/hello/hello`,
       globalCss: true,
     });
 
@@ -81,7 +81,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      path: 'my-app/src/app/hello',
+      path: 'my-app/src/app/hello/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -95,7 +95,7 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       style: 'css',
-      path: 'my-app/src/app/hello',
+      path: 'my-app/src/app/hello/hello',
       globalCss: true,
     });
 
@@ -110,7 +110,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         classComponent: true,
       });
 
@@ -170,7 +170,7 @@ describe('component', () => {
     it('should generate component files without styles', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         style: 'none',
       });
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -204,7 +204,7 @@ describe('component', () => {
     it('should use styled-components as the styled API library', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         style: 'styled-components',
       });
 
@@ -234,7 +234,7 @@ describe('component', () => {
     it('should use @emotion/styled as the styled API library', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         style: '@emotion/styled',
       });
 
@@ -265,7 +265,7 @@ describe('component', () => {
     it('should use styled-jsx as the styled API library', async () => {
       await componentGenerator(appTree, {
         name: 'hello',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         style: 'styled-jsx',
       });
 
@@ -296,7 +296,7 @@ describe('component', () => {
       await componentGenerator(appTree, {
         name: 'hello',
         style: 'css',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         routing: true,
       });
 

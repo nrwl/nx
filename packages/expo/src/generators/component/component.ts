@@ -25,7 +25,7 @@ export async function expoComponentGenerator(host: Tree, schema: Schema) {
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(host, join(__dirname, './files'), options.path, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
   });

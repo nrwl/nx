@@ -12,20 +12,7 @@ import {
 } from 'nx/src/devkit-internals';
 import { join, relative } from 'path';
 
-// TODO(leo): remove in a follow up
-export type NameAndDirectoryFormat = 'as-provided';
-
 export type ArtifactGenerationOptions = {
-  name: string;
-  directory?: string; // Deprecated in favor of path
-  path?: string;
-  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
-  fileName?: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
-  suffix?: string;
-};
-
-export type ArtifactGenerationOptionsV2 = {
   path: string;
   name?: string;
   fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
@@ -56,145 +43,64 @@ export type NameAndDirectoryOptions = {
   project: string;
 };
 
-export async function determineArtifactNameAndDirectoryOptionsV2(
-  tree: Tree,
-  options: ArtifactGenerationOptions
-): Promise<
-  NameAndDirectoryOptions & {
-    // TODO(leo): remove in a follow up
-    nameAndDirectoryFormat: 'as-provided';
-  }
-> {
-  const nameAndDirectoryOptions = getNameAndDirectoryOptions(tree, options);
-
-  validateResolvedProject(
-    tree,
-    nameAndDirectoryOptions.project,
-    options,
-    nameAndDirectoryOptions.directory
-  );
-
-  return {
-    ...nameAndDirectoryOptions,
-    nameAndDirectoryFormat: 'as-provided',
-  };
-}
-
 export async function determineArtifactNameAndDirectoryOptions(
   tree: Tree,
-  options: ArtifactGenerationOptionsV2
+  options: ArtifactGenerationOptions
 ): Promise<NameAndDirectoryOptions> {
-  return { ...getNameAndDirectoryOptionsV2(tree, options) };
+  const normalizedOptions = getNameAndDirectoryOptions(tree, options);
+
+  validateResolvedProject(
+    normalizedOptions.project,
+    normalizedOptions.directory
+  );
+
+  return normalizedOptions;
 }
 
 // TODO(nicholas): Rename to `getArtifactNameAndDirectoryOptions` after testing
-function getNameAndDirectoryOptionsV2(
+function getNameAndDirectoryOptions(
   tree: Tree,
-  options: ArtifactGenerationOptionsV2
+  options: ArtifactGenerationOptions
 ) {
   const path = options.path
     ? normalizePath(options.path.replace(/^\.?\//, ''))
     : undefined;
   const fileExtension = options.fileExtension ?? 'ts';
-  const { name: extractedName, directory } =
+  let { name: extractedName, directory } =
     extractNameAndDirectoryFromPath(path);
-
-  return getAsProvidedOptions(tree, {
-    ...options,
-    fileExtension,
-    directory: options.name ? path : directory,
-    name: options.name ?? extractedName,
-  });
-}
-
-// TODO(nicholas): Remove after testing
-function getNameAndDirectoryOptions(
-  tree: Tree,
-  options: ArtifactGenerationOptions
-): NameAndDirectoryOptions {
-  const directory = options.directory
-    ? normalizePath(options.directory.replace(/^\.?\//, ''))
-    : undefined;
-  const fileExtension = options.fileExtension ?? 'ts';
-  const { name: extractedName, directory: extractedDirectory } =
-    extractNameAndDirectoryFromName(options.name);
-
-  if (extractedDirectory && directory) {
-    throw new Error(
-      `You can't specify both a directory (${options.directory}) and a name with a directory path (${options.name}). ` +
-        `Please specify either a directory or a name with a directory path.`
-    );
-  }
-
-  const asProvidedOptions = getAsProvidedOptions(tree, {
-    ...options,
-    directory: directory ?? extractedDirectory,
-    fileExtension,
-    name: extractedName,
-  });
-
-  return asProvidedOptions;
-}
-
-function getAsProvidedOptions(
-  tree: Tree,
-  options: ArtifactGenerationOptions
-): NameAndDirectoryOptions {
   const relativeCwd = getRelativeCwd();
 
-  let asProvidedDirectory: string;
-  if (options.directory) {
-    // append the directory to the current working directory if it doesn't start with it
-    if (
-      options.directory === relativeCwd ||
-      options.directory.startsWith(`${relativeCwd}/`)
-    ) {
-      asProvidedDirectory = options.directory;
-    } else {
-      asProvidedDirectory = joinPathFragments(relativeCwd, options.directory);
-    }
-  } else {
-    asProvidedDirectory = relativeCwd;
+  // append the directory to the current working directory if it doesn't start with it
+  if (directory !== relativeCwd && !directory.startsWith(`${relativeCwd}/`)) {
+    directory = joinPathFragments(relativeCwd, directory);
   }
-  const asProvidedProject = findProjectFromPath(tree, asProvidedDirectory);
 
-  const asProvidedFileName =
+  const project = findProjectFromPath(tree, directory);
+
+  const name =
     options.fileName ??
-    (options.suffix ? `${options.name}.${options.suffix}` : options.name);
-  const asProvidedFilePath = joinPathFragments(
-    asProvidedDirectory,
-    `${asProvidedFileName}.${options.fileExtension}`
-  );
+    (options.suffix ? `${extractedName}.${options.suffix}` : extractedName);
+  const filePath = joinPathFragments(directory, `${name}.${fileExtension}`);
+
   return {
-    artifactName: options.name,
-    directory: asProvidedDirectory,
-    fileName: asProvidedFileName,
-    filePath: asProvidedFilePath,
-    project: asProvidedProject,
+    artifactName: options.name ?? extractedName,
+    directory: directory,
+    fileName: name,
+    filePath: filePath,
+    project: project,
   };
 }
 
 function validateResolvedProject(
-  tree: Tree,
   project: string | undefined,
-  options: ArtifactGenerationOptions,
   normalizedDirectory: string
 ): void {
   if (project) {
     return;
   }
 
-  if (options.directory) {
-    throw new Error(
-      `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
-        `Please make sure to navigate to a location or provide a directory that exists under a project root.`
-    );
-  }
-
   throw new Error(
-    `The current working directory "${
-      getRelativeCwd() || '.'
-    }" does not exist under any project root. ` +
+    `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
       `Please make sure to navigate to a location or provide a directory that exists under a project root.`
   );
 }
@@ -226,17 +132,6 @@ function getCwd(): string {
   return process.env.INIT_CWD?.startsWith(workspaceRoot)
     ? process.env.INIT_CWD
     : process.cwd();
-}
-
-function extractNameAndDirectoryFromName(rawName: string): {
-  name: string;
-  directory: string | undefined;
-} {
-  const parsedName = normalizePath(rawName).split('/');
-  const name = parsedName.pop();
-  const directory = parsedName.length ? parsedName.join('/') : undefined;
-
-  return { name, directory };
 }
 
 function extractNameAndDirectoryFromPath(path: string): {

@@ -26,7 +26,7 @@ describe('component', () => {
   it('should generate component files', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',
-      path: `${projectName}/src/lib/hello`,
+      path: `${projectName}/src/lib/hello/hello`,
     });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -36,7 +36,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',
-      path: 'my-app/src/app/hello',
+      path: 'my-app/src/app/hello/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -47,7 +47,7 @@ describe('component', () => {
     it('should add to index.ts barrel', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        path: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         export: true,
       });
 
@@ -59,7 +59,7 @@ describe('component', () => {
     it('should not export from an app', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        path: 'my-app/src/app/hello',
+        path: 'my-app/src/app/hello/hello',
         export: true,
       });
 
@@ -73,7 +73,7 @@ describe('component', () => {
     it('should create component under the directory', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        path: 'my-lib/src/components/hello',
+        path: 'my-lib/src/components/hello/hello',
       });
 
       expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
@@ -82,7 +82,7 @@ describe('component', () => {
     it('should create with nested directories', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'helloWorld',
-        path: 'my-lib/src/lib/foo/hello-world',
+        path: 'my-lib/src/lib/foo/hello-world/hello-world',
       });
 
       expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));

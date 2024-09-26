@@ -23,6 +23,7 @@ export async function normalizeOptions(
     artifactName: name,
     fileName,
     filePath,
+    directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     name: options.name,
@@ -46,6 +47,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    directory,
     filePath,
     className,
     fileName: componentFileName,

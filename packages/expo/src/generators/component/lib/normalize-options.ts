@@ -3,6 +3,7 @@ import { Schema } from '../schema';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 export interface NormalizedSchema extends Schema {
+  directory: string;
   projectSourceRoot: string;
   fileName: string;
   className: string;
@@ -20,6 +21,7 @@ export async function normalizeOptions(
     artifactName: name,
     fileName,
     filePath,
+    directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     name: options.name,
@@ -43,6 +45,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    directory,
     className,
     fileName,
     filePath,

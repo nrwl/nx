@@ -1,5 +1,3 @@
-import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
 export type Language = 'js' | 'ts';
 export type UnitTestRunner = 'jest' | 'none';
 export type NestSchematic =

@@ -20,7 +20,7 @@ describe('component', () => {
     appTree.write('.gitignore', '');
     defaultSchema = {
       name: 'hello',
-      path: 'my-lib/src/lib/hello',
+      path: 'my-lib/src/lib/hello/hello',
       skipTests: false,
       export: false,
       classComponent: false,
@@ -35,7 +35,6 @@ describe('component', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
     await expoLibraryGenerator(appTree, {
       name: projectName,
@@ -45,7 +44,6 @@ describe('component', () => {
       unitTestRunner: 'jest',
       strict: true,
       js: false,
-      projectNameAndRootFormat: 'as-provided',
     });
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
@@ -65,7 +63,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await expoComponentGenerator(appTree, {
       ...defaultSchema,
-      path: 'my-app/src/app/hello',
+      path: 'my-app/src/app/hello/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
