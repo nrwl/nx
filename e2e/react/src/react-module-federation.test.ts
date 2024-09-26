@@ -133,7 +133,7 @@ describe('React Module Federation', () => {
       const remote3 = uniq('remote3');
 
       runCLI(
-        `generate @nx/react:host ${shell} --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
       );
 
       checkFilesExist(`apps/${shell}/module-federation.config.ts`);
@@ -292,10 +292,10 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --bundler=webpack --no-interactive --skipFormat`
       );
       runCLI(
-        `generate @nx/react:remote ${remote} --bundler=webpack --host=${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:remote ${remote} --bundler=webpack --host=${shell} --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -857,7 +857,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -993,7 +993,7 @@ describe('React Module Federation', () => {
       const remotePort = 4205;
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --dynamic=true --no-interactive --skipFormat`
       );
 
       updateJson(`${remote}/project.json`, (project) => {
