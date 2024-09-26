@@ -10,7 +10,7 @@ describe('Jest root projects', () => {
         packages: ['@nx/angular'],
       });
       runCLI(
-        `generate @nx/angular:app ${myapp} --directory . --rootProject --no-interactive`
+        `generate @nx/angular:app --name=${myapp} --directory . --rootProject --no-interactive`
       );
     });
 

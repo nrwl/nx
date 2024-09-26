@@ -17,9 +17,7 @@ describe('Storybook generators and executors for Vue projects', () => {
     proj = newProject({
       packages: ['@nx/vue'],
     });
-    runCLI(
-      `generate @nx/vue:app ${vueStorybookApp} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/vue:app ${vueStorybookApp} --no-interactive`);
     runCLI(
       `generate @nx/vue:storybook-configuration ${vueStorybookApp} --generateStories --no-interactive`
     );

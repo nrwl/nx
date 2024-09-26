@@ -48,9 +48,7 @@ describe('Vite Plugin', () => {
 
       beforeAll(() => {
         myApp = uniq('my-app');
-        runCLI(
-          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp}`
-        );
+        runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
       });
 
       afterEach(() => {

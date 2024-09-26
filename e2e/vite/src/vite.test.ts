@@ -155,7 +155,7 @@ describe('@nx/vite/plugin', () => {
     it('should support importing .js and .css files in tsconfig path', () => {
       const mylib = uniq('mylib');
       runCLI(
-        `generate @nx/react:library ${mylib} --bundler=none --unitTestRunner=vitest --directory=libs/${mylib} --project-name-and-root-format=as-provided`
+        `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
       );
       updateFile(`libs/${mylib}/src/styles.css`, `.foo {}`);
       updateFile(`libs/${mylib}/src/foo.mts`, `export const foo = 'foo';`);

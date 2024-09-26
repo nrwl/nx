@@ -14,9 +14,7 @@ describe('Storybook executors for Angular', () => {
     newProject({
       packages: ['@nx/angular'],
     });
-    runCLI(
-      `g @nx/angular:library ${angularStorybookLib} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`g @nx/angular:library ${angularStorybookLib} --no-interactive`);
     runCLI(
       `generate @nx/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
     );

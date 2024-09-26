@@ -25,12 +25,7 @@
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css",
-      "enum": [
-        "css",
-        "scss",
-        "sass",
-        "less"
-      ],
+      "enum": ["css", "scss", "sass", "less"],
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -74,11 +69,7 @@
     },
     "viewEncapsulation": {
       "description": "Specifies the view encapsulation strategy.",
-      "enum": [
-        "Emulated",
-        "None",
-        "ShadowDom"
-      ],
+      "enum": ["Emulated", "None", "ShadowDom"],
       "type": "string"
     },
     "prefix": {
@@ -108,20 +99,13 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": [
-        "jest",
-        "none"
-      ],
+      "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": [
-        "playwright",
-        "cypress",
-        "none"
-      ],
+      "enum": ["playwright", "cypress", "none"],
       "description": "Test runner to use for end to end (E2E) tests.",
       "x-prompt": "Which E2E test runner would you like to use?",
       "default": "playwright"
@@ -133,10 +117,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": [
-        "eslint",
-        "none"
-      ],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "backendProject": {
@@ -189,10 +170,7 @@
     "bundler": {
       "description": "Bundler to use to build the application. It defaults to `esbuild` for Angular versions >= 17.0.0. Otherwise, it defaults to `webpack`. _Note: The `esbuild` bundler is only considered stable from Angular v17._",
       "type": "string",
-      "enum": [
-        "webpack",
-        "esbuild"
-      ],
+      "enum": ["webpack", "esbuild"],
       "x-prompt": "Which bundler do you want to use to build the application?",
       "x-priority": "important"
     },
@@ -204,8 +182,6 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "directory"
-  ],
+  "required": ["directory"],
   "examplesFile": "../../../docs/application-examples.md"
 }

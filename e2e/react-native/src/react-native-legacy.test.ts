@@ -265,7 +265,7 @@ describe('@nx/react-native (legacy)', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --install=false --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -274,9 +274,7 @@ describe('@nx/react-native (legacy)', () => {
     // check tests pass
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
 
-    runCLI(
-      `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/react-native:library ${libName} --buildable`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided

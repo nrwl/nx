@@ -118,7 +118,7 @@ function addBabelSupport(path: string) {
 
 function createAppWithCt(appName: string) {
   runCLI(
-    `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false`
+    `generate @nx/next:app apps/${appName} --no-interactive --appDir=false --src=false`
   );
   runCLI(
     `generate @nx/next:component button --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
@@ -252,6 +252,7 @@ function createLibWithCtCypress(libName: string) {
     `
   );
 }
+
 function addTailwindToLib(libName: string) {
   createFile(`libs/${libName}/src/lib/styles.css`, ``);
   runCLI(

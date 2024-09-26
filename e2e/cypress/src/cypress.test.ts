@@ -26,7 +26,7 @@ describe('Cypress E2E Test runner', () => {
     'should generate an app with the Cypress as e2e test runner',
     () => {
       runCLI(
-        `generate @nx/react:app ${myapp} --directory=apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
+        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
       );
 
       // Making sure the package.json file contains the Cypress dependency
@@ -155,7 +155,7 @@ export default defineConfig({
     async () => {
       const appName = uniq('next-cy-app');
       runCLI(
-        `generate @nx/next:app ${appName} --directory=apps/${appName} --e2eTestRunner=none --no-interactive `
+        `generate @nx/next:app apps/${appName} --e2eTestRunner=none --no-interactive `
       );
       runCLI(
         `generate @nx/next:component btn --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
@@ -183,7 +183,7 @@ export default defineConfig({
     async () => {
       let appName = uniq(`angular-cy-app`);
       runCLI(
-        `generate @nx/angular:app ${appName} --directory=apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack`
+        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack`
       );
       runCLI(
         `generate @nx/angular:component btn --directory=apps/${appName}/src/app/btn --no-interactive`
