@@ -3,9 +3,9 @@ import type { Linter, LinterType } from '@nx/eslint';
 export interface CreatePackageSchema {
   name: string;
   project: string;
+  directory: string;
 
   // options to create cli package, passed to js library generator
-  directory?: string;
   skipFormat: boolean;
   tags?: string;
   unitTestRunner: 'jest' | 'none';

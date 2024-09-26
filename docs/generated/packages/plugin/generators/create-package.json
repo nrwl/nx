@@ -10,11 +10,15 @@
     "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executable\" %}\n\nCreate an executable that initializes an Nx workspace with {my-plugin}'s preset:\n\n```bash\nnx g @nx/plugin:create-package create-my-plugin --project my-plugin\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "type": "object",
     "properties": {
+      "directory": {
+        "type": "string",
+        "description": "A directory where the app is placed.",
+        "$default": { "$source": "argv", "index": 0 }
+      },
       "name": {
         "type": "string",
         "description": "The package name of cli, e.g. `create-framework-package`. Note this must be a valid NPM name to be published.",
         "pattern": "create-.+|^@.+/create(?:-.+)?",
-        "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"
       },
       "project": {
@@ -30,10 +34,6 @@
         "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "jest"
-      },
-      "directory": {
-        "type": "string",
-        "description": "A directory where the app is placed."
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -64,7 +64,7 @@
         "x-prompt": "What is the name of the e2e project? Leave blank to skip e2e tests"
       }
     },
-    "required": ["name", "project"],
+    "required": ["directory", "name", "project"],
     "presets": []
   },
   "description": "Create a package which can be used by npx to create a new workspace",

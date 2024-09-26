@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { CreatePackageSchema } from '../schema';
 
@@ -12,6 +12,11 @@ export async function normalizeSchema(
   host: Tree,
   schema: CreatePackageSchema
 ): Promise<NormalizedSchema> {
+  if (!schema.directory) {
+    throw new Error(
+      `Please provide the --directory option. It should be the directory containing the project '${schema.project}'.`
+    );
+  }
   const {
     projectName,
     names: projectNames,
