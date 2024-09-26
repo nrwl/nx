@@ -1,5 +1,5 @@
 import { prompt } from 'enquirer';
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -162,7 +162,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
         group.resolvedVersionPlans.forEach((plan) => {
           if (!args.dryRun) {
-            removeSync(plan.absolutePath);
+            rmSync(plan.absolutePath, { recursive: true, force: true });
             if (args.verbose) {
               console.log(`Removing ${plan.relativePath}`);
             }

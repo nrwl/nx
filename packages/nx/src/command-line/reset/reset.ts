@@ -1,4 +1,4 @@
-import { rmSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 import { daemonClient } from '../../daemon/client/client';
 import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
 import { output } from '../../utils/output';

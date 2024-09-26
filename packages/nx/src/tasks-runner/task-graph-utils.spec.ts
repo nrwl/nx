@@ -8,7 +8,6 @@ import {
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
-import { ensureDirSync, removeSync, writeFileSync } from 'fs-extra';
 import { tmpdir } from 'os';
 import { workspaceRoot } from '../utils/workspace-root';
 import { cacheDir } from '../utils/cache-directory';

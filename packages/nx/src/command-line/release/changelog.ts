@@ -1,7 +1,6 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
-import { removeSync } from 'fs-extra';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { ReleaseType, valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
@@ -962,7 +961,7 @@ async function applyChangesAndExit(
       if (group.resolvedVersionPlans) {
         group.resolvedVersionPlans.forEach((plan) => {
           if (!args.dryRun) {
-            removeSync(plan.absolutePath);
+            rmSync(plan.absolutePath, { recursive: true, force: true });
             if (args.verbose) {
               console.log(`Removing ${plan.relativePath}`);
             }
