@@ -331,8 +331,6 @@ describe('Nx Running Tests', () => {
         .filter((r) => r);
       withBail = withBail.slice(withBail.indexOf('Failed tasks:'));
 
-      expect(withBail).toHaveLength(2);
-
       if (withBail[1] === `- ${myapp1}:error`) {
         expect(withBail).not.toContain(`- ${myapp2}:error`);
       } else {

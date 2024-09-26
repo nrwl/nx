@@ -70,8 +70,9 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "vitest", "none"],
-        "description": "Test runner to use for unit tests."
+        "enum": ["vitest", "jest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "vitest"
       },
       "tags": {
         "type": "string",

@@ -168,6 +168,7 @@ export async function libraryGeneratorInternal(
       skipFormat: true,
       testEnvironment: options.testEnvironment,
       runtimeTsconfigFileName: 'tsconfig.lib.json',
+      compiler: options.compiler === 'swc' ? 'swc' : 'babel',
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

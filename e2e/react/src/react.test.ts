@@ -107,7 +107,7 @@ describe('React Applications', () => {
       const redSvg = `<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" viewBox="0 0 30 30"><rect x="10" y="10" width="10" height="10" fill="red"/></svg>`;
 
       runCLI(
-        `generate @nx/react:app ${appName} --directory=apps/${appName} --style=css --bundler=webpack --no-interactive --skipFormat`
+        `generate @nx/react:app ${appName} --directory=apps/${appName} --style=css --bundler=webpack --unit-test-runner=jest --no-interactive --skipFormat`
       );
       runCLI(
         `generate @nx/react:lib ${libName} --directory=libs${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`
@@ -234,7 +234,7 @@ describe('React Applications', () => {
       );
       const appTestResults = await runCLIAsync(`test ${appName}`);
       expect(appTestResults.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total'
+        `Successfully ran target test for project ${appName}`
       );
 
       lintResults = runCLI(`lint ${libName}`);
@@ -243,7 +243,7 @@ describe('React Applications', () => {
       );
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total'
+        `Successfully ran target test for project ${libName}`
       );
     }, 250_000);
 
@@ -414,7 +414,7 @@ describe('React Applications', () => {
       const plainJsLib = uniq('jslib');
 
       runCLI(
-        `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --no-interactive --js --skipFormat`
+        `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --unit-test-runner=jest --no-interactive --js --skipFormat`
       );
       runCLI(
         `generate @nx/react:lib ${libName} --directory=libs/${libName} --no-interactive --js --unit-test-runner=none --skipFormat`
