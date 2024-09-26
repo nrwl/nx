@@ -392,10 +392,10 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2(rollup@4.22.0)
       '@rspack/core':
-        specifier: ^1.0.4
+        specifier: 1.0.5
         version: 1.0.5(@swc/helpers@0.5.11)
       '@rspack/dev-server':
-        specifier: ^1.0.4
+        specifier: 1.0.5
         version: 1.0.5(@rspack/core@1.0.5(@swc/helpers@0.5.11))(@types/express@4.17.14)(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.88.0))(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))
       '@rspack/plugin-minify':
         specifier: ^0.7.5
