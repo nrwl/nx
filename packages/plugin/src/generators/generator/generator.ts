@@ -19,6 +19,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 import { join, relative } from 'path';
 
 type NormalizedSchema = Schema & {
+  directory: string;
   fileName: string;
   className: string;
   propertyName: string;
@@ -52,6 +53,7 @@ async function normalizeOptions(
 
   return {
     ...options,
+    directory,
     project,
     fileName,
     className,

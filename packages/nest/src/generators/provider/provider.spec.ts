@@ -18,6 +18,8 @@ describe('provider generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(providerGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      providerGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

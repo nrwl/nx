@@ -18,6 +18,8 @@ describe('guard generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(guardGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      guardGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

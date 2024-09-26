@@ -57,7 +57,6 @@ export async function determineArtifactNameAndDirectoryOptions(
   return normalizedOptions;
 }
 
-// TODO(nicholas): Rename to `getArtifactNameAndDirectoryOptions` after testing
 function getNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
@@ -76,7 +75,6 @@ function getNameAndDirectoryOptions(
   }
 
   const project = findProjectFromPath(tree, directory);
-
   const name =
     options.fileName ??
     (options.suffix ? `${extractedName}.${options.suffix}` : extractedName);
@@ -138,6 +136,9 @@ function extractNameAndDirectoryFromPath(path: string): {
   name: string;
   directory: string;
 } {
+  // Remove trailing slash
+  path = path.replace(/\/$/, '');
+
   const parsedPath = normalizePath(path).split('/');
   const name = parsedPath.pop();
   const directory = parsedPath.join('/');

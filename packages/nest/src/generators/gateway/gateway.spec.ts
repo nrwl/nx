@@ -18,6 +18,8 @@ describe('gateway generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(gatewayGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      gatewayGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

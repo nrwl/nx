@@ -18,6 +18,8 @@ describe('resolver generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(resolverGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      resolverGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

@@ -4,7 +4,6 @@ jest.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 
 import { Tree } from '@nx/devkit';
-import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { dirname } from 'path';
 import applicationGenerator from '../application/application.impl';
@@ -42,7 +41,7 @@ describe('resource route', () => {
 
   describe.each([['as-provided', 'apps/demo/app/routes/example.ts', '']])(
     '--nameAndDirectoryFormat=%s',
-    (nameAndDirectoryFormat: NameAndDirectoryFormat, path: string) => {
+    (nameAndDirectoryFormat, path: string) => {
       it(`should create correct file for path ${path}`, async () => {
         await resourceRouteGenerator(tree, {
           path,

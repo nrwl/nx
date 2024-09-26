@@ -37,13 +37,13 @@ describe('lint-checks generator', () => {
     });
     await generatorGenerator(tree, {
       name: 'my-generator',
-      directory: 'plugin/src/generators/my-generator',
+      path: 'plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
       skipLintChecks: true,
     });
     await executorGenerator(tree, {
       name: 'my-executor',
-      directory: 'plugin/src/executors/my-executor',
+      path: 'plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
       skipLintChecks: true,

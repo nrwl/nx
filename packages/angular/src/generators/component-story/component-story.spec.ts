@@ -19,7 +19,7 @@ describe('componentStory generator', () => {
     await generateTestLibrary(tree, { name: libName, skipFormat: true });
     await componentGenerator(tree, {
       name: 'test-button',
-      directory: `${libName}/src/lib/test-button`,
+      path: `${libName}/src/lib/test-button`,
       skipFormat: true,
     });
 

@@ -18,6 +18,8 @@ describe('service generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(serviceGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      serviceGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrowError();
   });
 });

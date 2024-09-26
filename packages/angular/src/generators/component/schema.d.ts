@@ -1,7 +1,6 @@
 export interface Schema {
   path: string;
   name?: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   displayBlock?: boolean;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;

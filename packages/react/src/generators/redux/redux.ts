@@ -38,10 +38,15 @@ export async function reduxGenerator(host: Tree, schema: Schema) {
 }
 
 function generateReduxFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(host, joinPathFragments(__dirname, './files'), options.path, {
-    ...options,
-    tmpl: '',
-  });
+  generateFiles(
+    host,
+    joinPathFragments(__dirname, './files'),
+    options.projectDirectory,
+    {
+      ...options,
+      tmpl: '',
+    }
+  );
 
   if (options.js) {
     toJS(host);
@@ -155,6 +160,7 @@ async function normalizeOptions(
   let appProjectSourcePath: string;
   let appMainFilePath: string;
   const extraNames = names(name);
+
   const projects = getProjects(host);
   const project = projects.get(projectName);
   const { sourceRoot, projectType } = project;
@@ -195,6 +201,7 @@ async function normalizeOptions(
       );
     }
   }
+
   return {
     ...options,
     ...extraNames,

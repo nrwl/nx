@@ -17,6 +17,8 @@ describe('interface generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(interfaceGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      interfaceGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

@@ -18,6 +18,8 @@ describe('filter generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(filterGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      filterGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

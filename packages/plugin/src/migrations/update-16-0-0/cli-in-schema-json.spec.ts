@@ -149,7 +149,7 @@ describe('updateCliPropsForPlugins', () => {
     const { root, name } = await createPlugin(tree);
     await executorGenerator(tree, {
       name: 'my-executor',
-      directory: `${name}/src/executors/my-executor`,
+      path: `${name}/src/executors/my-executor`,
       unitTestRunner: 'jest',
       includeHasher: false,
     });
@@ -171,7 +171,7 @@ describe('updateCliPropsForPlugins', () => {
     const { root, name } = await createPlugin(tree);
     await executorGenerator(tree, {
       name: 'my-executor',
-      directory: `${name}/src/executors/my-executor`,
+      path: `${name}/src/executors/my-executor`,
       unitTestRunner: 'jest',
       includeHasher: false,
     });
@@ -202,7 +202,7 @@ describe('updateCliPropsForPlugins', () => {
     const { root, name } = await createPlugin(tree);
     await generatorGenerator(tree, {
       name: 'my-generator',
-      directory: `${name}/src/generators/my-generator`,
+      path: `${name}/src/generators/my-generator`,
       unitTestRunner: 'jest',
     });
     const schemaPath = joinPathFragments(
@@ -223,7 +223,7 @@ describe('updateCliPropsForPlugins', () => {
     const { root, name } = await createPlugin(tree);
     await generatorGenerator(tree, {
       name: 'my-schematic',
-      directory: `${name}/src/generators/my-schematic`,
+      path: `${name}/src/generators/my-schematic`,
       unitTestRunner: 'jest',
     });
     updateJson<GeneratorsJson>(

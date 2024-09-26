@@ -17,6 +17,8 @@ describe('decorator generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(decoratorGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      decoratorGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

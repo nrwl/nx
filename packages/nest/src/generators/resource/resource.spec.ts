@@ -19,6 +19,8 @@ xdescribe('resource generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(resourceGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      resourceGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

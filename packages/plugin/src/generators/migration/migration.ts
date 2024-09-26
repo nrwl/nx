@@ -19,6 +19,7 @@ import { nxVersion } from '../../utils/versions';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 interface NormalizedSchema extends Schema {
+  directory: string;
   projectRoot: string;
   projectSourceRoot: string;
   project: string;
@@ -53,6 +54,7 @@ async function normalizeOptions(
 
   const normalized: NormalizedSchema = {
     ...options,
+    directory,
     project,
     name: artifactName,
     description,

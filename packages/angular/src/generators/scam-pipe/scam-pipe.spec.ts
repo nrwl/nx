@@ -15,7 +15,7 @@ describe('SCAM Pipe Generator', () => {
     // ACT
     await scamPipeGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       inlineScam: true,
       skipFormat: true,
     });
@@ -60,7 +60,7 @@ describe('SCAM Pipe Generator', () => {
     // ACT
     await scamPipeGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       inlineScam: false,
       skipFormat: true,
     });
@@ -101,7 +101,7 @@ describe('SCAM Pipe Generator', () => {
     // ACT
     await scamPipeGenerator(tree, {
       name: 'example',
-      directory: 'libs/lib1/feature/src/lib/example',
+      path: 'libs/lib1/feature/src/lib/example/example',
       inlineScam: false,
       export: true,
       skipFormat: true,
@@ -148,7 +148,7 @@ describe('SCAM Pipe Generator', () => {
       // ACT
       await scamPipeGenerator(tree, {
         name: 'example',
-        directory: 'apps/app1/src/app/random/example',
+        path: 'apps/app1/src/app/random/example/example',
         inlineScam: true,
         skipFormat: true,
       });
@@ -193,7 +193,7 @@ describe('SCAM Pipe Generator', () => {
       // ACT
       await scamPipeGenerator(tree, {
         name: 'example',
-        directory: '/apps/app1/src/app/random/example',
+        path: '/apps/app1/src/app/random/example/example',
         inlineScam: true,
         skipFormat: true,
       });
@@ -239,7 +239,7 @@ describe('SCAM Pipe Generator', () => {
       expect(
         scamPipeGenerator(tree, {
           name: 'example',
-          directory: 'libs/proj/src/lib/random/example',
+          path: 'libs/proj/src/lib/random/example/example',
           inlineScam: true,
           skipFormat: true,
         })

@@ -18,7 +18,6 @@
       "name": {
         "description": "The name of the controller.",
         "type": "string",
-        "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use?"
       },
       "skipFormat": {

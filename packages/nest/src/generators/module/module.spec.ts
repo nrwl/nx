@@ -17,6 +17,8 @@ describe('module generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(moduleGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      moduleGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

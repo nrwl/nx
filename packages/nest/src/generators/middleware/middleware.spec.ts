@@ -18,6 +18,8 @@ describe('middleware generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(middlewareGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      middlewareGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });
