@@ -27,13 +27,10 @@ describe('Linter (legacy)', () => {
       newProject({
         packages: ['@nx/react', '@nx/js', '@nx/eslint'],
       });
-      runCLI(
-        `generate @nx/react:app ${myapp} --tags=validtag --directory=apps/${myapp}`,
-        {
-          env: { NX_ADD_PLUGINS: 'false' },
-        }
-      );
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`, {
+      runCLI(`generate @nx/react:app apps/${myapp} --tags=validtag`, {
+        env: { NX_ADD_PLUGINS: 'false' },
+      });
+      runCLI(`generate @nx/js:lib apps/${mylib}`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
     });
@@ -138,10 +135,10 @@ describe('Linter (legacy)', () => {
         bundler: 'vite',
         e2eTestRunner: 'none',
       });
-      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`, {
+      runCLI(`generate @nx/js:lib libs/${mylib}`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
-      runCLI(`generate @nx/js:lib ${mylib2} --directory libs/${mylib2}`, {
+      runCLI(`generate @nx/js:lib libs/${mylib2}`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
 
