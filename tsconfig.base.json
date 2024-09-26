@@ -127,6 +127,8 @@
       "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
+      "@nx/rspack": ["packages/rspack/src"],
+      "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],

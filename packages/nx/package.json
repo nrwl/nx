@@ -142,6 +142,8 @@
       "@nrwl/rollup",
       "@nx/remix",
       "@nrwl/remix",
+      "@nx/rspack",
+      "@nrwl/rspack",
       "@nx/storybook",
       "@nrwl/storybook",
       "@nrwl/tao",

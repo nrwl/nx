@@ -1,0 +1,38 @@
+{
+  "name": "rspack-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/rspack",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "outputs": ["{workspaceRoot}/build/packages/{projectName}/README.md"],
+      "command": "node ./scripts/copy-readme.js rspack-legacy"
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "packages-legacy/rspack/index.ts",
+        "tsConfig": "packages-legacy/rspack/tsconfig.json",
+        "outputPath": "build/packages/rspack-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages-legacy/rspack/*.md",
+          {
+            "input": "packages-legacy/rspack",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/rspack",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
