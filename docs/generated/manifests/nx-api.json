@@ -3504,12 +3504,12 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
     "packageName": "@nx/powerpack-conformance",
-    "description": "Not intended for external use",
+    "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
     "documents": {
       "/nx-api/powerpack-conformance/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "Not intended for external use",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
         "file": "external-generated/packages/powerpack-conformance/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -3528,7 +3528,7 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-license",
     "packageName": "@nx/powerpack-license",
-    "description": "Not intended for external use",
+    "description": "Package to provide the ability to activate and read licenses for Nx Powerpack.",
     "documents": {},
     "root": "/libs/nx-packages/powerpack-license",
     "source": "/libs/nx-packages/powerpack-license/src",
@@ -3540,12 +3540,12 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-owners",
     "packageName": "@nx/powerpack-owners",
-    "description": "Not intended for external use",
+    "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
     "documents": {
       "/nx-api/powerpack-owners/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "Not intended for external use",
+        "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
         "file": "external-generated/packages/powerpack-owners/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -3583,12 +3583,12 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-s3-cache",
     "packageName": "@nx/powerpack-s3-cache",
-    "description": "Not intended for external use",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
     "documents": {
       "/nx-api/powerpack-s3-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "Not intended for external use",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
         "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -3617,12 +3617,12 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-shared-fs-cache",
     "packageName": "@nx/powerpack-shared-fs-cache",
-    "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+    "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
     "documents": {
       "/nx-api/powerpack-shared-fs-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin for an Nx cache which is shared through the filesystem",
+        "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
         "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
         "itemList": [],
         "isExternal": false,

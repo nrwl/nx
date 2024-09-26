@@ -3,7 +3,7 @@ title: Overview of the Nx powerpack-conformance Plugin
 description: The Nx Powerpack Conformance plugin provides the ability to write and apply rules for your workspace
 ---
 
-The `@nx/powerpack-conformance` plugin allows [Nx Powerpack]() users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
+The `@nx/powerpack-conformance` plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
 
 The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Conformance rules can also complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
 
@@ -16,7 +16,7 @@ The plugin also provides the following pre-written rules:
 In order to use `@nx/powerpack-conformance`, you need to have an active Powerpack license. If you don't have a license or it has expired, the `nx conformance` command will fail.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-conformance
 
 1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
 2. Install the package
