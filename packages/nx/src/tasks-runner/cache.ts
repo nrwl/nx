@@ -32,7 +32,8 @@ export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
   return (
     process.env.NX_DISABLE_DB !== 'true' &&
-    (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
+    nxJson.useLegacyCache !== true &&
+    process.env.NX_DB_CACHE !== 'false'
   );
 }
 
