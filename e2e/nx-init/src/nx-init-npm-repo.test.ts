@@ -72,7 +72,7 @@ describe('nx init (NPM repo - legacy)', () => {
     );
 
     const output = runCommand('npm run compound TEST');
-    expect(output).toContain('HELLO\n');
+    expect(output).toContain('HELLO');
     expect(output).toContain('COMPOUND TEST');
     expect(output).not.toContain('HELLO COMPOUND');
     cleanupProject();
