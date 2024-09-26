@@ -106,16 +106,16 @@ export const ProjectDetails = ({
               </p>
             ) : null}
             {projectData.tags && projectData.tags.length ? (
-              <TagList tags={projectData.tags} />
+              <TagList className="mb-2" tags={projectData.tags} />
             ) : null}
             {projectData.root ? (
-              <p>
+              <p className="mb-2">
                 <span className="font-medium">Root:</span>
                 <span className="font-mono"> {projectData.root.trim()}</span>
               </p>
             ) : null}
             {projectData.projectType ?? typeToProjectType[project.type] ? (
-              <p>
+              <p className="mb-2">
                 <span className="font-medium">Type:</span>
                 <span className="ml-2 font-mono capitalize">
                   {projectData.projectType ?? typeToProjectType[project.type]}

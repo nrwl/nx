@@ -86,6 +86,10 @@ export const CORE_PLUGINS: CorePlugin[] = [
     capabilities: 'executors,generators',
   },
   {
+    name: '@nx/rspack',
+    capabilities: 'executors,generators',
+  },
+  {
     name: '@nx/storybook',
     capabilities: 'executors,generators',
   },

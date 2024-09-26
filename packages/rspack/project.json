@@ -1,0 +1,50 @@
+{
+  "name": "rspack",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/rspack/src",
+  "projectType": "library",
+  "targets": {
+    "add-extra-dependencies": {
+      "outputs": ["{workspaceRoot}/build/packages/rspack"],
+      "command": "node ./scripts/add-dependency-to-build.js rspack @nrwl/rspack"
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/rspack"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js rspack"
+      }
+    },
+    "build-base": {
+      "dependsOn": ["^build-base"],
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "build/packages/rspack",
+        "main": "packages/rspack/src/index.ts",
+        "tsConfig": "packages/rspack/tsconfig.lib.json",
+        "assets": [
+          "packages/rspack/*.md",
+          {
+            "input": "./packages/rspack/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/rspack/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/rspack",
+            "glob": "**.json",
+            "output": ".",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
+          },
+          "LICENSE"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
