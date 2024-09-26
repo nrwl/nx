@@ -1,4 +1,3 @@
-import { execSync, fork } from 'child_process';
 import {
   ExecutorContext,
   getPackageManagerCommand,
@@ -6,6 +5,7 @@ import {
   output,
   workspaceRoot,
 } from '@nx/devkit';
+import { execSync, fork } from 'child_process';
 
 export interface PlaywrightExecutorSchema {
   /*
@@ -15,6 +15,7 @@ export interface PlaywrightExecutorSchema {
   browser?: 'all' | 'chromium' | 'firefox' | 'webkit' | string;
   config?: string;
   debug?: boolean;
+  failedOnly?: boolean;
   forbidOnly?: boolean;
   fullyParallel?: boolean;
   grep?: string;
