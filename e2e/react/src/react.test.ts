@@ -92,7 +92,7 @@ describe('React Applications', () => {
 
       if (runE2ETests()) {
         // TODO(Colum): investigate why webkit is failing
-        const e2eResults = runCLI(`e2e ${appName}-e2e --project=chromium`);
+        const e2eResults = runCLI(`e2e ${appName}-e2e -- --project=chromium`);
         expect(e2eResults).toContain('Successfully ran target e2e for project');
         expect(await killPorts()).toBeTruthy();
       }
