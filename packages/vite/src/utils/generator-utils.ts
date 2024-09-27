@@ -9,12 +9,13 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -362,48 +363,47 @@ export function createOrEditViteConfig(
     ? `${projectRoot}/vitest.config.ts`
     : `${projectRoot}/vite.config.ts`;
 
-  const buildOutDir =
-    projectRoot === '.'
-      ? `./dist/${options.project}`
-      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
+  const isUsingTsPlugin = isUsingTsSolutionSetup(tree);
+  const buildOutDir = isUsingTsPlugin
+    ? './dist'
+    : projectRoot === '.'
+    ? `./dist/${options.project}`
+    : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
 
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
-    ? `
-      // Configuration for building your library.
-      // See: https://vitejs.dev/guide/build.html#library-mode
-      build: {
-        outDir: '${buildOutDir}',
-        emptyOutDir: true,
-        reportCompressedSize: true,
-        commonjsOptions: {
-          transformMixedEsModules: true,
-        },
-        lib: {
-          // Could also be a dictionary or array of multiple entry points.
-          entry: 'src/index.ts',
-          name: '${options.project}',
-          fileName: 'index',
-          // Change this to the formats you want to support.
-          // Don't forget to update your package.json as well.
-          formats: ['es', 'cjs']
-        },
-        rollupOptions: {
-          // External packages that should not be bundled into your library.
-          external: [${options.rollupOptionsExternal ?? ''}]
-        },
-      },`
-    : `
-    build: {
-      outDir: '${buildOutDir}',
-      emptyOutDir: true,
-      reportCompressedSize: true,
-      commonjsOptions: {
-        transformMixedEsModules: true,
-      },
+    ? `  // Configuration for building your library.
+  // See: https://vitejs.dev/guide/build.html#library-mode
+  build: {
+    outDir: '${buildOutDir}',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
-    `;
+    lib: {
+      // Could also be a dictionary or array of multiple entry points.
+      entry: 'src/index.ts',
+      name: '${options.project}',
+      fileName: 'index',
+      // Change this to the formats you want to support.
+      // Don't forget to update your package.json as well.
+      formats: ['es', 'cjs']
+    },
+    rollupOptions: {
+      // External packages that should not be bundled into your library.
+      external: [${options.rollupOptionsExternal ?? ''}]
+    },
+  },`
+    : `  build: {
+    outDir: '${buildOutDir}',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },`;
 
   const imports: string[] = options.imports ? options.imports : [];
 
@@ -432,14 +432,14 @@ export function createOrEditViteConfig(
       : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
   const testOption = options.includeVitest
-    ? `test: {
+    ? `  test: {
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    ${
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],${
       options.inSourceTests
-        ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
+        ? `
+    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
         : ''
     }
     reporters: ['default'],
@@ -453,7 +453,7 @@ export function createOrEditViteConfig(
     : '';
 
   const defineOption = options.inSourceTests
-    ? `define: {
+    ? `  define: {
     'import.meta.vitest': undefined
   },`
     : '';
@@ -462,27 +462,24 @@ export function createOrEditViteConfig(
     ? ''
     : options.includeLib
     ? ''
-    : `
-    server:{
-      port: 4200,
-      host: 'localhost',
-    },`;
+    : `  server:{
+    port: 4200,
+    host: 'localhost',
+  },`;
 
   const previewServerOption = onlyVitest
     ? ''
     : options.includeLib
     ? ''
-    : `
-    preview:{
-      port: 4300,
-      host: 'localhost',
-    },`;
+    : `  preview:{
+    port: 4300,
+    host: 'localhost',
+  },`;
 
-  const workerOption = `
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [ nxViteTsPaths() ],
-    // },`;
+  const workerOption = `  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
     offsetFromRoot(projectRoot),
@@ -510,27 +507,32 @@ export function createOrEditViteConfig(
     return;
   }
 
-  viteConfigContent = `
-      /// <reference types='vitest' />
-      import { defineConfig } from 'vite';
-      ${imports.join(';\n')}${imports.length ? ';' : ''}
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-      
-      export default defineConfig({
-        root: __dirname,
-        ${cacheDir}
-        ${devServerOption}
-        ${previewServerOption}
-        
-        plugins: [${plugins.join(',\n')}],
-        ${workerOption}
-        ${buildOption}
-        ${defineOption}
-        ${testOption}
-      });`;
+  viteConfigContent = `/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+${imports.join(';\n')}${imports.length ? ';' : ''}
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  ${printOptions(
+    cacheDir,
+    devServerOption,
+    previewServerOption,
+    `  plugins: [${plugins.join(', ')}],`,
+    workerOption,
+    buildOption,
+    defineOption,
+    testOption
+  )}
+});
+`.replace(/\s+(?=(\n|$))/gm, '\n');
 
   tree.write(viteConfigPath, viteConfigContent);
+}
+
+function printOptions(...options: string[]): string {
+  return options.filter(Boolean).join('\n');
 }
 
 export function normalizeViteConfigFilePathWithTree(

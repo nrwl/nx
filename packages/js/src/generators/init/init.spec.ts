@@ -131,7 +131,7 @@ describe('js init generator', () => {
 
   it('should support skipping prettier setup', async () => {
     await init(tree, {
-      setUpPrettier: false,
+      formatter: 'none',
     });
 
     const packageJson = readJson(tree, 'package.json');
