@@ -183,17 +183,13 @@ To write your own conformance rule, specify a relative path to a TypeScript or J
 The rule definition file should look like this:
 
 ```ts {% fileName="tools/local-conformance-rule.ts" %}
-import type {
-  ConformanceRule,
-  ConformanceRuleResult,
-  createConformanceRule,
-} from '@nx/powerpack-conformance';
+import { createConformanceRule } from '@nx/powerpack-conformance';
 
 const rule = createConformanceRule({
   name: 'local-conformance-rule-example',
   category: 'security', // `consistency`, `maintainability`, `reliability` or `security`
   reporter: 'project-reporter', // `project-reporter` or `project-files-reporter`
-  implementation: async (context): Promise<ConformanceRuleResult> => {
+  implementation: async (context) => {
     const { projectGraph, ruleOptions } = context;
     // Your rule logic goes here
     return {
