@@ -13,6 +13,10 @@ Today we're introducing our latest product, **Nx Powerpack**, a suite of paid ex
 - No, we’re **not placing existing features behind a paywall**. Nx Powerpack introduces new features on top of Nx (more about that below).
 - Yes, we still **strongly believe in OSS and our community**, and we will keep improving Nx more than ever; if anything, Powerpack will help us fund our OSS work on Nx core and ensure its long-term sustainability.
 
+### What about my open-source repo ?
+
+Open source projects can continue to use Nx Cloud for **free** the same way they always have, and they can continue to use Nx with all its features. If you are an open-source maintainer and you want to use Powerpack, you will get a **free license**. Just reach out to us at [powerpack-support@nrwl.io](mailto:powerpack-support@nrwl.io).
+
 So this leaves us with:
 ![Nx products and their licenses](/blog/images/evolving-nx/nx-products-licenses.avif)
 
