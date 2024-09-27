@@ -183,7 +183,7 @@ To write your own conformance rule, specify a relative path to a TypeScript or J
 The rule definition file should look like this:
 
 ```ts {% fileName="tools/local-conformance-rule.ts" %}
-import type { createConformanceRule } from '@nx/powerpack-conformance';
+import { createConformanceRule } from '@nx/powerpack-conformance';
 
 const rule = createConformanceRule({
   name: 'local-conformance-rule-example',
