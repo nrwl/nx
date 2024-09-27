@@ -1,7 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import { mergeConfig } from 'metro-config';
 import type { MetroConfig } from 'metro-config';
-import { existsSync, readdirSync, statSync } from 'fs-extra';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'path';
 
 import { getResolveRequest } from './metro-resolver';
