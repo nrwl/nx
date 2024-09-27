@@ -1,6 +1,6 @@
 # Powerpack Features
 
-Nx PowerPack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.
+Nx PowerPack is a suite of paid extensions for the Nx CLI specifically designed for enterprises. Powerpack is available for Nx version 19.8 and higher.
 
 The following features are available after you [activate a Powerpack license](/recipes/installation/activate-powerpack):
 
