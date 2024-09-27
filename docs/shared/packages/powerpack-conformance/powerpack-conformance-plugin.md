@@ -59,21 +59,23 @@ Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx 
 ```jsonc {% fileName="nx.json" %}
 {
   "conformance": {
-    "rules": [{
-      /**
-       * Relative path to a local rule implementation or node_module path.
-       */
-      "rule": "@nx/powerpack-conformance/enforce-project-boundaries";
-      /**
-       * Rule specific configuration options. (Optional)
-       */
-      "options": {}
-      /**
-       * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
-       * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"]. (Optional)
-       */
-      "projects": ["*"];
-    }]
+    "rules": [
+      {
+        /**
+         * Relative path to a local rule implementation or node_module path.
+         */
+        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
+        /**
+         * Rule specific configuration options. (Optional)
+         */
+        "options": {},
+        /**
+         * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
+         * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"]. (Optional)
+         */
+        "projects": ["*"]
+      }
+    ]
   }
 }
 ```
