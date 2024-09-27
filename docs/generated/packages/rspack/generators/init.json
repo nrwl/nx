@@ -1,0 +1,39 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "Init",
+    "title": "Nx Rspack Init Generator",
+    "type": "object",
+    "description": "Rspack init generator.",
+    "properties": {
+      "framework": {
+        "type": "string",
+        "description": "The UI framework used by the project.",
+        "enum": ["none", "react", "web", "nest"],
+        "alias": ["uiFramework"]
+      },
+      "style": {
+        "type": "string",
+        "description": "The style solution to use.",
+        "enum": ["none", "css", "scss", "less", "styl"]
+      },
+      "rootProject": { "type": "boolean", "x-priority": "internal" },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Rspack init generator.",
+  "hidden": true,
+  "implementation": "/packages/rspack/src/generators/init/init.ts",
+  "aliases": [],
+  "path": "/packages/rspack/src/generators/init/schema.json",
+  "type": "generator"
+}

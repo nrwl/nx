@@ -6,7 +6,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard, SectionHeading } from '@nx/nx-dev/ui-common';
+import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev/ui-common';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef, ElementRef } from 'react';
 
@@ -14,7 +14,7 @@ interface Plugin {
   description: string;
   name: string;
   url: string;
-  isOfficial: boolean;
+  pluginType: PluginType;
   lastPublishedDate?: string;
   npmDownloads?: string;
   githubStars?: string;
@@ -260,7 +260,7 @@ export function PluginDirectory({
               key={plugin.name}
               name={plugin.name}
               description={plugin.description}
-              isOfficial={plugin.isOfficial}
+              pluginType={plugin.pluginType}
               lastPublishedDate={plugin.lastPublishedDate}
               npmDownloads={plugin.npmDownloads}
               githubStars={plugin.githubStars}

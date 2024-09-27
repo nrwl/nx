@@ -2,20 +2,20 @@
 
 {% youtube src="https://youtu.be/6wg23sLveTQ" title="Nx Powerpack workspace conformance" /%}
 
-The [`@nx/powerpack-conformance`](/nx-api/powerpack-conformance) plugin allows [Nx Powerpack]() users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
+The [`@nx/powerpack-conformance`](/nx-api/powerpack-conformance) plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
 
 The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Conformance rules can also **complement linting tools** by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
 
 The plugin also provides the following pre-written rules:
 
-- **Enforce Module Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - **Ensure Owners**: Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
 ## Setup
 
 The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/recipes/installation/activate-powerpack) is a simple process.
 
-{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://nx.app/powerpack/purchase" /%}
+{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://cloud.nx.app/powerpack/purchase" /%}
 
 Then, add the Conformance plugin to your workspace.
 
@@ -30,12 +30,12 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/powerpack-conformance/enforce-module-boundaries",
+        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
         "options": {
           "depConstraints": [
             {
               "sourceTag": "scope:shared",
-              "onlyDependOnLibsWithTags": ["scope:shared"]
+              "onlyDependOnProjectsWithTags": ["scope:shared"]
             }
           ]
         }

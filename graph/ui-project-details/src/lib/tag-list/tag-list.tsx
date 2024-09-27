@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Pill } from '../pill';
+import { twMerge } from 'tailwind-merge';
 
 interface TagListProps {
   tags: string[];
+  className: string;
 }
 
-export function TagList({ tags }: TagListProps) {
+export function TagList({ tags, className }: TagListProps) {
   const [isExpanded, _setIsExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const tagsContainerRef = useRef<HTMLSpanElement>(null);
@@ -34,7 +36,7 @@ export function TagList({ tags }: TagListProps) {
   }, [tagsContainerRef]);
 
   return (
-    <div className="relative max-w-full">
+    <div className={twMerge('relative max-w-full', className)}>
       <p className="flex min-w-0 font-medium leading-loose">
         <span className="inline-block">Tags:</span>
 

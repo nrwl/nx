@@ -135,24 +135,25 @@
               "name": "Powerpack Features",
               "id": "powerpack",
               "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+              "file": "shared/features/powerpack/index",
               "itemList": [
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
-                  "description": "Conformance",
+                  "description": "Write and apply rules for your Nx workspace",
                   "id": "conformance",
                   "tags": ["conformance"],
                   "file": "shared/features/powerpack/conformance"
                 },
                 {
                   "name": "Define Code Ownership at the Project Level",
-                  "description": "Owners",
+                  "description": "Configure and maintain code owners for projects in an Nx workspace",
                   "id": "owners",
                   "tags": ["owners"],
                   "file": "shared/features/powerpack/owners"
                 },
                 {
                   "name": "Self-Host the Remote Cache",
-                  "description": "Custom Caching",
+                  "description": "Host the remote cache without using Nx Cloud",
                   "id": "custom-caching",
                   "tags": ["custom-caching"],
                   "file": "shared/features/powerpack/custom-caching"
@@ -2555,6 +2556,19 @@
               "name": "Overview",
               "path": "/nx-api/remix",
               "file": "shared/packages/remix/remix-plugin"
+            }
+          ]
+        },
+        {
+          "name": "rspack",
+          "id": "rspack",
+          "description": "Rspack package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/rspack",
+              "file": "shared/packages/rspack/rspack-plugin"
             }
           ]
         },

@@ -37,9 +37,10 @@ interface BaseArguments extends CreateWorkspaceOptions {
 
 interface NoneArguments extends BaseArguments {
   stack: 'none';
-  workspaceType: 'package-based' | 'integrated' | 'standalone';
-  js: boolean;
-  appName: string | undefined;
+  workspaceType?: 'package-based' | 'integrated' | 'standalone';
+  js?: boolean;
+  appName?: string | undefined;
+  formatter?: 'none' | 'prettier';
 }
 
 interface ReactArguments extends BaseArguments {
@@ -394,7 +395,11 @@ async function determineStack(
       choices: [
         {
           name: `none`,
-          message: `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
+          message:
+            process.env.NX_ADD_PLUGINS !== 'false' &&
+            process.env.NX_ADD_TS_PLUGIN === 'true'
+              ? `None:          Configures a TypeScript/JavaScript monorepo.`
+              : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
         },
         {
           name: `react`,
@@ -441,34 +446,14 @@ async function determinePresetOptions(
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
-  let preset: Preset;
-  let workspaceType: 'package-based' | 'standalone' | 'integrated' | undefined =
-    undefined;
-  let appName: string | undefined = undefined;
-  let js: boolean | undefined;
-
-  if (parsedArgs.preset) {
-    preset = parsedArgs.preset;
-  } else {
-    workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
-    if (workspaceType === 'standalone') {
-      preset = Preset.TsStandalone;
-    } else if (workspaceType === 'integrated') {
-      preset = Preset.Apps;
-    } else {
-      preset = Preset.NPM;
-    }
-  }
-
-  if (parsedArgs.js !== undefined) {
-    js = parsedArgs.js;
-  } else if (preset === Preset.TsStandalone) {
-    // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
-    appName = parsedArgs.name;
-    const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
+  if (
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    process.env.NX_ADD_TS_PLUGIN === 'true'
+  ) {
+    const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
       {
-        name: 'ts',
-        message: `Would you like to use TypeScript with this project?`,
+        name: 'prettier',
+        message: `Would you like to use Prettier for code formatting?`,
         type: 'autocomplete',
         choices: [
           {
@@ -478,14 +463,68 @@ async function determineNoneOptions(
             name: 'No',
           },
         ],
-        initial: 0,
+        initial: 1,
         skip: !parsedArgs.interactive || isCI(),
       },
     ]);
-    js = reply.ts === 'No';
-  }
+    return {
+      preset: Preset.TS,
+      formatter: reply.prettier === 'Yes' ? 'prettier' : 'none',
+    };
+  } else {
+    let preset: Preset;
+    let workspaceType:
+      | 'package-based'
+      | 'standalone'
+      | 'integrated'
+      | undefined = undefined;
+    let appName: string | undefined = undefined;
+    let js: boolean | undefined;
 
-  return { preset, js, appName };
+    if (parsedArgs.preset) {
+      preset = parsedArgs.preset;
+    } else {
+      workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
+      if (workspaceType === 'standalone') {
+        preset = Preset.TsStandalone;
+      } else if (workspaceType === 'integrated') {
+        preset = Preset.Apps;
+      } else {
+        preset = Preset.NPM;
+      }
+    }
+
+    if (preset === Preset.TS) {
+      return { preset, formatter: 'prettier' };
+    }
+
+    if (parsedArgs.js !== undefined) {
+      js = parsedArgs.js;
+    } else if (preset === Preset.TsStandalone) {
+      // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
+      appName = parsedArgs.name;
+      const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
+        {
+          name: 'ts',
+          message: `Would you like to use TypeScript with this project?`,
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+            {
+              name: 'No',
+            },
+          ],
+          initial: 0,
+          skip: !parsedArgs.interactive || isCI(),
+        },
+      ]);
+      js = reply.ts === 'No';
+    }
+
+    return { preset, js, appName };
+  }
 }
 
 async function determineReactOptions(

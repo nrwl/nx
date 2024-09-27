@@ -33,7 +33,7 @@ describe('Linter (legacy)', () => {
           env: { NX_ADD_PLUGINS: 'false' },
         }
       );
-      runCLI(`generate @nx/js:lib ${mylib} --directory=apps/${mylib}`, {
+      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
     });

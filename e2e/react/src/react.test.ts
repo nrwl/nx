@@ -63,6 +63,41 @@ describe('React Applications', () => {
       }
     }, 250_000);
 
+    it('should be able to use Rspack to build and test apps', async () => {
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=vitest --no-interactive --skipFormat`
+      );
+      runCLI(
+        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
+      );
+
+      // Library generated with Vite
+      checkFilesExist(`${libName}/vite.config.ts`);
+
+      const mainPath = `${appName}/src/main.tsx`;
+      updateFile(
+        mainPath,
+        `
+        import '@${proj}/${libName}';
+        ${readFile(mainPath)}
+      `
+      );
+
+      runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/${appName}/index.html`);
+
+      if (runE2ETests()) {
+        // TODO(Colum): investigate why webkit is failing
+        const e2eResults = runCLI(`e2e ${appName}-e2e -- --project=chromium`);
+        expect(e2eResults).toContain('Successfully ran target e2e for project');
+        expect(await killPorts()).toBeTruthy();
+      }
+    }, 250_000);
+
     it('should be able to generate a react app + lib (with CSR and SSR)', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');

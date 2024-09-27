@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { ChildProcess, fork, Serializable } from 'child_process';
 import * as chalk from 'chalk';
-import * as logTransformer from 'strong-log-transformer';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
@@ -326,15 +325,15 @@ export class ForkedProcessTaskRunner {
               .pipe(
                 logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
               )
-              .pipe(logTransformer({ tag: color.bold(prefixText) }))
+              .pipe(addPrefixTransformer(color.bold(prefixText)))
               .pipe(process.stdout);
             p.stderr
               .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
-              .pipe(logTransformer({ tag: color(prefixText) }))
+              .pipe(addPrefixTransformer(color(prefixText)))
               .pipe(process.stderr);
           } else {
-            p.stdout.pipe(logTransformer()).pipe(process.stdout);
-            p.stderr.pipe(logTransformer()).pipe(process.stderr);
+            p.stdout.pipe(addPrefixTransformer()).pipe(process.stdout);
+            p.stderr.pipe(addPrefixTransformer()).pipe(process.stderr);
           }
         }
 
@@ -539,7 +538,7 @@ function getColor(projectName: string) {
 /**
  * Prevents terminal escape sequence from clearing line prefix.
  */
-function logClearLineToPrefixTransformer(prefix) {
+function logClearLineToPrefixTransformer(prefix: string) {
   let prevChunk = null;
   return new Transform({
     transform(chunk, _encoding, callback) {
@@ -548,6 +547,23 @@ function logClearLineToPrefixTransformer(prefix) {
       }
       this.push(chunk);
       prevChunk = chunk;
+      callback();
+    },
+  });
+}
+
+function addPrefixTransformer(prefix?: string) {
+  const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      const list = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
+      list
+        .filter(Boolean)
+        .forEach((m) =>
+          this.push(
+            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
+          )
+        );
       callback();
     },
   });

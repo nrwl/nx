@@ -27,15 +27,19 @@ There’s a Steve Jobs quote that I think rings true with all of us at Nx:
 
 > "I think money is a wonderful thing because it enables you to do things. It enables you to invest in ideas that don't have a short-term payback." - Steve Jobs
 
-As Nx has grown, we’ve hired more people to make the product better. Naturally, those people want to do good work and be paid. We all show up for work to build things we’re passionate about, and solve real pains for the millions of developers using Nx every day. Money is what enables us to keep doing what we love. So as much as Victor Savkin and I want to just build things and give them away for free, we need to balance our personal passion with what’s the best long-term decisions for Nx — the project, the community, and the company.
+As Nx has grown, we’ve hired more people to make the product better. Naturally, those people want to do good work and be paid. We all show up for work to build things we’re passionate about, and solve real pain points for the millions of developers using Nx every day. Money is what enables us to keep doing what we love. So as much as Victor Savkin and I want to just build things and give them away for free, we need to balance our personal passion with what’s the best long-term decisions for Nx — the project, the community, and the company.
 
 Like many open source projects, one of the bigger challenges to sustainability in recent years has been larger cloud products who wait for projects to become successful, and then try to capitalize on that success at the expense of the maintainers. I call these companies “parasite vendors” since they benefit from the host, but give no value back. To battle this, many open source projects have decided to make their open source licensing more restrictive, or introduce dual licenses, forcing those parasite vendors to work with the maintainers on a fair arrangement. We think we’ve come up with a better solution for the community by introducing a new package, Powerpack, with a new commercial license, with only new functionality. **Nx itself still has one license: the MIT license.**
 
 ![Nx products and their licenses](/blog/images/evolving-nx/nx-products-licenses.avif)
 
+### What about my open-source repo ?
+
+Open source projects can continue to use Nx Cloud for **free** the same way they always have, and they can continue to use Nx with all its features. If you are an open-source maintainer and you want to use Powerpack, you will get a **free license**. Just reach out to us at [powerpack-support@nrwl.io](mailto:powerpack-support@nrwl.io).
+
 ## How to Get Nx Powerpack
 
-Powerpack is automatically included for all existing enterprise customers. If you’re looking to purchase a new license, you can easily [do so on this page](/powerpack).
+Powerpack can be easily purchased as a one-off license and is automatically included for all existing enterprise customers. If you’re looking to purchase a license, you can [do so on this page](/powerpack).
 
 Are you a startup? If these features make sense for your team but the cost is a concern, reach out to our support team, and we’ll work with you to find a solution that fits.
 

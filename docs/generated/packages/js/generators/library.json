@@ -21,22 +21,28 @@
         "description": "A directory where the lib is placed.",
         "x-priority": "important"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "bundler": {
+        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "none"],
+        "x-priority": "important"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint", "none"],
-        "default": "eslint"
+        "enum": ["none", "eslint"],
+        "x-priority": "important"
       },
       "unitTestRunner": {
-        "type": "string",
-        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
-        "x-prompt": "Which unit test runner would you like to use?"
+        "type": "string",
+        "enum": ["none", "jest", "vitest"],
+        "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "tags": {
         "type": "string",
@@ -112,17 +118,8 @@
       "compiler": {
         "type": "string",
         "enum": ["tsc", "swc"],
-        "default": "tsc",
         "description": "The compiler used by the build and test targets",
         "x-deprecated": "Use the `bundler` option for greater control (swc, tsc, rollup, vite, esbuild, none)."
-      },
-      "bundler": {
-        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
-        "type": "string",
-        "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "none"],
-        "default": "tsc",
-        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
-        "x-priority": "important"
       },
       "skipTypeCheck": {
         "type": "boolean",
@@ -138,6 +135,10 @@
         "description": "Don't include the directory in the generated file name.",
         "type": "boolean",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["name"],

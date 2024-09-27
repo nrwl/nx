@@ -29,6 +29,9 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   ) {}
 
   startCommand(): void {
+    if (this.tasks.length === 0) {
+      return;
+    }
     if (this.projectNames.length <= 0) {
       output.logSingleLine(
         `No projects with ${formatTargetsAndProjects(
@@ -69,6 +72,10 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   endCommand(): void {
     output.addNewline();
 
+    if (this.tasks.length === 0) {
+      output.logSingleLine(`No tasks were run`);
+      return;
+    }
     if (this.failedTasks.length === 0) {
       output.addVerticalSeparatorWithoutNewLines('green');
 

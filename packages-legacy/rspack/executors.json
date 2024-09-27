@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "executors": {
+    "rspack": {
+      "implementation": "@nx/rspack/src/executors/rspack/rspack.impl",
+      "schema": "@nx/rspack/src/executors/rspack/schema.json",
+      "description": "rspack executor"
+    },
+    "dev-server": {
+      "implementation": "@nx/rspack/src/executors/dev-server/dev-server.impl",
+      "schema": "@nx/rspack/src/executors/dev-server/schema.json",
+      "description": "dev-server executor"
+    }
+  }
+}
