@@ -92,7 +92,7 @@ describe('syncGenerator()', () => {
     writeJson(tree, 'nx.json', nxJson);
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[Error: The @nx/js/typescript plugin must be added to the "plugins" array in nx.json before syncing tsconfigs]`
+      `[SyncError: The "@nx/js/typescript" plugin is not registered]`
     );
   });
 
@@ -100,7 +100,7 @@ describe('syncGenerator()', () => {
     tree.delete('tsconfig.json');
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[Error: A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.]`
+      `[SyncError: Missing root "tsconfig.json"]`
     );
   });
 
