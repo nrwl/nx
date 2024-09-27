@@ -186,7 +186,7 @@ impl TaskHasher {
                 hashed_runtime
             }
             HashInstruction::Environment(env) => {
-                let hashed_env = hash_env(env, js_env)?;
+                let hashed_env = hash_env(env, js_env);
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
                 hashed_env
             }
