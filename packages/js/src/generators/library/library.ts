@@ -735,7 +735,7 @@ async function normalizeOptions(
         type: 'select',
         name: 'unitTestRunner',
         message: `Which unit test runner would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'jest' }, { name: 'vitest' }],
+        choices: [{ name: 'none' }, { name: 'vitest' }, { name: 'jest' }],
         initial: 0,
       },
       { unitTestRunner: 'none' }
