@@ -1,8 +1,8 @@
 # Rescope Packages from @nrwl to @nx
 
-As of version 16, all the official Nx plugins are moving from the `@nrwl` npm scope to `@nx`. The goal is for anyone looking through a list of dependencies to easily make the connection between the `nx` package and the `@nx` plugins that are associated with it.
+As of version 16, all the official Nx plugins moved from the `@nrwl` npm scope to `@nx`. The goal is for anyone looking through a list of dependencies to easily make the connection between the `nx` package and the `@nx` plugins that are associated with it.
 
-`@nrwl/*` packages are still provided and reexport the `@nx/*` packages so any third-party plugins should continue to work. Any generators (e.g. `@nrwl/react:library`) and executors (e.g. `@nrwl/webpack:webpack`) will continue to work in the interim as well.
+As of version 20, the `@nrwl` scoped packages will no longer be published to npm.
 
 ## What Do You Need To Do?
 

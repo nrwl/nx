@@ -4,10 +4,6 @@
   "sourceRoot": "packages/rspack/src",
   "projectType": "library",
   "targets": {
-    "add-extra-dependencies": {
-      "outputs": ["{workspaceRoot}/build/packages/rspack"],
-      "command": "node ./scripts/add-dependency-to-build.js rspack @nrwl/rspack"
-    },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/rspack"],

@@ -1121,19 +1121,6 @@
                   "file": "shared/recipes/nx-release/build-before-versioning"
                 }
               ]
-            },
-            {
-              "name": "Other",
-              "id": "other",
-              "description": "Other recipes you will find useful.",
-              "itemList": [
-                {
-                  "name": "Rescope Packages from @nrwl to @nx",
-                  "id": "rescope",
-                  "tags": [],
-                  "file": "shared/recipes/rescope"
-                }
-              ]
             }
           ]
         },
@@ -1438,6 +1425,11 @@
               "name": "v1 Nx Plugin API",
               "id": "v1-nx-plugin-api",
               "file": "shared/deprecated/v1-nx-plugin-api"
+            },
+            {
+              "name": "Rescope Packages from @nrwl to @nx",
+              "id": "rescope",
+              "file": "shared/deprecated/rescope"
             }
           ]
         },

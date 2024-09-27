@@ -2962,29 +2962,6 @@
         "isExternal": false,
         "path": "/recipes/nx-release",
         "tags": []
-      },
-      {
-        "id": "other",
-        "name": "Other",
-        "description": "Other recipes you will find useful.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "rescope",
-            "name": "Rescope Packages from @nrwl to @nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/rescope",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/rescope",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/other",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -5551,40 +5528,6 @@
     "path": "/recipes/nx-release/build-before-versioning",
     "tags": ["nx-release"]
   },
-  "/recipes/other": {
-    "id": "other",
-    "name": "Other",
-    "description": "Other recipes you will find useful.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "rescope",
-        "name": "Rescope Packages from @nrwl to @nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/rescope",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/rescope",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/other",
-    "tags": []
-  },
-  "/recipes/other/rescope": {
-    "id": "rescope",
-    "name": "Rescope Packages from @nrwl to @nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/rescope",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/rescope",
-    "tags": []
-  },
   "/showcase": {
     "id": "showcase",
     "name": "Showcase",
@@ -6764,6 +6707,17 @@
         "isExternal": false,
         "path": "/deprecated/v1-nx-plugin-api",
         "tags": []
+      },
+      {
+        "id": "rescope",
+        "name": "Rescope Packages from @nrwl to @nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/rescope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/rescope",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6911,6 +6865,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/v1-nx-plugin-api",
+    "tags": []
+  },
+  "/deprecated/rescope": {
+    "id": "rescope",
+    "name": "Rescope Packages from @nrwl to @nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/rescope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/rescope",
     "tags": []
   },
   "/see-also": {
