@@ -1,8 +1,8 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
+import { existsSync } from 'node:fs';
 import { platform } from 'os';
-import { existsSync } from 'fs-extra';
+import { join, resolve as pathResolve } from 'path';
 
 import { ExpoRunOptions } from './schema';
 import { prebuildAsync } from '../prebuild/prebuild.impl';

@@ -5,8 +5,8 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { mkdirSync } from 'node:fs';
 import { dirname } from 'path';
-import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 
@@ -85,6 +85,6 @@ export function ensureNxProject(
   npmPackageName?: string,
   pluginDistPath?: string
 ): void {
-  ensureDirSync(tmpProjPath());
+  mkdirSync(tmpProjPath(), { recursive: true });
   newNxProject(npmPackageName, pluginDistPath);
 }
