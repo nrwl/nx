@@ -370,7 +370,10 @@ Dependencies between different target names across all projects
 
 • `Optional` **tasksRunnerOptions**: `Object`
 
-Available Task Runners
+**`Deprecated`**
+
+Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+Available Task Runners for Nx to use
 
 #### Index signature
 

@@ -14,6 +14,9 @@ export interface RawNxArgs extends NxArgs {
 export interface NxArgs {
   targets?: string[];
   configuration?: string;
+  /**
+   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   */
   runner?: string;
   parallel?: number;
   untracked?: boolean;
