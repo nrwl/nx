@@ -1,15 +1,15 @@
 import {
   detectPackageManager,
   ExecutorContext,
-  getPackageManagerCommand,
   names,
   PackageManager,
   readJsonFile,
+  writeJsonFile,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
-import { copyFileSync, existsSync, removeSync, writeFileSync } from 'fs-extra';
-import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
+import { copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
+import { resolve as pathResolve } from 'path';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { resolveEas } from '../../utils/resolve-eas';
@@ -144,10 +144,7 @@ function copyPackageJsonAndLock(
   projectPackageJson.devDependencies = rootPackageJsonDevDependencies;
 
   // Copy dependencies from root package.json to project package.json
-  writeFileSync(
-    packageJsonProject,
-    JSON.stringify(projectPackageJson, null, 2)
-  );
+  writeJsonFile(packageJsonProject, projectPackageJson);
 
   // Copy lock file from root to project
   copyFileSync(lockFile, lockFileProject);
@@ -162,6 +159,6 @@ function copyPackageJsonAndLock(
     );
 
     // Remove lock file from project
-    removeSync(lockFileProject);
+    rmSync(lockFileProject, { recursive: true, force: true });
   };
 }
