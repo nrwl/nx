@@ -135,8 +135,8 @@ function defaultReadFileAtRevision(
 }
 
 /**
- * TODO(v20): Remove this function
- * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v20.
+ * TODO(v21): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v21.
  */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
