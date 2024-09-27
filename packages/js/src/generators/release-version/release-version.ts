@@ -20,6 +20,7 @@ import {
   ProjectsVersionPlan,
 } from 'nx/src/command-line/release/config/version-plans';
 import {
+  getAbsoluteGitRoot,
   getFirstGitCommit,
   getLatestGitTagForPattern,
 } from 'nx/src/command-line/release/utils/git';
@@ -34,6 +35,7 @@ import {
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
+import { getWorkspaceGitRootOffset } from 'nx/src/command-line/release/utils/shared';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { ReleaseType, gt, inc, prerelease } from 'semver';
@@ -407,11 +409,18 @@ To fix this you will either need to add a package.json file at that location, or
               );
             }
 
+            // Obtain path offset from git root to Nx workspace for later normalizations
+            const workspaceGitRootOffset = getWorkspaceGitRootOffset(
+              await getAbsoluteGitRoot(),
+              workspaceRoot
+            );
+
             specifier = await resolveSemverSpecifierFromConventionalCommits(
               previousVersionRef,
               options.projectGraph,
               affectedProjects,
-              options.conventionalCommitsConfig
+              options.conventionalCommitsConfig,
+              workspaceGitRootOffset
             );
 
             if (!specifier) {

@@ -1,4 +1,5 @@
 import * as chalk from 'chalk';
+import * as path from 'path';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { Tree } from '../../../generators/tree';
@@ -336,4 +337,17 @@ export async function getCommitsRelevantToProjects(
           ))
     )
   );
+}
+
+export function getWorkspaceGitRootOffset(
+  gitRoot: string,
+  workspaceRoot: string,
+  separator = path.sep
+): string | undefined {
+  // Slice the gitRoot part from workspaceRoot to get the relative path
+  const offset = workspaceRoot.slice(gitRoot.length);
+  // Ensure there is a valid relative path and return it with the appropriate separator
+  return offset.startsWith(separator) && offset.length > 1
+    ? offset.slice(1) + separator
+    : undefined;
 }

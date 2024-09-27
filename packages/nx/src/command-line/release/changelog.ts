@@ -48,6 +48,7 @@ import {
 import {
   GitCommit,
   Reference,
+  getAbsoluteGitRoot,
   getCommitHash,
   getFirstGitCommit,
   getGitDiff,
@@ -71,6 +72,7 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  getWorkspaceGitRootOffset,
   handleDuplicateGitTags,
   noDiffInChangelogMessage,
 } from './utils/shared';
@@ -274,6 +276,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // If there are multiple release groups, we'll just skip the workspace changelog anyway.
     const versionPlansEnabledForWorkspaceChangelog =
       releaseGroups[0].resolvedVersionPlans;
+    // Obtain path offset from git root to Nx workspace for later normalizations
+    const workspaceGitRootOffset = getWorkspaceGitRootOffset(
+      await getAbsoluteGitRoot(),
+      workspaceRoot
+    );
+
     if (versionPlansEnabledForWorkspaceChangelog) {
       if (releaseGroups.length === 1) {
         const releaseGroup = releaseGroups[0];
@@ -288,7 +296,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               let githubReferences = [];
               let author = undefined;
               const parsedCommit = vp.commit
-                ? parseGitCommit(vp.commit, true)
+                ? parseGitCommit(vp.commit, { isVersionPlanCommit: true })
                 : null;
               if (parsedCommit) {
                 githubReferences = parsedCommit.references;
@@ -350,7 +358,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
       workspaceChangelogCommits = await getCommits(
         workspaceChangelogFromSHA,
-        toSHA
+        toSHA,
+        workspaceGitRootOffset
       );
 
       workspaceChangelogChanges = filterHiddenChanges(
@@ -517,7 +526,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 let githubReferences = [];
                 let author = undefined;
                 const parsedCommit = vp.commit
-                  ? parseGitCommit(vp.commit, true)
+                  ? parseGitCommit(vp.commit, { isVersionPlanCommit: true })
                   : null;
                 if (parsedCommit) {
                   githubReferences = parsedCommit.references;
@@ -550,7 +559,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
             if (!fromRef && useAutomaticFromRef) {
               const firstCommit = await getFirstGitCommit();
-              const allCommits = await getCommits(firstCommit, toSHA);
+              const allCommits = await getCommits(
+                firstCommit,
+                toSHA,
+                workspaceGitRootOffset
+              );
               const commitsForProject = allCommits.filter((c) =>
                 c.affectedFiles.find((f) => f.startsWith(project.data.root))
               );
@@ -571,7 +584,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             }
 
             if (!commits) {
-              commits = await getCommits(fromRef, toSHA);
+              commits = await getCommits(
+                fromRef,
+                toSHA,
+                workspaceGitRootOffset
+              );
             }
 
             const { fileMap } = await createFileMapUsingProjectGraph(
@@ -673,7 +690,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               let githubReferences = [];
               let author = undefined;
               const parsedCommit = vp.commit
-                ? parseGitCommit(vp.commit, true)
+                ? parseGitCommit(vp.commit, { isVersionPlanCommit: true })
                 : null;
               if (parsedCommit) {
                 githubReferences = parsedCommit.references;
@@ -736,7 +753,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             fileMap.projectFileMap
           );
 
-          commits = await getCommits(fromSHA, toSHA);
+          commits = await getCommits(fromSHA, toSHA, workspaceGitRootOffset);
           changes = filterHiddenChanges(
             commits.map((c) => ({
               type: c.type,
@@ -1366,11 +1383,15 @@ function checkChangelogFilesEnabled(nxReleaseConfig: NxReleaseConfig): boolean {
 
 async function getCommits(
   fromSHA: string,
-  toSHA: string
+  toSHA: string,
+  gitRootToWorkspacePath?: string
 ): Promise<GitCommit[]> {
   const rawCommits = await getGitDiff(fromSHA, toSHA);
   // Parse as conventional commits
-  return parseCommits(rawCommits);
+  return parseCommits(rawCommits, {
+    isVersionPlanCommit: false,
+    gitRootToWorkspacePath,
+  });
 }
 
 function filterHiddenChanges(
