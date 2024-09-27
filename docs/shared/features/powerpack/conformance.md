@@ -8,14 +8,14 @@ The conformance plugin allows you to **encode your own organization's standards*
 
 The plugin also provides the following pre-written rules:
 
-- **Enforce Module Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - **Ensure Owners**: Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
 ## Setup
 
 The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/recipes/installation/activate-powerpack) is a simple process.
 
-{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://nx.app/powerpack/purchase" /%}
+{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://cloud.nx.app/powerpack/purchase" /%}
 
 Then, add the Conformance plugin to your workspace.
 
@@ -30,12 +30,12 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/powerpack-conformance/enforce-module-boundaries",
+        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
         "options": {
           "depConstraints": [
             {
               "sourceTag": "scope:shared",
-              "onlyDependOnLibsWithTags": ["scope:shared"]
+              "onlyDependOnProjectsWithTags": ["scope:shared"]
             }
           ]
         }

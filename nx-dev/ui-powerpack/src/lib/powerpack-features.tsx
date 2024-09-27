@@ -26,7 +26,7 @@ export function PowerpackFeatures(): ReactElement {
                 Self-hosted cache storage
               </SectionHeading>
               <p className="mt-6 text-pretty text-lg">
-                Nx Powerpack enables you to use <Strong>AWS S3</Strong> or a{' '}
+                Nx Powerpack enables you to use <Strong>Amazon S3</Strong> or a{' '}
                 <Strong>shared network drive</Strong> as your remote cache
                 storage, offering a flexible, self-managed solution for faster
                 builds.
@@ -194,7 +194,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
 
             <ButtonLink
               href="/nx-api/powerpack-s3-cache"
-              title="Learn how to configure AWS S3 caching"
+              title="Learn how to configure Amazon S3 caching"
               variant="secondary"
               size="small"
               className="mt-4"

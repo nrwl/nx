@@ -443,6 +443,19 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
 
+    it('should handle ts project references pointing to non-existing files and not throw', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          references: [{ path: '../my-lib-2' }],
+        }),
+        'libs/my-lib/package.json': `{}`,
+      });
+
+      await expect(
+        invokeCreateNodesOnMatchingFiles(context, {})
+      ).resolves.not.toThrow();
+    });
+
     describe('inputs', () => {
       it('should add the config file and the `include` and `exclude` patterns', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
@@ -1819,6 +1832,23 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           },
         }
       `);
+    });
+
+    it('should handle ts project references pointing to non-existing files and not throw', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          references: [{ path: '../my-lib-2' }],
+        }),
+        'libs/my-lib/tsconfig.lib.json': `{}`,
+        'libs/my-lib/package.json': `{}`,
+      });
+
+      await expect(
+        invokeCreateNodesOnMatchingFiles(context, {
+          typecheck: false,
+          build: true,
+        })
+      ).resolves.not.toThrow();
     });
 
     describe('inputs', () => {
