@@ -125,7 +125,7 @@ As part of this new approach we're also going to [deprecate custom task runners]
 
 To fill in on the custom task runner API we're providing a new Powerpack plugin that allows you to use S3 or a network drive as your storing mechanism for your Nx cache.
 
-Here's an example of how to get started with AWS S3 based remote caching. First add the Powerpack plugin:
+Here's an example of how to get started with [Amazon S3](https://aws.amazon.com/s3) based remote caching. First add the Powerpack plugin:
 
 ```shell
 npx nx add @nx/powerpack-s3-cache

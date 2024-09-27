@@ -8,7 +8,7 @@ When you serve your host application via `nx serve host`, the Nx `module-federat
 
 {% callout type="note" title="Using Module Federation with SSR?" %}
 The same technique outlined below also applies to the `module-federation-ssr-dev-server`.  
-This is important to know when it comes to deploying your SSR Module Federation application as it indicates that you can place the build artifacts from the `remotes` onto something like an AWS S3 Bucket and your `host` will be able to find these files correctly.
+This is important to know when it comes to deploying your SSR Module Federation application as it indicates that you can place the build artifacts from the `remotes` onto something like an Amazon S3 Bucket and your `host` will be able to find these files correctly.
 {% /callout %}
 
 The executor does the following:
