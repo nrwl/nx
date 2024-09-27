@@ -6,7 +6,7 @@ Any CI tool requires tight integration with your existing version control system
 
 ![Screenshot of Nx Cloud connecting a GitHub repository](/nx-cloud/features/github-onboarding.avif)
 
-Ready to get started with Nx Cloud? Get started with Nx Cloud in no time with our GitHub connection process. Connect your workspace, and Nx Cloud will create a pull request with everything you need. Select your workspace and organization, and Nx Cloud takes care of the rest. User access is automatically connected to GitHub, and a PR is created to connect your workspace. Your repo now has [distributed caching](/ci/features/remote-cache) in less than 5 minutes.
+Get started with Nx Cloud in no time with our GitHub connection process. Connect your workspace, and Nx Cloud will create a pull request with everything you need. Select your workspace and organization, and Nx Cloud takes care of the rest. User access is automatically connected to GitHub, and a PR is created to connect your workspace. Your repo now has [distributed caching](/ci/features/remote-cache) in less than 5 minutes.
 
 ## Pull Request insights
 
@@ -20,26 +20,27 @@ Good CI checks require fast and easy access to results. That's why Nx Cloud will
 
 Nx Cloud organizations can use their existing GitHub access controls to manage Nx Cloud as well. This allows Nx Cloud to fit in to any existing on-boarding or off-boarding process. There's no need to manually manage users separately. Get your engineers Nx Cloud access right alongside their GitHub access so they can get to work fast. Use [personal access tokens](/ci/recipes/security/personal-access-tokens) to further enhance your security.
 
-## Getting started
+## Get started
 
 First, you'll want to connect your Nx Cloud account to GitHub. You can use your regular username and password or log in via Google or GitHub, connecting to GitHub is a separate step.
 
-{% call-to-action title="Log in to Nx Cloud" url="https://cloud.nx.app/profile/vcs-integrations" icon="nxcloud" description="Connect to GitHub via your profile settings" %}
+{% call-to-action title="Connect to GitHub" url="https://cloud.nx.app/profile/vcs-integrations" icon="nxcloud" description="Connect your Nx Cloud account to GitHub via your profile settings" %}
 Connect to GitHub
 {% /call-to-action %}
 
-## Connecting a new workspace and organization
+## Connect a new workspace and organization
 
 1. Visit [Nx Cloud](https://cloud.nx.app) and click **Connect a workspace** at the top.
-2. Follow the prompts to select a repo.
-3. If that repo is controlled by a GitHub organization, you will be prompted to use that organization.
-4. Follow the prompts to create a pull request to complete your connection to Nx Cloud.
+2. Select **Connect existing repository** from the dropdown.
+3. Follow the prompts to select a repo.
+4. If that repo is controlled by a GitHub organization, you will be prompted to use that organization.
+5. Follow the prompts to create a pull request to complete your connection to Nx Cloud.
 
-{% call-to-action title="Log in to Nx Cloud" url="https://cloud.nx.app/setup/connect-workspace/github/select" icon="nxcloud" description="Connect a new Nx workspace to Nx Cloud" %}
-Connect a new workspace to Nx Cloud
+{% call-to-action title="Connect a workspace to Nx Cloud" url="https://cloud.nx.app/setup/connect-workspace/github/select" icon="nxcloud" description="Connect an Nx workspace in GitHub to Nx Cloud" %}
+Connect an Nx workspace in GitHub to Nx Cloud
 {% /call-to-action %}
 
-## Connecting an existing organization
+## Connect an existing organization
 
 If you've already created an organization in Nx Cloud, and you'd like to use your GitHub organization to manage access to it:
 
@@ -48,6 +49,6 @@ If you've already created an organization in Nx Cloud, and you'd like to use you
 3. Go to **Connect GitHub organization in the sidebar**
 4. Follow the prompts there to connect to GitHub.
 
-## Connecting an existing workspace
+## Connect an existing workspace
 
 If you already have a workspace connected to Nx Cloud, and you'd like to connect it to a GitHub repo to enable PR insights, [see our recipe for more details.](/ci/recipes/source-control-integration/github)
