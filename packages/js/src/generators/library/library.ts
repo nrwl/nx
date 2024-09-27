@@ -574,6 +574,11 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       if (!options.publishable && !options.rootProject) {
         json.private = true;
       }
+      if (options.isUsingTsSolutionConfig && options.publishable) {
+        // package.json and README.md are always included by default
+        // https://docs.npmjs.com/cli/v10/configuring-npm/package-json#files
+        json.files = ['dist', '!**/*.tsbuildinfo'];
+      }
       return {
         ...json,
         dependencies: {
@@ -592,6 +597,11 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
     };
     if (!options.publishable && !options.rootProject) {
       packageJson.private = true;
+    }
+    if (options.isUsingTsSolutionConfig && options.publishable) {
+      // package.json and README.md are always included by default
+      // https://docs.npmjs.com/cli/v10/configuring-npm/package-json#files
+      packageJson.files = ['dist', '!**/*.tsbuildinfo'];
     }
     writeJson<PackageJson>(tree, packageJsonPath, packageJson);
   }
