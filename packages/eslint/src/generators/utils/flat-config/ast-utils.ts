@@ -175,12 +175,17 @@ export function replaceOverride(
           changes.push({
             type: ChangeType.Insert,
             index: start,
-            text: JSON.stringify(updatedData, null, 2)
-              // restore any parser require calls that were stripped during JSON parsing
-              .replace(/"parser": "([^"]+)"/g, (_, parser) => {
-                return `"parser": require('${parser}')`;
-              })
-              .slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
+            // NOTE: Indentation added to format without formatting tools like Prettier.
+            text:
+              '    ' +
+              JSON.stringify(updatedData, null, 2)
+                // restore any parser require calls that were stripped during JSON parsing
+                .replace(/"parser": "([^"]+)"/g, (_, parser) => {
+                  return `"parser": require('${parser}')`;
+                })
+                .slice(2, -2) // remove curly braces and start/end line breaks since we are injecting just properties
+                // Append indentation so file is formatted without Prettier
+                .replaceAll(/\n/g, '\n    '),
           });
         }
       }
