@@ -152,6 +152,7 @@ export class DbCache {
       }
     } else {
       return (
+        (await this.getCustomCache(nxJson.communityCache)) ??
         (await this.getPowerpackS3Cache()) ??
         (await this.getPowerpackSharedCache()) ??
         null
@@ -160,14 +161,14 @@ export class DbCache {
   }
 
   private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
-    return this.getPowerpackCache('@nx/powerpack-s3-cache');
+    return this.getCustomCache('@nx/powerpack-s3-cache');
   }
 
   private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
-    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+    return this.getCustomCache('@nx/powerpack-shared-fs-cache');
   }
 
-  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
+  private async getCustomCache(pkg: string): Promise<RemoteCacheV2 | null> {
     let getRemoteCache = null;
     try {
       getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;

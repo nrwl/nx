@@ -81,6 +81,7 @@ export const allowedWorkspaceExtensions = [
   'neverConnectToCloud',
   'sync',
   'enableDbCache',
+  'communityCache',
 ] as const;
 
 if (!patched) {

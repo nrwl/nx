@@ -519,6 +519,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Enable the new experimental db based cache
    */
   enableDbCache?: boolean;
+
+  /**
+   * community support for custom cache
+   */
+  communityCache?: string;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

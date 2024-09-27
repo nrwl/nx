@@ -19,6 +19,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
+- [communityCache](../../devkit/documents/Workspace#communitycache): string
 - [defaultBase](../../devkit/documents/Workspace#defaultbase): string
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
 - [enableDbCache](../../devkit/documents/Workspace#enabledbcache): boolean
@@ -91,6 +92,18 @@ Default generator collection. It is used when no collection is provided.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[cli](../../devkit/documents/NxJsonConfiguration#cli)
+
+---
+
+### communityCache
+
+• `Optional` **communityCache**: `string`
+
+community support for custom cache
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[communityCache](../../devkit/documents/NxJsonConfiguration#communitycache)
 
 ---
 
