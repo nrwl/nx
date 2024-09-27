@@ -5,7 +5,6 @@ export interface Schema {
   path: string;
   name?: string;
   skipTests?: boolean;
-  directory?: string;
   export?: boolean;
   classComponent?: boolean;
   js?: boolean;

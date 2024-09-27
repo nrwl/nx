@@ -189,7 +189,7 @@ describe('@nx/react-native (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/react-native:component ${componentName} --directory=libs/${libName}/src/lib/${componentName} --export`
+      `generate @nx/react-native:component libs/${libName}/src/lib/${componentName}/${componentName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);

@@ -111,7 +111,7 @@ export default App;`
       `generate @nx/react:lib ${buildableLibName} --directory=libs/${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component input --directory=libs/${buildableLibName}/src/lib/input --export --no-interactive`
+      `generate @nx/react:component libs/${buildableLibName}/src/lib/input/input --export --no-interactive`
     );
 
     checkFilesExist(`libs/${buildableLibName}/src/lib/input/input.tsx`);
