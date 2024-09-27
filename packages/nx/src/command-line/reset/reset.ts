@@ -42,15 +42,15 @@ export async function resetHandler(args: ResetCommandOptions) {
   if (all || args.onlyDaemon) {
     try {
       await killDaemon();
-    } catch {
-      errors.push('Failed to stop the Nx Daemon.');
+    } catch (e) {
+      errors.push('Failed to stop the Nx Daemon.', e.toString());
     }
   }
   if (all || args.onlyCache) {
     try {
       await cleanupCacheEntries();
-    } catch {
-      errors.push('Failed to clean up the cache directory.');
+    } catch (e) {
+      errors.push('Failed to clean up the cache directory.', e.toString());
     }
   }
   if (all || args.onlyWorkspaceData) {
@@ -61,12 +61,19 @@ export async function resetHandler(args: ResetCommandOptions) {
     }
     try {
       await cleanupWorkspaceData();
-    } catch {
-      errors.push('Failed to clean up the workspace data directory.');
+    } catch (e) {
+      errors.push(
+        'Failed to clean up the workspace data directory.',
+        e.toString()
+      );
     }
   }
   if (all || args.onlyCloud) {
-    await resetCloudClient();
+    try {
+      await resetCloudClient();
+    } catch (e) {
+      errors.push('Failed to reset the Nx Cloud client.', e.toString());
+    }
   }
   if (errors.length > 0) {
     output.error({
@@ -81,8 +88,10 @@ export async function resetHandler(args: ResetCommandOptions) {
   }
 }
 
-function killDaemon() {
-  return daemonClient.stop();
+async function killDaemon(): Promise<void> {
+  if (daemonClient.enabled()) {
+    return daemonClient.stop();
+  }
 }
 
 async function resetCloudClient() {
