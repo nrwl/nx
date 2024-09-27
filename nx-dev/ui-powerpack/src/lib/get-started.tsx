@@ -12,7 +12,7 @@ export function GetStarted(): ReactElement {
             Premium features, <br /> carefully crafted DX
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="text mt-6">
-            Expand you capabilities with Nx Powerpack, <br /> a suite of
+            Expand your capabilities with Nx Powerpack, <br /> a suite of
             advanced tools designed for enterprises.
           </SectionHeading>
         </div>
