@@ -4,7 +4,7 @@ import {
   getProjects,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 
 /**
  * Remove ensure-symlink target.
@@ -20,7 +20,7 @@ export default async function update(tree: Tree) {
     ) {
       removeTargets(config.targets, 'ensure-symlink');
       updateProjectConfiguration(tree, projectName, config);
-      removeSync(`${config.root}/node_modules`);
+      rmSync(`${config.root}/node_modules`, { recursive: true, force: true });
     }
   }
 }
