@@ -59,21 +59,23 @@ Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx 
 ```jsonc {% fileName="nx.json" %}
 {
   "conformance": {
-    "rules": [{
-      /**
-       * Relative path to a local rule implementation or node_module path.
-       */
-      "rule": "@nx/powerpack-conformance/enforce-project-boundaries";
-      /**
-       * Rule specific configuration options. (Optional)
-       */
-      "options": {}
-      /**
-       * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
-       * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"]. (Optional)
-       */
-      "projects": ["*"];
-    }]
+    "rules": [
+      {
+        /**
+         * Relative path to a local rule implementation or node_module path.
+         */
+        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
+        /**
+         * Rule specific configuration options. (Optional)
+         */
+        "options": {},
+        /**
+         * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
+         * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"]. (Optional)
+         */
+        "projects": ["*"]
+      }
+    ]
   }
 }
 ```
@@ -183,17 +185,13 @@ To write your own conformance rule, specify a relative path to a TypeScript or J
 The rule definition file should look like this:
 
 ```ts {% fileName="tools/local-conformance-rule.ts" %}
-import type {
-  ConformanceRule,
-  ConformanceRuleResult,
-  createConformanceRule,
-} from '@nx/powerpack-conformance';
+import { createConformanceRule } from '@nx/powerpack-conformance';
 
 const rule = createConformanceRule({
   name: 'local-conformance-rule-example',
   category: 'security', // `consistency`, `maintainability`, `reliability` or `security`
   reporter: 'project-reporter', // `project-reporter` or `project-files-reporter`
-  implementation: async (context): Promise<ConformanceRuleResult> => {
+  implementation: async (context) => {
     const { projectGraph, ruleOptions } = context;
     // Your rule logic goes here
     return {
