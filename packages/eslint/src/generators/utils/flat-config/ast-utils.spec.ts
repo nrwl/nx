@@ -619,22 +619,22 @@ module.exports = [
 
         module.exports = [
             {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-rule": "error"
-          }
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-rule": "error"
+              }
             },
             {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.js"
-          ],
-          "rules": {
-            "my-rule": "error"
-          }
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.js"
+              ],
+              "rules": {
+                "my-rule": "error"
+              }
             },
             {
                 files: [
@@ -690,14 +690,14 @@ module.exports = [
 
         module.exports = [
             {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-ts-rule": "error",
-            "my-new-rule": "error"
-          }
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-ts-rule": "error",
+                "my-new-rule": "error"
+              }
             },
             {
                 files: [
@@ -746,14 +746,14 @@ module.exports = [
         module.exports = [
             ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
             ...config,
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-ts-rule": "error",
-            "my-new-rule": "error"
-          }
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-ts-rule": "error",
+                "my-new-rule": "error"
+              }
           }),
         ];"
       `);
