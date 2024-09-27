@@ -31,9 +31,9 @@ import { isCI } from 'nx/src/utils/is-ci';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { getProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { isUsingTypeScriptPlugin } from '../../utils/typescript-plugin';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import {
@@ -41,7 +41,10 @@ import {
   getRelativePathToRootTsConfig,
   getRootTsConfigFileName,
 } from '../../utils/typescript/ts-config';
-import { isWorkspaceSetupWithTsSolution } from '../../utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  isUsingTypeScriptPlugin,
+} from '../../utils/typescript/ts-solution-setup';
 import {
   esbuildVersion,
   nxVersion,
@@ -56,10 +59,7 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from './utils/package-manager-workspaces';
+import { getProjectPackageManagerWorkspaceStateWarningTask } from './utils/package-manager-workspaces';
 import {
   ensureProjectIsExcludedFromPluginRegistrations,
   ensureProjectIsIncludedInPluginRegistrations,
@@ -84,20 +84,17 @@ export async function libraryGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const options = await normalizeOptions(tree, schema);
-
   tasks.push(
     await jsInitGenerator(tree, {
-      ...options,
+      ...schema,
       skipFormat: true,
-      tsConfigName: options.rootProject
-        ? 'tsconfig.json'
-        : 'tsconfig.base.json',
+      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
       // In the new setup, Prettier is prompted for and installed during `create-nx-workspace`.
-      formatter: options.isUsingTsSolutionConfig ? 'none' : 'prettier',
+      formatter: isUsingTsSolutionSetup(tree) ? 'none' : 'prettier',
     })
   );
+  const options = await normalizeOptions(tree, schema);
 
   createFiles(tree, options);
 
@@ -693,14 +690,14 @@ async function normalizeOptions(
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
   const nxJson = readNxJson(tree);
-  const addPlugin =
+  options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
 
   const hasPlugin = isUsingTypeScriptPlugin(tree);
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
-  if (hasPlugin) {
+  if (isUsingTsSolutionConfig) {
     if (options.bundler === 'esbuild' || options.bundler === 'swc') {
       throw new Error(
         `Cannot use the "${options.bundler}" bundler when using the @nx/js/typescript plugin.`
@@ -888,13 +885,6 @@ async function normalizeOptions(
     : [];
 
   options.minimal ??= false;
-
-  // If the TS plugin is used or meant to be added and there is no root tsconfig
-  // file, we'll generate it. Otherwise, we check if the workspace is already
-  // setup with a TS solution config.
-  const isUsingTsSolutionConfig =
-    hasPlugin &&
-    (!getRootTsConfigFileName(tree) || isWorkspaceSetupWithTsSolution(tree));
 
   const projectPackageManagerWorkspaceState =
     getProjectPackageManagerWorkspaceState(tree, projectRoot);

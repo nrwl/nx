@@ -4,6 +4,7 @@ import type {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 // nx-ignore-next-line
 const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
+import type { ProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
 
 export type Compiler = 'tsc' | 'swc';
 export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
@@ -38,10 +39,6 @@ export interface LibraryGeneratorSchema {
   useProjectJson?: boolean;
 }
 
-type ProjectPackageManagerWorkspaceState =
-  | 'included'
-  | 'excluded'
-  | 'no-workspaces';
 export interface NormalizedLibraryGeneratorOptions
   extends LibraryGeneratorSchema {
   name: string;

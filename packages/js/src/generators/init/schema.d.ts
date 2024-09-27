@@ -8,4 +8,5 @@ export interface InitSchema {
   tsConfigName?: string;
   addPlugin?: boolean;
   updatePackageScripts?: boolean;
+  addTsPlugin?: boolean;
 }

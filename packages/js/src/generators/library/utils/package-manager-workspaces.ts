@@ -1,36 +1,11 @@
 import {
   detectPackageManager,
   getPackageManagerVersion,
-  isWorkspacesEnabled,
   output,
-  readJson,
-  Tree,
   type GeneratorCallback,
 } from '@nx/devkit';
-import { minimatch } from 'minimatch';
-import { join } from 'node:path/posix';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { lt } from 'semver';
-import type { ProjectPackageManagerWorkspaceState } from '../schema';
-
-export function getProjectPackageManagerWorkspaceState(
-  tree: Tree,
-  projectRoot: string
-): ProjectPackageManagerWorkspaceState {
-  if (!isWorkspacesEnabled(detectPackageManager(tree.root), tree.root)) {
-    return 'no-workspaces';
-  }
-
-  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
-    tree.root,
-    (path) => readJson(tree, path, { expectComments: true })
-  );
-  const isIncluded = patterns.some((p) =>
-    minimatch(join(projectRoot, 'package.json'), p)
-  );
-
-  return isIncluded ? 'included' : 'excluded';
-}
+import type { ProjectPackageManagerWorkspaceState } from '../../../utils/package-manager-workspaces';
 
 export function getProjectPackageManagerWorkspaceStateWarningTask(
   projectPackageManagerWorkspaceState: ProjectPackageManagerWorkspaceState,

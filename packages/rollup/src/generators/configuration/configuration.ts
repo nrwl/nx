@@ -12,7 +12,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { isUsingTypeScriptPlugin } from '@nx/js/src/utils/typescript-plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
@@ -57,7 +57,7 @@ export async function configurationGenerator(
 }
 
 function createRollupConfig(tree: Tree, options: RollupProjectSchema) {
-  const isUsingTsPlugin = options.addPlugin && isUsingTypeScriptPlugin(tree);
+  const isUsingTsPlugin = isUsingTsSolutionSetup(tree);
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: RollupWithNxPluginOptions = {
     outputPath: isUsingTsPlugin

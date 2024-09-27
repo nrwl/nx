@@ -396,6 +396,7 @@ async function determineStack(
         {
           name: `none`,
           message:
+            process.env.NX_ADD_PLUGINS !== 'false' &&
             process.env.NX_ADD_TS_PLUGIN === 'true'
               ? `None:          Configures a TypeScript/JavaScript monorepo.`
               : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
@@ -445,7 +446,10 @@ async function determinePresetOptions(
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
-  if (process.env.NX_ADD_TS_PLUGIN === 'true') {
+  if (
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    process.env.NX_ADD_TS_PLUGIN === 'true'
+  ) {
     const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
       {
         name: 'prettier',

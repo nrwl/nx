@@ -17,8 +17,8 @@ import { join } from 'path';
 import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { generatePrettierSetup } from '../../utils/prettier';
-import { isUsingTypeScriptPlugin } from '../../utils/typescript-plugin';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
   prettierVersion,
@@ -69,8 +69,9 @@ export async function initGenerator(
   tree: Tree,
   schema: InitSchema
 ): Promise<GeneratorCallback> {
-  const isUsingTsPlugin = isUsingTypeScriptPlugin(tree);
-  schema.formatter ??= isUsingTsPlugin ? 'none' : 'prettier';
+  schema.addTsPlugin ??= false;
+  const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
+  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'prettier';
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
@@ -88,10 +89,10 @@ export async function initGeneratorInternal(
   schema.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
-  const addTsPlugin =
+  schema.addTsPlugin ??=
     schema.addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
 
-  if (addTsPlugin) {
+  if (schema.addTsPlugin) {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
@@ -114,7 +115,7 @@ export async function initGeneratorInternal(
   }
 
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
-    if (addTsPlugin) {
+    if (schema.addTsPlugin) {
       generateFiles(tree, join(__dirname, './files/ts-solution'), '.', {
         tmpl: '',
       });

@@ -1,6 +1,26 @@
-import { readJson, type Tree } from '@nx/devkit';
+import { readJson, readNxJson, type Tree } from '@nx/devkit';
+import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
 
-export function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
+export function isUsingTypeScriptPlugin(tree: Tree): boolean {
+  const nxJson = readNxJson(tree);
+
+  return (
+    nxJson?.plugins?.some((p) =>
+      typeof p === 'string'
+        ? p === '@nx/js/typescript'
+        : p.plugin === '@nx/js/typescript'
+    ) ?? false
+  );
+}
+
+export function isUsingTsSolutionSetup(tree: Tree): boolean {
+  return (
+    isUsingPackageManagerWorkspaces(tree) &&
+    isWorkspaceSetupWithTsSolution(tree)
+  );
+}
+
+function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (!tree.exists('tsconfig.base.json') || !tree.exists('tsconfig.json')) {
     return false;
   }
@@ -9,7 +29,19 @@ export function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (tsconfigJson.extends !== './tsconfig.base.json') {
     return false;
   }
-  if (tsconfigJson.files?.length || tsconfigJson.include?.length) {
+
+  /**
+   * New setup:
+   * - `files` is defined and set to an empty array
+   * - `references` is defined and set to an empty array
+   * - `include` is not defined or is set to an empty array
+   */
+  if (
+    !tsconfigJson.files ||
+    tsconfigJson.files.length > 0 ||
+    !tsconfigJson.references ||
+    !!tsconfigJson.include?.length
+  ) {
     return false;
   }
 

@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { isUsingTypeScriptPlugin } from '@nx/js/src/utils/typescript-plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
@@ -363,7 +363,7 @@ export function createOrEditViteConfig(
     ? `${projectRoot}/vitest.config.ts`
     : `${projectRoot}/vite.config.ts`;
 
-  const isUsingTsPlugin = isUsingTypeScriptPlugin(tree);
+  const isUsingTsPlugin = isUsingTsSolutionSetup(tree);
   const buildOutDir = isUsingTsPlugin
     ? './dist'
     : projectRoot === '.'

@@ -275,6 +275,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
+          process.env.NX_ADD_PLUGINS !== 'false' &&
           process.env.NX_ADD_TS_PLUGIN === 'true') ||
         options.preset === Preset.NPM
       ? './files-package-based-repo'
@@ -413,7 +414,9 @@ function normalizeOptions(options: NormalizedSchema) {
 function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.NPM ||
-    (options.preset === Preset.TS && process.env.NX_ADD_TS_PLUGIN === 'true')
+    (options.preset === Preset.TS &&
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      process.env.NX_ADD_TS_PLUGIN === 'true')
   ) {
     if (options.packageManager === 'pnpm') {
       tree.write(
