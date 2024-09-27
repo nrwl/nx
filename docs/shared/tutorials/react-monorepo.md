@@ -242,7 +242,7 @@ NX   Capabilities in @nx/react:
 
    GENERATORS
 
-   init : Initialize the `@nrwl/react` plugin.
+   init : Initialize the `@nx/react` plugin.
    application : Create a React application.
    library : Create a React library.
    component : Create a React component.

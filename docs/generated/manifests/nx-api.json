@@ -3113,18 +3113,6 @@
     },
     "path": "/nx-api/storybook"
   },
-  "tao": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "tao",
-    "packageName": "@nrwl/tao",
-    "description": "CLI for generating code and running commands",
-    "documents": {},
-    "root": "/packages/tao",
-    "source": "/packages/tao/src",
-    "executors": {},
-    "generators": {},
-    "path": "/nx-api/tao"
-  },
   "vite": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "vite",

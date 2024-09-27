@@ -55,8 +55,6 @@ export async function cypressComponentConfigGeneratorInternal(
     validExecutorNames: new Set<string>([
       '@nx/webpack:webpack',
       '@nx/vite:build',
-      '@nrwl/webpack:webpack',
-      '@nrwl/vite:build',
     ]),
   });
 
