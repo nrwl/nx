@@ -33,6 +33,10 @@ Like many open source projects, one of the bigger challenges to sustainability i
 
 ![Nx products and their licenses](/blog/images/evolving-nx/nx-products-licenses.avif)
 
+### What about my open-source repo ?
+
+Open source projects can continue to use Nx Cloud for **free** the same way they always have, and they can continue to use Nx with all its features. If you are an open-source maintainer and you want to use Powerpack, you will get a **free license**. Just reach out to us at [powerpack-support@nrwl.io](mailto:powerpack-support@nrwl.io).
+
 ## How to Get Nx Powerpack
 
 Powerpack can be easily purchased as a one-off license and is automatically included for all existing enterprise customers. If you’re looking to purchase a license, you can [do so on this page](/powerpack).
