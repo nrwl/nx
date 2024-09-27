@@ -176,8 +176,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   for (const [projectName, data] of Object.entries(projectGraph.dependencies)) {
     if (
       !projectGraph.nodes[projectName] ||
-      projectGraph.nodes[projectName].data.root === '.' ||
-      !data.length
+      projectGraph.nodes[projectName].data.root === '.'
     ) {
       continue;
     }
@@ -208,9 +207,6 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       projectGraph,
       collectedDependencies
     );
-    if (!dependencies.length) {
-      continue;
-    }
 
     for (const runtimeTsConfigFileName of runtimeTsConfigFileNames) {
       const runtimeTsConfigPath = joinPathFragments(
