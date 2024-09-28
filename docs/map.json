@@ -1721,6 +1721,11 @@
               "name": "Explain With AI",
               "id": "explain-with-ai",
               "file": "nx-cloud/features/explain-with-ai"
+            },
+            {
+              "name": "GitHub Integration",
+              "id": "github-integration",
+              "file": "nx-cloud/features/github-integration"
             }
           ]
         },

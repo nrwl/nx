@@ -273,6 +273,7 @@
     - [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)
     - [Dynamically Allocate Agents](/ci/features/dynamic-agents)
     - [Explain With AI](/ci/features/explain-with-ai)
+    - [GitHub Integration](/ci/features/github-integration)
   - [Concepts](/ci/concepts)
     - [The Building Blocks of Fast CI](/ci/concepts/building-blocks-fast-ci)
     - [Reduce Wasted Time in CI](/ci/concepts/reduce-waste)
