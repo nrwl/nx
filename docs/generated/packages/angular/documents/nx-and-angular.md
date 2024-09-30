@@ -137,7 +137,7 @@ Nx comes with slightly different terminology than the Angular CLI for some featu
 **Angular Schematics** are called [Generators](/features/generate-code) in Nx. You can invoke them in the same way as you would with the Angular CLI, but you use the `nx` command instead of `ng`:
 
 ```shell
-npx nx g @nx/angular:component my-component
+npx nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component
 ```
 
 You can also run Angular Schematics through the Nx CLI. So something like this works as well:

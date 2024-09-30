@@ -11,7 +11,7 @@ description: This page contains examples for the @nx/vue:app generator.
 Create an application named `my-app`:
 
 ```shell
-nx g @nx/vue:app my-app
+nx g @nx/vue:app apps/my-app
 ```
 
 {% /tab %}
@@ -25,7 +25,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/vue:app my-app --directory=apps/my-dir/my-app --style=scss
+nx g @nx/vue:app apps/my-dir/my-app --style=scss
 ```
 
 {% /tab %}
@@ -35,7 +35,7 @@ nx g @nx/vue:app my-app --directory=apps/my-dir/my-app --style=scss
 Add tags to the application (used for linting).
 
 ```shell
-nx g @nx/vue:app my-app --tags=scope:admin,type:ui
+nx g @nx/vue:app apps/my-app --tags=scope:admin,type:ui
 ```
 
 {% /tab %}

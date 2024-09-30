@@ -62,7 +62,7 @@ yarn create nx-workspace my-org --preset=ts
 You can add a new JS/TS library with the following command:
 
 ```shell
-nx g @nx/js:lib my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 ## Build
@@ -70,7 +70,7 @@ nx g @nx/js:lib my-lib
 You can `build` libraries that are generated with a bundler specified.
 
 ```shell
-nx g @nx/js:lib my-buildable-lib --bundler=rollup
+nx g @nx/js:lib libs/my-buildable-lib --bundler=rollup
 ```
 
 Generating a library with `--bundler` specified will add a `build` target to the library's `project.json` file allows the library to be built.
@@ -108,7 +108,7 @@ Currently, `@nx/js` supports the following compilers:
 - Create a buildable library with `swc`
 
 ```shell
-nx g @nx/js:lib my-swc-lib --bundler=swc
+nx g @nx/js:lib libs/my-swc-lib --bundler=swc
 ```
 
 - Convert a `tsc` library to use `swc`

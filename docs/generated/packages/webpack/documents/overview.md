@@ -96,17 +96,17 @@ You can generate a [React](/nx-api/react) application or a [Web](/nx-api/web) ap
 To generate a React application using Webpack, run the following:
 
 ```bash
-nx g @nx/react:app my-app --bundler=webpack
+nx g @nx/react:app apps/my-app --bundler=webpack
 ```
 
 To generate a Node application using Webpack, run the following:
 
 ```bash
-nx g @nx/node:app my-app --bundler=webpack
+nx g @nx/node:app apps/my-app --bundler=webpack
 ```
 
 To generate a Web application using Webpack, run the following:
 
 ```bash
-nx g @nx/web:app my-app --bundler=webpack
+nx g @nx/web:app apps/my-app --bundler=webpack
 ```

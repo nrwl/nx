@@ -6,7 +6,7 @@
 Create an application named `my-app`:
 
 ```bash
-nx g @nx/web:application my-app
+nx g @nx/web:application apps/my-app
 ```
 
 {% /tab %}
@@ -16,7 +16,7 @@ nx g @nx/web:application my-app
 Create an application named `my-app`:
 
 ```bash
-nx g @nx/web:app my-app --bundler=vite
+nx g @nx/web:app apps/my-app --bundler=vite
 ```
 
 When choosing `vite` as the bundler, your unit tests will be set up with `vitest`, unless you choose `none` for `unitTestRunner`.
@@ -32,7 +32,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```bash
-nx g @nx/web:app my-app --directory=apps/my-dir/my-app
+nx g @nx/web:app apps/my-dir/my-app
 ```
 
 {% /tab %}
@@ -42,7 +42,7 @@ nx g @nx/web:app my-app --directory=apps/my-dir/my-app
 Add tags to the application (used for linting).
 
 ```bash
-nx g @nx/web:app my-app --tags=scope:admin,type:ui
+nx g @nx/web:app apps/my-app --tags=scope:admin,type:ui
 ```
 
 {% /tab %}

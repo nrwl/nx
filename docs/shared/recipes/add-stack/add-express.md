@@ -34,7 +34,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/express:app my-express-api --directory=apps/my-express-api
+nx g @nx/express:app apps/my-express-api
 ```
 
 Serve the API by running
@@ -54,7 +54,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/js:lib my-lib --directory=libs/my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.
