@@ -1547,12 +1547,11 @@ describe('lib', () => {
     it('should generate the nx configuration in the package.json file when using --useProjectJson=false', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'none',
         linter: 'none',
         unitTestRunner: 'none',
         useProjectJson: false,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists('my-lib/project.json')).toBe(false);
@@ -1572,10 +1571,9 @@ describe('lib', () => {
     it('should generate the nx configuration in the project.json file when using --useProjectJson=true', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'none',
         useProjectJson: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(readJson(tree, 'my-lib/project.json')).toMatchInlineSnapshot(`
