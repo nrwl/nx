@@ -31,6 +31,7 @@ exports[`lib --unit-test-runner none should not generate test configuration 1`] 
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -53,6 +54,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -91,6 +93,7 @@ exports[`lib not nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

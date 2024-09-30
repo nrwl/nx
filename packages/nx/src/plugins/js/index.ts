@@ -1,5 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { ProjectGraph } from '../../config/project-graph';
@@ -153,7 +152,7 @@ function writeLastProcessedLockfileHash(
   hash: string,
   lockFile: ParsedLockFile
 ) {
-  ensureDirSync(dirname(lockFileHashFile));
+  mkdirSync(dirname(lockFileHashFile), { recursive: true });
   writeFileSync(cachedParsedLockFile, JSON.stringify(lockFile, null, 2));
   writeFileSync(lockFileHashFile, hash);
 }

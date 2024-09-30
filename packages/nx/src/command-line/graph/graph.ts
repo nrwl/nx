@@ -1,7 +1,13 @@
 import { createHash } from 'crypto';
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { copySync, ensureDirSync } from 'fs-extra';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import * as http from 'http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
@@ -416,7 +422,7 @@ export async function generateGraph(
     if (ext === '.html') {
       const assetsFolder = join(fileFolderPath, 'static');
       const assets: string[] = [];
-      copySync(join(__dirname, '../../core/graph'), assetsFolder, {
+      cpSync(join(__dirname, '../../core/graph'), assetsFolder, {
         filter: (_src, dest) => {
           const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
@@ -424,6 +430,7 @@ export async function generateGraph(
           }
           return isntHtml;
         },
+        recursive: true,
       });
 
       const { projectGraphClientResponse } =
@@ -457,7 +464,7 @@ export async function generateGraph(
         bodyLines: [fileFolderPath, ...assets],
       });
     } else if (ext === '.json') {
-      ensureDirSync(dirname(fullFilePath));
+      mkdirSync(dirname(fullFilePath), { recursive: true });
 
       const json = await createJsonOutput(
         prunedGraph,

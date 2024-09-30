@@ -132,6 +132,35 @@
               "file": "shared/features/manage-releases"
             },
             {
+              "name": "Powerpack Features",
+              "id": "powerpack",
+              "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+              "file": "shared/features/powerpack/index",
+              "itemList": [
+                {
+                  "name": "Run Language-Agnostic Conformance Rules",
+                  "description": "Write and apply rules for your Nx workspace",
+                  "id": "conformance",
+                  "tags": ["conformance"],
+                  "file": "shared/features/powerpack/conformance"
+                },
+                {
+                  "name": "Define Code Ownership at the Project Level",
+                  "description": "Configure and maintain code owners for projects in an Nx workspace",
+                  "id": "owners",
+                  "tags": ["owners"],
+                  "file": "shared/features/powerpack/owners"
+                },
+                {
+                  "name": "Self-Host the Remote Cache",
+                  "description": "Host the remote cache without using Nx Cloud",
+                  "id": "custom-caching",
+                  "tags": ["custom-caching"],
+                  "file": "shared/features/powerpack/custom-caching"
+                }
+              ]
+            },
+            {
               "name": "CI Features",
               "id": "ci-features",
               "description": "Features of Nx and Nx Cloud that improve CI",
@@ -354,6 +383,12 @@
               "id": "installation",
               "description": "Installing Nx",
               "itemList": [
+                {
+                  "name": "Activate Powerpack",
+                  "id": "activate-powerpack",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/activate-powerpack"
+                },
                 {
                   "name": "Install Nx in a Non-Javascript Repo",
                   "id": "install-non-javascript",
@@ -1086,19 +1121,6 @@
                   "file": "shared/recipes/nx-release/build-before-versioning"
                 }
               ]
-            },
-            {
-              "name": "Other",
-              "id": "other",
-              "description": "Other recipes you will find useful.",
-              "itemList": [
-                {
-                  "name": "Rescope Packages from @nrwl to @nx",
-                  "id": "rescope",
-                  "tags": [],
-                  "file": "shared/recipes/rescope"
-                }
-              ]
             }
           ]
         },
@@ -1365,6 +1387,11 @@
               "file": "shared/deprecated/workspace-generators"
             },
             {
+              "name": "Custom Task Runners",
+              "id": "custom-task-runners",
+              "file": "shared/deprecated/custom-task-runners"
+            },
+            {
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
@@ -1398,6 +1425,11 @@
               "name": "v1 Nx Plugin API",
               "id": "v1-nx-plugin-api",
               "file": "shared/deprecated/v1-nx-plugin-api"
+            },
+            {
+              "name": "Rescope Packages from @nrwl to @nx",
+              "id": "rescope",
+              "file": "shared/deprecated/rescope"
             }
           ]
         },
@@ -1689,6 +1721,11 @@
               "name": "Explain With AI",
               "id": "explain-with-ai",
               "file": "nx-cloud/features/explain-with-ai"
+            },
+            {
+              "name": "GitHub Integration",
+              "id": "github-integration",
+              "file": "nx-cloud/features/github-integration"
             }
           ]
         },
@@ -2520,6 +2557,19 @@
           ]
         },
         {
+          "name": "rspack",
+          "id": "rspack",
+          "description": "Rspack package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/rspack",
+              "file": "shared/packages/rspack/rspack-plugin"
+            }
+          ]
+        },
+        {
           "name": "detox",
           "id": "detox",
           "description": "Detox package.",
@@ -2555,6 +2605,58 @@
               "name": "Overview",
               "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-owners",
+          "id": "powerpack-owners",
+          "description": "powerpack-owners package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-owners",
+              "file": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-conformance",
+          "id": "powerpack-conformance",
+          "description": "powerpack-conformance package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-conformance",
+              "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-s3-cache",
+          "id": "powerpack-s3-cache",
+          "description": "powerpack-s3-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-s3-cache",
+              "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-shared-fs-cache",
+          "id": "powerpack-shared-fs-cache",
+          "description": "powerpack-shared-fs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-shared-fs-cache",
+              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
             }
           ]
         },

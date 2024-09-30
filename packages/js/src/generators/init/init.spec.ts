@@ -131,7 +131,7 @@ describe('js init generator', () => {
 
   it('should support skipping prettier setup', async () => {
     await init(tree, {
-      setUpPrettier: false,
+      formatter: 'none',
     });
 
     const packageJson = readJson(tree, 'package.json');
@@ -139,4 +139,31 @@ describe('js init generator', () => {
     expect(tree.exists('.prettierignore')).toBeFalsy();
     expect(tree.exists('.prettierrc')).toBeFalsy();
   });
+
+  it.each`
+    fileName                | importHelpers | shouldAdd
+    ${'tsconfig.json'}      | ${true}       | ${true}
+    ${'tsconfig.base.json'} | ${true}       | ${true}
+    ${'tsconfig.json'}      | ${false}      | ${false}
+    ${'tsconfig.base.json'} | ${false}      | ${false}
+    ${null}                 | ${false}      | ${false}
+  `(
+    'should add tslib if importHelpers is true in base tsconfig',
+    async ({ fileName, importHelpers, shouldAdd }) => {
+      if (fileName) {
+        writeJson(tree, fileName, {
+          compilerOptions: {
+            importHelpers,
+          },
+        });
+      }
+
+      await init(tree, {
+        addTsConfigBase: false,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(!!packageJson.devDependencies?.['tslib']).toBe(shouldAdd);
+    }
+  );
 });

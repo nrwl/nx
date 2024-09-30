@@ -27,6 +27,7 @@ import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate, useNavigation } from 'react-router-dom';
 import { useRouteConstructor } from '@nx/graph/shared';
 import { CompositeNode } from '../interfaces';
+import { useMemo } from 'react';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphProjectNode;
@@ -249,6 +250,10 @@ function CompositeNodeListItem({
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
 
+  const label = compositeNode.parent
+    ? `${compositeNode.parent}/${compositeNode.label}`
+    : compositeNode.label;
+
   function toggleProject() {
     if (compositeNode.state !== 'hidden') {
       projectGraphService.send({
@@ -283,13 +288,8 @@ function CompositeNodeListItem({
       <div className="flex items-center">
         <Link
           to={routeConstructor(
-            {
-              pathname: `/projects`,
-              search: `?composite=true&compositeContext=${encodeURIComponent(
-                compositeNode.id
-              )}`,
-            },
-            false
+            { pathname: `/projects`, search: `?composite=${compositeNode.id}` },
+            true
           )}
           className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           title="Focus on this node"
@@ -313,11 +313,11 @@ function CompositeNodeListItem({
         <label
           className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
           data-project={compositeNode.id}
-          title={compositeNode.label}
+          title={label}
           data-active={compositeNode.state !== 'hidden'}
           onClick={toggleProject}
         >
-          {compositeNode.label}
+          {label}
         </label>
       </div>
 
@@ -339,8 +339,6 @@ function CompositeNodeList({
 }: {
   compositeNodes: CompositeNode[];
 }) {
-  const projectGraphService = getProjectGraphService();
-
   if (compositeNodes.length === 0) {
     return <p>No composite nodes</p>;
   }

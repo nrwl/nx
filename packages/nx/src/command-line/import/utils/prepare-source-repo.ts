@@ -19,14 +19,16 @@ export async function prepareSourceRepo(
     join(gitClient.root, source)
   );
 
+  const message = relativeSourceDir.trim()
+    ? `Filtering git history to only include files in ${relativeSourceDir}`
+    : `Filtering git history`;
+
   if (await gitClient.hasFilterRepoInstalled()) {
-    spinner.start(
-      `Filtering git history to only include files in ${relativeSourceDir}`
-    );
+    spinner.start(message);
     await gitClient.filterRepo(relativeSourceDir, relativeDestination);
   } else {
     spinner.start(
-      `Filtering git history to only include files in ${relativeSourceDir} (this might take a few minutes -- install git-filter-repo for faster performance)`
+      `${message} (this might take a few minutes -- install git-filter-repo for faster performance)`
     );
     await gitClient.filterBranch(
       relativeSourceDir,
@@ -35,7 +37,9 @@ export async function prepareSourceRepo(
     );
   }
   spinner.succeed(
-    `Filtered git history to only include files in ${relativeSourceDir}`
+    relativeSourceDir.trim()
+      ? `Filtered git history to only include files in ${relativeSourceDir}`
+      : `Filtered git history`
   );
 
   spinner.succeed(

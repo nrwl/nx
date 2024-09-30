@@ -92,7 +92,7 @@ describe('syncGenerator()', () => {
     writeJson(tree, 'nx.json', nxJson);
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[Error: The @nx/js/typescript plugin must be added to the "plugins" array in nx.json before syncing tsconfigs]`
+      `[SyncError: The "@nx/js/typescript" plugin is not registered]`
     );
   });
 
@@ -100,7 +100,7 @@ describe('syncGenerator()', () => {
     tree.delete('tsconfig.json');
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[Error: A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.]`
+      `[SyncError: Missing root "tsconfig.json"]`
     );
   });
 
@@ -371,12 +371,19 @@ describe('syncGenerator()', () => {
           { path: '../c' }, // this is not a dependency, should be pruned
         ],
       });
+      // add a project with no dependencies
+      addProject('c');
+      updateJson(tree, 'packages/c/tsconfig.json', (json) => {
+        // this is not a dependency, should be pruned
+        json.references = [{ path: '../d' }];
+        return json;
+      });
 
       await syncGenerator(tree);
 
-      const rootTsconfig = readJson(tree, 'packages/b/tsconfig.json');
+      const bTsconfigJson = readJson(tree, 'packages/b/tsconfig.json');
       // The dependency reference on "a" is added to the start of the array
-      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+      expect(bTsconfigJson.references).toMatchInlineSnapshot(`
         [
           {
             "path": "../a",
@@ -389,6 +396,8 @@ describe('syncGenerator()', () => {
           },
         ]
       `);
+      const cTsconfigJson = readJson(tree, 'packages/c/tsconfig.json');
+      expect(cTsconfigJson.references).toStrictEqual([]);
     });
 
     it('should not prune existing external project references that are not dependencies but are git ignored', async () => {

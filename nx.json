@@ -52,11 +52,7 @@
     ]
   },
   "release": {
-    "projects": [
-      "packages/*",
-      "packages/nx/native-packages/*",
-      "packages-legacy/*"
-    ],
+    "projects": ["packages/*", "packages/nx/native-packages/*"],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
@@ -234,6 +230,15 @@
         "targetName": "e2e-macos-local",
         "ciTargetName": "e2e-macos-ci"
       }
+    },
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "startTargetName": "next:start",
+        "buildTargetName": "next:build",
+        "devTargetName": "dev",
+        "serveStaticTargetName": "serve-static"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
@@ -241,5 +246,10 @@
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
   "bust": 8,
-  "defaultBase": "master"
+  "defaultBase": "master",
+  "generators": {
+    "@nx/react": {
+      "library": {}
+    }
+  }
 }

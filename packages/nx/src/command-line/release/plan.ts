@@ -1,5 +1,6 @@
 import { prompt } from 'enquirer';
-import { ensureDir, readFileSync, writeFile, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
 import { dirSync } from 'tmp';
@@ -299,7 +300,7 @@ async function createVersionPlanFileForBumps(
     printDiff('', versionPlanFileContent, 1);
 
     const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
-    await ensureDir(versionPlansAbsolutePath);
+    await mkdir(versionPlansAbsolutePath, { recursive: true });
     await writeFile(
       join(versionPlansAbsolutePath, versionPlanFileName),
       versionPlanFileContent

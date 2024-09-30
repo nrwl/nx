@@ -1,0 +1,20 @@
+{
+  "name": "module-federation-static-server",
+  "implementation": "/packages/rspack/src/executors/module-federation-static-server/module-federation-static-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Module Federation Static Dev Server",
+    "description": "Serve a host application statically along with it's remotes.",
+    "cli": "nx",
+    "type": "object",
+    "properties": { "serveTarget": { "type": "string" } },
+    "required": ["serveTarget"],
+    "presets": []
+  },
+  "description": "Serve a host and its remotes statically.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/rspack/src/executors/module-federation-static-server/schema.json",
+  "type": "executor"
+}
