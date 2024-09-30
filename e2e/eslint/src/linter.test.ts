@@ -685,7 +685,9 @@ describe('Linter', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      runCLI(`generate @nx/react:app ${myapp} --rootProject=true`);
+      runCLI(
+        `generate @nx/react:app ${myapp} --unitTestRunner=jest --rootProject=true`
+      );
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');

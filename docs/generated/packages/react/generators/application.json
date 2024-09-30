@@ -105,9 +105,9 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "vitest", "none"],
+        "enum": ["vitest", "jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "jest"
+        "default": "vitest"
       },
       "inSourceTests": {
         "type": "boolean",

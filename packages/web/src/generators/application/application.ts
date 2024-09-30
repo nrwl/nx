@@ -325,6 +325,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       addPlugin: options.addPlugin,
+      compiler: options.compiler,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

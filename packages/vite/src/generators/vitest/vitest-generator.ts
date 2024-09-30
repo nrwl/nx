@@ -46,6 +46,10 @@ export async function vitestGeneratorInternal(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
+  // Setting default to jsdom since it is the most common use case (React, Web).
+  // The @nx/js:lib generator specifically sets this to node to be more generic.
+  schema.testEnvironment ??= 'jsdom';
+
   const tasks: GeneratorCallback[] = [];
 
   const { root, projectType } = readProjectConfiguration(tree, schema.project);
@@ -85,7 +89,11 @@ export async function vitestGeneratorInternal(
             "'react-dom'",
             "'react/jsx-runtime'",
           ],
-          imports: [`import react from '@vitejs/plugin-react'`],
+          imports: [
+            schema.compiler === 'swc'
+              ? `import react from '@vitejs/plugin-react-swc'`
+              : `import react from '@vitejs/plugin-react'`,
+          ],
           plugins: ['react()'],
           coverageProvider: schema.coverageProvider,
         },
