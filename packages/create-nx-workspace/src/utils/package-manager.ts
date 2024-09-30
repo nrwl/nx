@@ -8,6 +8,7 @@ import { join } from 'path';
  */
 
 export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
+const npm_config_user_agent = process.env.npm_config_user_agent || '';
 
 export type PackageManager = (typeof packageManagerList)[number];
 
@@ -147,6 +148,20 @@ export function detectInvokedPackageManager(): PackageManager {
   if (!invoker) {
     return detectedPackageManager;
   }
+
+  //parse npm_config_user_agent
+  const [agent] = npm_config_user_agent?.split(' ');
+  const [agent_type] = agent.match(/^.*(?=\/)/) || [];
+
+  const invokedPackageManager = packageManagerList.find(
+    (v) => v === agent_type
+  );
+
+  if (invokedPackageManager) {
+    return invokedPackageManager;
+  }
+
+  // not sure if we need this code below - it's not working well indeed
   for (const pkgManager of packageManagerList) {
     if (invoker.path.includes(pkgManager)) {
       detectedPackageManager = pkgManager;
