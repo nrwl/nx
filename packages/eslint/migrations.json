@@ -1,16 +1,5 @@
 {
   "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/linter with @nx/linter",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-8-0-add-ignored-files": {
-      "version": "16.8.0",
-      "description": "update-16-8-0-add-ignored-files",
-      "implementation": "./src/migrations/update-16-8-0-add-ignored-files/update-16-8-0-add-ignored-files"
-    },
     "update-17-0-0-rename-to-eslint": {
       "version": "17.0.0-beta.7",
       "description": "update-17-0-0-rename-to-eslint",
@@ -33,51 +22,6 @@
     }
   },
   "packageJsonUpdates": {
-    "16.0.0": {
-      "version": "16.0.0-beta.0",
-      "packages": {
-        "@typescript-eslint/parser": {
-          "version": "^5.58.0"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^5.58.0"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^5.58.0"
-        }
-      }
-    },
-    "16.5.0": {
-      "version": "16.5.0-beta.2",
-      "packages": {
-        "@typescript-eslint/parser": {
-          "version": "^5.60.1"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^5.60.1"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^5.60.1"
-        }
-      }
-    },
-    "16.7.0": {
-      "version": "16.7.0-beta.2",
-      "packages": {
-        "eslint": {
-          "version": "~8.46.0"
-        },
-        "@typescript-eslint/parser": {
-          "version": "^5.60.1"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^5.60.1"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^5.60.1"
-        }
-      }
-    },
     "17.0.0": {
       "version": "17.0.0-rc.2",
       "packages": {
