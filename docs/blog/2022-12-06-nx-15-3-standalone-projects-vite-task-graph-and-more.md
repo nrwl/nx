@@ -77,7 +77,7 @@ You can add another project as well, showing what the task graph looks like for 
 
 {% youtube src="https://www.youtube.com/watch?v=qEaVzh-oBBc" /%}
 
-Nx is widely known as [THE developer tool](https://monorepo.tools/) people look at when it comes to implementing monorepos in the frontend space. However, a lot of the unique features that Nx ships (in particular when it comes to implementing [Integrated Monorepos](/concepts/integrated-vs-package-based)) can be beneficial even outside of the typical monorepo scenario. In particular, Nx plugin features such as code generation, pre-configured build tooling setup, and battle-tested integration with best practices tools (e.g. Cypress, Jest, ESLint, Vite, …).
+Nx is widely known as [THE developer tool](https://monorepo.tools/) people look at when it comes to implementing monorepos in the frontend space. However, a lot of the unique features that Nx ships (in particular when it comes to implementing [Integrated Monorepos](/deprecated/integrated-vs-package-based)) can be beneficial even outside of the typical monorepo scenario. In particular, Nx plugin features such as code generation, pre-configured build tooling setup, and battle-tested integration with best practices tools (e.g. Cypress, Jest, ESLint, Vite, …).
 
 But one stands out most prominently: the **ability to easily modularize** your codebase.
 

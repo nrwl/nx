@@ -35,10 +35,10 @@ To create a new Nx workspace, run the command `npx create-nx-workspace <workspac
 ✔ Enable distributed caching to make your CI faster · No
 ```
 
-This will create an [integrated](/concepts/integrated-vs-package-based#integrated-repos) repo. What is an integrated repo?
+This will create an [integrated](/deprecated/integrated-vs-package-based) repo. What is an integrated repo?
 
 > An integrated repo contains projects that depend on each other through standard import statements. There is typically a [single version of every dependency](/concepts/decisions/dependency-management) defined at the root.  
-> [/concepts/integrated-vs-package-based#integrated-repos](/concepts/integrated-vs-package-based#integrated-repos)
+> [/deprecated/integrated-vs-package-based](/deprecated/integrated-vs-package-based)
 
 Now, your Nx workspace should have cats and cats-e2e under the `apps` folder and an empty libs folder:
 

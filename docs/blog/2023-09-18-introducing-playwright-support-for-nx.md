@@ -101,7 +101,7 @@ We get a standalone Nx React app named `nx-react-playwright`:
 ![](/blog/images/2023-09-18/1*-czlvgB1lLaIHb9uuRj9Ig.avif)
 _nx repo created_
 
-What is a [standalone application](/concepts/integrated-vs-package-based#standalone-applications)? It is like an integrated monorepo setup but with just a single, root-level application. The repo has the same file structure as an app created from Create-React-App, but we can still leverage all the generators and executors and structure your application into libraries or submodules.
+What is a [standalone application](/deprecated/integrated-vs-package-based)? It is like an integrated monorepo setup but with just a single, root-level application. The repo has the same file structure as an app created from Create-React-App, but we can still leverage all the generators and executors and structure your application into libraries or submodules.
 
 ### Run E2E
 
