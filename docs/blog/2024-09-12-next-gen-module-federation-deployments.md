@@ -96,7 +96,7 @@ If you'd like a more indepth recipe for scaffolding `host` and `remote` generato
 our [Module Federation Recipes](/recipes/module-federation).
 {% /callout %}
 
-```{% command="npx nx g @nx/react:host shell --remotes=remote1 --bundler=rspack" path="~/myorg" %}
+```{% command="npx nx g @nx/react:host apps/shell --remotes=remote1 --bundler=rspack" path="~/myorg" %}
  NX  Generating @nx/react:host
 
 ✔ Which stylesheet format would you like to use? · css

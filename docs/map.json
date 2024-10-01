@@ -134,25 +134,26 @@
             {
               "name": "Powerpack Features",
               "id": "powerpack",
-              "description": "Features of Nx that are available with a powerpack license.",
+              "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+              "file": "shared/features/powerpack/index",
               "itemList": [
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
-                  "description": "Conformance",
+                  "description": "Write and apply rules for your Nx workspace",
                   "id": "conformance",
                   "tags": ["conformance"],
                   "file": "shared/features/powerpack/conformance"
                 },
                 {
                   "name": "Define Code Ownership at the Project Level",
-                  "description": "Owners",
+                  "description": "Configure and maintain code owners for projects in an Nx workspace",
                   "id": "owners",
                   "tags": ["owners"],
                   "file": "shared/features/powerpack/owners"
                 },
                 {
                   "name": "Self-Host the Remote Cache",
-                  "description": "Custom Caching",
+                  "description": "Host the remote cache without using Nx Cloud",
                   "id": "custom-caching",
                   "tags": ["custom-caching"],
                   "file": "shared/features/powerpack/custom-caching"
@@ -1120,19 +1121,6 @@
                   "file": "shared/recipes/nx-release/build-before-versioning"
                 }
               ]
-            },
-            {
-              "name": "Other",
-              "id": "other",
-              "description": "Other recipes you will find useful.",
-              "itemList": [
-                {
-                  "name": "Rescope Packages from @nrwl to @nx",
-                  "id": "rescope",
-                  "tags": [],
-                  "file": "shared/recipes/rescope"
-                }
-              ]
             }
           ]
         },
@@ -1437,6 +1425,11 @@
               "name": "v1 Nx Plugin API",
               "id": "v1-nx-plugin-api",
               "file": "shared/deprecated/v1-nx-plugin-api"
+            },
+            {
+              "name": "Rescope Packages from @nrwl to @nx",
+              "id": "rescope",
+              "file": "shared/deprecated/rescope"
             }
           ]
         },
@@ -1728,6 +1721,11 @@
               "name": "Explain With AI",
               "id": "explain-with-ai",
               "file": "nx-cloud/features/explain-with-ai"
+            },
+            {
+              "name": "GitHub Integration",
+              "id": "github-integration",
+              "file": "nx-cloud/features/github-integration"
             }
           ]
         },
@@ -2555,6 +2553,19 @@
               "name": "Overview",
               "path": "/nx-api/remix",
               "file": "shared/packages/remix/remix-plugin"
+            }
+          ]
+        },
+        {
+          "name": "rspack",
+          "id": "rspack",
+          "description": "Rspack package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/rspack",
+              "file": "shared/packages/rspack/rspack-plugin"
             }
           ]
         },

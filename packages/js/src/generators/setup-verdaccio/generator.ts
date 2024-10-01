@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import * as path from 'path';
 import { SetupVerdaccioGeneratorSchema } from './schema';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 import { verdaccioVersion } from '../../utils/versions';
 import { execSync } from 'child_process';
 
@@ -38,21 +39,25 @@ export async function setupVerdaccio(
     },
   };
   if (!tree.exists('project.json')) {
+    const isUsingNewTsSetup = isUsingTsSolutionSetup(tree);
+
     const { name } = readJson(tree, 'package.json');
     updateJson(tree, 'package.json', (json) => {
-      if (!json.nx) {
-        json.nx = {
-          includedScripts: [],
-        };
+      json.nx ??= { includedScripts: [] };
+      if (isUsingNewTsSetup) {
+        json.nx.targets ??= {};
+        json.nx.targets['local-registry'] ??= verdaccioTarget;
       }
       return json;
     });
-    addProjectConfiguration(tree, name, {
-      root: '.',
-      targets: {
-        ['local-registry']: verdaccioTarget,
-      },
-    });
+    if (!isUsingNewTsSetup) {
+      addProjectConfiguration(tree, name, {
+        root: '.',
+        targets: {
+          ['local-registry']: verdaccioTarget,
+        },
+      });
+    }
   } else {
     // use updateJson instead of updateProjectConfiguration due to unknown project name
     updateJson(tree, 'project.json', (json: ProjectConfiguration) => {

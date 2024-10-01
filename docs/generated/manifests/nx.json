@@ -441,14 +441,14 @@
       {
         "id": "powerpack",
         "name": "Powerpack Features",
-        "description": "Features of Nx that are available with a powerpack license.",
+        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/features/powerpack/index",
         "itemList": [
           {
             "id": "conformance",
             "name": "Run Language-Agnostic Conformance Rules",
-            "description": "Conformance",
+            "description": "Write and apply rules for your Nx workspace",
             "mediaImage": "",
             "file": "shared/features/powerpack/conformance",
             "itemList": [],
@@ -459,7 +459,7 @@
           {
             "id": "owners",
             "name": "Define Code Ownership at the Project Level",
-            "description": "Owners",
+            "description": "Configure and maintain code owners for projects in an Nx workspace",
             "mediaImage": "",
             "file": "shared/features/powerpack/owners",
             "itemList": [],
@@ -470,7 +470,7 @@
           {
             "id": "custom-caching",
             "name": "Self-Host the Remote Cache",
-            "description": "Custom Caching",
+            "description": "Host the remote cache without using Nx Cloud",
             "mediaImage": "",
             "file": "shared/features/powerpack/custom-caching",
             "itemList": [],
@@ -646,14 +646,14 @@
   "/features/powerpack": {
     "id": "powerpack",
     "name": "Powerpack Features",
-    "description": "Features of Nx that are available with a powerpack license.",
+    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/features/powerpack/index",
     "itemList": [
       {
         "id": "conformance",
         "name": "Run Language-Agnostic Conformance Rules",
-        "description": "Conformance",
+        "description": "Write and apply rules for your Nx workspace",
         "mediaImage": "",
         "file": "shared/features/powerpack/conformance",
         "itemList": [],
@@ -664,7 +664,7 @@
       {
         "id": "owners",
         "name": "Define Code Ownership at the Project Level",
-        "description": "Owners",
+        "description": "Configure and maintain code owners for projects in an Nx workspace",
         "mediaImage": "",
         "file": "shared/features/powerpack/owners",
         "itemList": [],
@@ -675,7 +675,7 @@
       {
         "id": "custom-caching",
         "name": "Self-Host the Remote Cache",
-        "description": "Custom Caching",
+        "description": "Host the remote cache without using Nx Cloud",
         "mediaImage": "",
         "file": "shared/features/powerpack/custom-caching",
         "itemList": [],
@@ -691,7 +691,7 @@
   "/features/powerpack/conformance": {
     "id": "conformance",
     "name": "Run Language-Agnostic Conformance Rules",
-    "description": "Conformance",
+    "description": "Write and apply rules for your Nx workspace",
     "mediaImage": "",
     "file": "shared/features/powerpack/conformance",
     "itemList": [],
@@ -702,7 +702,7 @@
   "/features/powerpack/owners": {
     "id": "owners",
     "name": "Define Code Ownership at the Project Level",
-    "description": "Owners",
+    "description": "Configure and maintain code owners for projects in an Nx workspace",
     "mediaImage": "",
     "file": "shared/features/powerpack/owners",
     "itemList": [],
@@ -713,7 +713,7 @@
   "/features/powerpack/custom-caching": {
     "id": "custom-caching",
     "name": "Self-Host the Remote Cache",
-    "description": "Custom Caching",
+    "description": "Host the remote cache without using Nx Cloud",
     "mediaImage": "",
     "file": "shared/features/powerpack/custom-caching",
     "itemList": [],
@@ -2961,29 +2961,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/nx-release",
-        "tags": []
-      },
-      {
-        "id": "other",
-        "name": "Other",
-        "description": "Other recipes you will find useful.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "rescope",
-            "name": "Rescope Packages from @nrwl to @nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/rescope",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/rescope",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/other",
         "tags": []
       }
     ],
@@ -5551,40 +5528,6 @@
     "path": "/recipes/nx-release/build-before-versioning",
     "tags": ["nx-release"]
   },
-  "/recipes/other": {
-    "id": "other",
-    "name": "Other",
-    "description": "Other recipes you will find useful.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "rescope",
-        "name": "Rescope Packages from @nrwl to @nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/rescope",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/rescope",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/other",
-    "tags": []
-  },
-  "/recipes/other/rescope": {
-    "id": "rescope",
-    "name": "Rescope Packages from @nrwl to @nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/rescope",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/rescope",
-    "tags": []
-  },
   "/showcase": {
     "id": "showcase",
     "name": "Showcase",
@@ -6764,6 +6707,17 @@
         "isExternal": false,
         "path": "/deprecated/v1-nx-plugin-api",
         "tags": []
+      },
+      {
+        "id": "rescope",
+        "name": "Rescope Packages from @nrwl to @nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/rescope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/rescope",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6911,6 +6865,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/v1-nx-plugin-api",
+    "tags": []
+  },
+  "/deprecated/rescope": {
+    "id": "rescope",
+    "name": "Rescope Packages from @nrwl to @nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/rescope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/rescope",
     "tags": []
   },
   "/see-also": {

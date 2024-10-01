@@ -49,9 +49,6 @@
       "options": {
         "command": "node ./scripts/copy-readme.js express"
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js express @nrwl/express"
     }
   },
   "implicitDependencies": ["node"]

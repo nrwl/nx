@@ -39,8 +39,6 @@ export async function handleHashTasks(payload: {
   if (projectGraph !== storedProjectGraph) {
     storedProjectGraph = projectGraph;
     storedHasher = new InProcessTaskHasher(
-      fileMap?.projectFileMap,
-      allWorkspaceFiles,
       projectGraph,
       nxJson,
       rustReferences,

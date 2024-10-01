@@ -59,9 +59,6 @@
       "options": {
         "command": "node ./scripts/copy-readme.js react"
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js react @nrwl/react"
     }
   }
 }

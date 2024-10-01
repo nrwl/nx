@@ -275,7 +275,12 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.TS) {
     const { initGenerator } = require('@nx' + '/js');
-    return initGenerator(tree, {});
+    return initGenerator(tree, {
+      formatter: options.formatter,
+      addTsPlugin:
+        process.env.NX_ADD_PLUGINS !== 'false' &&
+        process.env.NX_ADD_TS_PLUGIN === 'true',
+    });
   } else if (options.preset === Preset.TsStandalone) {
     const { libraryGenerator } = require('@nx' + '/js');
     return libraryGenerator(tree, {

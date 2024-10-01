@@ -1,7 +1,0 @@
-{
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"]
-    }
-  }
-}

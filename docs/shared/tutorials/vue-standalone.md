@@ -406,7 +406,7 @@ More info can be found in [the editor setup page](/getting-started/editor-setup)
 
 Run the following command to generate a new "BaseButton" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/vue:component BaseButton --no-export --skipTests --directory=src/components --dry-run" path="~/vue-app" %}
+```{% command="npx nx g @nx/vue:component src/components/BaseButton --no-export --skipTests --dry-run" path="~/vue-app" %}
  NX  Generating @nx/vue:component
 
 ✔ Where should the component be generated? · src/components/BaseButton.vue
@@ -472,7 +472,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for these areas using the Vue library generator:
 
 ```
-nx g @nx/vue:library products --unitTestRunner=vitest --bundler=vite --directory=modules/products --component
+nx g @nx/vue:library modules/products --unitTestRunner=vitest --bundler=vite --component
 ```
 
 Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
@@ -590,8 +590,8 @@ export default defineConfig({
 Now that the repository is set up, let's generate the `orders` and `ui` libraries.
 
 ```
-nx g @nx/vue:library orders --unitTestRunner=vitest --bundler=vite --directory=modules/orders --component
-nx g @nx/vue:library ui --unitTestRunner=vitest --bundler=vite --directory=modules/shared/ui --component
+nx g @nx/vue:library modules/orders --unitTestRunner=vitest --bundler=vite --component
+nx g @nx/vue:library modules/ui --unitTestRunner=vitest --bundler=vite --component
 ```
 
 Running the above commands should lead to the following directory structure:

@@ -21,7 +21,7 @@ npx create-nx-plugin my-plugin
 
 ```shell {% title="Add a plugin to an existing workspace" %}
 npx nx add @nx/plugin
-npx nx g plugin my-plugin
+npx nx g plugin tools/my-plugin
 ```
 
 {% /side-by-side %}
@@ -47,7 +47,7 @@ You can follow along with one of the step by step tutorials below that is focuse
 Wire up a new generator with this terminal command:
 
 ```shell
-npx nx g generator library-with-readme --directory=my-plugin/src/generators/library-with-readme
+npx nx g generator my-plugin/src/generators/library-with-readme
 ```
 
 ### Understand the Generator Functionality

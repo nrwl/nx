@@ -113,10 +113,11 @@ describe('updateEslint', () => {
       });
 
       module.exports = [
-      ...compat.extends("next", "next/core-web-vitals"),
+          ...compat.extends("next", "next/core-web-vitals"),
+
           ...baseConfig,
-      ...nx.configs["flat/react-typescript"],
-      { ignores: [".next/**/*"] }
+          ...nx.configs["flat/react-typescript"],
+          { ignores: [".next/**/*"] }
       ];
       "
     `);

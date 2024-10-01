@@ -66,6 +66,7 @@ export interface PackageJson {
         packages: string[];
       };
   publishConfig?: Record<string, string>;
+  files?: string[];
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;

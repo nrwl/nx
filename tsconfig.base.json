@@ -16,8 +16,6 @@
     "rootDir": ".",
     "allowJs": true,
     "paths": {
-      "@nrwl/tao": ["packages/tao"],
-      "@nrwl/tao/*": ["packages/tao/*"],
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
@@ -127,6 +125,8 @@
       "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
+      "@nx/rspack": ["packages/rspack/src"],
+      "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],

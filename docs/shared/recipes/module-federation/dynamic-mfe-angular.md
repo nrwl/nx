@@ -217,7 +217,7 @@ This will scaffold a new library for us to use.
 We need an Angular Service that we will use to hold state:
 
 ```shell
-nx g @nx/angular:service user --project=data-access-user
+nx g @nx/angular:service libs/shared/data-access-user/src/lib/user
 ```
 
 This will create the `libs/shared/data-access-user/src/lib/user.service.ts` file. Change its contents to match:
