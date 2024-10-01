@@ -7,7 +7,7 @@
     "$id": "NxPluginExecutor",
     "title": "Create an Executor for an Nx Plugin",
     "description": "Create an Executor for an Nx Plugin.",
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`:\n\n```bash\nnx g @nx/plugin:executor build --project my-plugin\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor build --project my-plugin --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "type": "object",
     "examples": [
       {

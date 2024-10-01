@@ -16,8 +16,6 @@
     "rootDir": ".",
     "allowJs": true,
     "paths": {
-      "@nrwl/tao": ["packages/tao"],
-      "@nrwl/tao/*": ["packages/tao/*"],
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],

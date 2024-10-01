@@ -21,7 +21,7 @@ Then we , install the `@nx/plugin` package and generate a plugin:
 
 ```shell
 npx nx add @nx/plugin
-npx nx g @nx/plugin:plugin recommended --directory=tools/recommended
+npx nx g @nx/plugin:plugin tools/recommended
 ```
 
 This will create a `recommended` project that contains all your plugin code.
@@ -31,7 +31,7 @@ This will create a `recommended` project that contains all your plugin code.
 To create a new generator run:
 
 ```shell
-npx nx generate @nx/plugin:generator library --directory="tools/recommended/src/generators/library"
+npx nx generate @nx/plugin:generator tools/recommended/src/generators/library
 ```
 
 The new generator is located in `tools/recommended/src/generators/library`. The `generator.ts` file contains the code that runs the generator. We can delete the `files` directory since we won't be using it and update the `generator.ts` file with the following code:

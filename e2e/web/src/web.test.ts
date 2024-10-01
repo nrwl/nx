@@ -35,7 +35,7 @@ describe('Web Components Applications', () => {
     const testResults = await runCLIAsync(`test ${appName}`);
 
     expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
+      `Successfully ran target test for project ${appName}`
     );
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 

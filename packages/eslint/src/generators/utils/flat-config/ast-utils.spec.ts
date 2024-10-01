@@ -172,23 +172,23 @@ describe('ast-utils', () => {
         })
       );
       expect(result).toMatchInlineSnapshot(`
-              "const baseConfig = require("../../eslint.config.js");
-                  module.exports = [
-                      ...baseConfig,
-                      {
-                          files: [
-                              "my-lib/**/*.ts",
-                              "my-lib/**/*.tsx"
-                          ],
-                          rules: {}
-                      },
-                      { ignores: ["my-lib/.cache/**/*"] },
-              {
-                  files: ["**/*.svg"],
-                  rules: { "@nx/do-something-with-svg": "error" }
-              },
-                  ];"
-          `);
+        "const baseConfig = require("../../eslint.config.js");
+            module.exports = [
+                ...baseConfig,
+                {
+                    files: [
+                        "my-lib/**/*.ts",
+                        "my-lib/**/*.tsx"
+                    ],
+                    rules: {}
+                },
+                { ignores: ["my-lib/.cache/**/*"] },
+            {
+                files: ["**/*.svg"],
+                rules: { "@nx/do-something-with-svg": "error" }
+            },
+            ];"
+      `);
     });
 
     it('should inject spread to the beginning of the file', () => {
@@ -210,20 +210,21 @@ describe('ast-utils', () => {
         { insertAtTheEnd: false }
       );
       expect(result).toMatchInlineSnapshot(`
-              "const baseConfig = require("../../eslint.config.js");
-                  module.exports = [
-              ...config,
-                      ...baseConfig,
-                      {
-                          files: [
-                              "my-lib/**/*.ts",
-                              "my-lib/**/*.tsx"
-                          ],
-                          rules: {}
-                      },
-                      { ignores: ["my-lib/.cache/**/*"] },
-                  ];"
-          `);
+        "const baseConfig = require("../../eslint.config.js");
+            module.exports = [
+            ...config,
+
+                ...baseConfig,
+                {
+                    files: [
+                        "my-lib/**/*.ts",
+                        "my-lib/**/*.tsx"
+                    ],
+                    rules: {}
+                },
+                { ignores: ["my-lib/.cache/**/*"] },
+            ];"
+      `);
     });
   });
 
@@ -574,33 +575,33 @@ describe('ast-utils', () => {
     it('should find and replace rules in override', () => {
       const content = `const baseConfig = require("../../eslint.config.js");
 
-    module.exports = [
-      {
+module.exports = [
+    {
         files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
         ],
         rules: {
-          'my-ts-rule': 'error'
+            'my-ts-rule': 'error'
         }
-      },
-      {
+    },
+    {
         files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.js"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.js"
         ],
         rules: {}
-      },
-      {
+    },
+    {
         files: [
-          "my-lib/**/*.js",
-          "my-lib/**/*.jsx"
+            "my-lib/**/*.js",
+            "my-lib/**/*.jsx"
         ],
         rules: {
-          'my-js-rule': 'error'
+            'my-js-rule': 'error'
         }
-      },
-    ];`;
+    },
+];`;
 
       const result = replaceOverride(
         content,
@@ -616,61 +617,61 @@ describe('ast-utils', () => {
       expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
 
-            module.exports = [
-              {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-rule": "error"
-          }
-              },
-              {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.js"
-          ],
-          "rules": {
-            "my-rule": "error"
-          }
-              },
-              {
+        module.exports = [
+            {
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-rule": "error"
+              }
+            },
+            {
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.js"
+              ],
+              "rules": {
+                "my-rule": "error"
+              }
+            },
+            {
                 files: [
-                  "my-lib/**/*.js",
-                  "my-lib/**/*.jsx"
+                    "my-lib/**/*.js",
+                    "my-lib/**/*.jsx"
                 ],
                 rules: {
-                  'my-js-rule': 'error'
+                    'my-js-rule': 'error'
                 }
-              },
-            ];"
+            },
+        ];"
       `);
     });
 
     it('should append rules in override', () => {
       const content = `const baseConfig = require("../../eslint.config.js");
 
-    module.exports = [
-      {
+module.exports = [
+    {
         files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
         ],
         rules: {
-          'my-ts-rule': 'error'
+            'my-ts-rule': 'error'
         }
-      },
-      {
+    },
+    {
         files: [
-          "my-lib/**/*.js",
-          "my-lib/**/*.jsx"
+            "my-lib/**/*.js",
+            "my-lib/**/*.jsx"
         ],
         rules: {
-          'my-js-rule': 'error'
+            'my-js-rule': 'error'
         }
-      },
-    ];`;
+    },
+];`;
 
       const result = replaceOverride(
         content,
@@ -687,45 +688,45 @@ describe('ast-utils', () => {
       expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
 
-            module.exports = [
-              {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-ts-rule": "error",
-            "my-new-rule": "error"
-          }
-              },
-              {
+        module.exports = [
+            {
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-ts-rule": "error",
+                "my-new-rule": "error"
+              }
+            },
+            {
                 files: [
-                  "my-lib/**/*.js",
-                  "my-lib/**/*.jsx"
+                    "my-lib/**/*.js",
+                    "my-lib/**/*.jsx"
                 ],
                 rules: {
-                  'my-js-rule': 'error'
+                    'my-js-rule': 'error'
                 }
-              },
-            ];"
+            },
+        ];"
       `);
     });
 
     it('should work for compat overrides', () => {
       const content = `const baseConfig = require("../../eslint.config.js");
 
-    module.exports = [
-      ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
-        ...config,
-        files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.tsx"
-        ],
-        rules: {
-          'my-ts-rule': 'error'
-        }
-      }),
-    ];`;
+module.exports = [
+    ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+    ...config,
+    files: [
+        "my-lib/**/*.ts",
+        "my-lib/**/*.tsx"
+    ],
+    rules: {
+        'my-ts-rule': 'error'
+    }
+  }),
+];`;
 
       const result = replaceOverride(
         content,
@@ -742,19 +743,19 @@ describe('ast-utils', () => {
       expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
 
-            module.exports = [
-              ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
-                ...config,
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-ts-rule": "error",
-            "my-new-rule": "error"
-          }
-              }),
-            ];"
+        module.exports = [
+            ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+            ...config,
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-ts-rule": "error",
+                "my-new-rule": "error"
+              }
+          }),
+        ];"
       `);
     });
   });

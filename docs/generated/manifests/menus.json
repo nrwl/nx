@@ -2166,23 +2166,6 @@
               }
             ],
             "disableCollapsible": false
-          },
-          {
-            "name": "Other",
-            "path": "/recipes/other",
-            "id": "other",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Rescope Packages from @nrwl to @nx",
-                "path": "/recipes/other/rescope",
-                "id": "rescope",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4055,31 +4038,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Other",
-        "path": "/recipes/other",
-        "id": "other",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Rescope Packages from @nrwl to @nx",
-            "path": "/recipes/other/rescope",
-            "id": "rescope",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Rescope Packages from @nrwl to @nx",
-        "path": "/recipes/other/rescope",
-        "id": "rescope",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Showcase",
         "path": "/showcase",
         "id": "showcase",
@@ -4939,6 +4897,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Rescope Packages from @nrwl to @nx",
+            "path": "/deprecated/rescope",
+            "id": "rescope",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5043,6 +5009,14 @@
         "name": "v1 Nx Plugin API",
         "path": "/deprecated/v1-nx-plugin-api",
         "id": "v1-nx-plugin-api",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Rescope Packages from @nrwl to @nx",
+        "path": "/deprecated/rescope",
+        "id": "rescope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5653,6 +5627,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "GitHub Integration",
+            "path": "/ci/features/github-integration",
+            "id": "github-integration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5709,6 +5691,14 @@
         "name": "Explain With AI",
         "path": "/ci/features/explain-with-ai",
         "id": "explain-with-ai",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Integration",
+        "path": "/ci/features/github-integration",
+        "id": "github-integration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -10120,14 +10110,6 @@
             "disableCollapsible": false
           }
         ],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "tao",
-        "path": "/nx-api/tao",
-        "name": "tao",
-        "children": [],
         "isExternal": false,
         "disableCollapsible": false
       },

@@ -11,7 +11,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
@@ -20,12 +19,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -49,13 +46,11 @@ export default defineConfig({
       external: [],
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
@@ -184,7 +179,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -194,12 +188,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -239,7 +231,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -249,12 +240,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -278,13 +267,11 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
@@ -361,24 +348,19 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-react-app',
     emptyOutDir: true,
@@ -420,24 +402,19 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-web-app',
     emptyOutDir: true,
@@ -479,24 +456,19 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-react-app',
     emptyOutDir: true,
@@ -505,13 +477,11 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',

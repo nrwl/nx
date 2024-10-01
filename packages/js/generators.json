@@ -10,7 +10,7 @@
       "description": "Create a library"
     },
     "init": {
-      "factory": "./src/generators/init/init#initGenerator",
+      "factory": "./src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",

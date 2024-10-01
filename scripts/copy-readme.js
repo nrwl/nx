@@ -2,9 +2,7 @@ const fs = require('fs');
 
 const p = process.argv[2];
 
-let sourceReadmePath = !p.endsWith('-legacy')
-  ? `packages/${p}/README.md`
-  : `packages-legacy/${p.replace('-legacy', '')}/README.md`;
+let sourceReadmePath = `packages/${p}/README.md`;
 // we need exception for linter
 if (p === 'linter') {
   sourceReadmePath = 'packages/eslint/README.md';

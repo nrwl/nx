@@ -50,7 +50,7 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 3. Create a new app using the appropriate plugin under `apps/temp`
 
    ```shell
-   nx g app temp
+   nx g app apps/temp
    ```
 
 4. Move the `/src` (and `/public`, if present) folders to `apps/temp/`, overwriting the folders already there.

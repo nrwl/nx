@@ -2,7 +2,7 @@
 
 {% youtube src="https://youtu.be/vRGAa5SuiTM" title="Nx Powerpack self-hosted cache storage" /%}
 
-The recommended way to enable the [remote cache](/ci/features/remote-cache) is to use Nx Replay and have Nx Cloud share the task cache across your organization. For those organizations that are unable to use Nx Cloud, Nx offers official plugins that are enabled by [Nx Powerpack](/powerpack) to self-host the remote cache in a fast and secure manner. The recommended ways to host the remote cache are, in order of preference:
+The recommended way to enable the [remote cache](/ci/features/remote-cache) is to use Nx Replay and have Nx Cloud share the task cache across your organization. For those organizations that are unable to use Nx Cloud, Nx offers official plugins that are enabled by [Nx Powerpack](/powerpack) to self-host the remote cache in a fast and secure manner. Powerpack is available for Nx version 19.8 and higher. The recommended ways to host the remote cache are, in order of preference:
 
 1. [Nx Replay](/ci/features/remote-cache): Cache is hosted on Nx Cloud servers or on-premise with an [Nx Enterprise](/enterprise) contract
 2. [@nx/powerpack-s3-cache](/nx-api/powerpack-s3-cache): Cache is on a self-hosted Amazon S3 bucket

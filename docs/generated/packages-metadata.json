@@ -3087,17 +3087,6 @@
     "source": "/packages/storybook/src"
   },
   {
-    "description": "CLI for generating code and running commands",
-    "documents": [],
-    "executors": [],
-    "generators": [],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "tao",
-    "packageName": "@nrwl/tao",
-    "root": "/packages/tao",
-    "source": "/packages/tao/src"
-  },
-  {
     "description": "The Nx Plugin for building and testing applications using Vite",
     "documents": [
       {
