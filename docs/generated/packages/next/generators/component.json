@@ -9,10 +9,16 @@
     "description": "Create a React Component for Next.",
     "type": "object",
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path where the component will be generated.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Where should the component be generated?",
+        "x-priority": "important"
+      },
       "name": {
         "type": "string",
         "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the component?",
         "x-priority": "important"
       },
@@ -56,17 +62,6 @@
         "default": false,
         "x-priority": "internal"
       },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "alias": "dir",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
       "export": {
         "type": "boolean",
         "description": "When true, the component is exported from the project index.ts (if it exists).",
@@ -85,7 +80,7 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create an app component\" %}\n\n```shell\nnx g component apps/my-app/src/lib/my-cmp/my-cmp\n```\n\n{% /tab %}\n{% tab label=\"Create a component without its own folder\" %}\n\nRunning the following will create a component under `apps/my-app/components/my-cmp.tsx` rather than `apps/my-app/components/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component apps/my-app/src/lib/my-cmp\n```\n\n{% /tab %}\n{% tab label=\"Create component in a custom directory\" %}\n\nRunning the following will create a component under `apps/my-app/foo/my-cmp.tsx` rather than `apps/my-app/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component apps/my-app/foo/my-cmp\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },

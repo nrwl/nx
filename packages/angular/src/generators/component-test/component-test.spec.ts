@@ -31,7 +31,7 @@ describe('Angular Cypress Component Test Generator', () => {
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      directory: 'my-lib/src/lib/my-lib',
+      path: 'my-lib/src/lib/my-lib/my-lib',
       name: 'my-lib',
       skipFormat: true,
     });
@@ -55,7 +55,7 @@ describe('Angular Cypress Component Test Generator', () => {
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      directory: 'my-lib/src/lib/my-lib',
+      path: 'my-lib/src/lib/my-lib/',
       name: 'my-lib',
       skipFormat: true,
     });
@@ -109,7 +109,7 @@ export class MyLibComponent implements OnInit {
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      directory: 'my-lib/src/lib/my-lib',
+      path: 'my-lib/src/lib/my-lib',
       name: 'my-lib',
       standalone: true,
       skipFormat: true,
@@ -164,7 +164,7 @@ export class MyLibComponent implements OnInit {
 
     await componentGenerator(tree, {
       name: 'my-lib',
-      directory: 'my-lib/src/lib/my-lib',
+      path: 'my-lib/src/lib/my-lib',
       skipFormat: true,
     });
     tree.write(
@@ -195,7 +195,7 @@ export class MyLibComponent implements OnInit {
 
     await componentGenerator(tree, {
       name: 'my-lib',
-      directory: 'my-lib/src/lib/my-lib',
+      path: 'my-lib/src/lib/my-lib/my-lib',
       skipFormat: true,
     });
 

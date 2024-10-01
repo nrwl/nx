@@ -18,7 +18,7 @@ describe('Next.js Storybook', () => {
       `generate @nx/next:app ${appName} --e2eTestRunner=none --no-interactive`
     );
     runCLI(
-      `generate @nx/next:component foo --directory=${appName}/components/foo --nameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/next:component ${appName}/components/foo/foo --no-interactive`
     );
   });
 

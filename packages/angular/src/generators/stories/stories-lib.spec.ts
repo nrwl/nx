@@ -51,7 +51,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
-        directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
+        path: `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button`,
         skipFormat: true,
       });
 
@@ -167,7 +167,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for scam component', async () => {
       await scamGenerator(tree, {
         name: 'my-scam',
-        directory: `${libName}/src/lib/my-scam`,
+        path: `${libName}/src/lib/my-scam/my-scam`,
         skipFormat: true,
       });
 
@@ -181,7 +181,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for inline scam component', async () => {
       await scamGenerator(tree, {
         name: 'my-scam',
-        directory: `${libName}/src/lib/my-scam`,
+        path: `${libName}/src/lib/my-scam/my-scam`,
         inlineScam: true,
         skipFormat: true,
       });
@@ -197,7 +197,7 @@ describe('angularStories generator: libraries', () => {
       // add standalone component
       await componentGenerator(tree, {
         name: 'standalone',
-        directory: `${libName}/src/lib/standalone`,
+        path: `${libName}/src/lib/standalone/standalone`,
         standalone: true,
         skipFormat: true,
       });
@@ -211,7 +211,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-standalone',
-        directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
+        path: `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone`,
         standalone: true,
         skipFormat: true,
       });
@@ -253,7 +253,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
-        directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
+        path: `${libName}/secondary-entry-point/src/lib/secondary-button/seconday-button`,
         skipFormat: true,
       });
 

@@ -19,11 +19,6 @@
         "description": "Route path",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What is the path of the route? (e.g. 'apps/demo/app/routes/foo/bar.tsx')"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the styles in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       }
     },
     "required": ["path"],

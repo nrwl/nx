@@ -55,7 +55,7 @@ describe('@nx/expo (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/expo:component ${componentName} --directory=libs/${libName}/src/${componentName} --export --no-interactive`
+      `generate @nx/expo:component libs/${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {

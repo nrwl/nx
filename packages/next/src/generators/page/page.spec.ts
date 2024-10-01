@@ -28,7 +28,7 @@ describe('component', () => {
     it('should generate component in pages directory', async () => {
       await pageGenerator(tree, {
         name: 'hello',
-        directory: 'my-app/pages/hello',
+        path: 'my-app/pages/hello/index',
         style: 'css',
       });
 
@@ -39,7 +39,7 @@ describe('component', () => {
     it('should support dynamic routes and directories', async () => {
       await pageGenerator(tree, {
         name: '[dynamic]',
-        directory: 'my-app/pages/posts/[dynamic]',
+        path: 'my-app/pages/posts/[dynamic]/index',
         style: 'css',
       });
 
@@ -49,10 +49,6 @@ describe('component', () => {
       expect(
         tree.exists('my-app/pages/posts/[dynamic]/index.module.css')
       ).toBeTruthy();
-
-      const content = tree
-        .read('my-app/pages/posts/[dynamic]/index.tsx')
-        .toString();
     });
   });
 
@@ -60,9 +56,8 @@ describe('component', () => {
     it('should generate component in app directory', async () => {
       await pageGenerator(tree, {
         name: 'about',
-        directory: `${appRouterProjectName}/app/about`,
+        path: `${appRouterProjectName}/app/about/about`,
         style: 'css',
-        nameAndDirectoryFormat: 'as-provided',
       });
 
       expect(
@@ -76,7 +71,7 @@ describe('component', () => {
     it('should support dynamic routes and directories', async () => {
       await pageGenerator(tree, {
         name: '[dynamic]',
-        directory: `${appRouterProjectName}/app/posts/[dynamic]`,
+        path: `${appRouterProjectName}/app/posts/[dynamic]/page`,
         style: 'css',
       });
 

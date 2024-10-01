@@ -92,14 +92,14 @@ describe('Build React applications and libraries with Vite', () => {
     }).toThrow();
 
     runCLI(
-      `generate @nx/react:component comp1 --inSourceTests --export --directory=libs/${viteLib}/src/lib/comp1 --no-interactive`
+      `generate @nx/react:component libs/${viteLib}/src/lib/comp1/comp1 --inSourceTests --export --no-interactive`
     );
     expect(() => {
       checkFilesExist(`libs/${viteLib}/src/lib/comp1/comp1.spec.tsx`);
     }).toThrow();
 
     runCLI(
-      `generate @nx/react:component comp2 --export --directory=libs/${viteLib}/src/lib/comp2 --no-interactive`
+      `generate @nx/react:component libs/${viteLib}/src/lib/comp2/comp2 --export --no-interactive`
     );
     checkFilesExist(`libs/${viteLib}/src/lib/comp2/comp2.spec.tsx`);
 

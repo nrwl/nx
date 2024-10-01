@@ -31,7 +31,7 @@ describe('angularStories generator: applications', () => {
   it('should generate stories file for scam component', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      directory: `${appName}/src/app/my-scam`,
+      path: `${appName}/src/app/my-scam/my-scam`,
       skipFormat: true,
     });
 
@@ -45,7 +45,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      directory: `${appName}/src/app/my-scam`,
+      path: `${appName}/src/app/my-scam/my-scam`,
       skipFormat: true,
     });
 
@@ -63,7 +63,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths when full path to component is provided', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      directory: `${appName}/src/app/my-scam`,
+      path: `${appName}/src/app/my-scam/my-scam`,
       skipFormat: true,
     });
 
@@ -81,12 +81,12 @@ describe('angularStories generator: applications', () => {
   it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
     await componentGenerator(tree, {
       name: 'component-a',
-      directory: `${appName}/src/app/component-a`,
+      path: `${appName}/src/app/component-a/component-a`,
       skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'component-b',
-      directory: `${appName}/src/app/component-a/component-b`,
+      path: `${appName}/src/app/component-a/component-b/component-b`,
       skipFormat: true,
     });
 
@@ -136,7 +136,7 @@ describe('angularStories generator: applications', () => {
     );
     await componentGenerator(tree, {
       name: 'component',
-      directory: `${appName}/src/app/component`,
+      path: `${appName}/src/app/component/component`,
       skipFormat: true,
     });
 
@@ -160,7 +160,7 @@ describe('angularStories generator: applications', () => {
   it('should generate stories file for inline scam component', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      directory: `${appName}/src/app/my-scam`,
+      path: `${appName}/src/app/my-scam/my-scam`,
       inlineScam: true,
       skipFormat: true,
     });

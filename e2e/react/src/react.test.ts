@@ -219,13 +219,13 @@ describe('React Applications', () => {
         `g @nx/react:app apps/${appName} --bundler=webpack --no-interactive --skipFormat`
       );
       runCLI(
-        `g @nx/react:redux lemon --directory=apps/${appName}/src/app/lemon --skipFormat`
+        `g @nx/react:redux apps/${appName}/src/app/lemon/lemon --skipFormat`
       );
       runCLI(
         `g @nx/react:lib libs/${libName} --unit-test-runner=jest --no-interactive --skipFormat`
       );
       runCLI(
-        `g @nx/react:redux orange --directory=libs/${libName}/src/lib/orange --skipFormat`
+        `g @nx/react:redux libs/${libName}/src/lib/orange/orange --skipFormat`
       );
 
       let lintResults = runCLI(`lint ${appName}`);

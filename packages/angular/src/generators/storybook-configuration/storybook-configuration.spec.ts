@@ -109,7 +109,7 @@ describe('StorybookConfiguration generator', () => {
     // add standalone component
     await componentGenerator(tree, {
       name: 'standalone',
-      directory: `${libName}/src/lib/standalone`,
+      path: `${libName}/src/lib/standalone/standalone`,
       standalone: true,
       skipFormat: true,
     });
@@ -123,14 +123,14 @@ describe('StorybookConfiguration generator', () => {
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-button',
-      directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
+      path: `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button`,
       export: true,
       skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
-      directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
+      path: `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone`,
       standalone: true,
       export: true,
       skipFormat: true,
@@ -149,7 +149,7 @@ describe('StorybookConfiguration generator', () => {
     // add standalone component
     await componentGenerator(tree, {
       name: 'standalone',
-      directory: `${libName}/src/lib/standalone`,
+      path: `${libName}/src/lib/standalone/standalone`,
       standalone: true,
       skipFormat: true,
     });
@@ -163,14 +163,14 @@ describe('StorybookConfiguration generator', () => {
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-button',
-      directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
+      path: `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button`,
       export: true,
       skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
-      directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
+      path: `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone`,
       standalone: true,
       export: true,
       skipFormat: true,
