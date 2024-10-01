@@ -60,7 +60,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:migration --directory=${plugin}/src/migrations/update-${version} --packageVersion=${version} --packageJsonUpdates=false`
+      `generate @nx/plugin:migration --path=${plugin}/src/migrations/update-${version} --packageVersion=${version} --packageJsonUpdates=false`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -92,7 +92,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:generator ${generator} --directory=${plugin}/src/generators/${generator}`
+      `generate @nx/plugin:generator ${plugin}/src/generators/${generator} --name ${generator}`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -129,7 +129,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:executor ${executor} --directory=${plugin}/src/executors/${executor} --includeHasher`
+      `generate @nx/plugin:executor --name ${executor} --path=${plugin}/src/executors/${executor} --includeHasher`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -178,31 +178,31 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
 
     runCLI(
-      `generate @nx/plugin:generator ${goodGenerator} --directory=${plugin}/src/generators/${goodGenerator}`
+      `generate @nx/plugin:generator --name=${goodGenerator} --path=${plugin}/src/generators/${goodGenerator}`
     );
 
     runCLI(
-      `generate @nx/plugin:generator ${badFactoryPath} --directory=${plugin}/src/generators/${badFactoryPath}`
+      `generate @nx/plugin:generator --name=${badFactoryPath} --path=${plugin}/src/generators/${badFactoryPath}`
     );
 
     runCLI(
-      `generate @nx/plugin:executor ${goodExecutor} --directory=${plugin}/src/executors/${goodExecutor}`
+      `generate @nx/plugin:executor --name=${goodExecutor} --path=${plugin}/src/executors/${goodExecutor}`
     );
 
     runCLI(
-      `generate @nx/plugin:executor ${badExecutorBadImplPath} --directory=${plugin}/src/executors/${badExecutorBadImplPath}`
+      `generate @nx/plugin:executor --name=${badExecutorBadImplPath} --path=${plugin}/src/executors/${badExecutorBadImplPath}`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${badMigrationVersion} --directory=${plugin} --packageVersion="invalid"`
+      `generate @nx/plugin:migration --name=${badMigrationVersion} --path=${plugin}/src/migrations --packageVersion="invalid"`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${missingMigrationVersion} --directory=${plugin}/migrations/0.1.0 --packageVersion="0.1.0"`
+      `generate @nx/plugin:migration --name=${missingMigrationVersion} --path=${plugin}/migrations/0.1.0 --packageVersion="0.1.0"`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${goodMigration} --directory=${plugin}/migrations/0.1.0  --packageVersion="0.1.0"`
+      `generate @nx/plugin:migration --name=${goodMigration} --path=${plugin}/migrations/0.1.0  --packageVersion="0.1.0"`
     );
 
     updateFile(`${plugin}/generators.json`, (f) => {
@@ -348,11 +348,11 @@ describe('Nx Plugin', () => {
       const generatedProject = uniq('project');
 
       runCLI(
-        `generate @nx/plugin:generator ${generator} --directory=${plugin}/src/generators/${generator}`
+        `generate @nx/plugin:generator --name ${generator} --path ${plugin}/src/generators/${generator}`
       );
 
       runCLI(
-        `generate @nx/plugin:executor ${executor} --directory=${plugin}/src/executors/${executor}`
+        `generate @nx/plugin:executor --name ${executor} --path ${plugin}/src/executors/${executor}`
       );
 
       updateFile(
@@ -389,7 +389,7 @@ describe('Nx Plugin', () => {
 
       expect(() => {
         runCLI(
-          `generate @nx/plugin:generator ${generator} --directory=${plugin}/src/generators/${generator}`
+          `generate @nx/plugin:generator ${plugin}/src/generators/${generator} --name ${generator}`
         );
 
         runCLI(

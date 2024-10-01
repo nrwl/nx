@@ -57,7 +57,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should test and lint', async () => {
     const componentName = uniq('Component');
     runCLI(
-      `generate @nx/react-native:component ${componentName} --directory=libs/${libName}/src/lib/${componentName} --export --no-interactive`
+      `generate @nx/react-native:component libs/${libName}/src/lib/${componentName}/${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -189,7 +189,7 @@ describe('@nx/react-native (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/react-native:component ${componentName} --directory=libs/${libName}/src/lib/${componentName} --export`
+      `generate @nx/react-native:component libs/${libName}/src/lib/${componentName}/${componentName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);

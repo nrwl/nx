@@ -121,7 +121,7 @@ function createAppWithCt(appName: string) {
     `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false --projectNameAndRootFormat=as-provided`
   );
   runCLI(
-    `generate @nx/next:component button --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
+    `generate @nx/next:component apps/${appName}/components/button --no-interactive`
   );
   createFile(
     `apps/${appName}/public/data.json`,
@@ -191,7 +191,7 @@ function createLibWithCt(libName: string, buildable: boolean) {
   );
 
   runCLI(
-    `generate @nx/next:component button --directory=libs/${libName}/src/lib --export --no-interactive`
+    `generate @nx/next:component libs/${libName}/src/lib/button --export --no-interactive`
   );
   updateFile(`libs/${libName}/src/lib/button.tsx`, (content) => {
     return `import { useEffect, useState } from 'react';

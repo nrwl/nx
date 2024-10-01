@@ -16,17 +16,17 @@
       }
     ],
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path at which to generate the executor file.",
+        "x-prompt": "What path would you like to use for the executor?",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
+      },
       "name": {
         "type": "string",
         "description": "Executor name.",
-        "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the executor?",
-        "x-priority": "important"
-      },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the executor file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "aliases": ["dir"],
         "x-priority": "important"
       },
       "description": {
@@ -50,11 +50,6 @@
         "default": false,
         "description": "Do not add an eslint configuration for plugin json files."
       },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the executor in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
       "skipFormat": {
         "type": "boolean",
         "description": "Skip formatting files.",
@@ -62,7 +57,7 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "additionalProperties": false,
     "presets": []
   },

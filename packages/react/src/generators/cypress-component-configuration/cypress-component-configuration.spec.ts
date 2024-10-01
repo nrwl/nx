@@ -346,7 +346,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      directory: 'some-lib/src/lib/another-cmp',
+      path: 'some-lib/src/lib/another-cmp/another-cmp',
       style: 'scss',
     });
 
@@ -393,13 +393,13 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
     await componentGenerator(tree, {
       name: 'some-cmp',
-      directory: 'some-lib/src/lib',
+      path: 'some-lib/src/lib/some-cmp',
       style: 'scss',
       js: true,
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      directory: 'some-lib/src/lib/another-cmp',
+      path: 'some-lib/src/lib/another-cmp/another-cmp',
       style: 'scss',
       js: true,
     });

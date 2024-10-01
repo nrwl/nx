@@ -11,8 +11,7 @@ import { RemixRouteSchema } from './schema';
 export default async function (tree: Tree, options: RemixRouteSchema) {
   const { artifactName: name, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      name: options.path.replace(/^\//, '').replace(/\/$/, ''),
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+      path: options.path.replace(/^\//, '').replace(/\/$/, ''),
     });
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {

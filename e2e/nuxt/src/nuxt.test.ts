@@ -20,7 +20,7 @@ describe('Nuxt Plugin', () => {
       `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided --e2eTestRunner=cypress`
     );
     runCLI(
-      `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
+      `generate @nx/nuxt:component ${app}/src/components/one/one --name=one --unitTestRunner=vitest`
     );
   });
 

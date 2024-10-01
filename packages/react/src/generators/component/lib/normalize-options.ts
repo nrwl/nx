@@ -18,9 +18,8 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     fileExtension: 'tsx',
     fileName: options.fileName,
   });
@@ -55,8 +54,8 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    projectName,
     directory,
+    projectName,
     styledModule,
     hasStyles: options.style !== 'none',
     className,

@@ -11,7 +11,7 @@ describe('scam-to-standalone', () => {
     await generateTestApplication(tree, { name: 'foo', skipFormat: true });
     await scamGenerator(tree, {
       name: 'bar',
-      directory: 'foo/src/app/bar',
+      path: 'foo/src/app/bar/bar',
       skipFormat: true,
     });
 
