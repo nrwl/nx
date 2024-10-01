@@ -2,7 +2,7 @@
 
 Nx Plugins can be used to easily integrate a tool or framework into an Nx repository. If there is no plugin available for your favorite tool or framework, you can write your own.
 
-In this tutorial, we'll create a plugin that helps to integrate the [Astro]() framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
+In this tutorial, we'll create a plugin that helps to integrate the _Astro_ framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
 
 To create a plugin in a brand new repository, use the `create-nx-plugin` command:
 
