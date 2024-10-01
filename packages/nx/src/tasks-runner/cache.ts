@@ -1,5 +1,4 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
@@ -8,6 +7,8 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { existsSync, mkdirSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
@@ -31,7 +32,7 @@ export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 export function getCache(
   nxJson: NxJsonConfiguration,
   options: DefaultTasksRunnerOptions
-) {
+): DbCache | Cache {
   return process.env.NX_DISABLE_DB !== 'true' &&
     (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
     ? new DbCache({
@@ -288,7 +289,7 @@ export class Cache {
       await this.remove(tdCommit);
       await this.remove(td);
 
-      await mkdir(td);
+      await mkdir(td, { recursive: true });
       await writeFile(
         join(td, 'terminalOutput'),
         terminalOutput ?? 'no terminal output'
@@ -300,7 +301,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
-          if (await pathExists(src)) {
+          if (existsSync(src)) {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
@@ -338,7 +339,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (await pathExists(cached)) {
+          if (existsSync(cached)) {
             const src = join(this.root, f);
             await this.remove(src);
             await this.copy(cached, src);
@@ -413,7 +414,7 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (await pathExists(tdCommit)) {
+    if (existsSync(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
         'utf-8'

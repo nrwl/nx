@@ -15,7 +15,7 @@ import {
 } from '../../utils/test-utils';
 
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
-import { LibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+import { LibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -273,7 +273,7 @@ describe('@nx/vite:configuration', () => {
         ...defaultOptions,
         name: 'my-lib',
         bundler: 'vite',
-        unitTestRunner: undefined,
+        unitTestRunner: 'vitest',
         projectNameAndRootFormat: 'as-provided',
       });
 

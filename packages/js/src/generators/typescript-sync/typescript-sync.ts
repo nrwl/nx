@@ -13,7 +13,10 @@ import {
 import ignore from 'ignore';
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
-import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
+import {
+  SyncError,
+  type SyncGeneratorResult,
+} from 'nx/src/utils/sync-generators';
 import * as ts from 'typescript';
 import {
   PLUGIN_NAME,
@@ -63,17 +66,17 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
   );
   if (!tscPluginConfig) {
-    throw new Error(
-      `The ${PLUGIN_NAME} plugin must be added to the "plugins" array in nx.json before syncing tsconfigs`
-    );
+    throw new SyncError(`The "${PLUGIN_NAME}" plugin is not registered`, [
+      `The "${PLUGIN_NAME}" plugin must be added to the "plugins" array in "nx.json" in order to sync the project graph information to the TypeScript configuration files.`,
+    ]);
   }
 
   // Root tsconfig containing project references for the whole workspace
   const rootTsconfigPath = 'tsconfig.json';
   if (!tree.exists(rootTsconfigPath)) {
-    throw new Error(
-      `A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.`
-    );
+    throw new SyncError('Missing root "tsconfig.json"', [
+      `A "tsconfig.json" file must exist in the workspace root in order to sync the project graph information to the TypeScript configuration files.`,
+    ]);
   }
 
   const rawTsconfigContentsCache = new Map<string, string>();
@@ -176,8 +179,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   for (const [projectName, data] of Object.entries(projectGraph.dependencies)) {
     if (
       !projectGraph.nodes[projectName] ||
-      projectGraph.nodes[projectName].data.root === '.' ||
-      !data.length
+      projectGraph.nodes[projectName].data.root === '.'
     ) {
       continue;
     }
@@ -208,9 +210,6 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       projectGraph,
       collectedDependencies
     );
-    if (!dependencies.length) {
-      continue;
-    }
 
     for (const runtimeTsConfigFileName of runtimeTsConfigFileNames) {
       const runtimeTsConfigPath = joinPathFragments(
@@ -258,7 +257,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     return {
       outOfSyncMessage:
-        'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on.',
+        'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.',
     };
   }
 }

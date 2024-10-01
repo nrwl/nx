@@ -37,6 +37,7 @@ interface Schema {
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
+  formatter?: 'none' | 'prettier';
 }
 
 export interface NormalizedSchema extends Schema {

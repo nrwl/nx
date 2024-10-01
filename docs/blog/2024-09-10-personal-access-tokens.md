@@ -40,7 +40,7 @@ platform so that they're no longer committed to your repo.
 [Personal access tokens](/ci/recipes/security/personal-access-tokens) are a new type of access token that is scoped to
 an individual user, rather than the workspace. This token authenticates the user with Nx Cloud when running tasks, so that we can validate their access to the distributed cache for a workspace. As soon as a user loses access to an Nx Cloud organization, they will no longer be able to access the cache for any of the organization's workspaces. The user's token belongs to them and will still allow access to their remaining organizations.
 
-This gets even more powerful when combined with the GitHub VCS integration. When a user's GitHub access is removed from
+This gets even more powerful when combined with the [GitHub integration](/ci/features/github-integration). When a user's GitHub access is removed from
 a GitHub-connected organization, their access to your Nx Cloud organization is removed, and their access to the cache for any of the organization's workspaces is removed.
 This means that Nx Cloud can fit into existing user de-provisioning processes you already have.
 
@@ -91,4 +91,4 @@ can [find more details in our docs](/ci/recipes/security/personal-access-tokens)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

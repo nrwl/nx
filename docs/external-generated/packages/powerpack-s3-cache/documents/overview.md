@@ -1,15 +1,21 @@
 ---
 title: Overview of the Nx powerpack-s3-cache Plugin
-description: The powerpack-s3-cache Nx plugin enables you to use an AWS S3 bucket to host your remote cache instead of Nx Cloud
+description: The powerpack-s3-cache Nx plugin enables you to use an Amazon S3 bucket to host your remote cache instead of Nx Cloud
 ---
 
-The `@nx/powerpack-s3-cache` plugin enables you to use an AWS S3 bucket instead of Nx Cloud to host your remote cache.
+The `@nx/powerpack-s3-cache` plugin enables you to use an [Amazon S3](https://aws.amazon.com/s3) bucket instead of Nx Cloud to host your remote cache.
+
+This plugin will enable the remote cache for your Nx workspace, but does not provide any of the other features of Nx Cloud. If you want to leverage [distributed task execution](/ci/features/distribute-task-execution), [re-running flaky tasks](/ci/features/flaky-tasks) or [automatically splitting tasks](/ci/features/split-e2e-tasks), you'll need to [connect to Nx Cloud](/ci/intro/connect-to-nx-cloud) and use [Nx Replay](/ci/features/remote-cache) instead.
+
+{% callout type="warning" title="Potential Cache Poisoning" %}
+Using your own Amazon S3 bucket to host the remote cache opens you up to the possibility of [cache poisoning](/troubleshooting/unknown-local-cache). To avoid this, use [Nx Replay](/ci/features/remote-cache).
+{% /callout %}
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
 In order to use `@nx/powerpack-s3-cache`, you need to have an active Powerpack license. If you don't have a license or it has expired, your cache will no longer be shared and each machine will use its local cache.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-s3-cache
 
 ### 1. Install the Package
 

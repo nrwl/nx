@@ -70,7 +70,7 @@ If you want to dive deeper, there are many more resources on the architecture of
 
 To rebuild our UI, we first needed a new Lit app to work on. While there’s no native Nx plugin for Lit, generating the code we need was still very straightforward:
 
-`nx generate @nx/web:app --name generate-ui-v2`
+`nx generate @nx/web:app apps/generate-ui-v2`
 
 This generates an entire project for us, with a `tsconfig.json`, `index.html`, `main.ts`, and a `project.json`, where our Nx-specific config lives.
 
@@ -335,4 +335,4 @@ If the prettier UI and better performance haven’t convinced you, this surely w
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

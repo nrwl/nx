@@ -1,5 +1,5 @@
 import * as enquirer from 'enquirer';
-import { unlinkSync, writeFileSync } from 'fs-extra';
+import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { InitArgs } from '../init-v1';
 import { NxJsonConfiguration } from '../../../config/nx-json';

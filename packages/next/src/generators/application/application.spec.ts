@@ -625,6 +625,7 @@ describe('app', () => {
 
           module.exports = [
             ...compat.extends('next', 'next/core-web-vitals'),
+
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
             { ignores: ['.next/**/*'] },

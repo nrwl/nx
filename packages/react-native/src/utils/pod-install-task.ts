@@ -1,9 +1,9 @@
 import { execSync } from 'child_process';
+import { existsSync } from 'node:fs';
 import { platform } from 'os';
+import { join } from 'path';
 import * as chalk from 'chalk';
 import { GeneratorCallback, logger } from '@nx/devkit';
-import { existsSync } from 'fs-extra';
-import { join } from 'path';
 
 const podInstallErrorMessage = `
 Running ${chalk.bold('pod install')} failed, see above.

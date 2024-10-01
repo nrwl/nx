@@ -36,7 +36,6 @@
     "@nx/web": "file:../web",
     "@nx/webpack": "file:../webpack",
     "enhanced-resolve": "^5.8.3",
-    "fs-extra": "^11.1.0",
     "metro-config": "~0.80.4",
     "metro-resolver": "~0.80.4",
     "node-fetch": "^2.6.7",

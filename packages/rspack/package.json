@@ -1,0 +1,48 @@
+{
+  "name": "@nx/rspack",
+  "description": "The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/rspack"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "Rspack",
+    "Bundling",
+    "Module Federation"
+  ],
+  "author": "Jack Hsu",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "src/index.js",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "dependencies": {
+    "@nx/js": "file:../js",
+    "@nx/devkit": "file:../devkit",
+    "@nx/eslint": "file:../eslint",
+    "@phenomnomnominal/tsquery": "~5.0.1",
+    "less-loader": "11.1.0",
+    "license-webpack-plugin": "^4.0.2",
+    "sass-loader": "^12.2.0",
+    "stylus-loader": "^7.1.0",
+    "postcss-loader": "^8.1.1",
+    "@rspack/core": "^1.0.4",
+    "@rspack/plugin-react-refresh": "^1.0.0",
+    "@rspack/plugin-minify": "^0.7.5",
+    "chalk": "~4.1.0"
+  },
+  "peerDependencies": {
+    "@module-federation/enhanced": "~0.6.0",
+    "@module-federation/node": "~2.5.10"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  }
+}

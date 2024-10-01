@@ -47,14 +47,8 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/esbuild"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js esbuild",
-          "node ./scripts/add-dependency-to-build.js esbuild @nrwl/esbuild"
-        ]
+        "commands": ["node ./scripts/copy-readme.js esbuild"]
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js esbuild @nrwl/esbuild"
     }
   }
 }

@@ -187,7 +187,7 @@ If you create a generator named `init`, Nx will automatically run that generator
 To create the generator run the following command:
 
 ```shell
-npx nx g generator init --directory=src/generators/init
+npx nx g generator src/generators/init
 ```
 
 Then we can edit the `generator.ts` file to define the generator functionality:
@@ -256,7 +256,7 @@ export interface InitGeneratorSchema {}
 Let's make one more generator to automatically create a simple Astro application. First we'll create the generator:
 
 ```shell
-npx nx g generator application --directory=src/generators/application
+npx nx g generator src/generators/application
 ```
 
 Then we'll update the `generator.ts` file to define the generator functionality:

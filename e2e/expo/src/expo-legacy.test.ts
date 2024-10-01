@@ -146,14 +146,14 @@ describe('@nx/expo (legacy)', () => {
   it('should install', async () => {
     // run install command
     let installResults = await runCLIAsync(
-      `install ${appName} --no-interactive`
+      `install ${appName} --no-interactive --force`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
 
     installResults = await runCLIAsync(
-      `install ${appName} --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'

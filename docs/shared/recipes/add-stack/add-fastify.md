@@ -47,7 +47,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/node:app fastify-api --directory=apps/fastify-api
+nx g @nx/node:app apps/fastify-api
 ```
 
 Serve the API by running
@@ -67,7 +67,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/node:lib my-lib --directory=libs/my-lib
+nx g @nx/node:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.

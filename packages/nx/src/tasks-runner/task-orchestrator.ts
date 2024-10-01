@@ -5,7 +5,7 @@ import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { getCache } from './cache';
+import { Cache, DbCache, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
@@ -22,7 +22,7 @@ import { TaskMetadata } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
-import { hashTask } from '../hasher/hash-task';
+import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
@@ -32,9 +32,11 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { NxJsonConfiguration } from '../config/nx-json';
+import type { TaskDetails } from '../native';
 
 export class TaskOrchestrator {
-  private cache = getCache(this.nxJson, this.options);
+  private taskDetails: TaskDetails | null = getTaskDetails();
+  private cache: DbCache | Cache = getCache(this.nxJson, this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
@@ -163,7 +165,8 @@ export class TaskOrchestrator {
         this.projectGraph,
         this.taskGraph,
         task,
-        taskSpecificEnv
+        taskSpecificEnv,
+        this.taskDetails
       );
     }
 
@@ -181,7 +184,8 @@ export class TaskOrchestrator {
             this.projectGraph,
             this.taskGraph,
             task,
-            this.batchEnv
+            this.batchEnv,
+            this.taskDetails
           );
         }
         await this.options.lifeCycle.scheduleTask(task);
@@ -528,6 +532,9 @@ export class TaskOrchestrator {
         terminalOutput,
       };
     } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(e);
+      }
       return {
         code: 1,
       };

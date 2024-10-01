@@ -63,6 +63,41 @@ describe('React Applications', () => {
       }
     }, 250_000);
 
+    it('should be able to use Rspack to build and test apps', async () => {
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=vitest --no-interactive --skipFormat`
+      );
+      runCLI(
+        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
+      );
+
+      // Library generated with Vite
+      checkFilesExist(`${libName}/vite.config.ts`);
+
+      const mainPath = `${appName}/src/main.tsx`;
+      updateFile(
+        mainPath,
+        `
+        import '@${proj}/${libName}';
+        ${readFile(mainPath)}
+      `
+      );
+
+      runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/${appName}/index.html`);
+
+      if (runE2ETests()) {
+        // TODO(Colum): investigate why webkit is failing
+        const e2eResults = runCLI(`e2e ${appName}-e2e -- --project=chromium`);
+        expect(e2eResults).toContain('Successfully ran target e2e for project');
+        expect(await killPorts()).toBeTruthy();
+      }
+    }, 250_000);
+
     it('should be able to generate a react app + lib (with CSR and SSR)', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -72,7 +107,7 @@ describe('React Applications', () => {
       const redSvg = `<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" viewBox="0 0 30 30"><rect x="10" y="10" width="10" height="10" fill="red"/></svg>`;
 
       runCLI(
-        `generate @nx/react:app ${appName} --directory=apps/${appName} --style=css --bundler=webpack --no-interactive --skipFormat`
+        `generate @nx/react:app ${appName} --directory=apps/${appName} --style=css --bundler=webpack --unit-test-runner=jest --no-interactive --skipFormat`
       );
       runCLI(
         `generate @nx/react:lib ${libName} --directory=libs${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`
@@ -199,7 +234,7 @@ describe('React Applications', () => {
       );
       const appTestResults = await runCLIAsync(`test ${appName}`);
       expect(appTestResults.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total'
+        `Successfully ran target test for project ${appName}`
       );
 
       lintResults = runCLI(`lint ${libName}`);
@@ -208,7 +243,7 @@ describe('React Applications', () => {
       );
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total'
+        `Successfully ran target test for project ${libName}`
       );
     }, 250_000);
 
@@ -379,7 +414,7 @@ describe('React Applications', () => {
       const plainJsLib = uniq('jslib');
 
       runCLI(
-        `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --no-interactive --js --skipFormat`
+        `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --unit-test-runner=jest --no-interactive --js --skipFormat`
       );
       runCLI(
         `generate @nx/react:lib ${libName} --directory=libs/${libName} --no-interactive --js --unit-test-runner=none --skipFormat`
