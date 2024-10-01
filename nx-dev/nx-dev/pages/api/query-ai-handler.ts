@@ -35,6 +35,13 @@ export const config = {
 };
 
 export default async function handler(request: NextRequest) {
+  // Only allow requests from the docs site.
+  const branchUrl = process.env['VERCEL_BRANCH_URL'];
+  const deployUrl = process.env['VERCEL_URL'];
+  if (![branchUrl, deployUrl].includes(request.headers.get('host'))) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   const country = request.geo.country;
   const restrictedCountries: string[] = [
     'BY', // Belarus
