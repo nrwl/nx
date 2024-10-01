@@ -21,11 +21,11 @@ export async function mergeCustomWebpackConfig(
   // then await will just resolve that object.
   const config = await customWebpackConfiguration;
 
-  // The extra Webpack configuration file can export a synchronous or asynchronous function,
-  // for instance: `module.exports = async config => { ... }`.
   let newConfig: any;
   if (typeof config === 'function') {
-    newConfig = config(baseWebpackConfig, options, target);
+    // The extra Webpack configuration file can export a synchronous or asynchronous function,
+    // for instance: `module.exports = async config => { ... }`.
+    newConfig = await config(baseWebpackConfig, options, target);
   } else {
     newConfig = merge(baseWebpackConfig, config);
   }
