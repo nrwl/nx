@@ -684,7 +684,7 @@ describe('nx release circular dependencies', () => {
         {project-name} 📄 Using the provided version specifier "major".
         {project-name} ⚠️  Warning, the following packages depend on "{project-name}" but have been filtered out via --projects, and therefore will not be updated:
         - {project-name}
-        => You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"
+        => You can adjust this behavior by removing the usage of \`version.generatorOptions.updateDependents\` with "never"
         {project-name} ✍️  New version 2.0.0 written to {project-name}/package.json
 
 
