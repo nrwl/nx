@@ -9,7 +9,7 @@ import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TargetDependencyConfig } from '../devkit-exports';
 import { output } from '../utils/output';
 
-const NOOP_TASK_TARGET = '__nx__noop';
+const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -83,7 +83,7 @@ export class ProcessTasks {
       }
     }
 
-    this.filterNoopTasks();
+    this.filterDummyTasks();
 
     for (const projectName of Object.keys(this.dependencies)) {
       if (this.dependencies[projectName].length > 1) {
@@ -284,16 +284,20 @@ export class ProcessTasks {
           );
         }
       } else {
-        const noopId = this.getId(depProject.name, NOOP_TASK_TARGET, undefined);
-        this.dependencies[task.id].push(noopId);
-        this.dependencies[noopId] = [];
-        const noopTask = this.createNoopTask(noopId, task);
+        const dummyId = this.getId(
+          depProject.name,
+          DUMMY_TASK_TARGET,
+          undefined
+        );
+        this.dependencies[task.id].push(dummyId);
+        this.dependencies[dummyId] = [];
+        const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
   }
 
-  private createNoopTask(id: string, task: Task): Task {
+  private createDummyTask(id: string, task: Task): Task {
     return {
       ...task,
       id,
@@ -371,14 +375,14 @@ export class ProcessTasks {
     return id;
   }
 
-  private filterNoopTasks() {
+  private filterDummyTasks() {
     for (const [key, deps] of Object.entries(this.dependencies)) {
       const normalizedDeps = [];
       for (const dep of deps) {
-        if (dep.endsWith(NOOP_TASK_TARGET)) {
+        if (dep.endsWith(DUMMY_TASK_TARGET)) {
           normalizedDeps.push(
             ...this.dependencies[dep].filter(
-              (d) => !d.endsWith(NOOP_TASK_TARGET)
+              (d) => !d.endsWith(DUMMY_TASK_TARGET)
             )
           );
         } else {
@@ -390,7 +394,7 @@ export class ProcessTasks {
     }
 
     for (const key of Object.keys(this.dependencies)) {
-      if (key.endsWith(NOOP_TASK_TARGET)) {
+      if (key.endsWith(DUMMY_TASK_TARGET)) {
         delete this.dependencies[key];
       }
     }
