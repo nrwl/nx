@@ -9,6 +9,8 @@ import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TargetDependencyConfig } from '../devkit-exports';
 import { output } from '../utils/output';
 
+const NOOP_TASK_TARGET = '__nx__noop';
+
 export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
@@ -80,6 +82,8 @@ export class ProcessTasks {
         );
       }
     }
+
+    this.filterNoopTasks();
 
     for (const projectName of Object.keys(this.dependencies)) {
       if (this.dependencies[projectName].length > 1) {
@@ -228,6 +232,14 @@ export class ProcessTasks {
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
   ) {
+    if (
+      !this.projectGraph.dependencies.hasOwnProperty(
+        projectUsedToDeriveDependencies
+      )
+    ) {
+      return;
+    }
+
     for (const dep of this.projectGraph.dependencies[
       projectUsedToDeriveDependencies
     ]) {
@@ -272,9 +284,20 @@ export class ProcessTasks {
           );
         }
       } else {
-        this.processTask(task, depProject.name, configuration, overrides);
+        const noopId = this.getId(depProject.name, NOOP_TASK_TARGET, undefined);
+        this.dependencies[task.id].push(noopId);
+        this.dependencies[noopId] = [];
+        const noopTask = this.createNoopTask(noopId, task);
+        this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private createNoopTask(id: string, task: Task): Task {
+    return {
+      ...task,
+      id,
+    };
   }
 
   createTask(
@@ -347,6 +370,31 @@ export class ProcessTasks {
     }
     return id;
   }
+
+  private filterNoopTasks() {
+    for (const [key, deps] of Object.entries(this.dependencies)) {
+      const normalizedDeps = [];
+      for (const dep of deps) {
+        if (dep.endsWith(NOOP_TASK_TARGET)) {
+          normalizedDeps.push(
+            ...this.dependencies[dep].filter(
+              (d) => !d.endsWith(NOOP_TASK_TARGET)
+            )
+          );
+        } else {
+          normalizedDeps.push(dep);
+        }
+      }
+
+      this.dependencies[key] = normalizedDeps;
+    }
+
+    for (const key of Object.keys(this.dependencies)) {
+      if (key.endsWith(NOOP_TASK_TARGET)) {
+        delete this.dependencies[key];
+      }
+    }
+  }
 }
 
 export function createTaskGraph(
@@ -366,6 +414,7 @@ export function createTaskGraph(
     overrides,
     excludeTaskDependencies
   );
+
   return {
     roots,
     tasks: p.tasks,
