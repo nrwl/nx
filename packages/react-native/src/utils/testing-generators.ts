@@ -8,10 +8,9 @@ export async function createApp(tree: Tree, appName: string): Promise<void> {
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
+    directory: appName,
     e2eTestRunner: 'none',
     install: false,
-    projectNameAndRootFormat: 'as-provided',
     bundler: 'webpack',
   });
 }

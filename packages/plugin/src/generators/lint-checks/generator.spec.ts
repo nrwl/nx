@@ -26,7 +26,7 @@ describe('lint-checks generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await pluginGenerator(tree, {
-      name: 'plugin',
+      directory: 'plugin',
       importPath: '@acme/plugin',
       compiler: 'tsc',
       linter: Linter.EsLint,

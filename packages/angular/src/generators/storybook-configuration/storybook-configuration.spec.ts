@@ -186,7 +186,7 @@ describe('StorybookConfiguration generator', () => {
   });
 
   it('should exclude Storybook-related files from tsconfig.editor.json for applications', async () => {
-    await generateTestApplication(tree, { name: 'test-app' });
+    await generateTestApplication(tree, { directory: 'test-app' });
 
     await storybookConfigurationGenerator(tree, {
       project: 'test-app',

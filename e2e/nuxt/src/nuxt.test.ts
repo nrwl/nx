@@ -14,10 +14,9 @@ describe('Nuxt Plugin', () => {
   beforeAll(() => {
     newProject({
       packages: ['@nx/nuxt'],
-      unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided --e2eTestRunner=cypress`
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress`
     );
     runCLI(
       `generate @nx/nuxt:component ${app}/src/components/one/one --name=one --unitTestRunner=vitest`

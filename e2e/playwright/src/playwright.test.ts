@@ -76,7 +76,6 @@ describe('Playwright E2E Test Runner - legacy', () => {
     env = process.env.NX_ADD_PLUGINS;
     newProject({
       name: uniq('playwright'),
-      unsetProjectNameAndRootFormat: false,
     });
     process.env.NX_ADD_PLUGINS = 'false';
   });
@@ -98,7 +97,7 @@ describe('Playwright E2E Test Runner - legacy', () => {
       const pmc = getPackageManagerCommand();
 
       runCLI(
-        `g @nx/web:app demo-e2e --directory apps/demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive --projectNameAndRootFormat=as-provided`
+        `g @nx/web:app demo-e2e --directory apps/demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
         `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
@@ -121,7 +120,7 @@ describe('Playwright E2E Test Runner - legacy', () => {
       const pmc = getPackageManagerCommand();
 
       runCLI(
-        `g @nx/web:app demo-js-e2e --directory apps/demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive --projectNameAndRootFormat=as-provided`
+        `g @nx/web:app demo-js-e2e --directory apps/demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
         `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`

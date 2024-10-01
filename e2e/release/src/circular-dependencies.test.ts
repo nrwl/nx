@@ -50,7 +50,6 @@ describe('nx release circular dependencies', () => {
 
   beforeAll(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

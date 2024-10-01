@@ -30,7 +30,7 @@ describe('Node Applications + webpack', () => {
 
     // This fails with Crystal enabled because `--optimization` is not a correct flag to pass to `webpack`.
     runCLI(
-      `generate @nx/node:app ${app} --directory=apps/${app} --bundler=webpack --no-interactive`,
+      `generate @nx/node:app apps/${app} --bundler=webpack --no-interactive`,
       {
         env: { NX_ADD_PLUGINS: 'false' },
       }
@@ -66,7 +66,7 @@ describe('Node Applications + webpack', () => {
     // Test that serve can re-run dependency builds.
     const lib = uniq('nodelib');
     runCLI(
-      `generate @nx/js:lib ${lib} --bundler=esbuild --directory=libs/${lib} --no-interactive`
+      `generate @nx/js:lib libs/${lib} --bundler=esbuild --no-interactive`
     );
 
     updateJson(join('apps', app, 'project.json'), (config) => {

@@ -118,7 +118,7 @@ function addBabelSupport(path: string) {
 
 function createAppWithCt(appName: string) {
   runCLI(
-    `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false --projectNameAndRootFormat=as-provided`
+    `generate @nx/next:app apps/${appName} --no-interactive --appDir=false --src=false`
   );
   runCLI(
     `generate @nx/next:component apps/${appName}/components/button --no-interactive`
@@ -213,9 +213,7 @@ export default Button;
 }
 
 function createLibWithCtCypress(libName: string) {
-  runCLI(
-    `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`
-  );
+  runCLI(`generate @nx/next:lib ${libName} --no-interactive`);
 
   runCLI(
     `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`
@@ -254,6 +252,7 @@ function createLibWithCtCypress(libName: string) {
     `
   );
 }
+
 function addTailwindToLib(libName: string) {
   createFile(`libs/${libName}/src/lib/styles.css`, ``);
   runCLI(

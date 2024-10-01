@@ -407,7 +407,7 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory libs/subdir/${plugin} --e2eTestRunner=jest`
+        `generate @nx/plugin:plugin libs/subdir/${plugin} --linter=eslint  --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readJson(
@@ -438,7 +438,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin}`
+      `generate @nx/plugin:create-package ${createAppName} --name=${createAppName} --project=${plugin} --verbose`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -458,7 +458,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
+      `generate @nx/plugin:create-package ${createAppName} --name=${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --verbose`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -477,7 +477,7 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     expect(() =>
       runCLI(
-        `generate @nx/plugin:create-package create-${plugin} --project=invalid-plugin`
+        `generate @nx/plugin:create-package create-${plugin} --name=create-${plugin} --project=invalid-plugin`
       )
     ).toThrow();
   });
@@ -487,7 +487,7 @@ describe('Nx Plugin', () => {
     const createAppName = `create-${plugin}-app`;
 
     runCLI(
-      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable --project-name-and-root-format=as-provided`
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -504,7 +504,7 @@ describe('Nx Plugin', () => {
     );
 
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --project-name-and-root-format=as-provided`
+      `generate @nx/plugin:create-package ${createAppName} --name=${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
     );
 
     // check files are generated without the layout directory ("libs/") and

@@ -23,7 +23,6 @@ describe('@nx/storybook:cypress-project', () => {
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/test-ui-lib',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
   afterEach(() => jest.clearAllMocks());
@@ -32,7 +31,6 @@ describe('@nx/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/test-ui-lib-e2e',
-      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
     });
 
@@ -48,7 +46,6 @@ describe('@nx/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/test-ui-lib-e2e',
-      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib-e2e');

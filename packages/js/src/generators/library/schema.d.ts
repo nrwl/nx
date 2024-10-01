@@ -10,8 +10,8 @@ export type Compiler = 'tsc' | 'swc';
 export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
 
 export interface LibraryGeneratorSchema {
-  name: string;
-  directory?: string;
+  directory: string;
+  name?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   skipFormat?: boolean;
   tags?: string;

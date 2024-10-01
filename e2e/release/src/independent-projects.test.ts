@@ -65,7 +65,6 @@ describe('nx release - independent projects', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

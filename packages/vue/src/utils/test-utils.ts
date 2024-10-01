@@ -9,8 +9,7 @@ export async function createApp(tree: Tree, appName: string): Promise<any> {
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
-    projectNameAndRootFormat: 'as-provided',
+    directory: appName,
   });
 }
 

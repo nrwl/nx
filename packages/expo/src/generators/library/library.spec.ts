@@ -17,7 +17,7 @@ describe('lib', () => {
   let appTree: Tree;
 
   const defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -170,6 +170,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         directory: 'my-dir',
+        name: 'my-lib',
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
@@ -383,7 +384,7 @@ describe('lib', () => {
       try {
         await expoLibraryGenerator(appTree, {
           ...defaultSchema,
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

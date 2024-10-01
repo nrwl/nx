@@ -20,7 +20,7 @@ describe('angularStories generator: libraries', () => {
 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestLibrary(tree, { name: libName, skipFormat: true });
+      await generateTestLibrary(tree, { directory: libName, skipFormat: true });
     });
 
     it('should not fail on empty NgModule declarations', () => {

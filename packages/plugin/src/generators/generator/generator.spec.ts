@@ -22,8 +22,7 @@ describe('NxPlugin Generator Generator', () => {
     tree = createTreeWithEmptyWorkspace();
     setCwd('');
     await pluginGenerator(tree, {
-      name: projectName,
-      projectNameAndRootFormat: 'as-provided',
+      directory: projectName,
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
       compiler: 'tsc',
@@ -187,9 +186,8 @@ describe('NxPlugin Generator Generator', () => {
 
   it('should create generators.json if it is not present', async () => {
     await jsLibraryGenerator(tree, {
-      name: 'test-js-lib',
+      directory: 'test-js-lib',
       bundler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
     await generatorGenerator(tree, {

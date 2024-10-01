@@ -1,20 +1,7 @@
-import {
-  logger,
-  names,
-  output,
-  stripIndents,
-  type ProjectConfiguration,
-  type Tree,
-} from '@nx/devkit';
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { prompt } from 'enquirer';
-import { getImportPath, getNpmScope } from '../../../utilities/get-import-path';
+import { type ProjectConfiguration, type Tree } from '@nx/devkit';
+import { getNpmScope } from '../../../utilities/get-import-path';
 import type { NormalizedSchema, Schema } from '../schema';
-import {
-  getDestination,
-  getNewProjectName,
-  normalizePathSlashes,
-} from './utils';
+import { normalizePathSlashes } from './utils';
 
 export async function normalizeSchema(
   tree: Tree,

@@ -37,11 +37,6 @@
         "description": "The directory of the new remote application if one needs to be created.",
         "type": "string"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
       "style": {
         "description": "The file extension to be used for style files for the remote if one needs to be created.",
         "type": "string",

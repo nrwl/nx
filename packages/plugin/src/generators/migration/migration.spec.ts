@@ -19,7 +19,6 @@ describe('NxPlugin migration generator', () => {
     await pluginGenerator(tree, {
       name: projectName,
       directory: 'packages/my-plugin',
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
       compiler: 'tsc',

@@ -17,7 +17,7 @@ describe('Migration to delete Browserslist configurations', () => {
       .spyOn(devkit, 'formatFiles')
       .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
-      name: 'test',
+      directory: 'test',
       skipFormat: true,
     });
   });

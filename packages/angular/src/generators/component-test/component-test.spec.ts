@@ -25,7 +25,7 @@ describe('Angular Cypress Component Test Generator', () => {
 
   it('should handle component w/o inputs', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
@@ -49,7 +49,7 @@ describe('Angular Cypress Component Test Generator', () => {
 
   it('should generate a component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
@@ -103,7 +103,7 @@ export class MyLibComponent implements OnInit {
 
   it('should work with standalone components', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
@@ -156,7 +156,7 @@ export class MyLibComponent implements OnInit {
 
   it('should not overwrite an existing component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
@@ -187,7 +187,7 @@ export class MyLibComponent implements OnInit {
 
   it('should be idempotent', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,

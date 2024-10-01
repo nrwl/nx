@@ -13,16 +13,14 @@ describe('component', () => {
     appRouterProjectName = 'my-app-router';
     tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
-      name: projectName,
+      directory: projectName,
       style: 'css',
       appDir: false,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     await applicationGenerator(tree, {
-      name: appRouterProjectName,
+      directory: appRouterProjectName,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 

@@ -15,13 +15,12 @@ describe('lib', () => {
   let appTree: Tree;
 
   const defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   };
 
@@ -112,6 +111,7 @@ describe('lib', () => {
     it('should update nx.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
         tags: 'one',
       });
@@ -140,6 +140,7 @@ describe('lib', () => {
     it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
@@ -156,6 +157,7 @@ describe('lib', () => {
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
 
@@ -171,6 +173,7 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
 
@@ -191,6 +194,7 @@ describe('lib', () => {
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
 
@@ -313,6 +317,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(appTree, {
           ...defaultSchema,
+          name: 'my-lib',
           directory: 'my-dir',
           publishable: true,
         });
@@ -352,6 +357,7 @@ describe('lib', () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
+        name: 'my-lib',
         directory: 'my-dir',
         importPath: '@myorg/lib',
       });
@@ -367,7 +373,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'my-lib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -375,7 +381,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(appTree, {
           ...defaultSchema,
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });
