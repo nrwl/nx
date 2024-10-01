@@ -174,11 +174,9 @@ Here is another line in the message.
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -190,11 +188,9 @@ Here is another line in the message.
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -206,13 +202,11 @@ Here is another line in the message.
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
 +   Here is another line in the message.
-+
 +
 + ### ❤️  Thank You
 +
@@ -225,13 +219,11 @@ Here is another line in the message.
 
 + ## 0.1.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
 +   Here is another line in the message.
-+
 +
 + ### ❤️  Thank You
 +
@@ -244,13 +236,11 @@ Here is another line in the message.
 
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
 +   Here is another line in the message.
-+
 +
 + ### ❤️  Thank You
 +
@@ -323,16 +313,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #1
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -345,11 +332,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -363,11 +348,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.2 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #1
-+
 +
 + ### ❤️  Thank You
 +
@@ -381,11 +364,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -399,11 +380,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -562,11 +541,9 @@ const yargs = require('yargs');
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -578,11 +555,9 @@ const yargs = require('yargs');
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -594,11 +569,9 @@ const yargs = require('yargs');
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
-+
 +
 + ### ❤️  Thank You
 +
@@ -611,11 +584,9 @@ const yargs = require('yargs');
 
 + ## 0.1.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
-+
 +
 + ### ❤️  Thank You
 +
@@ -628,11 +599,9 @@ const yargs = require('yargs');
 
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
-+
 +
 + ### ❤️  Thank You
 +
@@ -708,16 +677,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #1
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -730,11 +696,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -748,11 +712,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.2 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #1
-+
 +
 + ### ❤️  Thank You
 +
@@ -766,11 +728,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -784,11 +744,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -850,7 +808,6 @@ Update packages in both groups with a mix #2
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.`
@@ -860,7 +817,6 @@ Update packages in both groups with a mix #2
 
 
 + ## 0.1.0 (YYYY-MM-DD)
-+
 +
 + ### 🚀 Features
 +

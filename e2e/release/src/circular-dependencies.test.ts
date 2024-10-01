@@ -544,7 +544,6 @@ describe('nx release circular dependencies', () => {
 
         + # 2.0.0 (YYYY-MM-DD)
         +
-        +
         + ### 🧱 Updated Dependencies
         +
         + - Updated {project-name} to 2.0.0
@@ -555,7 +554,6 @@ describe('nx release circular dependencies', () => {
 
 
         + # 2.0.0 (YYYY-MM-DD)
-        +
         +
         + ### 🧱 Updated Dependencies
         +
@@ -867,7 +865,6 @@ describe('nx release circular dependencies', () => {
 
         + # 2.0.0 (YYYY-MM-DD)
         +
-        +
         + ### 🧱 Updated Dependencies
         +
         + - Updated {project-name} to 2.0.0
@@ -878,7 +875,6 @@ describe('nx release circular dependencies', () => {
 
 
         + # 2.0.0 (YYYY-MM-DD)
-        +
         +
         + ### 🧱 Updated Dependencies
         +
@@ -1054,7 +1050,6 @@ describe('nx release circular dependencies', () => {
 
         + # 2.0.0 (YYYY-MM-DD)
         +
-        +
         + ### 🧱 Updated Dependencies
         +
         + - Updated {project-name} to 1.0.1
@@ -1065,7 +1060,6 @@ describe('nx release circular dependencies', () => {
 
 
         + ## 1.0.1 (YYYY-MM-DD)
-        +
         +
         + ### 🧱 Updated Dependencies
         +
