@@ -7,12 +7,15 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from '../plugin/plugin';
 import { PresetGeneratorSchema } from './schema';
 import createPackageGenerator from '../create-package/create-package';
 
 export default async function (tree: Tree, options: PresetGeneratorSchema) {
+  assertNotUsingTsSolutionSetup(tree, 'plugin', 'preset');
+
   const tasks: GeneratorCallback[] = [];
   const pluginProjectName = names(
     options.pluginName.includes('/')

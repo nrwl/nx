@@ -9,15 +9,18 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import { setupMf } from '../setup-mf/setup-mf';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { findNextAvailablePort, updateSsrSetup } from './lib';
 import type { Schema } from './schema';
-import { swcHelpersVersion } from '@nx/js/src/utils/versions';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
 export async function remote(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'remote');
+
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 

@@ -21,6 +21,7 @@ import {
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
@@ -43,6 +44,8 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'node', 'library');
+
   const options = await normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {

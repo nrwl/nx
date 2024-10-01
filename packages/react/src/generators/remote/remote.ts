@@ -27,6 +27,7 @@ import { maybeJs } from '../../utils/maybe-js';
 import { isValidVariable } from '@nx/js';
 import { moduleFederationEnhancedVersion } from '../../utils/versions';
 import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -90,6 +91,8 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'react', 'remote');
+
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, schema)),

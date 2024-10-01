@@ -49,6 +49,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -257,6 +258,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'web', 'application');
+
   const options = await normalizeOptions(host, schema);
 
   const tasks: GeneratorCallback[] = [];

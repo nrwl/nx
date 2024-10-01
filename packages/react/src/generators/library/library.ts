@@ -12,6 +12,7 @@ import {
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { nxVersion } from '../../utils/versions';
 import { maybeJs } from '../../utils/maybe-js';
@@ -36,6 +37,8 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'react', 'library');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(host, schema);

@@ -15,6 +15,7 @@ import {
 } from '@nx/devkit';
 import { Linter, LinterType } from '@nx/eslint';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 
 import { safeFileDelete } from '../../utils/utilities';
@@ -34,6 +35,8 @@ export async function cypressProjectGenerator(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'cypress', 'cypress-project');
+
   logger.warn(
     `Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.`
   );
