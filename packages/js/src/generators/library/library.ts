@@ -267,14 +267,26 @@ async function configureProject(
   }
 
   if (!options.useProjectJson) {
+    // we create a cleaner project configuration for the package.json file
+    const projectConfiguration: ProjectConfiguration = {
+      root: options.projectRoot,
+    };
+
     if (options.name !== options.importPath) {
       // if the name is different than the package.json name, we need to set
       // the proper name in the configuration
-      updateProjectConfiguration(tree, options.name, {
-        name: options.name,
-        root: options.projectRoot,
-      });
+      projectConfiguration.name = options.name;
     }
+
+    if (options.parsedTags?.length) {
+      projectConfiguration.tags = options.parsedTags;
+    }
+
+    if (options.publishable) {
+      await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
+    }
+
+    updateProjectConfiguration(tree, options.name, projectConfiguration);
 
     return;
   }
