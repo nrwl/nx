@@ -471,7 +471,7 @@ export function PlanTable(): JSX.Element {
               <span className="font-medium text-slate-700 dark:text-slate-300">
                 Nx Agents
               </span>
-              : native task distribution solution for CI{' '}
+              : native task distribution solution for CI
             </th>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
               <CheckIcon
@@ -555,6 +555,27 @@ export function PlanTable(): JSX.Element {
                 aria-hidden="true"
               />
               <span className="sr-only">yes</span>
+            </td>
+          </tr>
+          <tr className="text-sm transition hover:bg-slate-50/60 dark:hover:bg-slate-800/60">
+            <th
+              className="min-w-[124px] border-l border-t border-slate-200 px-2 py-1.5 text-left font-normal leading-tight md:min-w-[180px] md:p-2 md:px-3 lg:w-[325px] lg:px-4 lg:py-2.5 lg:pl-8 dark:border-slate-800"
+              scope="row"
+            >
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                Nx Powerpack
+              </span>
+              : a suite of premium extensions for the Nx CLI specifically
+              designed for enterprises
+            </th>
+            <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
+              Sold separately
+            </td>
+            <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
+              Sold separately
+            </td>
+            <td className="border-l border-r border-t border-slate-200 bg-slate-50/60 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800 dark:bg-slate-800/60">
+              Included
             </td>
           </tr>
           <tr className="text-sm transition hover:bg-slate-50/60 dark:hover:bg-slate-800/60">
