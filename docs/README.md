@@ -32,7 +32,6 @@ We also have different audiences in mind when writing docs:
 👦 Intermediate User
 
 - They know how to create an Nx repo or add Nx to an existing repo
-- They have heard the terms integrated and package-based
 - They know what a project is and how to make one
 - They understand how to run a task and the basics of caching
 - They can launch the graph

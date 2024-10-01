@@ -271,7 +271,7 @@ Nx is really made to scale with you. You can
 
 - start small with a single-project workspace
 - modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows ([more about that here](/getting-started/tutorials/angular-standalone-tutorial#modularizing-your-angular-app-with-local-libraries)), including mechanisms to make sure [things stay within their boundaries](/features/enforce-module-boundaries)
-- you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-integrated))
+- you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-monorepo))
 - or even [add Webpack Module Federation support](/recipes/angular/module-federation-with-ssr)
 
 ### Visualize your Workspace

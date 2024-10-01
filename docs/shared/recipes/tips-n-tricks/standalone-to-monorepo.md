@@ -1,8 +1,6 @@
-# Convert from a Standalone Repository to an Integrated Repository
+# Convert from a Standalone Repository to a Monorepo
 
-In many ways, a standalone repository is an integrated repository, but with one primary app located at the root of the repository. Both types of repos use plugins to generate code and to keep dependencies and config files up to date. Both types of repos use executors to hide away unneeded complexity.
-
-You can always add another app to a standalone repository the same way you would in an integrated repo. But at some point, you may want to move the primary app out of the root of your repo because the repo is no longer primarily focused on that one app. There are other apps that are equally important and you want the folder structure to align with the new reality.
+You can always add another app to a standalone repository the same way you would in a monorepo. But at some point, you may want to move the primary app out of the root of your repo because the repo is no longer primarily focused on that one app. There are other apps that are equally important and you want the folder structure to align with the new reality.
 
 {% youtube
 src="https://youtu.be/ztNpLf2Zl-c?si=u0CfLAx_tpioZ3Vu"
@@ -11,7 +9,7 @@ width="100%" /%}
 
 ## Run the Generator
 
-The `convert-to-monorepo` generator will attempt to convert a standalone repo to an integrated monorepo.
+The `convert-to-monorepo` generator will attempt to convert a standalone repo to a monorepo.
 
 ```shell
 nx g convert-to-monorepo

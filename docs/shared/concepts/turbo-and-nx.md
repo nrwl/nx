@@ -16,10 +16,9 @@ We are going to compare the tools in three different ways: **features**, **tech 
 
 #### 1. Incremental Adoption
 
-We should distinguish between [package-based vs integrated approach](/concepts/integrated-vs-package-based) to monorepos. Turbo uses a package-based approach to monorepos, while Nx can do both. To be able to compare the two from an incremental adoption point of view, let's focus on the package-based approach for now:
+Both Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add an `nx.json`. In this initial setup, both tools enable task running and computation caching.
 
-- Both Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add an `nx.json`.
-- With Nx you have the possibility to also transition to a more [integrated monorepo style](/concepts/integrated-vs-package-based#integrated-repos) that has been proven to lead to better maintainability and DX in the long-run.
+In addition, Nx allows you to incrementally enable [plugins and supporting features](#plugins-and-supporting-features) that are not available with Turborepo.
 
 Here are some examples for Nx:
 

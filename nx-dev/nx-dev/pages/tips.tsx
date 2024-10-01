@@ -77,7 +77,7 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more in our{' '}
           <Link
-            href="/concepts/integrated-vs-package-based"
+            href="/deprecated/integrated-vs-package-based"
             className="text-slate-900 underline dark:text-slate-100"
             prefetch={false}
           >
@@ -358,7 +358,7 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more about using Nx to{' '}
           <Link
-            href="/recipes/tips-n-tricks/standalone-to-integrated"
+            href="/recipes/tips-n-tricks/standalone-to-monorepo"
             className="text-slate-900 underline dark:text-slate-100"
             prefetch={false}
           >
