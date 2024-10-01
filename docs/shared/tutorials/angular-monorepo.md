@@ -233,7 +233,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run" path="angular-monorepo" %}
+```{% command="npx nx g @nx/angular:app apps/inventory --dry-run" path="angular-monorepo" %}
 NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
@@ -273,7 +273,7 @@ NOTE: The "dryRun" flag means no changes were made.
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
 ```shell
-npx nx g @nx/angular:app inventory --directory=apps/inventory
+npx nx g @nx/angular:app apps/inventory
 ```
 
 ## Sharing Code with Local Libraries
@@ -318,9 +318,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
 ```
-npx nx g @nx/angular:library products --directory=libs/products --standalone
-npx nx g @nx/angular:library orders --directory=libs/orders --standalone
-npx nx g @nx/angular:library shared-ui --directory=libs/shared/ui --standalone
+npx nx g @nx/angular:library libs/products --standalone
+npx nx g @nx/angular:library libs/orders --standalone
+npx nx g @nx/angular:library libs/shared/ui --standalone
 ```
 
 Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.

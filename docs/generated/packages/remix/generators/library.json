@@ -49,7 +49,7 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "vitest", "none"],
+        "enum": ["vitest", "jest", "none"],
         "description": "Test Runner to use for Unit Tests",
         "x-prompt": "What test runner should be used?",
         "default": "vitest"
