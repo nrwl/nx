@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { setupTailwindGenerator } from '@nx/react';
 import {
   testingLibraryReactVersion,
@@ -39,6 +40,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'next', 'application');
+
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(host, schema);
 

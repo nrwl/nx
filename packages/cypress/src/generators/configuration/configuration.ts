@@ -17,18 +17,19 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { Linter, LinterType } from '@nx/eslint';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
-import cypressInitGenerator, { addPlugin } from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import cypressInitGenerator, { addPlugin } from '../init/init';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -67,6 +68,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'cypress', 'configuration');
+
   const opts = normalizeOptions(tree, options);
   opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];

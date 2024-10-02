@@ -30,6 +30,7 @@ import {
   initGenerator as jsInitGenerator,
   tsConfigBaseOptions,
 } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
@@ -390,6 +391,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'node', 'application');
+
   const options = await normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [];
 

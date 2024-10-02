@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, GeneratorCallback, runTasksInSerial } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { libraryGenerator } from '@nx/react';
 import {
   addTsconfigEntryPoints,
@@ -21,6 +22,8 @@ export async function remixLibraryGeneratorInternal(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'remix', 'library');
+
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);
 

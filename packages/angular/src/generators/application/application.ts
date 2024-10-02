@@ -7,7 +7,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
@@ -27,12 +29,13 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
+
   const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 

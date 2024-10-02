@@ -20,6 +20,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname } from 'node:path';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
@@ -56,6 +57,8 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'remix', 'application');
+
   const options = await normalizeOptions(tree, _options);
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {

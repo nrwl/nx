@@ -1,5 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { formatFiles, runTasksInSerial } from '@nx/devkit';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 
 import { initGenerator } from '../init/init';
@@ -26,6 +27,8 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(tree, 'nest', 'application');
+
   const options = await normalizeOptions(tree, rawOptions);
 
   const tasks: GeneratorCallback[] = [];

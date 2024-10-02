@@ -9,6 +9,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { vueInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -27,6 +28,8 @@ export function libraryGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'vue', 'library');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);

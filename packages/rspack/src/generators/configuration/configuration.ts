@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
@@ -25,6 +26,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: ConfigurationSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'rspack', 'configuration');
+
   const task = await rspackInitGenerator(tree, {
     ...options,
     // TODO: Crystalize the default rspack.config.js file.

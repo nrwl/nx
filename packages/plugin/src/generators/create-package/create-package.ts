@@ -14,6 +14,7 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from 'nx/src/utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
@@ -26,6 +27,8 @@ export async function createPackageGenerator(
   host: Tree,
   schema: CreatePackageSchema
 ) {
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'create-package');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeSchema(host, schema);
