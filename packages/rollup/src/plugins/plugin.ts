@@ -182,9 +182,11 @@ async function buildRollupTarget(
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
-    command: `rollup -c ${basename(
-      configFilePath
-    )} --configPlugin @rollup/plugin-typescript`,
+    command: `rollup -c ${basename(configFilePath)}${
+      configFilePath.endsWith('ts')
+        ? ' --configPlugin @rollup/plugin-typescript'
+        : ''
+    }`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
