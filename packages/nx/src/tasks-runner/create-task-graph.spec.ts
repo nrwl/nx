@@ -1235,7 +1235,482 @@ describe('createTaskGraph', () => {
     });
   });
 
-  it('should handle cycles between projects (app1:build <-> app2 <-> app3:build)', () => {
+  it('should handle cycles between projects where all projects contain the same task target (lib1:build -> lib2:build -> lib3:build -> lib4:build -> lib1:build)', () => {
+    projectGraph = {
+      nodes: {
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib4: {
+          name: 'lib4',
+          type: 'lib',
+          data: {
+            root: 'lib4-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib3', type: 'static' }],
+        lib3: [{ source: 'lib3', target: 'lib4', type: 'static' }],
+        lib4: [{ source: 'lib4', target: 'lib1', type: 'static' }],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: [{ target: 'build', dependencies: true }],
+      },
+      ['lib1'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: [],
+      tasks: {
+        'lib1:build': expect.objectContaining({
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+        }),
+        'lib2:build': expect.objectContaining({
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+        }),
+        'lib3:build': expect.objectContaining({
+          id: 'lib3:build',
+          target: {
+            project: 'lib3',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib3-root',
+          parallelism: true,
+        }),
+        'lib4:build': expect.objectContaining({
+          id: 'lib4:build',
+          target: {
+            project: 'lib4',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib4-root',
+          parallelism: true,
+        }),
+      },
+      dependencies: {
+        'lib1:build': ['lib2:build'],
+        'lib2:build': ['lib3:build'],
+        'lib3:build': ['lib4:build'],
+        'lib4:build': ['lib1:build'],
+      },
+    });
+  });
+
+  it('should handle cycles between projects where all projects do not contain the same task target (lib1:build -> lib2:build -> lib3 -> lib4:build)', () => {
+    projectGraph = {
+      nodes: {
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            targets: {},
+          },
+        },
+        lib4: {
+          name: 'lib4',
+          type: 'lib',
+          data: {
+            root: 'lib4-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib3', type: 'static' }],
+        lib3: [{ source: 'lib3', target: 'lib4', type: 'static' }],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: [{ target: 'build', dependencies: true }],
+      },
+      ['lib1'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['lib4:build'],
+      tasks: {
+        'lib1:build': expect.objectContaining({
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+        }),
+        'lib2:build': expect.objectContaining({
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+        }),
+        'lib4:build': expect.objectContaining({
+          id: 'lib4:build',
+          target: {
+            project: 'lib4',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib4-root',
+          parallelism: true,
+        }),
+      },
+      dependencies: {
+        'lib1:build': ['lib2:build'],
+        'lib2:build': ['lib4:build'],
+        'lib4:build': [],
+      },
+    });
+  });
+
+  it('should handle cycles between projects where all projects do not contain the same task target (lib1:build -> lib2:build -> lib3 -> lib4:build -> lib1:build)', () => {
+    projectGraph = {
+      nodes: {
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            targets: {},
+          },
+        },
+        lib4: {
+          name: 'lib4',
+          type: 'lib',
+          data: {
+            root: 'lib4-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib3', type: 'static' }],
+        lib3: [{ source: 'lib3', target: 'lib4', type: 'static' }],
+        lib4: [{ source: 'lib4', target: 'lib1', type: 'static' }],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: [{ target: 'build', dependencies: true }],
+      },
+      ['lib1'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: [],
+      tasks: {
+        'lib1:build': expect.objectContaining({
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+        }),
+        'lib2:build': expect.objectContaining({
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+        }),
+        'lib4:build': expect.objectContaining({
+          id: 'lib4:build',
+          target: {
+            project: 'lib4',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib4-root',
+          parallelism: true,
+        }),
+      },
+      dependencies: {
+        'lib1:build': ['lib2:build'],
+        'lib2:build': ['lib4:build'],
+        'lib4:build': ['lib1:build'],
+      },
+    });
+  });
+
+  it('should handle cycles between projects where all projects do not contain the same task target (lib1:build -> lib2:build -> lib3 -> lib4 -> lib1:build)', () => {
+    projectGraph = {
+      nodes: {
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            targets: {},
+          },
+        },
+        lib4: {
+          name: 'lib4',
+          type: 'lib',
+          data: {
+            root: 'lib4-root',
+            targets: {},
+          },
+        },
+      },
+      dependencies: {
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib3', type: 'static' }],
+        lib3: [{ source: 'lib3', target: 'lib4', type: 'static' }],
+        lib4: [{ source: 'lib4', target: 'lib1', type: 'static' }],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: [{ target: 'build', dependencies: true }],
+      },
+      ['lib1'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['lib2:build'],
+      tasks: {
+        'lib1:build': expect.objectContaining({
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+        }),
+        'lib2:build': expect.objectContaining({
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+        }),
+      },
+      dependencies: {
+        'lib1:build': ['lib2:build'],
+        'lib2:build': [],
+      },
+    });
+  });
+
+  it('should handle cycles between projects where all projects do not contain the same task target (app1:build <-> app2 <-> app3:build)', () => {
     projectGraph = {
       nodes: {
         app1: {
@@ -1294,7 +1769,7 @@ describe('createTaskGraph', () => {
       }
     );
     expect(taskGraph).toEqual({
-      roots: [],
+      roots: ['app1:compile', 'app3:compile'],
       tasks: {
         'app1:compile': {
           id: 'app1:compile',
@@ -1324,13 +1799,13 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['app3:compile'],
-        'app3:compile': ['app1:compile'],
+        'app1:compile': [],
+        'app3:compile': [],
       },
     });
   });
 
-  it('should handle cycles between projects that do not create cycles between tasks (app1:build -> app2 <-> app3:build)``', () => {
+  it('should handle cycles between projects that do not create cycles between tasks and not contain the same task target (app1:build -> app2 <-> app3:build)``', () => {
     projectGraph = {
       nodes: {
         app1: {
@@ -1386,7 +1861,7 @@ describe('createTaskGraph', () => {
       }
     );
     expect(taskGraph).toEqual({
-      roots: ['app3:compile'],
+      roots: ['app1:compile', 'app3:compile'],
       tasks: {
         'app1:compile': {
           id: 'app1:compile',
@@ -1416,7 +1891,7 @@ describe('createTaskGraph', () => {
         },
       },
       dependencies: {
-        'app1:compile': ['app3:compile'],
+        'app1:compile': [],
         'app3:compile': [],
       },
     });
