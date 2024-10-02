@@ -15,7 +15,7 @@ export interface PlaywrightExecutorSchema {
   browser?: 'all' | 'chromium' | 'firefox' | 'webkit' | string;
   config?: string;
   debug?: boolean;
-  failedOnly?: boolean;
+  lastFailed?: boolean;
   forbidOnly?: boolean;
   fullyParallel?: boolean;
   grep?: string;
