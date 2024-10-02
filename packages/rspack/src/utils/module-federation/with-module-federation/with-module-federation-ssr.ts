@@ -31,7 +31,7 @@ export async function withModuleFederationForSSR(
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)(
         {
-          name: options.name,
+          name: options.name.replace(/-/g, '_'),
           filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,
