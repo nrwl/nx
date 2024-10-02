@@ -7,7 +7,7 @@ import {
   Strong,
 } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
-import { AnimatedAngledBeam } from '@nx/nx-dev/ui-animations';
+import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import {
   CalendarDaysIcon,
   CircleStackIcon,
@@ -172,10 +172,10 @@ Card.displayName = 'Card';
 
 export function CustomRemoteCacheAnimation(): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const gcpRef = useRef<HTMLDivElement>(null);
-  const gitlabRef = useRef<HTMLDivElement>(null);
   const nxRef = useRef<HTMLDivElement>(null);
+  const awsRef = useRef<HTMLDivElement>(null);
   const networkDriveRef = useRef<HTMLDivElement>(null);
+  const gcpRef = useRef<HTMLDivElement>(null);
   const azureRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -184,7 +184,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         <div className="flex w-full justify-center">
           <Card
             ref={nxRef}
-            className="size-18 relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
+            className="size-18 relative p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <NxIcon
               aria-hidden="true"
@@ -192,13 +192,13 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             />
             <CircleStackIcon
               aria-hidden="true"
-              className="absolute bottom-1 right-1 size-5 text-slate-900 dark:text-white"
+              className="absolute bottom-1 right-1 size-4 text-slate-900 dark:text-white"
             />
           </Card>
         </div>
         <div className="grid w-full grid-cols-4 items-stretch gap-4">
           <Card
-            ref={gitlabRef}
+            ref={awsRef}
             className="relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
@@ -262,43 +262,46 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         </div>
       </div>
 
-      <AnimatedAngledBeam
+      <AnimatedCurvedBeam
         containerRef={containerRef}
-        fromRef={gitlabRef}
+        fromRef={awsRef}
         toRef={nxRef}
-        endYOffset={0}
+        curvature={175}
+        startXOffset={-20}
+        endYOffset={30}
         bidirectional={true}
-        duration={3}
       />
-      <AnimatedAngledBeam
+      <AnimatedCurvedBeam
         containerRef={containerRef}
         fromRef={networkDriveRef}
         toRef={nxRef}
-        startYOffset={0}
-        endYOffset={0}
-        startXOffset={0}
-        endXOffset={0}
+        curvature={150}
+        startXOffset={-20}
+        endXOffset={20}
         bidirectional={true}
-        duration={3}
-        delay={1}
+        delay={2}
       />
-      <AnimatedAngledBeam
+      <AnimatedCurvedBeam
         containerRef={containerRef}
         fromRef={gcpRef}
         toRef={nxRef}
-        endYOffset={0}
         bidirectional={true}
-        duration={3}
-        delay={2}
+        curvature={130}
+        startXOffset={20}
+        endXOffset={-20}
+        reverse={true}
+        delay={3}
       />
-      <AnimatedAngledBeam
+      <AnimatedCurvedBeam
         containerRef={containerRef}
         fromRef={azureRef}
         toRef={nxRef}
-        endYOffset={0}
+        curvature={175}
+        startXOffset={20}
+        endYOffset={30}
         bidirectional={true}
-        duration={3}
-        delay={2}
+        reverse={true}
+        delay={1}
       />
     </div>
   );
