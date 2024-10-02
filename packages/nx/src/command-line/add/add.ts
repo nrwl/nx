@@ -4,7 +4,7 @@ import * as ora from 'ora';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import type { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
-import { runNxAsync } from '../../utils/child-process';
+import { runNxAsync, runNxSync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
@@ -135,8 +135,8 @@ async function initializePlugin(
       args.push(...options.__overrides_unparsed__);
     }
 
-    await runNxAsync(`g ${pkgName}:${initGenerator} ${args.join(' ')}`, {
-      silent: !options.verbose,
+    runNxSync(`g ${pkgName}:${initGenerator} ${args.join(' ')}`, {
+      stdio: [0, 1, 2],
     });
   } catch (e) {
     spinner.fail();
