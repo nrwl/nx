@@ -26,7 +26,7 @@ describe('Build React applications and libraries with Vite', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --compiler=babel --unitTestRunner=none --no-interactive`
+      `generate @nx/react:app apps/${appName} --bundler=webpack --compiler=babel --unitTestRunner=none --no-interactive`
     );
     createFile(
       `apps/${appName}/src/app/nx.svg`,
@@ -67,7 +67,7 @@ describe('Build React applications and libraries with Vite', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --compiler=babel --unitTestRunner=none --no-interactive`
+      `generate @nx/react:app apps/${appName} --bundler=webpack --compiler=babel --unitTestRunner=none --no-interactive`
     );
     createFile(
       `apps/${appName}/src/app/nx.svg`,

@@ -5,7 +5,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building a Single React App with Nx
 
-In this tutorial you'll learn how to use React with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications).
+In this tutorial you'll learn how to use React with Nx in a "standalone" (non-monorepo) setup.
 
 What will you learn?
 
@@ -976,7 +976,7 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 ## Migrating to a Monorepo
 
-When you are ready to add another application to the repo, you'll probably want to move `react-app` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+When you are ready to add another application to the repo, you'll probably want to move `react-app` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-monorepo).
 
 You can also go through the full [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 

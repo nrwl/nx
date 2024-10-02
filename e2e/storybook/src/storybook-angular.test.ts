@@ -13,11 +13,8 @@ describe('Storybook executors for Angular', () => {
   beforeAll(() => {
     newProject({
       packages: ['@nx/angular'],
-      unsetProjectNameAndRootFormat: false,
     });
-    runCLI(
-      `g @nx/angular:library ${angularStorybookLib} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`g @nx/angular:library ${angularStorybookLib} --no-interactive`);
     runCLI(
       `generate @nx/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
     );

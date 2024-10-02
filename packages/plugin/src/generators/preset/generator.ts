@@ -26,7 +26,6 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
     linter: Linter.EsLint,
-    name: pluginProjectName,
     skipFormat: true,
     unitTestRunner: 'jest',
     importPath: options.pluginName,
@@ -36,7 +35,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     directory:
       options.createPackageName && options.createPackageName !== 'false'
         ? `packages/${pluginProjectName}`
-        : undefined,
+        : pluginProjectName,
     rootProject: options.createPackageName ? false : true,
   });
   tasks.push(pluginTask);
@@ -62,6 +61,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 
   return runTasksInSerial(...tasks);
 }
+
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
     const nxPluginEntry = json.dependencies['@nx/plugin'];

@@ -514,7 +514,7 @@ describe('ngrx', () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         standalone: true,
         routing: true,
         skipFormat: true,
@@ -666,7 +666,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'myapp',
+        directory: 'myapp',
         standalone: false,
         skipFormat: true,
       });
@@ -712,7 +712,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'myapp',
+        directory: 'myapp',
         standalone: false,
         skipFormat: true,
       });

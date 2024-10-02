@@ -70,10 +70,9 @@ async function addPresetGenerator(
   if (!hasGenerator(host, schema.project, 'preset')) {
     await generatorGenerator(host, {
       name: 'preset',
-      directory: join(projectRoot, 'src/generators/preset'),
+      path: join(projectRoot, 'src/generators/preset'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
@@ -87,6 +86,7 @@ async function createCliPackage(
 ) {
   await jsLibraryGenerator(host, {
     ...options,
+    directory: options.directory,
     rootProject: false,
     config: 'project',
     publishable: true,

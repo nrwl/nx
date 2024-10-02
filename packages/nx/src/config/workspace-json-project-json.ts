@@ -122,6 +122,20 @@ export interface ProjectMetadata {
   description?: string;
   technologies?: string[];
   targetGroups?: Record<string, string[]>;
+  owners?: {
+    [ownerId: string]: {
+      ownedFiles: {
+        files: ['*'] | string[];
+        fromConfig?: {
+          filePath: string;
+          location: {
+            startLine: number;
+            endLine: number;
+          };
+        };
+      }[];
+    };
+  };
 }
 
 export interface TargetMetadata {

@@ -16,9 +16,8 @@ describe('cypress-component-configuration generator', () => {
 
   it('should setup nextjs app', async () => {
     await applicationGenerator(tree, {
-      name: 'demo',
+      directory: 'demo',
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,
@@ -107,9 +106,8 @@ describe('cypress-component-configuration generator', () => {
 
   it('should add styles setup in app', async () => {
     await applicationGenerator(tree, {
-      name: 'demo',
+      directory: 'demo',
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await setupTailwindGenerator(tree, { project: 'demo' });
     await cypressComponentConfiguration(tree, {
@@ -132,12 +130,11 @@ describe('cypress-component-configuration generator', () => {
 
   it('should setup nextjs lib', async () => {
     await libraryGenerator(tree, {
-      name: 'demo',
+      directory: 'demo',
       linter: Linter.EsLint,
       style: 'css',
       unitTestRunner: 'jest',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,

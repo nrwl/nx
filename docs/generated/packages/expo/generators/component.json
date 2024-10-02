@@ -9,19 +9,25 @@
     "type": "object",
     "examples": [
       {
-        "command": "g @nx/expo:component my-component --directory=mylib/my-component",
+        "command": "g @nx/expo:component mylib/my-component --name my-component",
         "description": "Generate a component in the mylib library"
       },
       {
-        "command": "g @nx/expo:component my-component --directory=mylib/my-component --classComponent",
+        "command": "g @nx/expo:component mylib/my-component --name my-component --classComponent",
         "description": "Generate a class component in the mylib library"
       }
     ],
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path where the component will be generated.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Where should the component be generated?",
+        "x-priority": "important"
+      },
       "name": {
         "type": "string",
         "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the component?"
       },
       "js": {
@@ -40,16 +46,6 @@
         "description": "When true, does not create \"spec.ts\" test files for the new component.",
         "default": false
       },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
       "export": {
         "type": "boolean",
         "description": "When true, the component is exported from the project index.ts (if it exists).",
@@ -64,7 +60,7 @@
         "default": false
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "description": "Create a component",

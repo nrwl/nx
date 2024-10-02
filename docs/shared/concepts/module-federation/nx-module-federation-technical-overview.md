@@ -31,7 +31,7 @@ If you prefer diagrams, the one below outlines the above steps.
 
 Previously, when using shared workspace libraries as part of your Module Federation application, there was a chance that the workspace library would be provided by one of the `static remotes`. This would cause issues where changes to those shared libraries would not be reflected in the locally served application.
 
-To combat this issue, we developed the `NxRuntimeLibraryControlPlugin`. This is a [Runtime Plugin]() that will ensure that workspace libraries are only shared via any active `dev remote`. This means that any changes to the shared library will be picked up by `webpack-dev-server` and, as such, reflected in the locally served application.
+To combat this issue, we developed the `NxRuntimeLibraryControlPlugin`. This is a _Runtime Plugin_ that will ensure that workspace libraries are only shared via any active `dev remote`. This means that any changes to the shared library will be picked up by `webpack-dev-server` and, as such, reflected in the locally served application.
 
 This plugin is enabled by default, however, you can turn it off in your `module-federation.config` file:
 

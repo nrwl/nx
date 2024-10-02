@@ -5,18 +5,20 @@ import { decoratorGenerator } from './decorator';
 
 describe('decorator generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: DecoratorGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(decoratorGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      decoratorGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

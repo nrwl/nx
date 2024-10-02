@@ -65,14 +65,13 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.component) {
     const relativeCwd = getRelativeCwd();
-    const name = joinPathFragments(
+    const path = joinPathFragments(
       options.projectRoot,
       'src/lib',
       options.fileName
     );
     await componentGenerator(tree, {
-      name: relativeCwd ? relative(relativeCwd, name) : name,
-      nameAndDirectoryFormat: 'as-provided',
+      path: relativeCwd ? relative(relativeCwd, path) : path,
       skipTests:
         options.unitTestRunner === 'none' ||
         (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
