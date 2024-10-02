@@ -9,8 +9,18 @@
         "no-restricted-imports": [
           "error",
           {
-            "name": "fs-extra",
-            "message": "Please use equivalent utilities from `node:fs` instead."
+            "paths": [
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              }
+            ]
           }
         ]
       }
