@@ -7,6 +7,7 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
+import { LiveStreamNotifier } from '@nx/nx-dev/ui-common';
 
 export default function CustomApp({
   Component,
@@ -79,6 +80,7 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
+      <LiveStreamNotifier />
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script
