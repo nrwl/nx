@@ -664,7 +664,7 @@ describe('nx release', () => {
       +
       ## 999.9.9 (YYYY-MM-DD)
 
-
+      ### 🚀 Features
 
 
       NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
