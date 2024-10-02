@@ -36,7 +36,7 @@ import type { TaskDetails } from '../native';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
-  private cache: DbCache | Cache = getCache(this.nxJson, this.options);
+  private cache: DbCache | Cache = getCache(this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
