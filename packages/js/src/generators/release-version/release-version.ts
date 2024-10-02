@@ -88,7 +88,7 @@ Valid values are: ${validReleaseVersionPrefixes
     }
 
     // Set default for updateDependents
-    const updateDependents = options.updateDependents ?? 'never';
+    const updateDependents = options.updateDependents ?? 'auto';
     const updateDependentsBump = 'patch';
 
     // Sort the projects topologically if update dependents is enabled
@@ -601,7 +601,7 @@ To fix this you will either need to add a package.json file at that location, or
           return localPackageDependency.target === project.name;
         });
 
-      const includeTransitiveDependents = updateDependents === 'auto';
+      const includeTransitiveDependents = updateDependents !== 'never';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
         for (const directDependent of allDependentProjects) {
@@ -674,7 +674,7 @@ To fix this you will either need to add a package.json file at that location, or
           logMsg += `\n${dependentProjectsOutsideCurrentBatch
             .map((dependentProject) => `${indent}- ${dependentProject.source}`)
             .join('\n')}`;
-          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"`;
+          logMsg += `\n${indent}=> You can adjust this behavior by removing the usage of \`version.generatorOptions.updateDependents\` with "never"`;
           logger.buffer(logMsg);
         }
       }
