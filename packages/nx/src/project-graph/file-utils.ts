@@ -28,7 +28,7 @@ import {
 import { globWithWorkspaceContextSync } from '../utils/workspace-context';
 import { buildProjectFromProjectJson } from '../plugins/project-json/build-nodes/project-json';
 import { PackageJson } from '../utils/package-json';
-import { NxJsonConfiguration } from '../devkit-exports';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export interface Change {
   type: string;

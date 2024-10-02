@@ -6,8 +6,8 @@ import {
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
-import { TargetDependencyConfig } from '../devkit-exports';
 import { output } from '../utils/output';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
