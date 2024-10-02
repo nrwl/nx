@@ -1,21 +1,20 @@
 'use client';
-import { forwardRef, ReactElement, ReactNode, useRef, useState } from 'react';
 import {
-  Button,
-  ButtonLink,
-  SectionHeading,
-  Strong,
-} from '@nx/nx-dev/ui-common';
+  forwardRef,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
-import {
-  CalendarDaysIcon,
-  CircleStackIcon,
-  ServerIcon,
-} from '@heroicons/react/24/outline';
+import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
 import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
-import { a } from '@react-spring/three';
 import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export function PowerpackFeatures(): ReactElement {
   return (
@@ -178,14 +177,91 @@ const Card = forwardRef<
 Card.displayName = 'Card';
 
 export function CustomRemoteCacheAnimation(): ReactElement {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const nxRef = useRef<HTMLDivElement>(null);
   const awsRef = useRef<HTMLDivElement>(null);
-  const networkDriveRef = useRef<HTMLDivElement>(null);
-  const gcpRef = useRef<HTMLDivElement>(null);
   const azureRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gcpRef = useRef<HTMLDivElement>(null);
+  const networkDriveRef = useRef<HTMLDivElement>(null);
+  const nxRef = useRef<HTMLDivElement>(null);
 
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const animatedBeamMap: Record<string, ReactElement> = {
+    aws: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={awsRef}
+        toRef={nxRef}
+        curvature={175}
+        startXOffset={-20}
+        endYOffset={30}
+        bidirectional={true}
+        duration={5}
+      />
+    ),
+    azure: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={azureRef}
+        toRef={nxRef}
+        curvature={175}
+        startXOffset={20}
+        endYOffset={30}
+        bidirectional={true}
+        reverse={true}
+        duration={5}
+      />
+    ),
+    gcp: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={gcpRef}
+        toRef={nxRef}
+        bidirectional={true}
+        curvature={130}
+        startXOffset={20}
+        endXOffset={-20}
+        reverse={true}
+        duration={5}
+      />
+    ),
+    networkDrive: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={networkDriveRef}
+        toRef={nxRef}
+        curvature={150}
+        startXOffset={-20}
+        endXOffset={20}
+        bidirectional={true}
+        duration={5}
+      />
+    ),
+  };
+
+  const links = Object.keys(animatedBeamMap);
+  const duration = 6000;
+  const timeout = useRef<NodeJS.Timeout>();
+  const [selected, setSelected] = useState<string | null>('aws');
+  const [autoplay, setAutoplay] = useState<boolean>(true);
+
+  const play = useCallback(() => {
+    timeout.current = setTimeout(next, duration);
+  }, [selected]);
+
+  const next = () => {
+    if (links.length <= 1) return; // No change if there's only one or no items
+
+    if (selected === null)
+      return setSelected(links[Math.floor(Math.random() * links.length)]);
+
+    const availableLinks = links.filter((link) => link !== selected);
+    const randomIndex = Math.floor(Math.random() * availableLinks.length);
+    setSelected(availableLinks[randomIndex]);
+  };
+
+  useEffect(() => {
+    clearTimeout(timeout.current);
+    if (autoplay) play();
+  }, [selected, autoplay, play]);
 
   return (
     <div className="relative flex h-full w-full" ref={containerRef}>
@@ -208,9 +284,18 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         <div className="grid w-full grid-cols-4 items-stretch gap-4">
           <Card
             ref={awsRef}
-            className="relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
-            onMouseEnter={() => setHoveredCard('aws')}
-            onMouseLeave={() => setHoveredCard(null)}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('aws');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'aws' }
+            )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
               AWS
@@ -228,9 +313,18 @@ export function CustomRemoteCacheAnimation(): ReactElement {
           </Card>
           <Card
             ref={networkDriveRef}
-            className="relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
-            onMouseEnter={() => setHoveredCard('networkDrive')}
-            onMouseLeave={() => setHoveredCard(null)}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('networkDrive');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'networkDrive' }
+            )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
               Network drive
@@ -248,8 +342,18 @@ export function CustomRemoteCacheAnimation(): ReactElement {
           </Card>
           <Card
             ref={gcpRef}
-            onMouseEnter={() => setHoveredCard('gcp')}
-            onMouseLeave={() => setHoveredCard(null)}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('gcp');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'gcp' }
+            )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
               GCP
@@ -265,8 +369,18 @@ export function CustomRemoteCacheAnimation(): ReactElement {
           </Card>
           <Card
             ref={azureRef}
-            onMouseEnter={() => setHoveredCard('azure')}
-            onMouseLeave={() => setHoveredCard(null)}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('azure');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'azure' }
+            )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
               Azure
@@ -283,52 +397,21 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         </div>
       </div>
 
-      {hoveredCard === 'aws' && (
-        <AnimatedCurvedBeam
-          containerRef={containerRef}
-          fromRef={awsRef}
-          toRef={nxRef}
-          curvature={175}
-          startXOffset={-20}
-          endYOffset={30}
-          bidirectional={true}
-        />
-      )}
-      {hoveredCard === 'networkDrive' && (
-        <AnimatedCurvedBeam
-          containerRef={containerRef}
-          fromRef={networkDriveRef}
-          toRef={nxRef}
-          curvature={150}
-          startXOffset={-20}
-          endXOffset={20}
-          bidirectional={true}
-        />
-      )}
-      {hoveredCard === 'gcp' && (
-        <AnimatedCurvedBeam
-          containerRef={containerRef}
-          fromRef={gcpRef}
-          toRef={nxRef}
-          bidirectional={true}
-          curvature={130}
-          startXOffset={20}
-          endXOffset={-20}
-          reverse={true}
-        />
-      )}
-      {hoveredCard === 'azure' && (
-        <AnimatedCurvedBeam
-          containerRef={containerRef}
-          fromRef={azureRef}
-          toRef={nxRef}
-          curvature={175}
-          startXOffset={20}
-          endYOffset={30}
-          bidirectional={true}
-          reverse={true}
-        />
-      )}
+      <AnimatePresence>
+        {selected ? (
+          <motion.div
+            key={selected}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.2 },
+            }}
+          >
+            {animatedBeamMap[selected]}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
