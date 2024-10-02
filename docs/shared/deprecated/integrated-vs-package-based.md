@@ -1,5 +1,11 @@
 # Integrated Repos vs. Package-Based Repos vs. Standalone Apps
 
+{% callout type="note" title="" %}
+As of Nx 20, it is no longer useful to draw a distinction between integrated and package-based repositories. We've removed references to these terms in the rest of the documentation, but this page is kept here to describe the terms for historical reasons.
+
+Instead of using terms that classify Nx repositories into two different types, we want to highlight the fact that Nx features can be enabled independently of each other. Choose the features that make sense for your repository.
+{% /callout %}
+
 There are many different ways to structure a repository and Nx is designed to support them all. To better discuss how Nx can improve a repository, it is helpful to define some terms.
 
 - Standalone Application - A repository with a single application

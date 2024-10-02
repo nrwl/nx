@@ -5,7 +5,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building React Apps in an Nx Monorepo
 
-In this tutorial you'll learn how to use React with Nx in a [monorepo (integrated) setup](/concepts/integrated-vs-package-based#integrated-repos).
+In this tutorial you'll learn how to use React with Nx in a monorepo setup.
 
 What will you learn?
 
@@ -19,15 +19,15 @@ What will you learn?
 Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for a React standalone app setup then check out our [React standalone app tutorial](/getting-started/tutorials/react-standalone-tutorial).
 {% /callout %}
 
-## Why Use an Integrated Monorepo?
+## Why Use an Nx Monorepo?
 
-An integrated monorepo is a repository configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
+In this tutorial, we'll set up a monorepo that is configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
 
 You'll notice that instead of using npm/yarn/pnpm workspaces, projects within the repository are linked using typescript path aliases that are defined in the `tsconfig.base.json` file. Also, since we're creating projects using Nx plugin generators, all new projects come preconfigured with useful tools like Prettier, ESLint and Jest.
 
 Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 
-Features of an integrated monorepo:
+Features we'll use in this monorepo:
 
 - [Install dependencies at the root by default](/concepts/decisions/dependency-management#single-version-policy)
 - [Scaffold new code with generators](/features/generate-code)
@@ -104,7 +104,7 @@ The setup includes..
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/react-store/project.json` file contains [settings that are specific to the `react-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 

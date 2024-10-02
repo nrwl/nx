@@ -265,12 +265,6 @@
               "file": "shared/concepts/executors-and-configurations"
             },
             {
-              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-              "tags": ["intro", "repository-types"],
-              "id": "integrated-vs-package-based",
-              "file": "shared/concepts/integrated-vs-package-based"
-            },
-            {
               "name": "Nx Daemon",
               "id": "nx-daemon",
               "file": "shared/concepts/daemon"
@@ -897,22 +891,9 @@
               "description": "Various tips and tricks for using Nx.",
               "itemList": [
                 {
-                  "name": "Add a Package-based Project in an Integrated Repo",
-                  "id": "package-based-in-integrated",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/package-based-in-integrated"
-                },
-                {
-                  "name": "Add an Integrated Project in a Package-based Repo",
-                  "id": "integrated-in-package-based",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/integrated-in-package-based"
-                },
-                {
-                  "name": "Convert from a Standalone Repository to an Integrated Repository",
-                  "id": "standalone-to-integrated",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/standalone-to-integrated"
+                  "name": "Convert from a Standalone Repository to a Monorepo",
+                  "id": "standalone-to-monorepo",
+                  "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo"
                 },
                 {
                   "name": "Configuring ESLint with Typescript",
@@ -1430,6 +1411,11 @@
               "name": "Rescope Packages from @nrwl to @nx",
               "id": "rescope",
               "file": "shared/deprecated/rescope"
+            },
+            {
+              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+              "id": "integrated-vs-package-based",
+              "file": "shared/deprecated/integrated-vs-package-based"
             }
           ]
         },
