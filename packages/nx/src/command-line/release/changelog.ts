@@ -314,7 +314,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        author,
+                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                        authors: [author],
                         affectedProjects: [project],
                       };
                     });
@@ -515,13 +516,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 const releaseType =
                   versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
                 let githubReferences = [];
-                let author = undefined;
+                let authors = [];
                 const parsedCommit = vp.commit
                   ? parseGitCommit(vp.commit, true)
                   : null;
                 if (parsedCommit) {
                   githubReferences = parsedCommit.references;
-                  author = parsedCommit.author;
+                  // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                  authors = [parsedCommit.author];
                 }
                 return {
                   type: releaseType.type,
@@ -531,8 +533,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   isBreaking: releaseType.isBreaking,
                   affectedProjects: Object.keys(vp.projectVersionBumps),
                   githubReferences,
-                  author,
-                };
+                  authors,
+                } as ChangelogChange;
               })
               .filter(Boolean);
           } else {

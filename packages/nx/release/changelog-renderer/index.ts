@@ -97,11 +97,7 @@ export default class DefaultChangelogRenderer {
     repoData?: GithubRepoData;
     conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
   }) {
-    this.changes = config.project
-      ? config.changes.filter((change) =>
-          change.affectedProjects.includes(config.project)
-        )
-      : config.changes;
+    this.changes = this.filterChanges(config.changes, config.project);
     this.changelogEntryVersion = config.changelogEntryVersion;
     this.project = config.project;
     this.entryWhenNoChanges = config.entryWhenNoChanges;
@@ -114,6 +110,20 @@ export default class DefaultChangelogRenderer {
     this.relevantChanges = [];
     this.breakingChanges = [];
     this.additionalChangesForAuthorsSection = [];
+  }
+
+  protected filterChanges(
+    changes: ChangelogChange[],
+    project: string | null
+  ): ChangelogChange[] {
+    if (project === null) {
+      return changes;
+    }
+    return changes.filter(
+      (c) =>
+        c.affectedProjects &&
+        (c.affectedProjects === '*' || c.affectedProjects.includes(project))
+    );
   }
 
   async render(): Promise<string> {

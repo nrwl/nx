@@ -490,12 +490,16 @@ const yargs = require('yargs');
     verbose: options.verbose,
   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
+  const publishProjectsResult = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-  process.exit(publishStatus);
+  // Derive an overall exit code from the publish projects result
+  process.exit(
+    Object.values(publishProjectsResult).every((result) => result.code === 0)
+      ? 0
+      : 1
+  );
 })();
 `
     );
