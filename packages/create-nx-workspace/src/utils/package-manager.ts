@@ -9,7 +9,6 @@ import { env } from 'node:process';
  */
 
 export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
-const npm_config_user_agent = process.env.npm_config_user_agent || '';
 
 export type PackageManager = (typeof packageManagerList)[number];
 
@@ -17,10 +16,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-        ? 'pnpm'
-        : 'npm';
+    ? 'yarn'
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : 'npm';
 }
 
 /**
