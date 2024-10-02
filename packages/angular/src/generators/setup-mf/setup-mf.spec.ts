@@ -18,13 +18,13 @@ describe('Init MF', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       routing: true,
       standalone: false,
       skipFormat: true,
     });
     await generateTestApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -347,7 +347,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       standalone: false,
       skipFormat: true,
     });
@@ -389,7 +389,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already when --typescriptConfiguration=true', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       standalone: false,
       skipFormat: true,
     });
@@ -431,7 +431,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications router config', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -474,7 +474,7 @@ describe('Init MF', () => {
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'test-app',
+      directory: 'test-app',
       routing: true,
       standalone: false,
       skipFormat: true,

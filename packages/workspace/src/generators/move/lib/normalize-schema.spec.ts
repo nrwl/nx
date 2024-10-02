@@ -37,7 +37,6 @@ xdescribe('normalizeSchema', () => {
       importPath: '@proj/my/library',
       newProjectName: 'my-library',
       projectName: 'my-library',
-      projectNameAndRootFormat: 'as-provided',
       relativeToRootDestination: 'libs/my/library',
       updateImportPath: true,
     };
@@ -53,7 +52,6 @@ xdescribe('normalizeSchema', () => {
       importPath: '@proj/my-awesome-library',
       newProjectName: 'my-library',
       projectName: 'my-library',
-      projectNameAndRootFormat: 'as-provided',
       relativeToRootDestination: 'libs/my/library',
       updateImportPath: true,
     };

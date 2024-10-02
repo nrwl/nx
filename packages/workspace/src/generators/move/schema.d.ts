@@ -1,5 +1,3 @@
-import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-
 export interface Schema {
   projectName: string;
   destination: string;
@@ -7,7 +5,6 @@ export interface Schema {
   updateImportPath: boolean;
   skipFormat?: boolean;
   newProjectName?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
 }
 
 export interface NormalizedSchema extends Schema {

@@ -43,7 +43,7 @@ describe('pipe generator', () => {
   it('should not generate test file when skipTests=true', async () => {
     // ACT
     await generatePipeWithDefaultOptions(tree, {
-      directory: 'test/src/app/my-pipes/test',
+      path: 'test/src/app/my-pipes/test',
       skipTests: true,
     });
 
@@ -82,7 +82,7 @@ describe('pipe generator', () => {
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        directory: 'test/src/app/test',
+        path: 'test/src/app/test/test',
         standalone: false,
       });
 
@@ -103,7 +103,7 @@ describe('pipe generator', () => {
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        directory: 'test/src/app/my-pipes/test',
+        path: 'test/src/app/my-pipes/test/test',
         standalone: false,
       });
 
@@ -124,7 +124,7 @@ describe('pipe generator', () => {
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        directory: 'test/src/app/my-pipes/test',
+        path: 'test/src/app/my-pipes/test/test',
         export: true,
         standalone: false,
       });
@@ -140,7 +140,7 @@ describe('pipe generator', () => {
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        directory: 'test/src/app/my-pipes/test',
+        path: 'test/src/app/my-pipes/test/test',
         skipImport: true,
         standalone: false,
       });
@@ -173,7 +173,7 @@ async function generatePipeWithDefaultOptions(
 ) {
   await pipeGenerator(tree, {
     name: 'test',
-    directory: 'test/src/app',
+    path: 'test/src/app/test',
     skipFormat: true,
     ...overrides,
   });

@@ -91,8 +91,7 @@ export async function createTestUIApp(name: string): Promise<Tree> {
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name,
-    projectNameAndRootFormat: 'as-provided',
+    directory: name,
   });
 
   return tree;

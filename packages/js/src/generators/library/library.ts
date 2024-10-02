@@ -22,7 +22,11 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { prompt } from 'enquirer';
@@ -690,6 +694,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
+  await ensureProjectName(tree, options, 'library');
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -871,7 +876,6 @@ async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
   });
   options.rootProject = projectRoot === '.';

@@ -20,9 +20,7 @@ describe('Move Angular Project', () => {
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
-    runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
   });
 
   afterAll(() => cleanupProject());
@@ -32,7 +30,7 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nx/angular:move --project ${app1} ${newPath} --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --project ${app1} ${newPath} `
     );
 
     // just check the output
@@ -76,7 +74,7 @@ describe('Move Angular Project', () => {
   `
     );
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -97,17 +95,13 @@ describe('Move Angular Project', () => {
   it('should work for libraries', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
-    runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:lib ${lib1} --no-standalone --no-interactive`);
 
     /**
      * Create a library which imports the module from the other lib
      */
 
-    runCLI(
-      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:lib ${lib2} --no-standalone --no-interactive`);
 
     updateFile(
       `${lib2}/src/lib/${lib2}.module.ts`,
@@ -117,7 +111,7 @@ describe('Move Angular Project', () => {
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1} --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
     );
 
     const newPath = `shared/${lib1}`;

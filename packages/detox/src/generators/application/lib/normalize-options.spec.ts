@@ -19,7 +19,7 @@ describe('Normalize Options', () => {
     });
     const schema: Schema = {
       framework: 'react-native',
-      e2eName: 'apps/my-app-e2e',
+      e2eDirectory: 'apps/my-app-e2e',
       appProject: 'my-app',
       linter: Linter.EsLint,
     };
@@ -28,6 +28,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       framework: 'react-native',
       e2eName: 'my-app-e2e',
+      e2eDirectory: 'apps/my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
@@ -47,7 +48,7 @@ describe('Normalize Options', () => {
     });
     const schema: Schema = {
       framework: 'react-native',
-      e2eName: 'apps/my-app-e2e',
+      e2eDirectory: 'apps/my-app-e2e',
       appProject: 'my-app',
       appDisplayName: 'app display name',
     };
@@ -60,6 +61,7 @@ describe('Normalize Options', () => {
       appFileName: 'my-app',
       appRoot: 'apps/my-app',
       e2eName: 'my-app-e2e',
+      e2eDirectory: 'apps/my-app-e2e',
       appProject: 'my-app',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',

@@ -13,8 +13,6 @@ export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
     export: false,
     standalone: false,
     skipFormat: true,
-    // options are already normalize, use them as is
-    nameAndDirectoryFormat: 'as-provided',
   });
 
   convertDirectiveToScam(tree, options);

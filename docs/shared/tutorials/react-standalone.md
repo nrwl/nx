@@ -5,7 +5,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building a Single React App with Nx
 
-In this tutorial you'll learn how to use React with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications).
+In this tutorial you'll learn how to use React with Nx in a "standalone" (non-monorepo) setup.
 
 What will you learn?
 
@@ -377,7 +377,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```text {% command="npx nx g @nx/react:component --directory=src/app/hello-world --skipTests=true hello-world --dry-run" path="react-app" %}
+```text {% command="npx nx g @nx/react:component src/app/hello-world/hello-world --skipTests=true --dry-run" path="react-app" %}
 NX  Generating @nx/react:component
 
 ✔ Which stylesheet format would you like to use? · css
@@ -473,7 +473,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for these areas using the React library generator:
 
 ```
-npx nx g @nx/react:library products --unitTestRunner=vitest --bundler=none --directory=modules/products
+npx nx g @nx/react:library modules/products --unitTestRunner=vitest --bundler=none
 ```
 
 Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
@@ -509,8 +509,8 @@ export default defineConfig({
 Now that the build system is set up, let's generate the `orders` and `ui` libraries.
 
 ```
-nx g @nx/react:library orders --unitTestRunner=vitest --bundler=none --directory=modules/orders
-nx g @nx/react:library ui --unitTestRunner=vitest --bundler=none --directory=modules/shared/ui
+nx g @nx/react:library modules/orders --unitTestRunner=vitest --bundler=none
+nx g @nx/react:library modules/ui --unitTestRunner=vitest --bundler=none
 ```
 
 Running the above commands should lead to the following directory structure:
@@ -976,7 +976,7 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 ## Migrating to a Monorepo
 
-When you are ready to add another application to the repo, you'll probably want to move `react-app` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+When you are ready to add another application to the repo, you'll probably want to move `react-app` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-monorepo).
 
 You can also go through the full [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 

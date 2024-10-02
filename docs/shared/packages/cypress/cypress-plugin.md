@@ -119,7 +119,7 @@ If you use the `setupNodeEvents` function in your Cypress configuration, make su
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
 ```shell
-nx g @nx/web:app frontend
+nx g @nx/web:app apps/frontend
 ```
 
 ### Configure Cypress for an existing project

@@ -30,13 +30,13 @@ describe('packaging libs', () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(
-      `generate @nx/js:lib ${esbuildLib} --directory=libs/${esbuildLib} --bundler=esbuild --no-interactive`
+      `generate @nx/js:lib libs/${esbuildLib} --bundler=esbuild --no-interactive`
     );
     runCLI(
-      `generate @nx/js:lib ${viteLib} --directory=libs/${viteLib} --bundler=vite --no-interactive`
+      `generate @nx/js:lib libs/${viteLib} --bundler=vite --no-interactive`
     );
     runCLI(
-      `generate @nx/js:lib ${rollupLib} --directory=libs/${rollupLib} --bundler=rollup --no-interactive`
+      `generate @nx/js:lib libs/${rollupLib} --bundler=rollup --no-interactive`
     );
     updateFile(`libs/${rollupLib}/src/index.ts`, (content) => {
       // Test that default functions work in ESM (Node).
@@ -139,17 +139,15 @@ describe('packaging libs', () => {
     const tscEsmLib = uniq('tscesmlib');
     const swcEsmLib = uniq('swcesmlib');
 
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
     runCLI(
-      `generate @nx/js:lib ${tscLib} --directory=libs/${tscLib} --bundler=tsc --no-interactive`
+      `generate @nx/js:lib libs/${swcLib}  --bundler=swc --no-interactive`
     );
     runCLI(
-      `generate @nx/js:lib ${swcLib} --directory=libs/${swcLib}  --bundler=swc --no-interactive`
+      `generate @nx/js:lib libs/${tscEsmLib} --bundler=tsc --no-interactive`
     );
     runCLI(
-      `generate @nx/js:lib ${tscEsmLib} --directory=libs/${tscEsmLib} --bundler=tsc --no-interactive`
-    );
-    runCLI(
-      `generate @nx/js:lib ${swcEsmLib} --directory=libs/${swcEsmLib} --bundler=swc --no-interactive`
+      `generate @nx/js:lib libs/${swcEsmLib} --bundler=swc --no-interactive`
     );
 
     // Change module format to ESM

@@ -21,7 +21,6 @@ export async function pageGenerator(host: Tree, schema: Schema) {
   const componentTask = await reactComponentGenerator(host, {
     ...options,
     isNextPage: true,
-    nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
     export: false,
     classComponent: false,
     routing: false,
@@ -47,7 +46,7 @@ async function normalizeOptions(host: Tree, options: Schema) {
   const { project: determinedProjectName } =
     await determineArtifactNameAndDirectoryOptions(host, {
       name: options.name,
-      directory: options.directory,
+      path: options.path,
     });
 
   const project = readProjectConfiguration(host, determinedProjectName);
@@ -57,20 +56,15 @@ async function normalizeOptions(host: Tree, options: Schema) {
     host.exists(`${project.root}/app`) ||
     host.exists(`${project.root}/src/app`);
 
-  const {
-    project: projectName,
-    fileName,
-    directory,
-  } = await determineArtifactNameAndDirectoryOptions(host, {
-    name: options.name,
-    fileName: isAppRouter ? 'page' : 'index',
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    fileExtension: 'tsx',
-  });
+  const { project: projectName, fileName } =
+    await determineArtifactNameAndDirectoryOptions(host, {
+      name: options.name,
+      fileName: isAppRouter ? 'page' : 'index',
+      path: options.path,
+      fileExtension: 'tsx',
+    });
   return {
     ...options,
-    directory,
     fileName,
     projectName,
   };

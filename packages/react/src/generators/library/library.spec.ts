@@ -23,7 +23,7 @@ describe('lib', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   let defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: true,
     skipTsConfig: false,
@@ -460,17 +460,15 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'my-app',
+        directory: 'my-app',
         routing: true,
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -489,16 +487,14 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'my-app',
+        directory: 'my-app',
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -732,7 +728,7 @@ module.exports = withNx(
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'my-lib-1',
+        directory: 'my-lib-1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -740,7 +736,7 @@ module.exports = withNx(
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'my-lib-2',
+          directory: 'my-lib-2',
           publishable: true,
           importPath: '@myorg/lib',
         });

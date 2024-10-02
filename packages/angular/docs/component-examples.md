@@ -6,7 +6,7 @@
 Create a component named `my-component`:
 
 ```bash
-nx g @nx/angular:component my-component
+nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component
 ```
 
 {% /tab %}
@@ -16,7 +16,7 @@ nx g @nx/angular:component my-component
 Create a component named `my-component` with inline styles and inline template:
 
 ```bash
-nx g @nx/angular:component my-component --inlineStyle --inlineTemplate
+nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --inlineStyle --inlineTemplate
 ```
 
 {% /tab %}
@@ -26,7 +26,7 @@ nx g @nx/angular:component my-component --inlineStyle --inlineTemplate
 Create a component named `my-component` with OnPush Change Detection Strategy:
 
 ```bash
-nx g @nx/angular:component my-component --changeDetection=OnPush
+nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --changeDetection=OnPush
 ```
 
 {% /tab %}

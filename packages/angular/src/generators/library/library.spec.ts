@@ -37,7 +37,7 @@ describe('lib', () => {
 
   async function runLibraryGeneratorWithOpts(opts: Partial<Schema> = {}) {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       publishable: false,
       buildable: false,
       linter: Linter.EsLint,
@@ -62,7 +62,10 @@ describe('lib', () => {
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
     // ACT & ASSERT
     await expect(
-      runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
+      runLibraryGeneratorWithOpts({
+        directory: 'mylib/shared/',
+        name: 'my-lib',
+      })
     ).resolves.not.toThrow();
   });
 
@@ -421,7 +424,7 @@ describe('lib', () => {
     it('should generate files', async () => {
       // ACT
       await runLibraryGeneratorWithOpts();
-      await runLibraryGeneratorWithOpts({ name: 'my-lib2' });
+      await runLibraryGeneratorWithOpts({ directory: 'my-lib2' });
 
       // ASSERT
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
@@ -1128,7 +1131,7 @@ describe('lib', () => {
       // ACT & ASSERT
       await expect(
         runLibraryGeneratorWithOpts({
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         })
@@ -1594,7 +1597,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         skipFormat: true,
       });
@@ -1619,7 +1622,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         skipFormat: true,
       });
@@ -1645,7 +1648,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as direct child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         standalone: true,
         skipFormat: true,
@@ -1673,7 +1676,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as a lazy child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         standalone: true,
         skipFormat: true,
@@ -1707,7 +1710,7 @@ describe('lib', () => {
 
       // ACT
       await runLibraryGeneratorWithOpts({
-        name: 'second',
+        directory: 'second',
         standalone: true,
         routing: true,
         parent: 'my-lib/src/lib/lib.routes.ts',
@@ -1728,7 +1731,7 @@ describe('lib', () => {
 
       // ACT
       await runLibraryGeneratorWithOpts({
-        name: 'second',
+        directory: 'second',
         standalone: true,
         routing: true,
         lazy: true,

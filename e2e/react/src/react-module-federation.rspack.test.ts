@@ -40,7 +40,7 @@ describe('React Rspack Module Federation', () => {
         const remote3 = uniq('remote3');
 
         runCLI(
-          `generate @nx/react:host ${shell} --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
+          `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
         );
 
         checkFilesExist(
@@ -132,7 +132,7 @@ describe('React Rspack Module Federation', () => {
       const remote3 = uniq('remote3');
 
       runCLI(
-        `generate @nx/react:host ${shell} --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
       );
 
       checkFilesExist(`apps/${shell}/module-federation.config.ts`);
@@ -198,11 +198,11 @@ describe('React Rspack Module Federation', () => {
       const remote2 = uniq('remote2');
 
       runCLI(
-        `generate @nx/react:host ${shell} --directory=apps/${shell} --remotes=${remote1} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
       );
 
       runCLI(
-        `generate @nx/react:remote ${remote2} --directory=apps/${remote2} --host=${shell} --bundler=rspack --style=css --no-interactive --skipFormat`
+        `generate @nx/react:remote apps/${remote2} --name=${remote2} --host=${shell} --bundler=rspack --style=css --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -267,11 +267,11 @@ describe('React Rspack Module Federation', () => {
       const remote1 = uniq('remote1');
       const remote2 = uniq('remote2');
       runCLI(
-        `generate @nx/react:host ${shell} --directory=apps/${shell} --remotes=${remote1} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
+        `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=rspack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
       );
 
       runCLI(
-        `generate @nx/react:remote ${remote2} --directory=apps/${remote2} --host=${shell} --bundler=webpack --style=css --no-interactive --skipFormat`
+        `generate @nx/react:remote apps/${remote2} --name=${remote2} --host=${shell} --bundler=webpack --style=css --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -327,7 +327,7 @@ describe('React Rspack Module Federation', () => {
         const remote3 = uniq('remote3');
 
         await runCLIAsync(
-          `generate @nx/react:host ${shell} --ssr --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --style=css --no-interactive --skipFormat`
+          `generate @nx/react:host apps/${shell} --ssr --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --style=css --no-interactive --skipFormat`
         );
 
         expect(readPort(shell)).toEqual(4200);
@@ -358,7 +358,7 @@ describe('React Rspack Module Federation', () => {
         const remote3 = uniq('remote3');
 
         await runCLIAsync(
-          `generate @nx/react:host ${shell} --ssr --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
+          `generate @nx/react:host apps/${shell} --ssr --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
         );
 
         const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
@@ -375,7 +375,7 @@ describe('React Rspack Module Federation', () => {
         const remote3 = uniq('remote3');
 
         await runCLIAsync(
-          `generate @nx/react:host ${shell} --ssr --directory=apps/${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
+          `generate @nx/react:host apps/${shell} --ssr --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=rspack --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
         );
 
         const capitalize = (s: string) =>
@@ -418,11 +418,9 @@ describe('React Rspack Module Federation', () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
 
+      runCLI(`generate @nx/react:host ${shell} --no-interactive --skipFormat`);
       runCLI(
-        `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
-      );
-      runCLI(
-        `generate @nx/react:remote ${remote} --host=${shell} --bundler=rspack --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:remote ${remote} --host=${shell} --bundler=rspack --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -495,16 +493,14 @@ describe('React Rspack Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
-      runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
-      );
+      runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --bundler=rspack --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --remoteDirectory=${remote} --bundler=rspack --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -596,16 +592,14 @@ describe('React Rspack Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
-      runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
-      );
+      runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --bundler=rspack --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --bundler=rspack --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -704,7 +698,7 @@ describe('React Rspack Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
       );
 
       // Update remote to be loaded via script
@@ -838,11 +832,11 @@ describe('React Rspack Module Federation', () => {
       const lib = uniq('lib');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -986,7 +980,7 @@ describe('React Rspack Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -1122,7 +1116,7 @@ describe('React Rspack Module Federation', () => {
       const remotePort = 4205;
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --dynamic=true --no-interactive --skipFormat`
       );
 
       updateJson(`${remote}/project.json`, (project) => {

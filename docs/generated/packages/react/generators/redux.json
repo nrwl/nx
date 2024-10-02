@@ -9,23 +9,17 @@
     "description": "Create a Redux state slice for a React project.",
     "type": "object",
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path where the Redux slice will be generated.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Where should the Redux slice be generated?",
+        "x-priority": "important"
+      },
       "name": {
         "type": "string",
         "description": "Redux slice name.",
-        "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"
-      },
-      "directory": {
-        "type": "string",
-        "alias": "dir",
-        "default": "",
-        "description": "The directory at which to create the Redux files. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       },
       "appProject": {
         "type": "string",
@@ -38,7 +32,7 @@
         "default": false
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "description": "Create a Redux slice for a project.",

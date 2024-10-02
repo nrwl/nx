@@ -25,11 +25,10 @@ describe('app', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: true,
-    name: 'my-app',
+    directory: 'my-app',
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   };
   let mockedInstalledCypressVersion: jest.Mock<
@@ -509,7 +508,7 @@ describe('app', () => {
   });
 
   it('should setup jest with tsx support', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+    await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
     expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
@@ -517,7 +516,7 @@ describe('app', () => {
   });
 
   it('should setup jest with babel-jest support', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+    await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
     expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
       "['babel-jest', { presets: ['@nx/react/babel'] }]"
@@ -525,7 +524,7 @@ describe('app', () => {
   });
 
   it('should setup jest without serializers', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+    await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
     expect(appTree.read('my-app/jest.config.ts').toString()).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
@@ -535,7 +534,7 @@ describe('app', () => {
   it('should setup webpack', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'webpack',
     });
 
@@ -545,7 +544,7 @@ describe('app', () => {
   it('should setup vite if bundler is vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
 
@@ -556,7 +555,7 @@ describe('app', () => {
   it('should setup vite if bundler is vite (--js)', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
       js: true,
     });
@@ -568,7 +567,7 @@ describe('app', () => {
   it('should setup the nx vite dev server builder if bundler is vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
     });
 
@@ -576,7 +575,7 @@ describe('app', () => {
   });
 
   it('should setup the eslint builder', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+    await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
     expect(appTree.exists('my-app/.eslintrc.json')).toBeTruthy();
   });
@@ -957,7 +956,7 @@ describe('app', () => {
     it('should create default application without Nx welcome component', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        name: 'plain',
+        directory: 'plain',
         minimal: true,
       });
       expect(appTree.exists('plain/src/app/nx-welcome.tsx')).toBeFalsy();
@@ -1018,12 +1017,12 @@ describe('app', () => {
     });
   });
 
-  describe('--root-project', () => {
+  describe('--directory="." (--root-project)', () => {
     it('should create files at the root', async () => {
       await applicationGenerator(appTree, {
         ...schema,
         name: 'my-app2',
-        rootProject: true,
+        directory: '.',
         bundler: 'vite',
       });
       expect(appTree.read('/src/main.tsx')).toBeDefined();
@@ -1038,7 +1037,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         ...schema,
         name: 'my-app3',
-        rootProject: true,
+        directory: '.',
         e2eTestRunner: 'playwright',
       });
 
@@ -1084,7 +1083,7 @@ describe('app', () => {
 
       await applicationGenerator(viteAppTree, {
         ...schema,
-        name: 'insourceTests',
+        directory: 'insourceTests',
         bundler: 'vite',
         inSourceTests: true,
       });
@@ -1106,7 +1105,7 @@ describe('app', () => {
           style,
           bundler: 'vite',
           unitTestRunner: 'vitest',
-          name: style,
+          directory: style,
         });
 
         expect(readJson(viteAppTree, 'package.json')).toMatchObject({
@@ -1127,7 +1126,7 @@ describe('app', () => {
 
     // ACT
     await applicationGenerator(tree, {
-      name: 'myapp',
+      directory: 'myapp',
       addPlugin: false,
       linter: Linter.None,
       style: 'none',
@@ -1155,7 +1154,7 @@ describe('app', () => {
 
     // ACT
     await applicationGenerator(tree, {
-      name: 'myapp',
+      directory: 'myapp',
       addPlugin: true,
       linter: Linter.None,
       style: 'none',
@@ -1184,7 +1183,7 @@ describe('app', () => {
 
     // ACT
     await applicationGenerator(tree, {
-      name: 'myapp',
+      directory: 'myapp',
       addPlugin: true,
       linter: Linter.None,
       style: 'none',
@@ -1220,7 +1219,7 @@ describe('app', () => {
 
     // ACT
     await applicationGenerator(tree, {
-      name: 'myapp',
+      directory: 'myapp',
       addPlugin: true,
       linter: Linter.None,
       style: 'none',

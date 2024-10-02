@@ -6,6 +6,7 @@ import { PresetGeneratorSchema } from './schema';
 export default async function (tree: Tree, options: PresetGeneratorSchema) {
   const appTask = applicationGenerator(tree, {
     ...options,
+    directory: '.',
     // Since `--style` is not passed down to custom preset, we're using individual flags for now.
     style: options.sass
       ? 'scss'

@@ -1,12 +1,10 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
-  name: string;
+  directory: string;
+  name?: string;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   unitTestRunner?: 'jest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
   linter?: Linter | LinterType;

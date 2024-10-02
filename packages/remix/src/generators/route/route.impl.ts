@@ -24,8 +24,7 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    name: options.path.replace(/^\//, '').replace(/\/$/, ''),
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    path: options.path.replace(/^\//, '').replace(/\/$/, ''),
   });
 
   const project = readProjectConfiguration(tree, projectName);
@@ -99,7 +98,6 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
   if (options.style === 'css') {
     await StyleGenerator(tree, {
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 

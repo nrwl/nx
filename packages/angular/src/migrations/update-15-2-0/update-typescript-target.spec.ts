@@ -21,12 +21,12 @@ describe('Migration to update target and add useDefineForClassFields', () => {
       .spyOn(devkit, 'formatFiles')
       .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
-      name: 'test',
+      directory: 'test',
       bundler: 'webpack',
       skipFormat: true,
     });
     await generateTestApplication(tree, {
-      name: 'karma',
+      directory: 'karma',
       unitTestRunner: UnitTestRunner.None,
       bundler: 'webpack',
       skipFormat: true,

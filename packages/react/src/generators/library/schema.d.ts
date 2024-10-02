@@ -1,4 +1,3 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings/style';
 
@@ -8,14 +7,13 @@ export interface Schema {
   bundler?: 'none' | 'rollup' | 'vite';
   compiler?: 'babel' | 'swc';
   component?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
   globalCss?: boolean;
   importPath?: string;
   inSourceTests?: boolean;
   js?: boolean;
   linter: Linter | LinterType;
-  name: string;
+  name?: string;
   publishable?: boolean;
   routing?: boolean;
   setParserOptionsProject?: boolean;

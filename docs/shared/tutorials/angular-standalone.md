@@ -1,6 +1,6 @@
 # Building Angular Apps with the Nx Standalone Projects Setup
 
-In this tutorial you'll learn how to use Angular with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications). Not to be confused with the "Angular Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level. This setup is very similar to what the Angular CLI gives you.
+In this tutorial you'll learn how to use Angular with Nx in a "standalone" (non-monorepo) setup. Not to be confused with the "Angular Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level. This setup is very similar to what the Angular CLI gives you.
 
 What will you learn?
 
@@ -517,7 +517,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/angular:component hello-world --directory=src/app/hello-world --standalone --dry-run" path="myngapp" %}
+```{% command="npx nx g @nx/angular:component src/apps/hello-world/hello-world --standalone --dry-run" path="myngapp" %}
 NX  Generating @nx/angular:component
 
 CREATE src/app/hello-world/hello-world.component.css
@@ -625,9 +625,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
 ```
-nx g @nx/angular:library products --directory=modules/products --standalone
-nx g @nx/angular:library orders --directory=modules/orders --standalone
-nx g @nx/angular:library shared-ui --directory=modules/shared/ui --standalone
+nx g @nx/angular:library modules/products --standalone
+nx g @nx/angular:library modules/orders --standalone
+nx g @nx/angular:library modules/shared/ui --standalone
 ```
 
 Note how we use the `--directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like, even keep all of them at the root-level.
@@ -1038,7 +1038,7 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 ## Migrating to a Monorepo
 
-When you are ready to add another application to the repo, you'll probably want to move `myngapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+When you are ready to add another application to the repo, you'll probably want to move `myngapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-monorepo).
 
 You can also go through the full [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 

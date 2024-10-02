@@ -26,9 +26,7 @@ describe('Remix E2E Tests', () => {
 
     it('should not cause peer dependency conflicts', async () => {
       const plugin = uniq('remix');
-      runCLI(
-        `generate @nx/remix:app ${plugin} --projectNameAndRootFormat=as-provided`
-      );
+      runCLI(`generate @nx/remix:app ${plugin}`);
 
       await runCommandAsync('npm install');
     }, 120000);
@@ -55,10 +53,10 @@ describe('Remix E2E Tests', () => {
     }, 120000);
 
     describe('--directory', () => {
-      it('should create src in the specified directory --projectNameAndRootFormat=as-provided', async () => {
+      it('should create src in the specified directory', async () => {
         const plugin = uniq('remix');
         runCLI(
-          `generate @nx/remix:app ${plugin} --directory=subdir --projectNameAndRootFormat=as-provided --rootProject=false --no-interactive`
+          `generate @nx/remix:app --name=${plugin} --directory=subdir --rootProject=false --no-interactive`
         );
 
         const result = runCLI(`build ${plugin}`);
@@ -71,7 +69,7 @@ describe('Remix E2E Tests', () => {
       it('should add tags to the project', async () => {
         const plugin = uniq('remix');
         runCLI(
-          `generate @nx/remix:app --directory=apps/${plugin} ${plugin} --tags e2etag,e2ePackage`
+          `generate @nx/remix:app apps/${plugin} --tags e2etag,e2ePackage`
         );
         const project = readJson(`apps/${plugin}/project.json`);
         expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
@@ -120,7 +118,7 @@ describe('Remix E2E Tests', () => {
 
       beforeAll(async () => {
         runCLI(
-          `generate @nx/remix:app ${plugin} --directory=apps/${plugin} --tags e2etag,e2ePackage`
+          `generate @nx/remix:app apps/${plugin} --tags e2etag,e2ePackage`
         );
       }, 120000);
 

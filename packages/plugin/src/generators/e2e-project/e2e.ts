@@ -46,33 +46,18 @@ async function normalizeOptions(
   options.addPlugin ??= addPlugin;
 
   let projectRoot: string;
-  if (options.projectNameAndRootFormat === 'as-provided') {
-    const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
-      host,
-      {
-        name: projectName,
-        projectType: 'application',
-        directory:
-          options.rootProject || !options.projectDirectory
-            ? projectName
-            : `${options.projectDirectory}-e2e`,
-        projectNameAndRootFormat: `as-provided`,
-      }
-    );
-    projectRoot = projectNameAndRootOptions.projectRoot;
-  } else {
-    const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-      options.projectDirectory
-    );
-    const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
-    const appsDir = layoutDirectory ?? defaultAppsDir;
-
-    projectRoot = options.rootProject
-      ? projectName
-      : projectDirectory
-      ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
-      : joinPathFragments(appsDir, projectName);
-  }
+  const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
+    host,
+    {
+      name: projectName,
+      projectType: 'application',
+      directory:
+        options.rootProject || !options.projectDirectory
+          ? projectName
+          : `${options.projectDirectory}-e2e`,
+    }
+  );
+  projectRoot = projectNameAndRootOptions.projectRoot;
 
   const pluginPropertyName = names(options.pluginName).propertyName;
 

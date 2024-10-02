@@ -531,7 +531,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/nx-api/rspac?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/nx-api/rspack?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with RSpack"
                   className="h-full w-full p-2 sm:p-4"

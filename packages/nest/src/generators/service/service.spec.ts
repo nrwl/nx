@@ -5,19 +5,21 @@ import { serviceGenerator } from './service';
 
 describe('service generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: ServiceGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(serviceGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      serviceGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrowError();
   });
 });

@@ -49,7 +49,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/nuxt:app myapp --directory=apps/nested/myapp
+nx g @nx/nuxt:app =apps/nested/myapp
 ```
 
 {% /tab %}
@@ -57,7 +57,7 @@ nx g @nx/nuxt:app myapp --directory=apps/nested/myapp
 {% tab label="Create app with vitest configured" %}
 
 ```shell
-nx g @nx/nuxt:app myapp --directory=apps/nested/myapp --unitTestRunner=vitest
+nx g @nx/nuxt:app apps/nested/myapp --unitTestRunner=vitest
 ```
 
 {% /tab %}
@@ -65,7 +65,7 @@ nx g @nx/nuxt:app myapp --directory=apps/nested/myapp --unitTestRunner=vitest
 {% tab label="Use plain JavaScript (not TypeScript)" %}
 
 ```shell
-nx g @nx/nuxt:app myapp --js
+nx g @nx/nuxt:app apps/myapp --js
 ```
 
 {% /tab %}
@@ -79,7 +79,7 @@ You can use the the [`@nx/vue:component` generator](/nx-api/vue/generators/compo
 {% tab label="New page" %}
 
 ```shell
-nx g @nx/nuxt:component --directory=my-app/src/pages --name=my-page
+nx g @nx/nuxt:component my-app/src/pages/my-page
 ```
 
 {% /tab %}
@@ -87,7 +87,7 @@ nx g @nx/nuxt:component --directory=my-app/src/pages --name=my-page
 {% tab label="New component" %}
 
 ```shell
-nx g @nx/nuxt:component --directory=my-app/src/components/my-cmp --name=my-cmp
+nx g @nx/nuxt:component my-app/src/components/my-cmp
 ```
 
 {% /tab %}

@@ -2,7 +2,6 @@ import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-
 
 export interface RemixRouteSchema {
   path: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   action: boolean;
   loader: boolean;
   skipChecks: boolean;

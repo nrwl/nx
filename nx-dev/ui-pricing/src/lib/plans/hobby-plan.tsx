@@ -84,7 +84,7 @@ export function HobbyPlan({
           />
           <p>
             <Link
-              href="/ci/features/agents"
+              href="/ci/features/distribute-task-execution"
               title="Learn more about Nx Agents"
               prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"

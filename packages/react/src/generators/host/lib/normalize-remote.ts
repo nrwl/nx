@@ -1,4 +1,4 @@
-import { Tree, joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema } from '../schema';
 
@@ -13,7 +13,6 @@ export async function normalizeRemoteName(
       name: remote,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
     }
   );
 

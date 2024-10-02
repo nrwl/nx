@@ -5,19 +5,21 @@ import { filterGenerator } from './filter';
 
 describe('filter generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: FilterGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(filterGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      filterGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

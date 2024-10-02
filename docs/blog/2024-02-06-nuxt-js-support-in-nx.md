@@ -134,7 +134,7 @@ This modular structure allows teams to work on different aspects of the applicat
 For instance, if you want to create a new Vue UI library, you can use the following command:
 
 ```shell
-nx generate @nx/vue:lib my-shared-ui
+nx generate @nx/vue:lib libs/my-shared-ui
 ```
 
 This command creates a my-shared-ui library within your workspace, which can then be used across your Nuxt app and potentially other applications within the same workspace.

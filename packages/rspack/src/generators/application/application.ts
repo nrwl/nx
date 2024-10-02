@@ -18,7 +18,7 @@ export default async function (
   });
   tasks.push(initTask);
 
-  const options = normalizeOptions(tree, _options);
+  const options = await normalizeOptions(tree, _options);
 
   options.style ??= 'css';
 

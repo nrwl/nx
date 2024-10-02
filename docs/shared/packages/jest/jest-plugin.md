@@ -133,7 +133,7 @@ The `@nx/jest/plugin` is configured in the `plugins` array in `nx.json`.
 By default, Nx will use Jest when creating applications and libraries.
 
 ```shell
-nx g @nx/web:app frontend
+nx g @nx/web:app apps/frontend
 ```
 
 ### Add Jest to a project

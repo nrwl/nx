@@ -11,7 +11,11 @@ For this example, we'll create a new migration generator that updates repos to u
 ### 1. Generate a migration
 
 ```shell
-nx generate @nx/plugin:migration 'Change Executor Name' --packageVersion=2.0.1 --project=pluginName --description='Changes the executor name from oldExecutorName to newExecutorName'
+nx generate @nx/plugin:migration libs/pluginName/src/migrations/change-executor-name \
+ --name='Change Executor Name' \
+ --packageVersion=2.0.1 \
+ --project=pluginName \
+ --description='Changes the executor name from oldExecutorName to newExecutorName'
 ```
 
 This command will update the following files:

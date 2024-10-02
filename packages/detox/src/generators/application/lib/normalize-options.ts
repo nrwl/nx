@@ -1,5 +1,8 @@
 import { names, readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -20,7 +23,6 @@ export async function normalizeOptions(
       name: options.e2eName,
       projectType: 'application',
       directory: options.e2eDirectory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
     });
   const nxJson = readNxJson(host);
   const addPlugin =

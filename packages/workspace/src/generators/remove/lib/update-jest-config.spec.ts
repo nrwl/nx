@@ -99,7 +99,7 @@ describe('updateRootJestConfig', () => {
     tree.delete('jest.config.ts');
 
     await libraryGenerator(tree, {
-      name: 'test',
+      directory: 'test',
       bundler: 'vite',
       unitTestRunner: 'vitest',
     });

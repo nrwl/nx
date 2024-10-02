@@ -12,7 +12,7 @@ describe('Create Files', () => {
 
   it('should generate files', () => {
     createFiles(tree, {
-      e2eName: 'my-app-e2e',
+      e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',

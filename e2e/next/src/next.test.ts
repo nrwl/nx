@@ -37,9 +37,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    runCLI(
-      `generate @nx/next:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/next:app ${appName} --no-interactive`);
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
@@ -54,9 +52,7 @@ describe('Next.js Applications', () => {
       `Successfully ran target test for project ${appName}`
     );
 
-    runCLI(
-      `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/next:lib ${libName} --buildable --no-interactive`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -189,9 +185,7 @@ describe('Next.js Applications', () => {
   it('should run e2e-ci test', async () => {
     const appName = uniq('app');
 
-    runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
 
     if (runE2ETests('cypress')) {
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {

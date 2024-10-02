@@ -35,7 +35,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 So, let’s use React for the Storybook Composition host library:
 
 ```shell
-nx g @nx/react:lib storybook-host --directory=libs/storybook-host --bundler=none --unitTestRunner=none --projectNameAndRootFormat=as-provided
+nx g @nx/react:lib libs/storybook-host --bundler=none --unitTestRunner=none
 ```
 
 Now that your library is generated, you can write your intro in the generated component (you can also do this later, it does not matter).

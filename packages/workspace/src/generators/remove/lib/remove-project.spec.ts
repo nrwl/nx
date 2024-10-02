@@ -15,7 +15,7 @@ describe('moveProject', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
 
     schema = {

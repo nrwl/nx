@@ -5,19 +5,21 @@ import { guardGenerator } from './guard';
 
 describe('guard generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: GuardGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(guardGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      guardGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

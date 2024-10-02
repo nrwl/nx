@@ -70,7 +70,7 @@ For a full tutorial experience, follow the [Angular Standalone Tutorial](/gettin
 It's straightforward to generate an Angular application:
 
 ```shell
-nx g @nx/angular:app appName
+nx g @nx/angular:app apps/appName
 ```
 
 By default, the application will be generated with:
@@ -94,7 +94,7 @@ nx e2e appName
 Generating an Angular library is very similar to generating an application:
 
 ```shell
-nx g @nx/angular:lib libName
+nx g @nx/angular:lib libs/libName
 ```
 
 By default, the library will be generated with:
@@ -122,7 +122,7 @@ to `@schematics/angular`. So, even though there is no `@nx/angular:service` gene
 successfully create a service:
 
 ```shell
-nx g @nx/angular:service my-service
+nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 ```
 
 ## More Documentation

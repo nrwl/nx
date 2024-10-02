@@ -54,10 +54,8 @@ describe('NxPlugin e2e-project Generator', () => {
       addPlugin: true,
     });
 
-    expect(tree.exists('apps/my-plugin-e2e/tsconfig.json')).toBeTruthy();
-    expect(
-      tree.exists('apps/my-plugin-e2e/src/my-plugin.spec.ts')
-    ).toBeTruthy();
+    expect(tree.exists('my-plugin-e2e/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('my-plugin-e2e/src/my-plugin.spec.ts')).toBeTruthy();
   });
 
   it('should extend from root tsconfig.base.json', async () => {
@@ -68,8 +66,8 @@ describe('NxPlugin e2e-project Generator', () => {
       addPlugin: true,
     });
 
-    const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
-    expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
+    const tsConfig = readJson(tree, 'my-plugin-e2e/tsconfig.json');
+    expect(tsConfig.extends).toEqual('../tsconfig.base.json');
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -82,8 +80,8 @@ describe('NxPlugin e2e-project Generator', () => {
       addPlugin: true,
     });
 
-    const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
-    expect(tsConfig.extends).toEqual('../../tsconfig.json');
+    const tsConfig = readJson(tree, 'my-plugin-e2e/tsconfig.json');
+    expect(tsConfig.extends).toEqual('../tsconfig.json');
   });
 
   it('should set project root with the directory option', async () => {
@@ -96,7 +94,7 @@ describe('NxPlugin e2e-project Generator', () => {
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
-    expect(project.root).toBe('apps/namespace/my-plugin-e2e');
+    expect(project.root).toBe('namespace/my-plugin-e2e');
   });
 
   it('should update the implicit dependencies', async () => {
@@ -125,7 +123,7 @@ describe('NxPlugin e2e-project Generator', () => {
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project).toBeTruthy();
-    expect(project.root).toEqual('apps/my-plugin-e2e');
+    expect(project.root).toEqual('my-plugin-e2e');
     expect(project.targets.e2e).toBeTruthy();
     expect(project.targets.e2e).toMatchInlineSnapshot(`
       {
@@ -134,7 +132,7 @@ describe('NxPlugin e2e-project Generator', () => {
         ],
         "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "apps/my-plugin-e2e/jest.config.ts",
+          "jestConfig": "my-plugin-e2e/jest.config.ts",
           "runInBand": true,
         },
         "outputs": [
@@ -156,12 +154,12 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(project.targets.e2e).toMatchObject({
       options: expect.objectContaining({
-        jestConfig: 'apps/my-plugin-e2e/jest.config.ts',
+        jestConfig: 'my-plugin-e2e/jest.config.ts',
       }),
     });
 
-    expect(tree.exists('apps/my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
-    expect(tree.exists('apps/my-plugin-e2e/jest.config.ts')).toBeTruthy();
+    expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
+    expect(tree.exists('my-plugin-e2e/jest.config.ts')).toBeTruthy();
   });
 
   it('should setup the eslint builder', async () => {
@@ -173,7 +171,7 @@ describe('NxPlugin e2e-project Generator', () => {
     });
 
     expect(
-      tree.read('apps/my-plugin-e2e/.eslintrc.json', 'utf-8')
+      tree.read('my-plugin-e2e/.eslintrc.json', 'utf-8')
     ).toMatchSnapshot();
   });
 });

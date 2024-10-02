@@ -15,8 +15,7 @@ describe('lib', () => {
   describe('not nested', () => {
     it('should update project configuration', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
         addPlugin: true,
       });
 
@@ -36,9 +35,8 @@ describe('lib', () => {
 
     it('should include a controller', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         controller: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`my-lib/src/lib/my-lib.controller.ts`)).toBeTruthy();
@@ -46,9 +44,8 @@ describe('lib', () => {
 
     it('should include a service', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         service: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`my-lib/src/lib/my-lib.service.ts`)).toBeTruthy();
@@ -56,9 +53,8 @@ describe('lib', () => {
 
     it('should add the @Global decorator', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         global: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
@@ -68,9 +64,8 @@ describe('lib', () => {
 
     it('should remove the default file from @nx/node:lib', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         global: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
@@ -79,10 +74,9 @@ describe('lib', () => {
 
     it('should provide the controller and service', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         controller: true,
         service: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
@@ -96,9 +90,8 @@ describe('lib', () => {
 
     it('should update tags', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         tags: 'one,two',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const projects = Object.fromEntries(devkit.getProjects(tree));
@@ -111,8 +104,7 @@ describe('lib', () => {
 
     it('should update root tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
@@ -123,8 +115,7 @@ describe('lib', () => {
 
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.json`);
@@ -133,8 +124,7 @@ describe('lib', () => {
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.spec.json`);
@@ -143,8 +133,7 @@ describe('lib', () => {
 
     it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
@@ -158,8 +147,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
@@ -172,10 +160,8 @@ describe('lib', () => {
   describe('nested', () => {
     it('should update tags', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
         directory: 'my-dir/my-lib',
         tags: 'one,two',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const projects = Object.fromEntries(devkit.getProjects(tree));
@@ -188,9 +174,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
         directory: 'my-dir/my-lib',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
@@ -200,9 +184,7 @@ describe('lib', () => {
 
     it('should update tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
         directory: 'my-dir/my-lib',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
@@ -214,9 +196,7 @@ describe('lib', () => {
 
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
         directory: 'my-dir/my-lib',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(readJson(tree, `my-dir/my-lib/tsconfig.json`)).toMatchSnapshot();
@@ -226,9 +206,8 @@ describe('lib', () => {
   describe('--strict', () => {
     it('should update the projects tsconfig with strict true', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         strict: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsConfig = readJson(tree, `/my-lib/tsconfig.lib.json`);
@@ -245,9 +224,8 @@ describe('lib', () => {
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`my-lib/tsconfig.spec.json`)).toBeFalsy();
@@ -262,10 +240,9 @@ describe('lib', () => {
       const importPath = `@proj/myLib`;
 
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         publishable: true,
         importPath,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const packageJson = readJson(tree, `my-lib/package.json`);
@@ -276,8 +253,7 @@ describe('lib', () => {
   describe('compiler options target', () => {
     it('should set target to es6 in tsconfig.lib.json by default', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
@@ -286,9 +262,8 @@ describe('lib', () => {
 
     it('should set target to es2021 in tsconfig.lib.json', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         target: 'es2021',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsconfigJson = readJson(tree, `my-lib/tsconfig.lib.json`);
@@ -301,8 +276,7 @@ describe('lib', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
@@ -312,9 +286,8 @@ describe('lib', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         skipFormat: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
@@ -324,8 +297,7 @@ describe('lib', () => {
   describe('--testEnvironment', () => {
     it('should set target jest testEnvironment to node by default', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-lib',
       });
 
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8')).toMatchSnapshot();
@@ -333,9 +305,8 @@ describe('lib', () => {
 
     it('should set target jest testEnvironment to jsdom', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         testEnvironment: 'jsdom',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8')).toMatchSnapshot();
@@ -345,12 +316,10 @@ describe('lib', () => {
   describe('--simpleName', () => {
     it('should generate a library with a simple name', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
         simpleName: true,
         directory: 'api/my-lib',
         service: true,
         controller: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const indexFile = tree.read('api/my-lib/src/index.ts', 'utf-8');

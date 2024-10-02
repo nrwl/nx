@@ -5,19 +5,21 @@ import { gatewayGenerator } from './gateway';
 
 describe('gateway generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: GatewayGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(gatewayGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      gatewayGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

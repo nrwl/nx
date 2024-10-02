@@ -31,7 +31,6 @@ export async function remixLibraryGeneratorInternal(
     tags: options.tags,
     importPath: options.importPath,
     directory: options.projectRoot,
-    projectNameAndRootFormat: 'as-provided',
     skipFormat: true,
     skipTsConfig: false,
     linter: Linter.EsLint,

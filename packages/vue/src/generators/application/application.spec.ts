@@ -16,7 +16,7 @@ import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 describe('application generator', () => {
   let tree: Tree;
-  const options: Schema = { name: 'test' } as Schema;
+  const options: Schema = { directory: 'test' } as Schema;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();

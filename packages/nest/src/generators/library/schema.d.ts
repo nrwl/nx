@@ -1,13 +1,11 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
 import type { UnitTestRunner } from '../utils';
 
 export interface LibraryGeneratorOptions {
-  name: string;
+  directory: string;
+  name?: string;
   buildable?: boolean;
   controller?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   global?: boolean;
   importPath?: string;
   linter?: Linter | LinterType;

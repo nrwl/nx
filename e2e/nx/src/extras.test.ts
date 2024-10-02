@@ -20,7 +20,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Output Style', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
 
       updateJson(join('apps', myapp, 'project.json'), (c) => {
         c.targets['inner'] = {
@@ -103,7 +103,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Run Commands', () => {
     const mylib = uniq('lib');
     beforeAll(() => {
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
     });
 
     it('should not override environment variables already set when setting a custom env file path', async () => {
@@ -249,7 +249,7 @@ describe('Extra Nx Misc Tests', () => {
 
       const folder = `dist/libs/${mylib}/some-folder`;
 
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
 
       runCLI(
         `generate @nx/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
@@ -296,7 +296,7 @@ describe('Extra Nx Misc Tests', () => {
 
     beforeAll(() => {
       runCLI(
-        `generate @nx/js:lib ${libName} --directory=libs/${libName} --bundler=none --unitTestRunner=none --no-interactive`
+        `generate @nx/js:lib libs/${libName} --bundler=none --unitTestRunner=none --no-interactive`
       );
     });
 
@@ -366,7 +366,7 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
 
     const baseLib = 'lib-base-123';
     beforeAll(() => {
-      runCLI(`generate @nx/js:lib ${baseLib} --directory=libs/${baseLib}`);
+      runCLI(`generate @nx/js:lib libs/${baseLib}`);
     });
 
     it('should correctly expand default task inputs', () => {
@@ -387,9 +387,7 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
 
     it('should correctly expand dependent task inputs', () => {
       const dependentLib = 'lib-dependent-123';
-      runCLI(
-        `generate @nx/js:lib ${dependentLib} --directory=libs/${dependentLib}`
-      );
+      runCLI(`generate @nx/js:lib libs/${dependentLib}`);
 
       updateJson(join('libs', baseLib, 'project.json'), (config) => {
         config.targets['build'].inputs = ['default', '^default'];

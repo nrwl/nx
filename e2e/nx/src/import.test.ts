@@ -19,7 +19,6 @@ describe('Nx Import', () => {
   beforeAll(() => {
     proj = newProject({
       packages: ['@nx/js'],
-      unsetProjectNameAndRootFormat: false,
     });
 
     if (getSelectedPackageManager() === 'pnpm') {

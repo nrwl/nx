@@ -16,7 +16,7 @@ describe('library', () => {
   let tree: Tree;
 
   let defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -390,7 +390,7 @@ module.exports = [
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'my-lib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -398,7 +398,7 @@ module.exports = [
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'myLib2',
+          directory: 'myLib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

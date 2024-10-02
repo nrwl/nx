@@ -609,13 +609,6 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
     }
   ],
   "inferred-tasks": [
@@ -704,36 +697,6 @@
       "id": "nx-devkit-angular-devkit",
       "name": "Nx Devkit and Angular Devkit",
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
-    }
-  ],
-  "repository-types": [
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/package-based-in-integrated",
-      "id": "package-based-in-integrated",
-      "name": "Add a Package-based Project in an Integrated Repo",
-      "path": "/recipes/tips-n-tricks/package-based-in-integrated"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/integrated-in-package-based",
-      "id": "integrated-in-package-based",
-      "name": "Add an Integrated Project in a Package-based Repo",
-      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/standalone-to-integrated",
-      "id": "standalone-to-integrated",
-      "name": "Convert from a Standalone Repository to an Integrated Repository",
-      "path": "/recipes/tips-n-tricks/standalone-to-integrated"
     }
   ],
   "module-federation": [

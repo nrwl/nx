@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 jest.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 import { Tree } from '@nx/devkit';
-import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application.impl';
 import presetGenerator from '../preset/preset.impl';
@@ -24,7 +23,6 @@ describe('route', () => {
   });
   describe.each([
     [
-      'as-provided',
       'apps/demo/app/routes/path/to/example',
       'app/routes',
       'apps/demo/app/routes/path/to/example.tsx',
@@ -35,13 +33,11 @@ describe('route', () => {
   ])(
     `--nameAndDirectoryFormat=%s`,
     (
-      nameAndDirectoryFormat: NameAndDirectoryFormat,
       path,
       standalonePath,
       expectedRoutePath,
       expectedStylePath,
-      expectedComponentName,
-      project: string
+      expectedComponentName
     ) => {
       it('should add route component', async () => {
         await applicationGenerator(tree, {
@@ -50,7 +46,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -72,7 +67,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path,
-          nameAndDirectoryFormat,
           style: 'none',
           loader: true,
           action: true,
@@ -92,7 +86,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path: `/${path}/`,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -111,7 +104,6 @@ describe('route', () => {
         });
         await routeGenerator(tree, {
           path: `${path}.tsx`,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -124,17 +116,14 @@ describe('route', () => {
       });
 
       it('should handle routes that have a param', async () => {
-        const componentName =
-          nameAndDirectoryFormat === 'as-provided'
-            ? 'WithParam'
-            : `${expectedComponentName}WithParam`;
+        const componentName = 'WithParam';
+
         await applicationGenerator(tree, {
           name: 'demo',
           directory: 'apps/demo',
         });
         await routeGenerator(tree, {
           path: `/${path}/$withParam.tsx`,
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -158,7 +147,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route1/.tsx`, // route.$withParams.tsx => route..tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -168,7 +156,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route2//index.tsx`, // route/$withParams/index.tsx => route//index.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -178,7 +165,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route3/.tsx`, // route/$withParams.tsx => route/.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -195,7 +181,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route1/..tsx`, // route.$withParams.tsx => route..tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -209,7 +194,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route2//index.tsx`, // route/$withParams/index.tsx => route//index.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -223,7 +207,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${path}/route3/.tsx`, // route/$withParams.tsx => route/.tsx
-          nameAndDirectoryFormat,
           style: 'css',
           loader: true,
           action: true,
@@ -240,7 +223,6 @@ describe('route', () => {
 
         await routeGenerator(tree, {
           path: `${standalonePath}/route.tsx`,
-          nameAndDirectoryFormat,
           style: 'none',
           loader: true,
           action: true,

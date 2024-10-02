@@ -7,25 +7,25 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g generator my-generator --project=my-plugin",
+      "command": "nx g generator libs/my-plugin/src/generators//my-generator",
       "description": "Generate `libs/my-plugin/src/generators/my-generator`"
     }
   ],
   "properties": {
-    "name": {
+    "path": {
       "type": "string",
-      "description": "Generator name.",
+      "description": "Path where the generator will be generated.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the generator?",
+      "x-prompt": "Where should the generator be generated?",
       "x-priority": "important"
     },
-    "directory": {
+    "name": {
       "type": "string",
-      "description": "The directory at which to create the generator file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-      "aliases": ["dir"],
+      "description": "Generator name.",
+      "x-prompt": "What name would you like to use for the generator?",
       "x-priority": "important"
     },
     "description": {
@@ -49,13 +49,8 @@
       "default": false,
       "description": "Do not format files with prettier.",
       "x-priority": "internal"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the generator in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
     }
   },
-  "required": ["name"],
+  "required": ["path"],
   "additionalProperties": false
 }

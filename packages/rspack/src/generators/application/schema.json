@@ -6,21 +6,24 @@
   "description": "React + Rspack application generator.",
   "examples": [
     {
-      "command": "nx g app myapp --directory=myorg",
+      "command": "nx g app myorg/myapp",
       "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
     }
   ],
   "properties": {
-    "name": {
-      "description": "The name of the application.",
+    "directory": {
       "type": "string",
+      "description": "The directory to nest the app under.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$",
-      "x-priority": "important"
+      "x-prompt": "What directory would you like to use for the application?"
+    },
+    "name": {
+      "description": "The name of the application.",
+      "type": "string",
+      "pattern": "^[a-zA-Z].*$"
     },
     "framework": {
       "type": "string",
@@ -75,10 +78,6 @@
       "enum": ["none", "cypress"],
       "default": "cypress"
     },
-    "directory": {
-      "type": "string",
-      "description": "The directory to nest the app under."
-    },
     "tags": {
       "type": "string",
       "description": "Add tags to the application (used for linting).",
@@ -94,5 +93,5 @@
       "x-priority": "internal"
     }
   },
-  "required": ["name"]
+  "required": ["directory"]
 }

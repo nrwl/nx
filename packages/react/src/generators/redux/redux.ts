@@ -41,7 +41,7 @@ function generateReduxFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(
     host,
     joinPathFragments(__dirname, './files'),
-    options.directory,
+    options.projectDirectory,
     {
       ...options,
       tmpl: '',
@@ -83,8 +83,8 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       true
     );
 
-    const statePath = options.directory
-      ? `./lib/${options.directory}/${options.fileName}`
+    const statePath = options.path
+      ? `./lib/${options.path}/${options.fileName}`
       : `./lib/${options.fileName}`;
     const changes = applyChangesToString(
       indexSource,
@@ -152,15 +152,15 @@ async function normalizeOptions(
     fileName,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     fileExtension: 'tsx',
   });
 
   let appProjectSourcePath: string;
   let appMainFilePath: string;
   const extraNames = names(name);
+
   const projects = getProjects(host);
   const project = projects.get(projectName);
   const { sourceRoot, projectType } = project;
@@ -171,8 +171,8 @@ async function normalizeOptions(
     : {};
   const modulePath =
     projectType === 'application'
-      ? options.directory
-        ? `./app/${options.directory}/${extraNames.fileName}.slice`
+      ? options.path
+        ? `./app/${options.path}/${extraNames.fileName}.slice`
         : `./app/${extraNames.fileName}.slice`
       : Object.keys(tsPaths).find((k) =>
           tsPaths[k].some((s) => s.includes(sourceRoot))
@@ -201,12 +201,13 @@ async function normalizeOptions(
       );
     }
   }
+
   return {
     ...options,
     ...extraNames,
     fileName,
-    constantName: names(options.name).constantName.toUpperCase(),
-    directory,
+    constantName: names(name).constantName.toUpperCase(),
+    projectDirectory: directory,
     projectType,
     projectSourcePath: sourceRoot,
     projectModulePath: modulePath,

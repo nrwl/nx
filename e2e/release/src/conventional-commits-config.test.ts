@@ -50,7 +50,6 @@ describe('nx release conventional commits config', () => {
 
   beforeAll(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

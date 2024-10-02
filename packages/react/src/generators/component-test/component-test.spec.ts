@@ -20,7 +20,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -40,7 +40,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -61,7 +61,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -83,7 +83,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -103,7 +103,7 @@ describe(componentTestGenerator.name, () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
@@ -124,7 +124,7 @@ describe(componentTestGenerator.name, () => {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -164,7 +164,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
@@ -196,13 +196,12 @@ export function AnotherCmp() {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -240,13 +239,12 @@ export function AnotherCmp2() {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -286,13 +284,12 @@ export function AnotherCmp2() {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -326,13 +323,12 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -362,13 +358,12 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -399,13 +394,12 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -421,13 +415,12 @@ export function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(
@@ -460,13 +453,12 @@ export default function AnotherCmp(props: AnotherCmpProps) {
       mockedAssertMinimumCypressVersion.mockReturnValue();
       await libraryGenerator(tree, {
         linter: Linter.EsLint,
-        name: 'some-lib',
+        directory: 'some-lib',
         skipFormat: true,
         skipTsConfig: false,
         style: 'scss',
         unitTestRunner: 'none',
         component: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       tree.write(

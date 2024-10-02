@@ -306,10 +306,14 @@ function addStringDependencyToSharedConfig(
 
     sharedConfig[dependency] = config;
   } else {
-    throw new Error(
-      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
-        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
-    );
+    const pkgJsonPath = require.resolve(`${dependency}/package.json`);
+    if (!pkgJsonPath) {
+      throw new Error(
+        `Could not find package ${dependency} when applying it as a shared package. Are you sure it has been installed?`
+      );
+    }
+    const pkgJson = readJsonFile(pkgJsonPath);
+    const config = getNpmPackageSharedConfig(dependency, pkgJson.version);
   }
 }
 

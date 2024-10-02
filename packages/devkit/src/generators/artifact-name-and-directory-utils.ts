@@ -12,15 +12,11 @@ import {
 } from 'nx/src/devkit-internals';
 import { join, relative } from 'path';
 
-// TODO(leo): remove in a follow up
-export type NameAndDirectoryFormat = 'as-provided';
-
 export type ArtifactGenerationOptions = {
-  name: string;
-  directory?: string;
+  path: string;
+  name?: string;
   fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
   fileName?: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   suffix?: string;
 };
 
@@ -50,115 +46,59 @@ export type NameAndDirectoryOptions = {
 export async function determineArtifactNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
-): Promise<
-  NameAndDirectoryOptions & {
-    // TODO(leo): remove in a follow up
-    nameAndDirectoryFormat: NameAndDirectoryFormat;
-  }
-> {
-  const nameAndDirectoryOptions = getNameAndDirectoryOptions(tree, options);
+): Promise<NameAndDirectoryOptions> {
+  const normalizedOptions = getNameAndDirectoryOptions(tree, options);
 
   validateResolvedProject(
-    tree,
-    nameAndDirectoryOptions.project,
-    options,
-    nameAndDirectoryOptions.directory
+    normalizedOptions.project,
+    normalizedOptions.directory
   );
 
-  return {
-    ...nameAndDirectoryOptions,
-    nameAndDirectoryFormat: 'as-provided',
-  };
+  return normalizedOptions;
 }
 
 function getNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
-): NameAndDirectoryOptions {
-  const directory = options.directory
-    ? normalizePath(options.directory.replace(/^\.?\//, ''))
+) {
+  const path = options.path
+    ? normalizePath(options.path.replace(/^\.?\//, ''))
     : undefined;
   const fileExtension = options.fileExtension ?? 'ts';
-  const { name: extractedName, directory: extractedDirectory } =
-    extractNameAndDirectoryFromName(options.name);
-
-  if (extractedDirectory && directory) {
-    throw new Error(
-      `You can't specify both a directory (${options.directory}) and a name with a directory path (${options.name}). ` +
-        `Please specify either a directory or a name with a directory path.`
-    );
-  }
-
-  const asProvidedOptions = getAsProvidedOptions(tree, {
-    ...options,
-    directory: directory ?? extractedDirectory,
-    fileExtension,
-    name: extractedName,
-  });
-
-  return asProvidedOptions;
-}
-
-function getAsProvidedOptions(
-  tree: Tree,
-  options: ArtifactGenerationOptions
-): NameAndDirectoryOptions {
+  let { name: extractedName, directory } =
+    extractNameAndDirectoryFromPath(path);
   const relativeCwd = getRelativeCwd();
 
-  let asProvidedDirectory: string;
-  if (options.directory) {
-    // append the directory to the current working directory if it doesn't start with it
-    if (
-      options.directory === relativeCwd ||
-      options.directory.startsWith(`${relativeCwd}/`)
-    ) {
-      asProvidedDirectory = options.directory;
-    } else {
-      asProvidedDirectory = joinPathFragments(relativeCwd, options.directory);
-    }
-  } else {
-    asProvidedDirectory = relativeCwd;
+  // append the directory to the current working directory if it doesn't start with it
+  if (directory !== relativeCwd && !directory.startsWith(`${relativeCwd}/`)) {
+    directory = joinPathFragments(relativeCwd, directory);
   }
-  const asProvidedProject = findProjectFromPath(tree, asProvidedDirectory);
 
-  const asProvidedFileName =
+  const project = findProjectFromPath(tree, directory);
+  const name =
     options.fileName ??
-    (options.suffix ? `${options.name}.${options.suffix}` : options.name);
-  const asProvidedFilePath = joinPathFragments(
-    asProvidedDirectory,
-    `${asProvidedFileName}.${options.fileExtension}`
-  );
+    (options.suffix ? `${extractedName}.${options.suffix}` : extractedName);
+  const filePath = joinPathFragments(directory, `${name}.${fileExtension}`);
 
   return {
-    artifactName: options.name,
-    directory: asProvidedDirectory,
-    fileName: asProvidedFileName,
-    filePath: asProvidedFilePath,
-    project: asProvidedProject,
+    artifactName: options.name ?? extractedName,
+    directory: directory,
+    fileName: name,
+    filePath: filePath,
+    project: project,
   };
 }
 
 function validateResolvedProject(
-  tree: Tree,
   project: string | undefined,
-  options: ArtifactGenerationOptions,
   normalizedDirectory: string
 ): void {
   if (project) {
     return;
   }
 
-  if (options.directory) {
-    throw new Error(
-      `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
-        `Please make sure to navigate to a location or provide a directory that exists under a project root.`
-    );
-  }
-
   throw new Error(
-    `The current working directory "${
-      getRelativeCwd() || '.'
-    }" does not exist under any project root. ` +
+    `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
       `Please make sure to navigate to a location or provide a directory that exists under a project root.`
   );
 }
@@ -192,13 +132,16 @@ function getCwd(): string {
     : process.cwd();
 }
 
-function extractNameAndDirectoryFromName(rawName: string): {
+function extractNameAndDirectoryFromPath(path: string): {
   name: string;
-  directory: string | undefined;
+  directory: string;
 } {
-  const parsedName = normalizePath(rawName).split('/');
-  const name = parsedName.pop();
-  const directory = parsedName.length ? parsedName.join('/') : undefined;
+  // Remove trailing slash
+  path = path.replace(/\/$/, '');
+
+  const parsedPath = normalizePath(path).split('/');
+  const name = parsedPath.pop();
+  const directory = parsedPath.join('/');
 
   return { name, directory };
 }

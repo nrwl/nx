@@ -24,7 +24,6 @@ describe('nx release - custom npm registries', () => {
     // We are testing some more advanced scoped registry features that only npm has within this file
     process.env.SELECTED_PM = 'npm';
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
   }, 60000);

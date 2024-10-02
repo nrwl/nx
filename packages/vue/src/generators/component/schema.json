@@ -7,25 +7,29 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nx/vue:component --directory=my-app/src/app/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest",
-      "description": "Generate a component in the `my-app` application"
+      "command": "nx g @nx/vue:component my-app/src/app/one --name=one --unitTestRunner=vitest",
+      "description": "Generate a component `one` in the `my-app` application at my-app/src/app/one"
+    },
+    {
+      "command": "nx g @nx/vue:component my-app/src/app/one",
+      "description": "Generate a component `one` in the `my-app` application at my-app/src/app/one"
     }
   ],
   "properties": {
-    "name": {
+    "path": {
       "type": "string",
-      "description": "The name of the component.",
+      "description": "Path where the component will be generated.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the component?",
+      "x-prompt": "Where should the component be generated?",
       "x-priority": "important"
     },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+    "name": {
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "description": "The name of the component.",
+      "x-prompt": "What name would you like to use for the component?"
     },
     "js": {
       "type": "boolean",
@@ -37,12 +41,6 @@
       "description": "When true, does not create `spec.ts` test files for the new component.",
       "default": false,
       "x-priority": "internal"
-    },
-    "directory": {
-      "type": "string",
-      "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-      "alias": "dir",
-      "x-priority": "important"
     },
     "export": {
       "type": "boolean",
@@ -71,5 +69,5 @@
       "x-priority": "internal"
     }
   },
-  "required": ["name"]
+  "required": ["path"]
 }

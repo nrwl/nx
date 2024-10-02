@@ -7,24 +7,25 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g migration my-migration --project=my-plugin --version=1.0.0",
-      "description": "Adds a new migration to the project `my-plugin`, which will be triggered when migrating to version 1.0.0 or above from a previous version."
+      "command": "nx g migration my-plugin/my-migration --version=1.0.0",
+      "description": "Adds a new migration inside `my-plugin`, which will be triggered when migrating to version 1.0.0 or above from a previous version."
     }
   ],
   "properties": {
-    "name": {
+    "path": {
       "type": "string",
-      "description": "Migration name.",
+      "description": "Path where the migration will be generated.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
+      "x-prompt": "Where should the migration be generated?",
       "x-priority": "important"
     },
-    "directory": {
+    "name": {
       "type": "string",
-      "description": "The directory at which to create the migration file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-      "aliases": ["dir"]
+      "description": "Migration name.",
+      "x-priority": "important"
     },
     "description": {
       "type": "string",
@@ -47,13 +48,8 @@
       "type": "boolean",
       "default": false,
       "description": "Do not eslint configuration for plugin json files."
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the migration in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
     }
   },
-  "required": ["packageVersion"],
+  "required": ["packageVersion", "path"],
   "additionalProperties": false
 }

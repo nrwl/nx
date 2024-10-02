@@ -53,16 +53,16 @@ application, and `nx g remote` for remote applications.
 {% tab label="React" %}
 
 ```shell
-nx g @nx/react:host shell --remotes=shop,cart
-nx g @nx/react:remote about --host=shell
+nx g @nx/react:host apps/shell --remotes=shop,cart
+nx g @nx/react:remote apps/about --host=shell
 ```
 
 {% /tab %}
 {% tab label="Angular" %}
 
 ```shell
-nx g @nx/angular:host shell --remotes=shop,cart
-nx g @nx/angular:remote about --host=shell
+nx g @nx/angular:host apps/shell --remotes=shop,cart
+nx g @nx/angular:remote apps/about --host=shell
 ```
 
 {% /tab %}

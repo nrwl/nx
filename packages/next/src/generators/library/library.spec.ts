@@ -15,20 +15,19 @@ describe('next library', () => {
   > = installedCypressVersion as never;
   it('should use @nx/next images.d.ts file', async () => {
     const baseOptions: Schema = {
-      name: '',
+      directory: '',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     };
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib',
+      directory: 'my-lib',
     });
     const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
       .compilerOptions.types;
@@ -38,25 +37,24 @@ describe('next library', () => {
 
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
     const baseOptions: Schema = {
-      name: '',
+      directory: '',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     };
 
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib',
+      directory: 'my-lib',
     });
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib2',
+      directory: 'my-lib2',
       style: '@emotion/styled',
     });
 
@@ -72,14 +70,13 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(appTree.read('my-lib/src/index.ts', 'utf-8')).toContain(
@@ -100,14 +97,13 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: false,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(

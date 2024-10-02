@@ -1,5 +1,4 @@
 import { names } from '@nx/devkit';
-import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export function getUnscopedLibName(libRoot: string) {
   return libRoot.slice(libRoot.lastIndexOf('/') + 1);
@@ -8,10 +7,9 @@ export function getUnscopedLibName(libRoot: string) {
 export function getE2eProjectName(
   targetProjectName: string,
   targetLibRoot: string,
-  cypressDirectory?: string,
-  nameAndProjectRootFormat: ProjectNameAndRootFormat = 'as-provided'
+  cypressDirectory?: string
 ) {
-  if (cypressDirectory && nameAndProjectRootFormat !== 'as-provided') {
+  if (cypressDirectory) {
     return `${filePathPrefix(cypressDirectory)}-${getUnscopedLibName(
       targetLibRoot
     )}-e2e`;

@@ -40,7 +40,6 @@
     "@svgr/webpack": "^8.0.1",
     "copy-webpack-plugin": "^10.2.4",
     "file-loader": "^6.2.0",
-    "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "picocolors": "^1.1.0",
     "semver": "^7.5.3",
@@ -51,7 +50,6 @@
     "@nx/react": "file:../react",
     "@nx/web": "file:../web",
     "@nx/webpack": "file:../webpack",
-    "@nx/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "publishConfig": {

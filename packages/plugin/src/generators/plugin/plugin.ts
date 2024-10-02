@@ -86,7 +86,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       bundler: options.bundler,
       publishable: options.publishable,
       importPath: options.npmPackageName,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     })
   );
@@ -129,7 +128,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
         npmPackageName: options.npmPackageName,
         skipFormat: true,
         rootProject: options.rootProject,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
       })
     );
   }

@@ -12,7 +12,7 @@ describe('normalizeOptions', () => {
 
   it('should set importPath and projectRoot', async () => {
     const options = await normalizeOptions(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       style: 'css',
       linter: Linter.None,
       unitTestRunner: 'jest',

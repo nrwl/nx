@@ -1,41 +1,26 @@
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  names,
-  normalizePath,
-  Tree,
-} from '@nx/devkit';
+import { names, Tree } from '@nx/devkit';
 import { ApplicationGeneratorSchema, NormalizedSchema } from '../schema';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 
-export function normalizeDirectory(options: ApplicationGeneratorSchema) {
-  const { projectDirectory } = extractLayoutDirectory(options.directory);
-  return projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-}
-
-export function normalizeProjectName(options: ApplicationGeneratorSchema) {
-  return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
-}
-
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: ApplicationGeneratorSchema
-): NormalizedSchema {
+): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'application');
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      ...options,
+      projectType: 'application',
+    });
   // --monorepo takes precedence over --rootProject
   // This won't be needed once we add --bundler=rspack to the @nx/react:app preset
   const rootProject = !options.monorepo && options.rootProject;
-  const appDirectory = normalizeDirectory(options);
-  const appProjectName = normalizeProjectName(options);
   const e2eProjectName = options.rootProject
     ? 'e2e'
-    : `${names(options.name).fileName}-e2e`;
-
-  const { layoutDirectory } = extractLayoutDirectory(options.directory);
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-  const appProjectRoot = rootProject
-    ? '.'
-    : normalizePath(`${appsDir}/${appDirectory}`);
+    : `${names(appProjectName).fileName}-e2e`;
 
   const normalized = {
     ...options,

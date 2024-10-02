@@ -265,14 +265,13 @@ describe('app', () => {
 
   describe('nested', () => {
     it('should create project configs', async () => {
-      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
+      await generateApp(appTree, 'my-dir/my-app');
       expect(readProjectConfiguration(appTree, 'my-app')).toMatchSnapshot();
       expect(readProjectConfiguration(appTree, 'my-app-e2e')).toMatchSnapshot();
     });
 
     it('should update tags + implicit dependencies', async () => {
-      await generateApp(appTree, 'my-app', {
-        directory: 'my-dir/my-app',
+      await generateApp(appTree, 'my-dir/my-app', {
         tags: 'one,two,my-app',
       });
       const projects = devkit.getProjects(appTree);
@@ -297,7 +296,7 @@ describe('app', () => {
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
-      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
+      await generateApp(appTree, 'my-dir/my-app');
 
       const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
       expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
@@ -339,7 +338,7 @@ describe('app', () => {
 
     it('should extend from tsconfig.base.json', async () => {
       // ACT
-      await generateApp(appTree, 'app', { directory: 'my-dir/app' });
+      await generateApp(appTree, 'my-dir/app');
 
       // ASSERT
       const appTsConfig = readJson(appTree, 'my-dir/app/tsconfig.json');
@@ -351,7 +350,7 @@ describe('app', () => {
       appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
       // ACT
-      await generateApp(appTree, 'app', { directory: 'my-dir/app' });
+      await generateApp(appTree, 'my-dir/app');
 
       // ASSERT
       const appTsConfig = readJson(appTree, 'my-dir/app/tsconfig.json');
@@ -370,9 +369,7 @@ describe('app', () => {
 
     it('should accept numbers in the path', async () => {
       // ACT
-      await generateApp(appTree, 'my-app', {
-        directory: 'src/9-websites/my-app',
-      });
+      await generateApp(appTree, 'src/9-websites/my-app');
 
       // ASSERT
 
@@ -387,7 +384,7 @@ describe('app', () => {
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
-      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
+      await generateApp(appTree, 'my-dir/my-app');
 
       const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
       expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
@@ -428,7 +425,7 @@ describe('app', () => {
     });
 
     it('should set esModuleInterop when using the application builder', async () => {
-      await generateApp(appTree, 'my-app', { rootProject: true });
+      await generateApp(appTree, '.', { name: 'my-app' });
 
       expect(
         readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop
@@ -436,8 +433,8 @@ describe('app', () => {
     });
 
     it('should not set esModuleInterop when using the browser builder', async () => {
-      await generateApp(appTree, 'my-app', {
-        rootProject: true,
+      await generateApp(appTree, '.', {
+        name: 'my-app',
         bundler: 'webpack',
       });
 
@@ -449,8 +446,8 @@ describe('app', () => {
 
   describe('routing', () => {
     it('should include RouterModule', async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'my-dir/my-app',
+      await generateApp(appTree, 'my-dir/my-app', {
+        name: 'myApp',
       });
       expect(
         appTree.read('my-dir/my-app/src/app/app.module.ts', 'utf-8')
@@ -461,8 +458,8 @@ describe('app', () => {
     });
 
     it('should not modify tests when --skip-tests is set', async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'my-dir/my-app',
+      await generateApp(appTree, 'mydir/my-app', {
+        name: 'myApp',
         skipTests: true,
       });
       expect(
@@ -473,15 +470,14 @@ describe('app', () => {
 
   describe('template generation mode', () => {
     it('should create Nx specific `app.component.html` template', async () => {
-      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
+      await generateApp(appTree, 'my-dir/my-app');
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8')
       ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
-      await generateApp(appTree, 'my-app', {
-        directory: 'my-dir/my-app',
+      await generateApp(appTree, 'my-dir/my-app', {
         inlineTemplate: true,
       });
       expect(
@@ -490,15 +486,14 @@ describe('app', () => {
     });
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
-      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
+      await generateApp(appTree, 'my-dir/my-app');
       expect(
         appTree.read('my-dir/my-app/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('Hello there');
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {
-      await generateApp(appTree, 'my-app', {
-        directory: 'my-dir/my-app',
+      await generateApp(appTree, 'my-dir/my-app', {
         inlineTemplate: true,
       });
       const testFileContent = appTree.read(
@@ -956,10 +951,10 @@ describe('app', () => {
     `);
   });
 
-  describe('--root-project', () => {
+  describe('--directory="." (--root-project)', () => {
     it('should create files at the root', async () => {
-      await generateApp(appTree, 'my-app', {
-        rootProject: true,
+      await generateApp(appTree, '.', {
+        name: 'my-app',
       });
 
       expect(appTree.exists('src/main.ts')).toBe(true);
@@ -972,9 +967,9 @@ describe('app', () => {
     });
 
     it('should generate playwright with root project', async () => {
-      await generateApp(appTree, 'root-app', {
+      await generateApp(appTree, '.', {
         e2eTestRunner: E2eTestRunner.Playwright,
-        rootProject: true,
+        name: 'root-app',
       });
       expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
@@ -1279,7 +1274,7 @@ describe('app', () => {
         dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
       }));
 
-      await generateApp(appTree, 'my-app', { rootProject: true });
+      await generateApp(appTree, '.', { name: 'my-app' });
 
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options.assets).toStrictEqual([
@@ -1296,7 +1291,7 @@ async function generateApp(
   options: Partial<Schema> = {}
 ) {
   await generateTestApplication(appTree, {
-    name,
+    directory: name,
     skipFormat: true,
     e2eTestRunner: E2eTestRunner.Cypress,
     unitTestRunner: UnitTestRunner.Jest,

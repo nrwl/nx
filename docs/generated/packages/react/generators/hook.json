@@ -10,15 +10,21 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g hook my-hook --project=mylib",
-        "description": "Generate a hook in the `mylib` library"
+        "command": "nx g hook mylib/my-hook",
+        "description": "Generate a hook `my-hook` in the `mylib` library"
       }
     ],
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path where the hook will be generated.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Where should the hook be generated?",
+        "x-priority": "important"
+      },
       "name": {
         "type": "string",
         "description": "The name of the hook.",
-        "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the hook?",
         "x-priority": "important"
       },

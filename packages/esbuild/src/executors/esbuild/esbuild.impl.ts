@@ -65,7 +65,6 @@ export async function* esbuildExecutor(
         });
       }
       return acc;
-      return acc;
     }, []);
 
   if (!options.thirdParty) {

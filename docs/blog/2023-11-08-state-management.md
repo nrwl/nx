@@ -108,10 +108,10 @@ Now let’s add our first query. In this example, it will be added under `lib/qu
 
 ```shell
 # expo workspace
-npx nx generate @nx/expo:lib use-cat-fact --directory=queries
+npx nx generate @nx/expo:lib libs/queries/use-cat-fact
 
 # react-native workspace
-npx nx generate @nx/react-native:lib use-cat-fact --directory=queries
+npx nx generate @nx/react-native:lib libs/queries/use-cat-fact
 ```
 
 Or use [Nx Console](/recipes/nx-console):
@@ -191,20 +191,20 @@ In order to test out `useQuery` hook, you need to wrap it inside a mock `QueryCl
 
 ```shell
 # expo library
-npx nx generate @nx/expo:library test-wrapper --directory=queries
+npx nx generate @nx/expo:library libs/queries/test-wrapper
 
 # react native library
-npx nx generate @nx/react-native:library test-wrapper --directory=queries
+npx nx generate @nx/react-native:library libs/queries/test-wrapper
 ```
 
 Then a component inside this library:
 
 ```shell
 # expo library
-npx nx generate @nx/expo:component test-wrapper --project=queries-test-wrapper
+npx nx generate @nx/expo:component libs/queries/test-wrapper/src/lib/test-wrapper/test-wrapper
 
 # react native library
-npx nx generate @nx/react-native:component test-wrapper --project=queries-test-wrapper
+npx nx generate @nx/react-native:component libs/queries/test-wrapper/src/lib/test-wrapper/test-wrapper
 ```
 
 Add the mock `QueryClientProvider` in `libs/queries/test-wrapper/src/lib/test-wrapper/test-wrapper.tsx`:
@@ -416,10 +416,10 @@ First, you need to create a library for redux:
 
 ```shell
 # expo library
-npx nx generate @nx/expo:lib cat --directory=states
+npx nx generate @nx/expo:lib libs/states/cat
 
 # react native library
-npx nx generate @nx/react-native:lib cat --directory=states
+npx nx generate @nx/react-native:lib libs/states/cat
 ```
 
 This should create a folder under libs:
@@ -439,7 +439,7 @@ You can use the [Nx Console](/recipes/nx-console) to create a redux slice:
 Or run this command:
 
 ```shell
-npx nx generate @nx/react:redux likes --project=states-cat --directory=likes
+npx nx generate @nx/react:redux libs/states/cat/src/lib/likes/likes
 ```
 
 Then update the redux slice at `libs/states/cat/src/lib/likes/likes.slice.ts`:

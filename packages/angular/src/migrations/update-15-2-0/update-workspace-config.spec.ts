@@ -17,7 +17,7 @@ describe(`Migration to remove bundleDependencies`, () => {
       .spyOn(devkit, 'formatFiles')
       .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
-      name: 'test',
+      directory: 'test',
       skipFormat: true,
     });
 

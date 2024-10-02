@@ -31,12 +31,12 @@ describe('Nx Affected and Graph Tests', () => {
       const mylib = uniq('mylib');
       const mylib2 = uniq('mylib2');
       const mypublishablelib = uniq('mypublishablelib');
-      runCLI(`generate @nx/web:app ${myapp} --directory apps/${myapp}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory apps/${myapp2}`);
-      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`);
-      runCLI(`generate @nx/js:lib ${mylib2} --directory libs/${mylib2}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp2}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib2}`);
       runCLI(
-        `generate @nx/js:lib ${mypublishablelib} --directory libs/${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
+        `generate @nx/js:lib libs/${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
       );
 
       updateFile(
@@ -193,26 +193,26 @@ describe('Nx Affected and Graph Tests', () => {
     });
 
     function generateAll() {
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp2}`);
+      runCLI(`generate @nx/js:lib  libs/${mylib}`);
       runCommand(`git add . && git commit -am "add all"`);
     }
 
     it('should not affect other projects by generating a new project', () => {
       // TODO: investigate why affected gives different results on windows
       if (isNotWindows()) {
-        runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+        runCLI(`generate @nx/web:app apps/${myapp}`);
         expect(runCLI('show projects --affected')).toContain(myapp);
         runCommand(`git add . && git commit -am "add ${myapp}"`);
 
-        runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+        runCLI(`generate @nx/web:app apps/${myapp2}`);
         let output = runCLI('show projects --affected');
         expect(output).not.toContain(myapp);
         expect(output).toContain(myapp2);
         runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
-        runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+        runCLI(`generate @nx/js:lib libs/${mylib}`);
         output = runCLI('show projects --affected');
         expect(output).not.toContain(myapp);
         expect(output).not.toContain(myapp2);

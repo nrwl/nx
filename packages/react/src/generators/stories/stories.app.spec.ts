@@ -325,9 +325,8 @@ export async function createTestUIApp(
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }

@@ -45,7 +45,6 @@ To start with, we need to create a new Nx Workspace and add the Nx Angular plugi
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Which stack do you want to use? · none
-✔ Package-based monorepo, integrated monorepo, or standalone project? · integrated
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 
@@ -65,7 +64,6 @@ npx nx add @nx/angular
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Which stack do you want to use? · none
-✔ Package-based monorepo, integrated monorepo, or standalone project? · integrated
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 
@@ -85,7 +83,6 @@ yarn nx add @nx/angular
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Which stack do you want to use? · none
-✔ Package-based monorepo, integrated monorepo, or standalone project? · integrated
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 
@@ -217,7 +214,7 @@ This will scaffold a new library for us to use.
 We need an Angular Service that we will use to hold state:
 
 ```shell
-nx g @nx/angular:service user --project=data-access-user
+nx g @nx/angular:service libs/shared/data-access-user/src/lib/user
 ```
 
 This will create the `libs/shared/data-access-user/src/lib/user.service.ts` file. Change its contents to match:

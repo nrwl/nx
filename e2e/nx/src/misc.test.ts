@@ -43,10 +43,8 @@ describe('Nx Commands', () => {
         runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
-      runCLI(
-        `generate @nx/web:app ${app1} --tags e2etag --directory=apps/${app1}`
-      );
-      runCLI(`generate @nx/web:app ${app2} --directory=apps/${app2}`);
+      runCLI(`generate @nx/web:app apps/${app1} --tags e2etag`);
+      runCLI(`generate @nx/web:app apps/${app2}`);
 
       const s = runCLI('show projects').split('\n');
 
@@ -70,7 +68,7 @@ describe('Nx Commands', () => {
 
     it('should show detailed project info', () => {
       const app = uniq('myapp');
-      runCLI(`generate @nx/web:app ${app} --directory=apps/${app}`);
+      runCLI(`generate @nx/web:app apps/${app}`);
       const project: ProjectConfiguration = JSON.parse(
         runCLI(`show project ${app}`)
       );
@@ -80,7 +78,7 @@ describe('Nx Commands', () => {
 
     it('should open project details view', async () => {
       const app = uniq('myapp');
-      runCLI(`generate @nx/web:app ${app} --directory=apps/${app}`);
+      runCLI(`generate @nx/web:app apps/${app}`);
       let url: string;
       let port: number;
       const child_process = await runCommandUntil(
@@ -182,8 +180,8 @@ describe('Nx Commands', () => {
     const mylib = uniq('mylib');
 
     beforeAll(async () => {
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
     });
 
     beforeEach(() => {

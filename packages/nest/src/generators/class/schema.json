@@ -6,33 +6,19 @@
   "cli": "nx",
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the class.",
+    "path": {
+      "description": "Path where the class will be generated.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
+      "x-prompt": "Where should the class be generated?"
+    },
+    "name": {
+      "description": "The name of the class.",
+      "type": "string",
       "x-prompt": "What name would you like to use?"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
-    "project": {
-      "description": "The Nest project to target.",
-      "type": "string",
-      "$default": {
-        "$source": "projectName"
-      },
-      "alias": "p",
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
-    "directory": {
-      "description": "Directory where the generated files are placed. when `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. otherwise, it will be relative to the workspace root.",
-      "type": "string",
-      "aliases": ["dir", "path"]
     },
     "skipFormat": {
       "description": "Skip formatting files.",
@@ -59,5 +45,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["path"]
 }

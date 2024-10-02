@@ -950,17 +950,6 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "integrated-vs-package-based",
-        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/integrated-vs-package-based",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/integrated-vs-package-based",
-        "tags": ["intro", "repository-types"]
-      },
-      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -1241,17 +1230,6 @@
     "isExternal": false,
     "path": "/concepts/executors-and-configurations",
     "tags": ["run-tasks"]
-  },
-  "/concepts/integrated-vs-package-based": {
-    "id": "integrated-vs-package-based",
-    "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/integrated-vs-package-based",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/integrated-vs-package-based",
-    "tags": ["intro", "repository-types"]
   },
   "/concepts/nx-daemon": {
     "id": "nx-daemon",
@@ -2539,37 +2517,15 @@
         "file": "",
         "itemList": [
           {
-            "id": "package-based-in-integrated",
-            "name": "Add a Package-based Project in an Integrated Repo",
+            "id": "standalone-to-monorepo",
+            "name": "Convert from a Standalone Repository to a Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/repo-types/package-based-in-integrated",
+            "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-            "tags": ["repository-types"]
-          },
-          {
-            "id": "integrated-in-package-based",
-            "name": "Add an Integrated Project in a Package-based Repo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/repo-types/integrated-in-package-based",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-            "tags": ["repository-types"]
-          },
-          {
-            "id": "standalone-to-integrated",
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/repo-types/standalone-to-integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "tags": ["repository-types"]
+            "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+            "tags": []
           },
           {
             "id": "eslint",
@@ -4708,37 +4664,15 @@
     "file": "",
     "itemList": [
       {
-        "id": "package-based-in-integrated",
-        "name": "Add a Package-based Project in an Integrated Repo",
+        "id": "standalone-to-monorepo",
+        "name": "Convert from a Standalone Repository to a Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/repo-types/package-based-in-integrated",
+        "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-        "tags": ["repository-types"]
-      },
-      {
-        "id": "integrated-in-package-based",
-        "name": "Add an Integrated Project in a Package-based Repo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/repo-types/integrated-in-package-based",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-        "tags": ["repository-types"]
-      },
-      {
-        "id": "standalone-to-integrated",
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/repo-types/standalone-to-integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "tags": ["repository-types"]
+        "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+        "tags": []
       },
       {
         "id": "eslint",
@@ -4910,38 +4844,16 @@
     "path": "/recipes/tips-n-tricks",
     "tags": []
   },
-  "/recipes/tips-n-tricks/package-based-in-integrated": {
-    "id": "package-based-in-integrated",
-    "name": "Add a Package-based Project in an Integrated Repo",
+  "/recipes/tips-n-tricks/standalone-to-monorepo": {
+    "id": "standalone-to-monorepo",
+    "name": "Convert from a Standalone Repository to a Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/repo-types/package-based-in-integrated",
+    "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-    "tags": ["repository-types"]
-  },
-  "/recipes/tips-n-tricks/integrated-in-package-based": {
-    "id": "integrated-in-package-based",
-    "name": "Add an Integrated Project in a Package-based Repo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/repo-types/integrated-in-package-based",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-    "tags": ["repository-types"]
-  },
-  "/recipes/tips-n-tricks/standalone-to-integrated": {
-    "id": "standalone-to-integrated",
-    "name": "Convert from a Standalone Repository to an Integrated Repository",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/repo-types/standalone-to-integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-    "tags": ["repository-types"]
+    "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+    "tags": []
   },
   "/recipes/tips-n-tricks/eslint": {
     "id": "eslint",
@@ -6718,6 +6630,17 @@
         "isExternal": false,
         "path": "/deprecated/rescope",
         "tags": []
+      },
+      {
+        "id": "integrated-vs-package-based",
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/integrated-vs-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/integrated-vs-package-based",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6876,6 +6799,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/rescope",
+    "tags": []
+  },
+  "/deprecated/integrated-vs-package-based": {
+    "id": "integrated-vs-package-based",
+    "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/integrated-vs-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/integrated-vs-package-based",
     "tags": []
   },
   "/see-also": {

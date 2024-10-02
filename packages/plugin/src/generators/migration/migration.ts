@@ -19,6 +19,7 @@ import { nxVersion } from '../../utils/versions';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 interface NormalizedSchema extends Schema {
+  directory: string;
   projectRoot: string;
   projectSourceRoot: string;
   project: string;
@@ -38,8 +39,7 @@ async function normalizeOptions(
   const { project, fileName, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       name: name,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      directory: options.directory,
+      path: options.path,
       fileName: name,
     });
 
@@ -54,9 +54,9 @@ async function normalizeOptions(
 
   const normalized: NormalizedSchema = {
     ...options,
+    directory,
     project,
     name: artifactName,
-    directory,
     description,
     projectRoot,
     projectSourceRoot,
@@ -66,12 +66,10 @@ async function normalizeOptions(
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(
-    host,
-    path.join(__dirname, 'files/migration'),
-    options.directory,
-    { ...options, tmpl: '' }
-  );
+  generateFiles(host, path.join(__dirname, 'files/migration'), options.path, {
+    ...options,
+    tmpl: '',
+  });
 }
 
 function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
@@ -94,7 +92,7 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
     version: options.packageVersion,
     description: options.description,
     implementation: `./${joinPathFragments(
-      relative(options.projectRoot, options.directory),
+      relative(options.projectRoot, options.path),
       options.name
     )}`,
   };

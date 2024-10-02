@@ -145,7 +145,6 @@ describe('route', () => {
     await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
       path: 'apps/demo/app/routes/example/$withParam.tsx',
-      nameAndDirectoryFormat: 'as-provided',
       style: 'none',
       loader: false,
       action: false,
@@ -154,7 +153,6 @@ describe('route', () => {
     });
     await styleGenerator(tree, {
       path: 'apps/demo/app/routes/example/$withParam.tsx',
-      nameAndDirectoryFormat: 'as-provided',
     });
     const content = tree.read(
       'apps/demo/app/routes/example/$withParam.tsx',

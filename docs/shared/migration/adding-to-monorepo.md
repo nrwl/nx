@@ -422,7 +422,4 @@ url="/reference/nxignore" /%}
 {% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
 /concepts/turbo-and-nx" /%}
 
-{% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="
-/concepts/integrated-vs-package-based" /%}
-
 {% /cards %}

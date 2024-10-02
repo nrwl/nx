@@ -32,7 +32,7 @@ describe('rspack e2e', () => {
   it('should create rspack root project and additional apps', async () => {
     const project = uniq('myapp');
     runCLI(
-      `generate @nx/rspack:preset ${project} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress`
+      `generate @nx/rspack:preset ${project} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress --verbose`
     );
 
     // Added this so that the nx-ecosystem-ci tests don't throw jest error
