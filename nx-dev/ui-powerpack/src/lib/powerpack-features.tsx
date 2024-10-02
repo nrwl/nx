@@ -1,6 +1,11 @@
 'use client';
 import { forwardRef, ReactElement, ReactNode, useRef } from 'react';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import {
+  Button,
+  ButtonLink,
+  SectionHeading,
+  Strong,
+} from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedAngledBeam } from '@nx/nx-dev/ui-animations';
 import {
@@ -8,7 +13,9 @@ import {
   CircleStackIcon,
   ServerIcon,
 } from '@heroicons/react/24/outline';
-import { NxIcon } from '@nx/nx-dev/ui-icons';
+import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { a } from '@react-spring/three';
+import Link from 'next/link';
 
 export function PowerpackFeatures(): ReactElement {
   return (
@@ -152,7 +159,7 @@ const Card = forwardRef<
     <div
       ref={ref}
       className={cx(
-        'z-10 flex flex-col items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-950',
+        'z-10 flex flex-col items-center justify-between rounded-lg border border-slate-200 bg-white p-2 py-3 shadow-sm dark:border-white/10 dark:bg-slate-950',
         className
       )}
     >
@@ -165,16 +172,20 @@ Card.displayName = 'Card';
 
 export function CustomRemoteCacheAnimation(): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const gitHubRef = useRef<HTMLDivElement>(null);
+  const gcpRef = useRef<HTMLDivElement>(null);
   const gitlabRef = useRef<HTMLDivElement>(null);
   const nxRef = useRef<HTMLDivElement>(null);
-  const computerRef = useRef<HTMLDivElement>(null);
+  const networkDriveRef = useRef<HTMLDivElement>(null);
+  const azureRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="relative flex h-full w-full" ref={containerRef}>
       <div className="flex w-full flex-col items-center justify-center gap-24">
         <div className="flex w-full justify-center">
-          <Card ref={nxRef} className="size-18 relative">
+          <Card
+            ref={nxRef}
+            className="size-18 relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
             <NxIcon
               aria-hidden="true"
               className="size-10 text-slate-900 dark:text-white"
@@ -185,45 +196,68 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             />
           </Card>
         </div>
-        <div className="grid w-full grid-cols-3 items-stretch gap-4">
-          <Card ref={gitlabRef}>
-            <div className="text-center text-sm text-slate-900 dark:text-white">
+        <div className="grid w-full grid-cols-4 items-stretch gap-4">
+          <Card
+            ref={gitlabRef}
+            className="relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <div className="text-center text-xs text-slate-900 dark:text-white">
               AWS
             </div>
-            <div className="mt-2 text-center text-2xl font-semibold">S3</div>
+            <div className="mt-1 text-center text-xl font-semibold">S3</div>
 
-            <ButtonLink
+            <Link
               href="/nx-api/powerpack-s3-cache"
               title="Learn how to configure Amazon S3 caching"
-              variant="secondary"
-              size="small"
-              className="mt-4"
+              className="mt-4 text-xs"
             >
+              <span className="absolute inset-0" />
               Get started
-            </ButtonLink>
+            </Link>
           </Card>
-          <Card ref={computerRef}>
-            <div className="text-center text-sm text-slate-900 dark:text-white">
+          <Card
+            ref={networkDriveRef}
+            className="relative transition hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <div className="text-center text-xs text-slate-900 dark:text-white">
               Network drive
             </div>
-            <ServerIcon aria-hidden="true" className="size-6" />
+            <ServerIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <ButtonLink
+            <Link
               href="/nx-api/powerpack-shared-fs-cache"
               title="Learn how to configure network drive caching"
-              variant="secondary"
-              size="small"
-              className="mt-4"
+              className="mt-4 text-xs"
             >
+              <span className="absolute inset-0" />
               Get started
-            </ButtonLink>
+            </Link>
           </Card>
-          <Card ref={gitHubRef}>
-            <div className="text-center text-sm text-slate-900 dark:text-white">
-              More soon!
+          <Card ref={gcpRef}>
+            <div className="text-center text-xs text-slate-900 dark:text-white">
+              GCP
             </div>
-            <CalendarDaysIcon aria-hidden="true" className="size-6" />
-            <div className="mt-4 size-8" />
+            <GoogleCloudIcon aria-hidden="true" className="mt-1 size-6" />
+
+            <span
+              title="Learn how to configure Google Storage caching"
+              className="mt-4 text-xs"
+            >
+              Soon!
+            </span>
+          </Card>
+          <Card ref={azureRef}>
+            <div className="text-center text-xs text-slate-900 dark:text-white">
+              Azure
+            </div>
+            <AzureDevOpsIcon aria-hidden="true" className="mt-1 size-6" />
+
+            <span
+              title="Learn how to configure Azure Blob Storage caching"
+              className="mt-4 text-xs"
+            >
+              Soon!
+            </span>
           </Card>
         </div>
       </div>
@@ -238,7 +272,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
       />
       <AnimatedAngledBeam
         containerRef={containerRef}
-        fromRef={computerRef}
+        fromRef={networkDriveRef}
         toRef={nxRef}
         startYOffset={0}
         endYOffset={0}
@@ -250,7 +284,16 @@ export function CustomRemoteCacheAnimation(): ReactElement {
       />
       <AnimatedAngledBeam
         containerRef={containerRef}
-        fromRef={gitHubRef}
+        fromRef={gcpRef}
+        toRef={nxRef}
+        endYOffset={0}
+        bidirectional={true}
+        duration={3}
+        delay={2}
+      />
+      <AnimatedAngledBeam
+        containerRef={containerRef}
+        fromRef={azureRef}
         toRef={nxRef}
         endYOffset={0}
         bidirectional={true}
