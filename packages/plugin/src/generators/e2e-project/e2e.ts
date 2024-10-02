@@ -21,6 +21,7 @@ import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import type { Schema } from './schema';
@@ -176,6 +177,8 @@ export async function e2eProjectGenerator(host: Tree, schema: Schema) {
 }
 
 export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'e2e-project');
+
   const tasks: GeneratorCallback[] = [];
 
   validatePlugin(host, schema.pluginName);

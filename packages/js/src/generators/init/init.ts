@@ -90,7 +90,7 @@ export async function initGeneratorInternal(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   schema.addTsPlugin ??=
-    schema.addPlugin && process.env.NX_ADD_TS_PLUGIN === 'true';
+    schema.addPlugin && process.env.NX_ADD_TS_PLUGIN !== 'false';
 
   if (schema.addTsPlugin) {
     await addPlugin(

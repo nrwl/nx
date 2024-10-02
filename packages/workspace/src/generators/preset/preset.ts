@@ -262,7 +262,7 @@ async function createPreset(tree: Tree, options: Schema) {
       formatter: options.formatter,
       addTsPlugin:
         process.env.NX_ADD_PLUGINS !== 'false' &&
-        process.env.NX_ADD_TS_PLUGIN === 'true',
+        process.env.NX_ADD_TS_PLUGIN !== 'false',
     });
   } else if (options.preset === Preset.TsStandalone) {
     const { libraryGenerator } = require('@nx' + '/js');

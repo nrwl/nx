@@ -9,6 +9,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
@@ -59,6 +60,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'storybook', 'configuration');
+
   const storybookMajor = storybookMajorVersion();
   if (storybookMajor > 0 && storybookMajor === 6) {
     throw new Error(pleaseUpgrade());

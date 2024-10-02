@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -40,6 +41,8 @@ export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(host, 'react-native', 'application');
+
   const options = await normalizeOptions(host, schema);
 
   const tasks: GeneratorCallback[] = [];

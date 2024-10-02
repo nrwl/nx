@@ -11,6 +11,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { tslibVersion } from '@nx/node/src/utils/versions';
 import { join } from 'path';
@@ -74,6 +75,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'express', 'application');
+
   const options = await normalizeOptions(tree, schema);
 
   const tasks: GeneratorCallback[] = [];
