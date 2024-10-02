@@ -494,7 +494,7 @@ To fix this you will either need to add a package.json file at that location, or
             currentVersionResolver: 'disk',
             specifierSource: 'prompt',
             releaseGroup: createReleaseGroup('independent'),
-            updateDependents: 'auto',
+            // No value for updateDependents, should default to 'auto'
           });
 
           expect(readJson(tree, 'libs/my-lib/package.json'))
