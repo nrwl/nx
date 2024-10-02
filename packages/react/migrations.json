@@ -1,35 +1,5 @@
 {
   "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/react with @nx/react",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-2-0-remove-package": {
-      "cli": "nx",
-      "version": "16.2.0-beta.0",
-      "description": "Remove react-test-renderer from package.json",
-      "implementation": "./src/migrations/update-16-2-0-remove-package/update-16-2-0-remove-package"
-    },
-    "remove-types-react-router-dom": {
-      "cli": "nx",
-      "version": "16.3.0-beta.2",
-      "description": "Remove @types/react-router-dom from package.json",
-      "implementation": "./src/migrations/update-16-3-0/remove-types-react-router-dom-package"
-    },
-    "add-babel-core": {
-      "cli": "nx",
-      "version": "16.7.0-beta.2",
-      "description": "Add @babel/core to package.json if @babel/preset-react is present",
-      "implementation": "./src/migrations/update-16-7-0/add-babel-core"
-    },
-    "update-16-7-0-add-typings": {
-      "cli": "nx",
-      "version": "16.7.0-beta.2",
-      "description": "Add @nx/react types to tsconfig types array",
-      "implementation": "./src/migrations/update-16-7-0-add-typings/update-16-7-0-add-typings"
-    },
     "add-module-federation-env-var-to-target-defaults": {
       "cli": "nx",
       "version": "18.0.0-beta.0",
@@ -62,88 +32,6 @@
     }
   },
   "packageJsonUpdates": {
-    "16.3.0": {
-      "version": "16.3.0-beta.2",
-      "packages": {
-        "react-router-dom": {
-          "version": "6.11.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@svgr/rollup": {
-          "version": "^8.0.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.4": {
-      "version": "16.4.0-beta.4",
-      "packages": {
-        "stylus": {
-          "version": "^0.59.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.7": {
-      "version": "16.4.0-beta.7",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.12",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.2.5",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.2.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.8": {
-      "version": "16.4.0-beta.8",
-      "packages": {
-        "@emotion/styled": {
-          "version": "11.11.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@emotion/react": {
-          "version": "11.11.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@emotion/babel-plugin": {
-          "version": "11.11.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.11": {
-      "version": "16.4.0-beta.11",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.13",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.2.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.2.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.5.0-beta.4": {
-      "version": "16.5.0-beta.4",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.14",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "17.0.0-beta.0": {
       "version": "17.0.0-beta.0",
       "packages": {
