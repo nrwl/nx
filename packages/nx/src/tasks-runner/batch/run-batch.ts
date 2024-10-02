@@ -51,7 +51,6 @@ async function runTasks(
     cwd: process.cwd(),
     projectsConfigurations,
     nxJsonConfiguration,
-    workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
     isVerbose: false,
     projectGraph,
     taskGraph: fullTaskGraph,
