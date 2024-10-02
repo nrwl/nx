@@ -12,6 +12,8 @@ function getJestConfigProjectPath(projectJestConfigPath: string): string {
 }
 
 /**
+ * TODO(v21): Remove this function
+ * @deprecated To get projects use {@link getJestProjectsAsync} instead. This will be removed in v21.
  * Get a list of paths to all the jest config files
  * using the Nx Jest executor.
  *
