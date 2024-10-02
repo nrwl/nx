@@ -856,7 +856,9 @@ async function normalizeOptions(
     }
 
     if (options.bundler === 'none') {
-      options.bundler = 'tsc';
+      throw new Error(
+        `Publishable libraries can't be generated with "--bundler=none". Please select a valid bundler.`
+      );
     }
   }
 
