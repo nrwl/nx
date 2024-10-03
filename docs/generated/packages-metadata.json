@@ -1155,7 +1155,7 @@
       },
       {
         "id": "typescript-project-references",
-        "name": "Link Projects with TypeScript Project References",
+        "name": "Configure TypeScript Project References in an Nx Workspace",
         "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
         "file": "generated/packages/js/documents/typescript-project-references",
         "itemList": [],

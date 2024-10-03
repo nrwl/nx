@@ -1,19 +1,19 @@
-# Link Projects with TypeScript Project References
+# Configure TypeScript Project References in an Nx Workspace
 
-In Nx 20, the `@nx/js` plugin provides the ability to link projects in a monorepo using [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) instead of [TypeScript compilerOptions Paths](https://www.typescriptlang.org/docs/handbook/modules/reference.html#paths). The TypeScript team recommends using project references when working in a monorepo, but until now the configuration settings were difficult to maintain. Each project is required to list its own project dependencies in the `references` property of the `tsconfig.json` file so that TypeScript can incrementally compile projects in the correct order. Nx users know how complex the project graph can become, so maintaining those settings manually is daunting.
+In Nx 20, the `@nx/js` plugin provides the ability to incrementally build projects in a monorepo using [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html). Nx also provides a `ts` preset for `create-nx-workspace` that configures project references and uses `workspaces` to link projects instead of [TypeScript compilerOptions Paths](https://www.typescriptlang.org/docs/handbook/modules/reference.html#paths).
 
-The `@nx/js` plugin registers a [sync generator](/concepts/sync-generators) to automatically update the references based on Nx's project graph before any TypeScript `build` task is executed.
+The TypeScript team recommends using project references when working in a monorepo, but until now the configuration settings were difficult to maintain. Each project is required to list its own project dependencies in the `references` property of the `tsconfig.json` file so that TypeScript can incrementally compile projects in the correct order. In a large monorepo, maintaining those settings manually is cost prohibitive. To solve this problem, the `@nx/js` plugin registers a [sync generator](/concepts/sync-generators) to automatically update the references based on Nx's project graph before any TypeScript `build` task is executed.
 
 ## Create a New Nx Workspace Using Project References
 
-We anticipate that this style of linking will eventually become the default, but currently it will only be enabled for repositories configured in a specific way. Existing workspaces will continue to function as usual and there is no migration path yet. You can generate a new repository with these settings by using the `--preset=ts` flag of the `create-nx-workspace` command.
+We anticipate that this style of compiling projects will eventually become the default, but currently it will only be enabled for repositories configured in a specific way. Existing workspaces will continue to function as usual and there is no migration path yet. You can generate a new repository with these settings by using the `--preset=ts` flag of the `create-nx-workspace` command.
 
 ```shell
-create-nx-workspace --preset=ts
+npx create-nx-workspace --preset=ts
 ```
 
 {% callout type="note" title="Empty Workspace with Paths" %}
-To generate an empty Nx workspace that links projects with the `compilerOptions.paths` property, use `create-nx-workspace --preset=apps`
+To generate an empty Nx workspace that links projects with the `compilerOptions.paths` property and does not use project references, use `create-nx-workspace --preset=apps`
 {% /callout %}
 
 This will generate an empty repository that is configured to use TypeScript project references. To see the new functionality in action, create some TypeScript projects and make sure to use the `tsc` bundler option.
@@ -39,7 +39,7 @@ Now if you run `nx build cart` or directly run `nx sync`, the `packages/cart/tsc
 
 ## Project Reference Configuration Files
 
-Nx expects the following configuration settings to be in place in order to use TypeScript project references to link projects. Most of this configuration is set up and maintained for you automatically by Nx.
+Nx expects the following configuration settings to be in place in order to use TypeScript project references to build projects. Most of this configuration is set up and maintained for you automatically by Nx.
 
 Identify projects in the `workspaces` property in the root `package.json` file.
 

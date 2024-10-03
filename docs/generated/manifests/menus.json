@@ -8137,7 +8137,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Link Projects with TypeScript Project References",
+                "name": "Configure TypeScript Project References in an Nx Workspace",
                 "path": "/nx-api/js/documents/typescript-project-references",
                 "id": "typescript-project-references",
                 "isExternal": false,
