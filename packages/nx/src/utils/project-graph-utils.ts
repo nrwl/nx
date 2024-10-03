@@ -73,8 +73,6 @@ export function findAllProjectNodeDependencies(
   return Array.from(dependencyNodeNames);
 }
 
-const cache = {};
-
 // Recursively get all the dependencies of the node
 function collectDependentProjectNodesNames(
   nxDeps: ProjectGraph,
