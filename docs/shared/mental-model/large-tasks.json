@@ -6124,7 +6124,7 @@
     },
     {
       "name": "nx-dev-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:nx-dev", "type:e2e"],
         "root": "nx-dev/nx-dev-e2e",

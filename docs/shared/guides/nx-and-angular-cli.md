@@ -321,7 +321,7 @@ As you start modularizing your Angular workspace, Nx can visualize it using the 
     },
     {
       "name": "cart-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:cart", "type:e2e"]
       }

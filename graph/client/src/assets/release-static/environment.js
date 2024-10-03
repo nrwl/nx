@@ -1079,7 +1079,7 @@ window.projectGraphResponse = {
     },
     {
       name: 'products-e2e',
-      type: 'e2e',
+      type: 'app',
       data: {
         tags: ['scope:products', 'type:e2e'],
         root: 'apps/products-e2e',
@@ -1150,7 +1150,7 @@ window.projectGraphResponse = {
     },
     {
       name: 'cart-e2e',
-      type: 'e2e',
+      type: 'app',
       data: {
         tags: ['scope:cart', 'type:e2e'],
         root: 'apps/cart-e2e',
