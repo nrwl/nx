@@ -82,7 +82,6 @@ function collectDependentProjectNodesNames(
   parentNodeName: string,
   includeExternalDependencies: boolean
 ) {
-  const tokenizedInputs = JSON.stringify(nxDeps, dependencyNodeNames);
   const dependencies = nxDeps.dependencies[parentNodeName];
   if (!dependencies) {
     // no dependencies for the given node, so silently return,
