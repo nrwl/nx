@@ -73,6 +73,8 @@ export function findAllProjectNodeDependencies(
   return Array.from(dependencyNodeNames);
 }
 
+const cache = {};
+
 // Recursively get all the dependencies of the node
 function collectDependentProjectNodesNames(
   nxDeps: ProjectGraph,
@@ -80,6 +82,7 @@ function collectDependentProjectNodesNames(
   parentNodeName: string,
   includeExternalDependencies: boolean
 ) {
+  const tokenizedInputs = JSON.stringify(nxDeps, dependencyNodeNames);
   const dependencies = nxDeps.dependencies[parentNodeName];
   if (!dependencies) {
     // no dependencies for the given node, so silently return,
