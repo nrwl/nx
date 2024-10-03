@@ -69,6 +69,13 @@ The location of current project is available through the environment variable $N
 nx exec -- echo \$NX_PROJECT_ROOT_PATH
 ```
 
+Commands with quotes or other characters that may be stripped or interpreted by the shell should be passed as a single argument:
+
+```
+nx exec -- "npm run foo && npm run bar"
+nx exec -- 'node -e "console.log(\'hello\')"'
+```
+
 ## Options
 
 ### all
