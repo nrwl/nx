@@ -184,7 +184,7 @@
     "eslint-config-next": "14.2.3",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-cypress": "2.14.0",
-    "eslint-plugin-import": "2.30.0",
+    "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.7.1",
     "eslint-plugin-playwright": "^1.6.2",
     "eslint-plugin-react": "7.35.0",
