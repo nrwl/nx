@@ -68,7 +68,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
     });
   }, 1_000_000);
 
@@ -83,7 +83,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
     });
   });
 
@@ -120,7 +120,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
     });
   });
 
@@ -146,8 +146,8 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
-      [`${libName}/server`]: [`packages/${libName}/src/server.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}/server`]: [`packages/${libName}/src/server.ts`],
     });
   });
 
@@ -177,7 +177,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
     });
   });
 
@@ -203,7 +203,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
     });
   });
 
@@ -229,7 +229,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [libName]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
     });
   });
 
