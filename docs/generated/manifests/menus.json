@@ -8135,6 +8135,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Link Projects with TypeScript Project References",
+                "path": "/nx-api/js/documents/typescript-project-references",
+                "id": "typescript-project-references",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
