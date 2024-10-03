@@ -8,7 +8,8 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+✔ Which CI provider would you like to use? · skip
+✔ Would you like remote caching to make your build faster? · skip
 ```
 
 ## Install Nx Remix Plugin
