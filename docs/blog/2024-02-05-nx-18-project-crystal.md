@@ -43,7 +43,7 @@ You can add Nx to an existing npm/yarn/pnpm monorepo quite straightforwardly. Yo
 npx nx@latest init
 ```
 
-You’ll get an `nx` package installed and an `nx.json` allowing you to define [task dependencies](/recipes/running-tasks/defining-task-pipeline) and caching. With that, you're now able to run commands like `nx build <your project>` or nx `run-many -t build test` to run all `build` and `test` targets in your workspace in parallel. Nx will read and use your existing `package.json` scripts. I've written an in-depth [blog post about adopting Nx in such a scenario](https://dev.to/nx/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx-1eem).
+You’ll get an `nx` package installed and an `nx.json` allowing you to define [task dependencies](/recipes/running-tasks/defining-task-pipeline) and caching. With that, you're now able to run commands like `nx build <your project>` or nx `run-many -t build test` to run all `build` and `test` targets in your workspace in parallel. Nx will read and use your existing `package.json` scripts. I've written an in-depth [blog post about adopting Nx in such a scenario](/blog/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx).
 
 This is the most lightweight setup you can get while still getting some improvements via Nx regarding faster task running and more intelligent parallelization. But, you need to deal with the remaining of the monorepo setup.
 

@@ -49,7 +49,7 @@ npx create-nx-workspace@latest qwik-todo-app
 
 > You can also use the `preset` created by the `qwik-nx` plugin by running `npx create-qwik-nx` or `npx -y create-nx-workspace@latest --preset=qwik-nx`. This will skip a few of the next steps by installing the appropriate dependencies and generating your Qwik app.
 >
-> The `create-qwik-nx` package is an example of creating an Install Package with Nx. You can learn more here: [https://nx.dev/extending-nx/recipes/create-install-package](/extending-nx/recipes/create-install-package)
+> The `create-qwik-nx` package is an example of creating an Install Package with Nx. You can learn more here: [/extending-nx/recipes/create-install-package](/extending-nx/recipes/create-install-package)
 
 Next, navigate into the workspace and install the `qwik-nx` plugin.
 
