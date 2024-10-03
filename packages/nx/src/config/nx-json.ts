@@ -393,7 +393,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * Available Task Runners
+   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
