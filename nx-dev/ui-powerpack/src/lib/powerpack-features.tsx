@@ -1,14 +1,20 @@
 'use client';
-import { forwardRef, ReactElement, ReactNode, useRef } from 'react';
+import {
+  forwardRef,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
-import { AnimatedAngledBeam } from '@nx/nx-dev/ui-animations';
-import {
-  CalendarDaysIcon,
-  CircleStackIcon,
-  ServerIcon,
-} from '@heroicons/react/24/outline';
-import { NxIcon } from '@nx/nx-dev/ui-icons';
+import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
+import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
+import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export function PowerpackFeatures(): ReactElement {
   return (
@@ -146,15 +152,22 @@ export function PowerpackFeatures(): ReactElement {
 
 const Card = forwardRef<
   HTMLDivElement,
-  { className?: string; children?: ReactNode }
->(({ className, children }, ref) => {
+  {
+    className?: string;
+    children?: ReactNode;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+  }
+>(({ className, children, onMouseEnter, onMouseLeave }, ref) => {
   return (
     <div
       ref={ref}
       className={cx(
-        'z-10 flex flex-col items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-950',
+        'z-10 flex flex-col items-center justify-between rounded-lg border border-slate-200 bg-white p-2 py-3 shadow-sm dark:border-white/10 dark:bg-slate-950',
         className
       )}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {children}
     </div>
@@ -164,99 +177,241 @@ const Card = forwardRef<
 Card.displayName = 'Card';
 
 export function CustomRemoteCacheAnimation(): ReactElement {
+  const awsRef = useRef<HTMLDivElement>(null);
+  const azureRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const gitHubRef = useRef<HTMLDivElement>(null);
-  const gitlabRef = useRef<HTMLDivElement>(null);
+  const gcpRef = useRef<HTMLDivElement>(null);
+  const networkDriveRef = useRef<HTMLDivElement>(null);
   const nxRef = useRef<HTMLDivElement>(null);
-  const computerRef = useRef<HTMLDivElement>(null);
+
+  const animatedBeamMap: Record<string, ReactElement> = {
+    aws: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={awsRef}
+        toRef={nxRef}
+        curvature={175}
+        startXOffset={-20}
+        endYOffset={30}
+        bidirectional={true}
+        duration={5}
+      />
+    ),
+    azure: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={azureRef}
+        toRef={nxRef}
+        curvature={175}
+        startXOffset={20}
+        endYOffset={30}
+        bidirectional={true}
+        reverse={true}
+        duration={5}
+      />
+    ),
+    gcp: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={gcpRef}
+        toRef={nxRef}
+        bidirectional={true}
+        curvature={130}
+        startXOffset={20}
+        endXOffset={-20}
+        reverse={true}
+        duration={5}
+      />
+    ),
+    networkDrive: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={networkDriveRef}
+        toRef={nxRef}
+        curvature={150}
+        startXOffset={-20}
+        endXOffset={20}
+        bidirectional={true}
+        duration={5}
+      />
+    ),
+  };
+
+  const links = Object.keys(animatedBeamMap);
+  const duration = 6000;
+  const timeout = useRef<NodeJS.Timeout>();
+  const [selected, setSelected] = useState<string | null>('aws');
+  const [autoplay, setAutoplay] = useState<boolean>(true);
+
+  const play = useCallback(() => {
+    timeout.current = setTimeout(next, duration);
+  }, [selected]);
+
+  const next = () => {
+    if (links.length <= 1) return; // No change if there's only one or no items
+
+    if (selected === null)
+      return setSelected(links[Math.floor(Math.random() * links.length)]);
+
+    const availableLinks = links.filter((link) => link !== selected);
+    const randomIndex = Math.floor(Math.random() * availableLinks.length);
+    setSelected(availableLinks[randomIndex]);
+  };
+
+  useEffect(() => {
+    clearTimeout(timeout.current);
+    if (autoplay) play();
+  }, [selected, autoplay, play]);
 
   return (
     <div className="relative flex h-full w-full" ref={containerRef}>
       <div className="flex w-full flex-col items-center justify-center gap-24">
         <div className="flex w-full justify-center">
-          <Card ref={nxRef} className="size-18 relative">
+          <Card
+            ref={nxRef}
+            className="size-18 relative p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
             <NxIcon
               aria-hidden="true"
               className="size-10 text-slate-900 dark:text-white"
             />
             <CircleStackIcon
               aria-hidden="true"
-              className="absolute bottom-1 right-1 size-5 text-slate-900 dark:text-white"
+              className="absolute bottom-1 right-1 size-4 text-slate-900 dark:text-white"
             />
           </Card>
         </div>
-        <div className="grid w-full grid-cols-3 items-stretch gap-4">
-          <Card ref={gitlabRef}>
-            <div className="text-center text-sm text-slate-900 dark:text-white">
+        <div className="grid w-full grid-cols-4 items-stretch gap-4">
+          <Card
+            ref={awsRef}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('aws');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'aws' }
+            )}
+          >
+            <div className="text-center text-xs text-slate-900 dark:text-white">
               AWS
             </div>
-            <div className="mt-2 text-center text-2xl font-semibold">S3</div>
+            <div className="mt-1 text-center text-xl font-semibold">S3</div>
 
-            <ButtonLink
+            <Link
               href="/nx-api/powerpack-s3-cache"
               title="Learn how to configure Amazon S3 caching"
-              variant="secondary"
-              size="small"
-              className="mt-4"
+              className="mt-4 text-xs"
             >
+              <span className="absolute inset-0" />
               Get started
-            </ButtonLink>
+            </Link>
           </Card>
-          <Card ref={computerRef}>
-            <div className="text-center text-sm text-slate-900 dark:text-white">
+          <Card
+            ref={networkDriveRef}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('networkDrive');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'networkDrive' }
+            )}
+          >
+            <div className="text-center text-xs text-slate-900 dark:text-white">
               Network drive
             </div>
-            <ServerIcon aria-hidden="true" className="size-6" />
+            <ServerIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <ButtonLink
+            <Link
               href="/nx-api/powerpack-shared-fs-cache"
               title="Learn how to configure network drive caching"
-              variant="secondary"
-              size="small"
-              className="mt-4"
+              className="mt-4 text-xs"
             >
+              <span className="absolute inset-0" />
               Get started
-            </ButtonLink>
+            </Link>
           </Card>
-          <Card ref={gitHubRef}>
-            <div className="text-center text-sm text-slate-900 dark:text-white">
-              More soon!
+          <Card
+            ref={gcpRef}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('gcp');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'gcp' }
+            )}
+          >
+            <div className="text-center text-xs text-slate-900 dark:text-white">
+              GCP
             </div>
-            <CalendarDaysIcon aria-hidden="true" className="size-6" />
-            <div className="mt-4 size-8" />
+            <GoogleCloudIcon aria-hidden="true" className="mt-1 size-6" />
+
+            <span
+              title="Learn how to configure Google Storage caching"
+              className="mt-4 text-xs"
+            >
+              Soon!
+            </span>
+          </Card>
+          <Card
+            ref={azureRef}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('azure');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'azure' }
+            )}
+          >
+            <div className="text-center text-xs text-slate-900 dark:text-white">
+              Azure
+            </div>
+            <AzureDevOpsIcon aria-hidden="true" className="mt-1 size-6" />
+
+            <span
+              title="Learn how to configure Azure Blob Storage caching"
+              className="mt-4 text-xs"
+            >
+              Soon!
+            </span>
           </Card>
         </div>
       </div>
 
-      <AnimatedAngledBeam
-        containerRef={containerRef}
-        fromRef={gitlabRef}
-        toRef={nxRef}
-        endYOffset={0}
-        bidirectional={true}
-        duration={3}
-      />
-      <AnimatedAngledBeam
-        containerRef={containerRef}
-        fromRef={computerRef}
-        toRef={nxRef}
-        startYOffset={0}
-        endYOffset={0}
-        startXOffset={0}
-        endXOffset={0}
-        bidirectional={true}
-        duration={3}
-        delay={1}
-      />
-      <AnimatedAngledBeam
-        containerRef={containerRef}
-        fromRef={gitHubRef}
-        toRef={nxRef}
-        endYOffset={0}
-        bidirectional={true}
-        duration={3}
-        delay={2}
-      />
+      <AnimatePresence>
+        {selected ? (
+          <motion.div
+            key={selected}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.2 },
+            }}
+          >
+            {animatedBeamMap[selected]}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
