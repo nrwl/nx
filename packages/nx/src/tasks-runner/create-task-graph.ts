@@ -85,10 +85,12 @@ export class ProcessTasks {
 
     this.filterDummyTasks();
 
-    for (const projectName of Object.keys(this.dependencies)) {
-      if (this.dependencies[projectName].length > 1) {
-        this.dependencies[projectName] = [
-          ...new Set(this.dependencies[projectName]).values(),
+    for (const taskId of Object.keys(this.dependencies)) {
+      if (this.dependencies[taskId].length > 0) {
+        this.dependencies[taskId] = [
+          ...new Set(
+            this.dependencies[taskId].filter((d) => d !== taskId)
+          ).values(),
         ];
       }
     }
