@@ -21,6 +21,7 @@ Nx.json configuration
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
+- [communityCache](../../devkit/documents/NxJsonConfiguration#communitycache): string
 - [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
 - [enableDbCache](../../devkit/documents/NxJsonConfiguration#enabledbcache): boolean
@@ -79,6 +80,14 @@ Default generator collection. It is used when no collection is provided.
 | :-------------------- | :-------------------------------------------------------- |
 | `defaultProjectName?` | `string`                                                  |
 | `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
+
+---
+
+### communityCache
+
+• `Optional` **communityCache**: `string`
+
+community support for custom cache
 
 ---
 
