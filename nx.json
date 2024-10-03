@@ -70,8 +70,7 @@
       "generatorOptions": {
         "packageRoot": "build/packages/{projectName}",
         "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true,
-        "updateDependents": "never"
+        "skipLockFileUpdate": true
       },
       "git": {
         "commit": false,
