@@ -2,8 +2,8 @@ import { runCommand } from '../../tasks-runner/run-command';
 import {
   NxArgs,
   readGraphFileFromGraphArg,
+  splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
@@ -16,7 +16,6 @@ import { TargetDependencyConfig } from '../../config/workspace-json-project-json
 import { readNxJson } from '../../config/configuration';
 import { output } from '../../utils/output';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { generateGraph } from '../graph/graph';
 
 export async function runMany(
@@ -35,7 +34,6 @@ export async function runMany(
 ) {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
-  workspaceConfigurationCheck();
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,

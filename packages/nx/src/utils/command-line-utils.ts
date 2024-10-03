@@ -217,47 +217,37 @@ function normalizeNxArgsRunner(
   options: { printWarnings: boolean }
 ) {
   if (!nxArgs.runner) {
-    // TODO: Remove NX_RUNNER environment variable support in Nx v17
-    for (const envKey of ['NX_TASKS_RUNNER', 'NX_RUNNER']) {
-      const runner = process.env[envKey];
-      if (runner) {
-        const runnerExists = nxJson.tasksRunnerOptions?.[runner];
-        if (options.printWarnings) {
-          if (runnerExists) {
-            output.note({
-              title: `No explicit --runner argument provided, but found environment variable ${envKey} so using its value: ${output.bold(
-                `${runner}`
-              )}`,
-            });
-          } else if (
-            nxArgs.verbose ||
-            process.env.NX_VERBOSE_LOGGING === 'true'
-          ) {
-            output.warn({
-              title: `Could not find ${output.bold(
-                `${runner}`
-              )} within \`nx.json\` tasksRunnerOptions.`,
-              bodyLines: [
-                `${output.bold(`${runner}`)} was set by ${envKey}`,
-                ``,
-                `To suppress this message, either:`,
-                `  - provide a valid task runner with --runner`,
-                `  - ensure NX_TASKS_RUNNER matches a task runner defined in nx.json`,
-              ],
-            });
-          }
-        }
+    const envKey = 'NX_TASKS_RUNNER';
+    const runner = process.env[envKey];
+    if (runner) {
+      const runnerExists = nxJson.tasksRunnerOptions?.[runner];
+      if (options.printWarnings) {
         if (runnerExists) {
-          // TODO: Remove in v17
-          if (envKey === 'NX_RUNNER' && options.printWarnings) {
-            output.warn({
-              title:
-                'NX_RUNNER is deprecated, please use NX_TASKS_RUNNER instead.',
-            });
-          }
-          nxArgs.runner = runner;
+          output.note({
+            title: `No explicit --runner argument provided, but found environment variable ${envKey} so using its value: ${output.bold(
+              `${runner}`
+            )}`,
+          });
+        } else if (
+          nxArgs.verbose ||
+          process.env.NX_VERBOSE_LOGGING === 'true'
+        ) {
+          output.warn({
+            title: `Could not find ${output.bold(
+              `${runner}`
+            )} within \`nx.json\` tasksRunnerOptions.`,
+            bodyLines: [
+              `${output.bold(`${runner}`)} was set by ${envKey}`,
+              ``,
+              `To suppress this message, either:`,
+              `  - provide a valid task runner with --runner`,
+              `  - ensure NX_TASKS_RUNNER matches a task runner defined in nx.json`,
+            ],
+          });
         }
-        break;
+      }
+      if (runnerExists) {
+        nxArgs.runner = runner;
       }
     }
   }
