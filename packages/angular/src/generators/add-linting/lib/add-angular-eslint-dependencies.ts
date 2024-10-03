@@ -6,6 +6,12 @@ import {
 import { versions } from '../../utils/version-utils';
 import { isBuildableLibraryProject } from './buildable-project';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import {
+  eslint9__eslintVersion,
+  eslint9__typescriptESLintVersion,
+} from '@nx/eslint/src/utils/versions';
+import { getInstalledEslintVersion } from '@nx/eslint/src/utils/version-utils';
+import { gte } from 'semver';
 
 export function addAngularEsLintDependencies(
   tree: Tree,
@@ -24,8 +30,14 @@ export function addAngularEsLintDependencies(
       };
 
   if ('typescriptEslintVersion' in compatVersions) {
-    devDependencies['@typescript-eslint/utils'] =
-      compatVersions.typescriptEslintVersion;
+    const installedEslintVersion = getInstalledEslintVersion(tree);
+    const usingEslintV9 = gte(
+      installedEslintVersion ?? eslint9__eslintVersion,
+      '9.0.0'
+    );
+    devDependencies['@typescript-eslint/utils'] = usingEslintV9
+      ? eslint9__typescriptESLintVersion
+      : compatVersions.typescriptEslintVersion;
   }
 
   if (isBuildableLibraryProject(tree, projectName)) {

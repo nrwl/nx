@@ -1,5 +1,4 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import {
   ProjectConfiguration,
   Tree,
@@ -10,6 +9,24 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as linter from '@nx/eslint';
 import { addLintingGenerator } from './add-linting';
+import { eslint9__eslintVersion } from '@nx/eslint/src/utils/versions';
+
+jest.mock('nx/src/devkit-internals', () => ({
+  ...jest.requireActual<any>('nx/src/devkit-internals'),
+  readModulePackageJson: jest.fn().mockImplementation((module, extras) => {
+    if (module === 'eslint') {
+      return {
+        packageJson: {
+          version: '9.8.0',
+        },
+      };
+    } else {
+      return jest
+        .requireActual<any>('nx/src/devkit-internals')
+        .readModulePackageJson(module, extras);
+    }
+  }),
+}));
 
 describe('addLinting generator', () => {
   let tree: Tree;
@@ -54,6 +71,25 @@ describe('addLinting generator', () => {
       devDependencies['@angular-eslint/eslint-plugin-template']
     ).toBeDefined();
     expect(devDependencies['@angular-eslint/template-parser']).toBeDefined();
+  });
+
+  it('should use flat config and install correct dependencies when using it', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies['eslint'] = eslint9__eslintVersion;
+      return json;
+    });
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@typescript-eslint/utils']).toMatchInlineSnapshot(
+      `"^8.0.0"`
+    );
   });
 
   it('should correctly generate the .eslintrc.json file', async () => {
