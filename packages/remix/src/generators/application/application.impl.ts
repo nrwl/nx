@@ -181,7 +181,6 @@ export async function remixApplicationGeneratorInternal(
       const vitestTask = await vitestGenerator(tree, {
         uiFramework: 'react',
         project: options.projectName,
-        coverageProvider: 'v8',
         inSourceTests: false,
         skipFormat: true,
         testEnvironment: 'jsdom',

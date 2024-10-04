@@ -1,7 +1,7 @@
 export interface VitestGeneratorSchema {
   project: string;
   uiFramework: 'react' | 'none';
-  coverageProvider: 'v8' | 'istanbul' | 'custom';
+  coverageProvider?: 'v8' | 'istanbul' | 'custom'; // default: v8
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
   testTarget?: string;

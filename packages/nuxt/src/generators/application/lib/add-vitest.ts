@@ -21,7 +21,6 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
     {
       project: options.projectName,
       uiFramework: 'none',
-      coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: 'jsdom',
       skipViteConfig: true,
