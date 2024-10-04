@@ -313,7 +313,6 @@ describe('nx deps utils', () => {
     const defaults: FileMapCache = {
       version: '6.0',
       nxVersion: nxVersion,
-      deps: {},
       pathMappings: {
         mylib: ['libs/mylib/index.ts'],
       },

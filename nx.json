@@ -1,5 +1,6 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "enableDbCache": true,
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -69,7 +70,8 @@
       "generatorOptions": {
         "packageRoot": "build/packages/{projectName}",
         "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true
+        "skipLockFileUpdate": true,
+        "updateDependents": "never"
       },
       "git": {
         "commit": false,

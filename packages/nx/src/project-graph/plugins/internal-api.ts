@@ -5,7 +5,6 @@ import { join } from 'path';
 
 import { workspaceRoot } from '../../utils/workspace-root';
 import { PluginConfiguration } from '../../config/nx-json';
-import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
 
 import {
@@ -17,10 +16,7 @@ import {
   CreateNodesResult,
   NxPluginV2,
 } from './public-api';
-import {
-  ProjectGraph,
-  ProjectGraphProcessor,
-} from '../../config/project-graph';
+import { ProjectGraph } from '../../config/project-graph';
 import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
 import { createNodesFromFiles } from './utils';
@@ -29,7 +25,7 @@ import {
   isAggregateCreateNodesError,
 } from '../error-types';
 import { IS_WASM } from '../../native';
-import { platform } from 'os';
+import { output } from '../../utils/output';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -51,13 +47,12 @@ export class LoadedNxPlugin {
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => ReturnType<CreateMetadata>;
-  readonly processProjectGraph?: ProjectGraphProcessor;
 
   readonly options?: unknown;
   readonly include?: string[];
   readonly exclude?: string[];
 
-  constructor(plugin: NormalizedPlugin, pluginDefinition: PluginConfiguration) {
+  constructor(plugin: NxPluginV2, pluginDefinition: PluginConfiguration) {
     this.name = plugin.name;
     if (typeof pluginDefinition !== 'string') {
       this.options = pluginDefinition.options;
@@ -124,8 +119,6 @@ export class LoadedNxPlugin {
       this.createMetadata = (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
     }
-
-    this.processProjectGraph = plugin.processProjectGraph;
   }
 }
 
@@ -133,9 +126,6 @@ export type CreateNodesResultWithContext = CreateNodesResult & {
   file: string;
   pluginName: string;
 };
-
-export type NormalizedPlugin = NxPluginV2 &
-  Pick<NxPluginV1, 'processProjectGraph'>;
 
 // Short lived cache (cleared between cmd runs)
 // holding resolved nx plugin objects.
