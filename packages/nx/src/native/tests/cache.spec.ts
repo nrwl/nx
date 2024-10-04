@@ -64,4 +64,9 @@ describe('Cache', () => {
       'output contents 123'
     );
   });
+
+  it('should handle storing hashes that already exist in the cache', async () => {
+    cache.put('123', 'output 123', ['dist'], 0);
+    expect(() => cache.put('123', 'output 123', ['dist'], 0)).not.toThrow();
+  });
 });

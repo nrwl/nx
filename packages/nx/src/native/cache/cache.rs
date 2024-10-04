@@ -49,7 +49,7 @@ impl NxCache {
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
-            link_task_details: link_task_details.unwrap_or(true)
+            link_task_details: link_task_details.unwrap_or(true),
         };
 
         r.setup()?;
@@ -134,7 +134,9 @@ impl NxCache {
         create_dir_all(&task_dir)?;
 
         // Write the terminal outputs into a file
-        write(self.get_task_outputs_path_internal(&hash), terminal_output)?;
+        let task_outputs_path = self.get_task_outputs_path_internal(&hash);
+        trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
+        write(task_outputs_path, terminal_output)?;
 
         // Expand the outputs
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
@@ -184,9 +186,7 @@ impl NxCache {
     fn record_to_cache(&self, hash: String, code: i16) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}", &hash, code);
         self.db.execute(
-            "INSERT INTO cache_outputs
-                (hash, code)
-                VALUES (?1, ?2)",
+            "INSERT OR REPLACE INTO cache_outputs (hash, code) VALUES (?1, ?2)",
             params![hash, code],
         )?;
         Ok(())
@@ -259,10 +259,9 @@ impl NxCache {
             },
         )?.unwrap_or(false);
 
-        if cache_records_exist {
+        if !cache_records_exist {
             let hash_regex = Regex::new(r"^\d+$").expect("Hash regex is invalid");
-            let fs_entries = std::fs::read_dir(&self.cache_path)
-                .map_err(anyhow::Error::from)?;
+            let fs_entries = std::fs::read_dir(&self.cache_path).map_err(anyhow::Error::from)?;
 
             for entry in fs_entries {
                 let entry = entry?;
