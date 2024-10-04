@@ -2,7 +2,7 @@
 title: 'Nx 15.8 — Rust Hasher, Nx Console for IntelliJ, Deno, Node and Storybook'
 slug: 'nx-15-8-rust-hasher-nx-console-for-intellij-deno-node-and-storybook'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-03-08/1*2gKrC6_Yx3hVkQaHxnw5xw.png'
+cover_image: '/blog/images/2023-03-08/2gKrC6_Yx3hVkQaHxnw5xw.png'
 tags: [nx, release]
 ---
 
@@ -138,7 +138,7 @@ Read all the details [on our blog post](/blog/expanding-nx-console-to-jetbrains-
 
 Nx Console has proven a highly valuable tool for exploring Nx generators. Especially if you cannot recall all the various parameters, you can possibly pass. And sure, you could always pass the `--help` or browse [the docs](/nx-api/react/generators/library), but it is just less convenient.
 
-![](/blog/images/2023-03-08/0*xFSreZ1G_zifIsdf.avif)
+![](/blog/images/2023-03-08/xFSreZ1G_zifIsdf.avif)
 
 With a growing number of parameters that a generator can take, it started to get messy and overwhelming. Furthermore, in 80% of the cases, you would probably need the main parameters such as the name, bundler, and directory where to generate the output.  
 This is the main reason we introduced a `x-priority` flag to our generator metadata, to have a way to prioritize certain flags and show them more prominently to the end user. Available values are `important` and `internal`.
@@ -157,7 +157,7 @@ The property can be defined for the desired parameters in the generator’s `sch
 
 All required properties and those marked with an `x-priority: important` will be shown at the top of both, the CLI output (when using `--help`) as well as the Nx Console UI.
 
-![](/blog/images/2023-03-08/0*eDOHabm8ca96lwul.avif)
+![](/blog/images/2023-03-08/eDOHabm8ca96lwul.avif)
 
 Read all about it [in the doc about Customizing Generator Options](/extending-nx/recipes/generator-options).
 

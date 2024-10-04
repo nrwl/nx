@@ -2,7 +2,7 @@
 title: 'How Lerna just got 10x faster!'
 slug: 'lerna-used-to-walk-now-it-can-fly'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-25/1*WPGHapKqT3IguWjeN5UgWg.png'
+cover_image: '/blog/images/2022-05-25/WPGHapKqT3IguWjeN5UgWg.png'
 tags: [nx]
 ---
 
@@ -31,7 +31,7 @@ But let’s do some more real “apples-to-apples” comparison of Lerna’s spe
 
 Here’s a gif of running the benchmark of Lerna+Nx and Turborepo:
 
-![](/blog/images/2022-05-25/1*MrhEU4wPZlwp4dbKsj876g.avif)
+![](/blog/images/2022-05-25/MrhEU4wPZlwp4dbKsj876g.avif)
 
 **Lerna+Nx is 5.3 times faster** than Turborepo 🚀.
 
@@ -82,7 +82,7 @@ By having Nx integrated, you not just get faster builds but also some other Nx�
 
 [**Nx Project graph**](/features/explore-graph) — By running `npx nx graph` you get the visualization of the graph. You can interactively explore what your workspace looks like and the relationships between the packages. We actually used this same graph on the Lerna repo itself, which helped us to get a better understanding of how the repo is structured when we took over the maintenance. Here’s an example of filtering the lerna packages to understand what `@lerna/exec` is about and how it relates to other packages in the repo.
 
-![](/blog/images/2022-05-25/0*uW4TaZQy7smwCDEj.avif)
+![](/blog/images/2022-05-25/uW4TaZQy7smwCDEj.avif)
 
 **Distributed caching** — Right now when you enable `useNx` in your existing Lerna repo, you will get local caching, meaning the cache sits in a local folder on your machine. You get much more value out of it when you start distributing and sharing it with your teammates but especially in CI. This can be done by adding Nx Cloud, which comes with a no-credit card, 500 hours free / month offer which is more than what most workspaces need. Adding that is easy and can be done by adding `@nrwl/nx-cloud` to your root-level `package.json` and then by running:
 

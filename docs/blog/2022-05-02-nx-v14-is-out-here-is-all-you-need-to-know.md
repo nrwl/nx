@@ -2,7 +2,7 @@
 title: 'Nx v14 is out — Here is all you need to know!'
 slug: 'nx-v14-is-out-here-is-all-you-need-to-know'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-02/1*UAN1p_RMt38_IvB3CRpYTA.png'
+cover_image: '/blog/images/2022-05-02/UAN1p_RMt38_IvB3CRpYTA.png'
 tags: [nx, release]
 ---
 
@@ -22,7 +22,7 @@ We hit a major milestone with Nx v13 when we reached 1 million weekly downloads 
 
 Nx also outgrew Lerna in February in weekly downloads. Up until that point, [Lerna](https://lerna.js.org/) was considered the go-to choice when it comes to JS-based monorepos. But just recently, they made it [even more evident](https://github.com/lerna/lerna/pull/3092) that Lerna has been and is [largely unmaintained](https://github.com/lerna/lerna/issues/2703).
 
-![](/blog/images/2022-05-02/0*mPx5PywQEPHBayAO.avif)
+![](/blog/images/2022-05-02/mPx5PywQEPHBayAO.avif)
 
 We saw that coming and made it easy for people to migrate to Nx.
 
@@ -34,7 +34,7 @@ There’s a detailed guide helping with some of the doubts and misconceptions wh
 
 The future for monorepo tools looks bright as the awareness of monorepos, especially in the JS ecosystem, has grown a lot in recent months. Nx is doing great compared to those tools. But this movement excites us and we are more than ever committed to keep pushing forward and making Nx even better.
 
-![](/blog/images/2022-05-02/0*3nUxgDpXZ82yx6r8.avif)
+![](/blog/images/2022-05-02/3nUxgDpXZ82yx6r8.avif)
 
 ## Nx Console reaches 1 million installs
 
@@ -63,7 +63,7 @@ How can Nx be so fast? One thing we did introduce after v13 and [recently enable
 
 While a lot of the above improvements help with local development, one of the biggest pain points of having a large monorepo can be CI times. This is where **distributed task execution (DTE)** makes all the difference\*_._\* Nx Cloud’s DTE understands which commands your CI is running, how many agents are typically being used, and how long a given task typically takes. It leverages that information along with task dependencies to create an execution plan that prioritizes builds of shared libraries first to unblock upstream builds. This results in a more even utilization of CI agents, optimizing the overall running time of your CI.
 
-![](/blog/images/2022-05-02/0*k4ayjIt_OMEedxn-.avif)
+![](/blog/images/2022-05-02/k4ayjIt_OMEedxn-.avif)
 
 Over time, Nx Cloud’s DTE learns about your workspace, keeping metrics about running times to allow the best possible distribution of a given task with the given amount of agents. This comes with Nx Cloud.
 
@@ -87,11 +87,11 @@ Developer experience is highly important to us. And that doesn’t stop at the t
 
 _(here executed by skipping the cache to show some progress running_ 🙂*)*
 
-![](/blog/images/2022-05-02/0*Sodlw6nDI6l9LgsB.avif)
+![](/blog/images/2022-05-02/Sodlw6nDI6l9LgsB.avif)
 
 We now even filter out the build of dependent projects. Say you build the `react` project in your workspace which depends on 11 other projects. Nx needs to first incrementally build those 11 dependent projects, which it does now in a very subtle way by just reporting the overall progress at the top of the terminal output, while the main `react` project build output is printed just as normal.
 
-![](/blog/images/2022-05-02/0*jXaiowGZpPMC6PlJ.avif)
+![](/blog/images/2022-05-02/jXaiowGZpPMC6PlJ.avif)
 
 Obviously, all errors would be reported properly, and on CI this behavior is disabled by default. If you want to disable it, you can always set `NX_TASKS_RUNNER_DYNAMIC_OUTPUT` to false.
 
@@ -134,7 +134,7 @@ npx nx generate @nrwl/workspace:ci-workflow --ci=github
 
 Or just use [Nx Console](/getting-started/editor-setup), as always.
 
-![](/blog/images/2022-05-02/0*XFXDdGUWc3dF9ZMC.avif)
+![](/blog/images/2022-05-02/XFXDdGUWc3dF9ZMC.avif)
 
 This sets you up with an automated CI workflow that properly uses the Nx affected command together with the power of [Nx Cloud’s distributed task execution](/ci/features/distribute-task-execution).
 
@@ -144,11 +144,11 @@ You can also use the `--all` flag when generating a new workspace, for seeing al
 
 The [Nx Cloud GitHub app](https://github.com/apps/nx-cloud) is so useful for not having to go to your CircleCI logs and try to find the entry you’re searching for. Instead all the executed targets nicely show up as a comment in your PR.
 
-![](/blog/images/2022-05-02/0*4zTea6s4BTMyDToD.avif)
+![](/blog/images/2022-05-02/4zTea6s4BTMyDToD.avif)
 
 Once you click them, you get a nicely formatted and structured page within Nx Cloud.
 
-![](/blog/images/2022-05-02/0*WnsKJB1ceufeHGPZ.avif)
+![](/blog/images/2022-05-02/WnsKJB1ceufeHGPZ.avif)
 
 Until now, you had to have a task that is being executed through Nx Cloud. But what about those workspace utility scripts, like checking the commit format etc. You can now use `nx-cloud record` for those, like
 
@@ -176,7 +176,7 @@ nx g @nrwl/angular:host shell --remotes=shop,cart,about
 
 By specifying the `implicitDependencies` in Nx ([see docs](/reference/project-configuration)) Nx knows what the relation between the various apps is, even though there are not direct imports
 
-![](/blog/images/2022-05-02/0*1VDr0oYKNn4j4gWm.avif)
+![](/blog/images/2022-05-02/1VDr0oYKNn4j4gWm.avif)
 
 Combining this with the power of Nx Cloud distributed caching, you can now serve your shell project
 
@@ -209,31 +209,31 @@ Read more on our docs: [/concepts/module-federation/micro-frontend-architecture]
 
 You asked for it, the community responded. [Luís Carvalho](https://github.com/Lcarv20) - a first time contributor - worked together with Nx core team members Philip and Ben to deliver dark mode for the project graph visualization!!
 
-![](/blog/images/2022-05-02/0*TzVbTnDmzgInCw6H.avif)
+![](/blog/images/2022-05-02/TzVbTnDmzgInCw6H.avif)
 
 Also, have you ever wondered whether in your gigantic graph there’s a connection between two nodes?
 
-![](/blog/images/2022-05-02/0*eMk2cAwrdHmaK07h.avif)
+![](/blog/images/2022-05-02/eMk2cAwrdHmaK07h.avif)
 
 Now you can easily find out! Just click on a node and hit the “Start” button.
 
-![](/blog/images/2022-05-02/0*gDnkyfnnAHy2P0Z8.avif)
+![](/blog/images/2022-05-02/gDnkyfnnAHy2P0Z8.avif)
 
 Then click the target node you’re interested in and hit “End”.
 
-![](/blog/images/2022-05-02/0*BMoc7FuUD94GzOXO.avif)
+![](/blog/images/2022-05-02/BMoc7FuUD94GzOXO.avif)
 
 The project graph now renders the path between those nodes.
 
-![](/blog/images/2022-05-02/0*I2E5CvnLb-C8z95L.avif)
+![](/blog/images/2022-05-02/I2E5CvnLb-C8z95L.avif)
 
 And by clicking on the edges you can even get a more detailed output of why the connection exists in the first place 🤯
 
-![](/blog/images/2022-05-02/0*EnPbSRFUD3KeOH4w.avif)
+![](/blog/images/2022-05-02/EnPbSRFUD3KeOH4w.avif)
 
 Oh wait, you didn’t want the shortest path? There’s a button for showing all possible paths too 😉
 
-![](/blog/images/2022-05-02/0*OlhUXFMhEwshLoTV.avif)
+![](/blog/images/2022-05-02/OlhUXFMhEwshLoTV.avif)
 
 ## JavaScript & TypeScript library support
 

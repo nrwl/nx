@@ -2,7 +2,7 @@
 title: 'Setting up Module Federation with Server-Side Rendering for Angular'
 slug: 'setting-up-module-federation-with-server-side-rendering-for-angular'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-01-10/1*kyMChnJ-X6jK9sbuaOdOiw.png'
+cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.png'
 tags: [nx, tutorial]
 ---
 
@@ -27,11 +27,11 @@ Now we can get both, the benefits of Module Federation and SSR in our Nx Workspa
 
 A traditional SSR application is rendered on the server. It receives the requested route from the browser, Angular evaluates that route, and the server generates the HTML and sends it back to the browser.
 
-![](/blog/images/2023-01-10/0*ZqG4jdD8DaqmG_It.avif)
+![](/blog/images/2023-01-10/ZqG4jdD8DaqmG_It.avif)
 
 With Module Federation and SSR, it takes that concept and the concept of MF to allow portions of the app to be run on their own server. The host server will receive the route and if it’s a route pointing to a remote, it will ask the remote to process the route, then send the rendered HTML to the browser.
 
-![](/blog/images/2023-01-10/0*eQis_bQnsj-MToCa.avif)
+![](/blog/images/2023-01-10/eQis_bQnsj-MToCa.avif)
 
 This gives us full power of SSR but also still allowing us to break our build into multiple smaller builds. It also means that we _could_ redeploy the remote server with new changes without having to redeploy the host server, allowing for independent deployability of features within the overall application.
 
@@ -93,11 +93,11 @@ Compiled successfully.
 
 Let’s open a new tab in our browser, and open Network tab in the DevTools. After this, navigate to [http://localhost:4200](http://localhost:4200/). You should see the following:
 
-![](/blog/images/2023-01-10/0*3irxzNENB79JiQmR.avif)
+![](/blog/images/2023-01-10/3irxzNENB79JiQmR.avif)
 
 The most interesting piece here is the first entry in the network log. Let’s look at it more closely:
 
-![](/blog/images/2023-01-10/0*Ikvgk8dF8rKmutTY.avif)
+![](/blog/images/2023-01-10/Ikvgk8dF8rKmutTY.avif)
 
 We can see that the server returned the fully rendered HTML for the page!
 

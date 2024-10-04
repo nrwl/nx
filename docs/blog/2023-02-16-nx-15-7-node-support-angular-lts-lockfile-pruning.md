@@ -2,7 +2,7 @@
 title: 'Nx 15.7 — Node Support, Angular LTS, Lockfile Pruning'
 slug: 'nx-15-7-node-support-angular-lts-lockfile-pruning'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-02-16/1*2AAo-mng7QyJP9yC80zNFQ.png'
+cover_image: '/blog/images/2023-02-16/2AAo-mng7QyJP9yC80zNFQ.png'
 tags: [nx, release]
 ---
 
@@ -29,7 +29,7 @@ Here’s all you need to know about our latest Nx release.
 
 It’s almost a tradition to have some stats at the beginning of our Nx release blog posts. This time, about our YT channel: incredibly, we crossed 10k subscribers [on our Youtube channel](https://www.youtube.com/@nxdevtools)!!
 
-![](/blog/images/2023-02-16/0*s8uTPTC3X01sE3u2.avif)
+![](/blog/images/2023-02-16/s8uTPTC3X01sE3u2.avif)
 
 Apart from delivering high-quality engineering work, we’re very invested in producing educational content around developer tooling and monorepos. We’ve been almost consistently shipping new content every week, whether that is blog posts on the [Nx blog](/blog) or in the form of new videos and live streams on our channel. Seeing our audience grow on Youtube confirms we’re on the right track and gives us new fuel to keep pushing!!
 
@@ -48,7 +48,7 @@ Please have a look at our updated guide: [/extending-nx/tutorials/organization-s
 Due to a lack of time we never invested much more into streamlining the Node experience within Nx, though. This [changed now](/blog/from-bootstrapped-to-venture-backed), which is why we’re committed to making Nx the best developer tool for node based apps. Starting with v15.7 we improved support for [ExpressJS](https://expressjs.com/), [Fastify](https://fastify.io/) and [Koa](https://koajs.com/).  
 When starting a new Nx workspace, you now have a new option: “Standalone Node Server app”.
 
-![](/blog/images/2023-02-16/0*yTl82iMY0EsbjmBQ.avif)
+![](/blog/images/2023-02-16/yTl82iMY0EsbjmBQ.avif)
 
 This is when you want a single-project Nx workspace to build out your Node backend.
 
@@ -142,13 +142,13 @@ You can try out Storybook 7.0 beta in a new Nx workspace by passing the `--story
 
 Previously when you created a new React application with the Nx `@nrwl/react` plugin, the actual Webpack config was hidden within the plugin itself.
 
-![](/blog/images/2023-02-16/0*1rWmKSybkBC8I-0O.avif)
+![](/blog/images/2023-02-16/1rWmKSybkBC8I-0O.avif)
 
 It was for a good reason, but at the same time, it is a thin line to walk between giving more flexibility and ensuring integrity and consistency (not to speak about features such as [automated code migrations](/features/automate-updating-dependencies)). We wrote a [blog post about it last week](/blog/configuration-files-and-potholes-in-your-codebase).
 
 Inspired by our new [Vite setup](/nx-api/vite), which allows for a more modular configuration in the `vite.config.ts`, we wanted to bring some of the same flexibility to our Webpack setup as well. As such, now every Nx Webpack setup (e.g. a new React + Webpack based app) have a `webpack.config.js` in the project root. Old project are automatically migrated to this new setup.
 
-![](/blog/images/2023-02-16/0*emRP2gF7umWc4UE-.avif)
+![](/blog/images/2023-02-16/emRP2gF7umWc4UE-.avif)
 
 If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details on our docs: [/recipes/webpack/webpack-config-setup](/recipes/webpack/webpack-config-setup)
 
