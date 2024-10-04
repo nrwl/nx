@@ -67,6 +67,7 @@ export async function hostGeneratorInternal(
 
   const initTask = await applicationGenerator(host, {
     ...options,
+    directory: options.appProjectRoot,
     name: options.projectName,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
@@ -96,7 +97,7 @@ export async function hostGeneratorInternal(
         typescriptConfiguration: options.typescriptConfiguration,
         js: options.js,
         dynamic: options.dynamic,
-        host: options.name,
+        host: options.projectName,
         skipPackageJson: options.skipPackageJson,
         bundler: options.bundler,
       });
