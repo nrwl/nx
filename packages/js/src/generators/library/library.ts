@@ -1,3 +1,4 @@
+// bump
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
