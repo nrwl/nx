@@ -2,7 +2,7 @@
 title: 'Storybook Interaction Tests in Nx'
 slug: 'storybook-interaction-tests-in-nx'
 authors: ['Katerina Skroumpelou']
-cover_image: '/blog/images/2023-08-03/1*NfJA7VBZvDwyyZHmV8qsiw.png'
+cover_image: '/blog/images/2023-08-03/NfJA7VBZvDwyyZHmV8qsiw.png'
 tags: [nx]
 ---
 
@@ -38,7 +38,7 @@ For complex flows, it can be worthwhile to group sets of related interactions us
 
 Storybook provides an interactive debugger that displays the step-by-step flow of your interactions, and provides UI controls to pause, resume, rewind, and step through each interaction​.
 
-![](/blog/images/2023-08-03/0*ZhrFxCwtYkO3gLaU.avif)
+![](/blog/images/2023-08-03/ZhrFxCwtYkO3gLaU.avif)
 _Interaction test for the click of a button._
 
 If an error occurs during a story’s play function, it’ll be shown in the interaction addon panel to help with debugging. And since Storybook is a web app, anyone with the URL can reproduce the error with the same detailed information without any additional environment configuration or tooling required​.

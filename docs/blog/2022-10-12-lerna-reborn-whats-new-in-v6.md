@@ -2,7 +2,7 @@
 title: 'Lerna reborn — What’s new in v6?'
 slug: 'lerna-reborn-whats-new-in-v6'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-10-12/1*RGQCNNO-SSQ8PHnIZ4BVTQ.png'
+cover_image: '/blog/images/2022-10-12/RGQCNNO-SSQ8PHnIZ4BVTQ.png'
 tags: [nx, release]
 ---
 
@@ -75,7 +75,7 @@ By using Nx as the task scheduler for Lerna it inherits all the capabilities Nx 
 
 Remote caching allows you to distribute your local cache with your co-workers and your CI system. This is done via [Nx Cloud](/nx-cloud). But distributed caching is just one aspect. Nx Cloud also comes with a “run view” that visualizes your CI run with easy grouping and filtering capabilities, but in particular, it comes with the ability to distribute your tasks dynamically across multiple machines. All by optimizing for the best parallelization and machine utilization.
 
-![](/blog/images/2022-10-12/0*CtvU5Me27YRidzG1.avif)
+![](/blog/images/2022-10-12/CtvU5Me27YRidzG1.avif)
 
 All you need to set this up is to run..
 
@@ -139,7 +139,7 @@ You can now finally use one of the fastest package managers in combination with 
 
 When running tasks in parallel across a large number of projects, it can become quite difficult to follow along in the terminal with what got built and where tasks failed. That’s why the new Lerna version comes with a dynamic terminal output that only shows what is most relevant at a given moment.
 
-![](/blog/images/2022-10-12/0*8hPYG2wuAMk5hri0.avif)
+![](/blog/images/2022-10-12/8hPYG2wuAMk5hri0.avif)
 
 Note that you would still see all of the output as usual on CI.
 
@@ -147,21 +147,21 @@ Note that you would still see all of the output as usual on CI.
 
 Lerna now has a [dedicated VSCode extension](https://lerna.js.org/docs/features/editor-integrations) to help you navigate your monorepo. This allows you to run commands directly from the context menu (by right-clicking on a project):
 
-![](/blog/images/2022-10-12/0*-TlHvP1Kd46Vzbfg.avif)
+![](/blog/images/2022-10-12/TlHvP1Kd46Vzbfg.avif)
 
 Or visualize a project and its relationships with other projects in the workspace.
 
-![](/blog/images/2022-10-12/0*ZFhpQX9xS59eZD7Q.avif)
+![](/blog/images/2022-10-12/ZFhpQX9xS59eZD7Q.avif)
 
 You will also get intelligent autocompletion in configuration files. Here’s an example of Nx console providing context-based information when editing the `nx.json` task dependencies.
 
-![](/blog/images/2022-10-12/0*pMotejmmm1TUsLR2.avif)
+![](/blog/images/2022-10-12/pMotejmmm1TUsLR2.avif)
 
 ## Lerna Repair
 
 Lerna v6 comes with a built-in `lerna repair` command. Running this command will automatically fix your Lerna configuration. For instance, in Lerna v6, there's no need to have `useNx: true` in your `lerna.json` since that will be the new default going forward. Running `lerna repair` fixes this.
 
-![](/blog/images/2022-10-12/0*SNKZvHYE2CG7jX7A.avif)
+![](/blog/images/2022-10-12/SNKZvHYE2CG7jX7A.avif)
 
 This allows you always to have the most up-to-date Lerna setup and it will become even more powerful as we keep adding migrations in the future.
 

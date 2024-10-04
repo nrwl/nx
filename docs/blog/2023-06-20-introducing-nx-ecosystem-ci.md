@@ -2,7 +2,7 @@
 title: 'Introducing Nx Ecosystem CI'
 slug: 'introducing-nx-ecosystem-ci'
 authors: ['Katerina Skroumpelou']
-cover_image: '/blog/images/2023-06-20/1*EffyLKcVe5gE_x3MT8PJUQ.png'
+cover_image: '/blog/images/2023-06-20/EffyLKcVe5gE_x3MT8PJUQ.png'
 tags: [nx]
 ---
 

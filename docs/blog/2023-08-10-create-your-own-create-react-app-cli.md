@@ -2,7 +2,7 @@
 title: 'Create Your Own create-react-app CLI'
 slug: 'create-your-own-create-react-app-cli'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-10/1*j2QU-hjxt-1krFST8CGFiA.png'
+cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.png'
 tags: [nx]
 ---
 
@@ -47,7 +47,7 @@ Note, if you already have an existing Nx plugin workspace, instead of creating a
 nx g @nx/plugin:create-package <cli name> --project=<existing plugin name> --e2eProject e2e
 ```
 
-![](/blog/images/2023-08-10/1*dL5XHPOGCtfFyTHhloaYcQ.avif)
+![](/blog/images/2023-08-10/dL5XHPOGCtfFyTHhloaYcQ.avif)
 _Project graph of the workspace_
 
 The resulting workspace contains 2 projects: a CLI and an Nx plugin.
@@ -59,7 +59,7 @@ The resulting workspace contains 2 projects: a CLI and an Nx plugin.
 
 Let’s focus on the `create-my-own-react-app` project which is our CLI.
 
-![](/blog/images/2023-08-10/1*00F7H_Z13uonZiflZSQd8Q.avif)
+![](/blog/images/2023-08-10/00F7H_Z13uonZiflZSQd8Q.avif)
 
 The `index.ts` file is the key part here. It is the one that gets invoked when someone runs `npx create-my-own-react-app` later once we publish it.
 
@@ -121,7 +121,7 @@ _(Note,_ `_publish_` _is a target defined in the_ `_project.json_` _of our proje
 
 This command will publish both `my-own-react` and `create-my-own-react-app` packages to your local registry. If open the running Verdaccio registry at [http://localhost:4873](http://localhost:4873) you should see the published packages.
 
-![](/blog/images/2023-08-10/1*_D72hvW4nrl_DSYyMQU0DQ.avif)
+![](/blog/images/2023-08-10/D72hvW4nrl_DSYyMQU0DQ.avif)
 
 3\. Now, you can run `npx create-my-own-react-app` just like a developer using our CLI would. For example, go to the tmp directory and create a `my-own-react` workspace named `test`:
 
@@ -132,7 +132,7 @@ npx create-my-own-react-app@1.0.0 test
 
 What you’ll get is an Nx workspace with the base setup and a `test` library project with a single TS file. Because that’s exactly what our current `preset` generator does.
 
-![](/blog/images/2023-08-10/1*v70qP_BS6LJm3NMAYkv2KQ.avif)
+![](/blog/images/2023-08-10/v70qP_BS6LJm3NMAYkv2KQ.avif)
 
 Let’s fix that in the next step.
 
@@ -184,7 +184,7 @@ The preset generator does 2 things:
 - Generates files in the project using the`generateFiles` function. This uses the templates under `src/generators/preset/files` which are interpolated to become the files that are generated for the user.
 - Format the generated files with `prettier` with the`formatFiles` function
 
-![](/blog/images/2023-08-10/1*38RvkLIwUAvVDDrEp5sFPQ.avif)
+![](/blog/images/2023-08-10/38RvkLIwUAvVDDrEp5sFPQ.avif)
 _preset generator_
 
 The `addProjectConfiguration` and `generateFiles` functions are from [@nx/devkit](/nx-api/devkit/documents/nx_devkit), a library that contains utility functions for writing plugins for Nx. For the future, see the [complete list of utility functions](/nx-api/devkit/documents/nx_devkit).
@@ -393,7 +393,7 @@ npx create-my-own-react-app@1.0.1 test2
 
 The CLI now creates a workspace with the dependencies we want and the code for the react application just like `create-react-app`:
 
-![](/blog/images/2023-08-10/1*gZ7ocdR49soEahM8TlGA4A.avif)
+![](/blog/images/2023-08-10/gZ7ocdR49soEahM8TlGA4A.avif)
 
 ## Step 5: Add a Serve Target
 
@@ -472,15 +472,15 @@ npx nx run-many --targets publish --ver 1.0.2 --tag latest
 
 Once we generate a new workspace with the new preset version (npx create-my-own-react-app@1.0.2 test3), we should now see our `package.json` `start`script being generated.
 
-![](/blog/images/2023-08-10/1*Rb6xWqUiK51DsZsAGdtNbQ.avif)
+![](/blog/images/2023-08-10/Rb6xWqUiK51DsZsAGdtNbQ.avif)
 
 To run the app we either run
 
 - `npm start`
 - or `npx nx start` which would automatically pick up the `start` script in the `package.json`
 
-![](/blog/images/2023-08-10/1*qVf6zEOndAgYkIRgZxTYZA.avif)
-![](/blog/images/2023-08-10/1*K7YZDNyIWp0Bu9tLl5VixA.avif)
+![](/blog/images/2023-08-10/qVf6zEOndAgYkIRgZxTYZA.avif)
+![](/blog/images/2023-08-10/K7YZDNyIWp0Bu9tLl5VixA.avif)
 _serve output_
 
 ## Step 7: Add a Prompt to the CLI to Customize the Starter App
@@ -576,8 +576,8 @@ Also, change the CSS for `.App-header` in the CSS template file`src/generators/p
 
 Now if you republish the projects and regenerate an app with the light mode, you should see the background color and text color of the header got changed:
 
-![](/blog/images/2023-08-10/1*tifthl0LFTk1i3PcZWUo_A.avif)
-![](/blog/images/2023-08-10/1*ruXAwt1cxeZsdN2AkZqPzA.avif)
+![](/blog/images/2023-08-10/tifthl0LFTk1i3PcZWUo_A.avif)
+![](/blog/images/2023-08-10/ruXAwt1cxeZsdN2AkZqPzA.avif)
 _serve output_
 
 ## Step 8: E2E Testing

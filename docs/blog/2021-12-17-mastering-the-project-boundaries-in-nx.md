@@ -2,7 +2,7 @@
 title: 'Taming Code Organization with Module Boundaries in Nx'
 slug: 'mastering-the-project-boundaries-in-nx'
 authors: ['Miroslav Jonaš']
-cover_image: '/blog/images/2021-12-17/1*PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2021-12-17/PIUl1QGk7mOpSFdEwFQ8OA.png'
 tags: [nx]
 ---
 
@@ -79,7 +79,7 @@ Finally, the flag `enforceBuildableLibDependency` prevents us from importing a n
 
 To best express the need for the boundaries and assist us through the explanation, we will be using the repository represented by the following graph:
 
-![](/blog/images/2021-12-17/1*z3ap5kyCXG4p8bcBQXx9tA.avif)
+![](/blog/images/2021-12-17/z3ap5kyCXG4p8bcBQXx9tA.avif)
 _The graph representation of the repository_
 
 Our repository consists of two applications — Store and Admin. Each of them is composed of several feature libraries — Products (for Store), Sales, and Invoices (for Admin). Also, both of these applications depend on the Core library, and every project in our repo depends on our Shared library. Using common sense, we would like to enforce certain boundaries:
@@ -109,7 +109,7 @@ Your changed project configuration should now have the tags section defined.
 
 Your enhanced graph will now look similar to this:
 
-![](/blog/images/2021-12-17/1*kTiRazA4qhZ7kD-lGgGyjg.avif)
+![](/blog/images/2021-12-17/kTiRazA4qhZ7kD-lGgGyjg.avif)
 _Graph with type tags set_
 
 The above list of library types is not complete. You might add specific ones for E2E projects or UI component libraries. Using the naming format `type:*` is just a suggestion. Consider this being a hashtag on your favorite social app. You can use any prefix or format you feel fitting. The important thing is that it's readable and intuitive to all the members of your team.
@@ -149,7 +149,7 @@ Now, that we have marked all of our projects, we can continue to define the rule
 
 We said that a feature library can depend on any other feature library, but there is a small catch. Our two apps could be built with a different framework so mixing feature libraries would not be possible. To avoid any future impediments, we don’t want to allow a feature library used in `Store` to depend on the feature library from `Admin` and vice versa. Additionally, only our apps should be able to load the `Core` library.
 
-![](/blog/images/2021-12-17/1*mr_MbGgWVbBcfBhss0hNqA.avif)
+![](/blog/images/2021-12-17/mr_MbGgWVbBcfBhss0hNqA.avif)
 _Project graph with type tags and technology badges_
 
 Let’s add another dimension to allow such restrictions. We will define the necessary scope tags:
@@ -161,7 +161,7 @@ Let’s add another dimension to allow such restrictions. We will define the nec
 
 Our diagram should now look like this:
 
-![](/blog/images/2021-12-17/1*KeO1ZnEkUtmS2uj8M2rqKA.avif)
+![](/blog/images/2021-12-17/KeO1ZnEkUtmS2uj8M2rqKA.avif)
 _Full project graph with two-dimensional tags_
 
 Let us now define our missing rules!

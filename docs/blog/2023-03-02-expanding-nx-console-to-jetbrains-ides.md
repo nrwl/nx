@@ -2,7 +2,7 @@
 title: 'Expanding Nx Console to JetBrains IDEs'
 slug: 'expanding-nx-console-to-jetbrains-ides'
 authors: ['Max Kless']
-cover_image: '/blog/images/2023-03-02/1*lEAhfd3d17hGichyT-oGbw.png'
+cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.png'
 tags: [nx]
 ---
 
@@ -17,7 +17,7 @@ Go grab it on the official store.
 👉 **Install link:
 ** [https://plugins.jetbrains.com/plugin/21060-nx-console](https://plugins.jetbrains.com/plugin/21060-nx-console)
 
-![](/blog/images/2023-03-02/1*gnMRzttFFaoTX0tVw-zZbQ.avif)
+![](/blog/images/2023-03-02/gnMRzttFFaoTX0tVw-zZbQ.avif)
 
 Before we go into details of Nx Console for IntelliJ, we’d really want to go and **thank our community**. [\* \*_Issam Guissouma_\*\*](https://twitter.com/iguissouma) and [**_Edward Tkachev_**](https://twitter.com/etkachev) from the
 Nx community had their own Nx Console plugins for IntelliJ out there already for a while. And they have been super
@@ -124,7 +124,7 @@ without the core support.
 
 ## Generate UI
 
-![](/blog/images/2023-03-02/0*-BMjrO5LdBCWK2TU.avif)
+![](/blog/images/2023-03-02/BMjrO5LdBCWK2TU.avif)
 _Screenshot of the generate UI in IntelliJ_
 
 As mentioned, the generate UI is a key feature of Nx Console. It allows users to easily generate code by using a
