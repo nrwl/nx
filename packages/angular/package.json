@@ -58,7 +58,7 @@
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
     "webpack": "^5.88.0",
-    "@module-federation/enhanced": "0.6.6",
+    "@module-federation/enhanced": "0.6.9",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
