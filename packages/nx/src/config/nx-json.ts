@@ -517,9 +517,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   sync?: NxSyncConfiguration;
 
   /**
-   * Enable the new experimental db based cache
+   * Use the legacy file system cache instead of the db cache
    */
-  enableDbCache?: boolean;
+  useLegacyCache?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

@@ -2,7 +2,7 @@
 title: 'React, Vite and TypeScript: Get started in under 2 minutes'
 slug: 'react-vite-and-typescript-get-started-in-under-2-minutes'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-01-12/1*ucL7YQ2v8aaOy426soLPZA.png'
+cover_image: '/blog/images/2023-01-12/ucL7YQ2v8aaOy426soLPZA.png'
 tags: [nx]
 ---
 
@@ -63,11 +63,11 @@ npx create-nx-workspace@latest awesomereactapp
 
 And then choose the option you prefer in the terminal prompt:
 
-![](/blog/images/2023-01-12/0*WceoJTEWec2ZTp5X.avif)
+![](/blog/images/2023-01-12/WceoJTEWec2ZTp5X.avif)
 
 In the end, what you’ll get is the following structure:
 
-![](/blog/images/2023-01-12/0*mykjIRKX-a5VtyQl.avif)
+![](/blog/images/2023-01-12/mykjIRKX-a5VtyQl.avif)
 
 ## Running, building and testing the app
 
@@ -248,7 +248,7 @@ export default defineConfig({
 
 Nx is known for its caching that helps optimize the speed in monorepos. Caching takes the inputs (the command, source files, environment variables…) and computes a hash.
 
-![](/blog/images/2023-01-12/0*Af7lMrhaO0gcIUeY.avif)
+![](/blog/images/2023-01-12/Af7lMrhaO0gcIUeY.avif)
 
 On every run, Nx compares that hash against a local cache folder. If the hash exists, Nx restores the command line output and potential artifacts (JS, CSS,… files) produced by a previous run. This helps speed up computation because you don’t run it if you don’t need to.
 
@@ -384,11 +384,11 @@ Another side-effect of splitting up your codebase into libraries is that your co
 npx nx graph
 ```
 
-![](/blog/images/2023-01-12/0*lQqPKUstJg1JHD-f.avif)
+![](/blog/images/2023-01-12/lQqPKUstJg1JHD-f.avif)
 
 It becomes even more interesting if you select the “Group by folder” checkbox as the domains become visible at that point:
 
-![](/blog/images/2023-01-12/0*5s3J449vgsfYVLkL.avif)
+![](/blog/images/2023-01-12/5s3J449vgsfYVLkL.avif)
 
 > _Note this is a hypothetical app to demo some of the features of the Nx graph visualization. Some of the connections might only make a little sense._
 
@@ -453,7 +453,7 @@ Let’s say we make a change in the `product-detail` library of our application.
 npx nx affected:graph
 ```
 
-![](/blog/images/2023-01-12/0*W_ttiuzGHhjnUC2I.avif)
+![](/blog/images/2023-01-12/W_ttiuzGHhjnUC2I.avif)
 
 To run tasks only for the affected areas, use:
 
@@ -473,11 +473,11 @@ If you are not the “command line interface type” developer and you’d rathe
 
 It has a dedicated view within VSCode to trigger common commands, browse the workspace structure and even inline render the graph.
 
-![](/blog/images/2023-01-12/0*ekMC03F1rFd_acmu.avif)
+![](/blog/images/2023-01-12/ekMC03F1rFd_acmu.avif)
 
 It also comes with contextual menus to quickly access most of the commonly used functionality:
 
-![](/blog/images/2023-01-12/0*0wOJ7DPKcNV25D-V.avif)
+![](/blog/images/2023-01-12/0wOJ7DPKcNV25D-V.avif)
 
 Here’s a walkthrough video showing some of the powerful capabilities of Nx Console:
 

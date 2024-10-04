@@ -2,7 +2,7 @@
 title: 'Set up Tailwind CSS with Angular in an Nx workspace'
 slug: 'set-up-tailwind-css-with-angular-in-an-nx-workspace'
 authors: ['Leosvel Pérez Espinosa']
-cover_image: '/blog/images/2022-01-28/1*igoocYqr8gj8n9t8qr5cuA.png'
+cover_image: '/blog/images/2022-01-28/igoocYqr8gj8n9t8qr5cuA.png'
 tags: [nx]
 ---
 
@@ -20,7 +20,7 @@ The final result of what we are going to be building can be found in this Github
 
 We are going to create 2 simple applications with the following layout:
 
-![](/blog/images/2022-01-28/1*OXo64rzyF-5nKO2fbpG4xg.avif)
+![](/blog/images/2022-01-28/OXo64rzyF-5nKO2fbpG4xg.avif)
 _Applications mockup_
 
 We’ll start by creating one application with the required markup and **Tailwind CSS** utility classes to achieve the above layout. Then, we’re going to leverage **Nx**’s library support and extract some common UI components into 2 different shared libraries:
@@ -200,7 +200,7 @@ npx nx run app1:serve
 
 Visiting [https://localhost:4200](https://localhost:4200) in your browser should show the application looking like the following screenshot:
 
-![](/blog/images/2022-01-28/1*TkIVfzbeier6j0nlAeX7ig.avif)
+![](/blog/images/2022-01-28/TkIVfzbeier6j0nlAeX7ig.avif)
 _Application 1 screenshot_
 
 That’s it! We have successfully created our application to fulfill the requirements we had. Next, we are going to start extracting pieces of the UI into shared libraries to reuse them with the second application.
@@ -260,7 +260,7 @@ Since we have our application configured to scan the relevant files within itsel
 
 Below is a small decision tree to check whether a **Tailwind CSS** configuration is needed for your library in an **Nx** workspace:
 
-![](/blog/images/2022-01-28/1*x_nZUiADymUMNsmDpAU3aA.avif)
+![](/blog/images/2022-01-28/x_nZUiADymUMNsmDpAU3aA.avif)
 _Decision tree for the need of Tailwind CSS configuration in Angular libraries_
 
 ## Extracting the header into a library
@@ -655,7 +655,7 @@ Once again, if we serve our application everything should still be working as ex
 
 Also, if we visualize the workspace projects we’ll see how `app1` and `lib2` now have a dependency on `tailwind-preset`:
 
-![](/blog/images/2022-01-28/1*F1p0OfL4WrmubTQ2QPX04Q.avif)
+![](/blog/images/2022-01-28/F1p0OfL4WrmubTQ2QPX04Q.avif)
 _Project graph showing dependencies between the projects in the workspace_
 
 ## Creating the second application
@@ -782,7 +782,7 @@ npx nx run app2:serve
 
 Now, open your browser and navigate to it where you should see the application looking like the following screenshot:
 
-![](/blog/images/2022-01-28/1*LoOmmjSzfB33ho9NhcqQKQ.avif)
+![](/blog/images/2022-01-28/LoOmmjSzfB33ho9NhcqQKQ.avif)
 _Application 2 screenshot_
 
 That does indeed look different, but something is off. The card background color is not right, it’s still the same used for `app1` even though we provided a different theme. Also, some of the spacing for the elements within the card doesn’t seem to have changed according to our configuration.
@@ -896,7 +896,7 @@ We need to do the same for `app1`. Edit the `apps/app1/src/styles.css` file with
 
 Let’s serve again `app2` and navigate to it to check the results of our changes:
 
-![](/blog/images/2022-01-28/1*TwcAfPTrKRm1D9ydEFwWWA.avif)
+![](/blog/images/2022-01-28/TwcAfPTrKRm1D9ydEFwWWA.avif)
 _Application 2 screenshot_
 
 Now we are talking!
@@ -1200,7 +1200,7 @@ npx nx run lib3:build
 
 If we check the output folder `dist/libs/lib3`, we’ll see there’s a `themes` folder in it with a couple of files `indigo.css` and `teal.css`:
 
-![](/blog/images/2022-01-28/1*vcHqTWEppPbVtGRlVIqEPg.avif)
+![](/blog/images/2022-01-28/vcHqTWEppPbVtGRlVIqEPg.avif)
 _Publishable library with the produced theme files highlighted_
 
 These theme files can now be used by the consumers of our library to properly style the components exposed by it. All they would need to do is to import one of those themes into their application styles entry point or `index.html` file.

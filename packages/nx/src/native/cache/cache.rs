@@ -136,12 +136,17 @@ impl NxCache {
         let task_dir = self.cache_path.join(&hash);
 
         // Remove the task directory
+        //
+        trace!("Removing task directory: {:?}", &task_dir);
         remove_items(&[&task_dir])?;
         // Create the task directory again
+        trace!("Creating task directory: {:?}", &task_dir);
         create_dir_all(&task_dir)?;
 
         // Write the terminal outputs into a file
-        write(self.get_task_outputs_path_internal(&hash), terminal_output)?;
+        let task_outputs_path: _ = self.get_task_outputs_path_internal(&hash);
+        trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
+        write(task_outputs_path, terminal_output)?;
 
         // Expand the outputs
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
@@ -151,10 +156,12 @@ impl NxCache {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
+                trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
                 _copy(p, cached_outputs_dir)?;
             }
         }
 
+        trace!("Recording to cache: {:?}", &hash);
         self.record_to_cache(hash, code)?;
         Ok(())
     }
@@ -269,7 +276,7 @@ impl NxCache {
                 let entry = entry?;
                 let is_dir = entry.file_type()?.is_dir();
 
-                if (is_dir) {
+                if is_dir {
                     if let Some(file_name) = entry.file_name().to_str() {
                         if hash_regex.is_match(file_name) {
                             return Ok(false);

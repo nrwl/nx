@@ -2,7 +2,7 @@
 title: 'What is new in Nx 13.10?'
 slug: 'what-is-new-in-nx-13-10'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-04-08/1*PJ3SRAadq0DxGiC9mCIWsA.png'
+cover_image: '/blog/images/2022-04-08/PJ3SRAadq0DxGiC9mCIWsA.png'
 tags: [nx, release]
 ---
 
@@ -24,7 +24,7 @@ Read more on the docs: [/guides/nx-daemon](/concepts/nx-daemon)
 
 When you set up a new Nx workspace with `create-nx-workspace` the question about opting into Nx Cloud will be pointed on “Yes” by default now.
 
-![](/blog/images/2022-04-08/1*2N8T5oP1MUgmBTF_Q0bF-A.avif)
+![](/blog/images/2022-04-08/2N8T5oP1MUgmBTF_Q0bF-A.avif)
 _Nx Cloud opt-in when setting up a new Nx workspace_
 
 ## Build and run Nx Plugins locally in your Nx workspace
@@ -37,7 +37,7 @@ Nx can be used in a wide range of scenarios, from small open source projects, st
 
 This illustration should give you a rough idea. obviously some of the plugins may be built on top of others, leveraging common functionality. An example is the [@nrwl/js](/nx-api/js) plugin which not only can be used as a standalone plugin but also builds the basis for of many others by providing core JavaScript/TypeScript features.
 
-![](/blog/images/2022-04-08/1*iMPg692nMj5ty709M7tTQQ.avif)
+![](/blog/images/2022-04-08/iMPg692nMj5ty709M7tTQQ.avif)
 
 You can just use the [Nx core without any plugins](/getting-started/intro) to get started and later decide to add more plugins such as `@nrwl/react` or `@nrwl/js` etc depending on your specific use case.
 
@@ -84,7 +84,7 @@ where `@myorg` is your Nx workspace name you defined and `workspace-extensions` 
 
 We keep improving our project graph and make it more and more useful for visually exploring your Nx workspace. You can now click on an edge and list the files that cause it which can be extremely valuable during debugging.
 
-![](/blog/images/2022-04-08/1*a2bXoE4fGcDmqPTrxDyEFg.avif)
+![](/blog/images/2022-04-08/a2bXoE4fGcDmqPTrxDyEFg.avif)
 _Improved Project Graph visualization showing information about the edges that connect nodes_
 
 And this is just a sneak peak of what’s coming in Nx v14, so stay tuned!
@@ -93,7 +93,7 @@ And this is just a sneak peak of what’s coming in Nx v14, so stay tuned!
 
 Having a decent monorepo setup is not always just about speed but also to have features in place that help you keep your code-base healthy and maintainable in the long run. The Nx module boundary lint rules are an example for that.
 
-![](/blog/images/2022-04-08/1*ceWCqFUBimFNl8VOONDFsQ.avif)
+![](/blog/images/2022-04-08/ceWCqFUBimFNl8VOONDFsQ.avif)
 _Tagging Nx projects_
 
 By assigning tags to your projects you can then configure which relationships among libraries and applications are allowed, and which are forbidden.
@@ -152,7 +152,7 @@ More on Miroslav’s tweet:
 
 Whether by accident or by letting your IDE auto-add the import. It often happens that the path that is being used is via the library’s TS path mapping through the `index.ts` entry point. This leads to a circular dependency when also `tslib-c-another.ts` is exported via the `index.ts`. Nx’s module boundary lint rule correctly highlights this as can be seen in this screenshot.
 
-![](/blog/images/2022-04-08/1*Nh5uHJxDvqxppHF5kJJjZw.avif)
+![](/blog/images/2022-04-08/Nh5uHJxDvqxppHF5kJJjZw.avif)
 _Self circular dependency issue within a Nx based library_
 
 Adjusting these circular self references is easy, but can be cumbersome to find the correct imports and time consuming if you have hundreds of libs that might be affected by this. In the latest version of Nx we shipped a fix implementation for these lint rules, such that you can now conveniently add `--fix` to auto-adjust the imports:
@@ -163,17 +163,17 @@ npx nx lint tslib-c --fix
 
 This will analyze your imports, find the correct file and adjust them accordingly:
 
-![](/blog/images/2022-04-08/1*y81cryDv1j2uug38EgQsNg.avif)
+![](/blog/images/2022-04-08/y81cryDv1j2uug38EgQsNg.avif)
 _Automatic adjustment of circular self references when running the lint rule fix_
 
 Similarly if you have relative or absolute imports across library boundaries rather than using the NPM scope, you’ll get a linting error.
 
-![](/blog/images/2022-04-08/1*S69zum8bULwD_EXOT3xT6g.avif)
+![](/blog/images/2022-04-08/S69zum8bULwD_EXOT3xT6g.avif)
 _Lint error about relative import across library boundaries_
 
 Such imports will also be adjusted by applying the `--fix` to your linting command:
 
-![](/blog/images/2022-04-08/1*tKX2DSDSKhR8UEN04_ckQg.avif)
+![](/blog/images/2022-04-08/tKX2DSDSKhR8UEN04_ckQg.avif)
 _Automatic fixes for cross-library imports_
 
 ## React 18 support
@@ -221,14 +221,14 @@ Here are some of the highlights in the latest Nx Console release.
 
 You can now open the VSCode Command menu (Cmd + Shift + P or Win + Shift + P) and enter “Nx: Run Target” to invoke the Run Target menu which allows to choose the target to run as well as the project to execute the target on.
 
-![](/blog/images/2022-04-08/1*PuzwriM96qHohP28-_q3jA.avif)
+![](/blog/images/2022-04-08/PuzwriM96qHohP28-_q3jA.avif)
 _Commands can be invoked from the VSCode Command menu_
 
 ## Run Target View now in sync with workspace commands
 
 While initially the “Generate and Run Target” panel was a static list of the usual Nx targets, it is now a dynamically generated list based on your actual workspace commands. Hence, also your custom defined targets will automatically show up.
 
-![](/blog/images/2022-04-08/1*qILNK9-yQOtbgwE9uFMMiw.avif)
+![](/blog/images/2022-04-08/qILNK9-yQOtbgwE9uFMMiw.avif)
 _Nx Console dynamically reads Nx targets from your Nx workspace now_
 
 ## Prompts for Angular CLI users

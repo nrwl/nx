@@ -2,7 +2,7 @@
 title: 'Step by Step Guide on Creating a Monorepo for React Native Apps using Nx'
 slug: 'step-by-step-guide-on-creating-a-monorepo-for-react-native-apps-using-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2021-10-14/1*92uzyqB8oJ8tZJB9wAdoWQ.png'
+cover_image: '/blog/images/2021-10-14/92uzyqB8oJ8tZJB9wAdoWQ.png'
 tags: [nx, tutorial]
 ---
 
@@ -10,7 +10,7 @@ Do you want to have both mobile and web apps in the same repo? Do you wish that 
 
 It goes through how to create a simple 2-page app that shows your daily horoscope based on your zodiac sign.
 
-![](/blog/images/2021-10-14/1*yqKU8cqFWP4nzAkttVyE1w.avif)
+![](/blog/images/2021-10-14/yqKU8cqFWP4nzAkttVyE1w.avif)
 _Screenshots of Daily Horoscope App_
 
 TL;DR — GitHub repo: [xiongemi/aztro-daily-horoscope](https://github.com/xiongemi/aztro-daily-horoscope)
@@ -44,7 +44,7 @@ nx generate application **daily-horoscope-app**
 
 This should generate `daily-horoscope-app` folder under apps:
 
-![](/blog/images/2021-10-14/1*WWfQWoOHTgH8l9uCnstTVQ.avif)
+![](/blog/images/2021-10-14/WWfQWoOHTgH8l9uCnstTVQ.avif)
 _daily-horoscope-app folder_
 
 Now you install the starter project of Nx React Native. If you run:
@@ -144,7 +144,7 @@ nx generate lib models
 
 This should generate a models folder under libs:
 
-![](/blog/images/2021-10-14/1*CduoANBuFeigb68ZIiebxg.avif)
+![](/blog/images/2021-10-14/CduoANBuFeigb68ZIiebxg.avif)
 _models folder under libs_
 
 Then under this models folder, create a file to have the below enum that contains all the zodiac signs:
@@ -300,14 +300,14 @@ export default App;
 
 If you run `nx run-ios daily-horoscope-app` and `nx run-android daily-horoscope-app`, you should see something like:
 
-![](/blog/images/2021-10-14/1*-6HpGqGYxKk0xoqdYo1ihg.avif)
+![](/blog/images/2021-10-14/6HpGqGYxKk0xoqdYo1ihg.avif)
 _Left: iOS simulator, right: Android simulator_
 
 You have created the first page of your app.
 
 If you run the command `nx dep-graph`, you should see what the dependency graph looks like below:
 
-![](/blog/images/2021-10-14/1*Gwhu91TPPZzjtDIMU07__w.avif)
+![](/blog/images/2021-10-14/Gwhu91TPPZzjtDIMU07__w.avif)
 _Dependency graph_
 
 The next step is to handle action when users pressed on a list item. To achieve that, it is going to use Redux.
@@ -561,14 +561,14 @@ Since the code is running in simulators, how to use the Redux Devtools extension
 
 Open the debug menu in the simulator by entering `d` in the terminal that runs the start command. Then in the debug menu, choose “Debug with Chrome” for iOS and “Debug” for Android.
 
-![](/blog/images/2021-10-14/1*4QVoNHRjzW0agHGnxyWvpw.avif)
+![](/blog/images/2021-10-14/4QVoNHRjzW0agHGnxyWvpw.avif)
 _Debug Menu in iOS and Android_
 
 Install tool React Native Debugger: [https://github.com/jhen0409/react-native-debugger](https://github.com/jhen0409/react-native-debugger).
 
 Now inside React Native Debugger, you should be able to use Redux Devtools and Redux Logger. Now if you press any zodiac sign from the list, you should see action `horoscope/setUserZodiacSignItem` got dispatched and the state is updated.
 
-![](/blog/images/2021-10-14/1*pTbVOfaAbCvW1Kcn3RzzfQ.avif)
+![](/blog/images/2021-10-14/pTbVOfaAbCvW1Kcn3RzzfQ.avif)
 _React Native Debugger_
 
 Now you have successfully set up the Redux store for your app. The next step is to navigate to a different screen when you have successfully selected a zodiac sign.
@@ -648,7 +648,7 @@ export default App;
 
 If you run the code in the simulator, the app should look similar to before except for the header.
 
-![](/blog/images/2021-10-14/1*X_A3v107SDFSmYWwBhki1A.avif)
+![](/blog/images/2021-10-14/X_A3v107SDFSmYWwBhki1A.avif)
 _Add React Navigation in iOS and Android simulator_
 
 ### Create Second Page
@@ -782,7 +782,7 @@ export const ZodiacSignListContainer = connect(
 
 Now you should be able to navigate between 2 screens.
 
-![](/blog/images/2021-10-14/1*kA79kriH_l3OTWSvB5iQZQ.avif)
+![](/blog/images/2021-10-14/kA79kriH_l3OTWSvB5iQZQ.avif)
 _Navigate between 2 screens_
 
 ## Integrate with API
@@ -1214,14 +1214,14 @@ In the App component, replace `HoroscopeCard` with `HoroscopeCardContainer`:
 
 Now when you run the app, it should display the horoscope according to the zodiac user selected.
 
-![](/blog/images/2021-10-14/1*yqKU8cqFWP4nzAkttVyE1w.avif)
+![](/blog/images/2021-10-14/yqKU8cqFWP4nzAkttVyE1w.avif)
 _Horoscope Card integrated with API_
 
 Finally, you got a mobile app that runs on both Android and iOS. You could reuse the libraries to create a web app.
 
 If you run command `nx dep-graph`, you should see the dependency graph looks like below:
 
-![](/blog/images/2021-10-14/1*gel7mQ8k4jDkCABq3-itpw.avif)
+![](/blog/images/2021-10-14/gel7mQ8k4jDkCABq3-itpw.avif)
 _Dependency Graph_
 
 ## Create Web App
@@ -1367,12 +1367,12 @@ Also in `workspace.json`, change the webpackConfig under daily-horoscope-web to 
 
 Now if you run `nx serve daily-horoscope-web`, it should the web app in the browser.
 
-![](/blog/images/2021-10-14/1*w7SscyvUFlujPqwXb-QN-w.avif)
+![](/blog/images/2021-10-14/w7SscyvUFlujPqwXb-QN-w.avif)
 _Web App_
 
 Now the dependency graph should look like:
 
-![](/blog/images/2021-10-14/1*hIHwQPhh9_DOGIJokxLX4g.avif)
+![](/blog/images/2021-10-14/hIHwQPhh9_DOGIJokxLX4g.avif)
 _Dependency Graph_
 
 ## Conclusion

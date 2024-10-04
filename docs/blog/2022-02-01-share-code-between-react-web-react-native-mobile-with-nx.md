@@ -2,7 +2,7 @@
 title: 'Share code between React Web & React Native Mobile with Nx'
 slug: 'share-code-between-react-web-react-native-mobile-with-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2022-02-01/1*lL-fGNaIGYBC_eOBwSvdBw.png'
+cover_image: '/blog/images/2022-02-01/lL-fGNaIGYBC_eOBwSvdBw.png'
 tags: [nx, tutorial]
 ---
 
@@ -10,7 +10,7 @@ tags: [nx, tutorial]
 
 I am mostly a web developer, so let’s start with the web app first: [https://xiongemi.github.io/studio-ghibli-search-engine](https://xiongemi.github.io/studio-ghibli-search-engine). It is a search engine for movies and characters under Studio Ghibli:
 
-![](/blog/images/2022-02-01/1*TILaEjwvKtDTODE8Zo7wFA.avif)
+![](/blog/images/2022-02-01/TILaEjwvKtDTODE8Zo7wFA.avif)
 _Screenshot of web app_
 
 Example Repo: [xiongemi/studio-ghibli-search-engine](https://github.com/xiongemi/studio-ghibli-search-engine)
@@ -27,7 +27,7 @@ Now let’s create the corresponding mobile version of this app.
 
 Currently, there’s only a React web app within our Nx workspace. If I run `nx graph`, the dependency graph looks like the below:
 
-![](/blog/images/2022-02-01/1*AkrRrJ1pbALScj64T8rc_g.avif)
+![](/blog/images/2022-02-01/AkrRrJ1pbALScj64T8rc_g.avif)
 _Dependency graph_
 
 ## React Native Setup
@@ -50,12 +50,12 @@ npx nx generate @nrwl/react-native:app studio-ghibli-search-engine-mobile
 
 As a result of running the above command, you should now have two new folders under the `apps` directory: `studio-ghibli-search-engine-mobile` and `studio-ghibli-search-engine-mobile-e2e`
 
-![](/blog/images/2022-02-01/1*pKHufw-OEbTmDRyNcsAd4A.avif)
+![](/blog/images/2022-02-01/pKHufw-OEbTmDRyNcsAd4A.avif)
 _studio-ghibli-search-engine-mobile created under apps_
 
 If we now run `nx dep-graph` again, the dependency graph looks like this:
 
-![](/blog/images/2022-02-01/1*UN-VoWFKTqExCCFzQeZkYA.avif)
+![](/blog/images/2022-02-01/UN-VoWFKTqExCCFzQeZkYA.avif)
 _Dependency graph_
 
 Note that there is no code shared between `studio-ghibli-search-engine-mobile` and `studio-ghibli-search-engine-web`. However, our goal is to reuse some of the functionality that we have previously written for the web version on our new React native version of the app.
@@ -325,7 +325,7 @@ With Nx, it requires zero configuration to share the above library code. Even th
 
 For example, I need to create a film page to display film details with film id passed in as a parameter:
 
-![](/blog/images/2022-02-01/1*zD_5omXSG-hIVHbgpCb-bA.avif)
+![](/blog/images/2022-02-01/zD_5omXSG-hIVHbgpCb-bA.avif)
 _Screenshot of Film Page on Mobile (left: iOS, right: Android)_
 
 I would do import from the store library directly:
@@ -454,12 +454,12 @@ Note I could import from `@studio-ghibli-search-engine/models`, `@studio-ghibli-
 
 Now when I run `nx dep-graph`, it shows the dependency graph below where all these 3 libraries are shared between web and mobile:
 
-![](/blog/images/2022-02-01/1*697qjtaGr4mTSnuRq6vpPw.avif)
+![](/blog/images/2022-02-01/697qjtaGr4mTSnuRq6vpPw.avif)
 _Dependency graph_
 
 For this example project, to create the mobile app, it took me some time to rewrite the entire UI. However, I do not need to make any changes to the above libraries.
 
-![](/blog/images/2022-02-01/1*Ldob3R4V50WG4gP-UzKAOg.avif)
+![](/blog/images/2022-02-01/Ldob3R4V50WG4gP-UzKAOg.avif)
 _Screenshots of Mobile App (left: iOS, right: Android)_
 
 ## Conclusion

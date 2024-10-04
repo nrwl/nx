@@ -2,7 +2,7 @@
 title: 'What’s New With Lerna 6.5?'
 slug: 'whats-new-with-lerna-6-5'
 authors: ['Zack DeRose']
-cover_image: '/blog/images/2023-02-22/1*izlWzEYnkZ9myXi58Rmv8A.png'
+cover_image: '/blog/images/2023-02-22/izlWzEYnkZ9myXi58Rmv8A.png'
 tags: [nx, release]
 ---
 
@@ -27,7 +27,7 @@ You can find a more detailed account of Lerna’s “Maintainance Odyssey” in 
 
 Since Nx took over in Lerna 4, we’ve added a brand new site to refresh the Lerna Docs:
 
-![](/blog/images/2023-02-22/0*3GKvhzStrTwq7re5.avif)
+![](/blog/images/2023-02-22/3GKvhzStrTwq7re5.avif)
 
 The top of our priorities for Lerna 5 was to resolve all vulnerabilities and outdated dependencies facing Lerna. We went on to make Lerna faster by allowing users to [opt into Nx’s task caching inside of Lerna with the new `lerna add-caching` command](https://github.com/lerna/lerna/tree/main/packages/lerna/src/commands/add-caching#readme), and [add support for distributed caching to share task results amongst your organization in Lerna with Nx Cloud](https://lerna.js.org/docs/features/share-your-cache).
 
@@ -41,7 +41,7 @@ We’ve also started an initiative to assist Open Source projects in getting the
 
 We’ve just started this initiative and have already been able to help [Sentry](https://github.com/getsentry/sentry-javascript) get optimized with task caching and task pipeline optimizations for their workspace!
 
-![](/blog/images/2023-02-22/0*7Wu1y3L6BNPZmZwE.avif)
+![](/blog/images/2023-02-22/7Wu1y3L6BNPZmZwE.avif)
 
 This initiative complements [our free tier of unlimited Nx Cloud](/pricing) for any Open Source project.
 
@@ -95,8 +95,8 @@ You can find more information on this change [here](https://github.com/lerna/ler
 
 Unlike the other updates mentioned for 6.5, this update does not affect Lerna’s public API, but as you can see from the numbers, this was quite an undertaking:
 
-![](/blog/images/2023-02-22/0*AKQyRtbrKzzOUdPZ.avif)
-![](/blog/images/2023-02-22/0*GUSOJi5vj5fGYYj3.avif)
+![](/blog/images/2023-02-22/AKQyRtbrKzzOUdPZ.avif)
+![](/blog/images/2023-02-22/GUSOJi5vj5fGYYj3.avif)
 
 The result is a significant improvement to the Typescript support for Lerna’s internals and a substantial simplification of the codebase. This investment will make Lerna significantly more approachable to other would-be contributors!
 

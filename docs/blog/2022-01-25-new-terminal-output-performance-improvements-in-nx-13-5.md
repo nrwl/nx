@@ -2,7 +2,7 @@
 title: 'New Terminal Output & Performance Improvements in Nx 13.5'
 slug: 'new-terminal-output-performance-improvements-in-nx-13-5'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-01-25/1*PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.png'
 tags: [nx]
 ---
 
@@ -12,7 +12,7 @@ Nx is a smart, extensible build framework to help you architect, test, and build
 
 Folks that have been following along in our journey for quite some time know already that at Nx we strive for the best possible DX. The current terminal output was always something we haven’t been super happy with, especially if you run some of the commands that trigger the execution of multiple tasks (e.g. affected commands, run-many etc). This is why we’re even more excited about this feature: the new dynamic Nx terminal output is now the default for everyone.
 
-![](/blog/images/2022-01-25/1*81krRElSXV5w2T54DiCBAA.avif)
+![](/blog/images/2022-01-25/81krRElSXV5w2T54DiCBAA.avif)
 _New dynamic terminal output in Nx 13.5_
 
 It clearly separates the terminal output into an upper part where all the completed tasks and their corresponding execution time are listed and a lower part where the currently running tasks show up. Of course, errors are always shown immediately and therefore easy to spot.
@@ -39,7 +39,7 @@ When running an Nx command there might potentially be many tasks running at diff
 
 That’s why we introduced the ability to profile and visualize Nx commands in the Chrome Devtools.
 
-![](/blog/images/2022-01-25/1*7vk8AUWRGkDI0vcVX4Ql-g.avif)
+![](/blog/images/2022-01-25/7vk8AUWRGkDI0vcVX4Ql-g.avif)
 
 Use the `NX_PROFILE=<filename>` environment variable attached to your Nx CLI command:
 
@@ -64,7 +64,7 @@ The project graph is always a nice feature to show off in videos, talks, and blo
 
 In v13.5 we now also store the current filter status in the URL. That makes it easy to pinpoint a certain view and share it with a co-worker. Actually, this could just be the beginning of some more interesting features when we think about CI and visualizations 🤔.
 
-![](/blog/images/2022-01-25/1*RM9hDFIsgLn1X4EX5qsgGg.avif)
+![](/blog/images/2022-01-25/RM9hDFIsgLn1X4EX5qsgGg.avif)
 _Nx dep graph now stores filters in the URL_
 
 Here’s our deployed live example of the above screenshot: [https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page)
