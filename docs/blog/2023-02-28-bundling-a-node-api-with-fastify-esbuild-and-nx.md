@@ -2,7 +2,7 @@
 title: 'Bundling a Node API with Fastify, esbuild, and Nx'
 slug: 'bundling-a-node-api-with-fastify-esbuild-and-nx'
 authors: ['Jack Hsu']
-cover_image: '/blog/images/2023-02-28/1*PADY_RKrkXj39p4nj79ESw.png'
+cover_image: '/blog/images/2023-02-28/PADY_RKrkXj39p4nj79ESw.png'
 tags: [nx, tutorial]
 ---
 
@@ -170,7 +170,7 @@ To build the image, run `npx nx docker-build`. The image copies only the self-co
 
 Nx is smart enough to bundle the app before building the Docker image — because of the `dependsOn` configuration in `project.json`. You can visualize this dependency with `npx nx graph`.
 
-![](/blog/images/2023-02-28/1*HRfoF6hPy-XH-MSL42PSIQ.avif)
+![](/blog/images/2023-02-28/HRfoF6hPy-XH-MSL42PSIQ.avif)
 
 Now that the image is built, we can run it.
 
@@ -218,11 +218,11 @@ $ fly deploy
 
 Fly will log out the monitoring link when the app is successfully deployed.
 
-![](/blog/images/2023-02-28/1*oAuTGrLZCV87OEC0e-6KpQ.avif)
+![](/blog/images/2023-02-28/oAuTGrLZCV87OEC0e-6KpQ.avif)
 
 And you can open the deployed server using `fly open`.
 
-![](/blog/images/2023-02-28/1*tV8aAtjRoRMwlj1Tv17IAw.avif)
+![](/blog/images/2023-02-28/tV8aAtjRoRMwlj1Tv17IAw.avif)
 
 That’s it! Our server is now deployed for the world to use.
 

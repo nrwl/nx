@@ -2,7 +2,7 @@
 title: 'Introducing Playwright Support for Nx'
 slug: 'introducing-playwright-support-for-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-09-18/1*_589bVpPTJ4D4IACBePXWQ.png'
+cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.png'
 tags: [nx, release, tutorial]
 ---
 
@@ -67,12 +67,12 @@ await page.getByTestId('submit-button').click();
 
 Playwright creates a nice HTML test report that allows filtering tests by browsers, passed tests, failed tests, skipped tests, and flaky tests.
 
-![](/blog/images/2023-09-18/1*28KM1laCSbq9OwLYFaq8BQ.avif)
+![](/blog/images/2023-09-18/28KM1laCSbq9OwLYFaq8BQ.avif)
 _HTML Test Report_
 
 Clicking on the individual test shows more detailed errors along with each step of the test:
 
-![](/blog/images/2023-09-18/1*slGx_vh9CQAD3er6XaNsjw.avif)
+![](/blog/images/2023-09-18/slGx_vh9CQAD3er6XaNsjw.avif)
 _Test error_
 
 It also has other features like recording [screenshots](https://playwright.dev/docs/screenshots) and [videos](https://playwright.dev/docs/videos), [test generation](https://playwright.dev/docs/codegen), and [visual comparisons](https://playwright.dev/docs/test-snapshots). Read more about Playwright at [https://playwright.dev](https://playwright.dev/)
@@ -98,7 +98,7 @@ npx create-nx-workspace
 
 We get a standalone Nx React app named `nx-react-playwright`:
 
-![](/blog/images/2023-09-18/1*-czlvgB1lLaIHb9uuRj9Ig.avif)
+![](/blog/images/2023-09-18/czlvgB1lLaIHb9uuRj9Ig.avif)
 _nx repo created_
 
 What is a [standalone application](/deprecated/integrated-vs-package-based)? It is like an integrated monorepo setup but with just a single, root-level application. The repo has the same file structure as an app created from Create-React-App, but we can still leverage all the generators and executors and structure your application into libraries or submodules.
@@ -119,7 +119,7 @@ test('has title', async ({ page }) => {
 
 The test verifies the `h1` header contains the text `Welcome`:
 
-![](/blog/images/2023-09-18/1*ehJZTRfHfFF6hmSh3eJ-qA.avif)
+![](/blog/images/2023-09-18/ehJZTRfHfFF6hmSh3eJ-qA.avif)
 _Page served up_
 
 To run the e2e tests, run the below command:
@@ -141,13 +141,13 @@ To open last HTML report run:
 
 So the test passed and it also generated a report at `dist/.playwright/e2e/playwright-report/index.html`:
 
-![](/blog/images/2023-09-18/1*xWKkHUozvDtk0Q9ihjDZbw.avif)
+![](/blog/images/2023-09-18/xWKkHUozvDtk0Q9ihjDZbw.avif)
 
 ### Add Another Test
 
 Let's add another test to check the Documentation button works:
 
-![](/blog/images/2023-09-18/1*yTeWAR-3vE6Vdb6Cc6C5RA.avif)
+![](/blog/images/2023-09-18/yTeWAR-3vE6Vdb6Cc6C5RA.avif)
 _Documentation_
 
 In `src/app/nx-welcome.tsx`, we need to add a test id to the link:
@@ -208,7 +208,7 @@ For this example, I am going to add Playwright e2e tests to this repo: [nrwl/nx-
 
 We are going to focus on the cart app in this example. In the terminal, run `npx nx serve cart` and it should serve up the app at [http://localhost:4200/cart](http://localhost:4200/cart).
 
-![](/blog/images/2023-09-18/1*F8KLtNUJvKtsZtUSU13vgQ.avif)
+![](/blog/images/2023-09-18/F8KLtNUJvKtsZtUSU13vgQ.avif)
 _Cart App_
 
 ### Install @nx/playwright
@@ -244,7 +244,7 @@ It adds:
 - an e2e folder at `apps/cart/e2e` containing e2e tests
 - `playwright.config.ts` containing Playwright configuration
 
-![](/blog/images/2023-09-18/1*IEwONcILNaIYHmjTyhF3Bw.avif)
+![](/blog/images/2023-09-18/IEwONcILNaIYHmjTyhF3Bw.avif)
 _new cart folder_
 
 Let's update the default test `apps/cart/e2e/example.spec.ts` to check whether the header exists:
@@ -267,7 +267,7 @@ The second way is to create a separate E2E project folder and apply configuratio
 
 Create a folder e2e at the workspace root and a project.json file inside it:
 
-![](/blog/images/2023-09-18/1*nF2bZhQb1CZ4Kc8btsxzRw.avif)
+![](/blog/images/2023-09-18/nF2bZhQb1CZ4Kc8btsxzRw.avif)
 
 Add name in `e2e/project.json`:
 
@@ -285,7 +285,7 @@ npx nx generate @nx/playwright:configuration --project=e2e ---webServerCommand="
 
 Now I created an e2e folder at the workspace root:
 
-![](/blog/images/2023-09-18/1*nZXrAKzg4krYx6fouDefpw.avif)
+![](/blog/images/2023-09-18/nZXrAKzg4krYx6fouDefpw.avif)
 _e2e folder_
 
 Now we can run `npx nx e2e e2e` to run the Playwright e2e tests.

@@ -2,7 +2,7 @@
 title: 'Nx 15.3 — Standalone Projects, Vite, Task Graph and more!'
 slug: 'nx-15-3-standalone-projects-vite-task-graph-and-more'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-12-06/1*VXYjjWhOUpNuHFGCoF63OQ.png'
+cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.png'
 tags: [nx, release]
 ---
 
@@ -43,7 +43,7 @@ For most of our workforce, working on Nx and Nx Cloud was only part of their “
 
 On to 4 million!
 
-![](/blog/images/2022-12-06/0*TxO8bDuJW6pJZ-zy.avif)
+![](/blog/images/2022-12-06/TxO8bDuJW6pJZ-zy.avif)
 
 ## New Task Graph Visualization
 
@@ -71,7 +71,7 @@ Therefore, let me introduce you the **task graph**. You might already be used to
 
 You can add another project as well, showing what the task graph looks like for a command that runs tasks for multiple projects like `nx run-many` or `nx affected`. Click on the `Group by project` checkbox to group related tasks by their project, and click on a task to see what executor it uses.
 
-![](/blog/images/2022-12-06/0*NZWdLWLIxwzwcfmp.avif)
+![](/blog/images/2022-12-06/NZWdLWLIxwzwcfmp.avif)
 
 ## Standalone Projects
 
@@ -81,13 +81,13 @@ Nx is widely known as [THE developer tool](https://monorepo.tools/) people look 
 
 But one stands out most prominently: the **ability to easily modularize** your codebase.
 
-![](/blog/images/2022-12-06/0*wBnyRIMm8_K6K9k3.avif)
+![](/blog/images/2022-12-06/wBnyRIMm8_K6K9k3.avif)
 
 A lot of our users adopt Nx for precisely this reason. They have a large app and want to break it into smaller pieces while still having the comfort of deploying it as a single one.
 
 In 15.3 we are therefore making **standalone projects** a first-class feature. Suppose you now create a new workspace with `npx create-nx-workspace` alongside the usual monorepo options. In that case, you will now see two more options for scaffolding a standalone React or Angular application (we will add more in the future).
 
-![](/blog/images/2022-12-06/0*z3UOtkyCIKcL2LNg.avif)
+![](/blog/images/2022-12-06/z3UOtkyCIKcL2LNg.avif)
 
 In a standalone project setup, you don’t have the typical `apps` and `libs` structure you might be accustomed to if you have been using Nx in the past. Instead, the app lives directly at the root of your workspace. The structure looks similar to the following:
 

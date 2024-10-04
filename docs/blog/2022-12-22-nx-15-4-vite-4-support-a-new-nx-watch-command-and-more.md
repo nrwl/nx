@@ -2,7 +2,7 @@
 title: 'Nx 15.4 — Vite 4 Support, a new Nx Watch Command, and more!'
 slug: 'nx-15-4-vite-4-support-a-new-nx-watch-command-and-more'
 authors: ['Zack DeRose']
-cover_image: '/blog/images/2022-12-22/1*N4_XxtYFr-V2cF6fPoBO3g.png'
+cover_image: '/blog/images/2022-12-22/N4_XxtYFr-V2cF6fPoBO3g.png'
 tags: [nx, release]
 ---
 
@@ -25,7 +25,7 @@ Prefer a **video version**?
 
 Nx 15.4 brings in the latest Vite major version following the Vite 4 release earlier this month.
 
-![](/blog/images/2022-12-22/0*w-TkOJGLJpif48RN.avif)
+![](/blog/images/2022-12-22/w-TkOJGLJpif48RN.avif)
 
 As the [Vite launch article](https://vitejs.dev/blog/announcing-vite4.html) mentions, we are investing in the Vite ecosystem, and now officially support a first-party Vite plugin. Nx 15.4 continues this investment with timely support for Vite 4, and we’re excited to be a part of the Vite ecosystem and a part of bringing more value to our devs through Vite support!
 
@@ -78,7 +78,7 @@ Check out [our docs](/recipes/running-tasks/workspace-watching) for more details
 
 ## Webpack-less Cypress Support for Our React Standalone preset
 
-![](/blog/images/2022-12-22/0*wF2QV3h_G5ZjBfLK.avif)
+![](/blog/images/2022-12-22/wF2QV3h_G5ZjBfLK.avif)
 _Running e2e with React Standalone Projects_
 
 We added a React Standalone preset in 15.3 to support single react application workspaces with Nx, and in 15.4, we’ve added back in Cypress for this preset.
@@ -87,7 +87,7 @@ With Nx 15.4, a standalone React application will be created with an e2e directo
 
 ## Server-Side Rendering support for Module Federation for both Angular and React Applications
 
-![](/blog/images/2022-12-22/0*3pXE3lHOtndkH8jO.avif)
+![](/blog/images/2022-12-22/3pXE3lHOtndkH8jO.avif)
 
 Now you can get the benefits of both Server Side Rendering and Module Federation for your applications, which will improve page loads, Search Engine Optimization, and build times!
 
@@ -121,7 +121,7 @@ Last but not least, we’ve added support for interactive prompts for Custom Pre
 
 In Nx, [presets](/extending-nx/recipes/create-preset#create-a-custom-plugin-preset) are special code generation scripts that can be used to create a brand new Nx Workspace, using our `create-nx-workspace` command.
 
-![](/blog/images/2022-12-22/0*d4gI6k61RAEU_XfF.avif)
+![](/blog/images/2022-12-22/d4gI6k61RAEU_XfF.avif)
 
 For instance, I happen to know [Shai Reznik](https://twitter.com/shai_reznik) at [builder.io](https://builder.io/) has been working on a qwik plugin for Nx, and since the [qwik-nx](https://www.npmjs.com/package/qwik-nx) plugin that he’s published includes an [Nx generator called “preset”](https://github.com/qwikifiers/qwik-nx/blob/main/packages/qwik-nx/generators.json#L33), I can run the command:
 

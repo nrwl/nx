@@ -2,7 +2,7 @@
 title: 'Configuration Files and Potholes in Your Codebase'
 slug: 'configuration-files-and-potholes-in-your-codebase'
 authors: ['Isaac Mann']
-cover_image: '/blog/images/2023-01-31/0*T-xiDccBOxMQpDrG.png'
+cover_image: '/blog/images/2023-01-31/T-xiDccBOxMQpDrG.png'
 tags: [nx]
 ---
 
@@ -12,21 +12,21 @@ Let’s talk about configuration. The detractors call it boilerplate while propo
 
 There have been many attempts over the years to make it easier to bypass configuration code.
 
-![](/blog/images/2023-01-31/0*RHP5AYxe6DD7UaYx.avif)
+![](/blog/images/2023-01-31/RHP5AYxe6DD7UaYx.avif)
 
 Ruby on Rails popularized the philosophy of Convention over Configuration. In this philosophy, the default configuration settings are derived from your folder structure or the way you name your files. These unwritten conventions are used as a way of bypassing writing configuration files that most of the time will follow a set pattern.
 
-![](/blog/images/2023-01-31/0*y-gFItbtvrFYx9_3.avif)
+![](/blog/images/2023-01-31/y-gFItbtvrFYx9_3.avif)
 
 Parcel advertises itself as a zero configuration bundler. This is mostly a reaction to webpack, which requires a fairly complex config file before it can do anything useful. As application grow more complex, so does the config file. These often become so complicated that developers dread fixing any problems with them, because once it becomes known that they have fixed a problem with webpack, they will be forever saddled with the burden of maintaining that file. In contrast, Parcel does all the tasks required of a typical SPA web app without any config file.
 
-![](/blog/images/2023-01-31/0*-sWVhhyftTBiuMef.avif)
+![](/blog/images/2023-01-31/sWVhhyftTBiuMef.avif)
 
 Apple also leveraged this sentiment with marketing slogan “It Just Works”. Compared to Windows or Linux ecosystems that require modifying settings to get software from different companies to work together, Apple provides its own suite of tools and hardware that have a major selling point of being intentionally designed to all work together. Theoretically, any hardware or software produced by Apple should fit seamlessly into the rest of the system.
 
 All of these efforts to skip the configuration step reach their limits at some point. The idea of hiding default configuration works well, until you need to modify that default and have no starting point. The Zen of Python philosophy of “explicit is better than implicit” is a direct contradiction to Convention over Configuration. If you like most of what the zero config tool gives you, but you want to tweak it a little bit, it can be hard to find where to do the tweaking. Apple is great when It Just Works. But sometimes, It Just Doesn’t.
 
-![](/blog/images/2023-01-31/0*8f5YjBkc6SqPBA5E.avif)
+![](/blog/images/2023-01-31/8f5YjBkc6SqPBA5E.avif)
 
 ## How much configuration is the right amount of configuration?
 
@@ -42,7 +42,7 @@ The problem with both of these tools is that any code they generate for you is i
 
 ## Nx Generators and Migration Generators
 
-![](/blog/images/2023-01-31/1*p-fVnh5Cwp1rTZPhehl14g.avif)
+![](/blog/images/2023-01-31/p-fVnh5Cwp1rTZPhehl14g.avif)
 
 Nx has an elegant solution to this dilemma. There are three key parts.
 
