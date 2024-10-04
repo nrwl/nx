@@ -4,7 +4,11 @@
 
 import { globAsync, Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { BinaryExpression, ExpressionStatement } from 'typescript';
+import {
+  BinaryExpression,
+  ExpressionStatement,
+  ExportAssignment,
+} from 'typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -26,8 +30,8 @@ export default async function update(tree: Tree) {
         true
       );
 
-      // find the import statement for @nx/jest
-      const importStatement = sourceFile.statements.find(
+      // find `require('@nx/jest')` or `import { getJestProjects } from '@nx/jest`
+      const requireStatement = sourceFile.statements.find(
         (statement) =>
           tsModule.isVariableStatement(statement) &&
           statement.declarationList.declarations.some(
@@ -39,9 +43,14 @@ export default async function update(tree: Tree) {
               declaration.initializer.arguments[0].text === '@nx/jest'
           )
       );
-      if (importStatement) {
-        // find export statement with `projects: getJestProjects()`
-        let exportStatement = sourceFile.statements.find(
+      const importStatement = sourceFile.statements.find(
+        (statement) =>
+          tsModule.isImportDeclaration(statement) &&
+          statement.moduleSpecifier.getText() === `'@nx/jest'`
+      );
+      if (requireStatement || importStatement) {
+        // find `module.exports` statement with `projects: getJestProjects()`
+        const moduleExports = sourceFile.statements.find(
           (statement) =>
             tsModule.isExpressionStatement(statement) &&
             tsModule.isBinaryExpression(statement.expression) &&
@@ -65,18 +74,18 @@ export default async function update(tree: Tree) {
             )
         ) as ExpressionStatement;
 
-        if (exportStatement) {
+        if (moduleExports) {
           // replace getJestProjects with getJestProjectsAsync in export statement
           const rightExpression = (
-            exportStatement.expression as BinaryExpression
+            moduleExports.expression as BinaryExpression
           ).right.getText();
           const newExpression = rightExpression.replace(
             'getJestProjects()',
             'await getJestProjectsAsync()'
           );
-          const newStatement = `export default async () => (${newExpression});`;
+          const newStatement = `module.exports = async () => (${newExpression});`;
           let newContent = oldContent.replace(
-            exportStatement.getText(),
+            moduleExports.getText(),
             newStatement
           );
 
@@ -87,6 +96,43 @@ export default async function update(tree: Tree) {
           );
 
           tree.write(jestConfigPath, newContent);
+        } else {
+          // find `export default` statement with `projects: getJestProjects()`
+          const exportAssignment = sourceFile.statements.find((statement) =>
+            tsModule.isExportAssignment(statement)
+          ) as ExportAssignment;
+          const defaultExport =
+            exportAssignment?.expression &&
+            tsModule.isObjectLiteralExpression(exportAssignment?.expression)
+              ? exportAssignment?.expression
+              : null;
+          const projectProperty = defaultExport?.properties.find(
+            (property) =>
+              tsModule.isPropertyAssignment(property) &&
+              property.name.getText() === 'projects' &&
+              tsModule.isCallExpression(property.initializer) &&
+              tsModule.isIdentifier(property.initializer.expression) &&
+              property.initializer.expression.escapedText === 'getJestProjects'
+          );
+          if (projectProperty) {
+            // replace getJestProjects with getJestProjectsAsync in export statement
+            const newExpression = defaultExport
+              .getText()
+              .replace('getJestProjects()', 'await getJestProjectsAsync()');
+            const newStatement = `export default async () => (${newExpression});`;
+            let newContent = oldContent.replace(
+              exportAssignment.getText(),
+              newStatement
+            );
+
+            // replace getJestProjects with getJestProjectsAsync in import statement
+            newContent = newContent.replace(
+              'getJestProjects',
+              'getJestProjectsAsync'
+            );
+
+            tree.write(jestConfigPath, newContent);
+          }
         }
       }
     }
