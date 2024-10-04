@@ -4,7 +4,7 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
-import { join } from 'path';
+import { join, parse } from 'path';
 import * as yargs from 'yargs-parser';
 
 function getJestConfigProjectPath(projectJestConfigPath: string): string {
@@ -120,7 +120,18 @@ export async function getJestProjectsAsync() {
     }
   }
 
+  removeDuplicates(jestConfigurations);
   return Array.from(jestConfigurations);
+}
+
+// If two paths result in same project, prefer the more specific path.
+// e.g. <rootDir>/demo/jest.config.js over <rootDir>/demo
+function removeDuplicates(configs: Set<string>): void {
+  configs.forEach((config) => {
+    const { dir, ext } = parse(config);
+    // If the directory has been added previously, remove it and keep the current, more specific path.
+    if (ext) configs.delete(dir);
+  });
 }
 
 function collectJestConfigFromJestExecutor(
