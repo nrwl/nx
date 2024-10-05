@@ -17,10 +17,10 @@ describe('@nx/detox', () => {
     reactNativeAppName = uniq('appTest');
     expoAppName = uniq('expoAppTest');
     runCLI(
-      `generate @nx/react-native:app ${reactNativeAppName} --e2eTestRunner=detox --install=false --project-name-and-root-format=as-provided --interactive=false`
+      `generate @nx/react-native:app ${reactNativeAppName} --e2eTestRunner=detox --install=false --interactive=false`
     );
     runCLI(
-      `generate @nx/expo:app ${expoAppName} --e2eTestRunner=detox --project-name-and-root-format=as-provided --interactive=false`
+      `generate @nx/expo:app ${expoAppName} --e2eTestRunner=detox --interactive=false`
     );
     updateAppDetoxJson(reactNativeAppName);
     updateAppDetoxJson(expoAppName);

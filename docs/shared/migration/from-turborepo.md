@@ -1,6 +1,6 @@
 # Migrate from Turborepo to Nx
 
-If you have an existing monorepo that uses Turborepo, switching to use Nx is a straight-forward process. After switching, you'll have cleaner CLI output, a better graph view and IDE support with the option to incorporate Nx plugins and take advantage of the features of an integrated repository. All this without increasing the complexity of your configuration files.
+If you have an existing monorepo that uses Turborepo, switching to use Nx is a straight-forward process. After switching, you'll have cleaner CLI output, a better graph view and IDE support with the option to incorporate [Nx plugins](/concepts/nx-plugins). All this without increasing the complexity of your configuration files.
 
 For more details, read our [comparison of Nx and Turborepo](/concepts/turbo-and-nx)
 

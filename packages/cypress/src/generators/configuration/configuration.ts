@@ -17,18 +17,19 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { Linter, LinterType } from '@nx/eslint';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
-import cypressInitGenerator, { addPlugin } from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import cypressInitGenerator, { addPlugin } from '../init/init';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -67,6 +68,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'cypress', 'configuration');
+
   const opts = normalizeOptions(tree, options);
   opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
@@ -93,7 +96,7 @@ export async function configurationGeneratorInternal(
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
-    addTarget(tree, opts);
+    addTarget(tree, opts, projectGraph);
   }
 
   const linterTask = await addLinterToCyProject(tree, {
@@ -287,7 +290,11 @@ async function addFiles(
   }
 }
 
-function addTarget(tree: Tree, opts: NormalizedSchema) {
+function addTarget(
+  tree: Tree,
+  opts: NormalizedSchema,
+  projectGraph: ProjectGraph
+) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
   projectConfig.targets ??= {};
@@ -304,7 +311,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
     },
   };
   if (opts.devServerTarget) {
-    const parsedTarget = parseTargetString(opts.devServerTarget);
+    const parsedTarget = parseTargetString(opts.devServerTarget, projectGraph);
 
     projectConfig.targets.e2e.options = {
       ...projectConfig.targets.e2e.options,

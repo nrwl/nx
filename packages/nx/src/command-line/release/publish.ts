@@ -9,13 +9,13 @@ import {
 } from '../../config/project-graph';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { runCommand } from '../../tasks-runner/run-command';
+import { runCommandForTasks } from '../../tasks-runner/run-command';
 import {
   createOverrides,
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
+import { output } from '../../utils/output';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
@@ -27,8 +27,24 @@ import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { printConfigAndExit } from './utils/print-config';
 
+export interface PublishProjectsResult {
+  [projectName: string]: {
+    code: number;
+  };
+}
+
 export const releasePublishCLIHandler = (args: PublishOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args, true));
+  handleErrors(args.verbose, async () => {
+    const publishProjectsResult: PublishProjectsResult = await createAPI({})(
+      args
+    );
+    // If all projects are published successfully, return 0, otherwise return 1
+    return Object.values(publishProjectsResult).every(
+      (result) => result.code === 0
+    )
+      ? 0
+      : 1;
+  });
 
 export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   /**
@@ -37,9 +53,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
    * to have control over their own error handling when using the API.
    */
   return async function releasePublish(
-    args: PublishOptions,
-    isCLI = false
-  ): Promise<number> {
+    args: PublishOptions
+  ): Promise<PublishProjectsResult> {
     /**
      * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
      * important for invoking the relevant executor behind the scenes.
@@ -98,53 +113,53 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       _args.groups?.length > 0 ||
       args.excludeTaskDependencies;
 
-    let overallExitStatus = 0;
+    let overallPublishProjectsResult: PublishProjectsResult = {};
 
     if (args.projects?.length) {
       /**
        * Run publishing for all remaining release groups and filtered projects within them
        */
       for (const releaseGroup of releaseGroups) {
-        const status = await runPublishOnProjects(
+        const publishProjectsResult = await runPublishOnProjects(
           _args,
           projectGraph,
           nxJson,
           Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
-          isCLI,
           {
             excludeTaskDependencies: shouldExcludeTaskDependencies,
             loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
           }
         );
-        if (status !== 0) {
-          overallExitStatus = status || 1;
-        }
+        overallPublishProjectsResult = {
+          ...overallPublishProjectsResult,
+          ...publishProjectsResult,
+        };
       }
 
-      return overallExitStatus;
+      return overallPublishProjectsResult;
     }
 
     /**
      * Run publishing for all remaining release groups
      */
     for (const releaseGroup of releaseGroups) {
-      const status = await runPublishOnProjects(
+      const publishProjectsResult = await runPublishOnProjects(
         _args,
         projectGraph,
         nxJson,
         releaseGroup.projects,
-        isCLI,
         {
           excludeTaskDependencies: shouldExcludeTaskDependencies,
           loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
         }
       );
-      if (status !== 0) {
-        overallExitStatus = status || 1;
-      }
+      overallPublishProjectsResult = {
+        ...overallPublishProjectsResult,
+        ...publishProjectsResult,
+      };
     }
 
-    return overallExitStatus;
+    return overallPublishProjectsResult;
   };
 }
 
@@ -153,12 +168,11 @@ async function runPublishOnProjects(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   projectNames: string[],
-  isCLI: boolean,
   extraOptions: {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
   }
-): Promise<number> {
+): Promise<PublishProjectsResult> {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
   );
@@ -212,7 +226,7 @@ async function runPublishOnProjects(
       },
       projectNamesWithTarget
     );
-    return 0;
+    return {};
   }
 
   const projectsWithTarget = projectsToRun.filter((project) =>
@@ -232,7 +246,7 @@ async function runPublishOnProjects(
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
    */
-  const status = await runCommand(
+  const commandResults = await runCommandForTasks(
     projectsWithTarget,
     projectGraph,
     { nxJson },
@@ -249,16 +263,12 @@ async function runPublishOnProjects(
     extraOptions
   );
 
-  if (status !== 0) {
-    // In order to not add noise to the overall CLI output, do not throw an additional error
-    if (isCLI) {
-      return status;
-    }
-    // Throw an additional error for programmatic API usage
-    throw new Error(
-      'One or more of the selected projects could not be published'
-    );
+  const publishProjectsResult: PublishProjectsResult = {};
+  for (const taskData of Object.values(commandResults)) {
+    publishProjectsResult[taskData.task.target.project] = {
+      code: taskData.code,
+    };
   }
 
-  return 0;
+  return publishProjectsResult;
 }

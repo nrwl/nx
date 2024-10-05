@@ -78,7 +78,7 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
 
 async function setup(tree: Tree, name: string) {
   await generateTestApplication(tree, {
-    name,
+    directory: name,
     skipPackageJson: true,
     skipFormat: true,
   });
@@ -102,7 +102,7 @@ async function setup(tree: Tree, name: string) {
   });
 
   await generateTestLibrary(tree, {
-    name: `${name}-lib`,
+    directory: `${name}-lib`,
     skipFormat: true,
   });
 

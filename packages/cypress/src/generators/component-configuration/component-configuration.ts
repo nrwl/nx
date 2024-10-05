@@ -14,6 +14,7 @@ import {
   runTasksInSerial,
   GeneratorCallback,
 } from '@nx/devkit';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 import {
@@ -42,6 +43,8 @@ export async function componentConfigurationGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
+
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
 

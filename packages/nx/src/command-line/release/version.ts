@@ -86,10 +86,10 @@ export interface ReleaseVersionGeneratorSchema {
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
   deleteVersionPlans?: boolean;
   /**
-   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
-   * This is only applicable to independently released projects.
+   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects. 'never' will cause dependents to not be updated.
    */
-  updateDependents?: 'never' | 'auto';
+  updateDependents?: 'auto' | 'never';
   /**
    * Whether or not to completely omit project logs when that project has no applicable changes. This can be useful for
    * large monorepos which have a large number of projects, especially when only a subset are released together.

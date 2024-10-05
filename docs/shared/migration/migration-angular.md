@@ -4,7 +4,7 @@ Within an Nx workspace, you gain many capabilities that help you build applicati
 
 ## Migrating to a Standalone Angular App with Nx
 
-You can migrate to a [Standalone Angular App](/concepts/integrated-vs-package-based#standalone-applications) with the command:
+You can migrate to a standalone Angular app with the command:
 
 ```shell
 npx nx@latest init
@@ -20,9 +20,9 @@ This will enable you to use the Nx CLI in your existing Angular CLI workspace wh
 
 **Note:** The changes will be slightly different for Angular 13 and lower.
 
-## Migrating to an Integrated Nx Monorepo
+## Migrating to an Nx Monorepo
 
-If you want to migrate your Angular CLI project to an [Integrated Nx Monorepo](/concepts/integrated-vs-package-based#integrated-repos), run the following command:
+If you want to migrate your Angular CLI project to an Nx Monorepo, run the following command:
 
 ```shell
 npx nx@latest init --integrated

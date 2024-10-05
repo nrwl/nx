@@ -18496,11 +18496,6 @@
             "deps": ["npm:next", "devkit", "npm:@nrwl/next"]
           },
           {
-            "file": "packages/next/plugins/with-stylus.ts",
-            "hash": "f3a6bbd478d02c0e9940e4ebe3ab662456b53ebe",
-            "deps": ["npm:webpack-merge", "npm:next"]
-          },
-          {
             "file": "packages/next/project.json",
             "hash": "171f3c8158b2682525ffb65dac39edf04578460c"
           },

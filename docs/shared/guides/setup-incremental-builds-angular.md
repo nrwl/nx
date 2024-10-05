@@ -16,7 +16,7 @@ the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) 
 You can generate a new buildable library with:
 
 ```shell
-nx g @nx/angular:lib my-lib --directory=libs/my-lib --buildable
+nx g @nx/angular:lib libs/my-lib --buildable
 ```
 
 The generated buildable library uses the `@nx/angular:ng-packagr-lite` executor which is optimized for the incremental
@@ -53,7 +53,7 @@ path is later changed in `ng-package.json`, it needs to be updated as well in th
 
 The `@nx/angular:package` executor also supports incremental builds. It is used to build and package an Angular library
 to be distributed as an NPM package following the Angular Package Format (APF) specification. It will be automatically
-configured when generating a publishable library (`nx g @nx/angular:lib my-lib --publishable --importPath my-lib`).
+configured when generating a publishable library (`nx g @nx/angular:lib libs/my-lib --publishable --importPath my-lib`).
 {% /callout %}
 
 ## Adjust the application executor

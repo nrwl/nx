@@ -6,24 +6,20 @@
   "description": "Create a web application using `swc` or `babel` as compiler.",
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the application.",
+    "directory": {
+      "description": "The directory of the new application.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z][^:]*$"
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "directory": {
-      "description": "The directory of the new application.",
-      "type": "string"
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-priority": "important"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -77,7 +73,8 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "vitest", "none"],
+      "enum": ["vitest", "jest", "none"],
+      "default": "vitest",
       "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler"
     },
     "inSourceTests": {
@@ -113,6 +110,6 @@
       "x-deprecated": "Nx only supports standaloneConfig"
     }
   },
-  "required": ["name"],
+  "required": ["directory"],
   "examplesFile": "../../../docs/application-examples.md"
 }

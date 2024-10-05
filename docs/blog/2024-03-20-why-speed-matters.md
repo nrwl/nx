@@ -32,7 +32,7 @@ But let’s see all the extra things we did this past year to make everything fa
 
 The Nx daemon has seen significant enhancements, notably through the use of Rust to calculate file hashes behind the scenes. This improvement not only speeds up the start-up times but also optimizes performance even without the daemon, especially on CI environments where the daemon isn't used. The benchmark results at [this repo](https://github.com/vsavkin/large-monorepo) showcase the remarkable speed improvements, making Nx competitive with native code solutions while maintaining the accessibility and flexibility of Node.js. Nx is still Node-first, so contributions are easier and only the most performance-critical parts of Nx are native code.
 
-### **Task Hasher and archive file innovations**
+### Task Hasher and archive file innovations
 
 The introduction of a task hasher written in Rust, alongside the use of an archive file to store workspace file hashes (`.nx/cache`), has significantly reduced the need for repetitive file system accesses. This innovation means that running multiple Nx commands in CI is much faster, as file hashing becomes unnecessary after the initial run.
 
@@ -48,7 +48,7 @@ Nx Replay enables caching and reusing of task results. It’s our well known Nx 
 
 With Nx Replay, you can see significant speed improvements in your CI pipelines for modified PRs. What’s also important is that if a task has been executed in CI, a developer running that same task locally can reuse the task result instead of actually running the task. So you will also see improvements locally.
 
-### **Nx Agents**
+### Nx Agents
 
 ![](/blog/images/2024-03-20/bodyimg2.avif)
 
@@ -64,13 +64,13 @@ With Nx Replay, you can see significant speed improvements in your CI pipelines 
 
 You can read more about Nx Agents [here](https://nx.app/products/agents#content).
 
-### **Atomizer**
+### Atomizer
 
 The [Atomizer](/ci/features/split-e2e-tasks) splits your Cypress or Playwright e2e tests by file. This significantly enhances granularity for caching, parallel execution, and flaky test identification. This granular approach ensures that individual test results can be cached and only the necessary tests rerun, greatly reducing CI pipeline times and facilitating more accurate flaky test detection.
 
 {% youtube src="https://www.youtube.com/watch?v=0YxcxIR7QU0" /%}
 
-### **Addressing flaky tests with test deflaking**
+### Addressing flaky tests with test deflaking
 
 Flaky tests can be a significant bottleneck in the CI process. Nx tackles this issue head-on by intelligently [re-running only the flaky tasks](/ci/features/flaky-tasks), rather than the entire pipeline. This approach not only saves time but also provides developers with more confidence in their CI pipeline's reliability.
 
@@ -102,4 +102,4 @@ Nx provides an unparalleled toolkit for developers and teams looking to optimize
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+- [Speed up your CI](/nx-cloud)

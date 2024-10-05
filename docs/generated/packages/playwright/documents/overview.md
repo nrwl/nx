@@ -104,7 +104,7 @@ npm add -D @nx/playwright
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`
 
 ```shell
-nx g @nx/web:app frontend --e2eTestRunner=playwright
+nx g @nx/web:app apps/frontend --e2eTestRunner=playwright
 ```
 
 ### Add Playwright e2e to an existing project

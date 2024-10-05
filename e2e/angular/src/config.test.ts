@@ -13,9 +13,7 @@ describe('angular.json v1 config', () => {
 
   beforeAll(() => {
     newProject({ packages: ['@nx/angular'] });
-    runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));
     removeFile(`${app1}/project.json`);
@@ -33,9 +31,7 @@ describe('angular.json v1 config', () => {
   it('should generate new app with project.json and keep the existing in angular.json', async () => {
     // create new app
     const app2 = uniq('app2');
-    runCLI(
-      `generate @nx/angular:app ${app2} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:app ${app2} --no-interactive`);
 
     // should generate project.json for new projects
     checkFilesExist(`${app2}/project.json`);

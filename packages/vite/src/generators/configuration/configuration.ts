@@ -163,6 +163,7 @@ export async function viteConfigurationGeneratorInternal(
       testTarget: 'test',
       skipFormat: true,
       addPlugin: schema.addPlugin,
+      compiler: schema.compiler,
     });
     tasks.push(vitestTask);
   }

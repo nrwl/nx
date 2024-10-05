@@ -17,8 +17,7 @@ export async function generatorGenerator(tree: Tree) {
     name: `add-${basename(cwd)}-plugin`,
     packageVersion: '17.2.0-beta.0',
     description: `Add @nx/${basename(cwd)}/plugin`,
-    nameAndDirectoryFormat: 'as-provided',
-    directory: `src/migrations/update-17-2-0`,
+    path: `src/migrations/update-17-2-0`,
     skipFormat: true,
   });
 

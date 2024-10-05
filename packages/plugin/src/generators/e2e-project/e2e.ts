@@ -21,6 +21,7 @@ import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import type { Schema } from './schema';
@@ -46,33 +47,18 @@ async function normalizeOptions(
   options.addPlugin ??= addPlugin;
 
   let projectRoot: string;
-  if (options.projectNameAndRootFormat === 'as-provided') {
-    const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
-      host,
-      {
-        name: projectName,
-        projectType: 'application',
-        directory:
-          options.rootProject || !options.projectDirectory
-            ? projectName
-            : `${options.projectDirectory}-e2e`,
-        projectNameAndRootFormat: `as-provided`,
-      }
-    );
-    projectRoot = projectNameAndRootOptions.projectRoot;
-  } else {
-    const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-      options.projectDirectory
-    );
-    const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
-    const appsDir = layoutDirectory ?? defaultAppsDir;
-
-    projectRoot = options.rootProject
-      ? projectName
-      : projectDirectory
-      ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
-      : joinPathFragments(appsDir, projectName);
-  }
+  const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
+    host,
+    {
+      name: projectName,
+      projectType: 'application',
+      directory:
+        options.rootProject || !options.projectDirectory
+          ? projectName
+          : `${options.projectDirectory}-e2e`,
+    }
+  );
+  projectRoot = projectNameAndRootOptions.projectRoot;
 
   const pluginPropertyName = names(options.pluginName).propertyName;
 
@@ -191,6 +177,8 @@ export async function e2eProjectGenerator(host: Tree, schema: Schema) {
 }
 
 export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'e2e-project');
+
   const tasks: GeneratorCallback[] = [];
 
   validatePlugin(host, schema.pluginName);

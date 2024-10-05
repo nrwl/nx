@@ -11,6 +11,7 @@ import {
   addPlugin,
   generateCombinations,
 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';
@@ -20,6 +21,8 @@ export function remixInitGenerator(tree: Tree, options: Schema) {
 }
 
 export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'remix', 'init');
+
   const tasks: GeneratorCallback[] = [];
 
   if (!options.skipPackageJson) {

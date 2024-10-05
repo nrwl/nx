@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { initGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../../plugin';
 import {
   lessLoaderVersion,
@@ -24,6 +25,8 @@ export async function rspackInitGenerator(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'rspack', 'init');
+
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(tree);

@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -39,6 +40,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'playwright', 'configuration');
+
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&

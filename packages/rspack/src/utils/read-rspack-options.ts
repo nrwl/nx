@@ -1,6 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import { Configuration } from '@rspack/core';
 import { isNxRspackComposablePlugin } from './config';
+import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
 
 /**
  * Reads the Rspack options from a give Rspack configuration. The configuration can be:
@@ -25,7 +26,14 @@ export async function readRspackOptions(
           projectRoot: '',
           sourceRoot: '',
         },
-        context: { root: workspaceRoot, cwd: undefined, isVerbose: false },
+        context: {
+          root: workspaceRoot,
+          cwd: undefined,
+          isVerbose: false,
+          nxJsonConfiguration: readNxJsonFromDisk(workspaceRoot),
+          projectGraph: null,
+          projectsConfigurations: null,
+        },
       }
     );
   } else if (typeof rspackConfig === 'function') {
