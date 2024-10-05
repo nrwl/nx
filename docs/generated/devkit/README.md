@@ -20,7 +20,6 @@ It only uses language primitives and immutable objects
 ### Classes
 
 - [AggregateCreateNodesError](../../devkit/documents/AggregateCreateNodesError)
-- [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
 
 ### Interfaces
 
@@ -49,7 +48,6 @@ It only uses language primitives and immutable objects
 - [ProjectGraph](../../devkit/documents/ProjectGraph)
 - [ProjectGraphDependency](../../devkit/documents/ProjectGraphDependency)
 - [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode)
-- [ProjectGraphProcessorContext](../../devkit/documents/ProjectGraphProcessorContext)
 - [ProjectGraphProjectNode](../../devkit/documents/ProjectGraphProjectNode)
 - [ProjectsConfigurations](../../devkit/documents/ProjectsConfigurations)
 - [RemoteCache](../../devkit/documents/RemoteCache)
@@ -85,12 +83,9 @@ It only uses language primitives and immutable objects
 - [ImplicitDependency](../../devkit/documents/ImplicitDependency)
 - [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry)
 - [NxPlugin](../../devkit/documents/NxPlugin)
-- [NxPluginV1](../../devkit/documents/NxPluginV1)
 - [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)
 - [PluginConfiguration](../../devkit/documents/PluginConfiguration)
-- [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
-- [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
 - [ProjectType](../../devkit/documents/ProjectType)
 - [ProjectsMetadata](../../devkit/documents/ProjectsMetadata)
 - [PromiseExecutor](../../devkit/documents/PromiseExecutor)
@@ -105,7 +100,6 @@ It only uses language primitives and immutable objects
 ### Variables
 
 - [NX_VERSION](../../devkit/documents/NX_VERSION): string
-- [appRootPath](../../devkit/documents/appRootPath): string
 - [cacheDir](../../devkit/documents/cacheDir): string
 - [logger](../../devkit/documents/logger): Object
 - [output](../../devkit/documents/output): CLIOutput

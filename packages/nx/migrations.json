@@ -52,6 +52,11 @@
       "description": "Set project name in nx.json explicitly",
       "implementation": "./src/migrations/update-19-2-4/set-project-name",
       "x-repair-skip": true
+    },
+    "move-use-daemon-process": {
+      "version": "20.0.0-beta.7",
+      "description": "Migration for v20.0.0-beta.7",
+      "implementation": "./src/migrations/update-20-0-0/move-use-daemon-process"
     }
   }
 }

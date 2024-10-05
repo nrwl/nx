@@ -171,11 +171,9 @@ The spirit of this post is similar to Alan Kay's quote, "A change of perspective
 
 ---
 
-You can learn more about Nx Cloud on [nx.app](https://nx.app) and Nx open source on [nx.dev]().
+You can learn more about Nx Cloud on [our docs](/nx-cloud).
 
-**Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](https://nx.app/campaigns/pro)
-
-We also have a **Pro for Startups** plan which offers agents that are 3.5x cheaper than analogous VMs on CircleCI or Github Actions. [Learn more about Nx Pro for Startups.](https://nx.app/campaigns/pro-for-startups)
+**Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](/pricing)
 
 ---
 
@@ -187,4 +185,4 @@ We also have a **Pro for Startups** plan which offers agents that are 3.5x cheap
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+- [Speed up your CI](/nx-cloud)

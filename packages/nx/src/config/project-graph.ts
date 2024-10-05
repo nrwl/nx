@@ -89,11 +89,6 @@ export enum DependencyType {
   implicit = 'implicit',
 }
 
-/** @deprecated this type will be removed in v16. Use {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} instead */
-export type ProjectGraphNode =
-  | ProjectGraphProjectNode
-  | ProjectGraphExternalNode;
-
 /**
  * A node describing a project in a workspace
  */

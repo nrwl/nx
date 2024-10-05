@@ -3,6 +3,7 @@ export * from './lib/ci-providers/azure-devops';
 export * from './lib/ci-providers/bitbucket';
 export * from './lib/ci-providers/github';
 export * from './lib/ci-providers/gitlab';
+export * from './lib/ci-providers/google-cloud';
 export * from './lib/ci-providers/jenkins';
 export * from './lib/ci-providers/travis-ci';
 

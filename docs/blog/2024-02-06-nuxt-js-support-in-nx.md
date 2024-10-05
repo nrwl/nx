@@ -178,13 +178,20 @@ and see the structure of your projects:
 
 Whether you're starting a new Nuxt project or looking to enhance an existing one, Nx offers a compelling set of tools and features to streamline your development process. From modularization to caching, the integration of Nx into your Nuxt projects promises a more efficient, scalable, and enjoyable development experience. By embracing Nx's capabilities in your Nuxt development, you're not just optimizing your current workflow; you're future-proofing your development process. As your projects grow and evolve, Nx's modular architecture and powerful tooling will continue to provide value, making your development experience more enjoyable and productive.
 
----
+## Nx Live With Nuxt Maintainer Daniel Roe
+
+Don’t miss Nx team members Zack and Katerina with Nuxt’s maintainer, Daniel Roe — live!
+
+{% youtube src="https://www.youtube.com/watch?v=uHwUxFYX2DY" %}
 
 ## Learn more
 
+Check out the [example repo](https://github.com/mandarini/my-nx-nuxt-workspace) used in this blog post or one of the links below to learn more:
+
 - [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools) - [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+- [Speed up your CI](/nx-cloud)
+
+Also, if you liked this, make sure to follow [Katerina](https://twitter.com/psybercity) and [Nx](https://twitter.com/nxdevtools) on Twitter for more!

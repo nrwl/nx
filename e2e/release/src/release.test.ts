@@ -129,7 +129,6 @@ describe('nx release', () => {
 
       + ## 999.9.9 (YYYY-MM-DD)
       +
-      +
       + ### 🚀 Features
       +
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
@@ -149,7 +148,6 @@ describe('nx release', () => {
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
       ## 999.9.9 (YYYY-MM-DD)
-
 
       ### 🚀 Features
 
@@ -666,7 +664,7 @@ describe('nx release', () => {
       +
       ## 999.9.9 (YYYY-MM-DD)
 
-
+      ### 🚀 Features
 
 
       NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0

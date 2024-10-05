@@ -2,7 +2,7 @@
 title: State Management Nx React Native/Expo Apps with TanStack Query and Redux
 slug: 'state-management-nx-react-native-expo-apps-with-tanstack-query-and-redux'
 authors: [Emily Xiong]
-image: '/blog/images/2023-11-08/featured_img.webp'
+cover_image: '/blog/images/2023-11-08/featured_img.webp'
 tags: [nx, React Native]
 ---
 
@@ -96,7 +96,7 @@ If you open my Expo app on the web by running `nx start cats` and choose the opt
 
 ![](/blog/images/2023-11-08/bodyimg2.webp)
 
-Or you can run npx nx serve cats to launch the app in a web browser and debug from there.
+Or you can run `npx nx serve cats` to launch the app in a web browser and debug from there.
 
 ### Create a Query
 
@@ -160,7 +160,7 @@ Invalid hook call. Hooks can only be called inside of the body of a function com
 
 To solve this, you need to wrap your component inside the renderHook function from `@testing-library/react-native` library:
 
-1. **Install Library to Mock Fetch**
+**1\. Install Library to Mock Fetch**
 
 Depending on which library you use to make HTTP requests. (e.g. fetch, axios), you need to install a library to mock the response.
 
@@ -185,7 +185,7 @@ import fetchMock from 'jest-fetch-mock';
 fetchMock.enableMocks();
 ```
 
-2. **Create Mock Query Provider**
+**2\. Create Mock Query Provider**
 
 In order to test out `useQuery` hook, you need to wrap it inside a mock `QueryClientProvider`. Since this mock query provider is going to be used more than once, let’s create a library for this wrapper:
 
@@ -227,7 +227,7 @@ export function TestWrapper({ children }: TestWrapperProps) {
 export default TestWrapper;
 ```
 
-3. **Use Mock Responses in Unit Test**
+**3\. Use Mock Responses in Unit Test**
 
 Then this is what the unit test for my query would look like:
 
@@ -516,8 +516,104 @@ This state has 3 actions:
 
 Then you have to add the root store and create a transform function to stringify the redux state:
 
-```html
-<script src="https://gist.github.com/xiongemi/5f364d84f89b647dcaaf7e5437ea789c.js"></script>
+```typescript {% fileName="persist-transform.ts" %}
+import { EntityState } from '@reduxjs/toolkit';
+import { createTransform } from 'redux-persist';
+import { LIKES_FEATURE_KEY } from '../likes/likes.slice';
+
+const transformEntityStateToPersist = createTransform(
+  // transform state on its way to being serialized and persisted.
+  (
+    entityState: EntityState<any>
+  ): {
+    ids: string;
+    entities: any;
+  } => {
+    return {
+      ...entityState,
+      ids: JSON.stringify(entityState.ids),
+      entities: JSON.stringify(entityState.entities),
+    };
+  },
+  // transform state being rehydrated
+  (entityState: { ids: string; entities: string }): EntityState<any> => {
+    return {
+      ...entityState,
+      ids: JSON.parse(entityState.ids),
+      entities: JSON.parse(entityState.entities),
+    };
+  },
+  // define which reducers this transform gets called for.
+  { whitelist: [LIKES_FEATURE_KEY] }
+);
+
+export { transformEntityStateToPersist };
+```
+
+```typescript {% fileName="root-state.initial.ts" %}
+import { initialLikesState } from '../likes/likes.slice';
+
+import { RootState } from './root-state.interface';
+
+export const initialRootState: RootState = {
+  likes: initialLikesState,
+};
+```
+
+```typescript {% fileName="root-state.interface.ts" %}
+import { LikesState } from '../likes/likes.slice';
+
+export interface RootState {
+  likes: LikesState;
+}
+```
+
+```typescript {% fileName="root-reducer.ts" %}
+import { combineReducers } from '@reduxjs/toolkit';
+
+import { likesReducer } from '../likes/likes.slice';
+import { RootState } from './root-state.interface';
+
+export const createRootReducer = combineReducers<RootState>({
+  likes: likesReducer,
+});
+```
+
+```typescript {% fileName="root.store.ts" %}
+import { configureStore } from '@reduxjs/toolkit';
+import logger from 'redux-logger';
+import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
+
+import { initialRootState } from './root-state.initial';
+import { RootState } from './root-state.interface';
+import { createRootReducer } from './root.reducer';
+
+declare const process: any;
+
+export const createRootStore = (persistConfig: PersistConfig<RootState>) => {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  const rootReducer = createRootReducer;
+  const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+  const store = configureStore({
+    reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) => {
+      const defaultMiddleware = getDefaultMiddleware({
+        serializableCheck: false,
+      });
+      return isDevelopment
+        ? defaultMiddleware.concat(logger)
+        : defaultMiddleware;
+    },
+    devTools: isDevelopment,
+    preloadedState: initialRootState,
+  });
+
+  const persistor = persistStore(store);
+
+  return { store, persistor };
+};
 ```
 
 ### Connect Redux State with UI

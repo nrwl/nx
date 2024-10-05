@@ -209,17 +209,13 @@ export interface ExecutorContext {
 
   /**
    * Projects config
-   *
-   * @todo(vsavkin): mark this as required for v17
    */
-  projectsConfigurations?: ProjectsConfigurations;
+  projectsConfigurations: ProjectsConfigurations;
 
   /**
    * The contents of nx.json.
-   *
-   * @todo(vsavkin): mark this as required for v17
    */
-  nxJsonConfiguration?: NxJsonConfiguration;
+  nxJsonConfiguration: NxJsonConfiguration;
 
   /**
    * The current working directory
@@ -234,21 +230,12 @@ export interface ExecutorContext {
   /**
    * A snapshot of the project graph as
    * it existed when the Nx command was kicked off
-   *
-   * @todo(vsavkin) mark this required for v17
    */
-  projectGraph?: ProjectGraph;
+  projectGraph: ProjectGraph;
 
   /**
    * A snapshot of the task graph as
    * it existed when the Nx command was kicked off
    */
   taskGraph?: TaskGraph;
-
-  /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
-   * The full workspace configuration
-   * @todo(vsavkin): remove after v17
-   */
-  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 }

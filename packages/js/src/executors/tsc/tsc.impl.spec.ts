@@ -11,6 +11,10 @@ describe('tscExecutor', () => {
     context = {
       root: '/root',
       cwd: '/root',
+      projectGraph: {
+        nodes: {},
+        dependencies: {},
+      },
       projectsConfigurations: {
         version: 2,
         projects: {},

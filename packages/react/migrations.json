@@ -130,6 +130,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.0.0": {
+      "version": "20.0.0-beta.8",
+      "packages": {
+        "eslint-plugin-import": {
+          "version": "2.31.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
