@@ -118,6 +118,7 @@ The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx 
 To serve your new Angular application, just run:
 
 ```shell
+cd angular-monorepo
 npx nx serve angular-store
 ```
 
