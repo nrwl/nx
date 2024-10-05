@@ -14,7 +14,6 @@ export class ProjectGraphError extends Error {
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
     | ProcessDependenciesError
-    | ProcessProjectGraphError
     | WorkspaceValidityError
   >;
   readonly #partialProjectGraph: ProjectGraph;
@@ -27,7 +26,6 @@ export class ProjectGraphError extends Error {
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
       | ProcessDependenciesError
-      | ProcessProjectGraphError
       | CreateMetadataError
       | WorkspaceValidityError
     >,
@@ -312,27 +310,10 @@ export function isWorkspaceValidityError(
       e?.name === WorkspaceValidityError.name)
   );
 }
-
-export class ProcessProjectGraphError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
-    super(
-      `The "${pluginName}" plugin threw an error while processing the project graph:`,
-      {
-        cause,
-      }
-    );
-    this.name = this.constructor.name;
-    this.stack = `${this.message}\n${indentString(cause, 2)}`;
-  }
-}
-
 export class AggregateProjectGraphError extends Error {
   constructor(
     public readonly errors: Array<
-      | CreateMetadataError
-      | ProcessDependenciesError
-      | ProcessProjectGraphError
-      | WorkspaceValidityError
+      CreateMetadataError | ProcessDependenciesError | WorkspaceValidityError
     >,
     public readonly partialProjectGraph: ProjectGraph
   ) {

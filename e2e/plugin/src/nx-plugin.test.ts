@@ -271,47 +271,7 @@ describe('Nx Plugin', () => {
       runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     });
 
-    it('should be able to infer projects and targets (v1)', async () => {
-      // Setup project inference + target inference
-      updateFile(
-        `${plugin}/src/index.ts`,
-        `import {basename} from 'path'
-
-  export function registerProjectTargets(f) {
-    if (basename(f) === 'my-project-file') {
-      return {
-        build: {
-          executor: "nx:run-commands",
-          options: {
-            command: "echo 'custom registered target'"
-          }
-        }
-      }
-    }
-  }
-
-  export const projectFilePatterns = ['my-project-file'];
-  `
-      );
-
-      // Register plugin in nx.json (required for inference)
-      updateFile(`nx.json`, (nxJson) => {
-        const nx = JSON.parse(nxJson);
-        nx.plugins = [`@${workspaceName}/${plugin}`];
-        return JSON.stringify(nx, null, 2);
-      });
-
-      // Create project that should be inferred by Nx
-      const inferredProject = uniq('inferred');
-      createFile(`${inferredProject}/my-project-file`);
-
-      // Attempt to use inferred project w/ Nx
-      expect(runCLI(`build ${inferredProject}`)).toContain(
-        'custom registered target'
-      );
-    });
-
-    it('should be able to infer projects and targets (v2)', async () => {
+    it('should be able to infer projects and targets', async () => {
       // Setup project inference + target inference
       updateFile(`${plugin}/src/index.ts`, NX_PLUGIN_V2_CONTENTS);
 

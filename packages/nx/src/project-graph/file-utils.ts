@@ -180,7 +180,7 @@ export function readPackageJson(): any {
 export { FileData };
 
 /**
- * TODO(v20): Remove this function.
+ * TODO(v21): Remove this function.
  */
 function getProjectsSync(
   root: string,

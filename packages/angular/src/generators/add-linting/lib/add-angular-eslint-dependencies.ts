@@ -3,9 +3,10 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { eslint9__typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
 import { versions } from '../../utils/version-utils';
 import { isBuildableLibraryProject } from './buildable-project';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export function addAngularEsLintDependencies(
   tree: Tree,
@@ -13,7 +14,8 @@ export function addAngularEsLintDependencies(
 ): GeneratorCallback {
   const compatVersions = versions(tree);
   const angularEslintVersionToInstall = compatVersions.angularEslintVersion;
-  const devDependencies = useFlatConfig(tree)
+  const usesEslintFlatConfig = useFlatConfig(tree);
+  const devDependencies = usesEslintFlatConfig
     ? {
         'angular-eslint': angularEslintVersionToInstall,
       }
@@ -24,8 +26,9 @@ export function addAngularEsLintDependencies(
       };
 
   if ('typescriptEslintVersion' in compatVersions) {
-    devDependencies['@typescript-eslint/utils'] =
-      compatVersions.typescriptEslintVersion;
+    devDependencies['@typescript-eslint/utils'] = usesEslintFlatConfig
+      ? eslint9__typescriptESLintVersion
+      : compatVersions.typescriptEslintVersion;
   }
 
   if (isBuildableLibraryProject(tree, projectName)) {

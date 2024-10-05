@@ -257,43 +257,6 @@ describe('splitArgs', () => {
   });
 
   describe('--runner environment handling', () => {
-    it('should set runner based on environment NX_RUNNER, if it is not provided directly on the command', () => {
-      withEnvironment({ NX_RUNNER: 'some-env-runner-name' }, () => {
-        expect(
-          splitArgsIntoNxArgsAndOverrides(
-            {
-              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-              $0: '',
-            },
-            'run-one',
-            {} as any,
-            {
-              tasksRunnerOptions: {
-                'some-env-runner-name': { runner: '' },
-              },
-            }
-          ).nxArgs.runner
-        ).toEqual('some-env-runner-name');
-
-        expect(
-          splitArgsIntoNxArgsAndOverrides(
-            {
-              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-              $0: '',
-              runner: 'directlyOnCommand', // higher priority than $NX_RUNNER
-            },
-            'run-one',
-            {} as any,
-            {
-              tasksRunnerOptions: {
-                'some-env-runner-name': { runner: '' },
-              },
-            }
-          ).nxArgs.runner
-        ).toEqual('directlyOnCommand');
-      });
-    });
-
     it('should set runner based on environment NX_TASKS_RUNNER, if it is not provided directly on the command', () => {
       withEnvironment({ NX_TASKS_RUNNER: 'some-env-runner-name' }, () => {
         expect(

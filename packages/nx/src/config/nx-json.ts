@@ -393,7 +393,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * Available Task Runners
+   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
@@ -516,9 +517,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   sync?: NxSyncConfiguration;
 
   /**
-   * Enable the new experimental db based cache
+   * Use the legacy file system cache instead of the db cache
    */
-  enableDbCache?: boolean;
+  useLegacyCache?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

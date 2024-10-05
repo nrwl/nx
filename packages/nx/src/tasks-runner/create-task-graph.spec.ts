@@ -1490,6 +1490,71 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should handle cycles where tasks seem to depend on themselves (lib1:build -> lib2 -> lib1:build)', () => {
+    projectGraph = {
+      nodes: {
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {},
+          },
+        },
+      },
+      dependencies: {
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib1', type: 'static' }],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: [{ target: 'build', dependencies: true }],
+      },
+      ['lib1'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['lib1:build'],
+      tasks: {
+        'lib1:build': expect.objectContaining({
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          outputs: expect.arrayContaining([expect.any(String)]),
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+        }),
+      },
+      dependencies: {
+        'lib1:build': [],
+      },
+    });
+  });
+
   it('should handle cycles between projects where all projects do not contain the same task target (lib1:build -> lib2:build -> lib3 -> lib4:build -> lib1:build)', () => {
     projectGraph = {
       nodes: {
