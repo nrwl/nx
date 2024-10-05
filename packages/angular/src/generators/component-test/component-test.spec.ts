@@ -8,6 +8,7 @@ import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
+import { EOL } from 'node:os';
 
 jest.mock('@nx/cypress/src/utils/cypress-version');
 
@@ -226,7 +227,9 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree
+        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .replaceAll(EOL, '\n')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
@@ -237,7 +240,9 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree
+        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .replaceAll(EOL, '\n')
     ).toEqual(expected);
   });
 });

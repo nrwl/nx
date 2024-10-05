@@ -2,24 +2,24 @@
 
 exports[`preset should create files (preset = angular-monorepo) 1`] = `
 [
+  ".eslintrc.json",
+  "jest.config.ts",
   "project.json",
+  "public",
   "src",
   "tsconfig.app.json",
   "tsconfig.editor.json",
   "tsconfig.json",
-  "public",
-  ".eslintrc.json",
-  "jest.config.ts",
   "tsconfig.spec.json",
 ]
 `;
 
 exports[`preset should create files (preset = angular-monorepo) 2`] = `
 [
-  "index.html",
-  "styles.css",
   "app",
+  "index.html",
   "main.ts",
+  "styles.css",
   "test-setup.ts",
 ]
 `;
