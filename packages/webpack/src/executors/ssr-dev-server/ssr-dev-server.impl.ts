@@ -4,7 +4,7 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 
 import { WebpackExecutorOptions } from '../webpack/schema';
@@ -62,7 +62,7 @@ export async function* ssrDevServerExecutor(
     if (nodeStarted && browserBuilt) {
       await waitUntilServerIsListening(options.port);
       console.log(
-        `[ ${chalk.green('ready')} ] on http://localhost:${options.port}`
+        `[ ${pc.green('ready')} ] on http://localhost:${options.port}`
       );
       yield {
         ...output,
