@@ -20,7 +20,7 @@ The following are the currently supported major versions of Nx.
 
 | Version | Support Type | Release Date |
 | ------- | ------------ | ------------ |
-| v20     | Current      | 2024-10-04   |
+| v20     | Current      | 2024-10-06   |
 | v19     | LTS          | 2024-05-06   |
 | v18\*   | LTS          | 2024-02-03   |
 | v17     | LTS          | 2023-10-19   |
