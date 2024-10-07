@@ -554,4 +554,44 @@ describe('buildEsbuildOptions', () => {
       },
     });
   });
+
+  it('should respect user defined outputs', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          assets: [],
+          singleEntry: true,
+          outputPath: 'user-defined-outputPath',
+          outputFileName: 'user-defined-fileName.js',
+          external: ['foo'],
+          userDefinedBuildOptions: {
+            external: ['bar'],
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'user-defined-outputPath/user-defined-fileName.js',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
+      external: ['bar', 'foo'],
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+    });
+  });
 });

@@ -147,7 +147,7 @@ export function getOutfile(
 ) {
   const ext = getOutExtension(format, options);
   const candidate = joinPathFragments(
-    context.target.options.outputPath,
+    options.outputPath,
     options.outputFileName
   );
   const { dir, name } = path.parse(candidate);
