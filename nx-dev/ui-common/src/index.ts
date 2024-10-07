@@ -22,6 +22,7 @@ export * from './lib/discord-icon';
 export * from './lib/trusted-by';
 export * from './lib/testimonials';
 export * from './lib/square-dotted-pattern';
+export * from './lib/live-stream-notifier';
 
 export { resourceMenuItems } from './lib/headers/menu-items';
 export { solutionsMenuItems } from './lib/headers/menu-items';
