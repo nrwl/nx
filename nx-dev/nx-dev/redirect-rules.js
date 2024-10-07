@@ -862,6 +862,10 @@ const missingAndCatchAllRedirects = {
   '/packages/:path*': '/nx-api/:path*',
 };
 
+const marketing = {
+  '/conf': 'https://monorepo.world',
+};
+
 const movePluginFeaturesToCore = {
   '/plugin-features/use-task-executors':
     '/concepts/executors-and-configurations',
@@ -1171,4 +1175,5 @@ module.exports = {
   blogPosts,
   decisionsSection,
   featurePagesUpdate,
+  marketing,
 };
