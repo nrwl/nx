@@ -2,7 +2,7 @@
 title: 'Single File Monorepo Config, Custom Workspace Presets, Improved Tailwind Support, and more in Nx 13.4!'
 slug: 'single-file-monorepo-config-custom-workspace-presets-improved-tailwind-support-and-more-in-nx-13'
 authors: ['Brandon Roberts']
-cover_image: '/blog/images/2021-12-23/1*_4u3Fw49H5U-sqgyBoGsqw.png'
+cover_image: '/blog/images/2021-12-23/4u3Fw49H5U-sqgyBoGsqw.png'
 tags: [nx, release]
 ---
 
@@ -12,7 +12,7 @@ Nx is a smart, extensible build framework to help you architect, test, and build
 
 Nx reached a major milestone this week of one million weekly downloads. Nx has been working to push monorepos forward for a long time, and this milestone is a reflection of work between us and the Nx community to grow and expand in this space.
 
-![](/blog/images/2021-12-23/1*WC4RQRZhTtOCsiATOL1cBg.avif)
+![](/blog/images/2021-12-23/WC4RQRZhTtOCsiATOL1cBg.avif)
 _One million weekly downloads_
 
 ## Single File Monorepo Configuration ☝️
@@ -55,7 +55,7 @@ Read all the details on [our new TypeScript guide](/getting-started/intro) or ch
 
 ## Improved Tailwind support for Angular 💅
 
-![](/blog/images/2021-12-23/0*1yacozydc1muZ74G.avif)
+![](/blog/images/2021-12-23/1yacozydc1muZ74G.avif)
 _Tailwind Logo_
 
 Tailwind is a utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup. If you’ve used Tailwind with Angular applications previously, it's supported out of the box with Nx. We’re continually looking to improve the developer experience of using Tailwind in Angular applications and libraries. We already added support to the Angular plugin for Nx, and have added a new generator to configure Tailwind in **existing** apps and buildable/publishable libs, allowing you to set up and configure Tailwind without manual steps. The ability to configure new apps and libs is also supported, with support for Tailwind V2 and the latest V3 release.

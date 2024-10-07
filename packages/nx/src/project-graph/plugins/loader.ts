@@ -27,7 +27,6 @@ import { extname } from 'node:path';
 import { NxPlugin } from './public-api';
 import { PluginConfiguration } from '../../config/nx-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
-import { normalizeNxPlugin } from './utils';
 import { LoadedNxPlugin } from './internal-api';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
@@ -269,13 +268,13 @@ export async function loadNxPluginAsync(
     }
 
     performance.mark(`Load Nx Plugin: ${moduleName} - start`);
-    let { pluginPath, name } = await getPluginPathAndName(
+    const { pluginPath, name } = getPluginPathAndName(
       moduleName,
       paths,
       projectsWithoutInference,
       root
     );
-    const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
+    const plugin = await importPluginModule(pluginPath);
     plugin.name ??= name;
     performance.mark(`Load Nx Plugin: ${moduleName} - end`);
     performance.measure(

@@ -1,12 +1,8 @@
-import {
-  ProjectGraph,
-  ProjectGraphProcessorContext,
-} from '../../../config/project-graph';
+import { ProjectGraph } from '../../../config/project-graph';
 import { PluginConfiguration } from '../../../config/nx-json';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContext,
   CreateNodesContextV2,
 } from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
@@ -111,30 +107,6 @@ export interface PluginCreateMetadataResult {
       };
 }
 
-export interface PluginWorkerProcessProjectGraphMessage {
-  type: 'processProjectGraph';
-  payload: {
-    graph: ProjectGraph;
-    ctx: ProjectGraphProcessorContext;
-    tx: string;
-  };
-}
-
-export interface PluginWorkerProcessProjectGraphResult {
-  type: 'processProjectGraphResult';
-  payload:
-    | {
-        graph: ProjectGraph;
-        success: true;
-        tx: string;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
-
 export interface PluginWorkerShutdownMessage {
   type: 'shutdown';
   payload: {};
@@ -145,14 +117,12 @@ export type PluginWorkerMessage =
   | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
-  | PluginWorkerProcessProjectGraphMessage
   | PluginCreateMetadataMessage;
 
 export type PluginWorkerResult =
   | PluginWorkerLoadResult
   | PluginWorkerCreateNodesResult
   | PluginCreateDependenciesResult
-  | PluginWorkerProcessProjectGraphResult
   | PluginCreateMetadataResult;
 
 export function isPluginWorkerMessage(

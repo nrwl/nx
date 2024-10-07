@@ -48,7 +48,7 @@ impl NxCache {
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
-            link_task_details: link_task_details.unwrap_or(true)
+            link_task_details: link_task_details.unwrap_or(true),
         };
 
         r.setup()?;
@@ -80,11 +80,7 @@ impl NxCache {
             "
         };
 
-        self.db
-            .execute_batch(
-                query,
-            )
-            .map_err(anyhow::Error::from)
+        self.db.execute_batch(query).map_err(anyhow::Error::from)
     }
 
     #[napi]
@@ -136,12 +132,17 @@ impl NxCache {
         let task_dir = self.cache_path.join(&hash);
 
         // Remove the task directory
+        //
+        trace!("Removing task directory: {:?}", &task_dir);
         remove_items(&[&task_dir])?;
         // Create the task directory again
+        trace!("Creating task directory: {:?}", &task_dir);
         create_dir_all(&task_dir)?;
 
         // Write the terminal outputs into a file
-        write(self.get_task_outputs_path_internal(&hash), terminal_output)?;
+        let task_outputs_path = self.get_task_outputs_path_internal(&hash);
+        trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
+        write(task_outputs_path, terminal_output)?;
 
         // Expand the outputs
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
@@ -151,10 +152,12 @@ impl NxCache {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
+                trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
                 _copy(p, cached_outputs_dir)?;
             }
         }
 
+        trace!("Recording to cache: {:?}", &hash);
         self.record_to_cache(hash, code)?;
         Ok(())
     }
@@ -185,9 +188,7 @@ impl NxCache {
 
     fn record_to_cache(&self, hash: String, code: i16) -> anyhow::Result<()> {
         self.db.execute(
-            "INSERT INTO cache_outputs
-                (hash, code)
-                VALUES (?1, ?2)",
+            "INSERT OR REPLACE INTO cache_outputs (hash, code) VALUES (?1, ?2)",
             params![hash, code],
         )?;
         Ok(())
@@ -251,25 +252,22 @@ impl NxCache {
         // Checks that the number of cache records in the database
         // matches the number of cache directories on the filesystem.
         // If they don't match, it means that the cache is out of sync.
-        let cache_records_exist = self.db.query_row(
-            "SELECT EXISTS (SELECT 1 FROM cache_outputs)",
-            [],
-            |row| {
-                let exists: bool = row.get(0)?;
-                Ok(exists)
-            },
-        )?;
+        let cache_records_exist =
+            self.db
+                .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
+                    let exists: bool = row.get(0)?;
+                    Ok(exists)
+                })?;
 
         if !cache_records_exist {
             let hash_regex = Regex::new(r"^\d+$").expect("Hash regex is invalid");
-            let fs_entries = std::fs::read_dir(&self.cache_path)
-                .map_err(anyhow::Error::from)?;
+            let fs_entries = std::fs::read_dir(&self.cache_path).map_err(anyhow::Error::from)?;
 
             for entry in fs_entries {
                 let entry = entry?;
                 let is_dir = entry.file_type()?.is_dir();
 
-                if (is_dir) {
+                if is_dir {
                     if let Some(file_name) = entry.file_name().to_str() {
                         if hash_regex.is_match(file_name) {
                             return Ok(false);

@@ -2,7 +2,7 @@
 title: 'Using NgRx Standalone APIs with Nx'
 slug: 'using-ngrx-standalone-apis-with-nx'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-02-21/1*pJHhA04d6jIjOb5vpCDjyw.png'
+cover_image: '/blog/images/2023-02-21/pJHhA04d6jIjOb5vpCDjyw.png'
 tags: [nx, tutorial]
 ---
 
@@ -30,7 +30,7 @@ Select:
 
 The result should look something like this:
 
-![](/blog/images/2023-02-21/0*-91CdqmMaqFjMDVK.avif)
+![](/blog/images/2023-02-21/91CdqmMaqFjMDVK.avif)
 
 Now run `cd myorg` to enter the workspace.
 
@@ -64,7 +64,7 @@ You’ll be asked for a name for the feature state, but you can ignore this and 
 
 Say false to Facades also.
 
-![](/blog/images/2023-02-21/0*6igpc5F6dk9UMswf.avif)
+![](/blog/images/2023-02-21/6igpc5F6dk9UMswf.avif)
 
 The generator will now make changes to your `main.ts` file and install the NgRx packages for you!
 

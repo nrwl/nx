@@ -65,18 +65,23 @@ Click on a node to show a tooltip which also has a link to view more details abo
 You can trace the dependency chain between two projects by choosing a **Start** and **End** point in the project tooltips.
 Click on any dependency line to find which file(s) created the dependency.
 
+Composite nodes represent a set of projects in the same folder and can be expanded in place to show all the individual projects and their dependencies. You can also "focus" a composite node to render a graph of just the projects inside that node. Composite nodes are essential to navigate a graph of even a moderate size.
+
 Try playing around with a [fully interactive graph on a sample repo](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=cart) or look at the more limited example below:
 
-{% graph height="450px" %}
+{% side-by-side %}
+
+{% graph height="450px" title="Project View" %}
 
 ```json
 {
-  "hash": "58420bb4002bb9b6914bdeb7808c77a591a089fc82aaee11e656d73b2735e3fa",
+  "composite": false,
   "projects": [
     {
       "name": "shared-product-state",
       "type": "lib",
       "data": {
+        "root": "shared/product-state",
         "tags": ["scope:shared", "type:state"]
       }
     },
@@ -84,6 +89,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
       "name": "shared-product-types",
       "type": "lib",
       "data": {
+        "root": "shared/product-types",
         "tags": ["type:types", "scope:shared"]
       }
     },
@@ -91,6 +97,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
       "name": "shared-product-data",
       "type": "lib",
       "data": {
+        "root": "shared/product-data",
         "tags": ["type:data", "scope:shared"]
       }
     },
@@ -98,6 +105,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
       "name": "cart-cart-page",
       "type": "lib",
       "data": {
+        "root": "cart/cart-page",
         "tags": ["scope:cart", "type:feature"]
       }
     },
@@ -105,13 +113,15 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
       "name": "shared-styles",
       "type": "lib",
       "data": {
+        "root": "shared/styles",
         "tags": ["scope:shared", "type:styles"]
       }
     },
     {
-      "name": "cart-e2e",
+      "name": "e2e-cart",
       "type": "e2e",
       "data": {
+        "root": "e2e/cart",
         "tags": ["scope:cart", "type:e2e"]
       }
     },
@@ -119,6 +129,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
       "name": "cart",
       "type": "app",
       "data": {
+        "root": "cart",
         "tags": ["type:app", "scope:cart"]
       }
     }
@@ -153,8 +164,8 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
       }
     ],
     "shared-styles": [],
-    "cart-e2e": [
-      { "source": "cart-e2e", "target": "cart", "type": "implicit" }
+    "e2e-cart": [
+      { "source": "e2e-cart", "target": "cart", "type": "implicit" }
     ],
     "cart": [
       { "source": "cart", "target": "shared-styles", "type": "implicit" },
@@ -169,11 +180,128 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
   "focus": null,
   "groupByFolder": false,
   "exclude": [],
-  "enableTooltips": true
+  "enableTooltips": false
 }
 ```
 
 {% /graph %}
+
+{% graph height="450px" title="Composite View (Nx 20+)" %}
+
+```json
+{
+  "composite": true,
+  "projects": [
+    {
+      "name": "shared-product-state",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-state",
+        "tags": ["scope:shared", "type:state"]
+      }
+    },
+    {
+      "name": "shared-product-types",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-types",
+        "tags": ["type:types", "scope:shared"]
+      }
+    },
+    {
+      "name": "shared-product-data",
+      "type": "lib",
+      "data": {
+        "root": "shared/product-data",
+        "tags": ["type:data", "scope:shared"]
+      }
+    },
+    {
+      "name": "cart-cart-page",
+      "type": "lib",
+      "data": {
+        "root": "cart/cart-page",
+        "tags": ["scope:cart", "type:feature"]
+      }
+    },
+    {
+      "name": "shared-styles",
+      "type": "lib",
+      "data": {
+        "root": "shared/styles",
+        "tags": ["scope:shared", "type:styles"]
+      }
+    },
+    {
+      "name": "e2e-cart",
+      "type": "e2e",
+      "data": {
+        "root": "e2e/cart",
+        "tags": ["scope:cart", "type:e2e"]
+      }
+    },
+    {
+      "name": "cart",
+      "type": "app",
+      "data": {
+        "root": "cart/cart",
+        "tags": ["type:app", "scope:cart"]
+      }
+    }
+  ],
+  "dependencies": {
+    "shared-product-state": [
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-data",
+        "type": "static"
+      },
+      {
+        "source": "shared-product-state",
+        "target": "shared-product-types",
+        "type": "static"
+      }
+    ],
+    "shared-product-types": [],
+    "shared-product-data": [
+      {
+        "source": "shared-product-data",
+        "target": "shared-product-types",
+        "type": "static"
+      }
+    ],
+    "shared-e2e-utils": [],
+    "cart-cart-page": [
+      {
+        "source": "cart-cart-page",
+        "target": "shared-product-state",
+        "type": "static"
+      }
+    ],
+    "shared-styles": [],
+    "e2e-cart": [
+      { "source": "e2e-cart", "target": "cart", "type": "implicit" }
+    ],
+    "cart": [
+      { "source": "cart", "target": "shared-styles", "type": "implicit" },
+      { "source": "cart", "target": "cart-cart-page", "type": "static" }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": [],
+  "enableTooltips": false
+}
+```
+
+{% /graph %}
+
+{% /side-by-side %}
 
 ### Export Project Graph to JSON
 

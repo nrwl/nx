@@ -2,7 +2,7 @@
 title: 'Setup React and Tailwind — The Easy Way'
 slug: 'setup-react-and-tailwind-the-easy-way'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-02-09/1*TK4Kdj-cc890gQkgUtKNyA.png'
+cover_image: '/blog/images/2023-02-09/TK4Kdj-cc890gQkgUtKNyA.png'
 tags: [nx, tutorial]
 ---
 
@@ -16,7 +16,7 @@ Developers love to argue about whether Tailwind is good, almost like arguing abo
 
 Tailwind has good docs around getting started quickly. There are options to set up Tailwind with their Tailwind CLI, PostCSS, and framework-specific guides.
 
-![](/blog/images/2023-02-09/0*Z6SYFsnv-oA5FHz-.avif)
+![](/blog/images/2023-02-09/Z6SYFsnv-oA5FHz-.avif)
 
 These steps mostly involve
 
@@ -26,7 +26,7 @@ These steps mostly involve
 
 **One important thing:** if you use [Create-React-App](https://create-react-app.dev/) you might want to check out [what the Tailwind docs say](https://tailwindcss.com/docs/guides/create-react-app) first.
 
-![](/blog/images/2023-02-09/0*tcPmgZM4SjA2QM80.avif)
+![](/blog/images/2023-02-09/tcPmgZM4SjA2QM80.avif)
 
 This came up a couple of weeks ago due to a [PR opened on the CRA repo](https://github.com/reactjs/reactjs.org/pull/5487) asking to kinda deprecate it as the main choice for new React projects. I couldn’t help but share my opinion on this as well:
 
@@ -44,7 +44,7 @@ Nx has such generators. To use them, you need an Nx-based React setup. If you’
 $ npx create-nx-workspace reactapp --preset=react-standalone
 ```
 
-![](/blog/images/2023-02-09/0*Zw73l-Hm4PBi1mBD.avif)
+![](/blog/images/2023-02-09/Zw73l-Hm4PBi1mBD.avif)
 
 As you can see, this allows you to choose which bundler to use as well as other options (such as the CSS setup). Again, this is already such a code generator that creates this initial project scaffold.
 
@@ -72,7 +72,7 @@ You’ll get
 - Tailwind configured together with PostCSS
 - your main `styles.css` file updated with the Tailwind base classes
 
-![](/blog/images/2023-02-09/0*lOVFEvRc7Wrsm5V_.avif)
+![](/blog/images/2023-02-09/lOVFEvRc7Wrsm5V_.avif)
 
 ## That’s it!
 

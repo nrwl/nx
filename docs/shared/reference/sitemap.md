@@ -476,6 +476,7 @@
   - [js](/nx-api/js)
     - [documents](/nx-api/js/documents)
       - [Overview](/nx-api/js/documents/overview)
+      - [Configure TypeScript Project References in an Nx Workspace](/nx-api/js/documents/typescript-project-references)
     - [executors](/nx-api/js/executors)
       - [tsc](/nx-api/js/executors/tsc)
       - [swc](/nx-api/js/executors/swc)

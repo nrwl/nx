@@ -2,7 +2,7 @@
 title: 'Setup a Monorepo with PNPM workspaces and speed it up with Nx!'
 slug: 'setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-07-14/1*ABrBjQPg4SrYzFQQXFxY-Q.png'
+cover_image: '/blog/images/2022-07-14/ABrBjQPg4SrYzFQQXFxY-Q.png'
 tags: [nx, tutorial]
 ---
 
@@ -139,7 +139,7 @@ You should now be able to serve your Remix app in dev-mode by using:
 pnpm --filter my-remix-app dev
 ```
 
-![](/blog/images/2022-07-14/1*QXjUpc402IKnVSwJC9cw9g.avif)
+![](/blog/images/2022-07-14/QXjUpc402IKnVSwJC9cw9g.avif)
 
 ## Create a Shared UI library
 
@@ -327,7 +327,7 @@ pnpm --filter shared-ui build
 
 Why? This is due to the symlinks PNPM creates in order to be able to reference and resolve local dependencies. By adding `shared-ui: "workspace:*"` to Remix's `package.json` you instruct PNPM to add a symlink to Remix's `node_modules` folder.
 
-![](/blog/images/2022-07-14/1*MYLr1kb3cscQo7JW9_Jg8Q.avif)
+![](/blog/images/2022-07-14/MYLr1kb3cscQo7JW9_Jg8Q.avif)
 _PNPM creates a symlink in the local node_modules folder to be able to import local packages_
 
 ## Running commands with PNPM
@@ -629,7 +629,7 @@ Here’s the entire `nx.json` file again as a reference point:
 
 If we now run `npx nx build my-remix-app` we can see that Nx first runs tasks on dependent projects, and only then runs the command we invoked.
 
-![](/blog/images/2022-07-14/1*DhI4glb7lrvW_nSgHZz9KA.avif)
+![](/blog/images/2022-07-14/DhI4glb7lrvW_nSgHZz9KA.avif)
 
 _Nx highlights dependent projects being built, but it keeps the main attention to the current task at hand without distracting_
 
@@ -650,7 +650,7 @@ You can use any target you have defined in your workspace. For example
 
 **How does this work?** Nx builds a project graph based on the structure and dependencies among packages in your monorepo workspace. Let’s assume the following hypothetical graph:
 
-![](/blog/images/2022-07-14/1*wdMo0VwoyAdZbAmDbn6uMw.avif)
+![](/blog/images/2022-07-14/wdMo0VwoyAdZbAmDbn6uMw.avif)
 
 _Potential graph of a monorepo workspace_
 
@@ -666,7 +666,7 @@ Whenever we run the affected commands on a branch, Nx compares all the commits a
 
 If `lib2` gets changed in our feature branch, running tests against the workspace using `affected:test` would only run tests for `lib2` and `appB`.
 
-![](/blog/images/2022-07-14/1*FACbo_7-AlbPOna_6-hDaw.avif)
+![](/blog/images/2022-07-14/FACbo_7-AlbPOna_6-hDaw.avif)
 
 _Affected projects if “lib2” gets changed_
 
@@ -709,7 +709,7 @@ packages/shared-ui build: Done
 
 When using Nx to run tasks you get a dynamic terminal that shows just what is necessary and most relevant to the current command that has been executed. Running the same parallel build task results in the following output when using Nx:
 
-![](/blog/images/2022-07-14/1*GbaJL87ZfOpBQm-W6lBheQ.avif)
+![](/blog/images/2022-07-14/GbaJL87ZfOpBQm-W6lBheQ.avif)
 _Terminal output of Nx dynamically showing the parallel tasks being computed as well as the ones that already succeeded_
 
 ## Project Graph Visualization
@@ -720,7 +720,7 @@ npx nx graph
 
 This launches an interactive visualization of the workspace’s project graph with some advanced capabilities of filtering, debugging your workspace structure and more.
 
-![](/blog/images/2022-07-14/1*KpUCyj6SvYR3t7tmADloog.avif)
+![](/blog/images/2022-07-14/KpUCyj6SvYR3t7tmADloog.avif)
 _Nx project graph visualization of our PNPM workspace_
 
 > _As a side-note: you can run the project graph on any PNPM workspace, even if you don’t have Nx installed. Running_ `_npx nx graph_` _should work._

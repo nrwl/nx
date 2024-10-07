@@ -1,8 +1,14 @@
-import { type ExecutorContext, readCachedProjectGraph } from '@nx/devkit';
+import {
+  type ExecutorContext,
+  readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+  workspaceRoot,
+} from '@nx/devkit';
 import type { NxWebpackExecutionContext } from '../../utils/config';
 import type { NxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import type { Compiler, Configuration } from 'webpack';
 import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options';
+import { readNxJson } from 'nx/src/config/configuration';
 
 /**
  * This function is used to wrap the legacy plugin function to be used with the `composePlugins` function.
@@ -14,7 +20,7 @@ import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options';
         return config;
       }
   );
-  
+
 Since composePlugins is async, this function is used to wrap the legacy plugin function to be async.
 Using the nxUseLegacyPlugin function, the first argument is the legacy plugin function and the second argument is the options.
 The context options are created and passed to the legacy plugin function.
@@ -49,8 +55,11 @@ export async function useLegacyNxPlugin(
   const context: ExecutorContext = {
     cwd: process.cwd(),
     isVerbose: process.env.NX_VERBOSE_LOGGING === 'true',
-    root: project.data.root,
-    projectGraph: readCachedProjectGraph(),
+    root: workspaceRoot,
+    projectGraph,
+    projectsConfigurations:
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+    nxJsonConfiguration: readNxJson(workspaceRoot),
     target: project.data.targets[targetName],
     targetName: targetName,
     projectName: projectName,

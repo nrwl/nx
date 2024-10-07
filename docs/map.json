@@ -2246,6 +2246,12 @@
               "id": "overview",
               "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
+            },
+            {
+              "name": "Configure TypeScript Project References in an Nx Workspace",
+              "id": "typescript-project-references",
+              "path": "/nx-api/js/typescript-project-references",
+              "file": "shared/packages/js/typescript-project-references"
             }
           ]
         },

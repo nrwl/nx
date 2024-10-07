@@ -2,7 +2,7 @@
 title: 'Rspack — Getting up to speed with Nx'
 slug: 'rspack-getting-up-to-speed-with-nx'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-03-10/1*fWQ53mw2itEs3SGAOJVonQ.png'
+cover_image: '/blog/images/2023-03-10/fWQ53mw2itEs3SGAOJVonQ.png'
 tags: [nx]
 ---
 
