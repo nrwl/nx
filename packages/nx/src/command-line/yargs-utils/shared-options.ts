@@ -96,9 +96,9 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       default: false,
     })
     .option('skipSync', {
+      describe: 'Skips running the sync generators associated with the tasks.',
       type: 'boolean',
-      // TODO(leo): add description and make it visible once it is stable
-      hidden: true,
+      default: false,
     })
     .options('cloud', {
       type: 'boolean',

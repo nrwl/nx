@@ -19,7 +19,7 @@ describe('Web Components Applications with bundler set as vite', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler=vite --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=vite --no-interactive`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -50,10 +50,10 @@ describe('Web Components Applications with bundler set as vite', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler=vite --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=vite --no-interactive`
     );
     runCLI(
-      `generate @nx/react:lib ${libName} --directory=libs/${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`
+      `generate @nx/react:lib libs/${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);

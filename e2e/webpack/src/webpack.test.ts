@@ -137,7 +137,7 @@ describe('Webpack Plugin', () => {
   it('should be able to build with NxWebpackPlugin and a standard webpack config file', () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler webpack --directory=apps/${appName} --projectNameAndRootFormat=as-provided`
+      `generate @nx/web:app ${appName} --bundler webpack --directory=apps/${appName}`
     );
     updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
     updateFile(`apps/${appName}/src/foo.ts`, `console.log('Foo');\n`);

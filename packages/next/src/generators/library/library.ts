@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
 
 import { nextInitGenerator } from '../init/init';
@@ -24,6 +25,8 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'next', 'library');
+
   const options = await normalizeOptions(host, rawOptions);
   const tasks: GeneratorCallback[] = [];
 

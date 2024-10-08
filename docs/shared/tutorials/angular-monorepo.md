@@ -5,7 +5,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building Angular Apps in an Nx Monorepo
 
-In this tutorial you'll learn how to use Angular with Nx in a [monorepo (integrated) setup](/concepts/integrated-vs-package-based#integrated-repos).
+In this tutorial you'll learn how to use Angular with Nx in a monorepo setup.
 
 What will you learn?
 
@@ -107,7 +107,7 @@ The setup includes:
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 
@@ -118,6 +118,7 @@ The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx 
 To serve your new Angular application, just run:
 
 ```shell
+cd angular-monorepo
 npx nx serve angular-store
 ```
 

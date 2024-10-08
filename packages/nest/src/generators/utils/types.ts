@@ -1,5 +1,3 @@
-import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
 export type Language = 'js' | 'ts';
 export type UnitTestRunner = 'jest' | 'none';
 export type NestSchematic =
@@ -26,10 +24,9 @@ export type TransportLayer =
   | 'ws';
 
 export type NestGeneratorOptions = {
-  name: string;
-  directory?: string;
+  path: string;
+  name?: string;
   skipFormat?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 };
 
 export type NestGeneratorWithLanguageOption = NestGeneratorOptions & {

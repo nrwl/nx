@@ -862,6 +862,10 @@ const missingAndCatchAllRedirects = {
   '/packages/:path*': '/nx-api/:path*',
 };
 
+const marketing = {
+  '/conf': 'https://monorepo.world',
+};
+
 const movePluginFeaturesToCore = {
   '/plugin-features/use-task-executors':
     '/concepts/executors-and-configurations',
@@ -1045,6 +1049,14 @@ const troubleshootingOutOfRecipes = {
  * Removed deprecated URLs
  */
 const removedDeprecatedUrls = {
+  '/concepts/integrated-vs-package-based':
+    '/deprecated/integrated-vs-package-based',
+  '/recipes/tips-n-tricks/package-based-in-integrated':
+    '/deprecated/integrated-vs-package-based',
+  '/recipes/tips-n-tricks/integrated-in-package-based':
+    '/deprecated/integrated-vs-package-based',
+  '/recipes/tips-n-tricks/standalone-to-integrated':
+    '/recipes/tips-n-tricks/standalone-to-monorepo',
   '/recipes/other/rescope': '/deprecated/rescope', // Removed in Nx 20
   '/nx-api/nx/documents/affected-dep-graph': '/deprecated/affected-graph', // nx affected:graph was removed in Nx 19
   '/cli/affected-dep-graph': '/deprecated/affected-graph',
@@ -1163,4 +1175,5 @@ module.exports = {
   blogPosts,
   decisionsSection,
   featurePagesUpdate,
+  marketing,
 };

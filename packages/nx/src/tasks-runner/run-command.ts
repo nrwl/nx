@@ -790,7 +790,7 @@ export function getRunner(
   runnerOptions: any;
 } {
   let runner = nxArgs.runner;
-  runner = runner || 'default';
+  runner = runner ?? 'default';
 
   if (runner !== 'default' && !nxJson.tasksRunnerOptions?.[runner]) {
     throw new Error(`Could not find runner configuration for ${runner}`);
@@ -799,6 +799,16 @@ export function getRunner(
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
   try {
+    if (isCustomRunnerPath(modulePath)) {
+      output.warn({
+        title: `Custom task runners will no longer be supported in Nx 21.`,
+        bodyLines: [
+          `Use Nx Cloud or the Nx Powerpack caches instead.`,
+          `For more information, see https://nx.dev/features/powerpack/custom-caching`,
+        ],
+      });
+    }
+
     const tasksRunner = loadTasksRunner(modulePath);
 
     return {
@@ -814,6 +824,8 @@ export function getRunner(
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
 }
+
+const defaultTasksRunnerPath = require.resolve('./default-tasks-runner');
 
 function getTasksRunnerPath(
   runner: string,
@@ -838,7 +850,7 @@ function getTasksRunnerPath(
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
 
-  return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
+  return isCloudRunner ? 'nx-cloud' : defaultTasksRunnerPath;
 }
 
 export function getRunnerOptions(
@@ -900,4 +912,9 @@ export function getRunnerOptions(
   }
 
   return result;
+}
+function isCustomRunnerPath(modulePath: string) {
+  return !['nx-cloud', '@nrwl/nx-cloud', defaultTasksRunnerPath].includes(
+    modulePath
+  );
 }

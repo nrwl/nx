@@ -14,7 +14,7 @@ In this tutorial, we will create a generator that helps enforce the follow best 
 Let's first create a new workspace with the `create-nx-workspace` command:
 
 ```shell
-npx create-nx-workspace myorg --preset=react-integrated --ci=github
+npx create-nx-workspace myorg --preset=react-monorepo --ci=github
 ```
 
 Then we , install the `@nx/plugin` package and generate a plugin:
@@ -48,7 +48,6 @@ export async function libraryGenerator(
 ) {
   const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     ...options,
-    projectNameAndRootFormat: 'as-provided',
     linter: Linter.EsLint,
     style: 'css',
     unitTestRunner: 'vitest',
@@ -214,7 +213,6 @@ export async function libraryGenerator(
     ...options,
     tags: `scope:${options.scope}`,
     directory: options.directory || `${options.scope}/${options.name}`,
-    projectNameAndRootFormat: 'as-provided',
     linter: Linter.EsLint,
     style: 'css',
     unitTestRunner: 'vitest',
@@ -261,7 +259,6 @@ export async function libraryGenerator(
       ...options,
       tags: `scope:${options.scope}`,
       directory,
-      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
       style: 'css',
       unitTestRunner: 'vitest',

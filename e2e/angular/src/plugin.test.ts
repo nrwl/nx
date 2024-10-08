@@ -25,7 +25,6 @@ describe('Angular Crystal Plugin', () => {
   beforeAll(() => {
     proj = newProject({
       packages: ['@nx/angular'],
-      unsetProjectNameAndRootFormat: false,
     });
 
     if (getSelectedPackageManager() === 'pnpm') {

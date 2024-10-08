@@ -54,6 +54,6 @@ export interface NormalizedSwcExecutorOptions
   swcCliOptions: SwcCliOptions;
   tmpSwcrcPath: string;
   sourceRoot?: string;
-  // TODO(v20): remove inline feature
+  // TODO(v21): remove inline feature
   inline?: boolean;
 }

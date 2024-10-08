@@ -30,11 +30,14 @@ import { addJest } from '../utils/add-jest';
 import { setGeneratorDefaults } from './lib/set-generator-defaults';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'library');
+
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);

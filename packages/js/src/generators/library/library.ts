@@ -22,7 +22,11 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { prompt } from 'enquirer';
@@ -263,14 +267,26 @@ async function configureProject(
   }
 
   if (!options.useProjectJson) {
+    // we create a cleaner project configuration for the package.json file
+    const projectConfiguration: ProjectConfiguration = {
+      root: options.projectRoot,
+    };
+
     if (options.name !== options.importPath) {
       // if the name is different than the package.json name, we need to set
       // the proper name in the configuration
-      updateProjectConfiguration(tree, options.name, {
-        name: options.name,
-        root: options.projectRoot,
-      });
+      projectConfiguration.name = options.name;
     }
+
+    if (options.parsedTags?.length) {
+      projectConfiguration.tags = options.parsedTags;
+    }
+
+    if (options.publishable) {
+      await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
+    }
+
+    updateProjectConfiguration(tree, options.name, projectConfiguration);
 
     return;
   }
@@ -690,6 +706,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
+  await ensureProjectName(tree, options, 'library');
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -839,7 +856,9 @@ async function normalizeOptions(
     }
 
     if (options.bundler === 'none') {
-      options.bundler = 'tsc';
+      throw new Error(
+        `Publishable libraries can't be generated with "--bundler=none". Please select a valid bundler.`
+      );
     }
   }
 
@@ -871,7 +890,6 @@ async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
   });
   options.rootProject = projectRoot === '.';

@@ -1,6 +1,6 @@
 import { exec, ExecOptions, execSync } from 'child_process';
 import { dirname, join, posix, sep } from 'path';
-import { logger } from '../devkit-exports';
+import { logger } from './logger';
 
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {

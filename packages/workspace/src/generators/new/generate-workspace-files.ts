@@ -276,7 +276,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
       ? './files-root-app'
       : (options.preset === Preset.TS &&
           process.env.NX_ADD_PLUGINS !== 'false' &&
-          process.env.NX_ADD_TS_PLUGIN === 'true') ||
+          process.env.NX_ADD_TS_PLUGIN !== 'false') ||
         options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
@@ -315,7 +315,7 @@ async function createReadme(
     isTsPreset: preset === Preset.TS,
     isUsingNewTsSolutionSetup:
       process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN === 'true',
+      process.env.NX_ADD_TS_PLUGIN !== 'false',
     isEmptyRepo: !appName,
     appName,
     generateAppCmd: presetInfo.generateAppCmd,
@@ -416,7 +416,7 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NPM ||
     (options.preset === Preset.TS &&
       process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN === 'true')
+      process.env.NX_ADD_TS_PLUGIN !== 'false')
   ) {
     if (options.packageManager === 'pnpm') {
       tree.write(

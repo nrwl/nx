@@ -1,6 +1,6 @@
 # Building Angular Apps with the Nx Standalone Projects Setup
 
-In this tutorial you'll learn how to use Angular with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications). Not to be confused with the "Angular Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level. This setup is very similar to what the Angular CLI gives you.
+In this tutorial you'll learn how to use Angular with Nx in a "standalone" (non-monorepo) setup. Not to be confused with the "Angular Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level. This setup is very similar to what the Angular CLI gives you.
 
 What will you learn?
 
@@ -1038,7 +1038,7 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 ## Migrating to a Monorepo
 
-When you are ready to add another application to the repo, you'll probably want to move `myngapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+When you are ready to add another application to the repo, you'll probably want to move `myngapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-monorepo).
 
 You can also go through the full [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 

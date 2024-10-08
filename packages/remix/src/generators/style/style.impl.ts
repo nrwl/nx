@@ -19,8 +19,7 @@ import {
 export default async function (tree: Tree, options: RemixStyleSchema) {
   const { project: projectName, artifactName: name } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      name: options.path,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat ?? 'as-provided',
+      path: options.path,
     });
   const project = readProjectConfiguration(tree, projectName);
   if (!project) throw new Error(`Project does not exist: ${projectName}`);

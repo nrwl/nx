@@ -64,7 +64,7 @@ Zack explains Nuxt and how to use the new plugin in this video:
 To add @nx/nuxt to your codebase, use the command:
 
 ```shell
-> nx add @nx/nuxt
+nx add @nx/nuxt
 ```
 
 Huge thanks to [Katerina](https://twitter.com/psybercity) for her work on the plugin, and Nuxt maintainer, [Daniel Roe](https://twitter.com/danielcroe), for helping to guide the project!
@@ -83,7 +83,7 @@ We’re very excited about Nx Agents because we think that in its current state,
 
 Be sure to also checkout the [blog post from Isaac on Nx Agents](/blog/fast-effortless-ci), including explanations of exclusive features like auto-detection and retrying for flaky tasks and automatically splitting lengthy end-to-end tests!
 
-You can [signup for Nx Agents NOW](https://nx.app/products/agents#content), and find out [more of the details in our docs](/ci/features/distribute-task-execution)!
+You can find out [more of the details in our docs](/ci/features/distribute-task-execution)!
 
 Rares and Altan are on the team building Nx Cloud, and during the conference, they dove deeper into some of these topics:
 
@@ -117,7 +117,7 @@ Tusky will also be able to provide organizational-level insights to your codebas
 
 Versioning and publishing packages is always a bit tricky. Mix in the added complexity of having multiple packages — sometimes with different versioning or publishing strategies — inside the same codebase, and things can get weird quick!
 
-For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9) (the OG Javascript monorepo tool), we’ve been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
+For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](/blog/lerna-is-dead-long-live-lerna) (the OG Javascript monorepo tool), we’ve been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
 
 Therefore, we’ve been working on a new command to the Nx CLI: [nx release](/recipes/nx-release/get-started-with-nx-release#get-started-with-nx-release). We launched this on Friday of our Launch Nx week!
 
