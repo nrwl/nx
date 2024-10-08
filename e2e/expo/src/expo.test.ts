@@ -23,9 +23,7 @@ describe('@nx/expo', () => {
   beforeAll(() => {
     newProject();
     appName = uniq('app');
-    runCLI(
-      `generate @nx/expo:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/expo:app ${appName} --no-interactive`);
   });
 
   afterAll(() => cleanupProject());

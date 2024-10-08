@@ -8,6 +8,7 @@ import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
 import { TagList } from '../tag-list/tag-list';
+import { OwnersList } from '../owners-list/owners-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
@@ -104,6 +105,13 @@ export const ProjectDetails = ({
               <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
                 {projectData.metadata?.description}
               </p>
+            ) : null}
+            {projectData.metadata?.owners &&
+            Object.keys(projectData.metadata?.owners).length ? (
+              <OwnersList
+                className="mb-2"
+                owners={Object.keys(projectData.metadata?.owners)}
+              />
             ) : null}
             {projectData.tags && projectData.tags.length ? (
               <TagList className="mb-2" tags={projectData.tags} />

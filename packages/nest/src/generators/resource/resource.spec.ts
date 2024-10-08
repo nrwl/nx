@@ -6,19 +6,21 @@ import { resourceGenerator } from './resource';
 // TODO (nicolas) fix the tests current fails with Error: spawn /bin/sh ENOENT)... Also fails on master from utils/run-nest-schematic.spec.ts
 xdescribe('resource generator', () => {
   let tree: Tree;
-  const directory = 'api';
+  const path = 'api';
   const options: ResourceGeneratorOptions = {
     name: 'test',
-    directory,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(resourceGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      resourceGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

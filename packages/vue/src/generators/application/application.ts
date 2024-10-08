@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -28,6 +29,8 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   _options: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(tree, 'vue', 'application');
+
   const options = await normalizeOptions(tree, _options);
   const nxJson = readNxJson(tree);
 

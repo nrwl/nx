@@ -4,7 +4,6 @@ jest.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 
 import { Tree } from '@nx/devkit';
-import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { dirname } from 'path';
 import applicationGenerator from '../application/application.impl';
@@ -42,14 +41,13 @@ describe('resource route', () => {
 
   describe.each([['as-provided', 'apps/demo/app/routes/example.ts', '']])(
     '--nameAndDirectoryFormat=%s',
-    (nameAndDirectoryFormat: NameAndDirectoryFormat, path: string) => {
+    (nameAndDirectoryFormat, path: string) => {
       it(`should create correct file for path ${path}`, async () => {
         await resourceRouteGenerator(tree, {
           path,
           action: false,
           loader: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         });
 
         expect(tree.exists('apps/demo/app/routes/example.ts')).toBeTruthy();
@@ -63,7 +61,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         }).catch((e) => expect(e).toMatchSnapshot());
 
         await resourceRouteGenerator(tree, {
@@ -71,7 +68,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         }).catch((e) =>
           expect(e).toMatchInlineSnapshot(
             `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`
@@ -83,7 +79,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: false,
-          nameAndDirectoryFormat,
         }).catch((e) => expect(e).toMatchSnapshot());
       });
 
@@ -100,7 +95,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: true,
-          nameAndDirectoryFormat,
         });
 
         expect(tree.exists(`${basePath}/${normalizedPath}route1/..ts`)).toBe(
@@ -112,7 +106,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: true,
-          nameAndDirectoryFormat,
         });
 
         expect(
@@ -124,7 +117,6 @@ describe('resource route', () => {
           loader: true,
           action: true,
           skipChecks: true,
-          nameAndDirectoryFormat,
         });
 
         expect(tree.exists(`${basePath}/${normalizedPath}route3/.ts`)).toBe(

@@ -1,5 +1,5 @@
 import { logger } from '@nx/devkit';
-import { readdirSync } from 'fs-extra';
+import { readdirSync } from 'node:fs';
 import { join } from 'path';
 
 export function checkPublicDirectory(root: string) {

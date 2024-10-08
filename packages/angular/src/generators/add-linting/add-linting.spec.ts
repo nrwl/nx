@@ -1,5 +1,4 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import {
   ProjectConfiguration,
   Tree,
@@ -54,6 +53,22 @@ describe('addLinting generator', () => {
       devDependencies['@angular-eslint/eslint-plugin-template']
     ).toBeDefined();
     expect(devDependencies['@angular-eslint/template-parser']).toBeDefined();
+  });
+
+  it('should use flat config and install correct dependencies when using it', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@typescript-eslint/utils']).toMatchInlineSnapshot(
+      `"^8.0.0"`
+    );
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
   });
 
   it('should correctly generate the .eslintrc.json file', async () => {

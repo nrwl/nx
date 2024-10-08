@@ -73,7 +73,7 @@ We'll start with a web application and then tweak the settings to match what we 
 workspace with the following command:
 
 ```shell
-nx g @nx/web:app my-solid-app --directory=apps/my-solid-app --bundler=vite
+nx g @nx/web:app apps/my-solid-app --bundler=vite
 ```
 
 The `@nx/web:app` generator will create some files that are unnecessary for our Solid application.
@@ -252,7 +252,7 @@ Let's create a library that our Solid application is going to consume. To create
 package and run:
 
 ```shell
-nx g @nx/js:lib my-lib --directory=libs/my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.

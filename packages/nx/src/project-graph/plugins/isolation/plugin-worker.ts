@@ -108,24 +108,6 @@ const server = createServer((socket) => {
             };
           }
         },
-        processProjectGraph: async ({ graph, ctx, tx }) => {
-          try {
-            const result = await plugin.processProjectGraph(graph, ctx);
-            return {
-              type: 'processProjectGraphResult',
-              payload: { graph: result, success: true, tx },
-            };
-          } catch (e) {
-            return {
-              type: 'processProjectGraphResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-                tx,
-              },
-            };
-          }
-        },
         createMetadata: async ({ graph, context, tx }) => {
           try {
             const result = await plugin.createMetadata(graph, context);

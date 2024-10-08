@@ -48,6 +48,28 @@ function getNxInitDate(): string | null {
   }
 }
 
+async function createNxCloudWorkspaceV1(
+  workspaceName: string,
+  installationSource: string,
+  nxInitDate: string | null
+): Promise<{ token: string; url: string }> {
+  const apiUrl = getCloudUrl();
+  const response = await require('axios').post(
+    `${apiUrl}/nx-cloud/create-org-and-workspace`,
+    {
+      workspaceName,
+      installationSource,
+      nxInitDate,
+    }
+  );
+
+  if (response.data.message) {
+    throw new Error(response.data.message);
+  }
+
+  return response.data;
+}
+
 async function createNxCloudWorkspaceV2(
   workspaceName: string,
   installationSource: string,
@@ -103,6 +125,29 @@ export interface ConnectToNxCloudOptions {
   generateToken?: boolean;
 }
 
+function addNxCloudAccessTokenToNxJson(
+  tree: Tree,
+  token: string,
+  directory: string = ''
+) {
+  const nxJsonPath = join(directory, 'nx.json');
+  if (tree.exists(nxJsonPath)) {
+    updateJson<NxJsonConfiguration>(
+      tree,
+      join(directory, 'nx.json'),
+      (nxJson) => {
+        const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
+        if (overrideUrl) {
+          nxJson.nxCloudUrl = overrideUrl;
+        }
+        nxJson.nxCloudAccessToken = token;
+
+        return nxJson;
+      }
+    );
+  }
+}
+
 function addNxCloudIdToNxJson(
   tree: Tree,
   nxCloudId: string,
@@ -140,6 +185,12 @@ export async function connectToNxCloud(
   const isGitHubDetected =
     schema.github ?? (await repoUsesGithub(schema.github));
 
+  let responseFromCreateNxCloudWorkspaceV1:
+    | {
+        token: string;
+      }
+    | undefined;
+
   let responseFromCreateNxCloudWorkspaceV2:
     | {
         nxCloudId: string;
@@ -157,22 +208,49 @@ export async function connectToNxCloud(
   )
     return null;
 
-  responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
-    getRootPackageName(tree),
-    schema.installationSource,
-    getNxInitDate()
-  );
+  try {
+    responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
+      getRootPackageName(tree),
+      schema.installationSource,
+      getNxInitDate()
+    );
+  } catch (e) {
+    if (e.response?.status === 404) {
+      responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
+        getRootPackageName(tree),
+        schema.installationSource,
+        getNxInitDate()
+      );
+    } else {
+      throw e;
+    }
+  }
 
-  addNxCloudIdToNxJson(
-    tree,
-    responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
-    schema.directory
-  );
-
-  await formatChangedFilesWithPrettierIfAvailable(tree, {
-    silent: schema.hideFormatLogs,
-  });
-  return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
+  if (responseFromCreateNxCloudWorkspaceV2) {
+    addNxCloudIdToNxJson(
+      tree,
+      responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
+      schema.directory
+    );
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: schema.hideFormatLogs,
+    });
+    return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
+  } else if (responseFromCreateNxCloudWorkspaceV1) {
+    addNxCloudAccessTokenToNxJson(
+      tree,
+      responseFromCreateNxCloudWorkspaceV1?.token,
+      schema.directory
+    );
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: schema.hideFormatLogs,
+    });
+    return responseFromCreateNxCloudWorkspaceV1.token;
+  } else {
+    throw new Error(
+      'Could not create an Nx Cloud Workspace. Please try again.'
+    );
+  }
 }
 
 async function connectToNxCloudGenerator(

@@ -454,7 +454,7 @@ To fix this you will either need to add a package.json file at that location, or
       });
 
       describe('updateDependentsOptions', () => {
-        it(`should not update dependents when filtering to a subset of projects by default`, async () => {
+        it(`should update dependents even when filtering to a subset of projects which do not include those dependents, by default`, async () => {
           expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
             '0.0.1'
           );
@@ -494,6 +494,7 @@ To fix this you will either need to add a package.json file at that location, or
             currentVersionResolver: 'disk',
             specifierSource: 'prompt',
             releaseGroup: createReleaseGroup('independent'),
+            // No value for updateDependents, should default to 'auto'
           });
 
           expect(readJson(tree, 'libs/my-lib/package.json'))
@@ -512,10 +513,10 @@ To fix this you will either need to add a package.json file at that location, or
           ).toMatchInlineSnapshot(`
             {
               "dependencies": {
-                "my-lib": "0.0.1",
+                "my-lib": "9.9.9",
               },
               "name": "project-with-dependency-on-my-pkg",
-              "version": "0.0.1",
+              "version": "0.0.2",
             }
           `);
           expect(
@@ -526,10 +527,10 @@ To fix this you will either need to add a package.json file at that location, or
           ).toMatchInlineSnapshot(`
             {
               "devDependencies": {
-                "my-lib": "0.0.1",
+                "my-lib": "9.9.9",
               },
               "name": "project-with-devDependency-on-my-pkg",
-              "version": "0.0.1",
+              "version": "0.0.2",
             }
           `);
         });

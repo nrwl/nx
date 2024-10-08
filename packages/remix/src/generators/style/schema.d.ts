@@ -2,5 +2,4 @@ import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-
 
 export interface RemixStyleSchema {
   path: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }

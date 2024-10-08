@@ -49,7 +49,6 @@ describe('nx release version plans only touched', () => {
 
   beforeEach(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

@@ -9,6 +9,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { vueInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -27,6 +28,8 @@ export function libraryGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'vue', 'library');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);
@@ -65,14 +68,13 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.component) {
     const relativeCwd = getRelativeCwd();
-    const name = joinPathFragments(
+    const path = joinPathFragments(
       options.projectRoot,
       'src/lib',
       options.fileName
     );
     await componentGenerator(tree, {
-      name: relativeCwd ? relative(relativeCwd, name) : name,
-      nameAndDirectoryFormat: 'as-provided',
+      path: relativeCwd ? relative(relativeCwd, path) : path,
       skipTests:
         options.unitTestRunner === 'none' ||
         (options.unitTestRunner === 'vitest' && options.inSourceTests == true),

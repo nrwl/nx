@@ -18,7 +18,7 @@ describe('@nx/react-native', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive`
     );
   });
 

@@ -4,7 +4,7 @@
 {% tab label="Create static page in an app" %}
 
 ```shell
-nx g page my-page --project=my-app
+nx g page apps/my-app/pages/my-page
 ```
 
 {% /tab %}
@@ -13,7 +13,7 @@ nx g page my-page --project=my-app
 The following creates a page under `apps/my-app/pages/products/[id].tsx`.
 
 ```shell
-nx g page "[id]" --project=my-app --directory=products
+nx g page "apps/my-app/pages/products/[id]"
 ```
 
 {% /tab %}

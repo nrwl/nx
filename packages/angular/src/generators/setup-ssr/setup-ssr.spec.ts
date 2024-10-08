@@ -25,7 +25,7 @@ describe('setupSSR', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
@@ -103,7 +103,10 @@ describe('setupSSR', () => {
     it('should create the files correctly for ssr when app is standalone', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
 
       // ACT
       await setupSsr(tree, { project: 'app1' });
@@ -149,7 +152,10 @@ describe('setupSSR', () => {
 
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
       const project = readProjectConfiguration(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
@@ -168,7 +174,10 @@ describe('setupSSR', () => {
 
     it('should remove "outputPath.browser" when it is an empty string', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
       const project = readProjectConfiguration(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
@@ -192,7 +201,7 @@ describe('setupSSR', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         bundler: 'webpack',
         skipFormat: true,
@@ -286,7 +295,7 @@ describe('setupSSR', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         bundler: 'webpack',
         skipFormat: true,
       });
@@ -350,7 +359,7 @@ describe('setupSSR', () => {
     it('should update build target output path', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         bundler: 'webpack',
         skipFormat: true,
@@ -370,7 +379,10 @@ describe('setupSSR', () => {
 
   it('should install the correct dependencies', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
 
     await setupSsr(tree, { project: 'app1', skipFormat: true });
 
@@ -388,7 +400,10 @@ describe('setupSSR', () => {
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
     let initialPackageJson;
     updateJson(tree, 'package.json', (json) => {
       json.dependencies = {};
@@ -413,7 +428,7 @@ describe('setupSSR', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       standalone: false,
       skipFormat: true,
     });
@@ -454,7 +469,7 @@ describe('setupSSR', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       skipFormat: true,
     });
 
@@ -500,7 +515,7 @@ describe('setupSSR', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       standalone: false,
       skipFormat: true,
     });
@@ -536,7 +551,10 @@ describe('setupSSR', () => {
 
   it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features when hydration=false', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
 
     await setupSsr(tree, {
       project: 'app1',
@@ -563,7 +581,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
@@ -601,7 +619,7 @@ describe('setupSSR', () => {
       }));
 
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
@@ -641,7 +659,10 @@ describe('setupSSR', () => {
         dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
       }));
 
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
 
       // ACT
       await setupSsr(tree, { project: 'app1', skipFormat: true });
@@ -669,7 +690,7 @@ describe('setupSSR', () => {
         },
       }));
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
@@ -687,7 +708,10 @@ describe('setupSSR', () => {
           '@angular/core': '16.2.0',
         },
       }));
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
 
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 

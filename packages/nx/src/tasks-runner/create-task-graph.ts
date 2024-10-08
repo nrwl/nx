@@ -6,8 +6,10 @@ import {
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
-import { TargetDependencyConfig } from '../devkit-exports';
 import { output } from '../utils/output';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+
+const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -81,10 +83,14 @@ export class ProcessTasks {
       }
     }
 
-    for (const projectName of Object.keys(this.dependencies)) {
-      if (this.dependencies[projectName].length > 1) {
-        this.dependencies[projectName] = [
-          ...new Set(this.dependencies[projectName]).values(),
+    this.filterDummyTasks();
+
+    for (const taskId of Object.keys(this.dependencies)) {
+      if (this.dependencies[taskId].length > 0) {
+        this.dependencies[taskId] = [
+          ...new Set(
+            this.dependencies[taskId].filter((d) => d !== taskId)
+          ).values(),
         ];
       }
     }
@@ -228,6 +234,14 @@ export class ProcessTasks {
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
   ) {
+    if (
+      !this.projectGraph.dependencies.hasOwnProperty(
+        projectUsedToDeriveDependencies
+      )
+    ) {
+      return;
+    }
+
     for (const dep of this.projectGraph.dependencies[
       projectUsedToDeriveDependencies
     ]) {
@@ -272,9 +286,24 @@ export class ProcessTasks {
           );
         }
       } else {
-        this.processTask(task, depProject.name, configuration, overrides);
+        const dummyId = this.getId(
+          depProject.name,
+          DUMMY_TASK_TARGET,
+          undefined
+        );
+        this.dependencies[task.id].push(dummyId);
+        this.dependencies[dummyId] = [];
+        const noopTask = this.createDummyTask(dummyId, task);
+        this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private createDummyTask(id: string, task: Task): Task {
+    return {
+      ...task,
+      id,
+    };
   }
 
   createTask(
@@ -347,6 +376,31 @@ export class ProcessTasks {
     }
     return id;
   }
+
+  private filterDummyTasks() {
+    for (const [key, deps] of Object.entries(this.dependencies)) {
+      const normalizedDeps = [];
+      for (const dep of deps) {
+        if (dep.endsWith(DUMMY_TASK_TARGET)) {
+          normalizedDeps.push(
+            ...this.dependencies[dep].filter(
+              (d) => !d.endsWith(DUMMY_TASK_TARGET)
+            )
+          );
+        } else {
+          normalizedDeps.push(dep);
+        }
+      }
+
+      this.dependencies[key] = normalizedDeps;
+    }
+
+    for (const key of Object.keys(this.dependencies)) {
+      if (key.endsWith(DUMMY_TASK_TARGET)) {
+        delete this.dependencies[key];
+      }
+    }
+  }
 }
 
 export function createTaskGraph(
@@ -366,6 +420,7 @@ export function createTaskGraph(
     overrides,
     excludeTaskDependencies
   );
+
   return {
     roots,
     tasks: p.tasks,

@@ -103,14 +103,13 @@ describe('remote generator', () => {
     it('should create the remote with the correct config files', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -136,14 +135,13 @@ describe('remote generator', () => {
     it('should create the remote with the correct config files when --js=true', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         js: true,
         bundler: 'webpack',
@@ -170,14 +168,13 @@ describe('remote generator', () => {
     it('should create the remote with the correct config files when --typescriptConfiguration=true', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'webpack',
       });
@@ -198,14 +195,13 @@ describe('remote generator', () => {
     it('should install @nx/web for the file-server executor', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
       });
 
@@ -216,14 +212,13 @@ describe('remote generator', () => {
     it('should not set the remote as the default project', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
       });
 
@@ -235,7 +230,7 @@ describe('remote generator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
@@ -243,7 +238,6 @@ describe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
       });
 
@@ -256,7 +250,7 @@ describe('remote generator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
@@ -264,7 +258,6 @@ describe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -286,7 +279,7 @@ describe('remote generator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
@@ -294,7 +287,6 @@ describe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'webpack',
       });
@@ -317,7 +309,7 @@ describe('remote generator', () => {
       const name = 'invalid-dynamic-remote-name';
       await expect(
         remote(tree, {
-          name,
+          directory: name,
           devServerPort: 4209,
           dynamic: true,
           e2eTestRunner: 'cypress',
@@ -326,7 +318,6 @@ describe('remote generator', () => {
           style: 'css',
           unitTestRunner: 'jest',
           ssr: true,
-          projectNameAndRootFormat: 'as-provided',
           typescriptConfiguration: true,
           bundler: 'webpack',
         })

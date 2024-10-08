@@ -252,7 +252,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
             }
           }
         } else {
-          result[metadataKey] = value;
+          result[metadataKey][key] = value[key];
           if (sourceMap) {
             sourceMap[`${baseSourceMapPath}.${metadataKey}`] =
               sourceInformation;

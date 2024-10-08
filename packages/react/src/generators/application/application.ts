@@ -33,7 +33,7 @@ import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { addE2e } from './lib/add-e2e';
 import {
@@ -46,6 +46,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -113,6 +114,8 @@ export async function applicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(host, 'react', 'application');
+
   const tasks = [];
 
   const options = await normalizeOptions(host, schema);
@@ -319,9 +322,9 @@ export async function applicationGeneratorInternal(
 
   if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
     logger.warn(
-      `${chalk.bold('styled-jsx')} is not supported by ${chalk.bold(
+      `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
         'Rspack'
-      )}. We've added ${chalk.bold(
+      )}. We've added ${pc.bold(
         'babel-loader'
       )} to your project, but using babel will slow down your build.`
     );
