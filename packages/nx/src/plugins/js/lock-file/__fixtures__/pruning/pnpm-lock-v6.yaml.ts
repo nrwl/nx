@@ -13,6 +13,9 @@ devDependencies:
   prettier:
     specifier: ^2.6.2
     version: 2.6.2
+  test-cdn-package:
+    specifier: https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz
+    version: '@cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz'
   typescript:
     specifier: ~4.8.2
     version: 4.8.4
@@ -1057,4 +1060,9 @@ packages:
       y18n: 5.0.8
       yargs-parser: 21.1.1
     dev: true
+
+  '@cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz':
+    resolution: {tarball: https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz}
+    name: test-cdn-package
+    version: 0.8.6
 `;

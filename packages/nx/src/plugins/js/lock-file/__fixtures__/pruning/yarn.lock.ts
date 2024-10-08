@@ -912,6 +912,10 @@ tar-stream@~2.2.0:
     inherits "^2.0.3"
     readable-stream "^3.1.1"
 
+"test-cdn-package@https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz":
+  version "0.19.3"
+  resolved "https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz"
+  
 through@^2.3.4:
   version "2.3.8"
   resolved "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
