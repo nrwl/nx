@@ -22,7 +22,7 @@ nx run mobile:run-android
 
 {% tabs %}
 {% tab label="Run on a specific device/simulator" %}
-To see all the avaiable emulators, run command:
+To see all the available emulators, run command:
 
 ```bash
 emulator -list-avds
