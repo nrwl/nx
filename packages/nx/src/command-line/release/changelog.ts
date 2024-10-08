@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { ReleaseType, valid } from 'semver';
@@ -1095,7 +1095,7 @@ async function generateChangelogForWorkspace({
   if (interpolatedTreePath) {
     const prefix = dryRun ? 'Previewing' : 'Generating';
     output.log({
-      title: `${prefix} an entry in ${interpolatedTreePath} for ${chalk.white(
+      title: `${prefix} an entry in ${interpolatedTreePath} for ${pc.white(
         releaseVersion.gitTag
       )}`,
     });
@@ -1234,7 +1234,7 @@ async function generateChangelogForProjects({
     if (interpolatedTreePath) {
       const prefix = dryRun ? 'Previewing' : 'Generating';
       output.log({
-        title: `${prefix} an entry in ${interpolatedTreePath} for ${chalk.white(
+        title: `${prefix} an entry in ${interpolatedTreePath} for ${pc.white(
           releaseVersion.gitTag
         )}`,
       });

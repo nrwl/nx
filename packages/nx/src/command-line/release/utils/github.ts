@@ -3,7 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import type { AxiosRequestConfig } from 'axios';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
@@ -145,14 +145,14 @@ export async function createOrUpdateGithubRelease(
   const logTitle = `https://${githubRepoData.hostname}/${githubRepoData.slug}/releases/tag/${releaseVersion.gitTag}`;
   if (existingGithubReleaseForVersion) {
     console.error(
-      `${chalk.white('UPDATE')} ${logTitle}${
-        dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+      `${pc.white('UPDATE')} ${logTitle}${
+        dryRun ? output.colors.orange(' [dry-run]') : ''
       }`
     );
   } else {
     console.error(
-      `${chalk.green('CREATE')} ${logTitle}${
-        dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+      `${pc.green('CREATE')} ${logTitle}${
+        dryRun ? output.colors.orange(' [dry-run]') : ''
       }`
     );
   }
@@ -236,14 +236,14 @@ async function createOrUpdateGithubReleaseInternal(
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             '\n'
         );
       });
@@ -268,7 +268,7 @@ async function createOrUpdateGithubReleaseInternal(
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             '\n'
         );
       });

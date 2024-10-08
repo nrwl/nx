@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { exec, execSync } from 'child_process';
 import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
@@ -594,7 +594,7 @@ export class Migrator {
     if (packageName.startsWith('@nx/')) {
       // @ts-expect-error -- enquirer types aren't correct, footer does exist
       promptConfig.footer = () =>
-        chalk.dim(
+        pc.dim(
           `  View migration details at https://nx.dev/nx-api/${packageName.replace(
             '@nx/',
             ''
@@ -1518,17 +1518,17 @@ export async function executeMigrations(
 
           if (committedSha) {
             logger.info(
-              chalk.dim(`- Commit created for changes: ${committedSha}`)
+              pc.dim(`- Commit created for changes: ${committedSha}`)
             );
           } else {
             logger.info(
-              chalk.red(
+              pc.red(
                 `- A commit could not be created/retrieved for an unknown reason`
               )
             );
           }
         } catch (e) {
-          logger.info(chalk.red(`- ${e.message}`));
+          logger.info(pc.red(`- ${e.message}`));
         }
       }
       logger.info(`---------------------------------------------------------`);

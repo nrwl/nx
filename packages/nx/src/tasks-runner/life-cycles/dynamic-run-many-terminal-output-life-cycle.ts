@@ -215,8 +215,8 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push('');
       for (const runningTask of runningTasks) {
         additionalFooterRows.push(
-          `${LEFT_PAD}${output.dim.cyan(
-            dots.frames[currentFrame]
+          `${LEFT_PAD}${output.dim(
+            output.colors.cyan(dots.frames[currentFrame])
           )}${SPACER}${output.formatCommand(runningTask.task.id)}`
         );
       }
@@ -275,11 +275,15 @@ export async function createRunManyDynamicOutputRenderer({
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.cyan('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim(
+            output.colors.cyan('With additional flags:')
+          )}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim(
+              output.colors.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            )
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -340,11 +344,15 @@ export async function createRunManyDynamicOutputRenderer({
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim(
+            output.colors.green('With additional flags:')
+          )}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim(
+              output.colors.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            )
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -352,7 +360,8 @@ export async function createRunManyDynamicOutputRenderer({
       const pinnedFooterLines = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.green(text) +
+            output.dim(output.colors.white(` (${timeTakenText})`))
         ),
         ...taskOverridesRows,
       ];
@@ -374,11 +383,15 @@ export async function createRunManyDynamicOutputRenderer({
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim(
+            output.colors.red('With additional flags:')
+          )}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim(
+              output.colors.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            )
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -391,7 +404,8 @@ export async function createRunManyDynamicOutputRenderer({
       const failureSummaryRows = [
         output.applyNxPrefix(
           'red',
-          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.red(text) +
+            output.dim(output.colors.white(` (${timeTakenText})`))
         ),
         ...taskOverridesRows,
         '',

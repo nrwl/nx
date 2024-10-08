@@ -13,7 +13,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../../utils/sync-generators';
 import type { SyncArgs } from './command-object';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 interface SyncOptions extends SyncArgs {
   check?: boolean;
@@ -47,7 +47,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           ? 'The workspace is up to date'
           : 'The workspace is already up to date',
         bodyLines: syncGenerators.map(
-          (generator) => `[${chalk.bold(generator)}]: All files are up to date.`
+          (generator) => `[${pc.bold(generator)}]: All files are up to date.`
         ),
       });
       return 0;

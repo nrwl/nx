@@ -47,10 +47,10 @@ export async function showProjectHandler(
       []
     );
   } else {
-    const chalk = require('chalk') as typeof import('chalk');
+    const pc = require('picocolors') as typeof import('picocolors');
     const logIfExists = (label, key: keyof (typeof node)['data']) => {
       if (node.data[key]) {
-        console.log(`${chalk.bold(label)}: ${node.data[key]}`);
+        console.log(`${pc.bold(label)}: ${node.data[key]}`);
       }
     };
 
@@ -67,7 +67,7 @@ export async function showProjectHandler(
     );
 
     if (targets.length > 0) {
-      console.log(`${chalk.bold('Targets')}: `);
+      console.log(`${pc.bold('Targets')}: `);
       for (const [target, targetConfig] of targets) {
         const executorCommandText =
           targetConfig.metadata?.scriptContent ??
@@ -77,14 +77,14 @@ export async function showProjectHandler(
             : targetConfig?.executor) ??
           '';
         console.log(
-          `- ${chalk.bold(
+          `- ${pc.bold(
             (target + ':').padEnd(maxTargetNameLength + 2)
           )} ${executorCommandText.padEnd(maxExecutorNameLength + 2)} ${(() => {
             const configurations = Object.keys(
               targetConfig.configurations ?? {}
             );
             if (configurations.length) {
-              return chalk.dim(configurations.join(', '));
+              return pc.dim(configurations.join(', '));
             }
             return '';
           })()}`

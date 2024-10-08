@@ -57,7 +57,7 @@ import {
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 import type { Observable } from 'rxjs';
 import { printPowerpackLicense } from '../utils/powerpack';
 import {
@@ -533,7 +533,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
         },
       ],
       footer: () =>
-        chalk.dim(
+        pc.dim(
           '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
         ),
     };
@@ -564,7 +564,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
         },
       ],
       footer: () =>
-        chalk.dim(
+        pc.dim(
           `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
         ),
     };
