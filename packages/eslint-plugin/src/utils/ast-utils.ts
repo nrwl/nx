@@ -108,7 +108,17 @@ function hasMemberExport(exportedMember, filePath) {
   );
 }
 
-export function getRelativeImportPath(exportedMember, filePath, basePath) {
+export function getRelativeImportPath(
+  exportedMember: string,
+  filePath: string,
+  basePath: string,
+  visitedPaths = new Set<string>()
+) {
+  if (visitedPaths.has(filePath)) {
+    return null;
+  } else {
+    visitedPaths.add(filePath);
+  }
   const status = lstatSync(filePath, {
     throwIfNoEntry: false,
   });
@@ -259,6 +269,25 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       } else if (modulePath.endsWith('.ts') || modulePath.endsWith('.tsx')) {
         moduleFilePath = join(dirname(filePath), modulePath);
       } else {
+        // check if it's an export from another package before assuming it's a TS(X) file
+        const externalEntryPoints =
+          getBarrelEntryPointByImportScope(modulePath);
+        while (externalEntryPoints.length > 0) {
+          const childFilePath = join(workspaceRoot, externalEntryPoints.pop());
+          if (visitedPaths.has(childFilePath)) {
+            continue;
+          }
+          const relativeImportPath = getRelativeImportPath(
+            exportedMember,
+            childFilePath,
+            basePath,
+            visitedPaths
+          );
+          if (relativeImportPath) {
+            return relativeImportPath;
+          }
+        }
+
         moduleFilePath = join(dirname(filePath), `${modulePath}.ts`);
         if (!existsSync(moduleFilePath)) {
           // might be a tsx file
