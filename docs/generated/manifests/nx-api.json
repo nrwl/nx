@@ -3000,6 +3000,15 @@
         "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
         "path": "/nx-api/rspack/generators/application",
         "type": "generator"
+      },
+      "/nx-api/rspack/generators/convert-webpack": {
+        "description": "Convert a webpack application to use rspack.",
+        "file": "generated/packages/rspack/generators/convert-webpack.json",
+        "hidden": false,
+        "name": "convert-webpack",
+        "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
+        "path": "/nx-api/rspack/generators/convert-webpack",
+        "type": "generator"
       }
     },
     "path": "/nx-api/rspack"
