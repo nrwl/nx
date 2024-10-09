@@ -142,7 +142,7 @@ function execLockFileUpdate(
         `Verify that '${command}' succeeds when run from the workspace root.`,
         `To configure a string of arguments to be passed to this command, set the 'release.version.generatorOptions.installArgs' property in nx.json.`,
         `To ignore install lifecycle scripts, set 'release.version.generatorOptions.installIgnoreScripts' to true in nx.json.`,
-        `To disable this step entirely, set 'release.version.skipLockFileUpdate' to true in nx.json.`,
+        `To disable this step entirely, set 'release.version.generatorOptions.skipLockFileUpdate' to true in nx.json.`,
       ],
     });
     throw e;
