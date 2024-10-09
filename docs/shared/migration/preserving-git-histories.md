@@ -16,12 +16,18 @@ In order to avoid merge conflicts later, it's best to first do the folder reorga
 
 ```shell
 cd my-standalone-app
+git checkout main
 git fetch
-git checkout -b monorepo-migration origin/master
+git checkout -b monorepo-migration main
 mkdir -p apps/my-standalone-app
 git ls-files | sed 's!/.*!!'| uniq | xargs -i git mv {} apps/my-standalone-app
+```
+Check if you need to move back the `.gitignore` file to the root and/or update any paths so you don't commit previously ignored files/folders.
+If all is well proceed with the commit and push.
+
+```shell
 git commit -m "Move files in preparation for monorepo migration"
-git push -u
+git push --set-upstream origin monorepo-migration
 ```
 
 Next, in your monorepo, we'll add a remote repository url for where the standalone app is located:
