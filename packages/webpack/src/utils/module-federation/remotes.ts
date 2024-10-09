@@ -28,7 +28,7 @@ export function mapRemotes(
     } else if (typeof remote === 'string') {
       const remoteName = normalizeRemoteName(remote);
       mappedRemotes[remoteName] = handleStringRemote(
-        remoteName,
+        remote,
         determineRemoteUrl,
         isRemoteGlobal
       );
@@ -49,7 +49,7 @@ function handleArrayRemote(
   const remoteLocationExt = extname(remoteLocation);
 
   // If remote location already has .js or .mjs extension
-  if (['.js', '.mjs'].includes(remoteLocationExt)) {
+  if (['.js', '.mjs', '.json'].includes(remoteLocationExt)) {
     return remoteLocation;
   }
 
@@ -102,7 +102,7 @@ export function mapRemotesForSSR(
       remoteName = normalizeRemoteName(remoteName);
       const remoteLocationExt = extname(remoteLocation);
       mappedRemotes[remoteName] = `${remoteName}@${
-        ['.js', '.mjs'].includes(remoteLocationExt)
+        ['.js', '.mjs', '.json'].includes(remoteLocationExt)
           ? remoteLocation
           : `${
               remoteLocation.endsWith('/')
