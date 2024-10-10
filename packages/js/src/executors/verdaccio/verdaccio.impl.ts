@@ -49,11 +49,11 @@ export async function verdaccioExecutor(
     options.location === 'none' ? [] : [setupNpm(options), setupYarn(options)];
 
   const processExitListener = (signal?: number | NodeJS.Signals) => {
-    if (childProcess) {
-      childProcess.kill(signal);
-    }
     for (const fn of cleanupFunctions) {
       fn();
+    }
+    if (childProcess) {
+      childProcess.kill(signal);
     }
   };
   process.on('exit', processExitListener);
