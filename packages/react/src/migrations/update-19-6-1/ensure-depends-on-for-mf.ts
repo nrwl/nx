@@ -9,7 +9,7 @@ export default async function (tree: Tree) {
     '@nx/webpack:webpack',
     (options, projectName, targetName) => {
       const webpackConfig: string = options.webpackConfig;
-      if (!webpackConfig) {
+      if (!webpackConfig || webpackConfig === '@nx/react/plugins/webpack') {
         return;
       }
 
