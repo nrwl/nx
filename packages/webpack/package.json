@@ -38,7 +38,7 @@
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
     "browserslist": "^4.21.4",
-    "chalk": "^4.1.0",
+    "picocolors": "^1.1.0",
     "copy-webpack-plugin": "^10.2.4",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^5.0.0",

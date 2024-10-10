@@ -1,7 +1,7 @@
 import { logger, type ProjectGraph } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { ModuleFederationConfig } from './models/index';
@@ -107,7 +107,7 @@ export function getRemotes(
   );
 
   logger.info(
-    `NX Starting module federation dev-server for ${chalk.bold(
+    `NX Starting module federation dev-server for ${pc.bold(
       context.projectName
     )} with ${[...knownRemotes, ...knownDynamicRemotes].length} remotes`
   );
