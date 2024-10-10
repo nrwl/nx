@@ -119,6 +119,11 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   }
 
   await ensureProjectName(host, options, 'application');
+  if (options.projectName.includes('-')) {
+    throw new Error(
+      `Remote projects cannot contain '-' in their name. Invalid remote name: ${options.projectName}`
+    );
+  }
   const initAppTask = await applicationGenerator(host, {
     ...options,
     name: options.projectName,

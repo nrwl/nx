@@ -39,6 +39,11 @@ export async function remote(tree: Tree, schema: Schema) {
       directory: options.directory,
     });
 
+  if (remoteProjectName.includes('-')) {
+    throw new Error(
+      `Remote projects cannot contain '-' in their name. Invalid remote name: ${remoteProjectName}`
+    );
+  }
   const port = options.port ?? findNextAvailablePort(tree);
 
   const appInstallTask = await applicationGenerator(tree, {
