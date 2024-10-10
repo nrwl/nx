@@ -1234,7 +1234,7 @@ describe('Dependency checks (eslint)', () => {
       name: '@mycompany/liba',
       dependencies: {
         external1: '~16.0.0',
-        external2: '^1.0.0',
+        external2: '^5.1.0',
       },
     };
 
