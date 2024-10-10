@@ -250,6 +250,17 @@
         "isExternal": false,
         "path": "/ci/features/explain-with-ai",
         "tags": []
+      },
+      {
+        "id": "github-integration",
+        "name": "GitHub Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/github-integration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/github-integration",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -331,6 +342,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/explain-with-ai",
+    "tags": []
+  },
+  "/ci/features/github-integration": {
+    "id": "github-integration",
+    "name": "GitHub Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/github-integration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/github-integration",
     "tags": []
   },
   "/ci/concepts": {

@@ -106,6 +106,7 @@ export async function lintProjectGeneratorInternal(
         (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
       )
     ) {
+      projectConfig.targets ??= {};
       projectConfig.targets['lint'] = {
         command: `eslint ${lintFilePatterns
           .join(' ')
@@ -113,6 +114,7 @@ export async function lintProjectGeneratorInternal(
       };
     }
   } else {
+    projectConfig.targets ??= {};
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',
     };

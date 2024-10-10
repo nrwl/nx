@@ -50,9 +50,6 @@
       "options": {
         "command": "node ./scripts/copy-readme.js expo"
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js expo @nrwl/expo"
     }
   },
   "tags": []

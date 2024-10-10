@@ -1,9 +1,8 @@
 import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 export interface Schema {
-  name: string;
-  directory?: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
+  path: string;
+  name?: string;
   displayBlock?: boolean;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
@@ -21,6 +20,7 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  name: string;
   directory: string;
   projectName: string;
   fileName: string;

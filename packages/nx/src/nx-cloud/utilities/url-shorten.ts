@@ -1,4 +1,4 @@
-import { logger } from '../../devkit-exports';
+import { logger } from '../../utils/logger';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getCloudUrl } from './get-cloud-options';
 

@@ -22,7 +22,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       typescriptConfiguration: false,
       standalone: false,
@@ -43,7 +43,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       typescriptConfiguration: true,
       standalone: false,
@@ -59,7 +59,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestHostApplication(tree, {
-      name: 'host',
+      directory: 'host',
       typescriptConfiguration: false,
       standalone: false,
       skipFormat: true,
@@ -67,7 +67,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       host: 'host',
       typescriptConfiguration: false,
       standalone: false,
@@ -84,7 +84,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestHostApplication(tree, {
-      name: 'host',
+      directory: 'host',
       typescriptConfiguration: true,
       standalone: false,
       skipFormat: true,
@@ -92,7 +92,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       host: 'host',
       typescriptConfiguration: true,
       standalone: false,
@@ -111,7 +111,7 @@ describe('MF Remote App Generator', () => {
     // ACT
     try {
       await generateTestRemoteApplication(tree, {
-        name: 'test',
+        directory: 'test',
         host: 'host',
         standalone: false,
         skipFormat: true,
@@ -128,7 +128,7 @@ describe('MF Remote App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
-      name: 'existing',
+      directory: 'existing',
       port: 4201,
       standalone: false,
       skipFormat: true,
@@ -136,7 +136,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       standalone: false,
       skipFormat: true,
     });
@@ -152,7 +152,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       standalone: false,
       skipFormat: true,
     });
@@ -168,7 +168,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       standalone: false,
       skipFormat: true,
@@ -185,7 +185,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       typescriptConfiguration: false,
     });
 
@@ -218,7 +218,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       typescriptConfiguration: true,
       skipFormat: true,
     });
@@ -248,7 +248,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       e2eTestRunner: E2eTestRunner.None,
       standalone: false,
       skipFormat: true,
@@ -265,7 +265,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       inlineTemplate: true,
       standalone: false,
       skipFormat: true,
@@ -291,7 +291,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       skipFormat: true,
     });
 
@@ -309,7 +309,7 @@ describe('MF Remote App Generator', () => {
 
       // ACT
       await generateTestRemoteApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: false,
         standalone: false,
@@ -357,7 +357,7 @@ describe('MF Remote App Generator', () => {
 
       // ACT
       await generateTestRemoteApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: true,
         standalone: false,
@@ -411,7 +411,7 @@ describe('MF Remote App Generator', () => {
         }));
 
         await generateTestRemoteApplication(tree, {
-          name: 'test',
+          directory: 'test',
           ssr: true,
           skipFormat: true,
         });
@@ -433,7 +433,7 @@ describe('MF Remote App Generator', () => {
     });
 
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       ssr: true,
       skipFormat: true,

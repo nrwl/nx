@@ -54,6 +54,7 @@ describe('federate-module', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     let remoteSchema: remoteSchma = {
       name: 'my-remote',
+      directory: 'my-remote',
       e2eTestRunner: E2eTestRunner.Cypress,
       skipFormat: true,
       linter: Linter.EsLint,

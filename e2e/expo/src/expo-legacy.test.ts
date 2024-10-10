@@ -40,10 +40,10 @@ describe('@nx/expo (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/expo:application ${appName} --directory=apps/${appName} --e2eTestRunner=cypress --no-interactive`
+      `generate @nx/expo:application apps/${appName} --e2eTestRunner=cypress --no-interactive`
     );
     runCLI(
-      `generate @nx/expo:library ${libName} --directory=libs/${libName} --buildable --publishable --importPath=${proj}/${libName}`
+      `generate @nx/expo:library libs/${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
   });
   afterAll(() => {
@@ -55,7 +55,7 @@ describe('@nx/expo (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/expo:component ${componentName} --directory=libs/${libName}/src/${componentName} --export --no-interactive`
+      `generate @nx/expo:component libs/${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -146,14 +146,14 @@ describe('@nx/expo (legacy)', () => {
   it('should install', async () => {
     // run install command
     let installResults = await runCLIAsync(
-      `install ${appName} --no-interactive`
+      `install ${appName} --no-interactive --force`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
 
     installResults = await runCLIAsync(
-      `install ${appName} --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
@@ -210,9 +210,7 @@ describe('@nx/expo (legacy)', () => {
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    runCLI(
-      `generate @nx/expo:application ${appName} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
@@ -223,9 +221,7 @@ describe('@nx/expo (legacy)', () => {
       `Successfully ran target test for project ${appName}`
     );
 
-    runCLI(
-      `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/expo:library ${libName} --buildable`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided

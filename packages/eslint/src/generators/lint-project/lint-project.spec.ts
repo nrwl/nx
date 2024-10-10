@@ -50,41 +50,48 @@ describe('@nx/eslint:lint-project', () => {
       linter: Linter.EsLint,
       project: 'test-lib',
       setParserOptionsProject: false,
+      skipFormat: true,
     });
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "const nx = require('@nx/eslint-plugin');
+      "const nx = require("@nx/eslint-plugin");
 
       module.exports = [
-        ...nx.configs['flat/base'],
-        ...nx.configs['flat/typescript'],
-        ...nx.configs['flat/javascript'],
-        {
-          ignores: ['**/dist'],
-        },
-        {
-          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-          rules: {
-            '@nx/enforce-module-boundaries': [
-              'error',
-              {
-                enforceBuildableLibDependency: true,
-                allow: ['^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$'],
-                depConstraints: [
-                  {
-                    sourceTag: '*',
-                    onlyDependOnLibsWithTags: ['*'],
-                  },
-                ],
-              },
-            ],
+          ...nx.configs["flat/base"],
+          ...nx.configs["flat/typescript"],
+          ...nx.configs["flat/javascript"],
+          {
+              ignores: ["**/dist"]
           },
-        },
-        {
-          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-          // Override or add rules here
-          rules: {},
-        },
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              rules: { "@nx/enforce-module-boundaries": [
+                      "error",
+                      {
+                          enforceBuildableLibDependency: true,
+                          allow: ["^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"],
+                          depConstraints: [{
+                                  sourceTag: "*",
+                                  onlyDependOnLibsWithTags: ["*"]
+                              }]
+                      }
+                  ] }
+          },
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              // Override or add rules here
+              rules: {}
+          },
       ];
       "
     `);

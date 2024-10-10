@@ -17,6 +17,7 @@ describe('updateEslint', () => {
     schema = {
       projectName: 'my-app',
       appProjectRoot: 'my-app',
+      directory: 'my-app',
       linter: Linter.EsLint,
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
@@ -27,7 +28,6 @@ describe('updateEslint', () => {
       fileName: 'index',
       e2eTestRunner: 'cypress',
       styledModule: null,
-      projectNameAndRootFormat: 'as-provided',
     };
     tree = createTreeWithEmptyWorkspace();
     const project: ProjectConfiguration = {
@@ -113,10 +113,11 @@ describe('updateEslint', () => {
       });
 
       module.exports = [
-      ...compat.extends("next", "next/core-web-vitals"),
+          ...compat.extends("next", "next/core-web-vitals"),
+
           ...baseConfig,
-      ...nx.configs["flat/react-typescript"],
-      { ignores: [".next/**/*"] }
+          ...nx.configs["flat/react-typescript"],
+          { ignores: [".next/**/*"] }
       ];
       "
     `);

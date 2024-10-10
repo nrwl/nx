@@ -87,11 +87,12 @@ jobs:
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
+      NX_CLOUD_NO_TIMEOUTS: 'true'
     steps:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e" --require-explicit-completion
       - run:
           command: |
             sudo apt-get update
@@ -121,6 +122,10 @@ jobs:
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
+      - run:
+          name: End CI Run
+          command: npx nx-cloud@next complete-ci-run
+          no_output_timeout: 20m
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------

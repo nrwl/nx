@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 1`] = `
+exports[`Remix Application Integrated Repo --directory should create the application correctly 1`] = `
 "import { createWatchPaths } from '@nx/remix';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -21,7 +21,7 @@ export default {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 2`] = `
+exports[`Remix Application Integrated Repo --directory should create the application correctly 2`] = `
 "import type { MetaFunction } from '@remix-run/node';
 import {
   Links,
@@ -59,7 +59,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 3`] = `
+exports[`Remix Application Integrated Repo --directory should create the application correctly 3`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -72,7 +72,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 1`] = `
+exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 1`] = `
 "import { createWatchPaths } from '@nx/remix';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -93,7 +93,7 @@ export default {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 2`] = `
+exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 2`] = `
 "import type { MetaFunction } from '@remix-run/node';
 import {
   Links,
@@ -131,7 +131,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 3`] = `
+exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 3`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -144,7 +144,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
@@ -166,7 +166,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 
@@ -239,7 +239,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 1`] = `
+exports[`Remix Application Integrated Repo --js should create the application correctly 1`] = `
 "import { createWatchPaths } from '@nx/remix';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -260,7 +260,7 @@ export default {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 2`] = `
+exports[`Remix Application Integrated Repo --js should create the application correctly 2`] = `
 "import {
   Links,
   LiveReload,
@@ -295,7 +295,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 3`] = `
+exports[`Remix Application Integrated Repo --js should create the application correctly 3`] = `
 "import NxWelcome from '../nx-welcome';
 export default function Index() {
   return (
@@ -307,7 +307,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 1`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
 "import { createWatchPaths } from '@nx/remix';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -328,7 +328,7 @@ export default {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 2`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "export default {
   displayName: 'test',
   preset: '../jest.preset.js',
@@ -341,14 +341,14 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 3`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 3`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 1`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
 "import { createWatchPaths } from '@nx/remix';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -369,7 +369,7 @@ export default {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 2`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -379,21 +379,17 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     setupFiles: ['test-setup.ts'],
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
@@ -404,14 +400,14 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 3`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -444,7 +440,7 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 1`] = `
+exports[`Remix Application Integrated Repo should create the application correctly 1`] = `
 "import { createWatchPaths } from '@nx/remix';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -465,7 +461,7 @@ export default {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 2`] = `
+exports[`Remix Application Integrated Repo should create the application correctly 2`] = `
 "import type { MetaFunction } from '@remix-run/node';
 import {
   Links,
@@ -503,7 +499,7 @@ export default function App() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 3`] = `
+exports[`Remix Application Integrated Repo should create the application correctly 3`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -702,21 +698,17 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: './node_modules/.vite/test',
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     setupFiles: ['test-setup.ts'],
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage/test',

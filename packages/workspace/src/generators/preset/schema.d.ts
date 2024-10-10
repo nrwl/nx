@@ -6,6 +6,7 @@ export interface Schema {
   preset: Preset;
   style?: string;
   linter?: string;
+  formatter?: 'none' | 'prettier';
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;

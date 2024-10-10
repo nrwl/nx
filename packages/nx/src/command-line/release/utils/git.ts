@@ -3,7 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
-import { workspaceRoot } from '../../../utils/app-root';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {

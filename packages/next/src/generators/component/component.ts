@@ -10,16 +10,12 @@ import type { SupportedStyles } from '@nx/react';
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 
 import { addStyleDependencies } from '../../utils/styles';
-import {
-  determineArtifactNameAndDirectoryOptions,
-  type NameAndDirectoryFormat,
-} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 interface Schema {
-  name: string;
+  path: string;
+  name?: string;
   style: SupportedStyles;
-  directory?: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   skipFormat?: boolean;
 }
 
@@ -34,16 +30,13 @@ export async function componentGenerator(host: Tree, options: Schema) {
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    path: options.path,
     fileExtension: 'tsx',
   });
 
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
     name,
-    nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
-    directory,
     classComponent: false,
     routing: false,
     skipFormat: true,

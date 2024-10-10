@@ -36,14 +36,14 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     },
     [
       {
-        executors: ['@nx/storybook:build', '@nrwl/storybook:build'],
+        executors: ['@nx/storybook:build'],
         postTargetTransformer: buildPostTargetTransformer(migrationLogs),
         targetPluginOptionMapper: (targetName) => ({
           buildStorybookTargetName: targetName,
         }),
       },
       {
-        executors: ['@nx/storybook:storybook', '@nrwl/storybook:storybook'],
+        executors: ['@nx/storybook:storybook'],
         postTargetTransformer: servePostTargetTransformer(migrationLogs),
         targetPluginOptionMapper: (targetName) => ({
           serveStorybookTargetName: targetName,

@@ -15,7 +15,7 @@ describe('convertPipeToScam', () => {
 
     await pipeGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       skipImport: true,
       export: false,
       standalone: false,
@@ -24,6 +24,7 @@ describe('convertPipeToScam', () => {
 
     // ACT
     convertPipeToScam(tree, {
+      path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/example/example.pipe.ts',
@@ -73,7 +74,7 @@ describe('convertPipeToScam', () => {
 
     await pipeGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       skipImport: true,
       export: false,
       skipFormat: true,
@@ -81,6 +82,7 @@ describe('convertPipeToScam', () => {
 
     // ACT
     convertPipeToScam(tree, {
+      path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/example/example.pipe.ts',

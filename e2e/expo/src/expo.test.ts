@@ -23,9 +23,7 @@ describe('@nx/expo', () => {
   beforeAll(() => {
     newProject();
     appName = uniq('app');
-    runCLI(
-      `generate @nx/expo:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/expo:app ${appName} --no-interactive`);
   });
 
   afterAll(() => cleanupProject());
@@ -117,14 +115,14 @@ describe('@nx/expo', () => {
   it('should install', async () => {
     // run install command
     let installResults = await runCLIAsync(
-      `install ${appName} --no-interactive`
+      `install ${appName} --force --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
 
     installResults = await runCLIAsync(
-      `install ${appName} --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'

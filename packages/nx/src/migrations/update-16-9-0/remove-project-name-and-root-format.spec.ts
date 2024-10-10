@@ -24,7 +24,6 @@ describe('removeProjectNameAndRootFormat', () => {
     const nxJson: any = {
       workspaceLayout: {
         libsDir: 'libs',
-        projectNameAndRootFormat: 'as-provided',
       },
     };
     writeJson(tree, 'nx.json', nxJson);
@@ -36,9 +35,7 @@ describe('removeProjectNameAndRootFormat', () => {
 
   it('should remove workspaceLayout if it is present', async () => {
     const nxJson: any = {
-      workspaceLayout: {
-        projectNameAndRootFormat: 'as-provided',
-      },
+      workspaceLayout: {},
     };
     writeJson(tree, 'nx.json', nxJson);
     await removeProjectNameAndRootFormat(tree);

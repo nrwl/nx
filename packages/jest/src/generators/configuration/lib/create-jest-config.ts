@@ -32,7 +32,7 @@ export default { ...nxPreset };`
       tree.write(
         `jest.preset.${presetExt}`,
         `const nxPreset = require('@nx/jest/preset').default;
-  
+
 module.exports = { ...nxPreset };`
       );
     }
@@ -139,17 +139,15 @@ module.exports = { ...nxPreset };`
 
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
-    ? stripIndents`
-    const { getJestProjectsAsync } = require('@nx/jest');
+    ? `const { getJestProjectsAsync } = require('@nx/jest');
 
-    module.exports = async () => ({
-      projects: await getJestProjectsAsync()
-    });`
-    : stripIndents`
-    import { getJestProjectsAsync } from '@nx/jest';
+module.exports = async () => ({
+  projects: await getJestProjectsAsync()
+});`
+    : `import { getJestProjectsAsync } from '@nx/jest';
 
-    export default async () => ({
-     projects: await getJestProjectsAsync()
-    });`;
+export default async () => ({
+  projects: await getJestProjectsAsync()
+});`;
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
 }

@@ -7,10 +7,6 @@ import {
 import { splitByColons, splitTarget } from 'nx/src/devkit-internals';
 
 /**
- * @deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
- */
-export function parseTargetString(targetString: string): Target;
-/**
  * Parses a target string into {project, target, configuration}
  *
  * Examples:

@@ -60,7 +60,7 @@ nx add my-plugin
 Runs a generator that creates and/or modifies files based on a generator from a plugin.
 
 ```shell
-nx generate @nx/react:component my-component
+nx generate @nx/react:component libs/my-lib/src/lib/my-component
 ```
 
 {% cards %}

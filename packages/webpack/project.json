@@ -49,9 +49,6 @@
       "options": {
         "command": "node ./scripts/copy-readme.js webpack"
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js webpack @nrwl/webpack"
     }
   }
 }

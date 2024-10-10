@@ -90,13 +90,14 @@ Valid values are: ${validReleaseVersionPrefixes
     }
 
     // Set default for updateDependents
-    const updateDependents = options.updateDependents ?? 'never';
+    const updateDependents = options.updateDependents ?? 'auto';
     const updateDependentsBump = 'patch';
 
     // Sort the projects topologically if update dependents is enabled
     // TODO: maybe move this sorting to the command level?
     const projects =
-      updateDependents === 'never'
+      updateDependents === 'never' ||
+      options.releaseGroup.projectsRelationship !== 'independent'
         ? options.projects
         : sortProjectsTopologically(options.projectGraph, options.projects);
     const projectToDependencyBumps = new Map<string, any>();
@@ -426,6 +427,7 @@ To fix this you will either need to add a package.json file at that location, or
             if (!specifier) {
               if (
                 updateDependents !== 'never' &&
+                options.releaseGroup.projectsRelationship === 'independent' &&
                 projectToDependencyBumps.has(projectName)
               ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
@@ -550,6 +552,7 @@ To fix this you will either need to add a package.json file at that location, or
             if (!specifier) {
               if (
                 updateDependents !== 'never' &&
+                options.releaseGroup.projectsRelationship === 'independent' &&
                 projectToDependencyBumps.has(projectName)
               ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
@@ -610,7 +613,9 @@ To fix this you will either need to add a package.json file at that location, or
           return localPackageDependency.target === project.name;
         });
 
-      const includeTransitiveDependents = updateDependents === 'auto';
+      const includeTransitiveDependents =
+        updateDependents !== 'never' &&
+        options.releaseGroup.projectsRelationship === 'independent';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
         for (const directDependent of allDependentProjects) {
@@ -665,7 +670,10 @@ To fix this you will either need to add a package.json file at that location, or
       }
 
       // If not always updating dependents (when they don't already appear in the batch itself), print a warning to the user about what is being skipped and how to change it
-      if (updateDependents === 'never') {
+      if (
+        updateDependents === 'never' ||
+        options.releaseGroup.projectsRelationship !== 'independent'
+      ) {
         if (dependentProjectsOutsideCurrentBatch.length > 0) {
           let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
           const reason =
@@ -683,7 +691,7 @@ To fix this you will either need to add a package.json file at that location, or
           logMsg += `\n${dependentProjectsOutsideCurrentBatch
             .map((dependentProject) => `${indent}- ${dependentProject.source}`)
             .join('\n')}`;
-          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"`;
+          logMsg += `\n${indent}=> You can adjust this behavior by removing the usage of \`version.generatorOptions.updateDependents\` with "never"`;
           logger.buffer(logMsg);
         }
       }
@@ -698,7 +706,8 @@ To fix this you will either need to add a package.json file at that location, or
         currentVersion,
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
         dependentProjects:
-          updateDependents === 'auto'
+          updateDependents === 'auto' &&
+          options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects
             : dependentProjectsInCurrentBatch,
       };
@@ -732,7 +741,8 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (allDependentProjects.length > 0) {
         const totalProjectsToUpdate =
-          updateDependents === 'auto'
+          updateDependents === 'auto' &&
+          options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects.length +
               transitiveLocalPackageDependents.length -
               // There are two entries per circular dep
@@ -864,7 +874,10 @@ To fix this you will either need to add a package.json file at that location, or
         });
       }
 
-      if (updateDependents === 'auto') {
+      if (
+        updateDependents === 'auto' &&
+        options.releaseGroup.projectsRelationship === 'independent'
+      ) {
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
           if (
             options.specifierSource === 'version-plans' &&

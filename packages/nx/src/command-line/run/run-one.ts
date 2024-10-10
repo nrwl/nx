@@ -17,7 +17,6 @@ import { output } from '../../utils/output';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { generateGraph } from '../graph/graph';
 
 export async function runOne(
@@ -37,7 +36,6 @@ export async function runOne(
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
-  workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync();

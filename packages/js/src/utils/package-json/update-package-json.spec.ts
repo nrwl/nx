@@ -6,7 +6,12 @@ import {
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { DependencyType, ExecutorContext, ProjectGraph } from '@nx/devkit';
+import {
+  DependencyType,
+  ExecutorContext,
+  ProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
@@ -471,6 +476,9 @@ describe('updatePackageJson', () => {
     cwd: '',
     targetName: 'build',
     projectGraph,
+    projectsConfigurations:
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+    nxJsonConfiguration: {},
   };
 
   it('should generate new package if missing', () => {

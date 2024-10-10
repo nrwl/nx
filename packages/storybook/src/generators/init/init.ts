@@ -11,6 +11,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { gte } from 'semver';
 import { createNodes } from '../../plugins/plugin';
 import {
@@ -95,6 +96,8 @@ export function initGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function initGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'storybook', 'init');
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

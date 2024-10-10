@@ -1168,6 +1168,17 @@
         "path": "/nx-api/js/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/js/js-plugin"
+      },
+      "/nx-api/js/documents/typescript-project-references": {
+        "id": "typescript-project-references",
+        "name": "Configure TypeScript Project References in an Nx Workspace",
+        "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
+        "file": "generated/packages/js/documents/typescript-project-references",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/js/documents/typescript-project-references",
+        "tags": [],
+        "originalFilePath": "shared/packages/js/typescript-project-references"
       }
     },
     "root": "/packages/js",
@@ -3112,18 +3123,6 @@
       }
     },
     "path": "/nx-api/storybook"
-  },
-  "tao": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "tao",
-    "packageName": "@nrwl/tao",
-    "description": "CLI for generating code and running commands",
-    "documents": {},
-    "root": "/packages/tao",
-    "source": "/packages/tao/src",
-    "executors": {},
-    "generators": {},
-    "path": "/nx-api/tao"
   },
   "vite": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

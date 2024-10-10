@@ -40,11 +40,11 @@ describe('Angular Module Federation', () => {
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --no-interactive`
     );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-standalone --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/")
@@ -59,7 +59,7 @@ describe('Angular Module Federation', () => {
 
     // generate a shared lib with a seconary entry point
     runCLI(
-      `generate @nx/angular:library ${sharedLib} --buildable --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${sharedLib} --buildable --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
@@ -67,7 +67,7 @@ describe('Angular Module Federation', () => {
 
     // Add a library that will be accessed via a wildcard in tspath mappings
     runCLI(
-      `generate @nx/angular:library ${wildcardLib} --buildable --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${wildcardLib} --buildable --no-standalone --no-interactive`
     );
 
     updateJson('tsconfig.base.json', (json) => {
@@ -180,10 +180,10 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --bundler=webpack --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:application ${app2} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:application ${app2} --bundler=webpack --no-interactive`
     );
 
     // convert apps
@@ -221,7 +221,7 @@ describe('Angular Module Federation', () => {
 
     // generate remote apps
     runCLI(
-      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
     );
 
     // ports
@@ -283,12 +283,10 @@ test('renders remotes', async ({ page }) => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    runCLI(
-      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
     // Federate Module
     runCLI(
@@ -357,16 +355,14 @@ test('renders remotes', async ({ page }) => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    runCLI(
-      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
     // Federate Module
     runCLI(
-      `generate @nx/angular:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive`
+      `generate @nx/angular:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --no-interactive`
     );
 
     updateFile(`${lib}/src/index.ts`, `export { isEven } from './lib/${lib}';`);

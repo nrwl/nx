@@ -13,8 +13,7 @@ export async function normalizeOptions(
   const { directory, fileName } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       name: options.name,
-      directory: options.directory,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+      path: options.path,
     });
 
   return {

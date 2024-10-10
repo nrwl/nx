@@ -12,7 +12,7 @@ export async function createTestUILibNoNgDevkit(
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
   });
 
   return appTree;

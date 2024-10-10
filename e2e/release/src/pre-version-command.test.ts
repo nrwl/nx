@@ -42,7 +42,6 @@ describe('nx release pre-version command', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

@@ -697,14 +697,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-            "path": "/concepts/integrated-vs-package-based",
-            "id": "integrated-vs-package-based",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx Daemon",
             "path": "/concepts/nx-daemon",
             "id": "nx-daemon",
@@ -905,14 +897,6 @@
         "name": "Executors and Configurations",
         "path": "/concepts/executors-and-configurations",
         "id": "executors-and-configurations",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-        "path": "/concepts/integrated-vs-package-based",
-        "id": "integrated-vs-package-based",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1859,25 +1843,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Add a Package-based Project in an Integrated Repo",
-                "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-                "id": "package-based-in-integrated",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add an Integrated Project in a Package-based Repo",
-                "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-                "id": "integrated-in-package-based",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Convert from a Standalone Repository to an Integrated Repository",
-                "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-                "id": "standalone-to-integrated",
+                "name": "Convert from a Standalone Repository to a Monorepo",
+                "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+                "id": "standalone-to-monorepo",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2160,23 +2128,6 @@
                 "name": "Build Before Versioning",
                 "path": "/recipes/nx-release/build-before-versioning",
                 "id": "build-before-versioning",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Other",
-            "path": "/recipes/other",
-            "id": "other",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Rescope Packages from @nrwl to @nx",
-                "path": "/recipes/other/rescope",
-                "id": "rescope",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3458,25 +3409,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Add a Package-based Project in an Integrated Repo",
-            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-            "id": "package-based-in-integrated",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add an Integrated Project in a Package-based Repo",
-            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-            "id": "integrated-in-package-based",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "id": "standalone-to-integrated",
+            "name": "Convert from a Standalone Repository to a Monorepo",
+            "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+            "id": "standalone-to-monorepo",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3605,25 +3540,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Package-based Project in an Integrated Repo",
-        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-        "id": "package-based-in-integrated",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add an Integrated Project in a Package-based Repo",
-        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-        "id": "integrated-in-package-based",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "id": "standalone-to-integrated",
+        "name": "Convert from a Standalone Repository to a Monorepo",
+        "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+        "id": "standalone-to-monorepo",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4050,31 +3969,6 @@
         "name": "Build Before Versioning",
         "path": "/recipes/nx-release/build-before-versioning",
         "id": "build-before-versioning",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Other",
-        "path": "/recipes/other",
-        "id": "other",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Rescope Packages from @nrwl to @nx",
-            "path": "/recipes/other/rescope",
-            "id": "rescope",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Rescope Packages from @nrwl to @nx",
-        "path": "/recipes/other/rescope",
-        "id": "rescope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4939,6 +4833,22 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Rescope Packages from @nrwl to @nx",
+            "path": "/deprecated/rescope",
+            "id": "rescope",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+            "path": "/deprecated/integrated-vs-package-based",
+            "id": "integrated-vs-package-based",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5043,6 +4953,22 @@
         "name": "v1 Nx Plugin API",
         "path": "/deprecated/v1-nx-plugin-api",
         "id": "v1-nx-plugin-api",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Rescope Packages from @nrwl to @nx",
+        "path": "/deprecated/rescope",
+        "id": "rescope",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+        "path": "/deprecated/integrated-vs-package-based",
+        "id": "integrated-vs-package-based",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5653,6 +5579,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "GitHub Integration",
+            "path": "/ci/features/github-integration",
+            "id": "github-integration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5709,6 +5643,14 @@
         "name": "Explain With AI",
         "path": "/ci/features/explain-with-ai",
         "id": "explain-with-ai",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Integration",
+        "path": "/ci/features/github-integration",
+        "id": "github-integration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8193,6 +8135,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Configure TypeScript Project References in an Nx Workspace",
+                "path": "/nx-api/js/documents/typescript-project-references",
+                "id": "typescript-project-references",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -10120,14 +10070,6 @@
             "disableCollapsible": false
           }
         ],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "tao",
-        "path": "/nx-api/tao",
-        "name": "tao",
-        "children": [],
         "isExternal": false,
         "disableCollapsible": false
       },

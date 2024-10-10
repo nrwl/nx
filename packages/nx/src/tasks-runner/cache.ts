@@ -29,17 +29,21 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function getCache(
-  nxJson: NxJsonConfiguration,
-  options: DefaultTasksRunnerOptions
-) {
-  return process.env.NX_DISABLE_DB !== 'true' &&
-    (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
+export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
+  return (
+    process.env.NX_DISABLE_DB !== 'true' &&
+    nxJson.useLegacyCache !== true &&
+    process.env.NX_DB_CACHE !== 'false'
+  );
+}
+
+// Do not change the order of these arguments as this function is used by nx cloud
+export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
+  const nxJson = readNxJson();
+  return dbCacheEnabled(nxJson)
     ? new DbCache({
         // Remove this in Nx 21
-        nxCloudRemoteCache: isNxCloudUsed(readNxJson())
-          ? options.remoteCache
-          : null,
+        nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
       })
     : new Cache(options);
 }
