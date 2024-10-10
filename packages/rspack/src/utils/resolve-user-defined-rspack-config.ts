@@ -27,7 +27,7 @@ export function resolveUserDefinedRspackConfig(
   cleanupTranspiler();
 
   // If the user provides a configuration in TS file
-  // then there are 3 cases for exporing an object. The first one is:
+  // then there are 3 cases for exploring an object. The first one is:
   // `module.exports = { ... }`. And the second one is:
   // `export default { ... }`. The ESM format is compiled into:
   // `{ default: { ... } }`
