@@ -18,7 +18,7 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { Stats } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
 
@@ -362,17 +362,17 @@ async function createRecorder(
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.white('UPDATE')} ${eventPath}`
+        tags.oneLine`${pc.white('UPDATE')} ${eventPath}`
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.green('CREATE')} ${eventPath}`
+        tags.oneLine`${pc.green('CREATE')} ${eventPath}`
       );
     } else if (event.kind === 'delete') {
-      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
+      record.loggingQueue.push(`${pc.yellow('DELETE')} ${eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`
+        `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
       );
     }
   };
@@ -1086,20 +1086,20 @@ let logger: logging.Logger;
 export const getLogger = (isVerbose = false): logging.Logger => {
   if (!logger) {
     logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: (s) => chalk.bold(chalk.yellow(s)),
+      warn: (s) => pc.bold(pc.yellow(s)),
       error: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.slice(3)))}\n`;
+          return `\n${NX_ERROR} ${pc.bold(pc.red(s.slice(3)))}\n`;
         }
 
-        return chalk.bold(chalk.red(s));
+        return pc.bold(pc.red(s));
       },
       info: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_PREFIX} ${chalk.bold(s.slice(3))}\n`;
+          return `\n${NX_PREFIX} ${pc.bold(s.slice(3))}\n`;
         }
 
-        return chalk.white(s);
+        return pc.white(s);
       },
     });
   }

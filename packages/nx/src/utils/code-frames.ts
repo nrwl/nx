@@ -1,5 +1,5 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-code-frame/src/index.js
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 
 type Location = {
   column: number;
@@ -11,14 +11,17 @@ type NodeLocation = {
   start?: Location;
 };
 
+const markerString = (str: string) => pc.red(pc.bold(str));
+const messageString = (str: string) => pc.red(pc.bold(str));
+
 /**
  * Chalk styles for code frame token types.
  */
-function getDefs(chalk) {
+function getDefs() {
   return {
-    gutter: chalk.grey,
-    marker: chalk.red.bold,
-    message: chalk.red.bold,
+    gutter: pc.gray,
+    marker: markerString,
+    message: messageString,
   };
 }
 
@@ -107,7 +110,7 @@ export function codeFrameColumns(
     highlight?: (rawLines: string) => string;
   } = {}
 ): string {
-  const defs = getDefs(chalk);
+  const defs = getDefs();
   const lines = rawLines.split(NEWLINE);
   const { start, end, markerLines } = getMarkerLines(loc, lines, opts);
 
@@ -146,5 +149,5 @@ export function codeFrameColumns(
     })
     .join('\n');
 
-  return chalk.reset(frame);
+  return pc.reset(frame);
 }

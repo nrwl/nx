@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import {
   getPseudoTerminal,
   PseudoTerminal,
@@ -339,7 +339,7 @@ async function createProcess(
     !isParallel &&
     usePty
   ) {
-    let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+    let terminalOutput = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     if (streamOutput) {
       process.stdout.write(terminalOutput);
     }
@@ -383,7 +383,7 @@ function nodeProcess(
   readyWhenStatus: { stringToMatch: string; found: boolean }[],
   streamOutput = true
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+  let terminalOutput = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
   if (streamOutput) {
     process.stdout.write(terminalOutput);
   }
@@ -445,16 +445,14 @@ function addColorAndPrefix(
   if (config.prefix) {
     out = out
       .split('\n')
-      .map((l) =>
-        l.trim().length > 0 ? `${chalk.bold(config.prefix)} ${l}` : l
-      )
+      .map((l) => (l.trim().length > 0 ? `${pc.bold(config.prefix)} ${l}` : l))
       .join('\n');
   }
-  if (config.color && chalk[config.color]) {
-    out = chalk[config.color](out);
+  if (config.color && pc[config.color]) {
+    out = pc[config.color](out);
   }
-  if (config.bgColor && chalk[config.bgColor]) {
-    out = chalk[config.bgColor](out);
+  if (config.bgColor && pc[config.bgColor]) {
+    out = pc[config.bgColor](out);
   }
   return out;
 }

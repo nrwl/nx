@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { output } from '../../utils/output';
 import { join } from 'path';
 import {
@@ -93,14 +93,14 @@ export async function reportHandler() {
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
-      `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
+      `${pc.green(p.package.padEnd(padding))} : ${pc.bold(p.version)}`
     );
   });
 
   if (powerpackLicense) {
     bodyLines.push('');
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(chalk.green('Nx Powerpack'));
+    bodyLines.push(pc.green('Nx Powerpack'));
 
     bodyLines.push(
       `Licensed to ${powerpackLicense.organizationName} for ${
@@ -123,7 +123,7 @@ export async function reportHandler() {
       ) + 1;
     for (const powerpackPlugin of powerpackPlugins) {
       bodyLines.push(
-        `${chalk.green(powerpackPlugin.name.padEnd(padding))} : ${chalk.bold(
+        `${pc.green(powerpackPlugin.name.padEnd(padding))} : ${pc.bold(
           powerpackPlugin.version
         )}`
       );
@@ -131,7 +131,7 @@ export async function reportHandler() {
     bodyLines.push('');
   } else if (powerpackError) {
     bodyLines.push('');
-    bodyLines.push(chalk.red('Nx Powerpack'));
+    bodyLines.push(pc.red('Nx Powerpack'));
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(powerpackError.message);
     bodyLines.push('');
@@ -141,7 +141,7 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push('Registered Plugins:');
     for (const plugin of registeredPlugins) {
-      bodyLines.push(`${chalk.green(plugin)}`);
+      bodyLines.push(`${pc.green(plugin)}`);
     }
   }
 
@@ -151,7 +151,7 @@ export async function reportHandler() {
     bodyLines.push('Community plugins:');
     communityPlugins.forEach((p) => {
       bodyLines.push(
-        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`
+        `${pc.green(p.name.padEnd(padding))}: ${pc.bold(p.version)}`
       );
     });
   }
@@ -162,7 +162,7 @@ export async function reportHandler() {
     bodyLines.push('Local workspace plugins:');
 
     for (const plugin of localPlugins) {
-      bodyLines.push(`\t ${chalk.green(plugin)}`);
+      bodyLines.push(`\t ${pc.green(plugin)}`);
     }
   }
 

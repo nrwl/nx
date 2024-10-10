@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import * as yargs from 'yargs';
 
 import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
@@ -63,7 +63,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart Monorepos · Fast CI'))
+  .usage(pc.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
   .command(yargsActivatePowerpackCommand)
   .command(yargsAddCommand)

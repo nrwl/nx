@@ -18,7 +18,7 @@ import {
 } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 import * as ora from 'ora';
 import * as open from 'open';
 
@@ -182,10 +182,10 @@ async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
     initial,
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
-    promptConfig.footer = () => chalk.dim(footer);
+    promptConfig.footer = () => pc.dim(footer);
   }
   if (hint) {
-    promptConfig.hint = () => chalk.dim(hint);
+    promptConfig.hint = () => pc.dim(hint);
   }
 
   return await (await import('enquirer'))

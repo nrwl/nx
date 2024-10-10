@@ -20,7 +20,7 @@ import {
 } from '../project-graph/project-graph';
 import { updateContextWithChangedFiles } from './workspace-context';
 import { workspaceRoot } from './workspace-root';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 export type SyncGeneratorResult = void | {
   callback?: GeneratorCallback;
@@ -268,11 +268,9 @@ export function getSyncGeneratorSuccessResultsMessageLines(
     }
 
     messageLines.push(
-      `The ${chalk.bold(
-        result.generatorName
-      )} sync generator identified ${chalk.bold(result.changes.length)} file${
-        result.changes.length === 1 ? '' : 's'
-      } in the workspace that ${
+      `The ${pc.bold(result.generatorName)} sync generator identified ${pc.bold(
+        result.changes.length
+      )} file${result.changes.length === 1 ? '' : 's'} in the workspace that ${
         result.changes.length === 1 ? 'is' : 'are'
       } out of sync${result.outOfSyncMessage ? ':' : '.'}`
     );
@@ -300,7 +298,7 @@ export function getFailedSyncGeneratorsFixMessageLines(
       }
       isFirst = false;
       messageLines.push(
-        `The ${chalk.bold(
+        `The ${pc.bold(
           result.generatorName
         )} sync generator reported the following error:`,
         '',
@@ -341,7 +339,7 @@ export function getFlushFailureMessageLines(
     }
     isFirst = false;
     messageLines.push(
-      `The ${chalk.bold(
+      `The ${pc.bold(
         failure.generator
       )} sync generator failed to apply its changes with the following error:`,
       '',
@@ -545,7 +543,7 @@ function getFailedSyncGeneratorsMessageLines(
 
 function errorToString(error: SerializableSimpleError, verbose: boolean) {
   if (error.title) {
-    let message = `  ${chalk.red(error.title)}`;
+    let message = `  ${pc.red(error.title)}`;
     if (error.bodyLines?.length) {
       message += `
 
@@ -557,7 +555,7 @@ function errorToString(error: SerializableSimpleError, verbose: boolean) {
     }
   }
 
-  return `  ${chalk.red(error.message)}${
+  return `  ${pc.red(error.message)}${
     verbose && error.stack ? '\n  ' + error.stack : ''
   }`;
 }
