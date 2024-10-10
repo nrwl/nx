@@ -114,7 +114,7 @@ function copyPackageJsonAndLock(
   packageManager: PackageManager,
   workspaceRoot: string,
   projectRoot: string
-) {
+): () => void {
   const packageJson = pathResolve(workspaceRoot, 'package.json');
   const rootPackageJson = readJsonFile<PackageJson>(packageJson);
   // do not copy package.json and lock file if workspaces are enabled
@@ -123,7 +123,8 @@ function copyPackageJsonAndLock(
       existsSync(pathResolve(workspaceRoot, 'pnpm-workspace.yaml'))) ||
     rootPackageJson.workspaces
   ) {
-    return;
+    // no resource taken, no resource cleaned up
+    return () => {};
   }
 
   const packageJsonProject = pathResolve(projectRoot, 'package.json');
