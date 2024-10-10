@@ -1,6 +1,7 @@
 use rusqlite::OpenFlags;
 use std::fs::{create_dir_all, remove_file};
 use std::path::PathBuf;
+use std::time::Duration;
 
 use crate::native::machine_id::get_machine_id;
 use napi::bindgen_prelude::External;
@@ -79,6 +80,9 @@ fn create_connection(db_path: &PathBuf) -> anyhow::Result<Connection> {
 
     // This makes things less synchronous than default
     c.pragma_update(None, "synchronous", "NORMAL")?;
+
+    c.busy_timeout(Duration::from_millis(25))?;
+    c.busy_handler(Some(|tries| tries < 6))?;
 
     Ok(c)
 }
