@@ -80,58 +80,6 @@ export function Hero(): JSX.Element {
               Contact us
             </ButtonLink>
           </div>
-          <div className="mt-12 flex justify-center">
-            <MotionConfig reducedMotion="user">
-              <motion.div
-                initial={{
-                  y: 16,
-                  opacity: 0,
-                }}
-                whileInView={{
-                  y: 0,
-                  opacity: 1,
-                }}
-                viewport={{ once: true }}
-                transition={{
-                  ease: 'easeOut',
-                  duration: 0.225,
-                  delay: 1,
-                }}
-                className="pointer-events-auto relative mx-auto w-full max-w-lg overflow-hidden rounded-lg bg-slate-950 text-left text-white shadow-lg ring-1 ring-white ring-opacity-5 transition hover:bg-slate-800"
-              >
-                <div className="p-4">
-                  <div className="flex items-start gap-6">
-                    <div className="-m-4 hidden flex-shrink-0 sm:block">
-                      <img
-                        src="/images/conferences/monorepoworld-vertical-banner.avif"
-                        alt="MonorepoWorld conference image"
-                        className="size-32"
-                      />
-                    </div>
-                    <div className="w-0 flex-1 pt-1">
-                      <p className="text-base font-semibold">
-                        <a
-                          href="https://monorepo.world/?utm_source=nxdev&utm_medium=website&utm_campaign=homepage_banner&utm_campaign=monorepoworld"
-                          title="Join us at Monorepo World"
-                          target="_blank"
-                        >
-                          <span className="absolute inset-0" />
-                          The Nx team will be at Monorepo World!
-                        </a>
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">
-                        The ultimate conference for{' '}
-                        <span className="text-[#DDFB24]">monorepos</span> and
-                        developer{' '}
-                        <span className="text-[#DDFB24]">tooling</span> on 0ct.
-                        7. 2024, Mountain View, CA.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </MotionConfig>
-          </div>
         </div>
       </div>
     </div>
