@@ -30,10 +30,14 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
+  "devDependencies": {
+    "@types/picomatch": "^3.0.1"
+  },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "fast-glob": "3.2.7",
+    "fdir": "^6.0.3",
+    "picomatch": "^4.0.2",
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
