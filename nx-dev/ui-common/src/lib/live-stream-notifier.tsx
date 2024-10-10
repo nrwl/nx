@@ -3,12 +3,7 @@
 import { useState, useEffect, ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import { MonorepoWorldIcon } from '@nx/nx-dev/ui-icons';
-import { ButtonLink } from './button';
-import {
-  PlayIcon,
-  XMarkIcon,
-  ChatBubbleLeftRightIcon,
-} from '@heroicons/react/24/outline';
+import { XMarkIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 
 export function LiveStreamNotifier(): ReactElement {
   const [isVisible, setIsVisible] = useState<boolean>(true);
@@ -62,49 +57,33 @@ export function LiveStreamNotifier(): ReactElement {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Monorepo World is live!</span>
+            <span>Monorepo World just ended!</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Join us live for exciting talks on developer tooling and
-              monorepos! Catch the action on YouTube and join the conversation
-              on Discord!
+              In case you missed Monorepo World, it is now available for replay.
             </p>
             <div className="flex flex-wrap items-center gap-1 sm:gap-4">
               <a
-                title="Watch track 1"
+                title="Track 1 replay"
                 href="http://go.nx.dev/MWTrack1"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#DDFB24] px-2 py-2 text-sm font-semibold text-black transition hover:bg-[#B2CF04] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
               >
-                <PlayIcon aria-hidden="true" className="size-4" />
-                <span>Track 1</span>
+                <VideoCameraIcon aria-hidden="true" className="size-5" />
+                <span>Track 1 replay</span>
               </a>
               <a
                 href="http://go.nx.dev/MWTrack2"
                 target="_blank"
-                title="Watch track 2"
+                title="Track 2 replay"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#DDFB24] px-2 py-2 text-sm font-semibold text-black transition hover:bg-[#B2CF04] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
               >
-                <PlayIcon aria-hidden="true" className="size-4" />
-                <span>Track 2</span>
+                <VideoCameraIcon aria-hidden="true" className="size-5" />
+                <span>Track 2 replay</span>
               </a>
-              <ButtonLink
-                variant="secondary"
-                size="small"
-                href="https://discord.gg/7yFabzBP"
-                target="_blank"
-                title="Join the discussion on Discord"
-                rel="noopener noreferrer"
-              >
-                <ChatBubbleLeftRightIcon
-                  aria-hidden="true"
-                  className="size-4"
-                />
-                <span>#monorepo-world</span>
-              </ButtonLink>
             </div>
           </motion.div>
         </div>
