@@ -86,8 +86,7 @@ jest.mock('@nx/devkit', () => {
   };
 });
 
-// TODO(colum): turn these on when rspack is moved into the main repo
-xdescribe('remote generator', () => {
+describe('remote generator', () => {
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
 
@@ -323,6 +322,29 @@ xdescribe('remote generator', () => {
           bundler: 'rspack',
         })
       ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+    });
+
+    it('should throw an error when an invalid remote name is used', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await expect(
+        remote(tree, {
+          directory: 'test/my-app',
+          devServerPort: 4209,
+          e2eTestRunner: 'cypress',
+          linter: Linter.EsLint,
+          skipFormat: false,
+          style: 'css',
+          unitTestRunner: 'jest',
+          ssr: true,
+          typescriptConfiguration: true,
+          bundler: 'rspack',
+        })
+      ).rejects.toMatchInlineSnapshot(`
+        [Error: Invalid remote name: my-app. Remote project names must:
+        - Start with a letter, dollar sign ($) or underscore (_)
+        - Followed by any valid character (letters, digits, underscores, or dollar signs)
+        The regular expression used is ^[a-zA-Z_$][a-zA-Z_$0-9]*$.]
+      `);
     });
   });
 });
