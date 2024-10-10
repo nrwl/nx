@@ -10,10 +10,14 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
   projectGraph: ProjectGraph,
   projectNames: string[],
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'],
+  gitRootToWorkspacePath?: string
 ): Promise<string | null> {
   const commits = await getGitDiff(from);
-  const parsedCommits = parseCommits(commits);
+  const parsedCommits = parseCommits(commits, {
+    isVersionPlanCommit: false,
+    gitRootToWorkspacePath,
+  });
   const relevantCommits = await getCommitsRelevantToProjects(
     projectGraph,
     parsedCommits,

@@ -391,8 +391,13 @@ export async function gitPush({
   }
 }
 
-export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
-  return commits.map((commit) => parseGitCommit(commit)).filter(Boolean);
+export function parseCommits(
+  commits: RawGitCommit[],
+  options: ParseGitCommitOptions = {}
+): GitCommit[] {
+  return commits
+    .map((commit) => parseGitCommit(commit, options))
+    .filter(Boolean);
 }
 
 export function parseConventionalCommitsMessage(message: string): {
@@ -453,12 +458,17 @@ const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
+export interface ParseGitCommitOptions {
+  readonly isVersionPlanCommit?: boolean;
+  readonly gitRootToWorkspacePath?: string;
+}
+
 export function parseGitCommit(
   commit: RawGitCommit,
-  isVersionPlanCommit = false
+  options: ParseGitCommitOptions = {}
 ): GitCommit | null {
   // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
-  if (isVersionPlanCommit) {
+  if (options.isVersionPlanCommit) {
     return {
       ...commit,
       description: commit.message,
@@ -513,15 +523,25 @@ export function parseGitCommit(
   // Find all authors
   const authors = getAllAuthorsForCommit(commit);
 
+  const replaceGitRootPathDiff = (file: string) => {
+    if (
+      !options.gitRootToWorkspacePath ||
+      !file.startsWith(options.gitRootToWorkspacePath)
+    ) {
+      return file;
+    }
+
+    return file.replace(options.gitRootToWorkspacePath, '');
+  };
+
   // Extract file changes from commit body
   const affectedFiles = Array.from(
     commit.body.matchAll(ChangedFileRegex)
-  ).reduce(
-    (prev, [fullLine, changeType, file1, file2]: RegExpExecArray) =>
-      // file2 only exists for some change types, such as renames
-      file2 ? [...prev, file1, file2] : [...prev, file1],
-    [] as string[]
-  );
+  ).reduce((prev, [fullLine, changeType, file1, file2]: RegExpExecArray) => {
+    // file2 only exists for some change types, such as renames
+    const files = file2 ? [file1, file2] : [file1];
+    return [...prev, ...files.map((file) => replaceGitRootPathDiff(file))];
+  }, [] as string[]);
 
   return {
     ...commit,
@@ -534,6 +554,14 @@ export function parseGitCommit(
     revertedHashes,
     affectedFiles,
   };
+}
+
+export async function getAbsoluteGitRoot() {
+  try {
+    return (await execCommand('git', ['rev-parse', '--show-toplevel'])).trim();
+  } catch (e) {
+    throw new Error(`Could not determine git root`);
+  }
 }
 
 export async function getCommitHash(ref: string) {
