@@ -51,6 +51,12 @@ type GeneratorOptions = {
 };
 
 type NormalizedGeneratorOptions = Required<GeneratorOptions>;
+type TsconfigInfoCaches = {
+  composite: Map<string, boolean>;
+  content: Map<string, string>;
+  exists: Map<string, boolean>;
+  isFile: Map<string, boolean>;
+};
 
 export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   // Ensure that the plugin has been wired up in nx.json
@@ -71,24 +77,28 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     ]);
   }
 
+  const tsconfigInfoCaches: TsconfigInfoCaches = {
+    composite: new Map(),
+    content: new Map(),
+    exists: new Map(),
+    isFile: new Map(),
+  };
   // Root tsconfig containing project references for the whole workspace
   const rootTsconfigPath = 'tsconfig.json';
-  if (!tree.exists(rootTsconfigPath)) {
+  if (!tsconfigExists(tree, tsconfigInfoCaches, rootTsconfigPath)) {
     throw new SyncError('Missing root "tsconfig.json"', [
       `A "tsconfig.json" file must exist in the workspace root in order to sync the project graph information to the TypeScript configuration files.`,
     ]);
   }
 
-  const rawTsconfigContentsCache = new Map<string, string>();
   const stringifiedRootJsonContents = readRawTsconfigContents(
     tree,
-    rawTsconfigContentsCache,
+    tsconfigInfoCaches,
     rootTsconfigPath
   );
   const rootTsconfig = parseJson<Tsconfig>(stringifiedRootJsonContents);
   const projectGraph = await createProjectGraphAsync();
   const projectRoots = new Set<string>();
-  const tsconfigHasCompositeEnabledCache = new Map<string, boolean>();
 
   const tsconfigProjectNodeValues = Object.values(projectGraph.nodes).filter(
     (node) => {
@@ -97,18 +107,17 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         node.data.root,
         'tsconfig.json'
       );
-      return tsconfigExists(
-        tree,
-        rawTsconfigContentsCache,
-        projectTsconfigPath
-      );
+      return tsconfigExists(tree, tsconfigInfoCaches, projectTsconfigPath);
     }
   );
 
   const tsSysFromTree: ts.System = {
     ...ts.sys,
+    fileExists(path) {
+      return tsconfigExists(tree, tsconfigInfoCaches, path);
+    },
     readFile(path) {
-      return readRawTsconfigContents(tree, rawTsconfigContentsCache, path);
+      return readRawTsconfigContents(tree, tsconfigInfoCaches, path);
     },
   };
 
@@ -125,9 +134,10 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       const resolvedRefPath = getTsConfigPathFromReferencePath(
         tree,
         rootTsconfigPath,
-        ref.path
+        ref.path,
+        tsconfigInfoCaches
       );
-      if (tsconfigExists(tree, rawTsconfigContentsCache, resolvedRefPath)) {
+      if (tsconfigExists(tree, tsconfigInfoCaches, resolvedRefPath)) {
         // we only keep the references that still exist
         referencesSet.add(normalizeReferencePath(ref.path));
       } else {
@@ -150,7 +160,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         .filter((ref) =>
           hasCompositeEnabled(
             tsSysFromTree,
-            tsconfigHasCompositeEnabledCache,
+            tsconfigInfoCaches,
             joinPathFragments(ref, 'tsconfig.json')
           )
         )
@@ -159,7 +169,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         }));
       patchTsconfigJsonReferences(
         tree,
-        rawTsconfigContentsCache,
+        tsconfigInfoCaches,
         rootTsconfigPath,
         updatedReferences
       );
@@ -192,9 +202,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       sourceProjectNode.data.root,
       'tsconfig.json'
     );
-    if (
-      !tsconfigExists(tree, rawTsconfigContentsCache, sourceProjectTsconfigPath)
-    ) {
+    if (!tsconfigExists(tree, tsconfigInfoCaches, sourceProjectTsconfigPath)) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         logger.warn(
           `Skipping project "${projectName}" as there is no tsconfig.json file found in the project root "${sourceProjectNode.data.root}".`
@@ -216,9 +224,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         sourceProjectNode.data.root,
         runtimeTsConfigFileName
       );
-      if (
-        !tsconfigExists(tree, rawTsconfigContentsCache, runtimeTsConfigPath)
-      ) {
+      if (!tsconfigExists(tree, tsconfigInfoCaches, runtimeTsConfigPath)) {
         continue;
       }
 
@@ -227,8 +233,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         updateTsConfigReferences(
           tree,
           tsSysFromTree,
-          rawTsconfigContentsCache,
-          tsconfigHasCompositeEnabledCache,
+          tsconfigInfoCaches,
           runtimeTsConfigPath,
           dependencies,
           sourceProjectNode.data.root,
@@ -243,8 +248,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       updateTsConfigReferences(
         tree,
         tsSysFromTree,
-        rawTsconfigContentsCache,
-        tsconfigHasCompositeEnabledCache,
+        tsconfigInfoCaches,
         sourceProjectTsconfigPath,
         dependencies,
         sourceProjectNode.data.root,
@@ -270,16 +274,17 @@ export default syncGenerator;
  */
 function readRawTsconfigContents(
   tree: Tree,
-  rawTsconfigContentsCache: Map<string, string>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): string {
-  if (!rawTsconfigContentsCache.has(tsconfigPath)) {
-    rawTsconfigContentsCache.set(
+  if (!tsconfigInfoCaches.content.has(tsconfigPath)) {
+    tsconfigInfoCaches.content.set(
       tsconfigPath,
       tree.read(tsconfigPath, 'utf-8')
     );
   }
-  return rawTsconfigContentsCache.get(tsconfigPath);
+
+  return tsconfigInfoCaches.content.get(tsconfigPath);
 }
 
 /**
@@ -288,19 +293,20 @@ function readRawTsconfigContents(
  */
 function tsconfigExists(
   tree: Tree,
-  rawTsconfigContentsCache: Map<string, string>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): boolean {
-  return rawTsconfigContentsCache.has(tsconfigPath)
-    ? true
-    : tree.exists(tsconfigPath);
+  if (!tsconfigInfoCaches.exists.has(tsconfigPath)) {
+    tsconfigInfoCaches.exists.set(tsconfigPath, tree.exists(tsconfigPath));
+  }
+
+  return tsconfigInfoCaches.exists.get(tsconfigPath);
 }
 
 function updateTsConfigReferences(
   tree: Tree,
   tsSysFromTree: ts.System,
-  rawTsconfigContentsCache: Map<string, string>,
-  tsconfigHasCompositeEnabledCache: Map<string, boolean>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
   projectRoot: string,
@@ -310,7 +316,7 @@ function updateTsConfigReferences(
 ): boolean {
   const stringifiedJsonContents = readRawTsconfigContents(
     tree,
-    rawTsconfigContentsCache,
+    tsconfigInfoCaches,
     tsConfigPath
   );
   const tsConfig = parseJson<Tsconfig>(stringifiedJsonContents);
@@ -335,12 +341,13 @@ function updateTsConfigReferences(
     const resolvedRefPath = getTsConfigPathFromReferencePath(
       tree,
       tsConfigPath,
-      ref.path
+      ref.path,
+      tsconfigInfoCaches
     );
     if (
       isProjectReferenceWithinNxProject(
         tree,
-        rawTsconfigContentsCache,
+        tsconfigInfoCaches,
         resolvedRefPath,
         projectRoot,
         projectRoots
@@ -362,12 +369,12 @@ function updateTsConfigReferences(
         dep.data.root,
         runtimeTsConfigFileName
       );
-      if (tsconfigExists(tree, rawTsconfigContentsCache, runtimeTsConfigPath)) {
+      if (tsconfigExists(tree, tsconfigInfoCaches, runtimeTsConfigPath)) {
         // Check composite is true in the dependency runtime tsconfig file before proceeding
         if (
           !hasCompositeEnabled(
             tsSysFromTree,
-            tsconfigHasCompositeEnabledCache,
+            tsconfigInfoCaches,
             runtimeTsConfigPath
           )
         ) {
@@ -386,7 +393,7 @@ function updateTsConfigReferences(
           if (
             tsconfigExists(
               tree,
-              rawTsconfigContentsCache,
+              tsconfigInfoCaches,
               possibleRuntimeTsConfigPath
             )
           ) {
@@ -394,7 +401,7 @@ function updateTsConfigReferences(
             if (
               !hasCompositeEnabled(
                 tsSysFromTree,
-                tsconfigHasCompositeEnabledCache,
+                tsconfigInfoCaches,
                 possibleRuntimeTsConfigPath
               )
             ) {
@@ -410,7 +417,7 @@ function updateTsConfigReferences(
       if (
         !hasCompositeEnabled(
           tsSysFromTree,
-          tsconfigHasCompositeEnabledCache,
+          tsconfigInfoCaches,
           joinPathFragments(dep.data.root, 'tsconfig.json')
         )
       ) {
@@ -433,7 +440,7 @@ function updateTsConfigReferences(
   if (hasChanges) {
     patchTsconfigJsonReferences(
       tree,
-      rawTsconfigContentsCache,
+      tsconfigInfoCaches,
       tsConfigPath,
       references
     );
@@ -508,14 +515,14 @@ function normalizeReferencePath(path: string): string {
 
 function isProjectReferenceWithinNxProject(
   tree: Tree,
-  rawTsconfigContentsCache: Map<string, string>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   refTsConfigPath: string,
   projectRoot: string,
   projectRoots: Set<string>
 ): boolean {
   let currentPath = getTsConfigDirName(
     tree,
-    rawTsconfigContentsCache,
+    tsconfigInfoCaches,
     refTsConfigPath
   );
 
@@ -554,14 +561,10 @@ function isProjectReferenceIgnored(
 
 function getTsConfigDirName(
   tree: Tree,
-  rawTsconfigContentsCache: Map<string, string>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   tsConfigPath: string
 ): string {
-  return (
-    rawTsconfigContentsCache.has(tsConfigPath)
-      ? true
-      : tree.isFile(tsConfigPath)
-  )
+  return tsconfigIsFile(tree, tsconfigInfoCaches, tsConfigPath)
     ? dirname(tsConfigPath)
     : normalize(tsConfigPath);
 }
@@ -569,14 +572,15 @@ function getTsConfigDirName(
 function getTsConfigPathFromReferencePath(
   tree: Tree,
   ownerTsConfigPath: string,
-  referencePath: string
+  referencePath: string,
+  tsconfigInfoCaches: TsconfigInfoCaches
 ): string {
   const resolvedRefPath = joinPathFragments(
     dirname(ownerTsConfigPath),
     referencePath
   );
 
-  return tree.isFile(resolvedRefPath)
+  return tsconfigIsFile(tree, tsconfigInfoCaches, resolvedRefPath)
     ? resolvedRefPath
     : joinPathFragments(resolvedRefPath, 'tsconfig.json');
 }
@@ -587,13 +591,13 @@ function getTsConfigPathFromReferencePath(
  */
 function patchTsconfigJsonReferences(
   tree: Tree,
-  rawTsconfigContentsCache: Map<string, string>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string,
   updatedReferences: { path: string }[]
 ) {
   const stringifiedJsonContents = readRawTsconfigContents(
     tree,
-    rawTsconfigContentsCache,
+    tsconfigInfoCaches,
     tsconfigPath
   );
   const edits = modify(
@@ -609,17 +613,40 @@ function patchTsconfigJsonReferences(
 
 function hasCompositeEnabled(
   tsSysFromTree: ts.System,
-  tsconfigHasCompositeEnabledCache: Map<string, boolean>,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): boolean {
-  if (!tsconfigHasCompositeEnabledCache.has(tsconfigPath)) {
+  if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
     const parsed = ts.parseJsonConfigFileContent(
       ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
       tsSysFromTree,
       dirname(tsconfigPath)
     );
-    const enabledVal = parsed.options.composite === true;
-    tsconfigHasCompositeEnabledCache.set(tsconfigPath, enabledVal);
+    tsconfigInfoCaches.composite.set(
+      tsconfigPath,
+      parsed.options.composite === true
+    );
   }
-  return tsconfigHasCompositeEnabledCache.get(tsconfigPath);
+
+  return tsconfigInfoCaches.composite.get(tsconfigPath);
+}
+
+function tsconfigIsFile(
+  tree: Tree,
+  tsconfigInfoCaches: TsconfigInfoCaches,
+  tsconfigPath: string
+): boolean {
+  if (tsconfigInfoCaches.isFile.has(tsconfigPath)) {
+    return tsconfigInfoCaches.isFile.get(tsconfigPath);
+  }
+
+  if (tsconfigInfoCaches.content.has(tsconfigPath)) {
+    // if it has content, it's a file
+    tsconfigInfoCaches.isFile.set(tsconfigPath, true);
+    return true;
+  }
+
+  tsconfigInfoCaches.isFile.set(tsconfigPath, tree.isFile(tsconfigPath));
+
+  return tsconfigInfoCaches.isFile.get(tsconfigPath);
 }

@@ -16,12 +16,11 @@ import {
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, join, normalize, relative } from 'node:path';
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -91,10 +90,19 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     const cachePath = join(workspaceDataDirectory, `tsc-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     const normalizedOptions = normalizePluginOptions(options);
+    const lockFileName = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            lockFileName,
+            targetsCache
+          ),
         configFilePaths,
         normalizedOptions,
         context
@@ -112,7 +120,16 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
     const normalizedOptions = normalizePluginOptions(options);
-    return createNodesInternal(configFilePath, normalizedOptions, context, {});
+    const lockFileName = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
+    return createNodesInternal(
+      configFilePath,
+      normalizedOptions,
+      context,
+      lockFileName,
+      {}
+    );
   },
 ];
 
@@ -120,6 +137,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: NormalizedPluginOptions,
   context: CreateNodesContext,
+  lockFileName: string,
   targetsCache: Record<string, TscProjectResult>
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
@@ -150,13 +168,23 @@ async function createNodesInternal(
     return {};
   }
 
-  const nodeHash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  /**
+   * The cache key is composed by:
+   * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
+   *   - current config file
+   *   - config files extended by the current config file (recursively up to the root config file)
+   *   - lock file
+   * - hash of the plugin options
+   * - current config file path
+   */
+  const extendedConfigFiles = getExtendedConfigFiles(
+    fullConfigPath,
+    readCachedTsConfig(fullConfigPath)
   );
-  // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
+  const nodeHash = hashArray([
+    ...[configFilePath, ...extendedConfigFiles, lockFileName].map(hashFile),
+    hashObject(options),
+  ]);
   const cacheKey = `${nodeHash}_${configFilePath}`;
 
   targetsCache[cacheKey] ??= buildTscTargets(
