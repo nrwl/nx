@@ -48,6 +48,35 @@ There are four different ways to authenticate with AWS. They will be attempted i
 
 Both the `AWS_ACCESS_KEY_ID` and the `AWS_SECRET_ACCESS_KEY` environment variables are required to use the environment variable authentication method.
 
+Here's an example of using OICD in GitHub Actions to set the environment variables in CI:
+
+```yaml {% fileName=".github/workflows/ci.yml" %}
+name: CI
+...
+permissions:
+  id-token: write
+  ...
+
+env:
+  NX_DB_CACHE: true
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+        ...
+
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789123:role/GhAIBucketUserRole
+          aws-region: us-east-1
+
+        ...
+
+      - run: pnpm exec nx affected -t lint test build
+```
+
 #### INI Config Files
 
 AWS can read your authentication credentials from [shared INI config files](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html). The files are located at `~/.aws/credentials` and `~/.aws/config`. Both files are expected to be INI formatted with section names corresponding to profiles. Sections in the credentials file are treated as profile names, whereas profile sections in the config file must have the format of `[profile profile-name]`, except for the default profile. Profiles that appear in both files will not be merged, and the version that appears in the credentials file will be given precedence over the profile found in the config file.
