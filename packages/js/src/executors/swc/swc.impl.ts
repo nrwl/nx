@@ -39,17 +39,17 @@ function normalizeOptions(
   if (isTsSolutionSetup) {
     if (options.generateLockfile) {
       throw new Error(
-        `Setting 'generateLockfile: true' is not allowed with the current TypeScript setup. Please don't set the 'generateLockfile' option.`
+        `Setting 'generateLockfile: true' is not supported with the current TypeScript setup. Unset the 'generateLockfile' option and try again.`
       );
     }
     if (options.generateExportsField) {
       throw new Error(
-        `Setting 'generateExportsField: true' is not allowed with the current TypeScript setup. Please set the 'exports' field in the 'package.json' file at the project root and don't set the 'generateExportsField' option.`
+        `Setting 'generateExportsField: true' is not supported with the current TypeScript setup. Set 'exports' field in the 'package.json' file at the project root and unset the 'generateExportsField' option.`
       );
     }
     if (options.additionalEntryPoints?.length) {
       throw new Error(
-        `Setting 'additionalEntryPoints' is not allowed with the current TypeScript setup. Please set the additional entry points in the 'package.json' file at the project root and don't set the 'additionalEntryPoints' option.`
+        `Setting 'additionalEntryPoints' is not supported with the current TypeScript setup. Set additional entry points in the 'package.json' file at the project root and unset the 'additionalEntryPoints' option.`
       );
     }
   }
