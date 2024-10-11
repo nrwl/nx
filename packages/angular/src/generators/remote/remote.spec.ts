@@ -455,7 +455,7 @@ describe('MF Remote App Generator', () => {
       [Error: Invalid remote name: my-remote. Remote project names must:
       - Start with a letter, dollar sign ($) or underscore (_)
       - Followed by any valid character (letters, digits, underscores, or dollar signs)
-      The regular expression used is /^[a-zA-Z_$][a-zA-Z_$0-9]*$/.]
+      The regular expression used is ^[a-zA-Z_$][a-zA-Z_$0-9]*$.]
     `);
   });
 });
