@@ -6,7 +6,11 @@ import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
-import { MonorepoWorldIcon } from '@nx/nx-dev/ui-icons';
+import {
+  MonorepoWorldIcon,
+  RustIcon,
+  TypeScriptIcon,
+} from '@nx/nx-dev/ui-icons';
 import { motion, MotionConfig } from 'framer-motion';
 
 export function Hero(): JSX.Element {
@@ -79,6 +83,14 @@ export function Hero(): JSX.Element {
             >
               Contact us
             </ButtonLink>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm italic">
+            Built with
+            <RustIcon aria-hidden="true" className="size-5 shrink-0" />
+            <span className="sr-only">Rust</span> for speed &
+            <TypeScriptIcon aria-hidden="true" className="size-4 shrink-0" />
+            <span className="sr-only">TypeScript</span> for extensibility.
           </div>
         </div>
       </div>
