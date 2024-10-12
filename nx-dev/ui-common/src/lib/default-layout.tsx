@@ -6,10 +6,16 @@ import cx from 'classnames';
 export function DefaultLayout({
   isHome = false,
   children,
-}: { isHome?: boolean } & PropsWithChildren): JSX.Element {
+  hideHeader = false,
+  hideFooter = false,
+}: {
+  isHome?: boolean;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
+} & PropsWithChildren): JSX.Element {
   return (
     <div className="w-full overflow-hidden dark:bg-slate-950">
-      <Header />
+      {!hideHeader && <Header />}
       <div className="relative isolate">
         <div
           className="absolute inset-x-0 -top-40 -z-10 h-full transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -23,9 +29,11 @@ export function DefaultLayout({
             }}
           />
         </div>
-        <main className={isHome ? '' : 'py-24 sm:py-32'}>{children}</main>
+        <main className={isHome || hideHeader ? '' : 'py-24 sm:py-32'}>
+          {children}
+        </main>
       </div>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 }
