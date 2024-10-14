@@ -1,4 +1,11 @@
-import { output, readJson, readNxJson, type Tree } from '@nx/devkit';
+import {
+  output,
+  readJson,
+  readNxJson,
+  workspaceRoot,
+  type Tree,
+} from '@nx/devkit';
+import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
@@ -13,7 +20,9 @@ export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   );
 }
 
-export function isUsingTsSolutionSetup(tree: Tree): boolean {
+export function isUsingTsSolutionSetup(tree?: Tree): boolean {
+  tree ??= new FsTree(workspaceRoot, false);
+
   return (
     isUsingPackageManagerWorkspaces(tree) &&
     isWorkspaceSetupWithTsSolution(tree)
