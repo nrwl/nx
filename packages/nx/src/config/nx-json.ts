@@ -520,6 +520,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Use the legacy file system cache instead of the db cache
    */
   useLegacyCache?: boolean;
+
+  /**
+   * community support for custom cache
+   */
+  remoteCache?: string;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

@@ -81,6 +81,7 @@ export const allowedWorkspaceExtensions = [
   'neverConnectToCloud',
   'sync',
   'useLegacyCache',
+  'remoteCache',
 ] as const;
 
 if (!patched) {

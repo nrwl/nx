@@ -37,6 +37,7 @@ Nx.json configuration
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
 - [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
+- [remoteCache](../../devkit/documents/NxJsonConfiguration#remotecache): string
 - [sync](../../devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
@@ -239,6 +240,14 @@ Configuration for Nx Plugins
 • `Optional` **release**: `NxReleaseConfiguration`
 
 Configuration for `nx release` (versioning and publishing of applications and libraries)
+
+---
+
+### remoteCache
+
+• `Optional` **remoteCache**: `string`
+
+community support for custom cache
 
 ---
 
