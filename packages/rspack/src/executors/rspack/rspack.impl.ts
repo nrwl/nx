@@ -120,9 +120,12 @@ async function executeTypeCheck(
 ) {
   const projectConfiguration =
     context.projectGraph.nodes[context.projectName].data;
+  const workspaceRoot = path.resolve(projectConfiguration.root);
   const result = await runTypeCheck({
-    workspaceRoot: path.resolve(projectConfiguration.root),
-    tsConfigPath: options.tsConfig,
+    workspaceRoot,
+    tsConfigPath: options.tsConfig.startsWith(workspaceRoot)
+      ? options.tsConfig
+      : path.join(workspaceRoot, options.tsConfig),
     mode: 'noEmit',
   });
 

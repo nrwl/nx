@@ -8,7 +8,7 @@ import {
 import { existsSync, readFileSync } from 'fs';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as path from 'path';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
@@ -97,7 +97,10 @@ export function withNx(_opts = {}) {
     plugins.push(new rspack.ProgressPlugin());
 
     options.fileReplacements.forEach((item) => {
-      alias[item.replace] = item.with;
+      alias[resolve(context.root, item.replace)] = resolve(
+        context.root,
+        item.with
+      );
     });
 
     const externals: ExternalItem = {};
