@@ -158,6 +158,10 @@ export function withNx(_opts = {}) {
         ...(config.devServer ?? {}),
         port: config.devServer?.port ?? 4200,
         hot: config.devServer?.hot ?? true,
+        devMiddleware: {
+          ...(config.devServer?.devMiddleware ?? {}),
+          stats: true,
+        },
       } as any,
       module: {
         rules: [
