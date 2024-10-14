@@ -1,30 +1,39 @@
+import { joinPathFragments, logger, type ExecutorContext } from '@nx/devkit';
+import { readTsConfig } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
+import * as pc from 'picocolors';
+import type {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
-import { ExecutorContext, joinPathFragments, logger } from '@nx/devkit';
-import * as pc from 'picocolors';
-import * as esbuild from 'esbuild';
-import { readTsConfig } from '@nx/js';
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
 ): NormalizedEsBuildExecutorOptions {
+  const isTsSolutionSetup = isUsingTsSolutionSetup();
+  if (isTsSolutionSetup && options.generatePackageJson) {
+    throw new Error(
+      `Setting 'generatePackageJson: true' is not allowed with the current TypeScript setup. Please update the 'package.json' file at the project root as needed and don't set the 'generatePackageJson' option.`
+    );
+  }
+
   const tsConfig = readTsConfig(options.tsConfig);
 
-  // If we're not generating package.json file, then copy it as-is as an asset.
-  const assets = options.generatePackageJson
-    ? options.assets
-    : [
-        ...options.assets,
-        joinPathFragments(
-          context.projectGraph.nodes[context.projectName].data.root,
-          'package.json'
-        ),
-      ];
+  // If we're not generating package.json file, then copy it as-is as an asset when not using ts solution setup.
+  const assets =
+    options.generatePackageJson || isTsSolutionSetup
+      ? options.assets
+      : [
+          ...options.assets,
+          joinPathFragments(
+            context.projectGraph.nodes[context.projectName].data.root,
+            'package.json'
+          ),
+        ];
 
   if (!options.bundle && options.thirdParty) {
     logger.info(
@@ -33,7 +42,7 @@ export function normalizeOptions(
           'bundle:false'
         )} and ${pc.bold(
           'thirdParty:true'
-        )}. Your package.json depedencies might not be generated correctly so we added an update ${pc.bold(
+        )}. Your package.json dependencies might not be generated correctly so we added an update ${pc.bold(
           'thirdParty:false'
         )}`
       )
@@ -42,8 +51,6 @@ export function normalizeOptions(
 
   const thirdParty = !options.bundle ? false : options.thirdParty;
 
-  const { root: projectRoot } =
-    context.projectsConfigurations.projects[context.projectName];
   const declarationRootDir = options.declarationRootDir
     ? path.join(context.root, options.declarationRootDir)
     : undefined;
