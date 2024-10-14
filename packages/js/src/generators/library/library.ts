@@ -266,31 +266,6 @@ async function configureProject(
     updateNxJson(tree, nxJson);
   }
 
-  if (!options.useProjectJson) {
-    // we create a cleaner project configuration for the package.json file
-    const projectConfiguration: ProjectConfiguration = {
-      root: options.projectRoot,
-    };
-
-    if (options.name !== options.importPath) {
-      // if the name is different than the package.json name, we need to set
-      // the proper name in the configuration
-      projectConfiguration.name = options.name;
-    }
-
-    if (options.parsedTags?.length) {
-      projectConfiguration.tags = options.parsedTags;
-    }
-
-    if (options.publishable) {
-      await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
-    }
-
-    updateProjectConfiguration(tree, options.name, projectConfiguration);
-
-    return;
-  }
-
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -300,34 +275,42 @@ async function configureProject(
   };
 
   if (
-    options.bundler &&
-    options.bundler !== 'none' &&
-    options.config !== 'npm-scripts'
+    options.config !== 'npm-scripts' &&
+    (options.bundler === 'swc' ||
+      options.bundler === 'esbuild' ||
+      (!options.isUsingTsSolutionConfig && options.bundler === 'tsc'))
   ) {
-    if (options.bundler !== 'rollup') {
-      const outputPath = getOutputPath(options);
-      const executor = getBuildExecutor(options.bundler);
-      addBuildTargetDefaults(tree, executor);
+    const outputPath = getOutputPath(options);
+    const executor = getBuildExecutor(options.bundler);
+    addBuildTargetDefaults(tree, executor);
 
-      projectConfiguration.targets.build = {
-        executor,
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath,
-          main:
-            `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
-          tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-          assets: [],
-        },
-      };
+    projectConfiguration.targets.build = {
+      executor,
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath,
+        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+      },
+    };
+
+    if (options.bundler === 'esbuild') {
+      projectConfiguration.targets.build.options.format = ['cjs'];
+    }
+
+    if (options.bundler === 'swc' && options.skipTypeCheck) {
+      projectConfiguration.targets.build.options.skipTypeCheck = true;
+    }
+
+    if (options.isUsingTsSolutionConfig) {
+      if (options.bundler === 'esbuild') {
+        projectConfiguration.targets.build.options.declarationRootDir = `${options.projectRoot}/src`;
+      }
+    } else {
+      projectConfiguration.targets.build.options.assets = [];
 
       if (options.bundler === 'esbuild') {
         projectConfiguration.targets.build.options.generatePackageJson = true;
-        projectConfiguration.targets.build.options.format = ['cjs'];
-      }
-
-      if (options.bundler === 'swc' && options.skipTypeCheck) {
-        projectConfiguration.targets.build.options.skipTypeCheck = true;
       }
 
       if (!options.minimal) {
@@ -337,8 +320,10 @@ async function configureProject(
         );
       }
     }
+  }
 
-    if (options.publishable) {
+  if (options.publishable) {
+    if (!options.isUsingTsSolutionConfig) {
       const packageRoot = joinPathFragments(
         defaultOutputDirectory,
         '{projectRoot}'
@@ -361,12 +346,22 @@ async function configureProject(
           },
         },
       };
-
-      await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
     }
+
+    await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
   }
 
-  if (options.config === 'workspace' || options.config === 'project') {
+  if (!options.useProjectJson) {
+    // we want the package.json as clean as possible, with the bare minimum
+    if (!projectConfiguration.tags?.length) {
+      delete projectConfiguration.tags;
+    }
+    // automatically inferred as `library`
+    delete projectConfiguration.projectType;
+
+    // empty targets are cleaned up automatically by `updateProjectConfiguration`
+    updateProjectConfiguration(tree, options.name, projectConfiguration);
+  } else if (options.config === 'workspace' || options.config === 'project') {
     addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
     addProjectConfiguration(tree, options.name, {
@@ -716,30 +711,6 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    if (options.bundler === 'esbuild' || options.bundler === 'swc') {
-      throw new Error(
-        `Cannot use the "${options.bundler}" bundler when using the @nx/js/typescript plugin.`
-      );
-    }
-
-    if (options.bundler === undefined && options.compiler === undefined) {
-      options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(
-        {
-          type: 'select',
-          name: 'bundler',
-          message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
-          choices: [
-            { name: 'tsc' },
-            { name: 'rollup' },
-            { name: 'vite' },
-            { name: 'none' },
-          ],
-          initial: 0,
-        },
-        { bundler: 'tsc' }
-      ).then(({ bundler }) => bundler);
-    }
-
     options.linter ??= await promptWhenInteractive<{
       linter: 'none' | 'eslint';
     }>(
@@ -766,50 +737,6 @@ async function normalizeOptions(
       { unitTestRunner: 'none' }
     ).then(({ unitTestRunner }) => unitTestRunner);
   } else {
-    if (options.bundler === undefined && options.compiler === undefined) {
-      options.bundler = await promptWhenInteractive<{ bundler: Bundler }>(
-        {
-          type: 'select',
-          name: 'bundler',
-          message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
-          choices: [
-            { name: 'swc' },
-            { name: 'tsc' },
-            { name: 'rollup' },
-            { name: 'vite' },
-            { name: 'esbuild' },
-            { name: 'none' },
-          ],
-          initial: 1,
-        },
-        { bundler: 'tsc' }
-      ).then(({ bundler }) => bundler);
-    } else {
-      /**
-       * We are deprecating the compiler and the buildable options.
-       * However, we want to keep the existing behavior for now.
-       *
-       * So, if the user has not provided a bundler, we will use the compiler option, if any.
-       *
-       * If the user has not provided a bundler and no compiler, but has set buildable to true,
-       * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
-       * and no compiler was provided.
-       *
-       * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
-       * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
-       *
-       * If it's publishable, we need to build the code before publishing it, so again
-       * we default to `tsc`. In the previous version of this, it would set `buildable` to true
-       * and that would default to `tsc`.
-       *
-       * In the past, the only way to get a non-buildable library was to set buildable to false.
-       * Now, the only way to get a non-buildble library is to set bundler to none.
-       * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
-       */
-
-      options.bundler ??= options.compiler;
-    }
-
     options.linter ??= await promptWhenInteractive<{
       linter: 'none' | 'eslint';
     }>(
@@ -842,6 +769,29 @@ async function normalizeOptions(
       options.unitTestRunner = 'jest';
     }
   }
+
+  /**
+   * We are deprecating the compiler and the buildable options.
+   * However, we want to keep the existing behavior for now.
+   *
+   * So, if the user has not provided a bundler, we will use the compiler option, if any.
+   *
+   * If the user has not provided a bundler and no compiler, but has set buildable to true,
+   * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
+   * and no compiler was provided.
+   *
+   * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
+   * set the bundler to tsc, to preserve old default behaviour (buildable: true by default).
+   *
+   * If it's publishable, we need to build the code before publishing it, so again
+   * we default to `tsc`. In the previous version of this, it would set `buildable` to true
+   * and that would default to `tsc`.
+   *
+   * In the past, the only way to get a non-buildable library was to set buildable to false.
+   * Now, the only way to get a non-buildble library is to set bundler to none.
+   * By default, with nothing provided, libraries are buildable with `@nx/js:tsc`.
+   */
+  options.bundler ??= options.compiler ?? 'tsc';
 
   // ensure programmatic runs have an expected default
   if (!options.config) {
@@ -994,6 +944,11 @@ function getBuildExecutor(bundler: Bundler) {
 }
 
 function getOutputPath(options: NormalizedLibraryGeneratorOptions) {
+  if (options.isUsingTsSolutionConfig) {
+    // Executors expect paths relative to workspace root, so we prepend the project root
+    return joinPathFragments(options.projectRoot, 'dist');
+  }
+
   const parts = [defaultOutputDirectory];
   if (options.projectRoot === '.') {
     parts.push(options.name);
@@ -1170,8 +1125,12 @@ function determineEntryFields(
     case 'swc':
       return {
         type: 'commonjs',
-        main: './src/index.js',
-        typings: './src/index.d.ts',
+        main: options.isUsingTsSolutionConfig
+          ? './dist/src/index.js'
+          : './src/index.js',
+        typings: options.isUsingTsSolutionConfig
+          ? './dist/src/index.d.ts'
+          : './src/index.d.ts',
       };
     case 'rollup':
       return {
@@ -1202,8 +1161,12 @@ function determineEntryFields(
       // For libraries intended for Node, use CJS.
       return {
         type: 'commonjs',
-        main: './index.cjs',
-        // typings is missing for esbuild currently
+        main: options.isUsingTsSolutionConfig
+          ? './dist/index.cjs'
+          : './index.cjs',
+        typings: options.isUsingTsSolutionConfig
+          ? './dist/index.d.ts'
+          : './index.d.ts',
       };
     default: {
       return {

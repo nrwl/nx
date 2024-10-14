@@ -45,7 +45,7 @@ function handleArrayRemote(
   const remoteLocationExt = extname(remoteLocation);
 
   // If remote location already has .js or .mjs extension
-  if (['.js', '.mjs'].includes(remoteLocationExt)) {
+  if (['.js', '.mjs', '.json'].includes(remoteLocationExt)) {
     return remoteLocation;
   }
 
