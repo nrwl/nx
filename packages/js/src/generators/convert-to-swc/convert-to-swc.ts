@@ -20,13 +20,14 @@ export async function convertToSwcGenerator(
   const options = normalizeOptions(schema);
   const projectConfiguration = readProjectConfiguration(tree, options.project);
 
-  updateProjectBuildTargets(
+  const updated = updateProjectBuildTargets(
     tree,
     projectConfiguration,
     options.project,
     options.targets
   );
-  return checkSwcDependencies(tree, projectConfiguration);
+
+  return updated ? checkSwcDependencies(tree, projectConfiguration) : () => {};
 }
 
 function normalizeOptions(
@@ -47,8 +48,9 @@ function updateProjectBuildTargets(
   projectName: string,
   projectTargets: string[]
 ) {
+  let updated = false;
   for (const target of projectTargets) {
-    const targetConfiguration = projectConfiguration.targets[target];
+    const targetConfiguration = projectConfiguration.targets?.[target];
     if (
       !targetConfiguration ||
       (targetConfiguration.executor !== '@nx/js:tsc' &&
@@ -56,9 +58,14 @@ function updateProjectBuildTargets(
     )
       continue;
     targetConfiguration.executor = '@nx/js:swc';
+    updated = true;
   }
 
-  updateProjectConfiguration(tree, projectName, projectConfiguration);
+  if (updated) {
+    updateProjectConfiguration(tree, projectName, projectConfiguration);
+  }
+
+  return updated;
 }
 
 function checkSwcDependencies(

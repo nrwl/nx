@@ -28,6 +28,7 @@ import { deleteOutput } from '../delete-output';
 import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
 import { normalizeOptions } from './normalize-options';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -182,6 +183,22 @@ export function withNx(
   }
 
   if (!global.NX_GRAPH_CREATION) {
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
+    if (isTsSolutionSetup) {
+      if (options.generatePackageJson) {
+        throw new Error(
+          `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option.`
+        );
+      }
+      if (options.generateExportsField) {
+        throw new Error(
+          `Setting 'generateExportsField: true' is not supported with the current TypeScript setup. Set 'exports' field in the 'package.json' file at the project root and unset the 'generateExportsField' option.`
+        );
+      }
+    } else {
+      options.generatePackageJson ??= true;
+    }
+
     finalConfig.plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -247,7 +264,7 @@ export function withNx(
         }),
       commonjs(),
       analyze(),
-      generatePackageJson(options, packageJson),
+      options.generatePackageJson && generatePackageJson(options, packageJson),
     ];
     if (Array.isArray(rollupConfig.plugins)) {
       finalConfig.plugins.push(...rollupConfig.plugins);

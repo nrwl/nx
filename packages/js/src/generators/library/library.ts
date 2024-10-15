@@ -67,7 +67,7 @@ import { getProjectPackageManagerWorkspaceStateWarningTask } from './utils/packa
 import {
   ensureProjectIsExcludedFromPluginRegistrations,
   ensureProjectIsIncludedInPluginRegistrations,
-} from './utils/plugin-registrations';
+} from '../../utils/typescript/plugin';
 
 const defaultOutputDirectory = 'dist';
 

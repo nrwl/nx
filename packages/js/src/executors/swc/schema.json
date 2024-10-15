@@ -113,12 +113,12 @@
       "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
       "default": false,
       "x-priority": "internal"
+    },
+    "stripLeadingPaths": {
+      "type": "boolean",
+      "description": "Remove leading directory from output (e.g. src). See: https://swc.rs/docs/usage/cli#--strip-leading-paths",
+      "default": false
     }
-  },
-  "stripLeadingPaths": {
-    "type": "boolean",
-    "description": "Remove leading directory from output (e.g. src). See: https://swc.rs/docs/usage/cli#--strip-leading-paths",
-    "default": false
   },
   "required": ["main", "outputPath", "tsConfig"],
   "definitions": {

@@ -18,7 +18,10 @@ import {
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
-import { EsBuildExecutorOptions } from './schema';
+import {
+  EsBuildExecutorOptions,
+  NormalizedEsBuildExecutorOptions,
+} from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
@@ -213,7 +216,7 @@ export async function* esbuildExecutor(
 }
 
 function getTypeCheckOptions(
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const { watch, tsConfig, outputPath } = options;
@@ -243,7 +246,7 @@ function getTypeCheckOptions(
 }
 
 async function runTypeCheck(
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const { errors, warnings } = await _runTypeCheck(

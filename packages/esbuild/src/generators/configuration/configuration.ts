@@ -3,31 +3,32 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
-import { esbuildInitGenerator } from '../init/init';
-import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
-import { EsBuildProjectSchema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
+import { esbuildInitGenerator } from '../init/init';
+import { EsBuildProjectSchema } from './schema';
+import { basename, dirname, join, normalize, relative } from 'node:path/posix';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function configurationGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'esbuild', 'configuration');
-
   const task = await esbuildInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
   options.buildTarget ??= 'build';
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   checkForTargetConflicts(tree, options);
-  addBuildTarget(tree, options);
+  addBuildTarget(tree, options, isTsSolutionSetup);
+  updatePackageJson(tree, options, isTsSolutionSetup);
   await formatFiles(tree);
   return task;
 }
@@ -42,51 +43,55 @@ function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
   }
 }
 
-function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
+function addBuildTarget(
+  tree: Tree,
+  options: EsBuildProjectSchema,
+  isTsSolutionSetup: boolean
+) {
   addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget);
   const project = readProjectConfiguration(tree, options.project);
-  const packageJsonPath = joinPathFragments(project.root, 'package.json');
-
-  if (!tree.exists(packageJsonPath)) {
-    const importPath =
-      options.importPath || getImportPath(tree, options.project);
-    writeJson(tree, packageJsonPath, {
-      name: importPath,
-      version: '0.0.1',
-    });
-  }
 
   const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
-
   const tsConfig = prevBuildOptions?.tsConfig ?? getTsConfigFile(tree, options);
+
+  let outputPath = prevBuildOptions?.outputPath;
+  if (!outputPath) {
+    outputPath = isTsSolutionSetup
+      ? joinPathFragments(project.root, 'dist')
+      : joinPathFragments(
+          'dist',
+          project.root === '.' ? options.project : project.root
+        );
+  }
 
   const buildOptions: EsBuildExecutorOptions = {
     main: prevBuildOptions?.main ?? getMainFile(tree, options),
-    outputPath:
-      prevBuildOptions?.outputPath ??
-      joinPathFragments(
-        'dist',
-        project.root === '.' ? options.project : project.root
-      ),
+    outputPath,
     outputFileName: 'main.js',
     tsConfig,
-    assets: [],
     platform: options.platform,
   };
+
+  if (isTsSolutionSetup) {
+    buildOptions.declarationRootDir =
+      project.sourceRoot ?? tree.exists(`${project.root}/src`)
+        ? `${project.root}/src`
+        : project.root;
+  } else {
+    buildOptions.assets = [];
+
+    if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
+      buildOptions.assets.push({
+        glob: `${project.root}/README.md`,
+        input: '.',
+        output: '.',
+      });
+    }
+  }
 
   if (options.platform === 'browser') {
     buildOptions.outputHashing = 'all';
     buildOptions.minify = true;
-  }
-
-  if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
-    buildOptions.assets = [
-      {
-        glob: `${project.root}/README.md`,
-        input: '.',
-        output: '.',
-      },
-    ];
   }
 
   updateProjectConfiguration(tree, options.project, {
@@ -109,6 +114,63 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
       },
     },
   });
+}
+
+function updatePackageJson(
+  tree: Tree,
+  options: EsBuildProjectSchema,
+  isTsSolutionSetup: boolean
+) {
+  const project = readProjectConfiguration(tree, options.project);
+
+  const {
+    declarationRootDir = '.',
+    main,
+    outputPath,
+    outputFileName,
+  } = project.targets[options.buildTarget].options;
+  const mainName = basename(main).replace(/\.[tj]s$/, '');
+  const mainDir = dirname(main);
+  const relativeDeclarationDir = relative(
+    join(tree.root, declarationRootDir),
+    join(tree.root, mainDir)
+  );
+  const relativeOutputPath = relative(
+    join(tree.root, project.root),
+    join(tree.root, outputPath)
+  );
+  const outputDir = `./${normalize(relativeOutputPath)}`;
+  const outputDeclarationDir = `./${join(
+    relativeOutputPath,
+    relativeDeclarationDir
+  )}`;
+
+  const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  if (tree.exists(packageJsonPath) && isTsSolutionSetup) {
+    if (!relativeOutputPath.startsWith('../')) {
+      updateJson<PackageJson>(tree, packageJsonPath, (json) => {
+        // the output is contained within the project root
+        json.main = `${outputDir}/${outputFileName}`;
+        json.types = `${outputDeclarationDir}/${mainName}.d.ts`;
+
+        return json;
+      });
+    }
+  } else if (!tree.exists(packageJsonPath)) {
+    const importPath =
+      options.importPath || getImportPath(tree, options.project);
+    const packageJson: PackageJson = {
+      name: importPath,
+      version: '0.0.1',
+    };
+    if (isTsSolutionSetup && !relativeOutputPath.startsWith('../')) {
+      // the output is contained within the project root
+      packageJson.main = `${outputDir}/${outputFileName}`;
+      packageJson.types = `${outputDeclarationDir}/${outputFileName}.d.ts`;
+    }
+
+    writeJson(tree, packageJsonPath, packageJson);
+  }
 }
 
 function getMainFile(tree: Tree, options: EsBuildProjectSchema) {

@@ -1,18 +1,32 @@
 import {
   ensurePackage,
   formatFiles,
-  type GeneratorCallback,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  type Tree,
+  updateJson,
+  updateNxJson,
   updateProjectConfiguration,
+  writeJson,
+  type GeneratorCallback,
+  type ProjectConfiguration,
+  type Tree,
 } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { basename, dirname, join, normalize, relative } from 'node:path/posix';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../..//utils/typescript/plugin';
+import { getImportPath } from '../../utils/get-import-path';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
+import { readTsConfig } from '../../utils/typescript/ts-config';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 import { nxVersion } from '../../utils/versions';
 import { SetupBuildGeneratorSchema } from './schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+
+let ts: typeof import('typescript');
 
 export async function setupBuildGenerator(
   tree: Tree,
@@ -20,8 +34,8 @@ export async function setupBuildGenerator(
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
-  const buildTarget = options.buildTarget ?? 'build';
-  const prevBuildOptions = project.targets?.[buildTarget]?.options;
+  options.buildTarget ??= 'build';
+  const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
 
   project.targets ??= {};
 
@@ -49,6 +63,7 @@ export async function setupBuildGenerator(
       `Cannot locate a main file for ${options.project}. Please specify one using --main=<file-path>.`
     );
   }
+  options.main = mainFile;
 
   let tsConfigFile: string;
   if (prevBuildOptions?.tsConfig) {
@@ -73,6 +88,9 @@ export async function setupBuildGenerator(
       `Cannot locate a tsConfig file for ${options.project}. Please specify one using --tsConfig=<file-path>.`
     );
   }
+  options.tsConfig = tsConfigFile;
+
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
 
   switch (options.bundler) {
     case 'vite': {
@@ -123,39 +141,61 @@ export async function setupBuildGenerator(
       break;
     }
     case 'tsc': {
-      addBuildTargetDefaults(tree, '@nx/js:tsc');
+      if (isTsSolutionSetup) {
+        const nxJson = readNxJson(tree);
+        ensureProjectIsIncludedInPluginRegistrations(
+          nxJson,
+          project.root,
+          options.buildTarget
+        );
+        updateNxJson(tree, nxJson);
+        updatePackageJsonForTsc(tree, options, project);
+      } else {
+        addBuildTargetDefaults(tree, '@nx/js:tsc');
 
-      const outputPath = joinPathFragments('dist', project.root);
-      project.targets[buildTarget] = {
-        executor: `@nx/js:tsc`,
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath,
-          main: mainFile,
-          tsConfig: tsConfigFile,
-          assets: [],
-        },
-      };
-      updateProjectConfiguration(tree, options.project, project);
+        const outputPath = joinPathFragments('dist', project.root);
+        project.targets[options.buildTarget] = {
+          executor: `@nx/js:tsc`,
+          outputs: ['{options.outputPath}'],
+          options: {
+            outputPath,
+            main: mainFile,
+            tsConfig: tsConfigFile,
+            assets: [],
+          },
+        };
+        updateProjectConfiguration(tree, options.project, project);
+      }
       break;
     }
     case 'swc': {
       addBuildTargetDefaults(tree, '@nx/js:swc');
 
-      const outputPath = joinPathFragments('dist', project.root);
-      project.targets[buildTarget] = {
+      const outputPath = isTsSolutionSetup
+        ? joinPathFragments(project.root, 'dist')
+        : joinPathFragments('dist', project.root);
+      project.targets[options.buildTarget] = {
         executor: `@nx/js:swc`,
         outputs: ['{options.outputPath}'],
         options: {
           outputPath,
           main: mainFile,
           tsConfig: tsConfigFile,
-          assets: [],
         },
       };
+
+      if (isTsSolutionSetup) {
+        project.targets[options.buildTarget].options.stripLeadingPaths = true;
+      } else {
+        project.targets[options.buildTarget].options.assets = [];
+      }
+
       updateProjectConfiguration(tree, options.project, project);
-      addSwcDependencies(tree);
+      tasks.push(addSwcDependencies(tree));
       addSwcConfig(tree, project.root, 'es6');
+      if (isTsSolutionSetup) {
+        updatePackageJsonForSwc(tree, options, project);
+      }
     }
   }
 
@@ -165,3 +205,116 @@ export async function setupBuildGenerator(
 }
 
 export default setupBuildGenerator;
+
+function updatePackageJsonForTsc(
+  tree: Tree,
+  options: SetupBuildGeneratorSchema,
+  project: ProjectConfiguration
+) {
+  if (!ts) {
+    ts = ensureTypescript();
+  }
+
+  let main = options.main;
+  const tsconfig = readTsConfig(options.tsConfig, {
+    ...ts.sys,
+    readFile: (p) => tree.read(p, 'utf-8'),
+    fileExists: (p) => tree.exists(p),
+  });
+
+  let {
+    rootDir: tsRootDir = project.root,
+    outDir: tsOutDir,
+    outFile: tsOutFile,
+  } = tsconfig.options;
+
+  if (tsOutFile) {
+    main = join(project.root, basename(tsOutFile));
+    tsOutDir = dirname(tsOutFile);
+  }
+
+  if (!tsOutDir) {
+    tsOutDir = project.root;
+  }
+
+  const mainName = basename(main).replace(/\.[tj]s$/, '');
+  const mainDir = dirname(main);
+  const relativeMainDir = relative(
+    join(tree.root, tsRootDir),
+    join(tree.root, mainDir)
+  );
+  const relativeOutputPath = relative(
+    join(tree.root, project.root),
+    join(tree.root, tsOutDir)
+  );
+  const outputDir = `./${join(relativeOutputPath, relativeMainDir)}`;
+
+  const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  if (tree.exists(packageJsonPath)) {
+    if (!relativeOutputPath.startsWith('../')) {
+      // the output is contained within the project root, we ensure the main
+      // and types fields are set accordingly
+      updateJson(tree, packageJsonPath, (json) => {
+        json.main = `${outputDir}/${mainName}.js`;
+        json.types = `${outputDir}/${mainName}.d.ts`;
+
+        return json;
+      });
+    }
+  } else {
+    const importPath = getImportPath(tree, options.project);
+    const packageJson: PackageJson = {
+      name: importPath,
+      version: '0.0.1',
+    };
+    if (!relativeOutputPath.startsWith('../')) {
+      // the output is contained within the project root, we ensure the main
+      // and types fields are set accordingly
+      packageJson.main = `${outputDir}/${mainName}.js`;
+      packageJson.types = `${outputDir}/${mainName}.d.ts`;
+    }
+
+    writeJson(tree, packageJsonPath, packageJson);
+  }
+}
+
+function updatePackageJsonForSwc(
+  tree: Tree,
+  options: SetupBuildGeneratorSchema,
+  project: ProjectConfiguration
+) {
+  const { main, outputPath } = project.targets[options.buildTarget].options;
+  const mainName = basename(main).replace(/\.[tj]s$/, '');
+  const relativeOutputPath = relative(
+    join(tree.root, project.root),
+    join(tree.root, outputPath)
+  );
+  const outputDir = `./${normalize(relativeOutputPath)}`;
+
+  const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  if (tree.exists(packageJsonPath)) {
+    if (!relativeOutputPath.startsWith('../')) {
+      // the output is contained within the project root, we ensure the main
+      // and types fields are set accordingly
+      updateJson(tree, packageJsonPath, (json) => {
+        json.main = `${outputDir}/${mainName}.js`;
+        json.types = `${outputDir}/${mainName}.d.ts`;
+        return json;
+      });
+    }
+  } else if (!tree.exists(packageJsonPath)) {
+    const importPath = getImportPath(tree, options.project);
+    const packageJson: PackageJson = {
+      name: importPath,
+      version: '0.0.1',
+    };
+    if (!relativeOutputPath.startsWith('../')) {
+      // the output is contained within the project root, we ensure the main
+      // and types fields are set accordingly
+      packageJson.main = `${outputDir}/${mainName}.js`;
+      packageJson.types = `${outputDir}/${mainName}.d.ts`;
+    }
+
+    writeJson(tree, packageJsonPath, packageJson);
+  }
+}
