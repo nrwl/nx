@@ -2,6 +2,7 @@
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ReactElement, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import Link from 'next/link';
 
 const MOBILE_BREAKPOINT = 768;
 const YOUTUBE_URL = 'https://youtu.be/KZ0nh2lj8zE?si=D1hkyP3vy36e-VZt';
@@ -60,6 +61,16 @@ export function Hero(): ReactElement {
             </span>
           </a>
         </div>
+        <p className="mt-6 text-sm italic">
+          Want to use Powerpack for OSS?{' '}
+          <Link
+            href="/powerpack/special-offer"
+            prefetch={false}
+            className="font-semibold underline"
+          >
+            Apply here.
+          </Link>
+        </p>
       </div>
 
       {!isMobile && (
