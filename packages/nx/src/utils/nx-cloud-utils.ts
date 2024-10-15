@@ -5,6 +5,10 @@ export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
     return false;
   }
 
+  if (nxJson.neverConnectToCloud) {
+    return true;
+  }
+
   return (
     !!process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
