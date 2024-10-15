@@ -24,7 +24,7 @@ export function mapRemotes(
         remoteEntryExt
       );
     } else if (typeof nxRemoteProjectName === 'string') {
-      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName[0]);
+      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
       mappedRemotes[mfRemoteName] = handleStringRemote(
         nxRemoteProjectName,
         determineRemoteUrl
