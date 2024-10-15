@@ -1,6 +1,10 @@
 import { NxJsonConfiguration } from '../config/nx-json';
 
 export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
+  if (process.env.NX_NO_CLOUD === 'true') {
+    return false;
+  }
+
   return (
     !!process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
