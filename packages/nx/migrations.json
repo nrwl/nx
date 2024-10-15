@@ -61,7 +61,8 @@
     "use-legacy-cache": {
       "version": "20.0.1",
       "description": "Set `useLegacyCache` to true for migrating workspaces",
-      "implementation": "./src/migrations/update-20-0-1/use-legacy-cache"
+      "implementation": "./src/migrations/update-20-0-1/use-legacy-cache",
+      "x-repair-skip": true
     }
   }
 }
