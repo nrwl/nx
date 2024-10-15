@@ -15,3 +15,9 @@ export function hashObject(obj: object): string {
 
   return hashArray(parts);
 }
+
+export function hashFile(filePath: string): string {
+  const { hashFile } = require('../native');
+
+  return hashFile(filePath);
+}
