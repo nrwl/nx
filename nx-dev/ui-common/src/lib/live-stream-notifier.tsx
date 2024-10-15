@@ -10,7 +10,7 @@ import {
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 
-export function LiveStreamNotifier(): ReactElement {
+export function LiveStreamNotifier(): ReactElement | null {
   const [isVisible, setIsVisible] = useState<boolean>(true);
 
   useEffect(() => {
@@ -62,13 +62,13 @@ export function LiveStreamNotifier(): ReactElement {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Monorepo World is live!</span>
+            <span>Monorepo World live replays available!</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Join us live for exciting talks on developer tooling and
-              monorepos! Catch the action on YouTube and join the conversation
-              on Discord!
+              Watch the replays of exciting talks on developer tooling and
+              monorepos! Catch all the insightful presentations from the event
+              on our YouTube channel.
             </p>
             <div className="flex flex-wrap items-center gap-1 sm:gap-4">
               <a
