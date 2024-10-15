@@ -89,6 +89,10 @@
       "type": "string",
       "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
     },
+    "neverConnectToCloud": {
+      "type": "boolean",
+      "description": "Set this to true to disable all connections to Nx Cloud."
+    },
     "parallel": {
       "type": "number",
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."

@@ -12,7 +12,7 @@ export function setupTspathForRemote(tree: Tree, options: Schema) {
 
   const exportName = options.standalone ? 'Routes' : 'Module';
 
-  addTsConfigPath(tree, `${options.appName}/${exportName}`, [
+  addTsConfigPath(tree, `${options.appName.replace(/-/g, '_')}/${exportName}`, [
     joinPathFragments(project.root, exportPath),
   ]);
 }

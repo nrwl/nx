@@ -18,7 +18,6 @@ import {
   solutionsMenuItems,
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
-import { AnnouncementBanner } from '../announcement-banner';
 import { DiscordIcon } from '../discord-icon';
 import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
@@ -170,9 +169,6 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="hidden w-full md:block">
-        <AnnouncementBanner />
-      </div>
       <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">

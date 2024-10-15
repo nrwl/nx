@@ -3,6 +3,7 @@ import {
   formatFiles,
   getProjects,
   runTasksInSerial,
+  stripIndents,
   Tree,
 } from '@nx/devkit';
 import {
@@ -39,6 +40,16 @@ export async function remote(tree: Tree, schema: Schema) {
       directory: options.directory,
     });
 
+  const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
+  const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
+  if (!remoteNameRegex.test(remoteProjectName)) {
+    throw new Error(
+      stripIndents`Invalid remote name: ${remoteProjectName}. Remote project names must:
+       - Start with a letter, dollar sign ($) or underscore (_)
+       - Followed by any valid character (letters, digits, underscores, or dollar signs)
+      The regular expression used is ${REMOTE_NAME_REGEX}.`
+    );
+  }
   const port = options.port ?? findNextAvailablePort(tree);
 
   const appInstallTask = await applicationGenerator(tree, {
