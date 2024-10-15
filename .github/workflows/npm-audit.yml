@@ -8,24 +8,20 @@ on:
 permissions: {}
 jobs:
   audit:
+    if: ${{ github.repository_owner == 'nrwl' }}
     permissions:
       contents: read  #  to fetch code (actions/checkout)
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install PNPM
-        run: |
-          npm install -g @pnpm/exe@8
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
       - name: Run a security audit
         run: pnpm dlx audit-ci --critical --report-type summary
-
-    # - name: Run Dependency confusion supply chain check
-    #  run: npx snync -d .
 
   report:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
