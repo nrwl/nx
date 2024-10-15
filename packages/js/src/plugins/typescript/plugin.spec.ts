@@ -1,6 +1,8 @@
-import { type CreateNodesContext } from '@nx/devkit';
+import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { minimatch } from 'minimatch';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
@@ -25,6 +27,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     process.chdir(tempFs.tempDir);
     originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+    const lockFileName = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
+    applyFilesToTempFsAndContext(tempFs, context, { [lockFileName]: '' });
   });
 
   afterEach(() => {
