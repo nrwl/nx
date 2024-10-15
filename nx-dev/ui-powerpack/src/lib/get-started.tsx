@@ -1,5 +1,5 @@
 import { SectionHeading, TextLink } from '@nx/nx-dev/ui-common';
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { TerminalOutput } from '@nx/nx-dev/ui-fence';
 import { PowerpackPricing } from './powerpack-pricing';
 

@@ -3,6 +3,7 @@ import {
   CallToAction,
   GetStarted,
   Hero,
+  OssCallout,
   PowerpackFeatures,
 } from '@nx/nx-dev/ui-powerpack';
 
@@ -42,6 +43,10 @@ export default function NxPowerPackPage(): JSX.Element {
 
       <div className="mt-32 scroll-mt-32 lg:mt-56">
         <GetStarted />
+      </div>
+
+      <div className="mt-32 scroll-mt-32 lg:mt-56">
+        <OssCallout />
       </div>
 
       <div className="mt-32 lg:mt-56">

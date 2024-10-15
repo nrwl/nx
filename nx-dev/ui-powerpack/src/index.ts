@@ -2,6 +2,7 @@
 
 export * from './lib/hero';
 export * from './lib/powerpack-features';
+export * from './lib/oss-callout';
 export * from './lib/get-started';
 export * from './lib/powerpack-pricing';
 export * from './lib/call-to-action';

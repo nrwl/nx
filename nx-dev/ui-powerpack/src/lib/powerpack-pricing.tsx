@@ -1,14 +1,11 @@
 'use client';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
+import type { ReactElement } from 'react';
 
-export function PowerpackPricing() {
+export function PowerpackPricing(): ReactElement {
   return (
     <aside>
-      {/*<h4 className="text-lg font-medium leading-6 text-slate-900 dark:text-slate-100">*/}
-      {/*  Nx Powerpack license subscription*/}
-      {/*</h4>*/}
-
       <div className="flex flex-col gap-2">
         <div className="group relative flex w-full items-center justify-between gap-8 rounded-md border border-slate-200 bg-white px-6 py-4 transition hover:bg-white/90 hover:shadow dark:border-slate-800/60 dark:bg-slate-900/60 dark:hover:bg-slate-900/100">
           <a
