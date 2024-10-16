@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { Configuration } from '@rspack/core';
-import { RspackDevServer } from '@rspack/dev-server';
+import type { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { getDevServerOptions } from './lib/get-dev-server-config';

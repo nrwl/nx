@@ -1,4 +1,4 @@
-import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import type { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import type { Configuration } from '@rspack/core';
 import { DefinePlugin } from '@rspack/core';
 import { SharedConfigContext } from '../../model';

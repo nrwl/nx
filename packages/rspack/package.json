@@ -39,10 +39,10 @@
     "@rspack/core": "^1.0.4",
     "@rspack/dev-server": "^1.0.4",
     "@rspack/plugin-react-refresh": "^1.0.0",
-    "@rspack/plugin-minify": "^0.7.5",
     "chalk": "~4.1.0",
     "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "webpack-sources": "^3.2.3"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "~0.6.0",
