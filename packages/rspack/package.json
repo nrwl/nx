@@ -33,7 +33,7 @@
     "http-proxy-middleware": "^3.0.0",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
-    "sass-loader": "^12.2.0",
+    "sass-loader": "^14.2.0",
     "stylus-loader": "^7.1.0",
     "postcss-loader": "^8.1.1",
     "@rspack/core": "^1.0.4",
