@@ -346,6 +346,7 @@ exports[`application generator should set up project correctly with given option
 [
   ".eslintignore",
   ".eslintrc.json",
+  ".gitignore",
   ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
