@@ -13,6 +13,7 @@ import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
+import { addViteTempFilesToGitIgnore } from '../../utils/add-vite-temp-files-to-gitignore';
 
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -83,6 +84,7 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
+  addViteTempFilesToGitIgnore(tree);
 
   if (schema.setupPathsPlugin) {
     await setupPathsPlugin(tree, { skipFormat: true });
