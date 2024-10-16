@@ -61,13 +61,13 @@ Tasks can fail:
 Let’s see how varying a few parameters affects the probability of the CI execution failing.
 
 | Number of VMS | Avg Tests per VM | Flaky Test Probability | Slow Test Probability | Broken CI Builds (Flaky) | Slow CI Builds |
-| ------------- | ---------------- | ---------------------- | --------------------- | ------------------------ | -------------- |
-| 5             | 10               | 0.1%                   | 0.3%                  | 5%                       | 15%            |
-| 10            | 10               | 0.1%                   | 0.3%                  | 10%                      | 26%            |
-| 50            | 10               | 0.1%                   | 0.3%                  | 39%                      | 78%            |
-| 5             | 10               | 0.5%                   | 1%                    | 23%                      | 41%            |
-| 10            | 10               | 0.5%                   | 1%                    | 40%                      | 65%            |
-| 50            | 10               | 0.5%                   | 1%                    | 92%                      | 99%            |
+| :-----------: | :--------------: | :--------------------: | :-------------------: | :----------------------: | :------------: |
+|       5       |        10        |          0.1%          |         0.3%          |            5%            |      15%       |
+|      10       |        10        |          0.1%          |         0.3%          |           10%            |      26%       |
+|      50       |        10        |          0.1%          |         0.3%          |           39%            |      78%       |
+|       5       |        10        |          0.5%          |          1%           |           23%            |      41%       |
+|      10       |        10        |          0.5%          |          1%           |           40%            |      65%       |
+|      50       |        10        |          0.5%          |          1%           |           92%            |      99%       |
 
 **The result is much worse than most intuitively expect.** For instance, assuming that an **e2e test has 1 in 1000 chance (0.1%) of failing** for a flaky reason, when the number of e2e tests reaches 500, **the probability of the CI failing for a flaky reason reaches 39%**, and the vast majority of CI executions are slowed down. Note, this is an exceptionally stable test suite. The bottom part of the table is more representative of a typical e2e suite, and the CI becomes “broken” at a much smaller scale.
 
