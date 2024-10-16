@@ -13,7 +13,7 @@ describe('addViteTempFilesToGitIgnore', () => {
     // ASSERT
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
       ".idea
-          **/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
+      **/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
     `);
   });
 

@@ -1,11 +1,16 @@
-import type { Tree } from '@nx/devkit';
+import { stripIndents, Tree } from '@nx/devkit';
 
 export function addViteTempFilesToGitIgnore(tree: Tree) {
-  let gitIgnoreContents = `**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*`;
+  let newGitIgnoreContents = `**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*`;
   if (tree.exists('.gitignore')) {
-    gitIgnoreContents = `${tree.read('.gitignore', 'utf-8')}
-    ${gitIgnoreContents}`;
-  }
+    const gitIgnoreContents = tree.read('.gitignore', 'utf-8');
+    if (!gitIgnoreContents.includes(newGitIgnoreContents)) {
+      newGitIgnoreContents = stripIndents`${gitIgnoreContents}
+        ${newGitIgnoreContents}`;
 
-  tree.write('.gitignore', gitIgnoreContents);
+      tree.write('.gitignore', newGitIgnoreContents);
+    }
+  } else {
+    tree.write('.gitignore', newGitIgnoreContents);
+  }
 }
