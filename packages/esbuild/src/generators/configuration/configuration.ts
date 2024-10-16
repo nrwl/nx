@@ -1,6 +1,7 @@
 import {
   formatFiles,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -10,11 +11,12 @@ import {
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { basename, dirname, join, normalize, relative } from 'node:path/posix';
+import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
+import { PackageJson } from 'nx/src/utils/package-json';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildProjectSchema } from './schema';
-import { basename, dirname, join, normalize, relative } from 'node:path/posix';
-import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -121,14 +123,23 @@ function updatePackageJson(
   options: EsBuildProjectSchema,
   isTsSolutionSetup: boolean
 ) {
+  // TODO(esbuild): consider add exports and use module
   const project = readProjectConfiguration(tree, options.project);
+  const nxJson = readNxJson(tree);
+  const projectTarget = project.targets[options.buildTarget];
+  const mergedTarget = mergeTargetConfigurations(
+    projectTarget,
+    (projectTarget.executor
+      ? nxJson.targetDefaults?.[projectTarget.executor]
+      : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+  );
 
   const {
     declarationRootDir = '.',
     main,
     outputPath,
     outputFileName,
-  } = project.targets[options.buildTarget].options;
+  } = mergedTarget.options;
   const mainName = basename(main).replace(/\.[tj]s$/, '');
   const mainDir = dirname(main);
   const relativeDeclarationDir = relative(

@@ -15,6 +15,7 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { basename, dirname, join, normalize, relative } from 'node:path/posix';
+import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../..//utils/typescript/plugin';
 import { getImportPath } from '../../utils/get-import-path';
@@ -91,6 +92,10 @@ export async function setupBuildGenerator(
   options.tsConfig = tsConfigFile;
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   switch (options.bundler) {
     case 'vite': {
@@ -101,10 +106,11 @@ export async function setupBuildGenerator(
       const task = await viteConfigurationGenerator(tree, {
         buildTarget: options.buildTarget,
         project: options.project,
-        newProject: true,
+        newProject: false,
         uiFramework: 'none',
         includeVitest: false,
         includeLib: true,
+        addPlugin,
         skipFormat: true,
       });
       tasks.push(task);
@@ -134,6 +140,7 @@ export async function setupBuildGenerator(
         project: options.project,
         compiler: 'tsc',
         format: ['cjs', 'esm'],
+        addPlugin,
         skipFormat: true,
         skipValidation: true,
       });
@@ -211,45 +218,99 @@ function updatePackageJsonForTsc(
   options: SetupBuildGeneratorSchema,
   project: ProjectConfiguration
 ) {
-  if (!ts) {
-    ts = ensureTypescript();
-  }
+  let main: string;
+  let rootDir: string;
+  let outputPath: string;
+  if (project.targets?.[options.buildTarget]) {
+    const mergedTarget = mergeTargetDefaults(
+      tree,
+      project,
+      options.buildTarget
+    );
+    ({ main, rootDir, outputPath } = mergedTarget.options);
+  } else {
+    main = options.main;
 
-  let main = options.main;
-  const tsconfig = readTsConfig(options.tsConfig, {
-    ...ts.sys,
-    readFile: (p) => tree.read(p, 'utf-8'),
-    fileExists: (p) => tree.exists(p),
-  });
+    if (!ts) {
+      ts = ensureTypescript();
+    }
 
-  let {
-    rootDir: tsRootDir = project.root,
-    outDir: tsOutDir,
-    outFile: tsOutFile,
-  } = tsconfig.options;
+    const tsconfig = readTsConfig(options.tsConfig, {
+      ...ts.sys,
+      readFile: (p) => tree.read(p, 'utf-8'),
+      fileExists: (p) => tree.exists(p),
+    });
 
-  if (tsOutFile) {
-    main = join(project.root, basename(tsOutFile));
-    tsOutDir = dirname(tsOutFile);
-  }
+    ({ rootDir = project.root, outDir: outputPath } = tsconfig.options);
+    const tsOutFile = tsconfig.options.outFile;
 
-  if (!tsOutDir) {
-    tsOutDir = project.root;
+    if (tsOutFile) {
+      main = join(project.root, basename(tsOutFile));
+      outputPath = dirname(tsOutFile);
+    }
+
+    if (!outputPath) {
+      outputPath = project.root;
+    }
   }
 
   const mainName = basename(main).replace(/\.[tj]s$/, '');
   const mainDir = dirname(main);
   const relativeMainDir = relative(
-    join(tree.root, tsRootDir),
+    join(tree.root, rootDir),
     join(tree.root, mainDir)
   );
   const relativeOutputPath = relative(
     join(tree.root, project.root),
-    join(tree.root, tsOutDir)
+    join(tree.root, outputPath)
   );
   const outputDir = `./${join(relativeOutputPath, relativeMainDir)}`;
 
   const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  updatePackageJson(
+    tree,
+    packageJsonPath,
+    options.project,
+    outputDir,
+    mainName,
+    relativeOutputPath
+  );
+}
+
+function updatePackageJsonForSwc(
+  tree: Tree,
+  options: SetupBuildGeneratorSchema,
+  project: ProjectConfiguration
+) {
+  const mergedTarget = mergeTargetDefaults(tree, project, options.buildTarget);
+  const { main, outputPath } = mergedTarget.options;
+  const mainName = basename(main).replace(/\.[tj]s$/, '');
+  const relativeOutputPath = relative(
+    join(tree.root, project.root),
+    join(tree.root, outputPath)
+  );
+  const outputDir = `./${normalize(relativeOutputPath)}`;
+
+  const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  updatePackageJson(
+    tree,
+    packageJsonPath,
+    options.project,
+    outputDir,
+    mainName,
+    relativeOutputPath
+  );
+}
+
+function updatePackageJson(
+  tree: Tree,
+  packageJsonPath: string,
+  projectName: string,
+  outputDir: string,
+  mainName: string,
+  relativeOutputPath: string
+) {
+  // TODO(tsc): consider add exports and use module
   if (tree.exists(packageJsonPath)) {
     if (!relativeOutputPath.startsWith('../')) {
       // the output is contained within the project root, we ensure the main
@@ -257,12 +318,11 @@ function updatePackageJsonForTsc(
       updateJson(tree, packageJsonPath, (json) => {
         json.main = `${outputDir}/${mainName}.js`;
         json.types = `${outputDir}/${mainName}.d.ts`;
-
         return json;
       });
     }
   } else {
-    const importPath = getImportPath(tree, options.project);
+    const importPath = getImportPath(tree, projectName);
     const packageJson: PackageJson = {
       name: importPath,
       version: '0.0.1',
@@ -278,43 +338,18 @@ function updatePackageJsonForTsc(
   }
 }
 
-function updatePackageJsonForSwc(
+function mergeTargetDefaults(
   tree: Tree,
-  options: SetupBuildGeneratorSchema,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  buildTarget: string
 ) {
-  const { main, outputPath } = project.targets[options.buildTarget].options;
-  const mainName = basename(main).replace(/\.[tj]s$/, '');
-  const relativeOutputPath = relative(
-    join(tree.root, project.root),
-    join(tree.root, outputPath)
+  const nxJson = readNxJson(tree);
+  const projectTarget = project.targets[buildTarget];
+
+  return mergeTargetConfigurations(
+    projectTarget,
+    (projectTarget.executor
+      ? nxJson.targetDefaults?.[projectTarget.executor]
+      : undefined) ?? nxJson.targetDefaults?.[buildTarget]
   );
-  const outputDir = `./${normalize(relativeOutputPath)}`;
-
-  const packageJsonPath = joinPathFragments(project.root, 'package.json');
-  if (tree.exists(packageJsonPath)) {
-    if (!relativeOutputPath.startsWith('../')) {
-      // the output is contained within the project root, we ensure the main
-      // and types fields are set accordingly
-      updateJson(tree, packageJsonPath, (json) => {
-        json.main = `${outputDir}/${mainName}.js`;
-        json.types = `${outputDir}/${mainName}.d.ts`;
-        return json;
-      });
-    }
-  } else if (!tree.exists(packageJsonPath)) {
-    const importPath = getImportPath(tree, options.project);
-    const packageJson: PackageJson = {
-      name: importPath,
-      version: '0.0.1',
-    };
-    if (!relativeOutputPath.startsWith('../')) {
-      // the output is contained within the project root, we ensure the main
-      // and types fields are set accordingly
-      packageJson.main = `${outputDir}/${mainName}.js`;
-      packageJson.types = `${outputDir}/${mainName}.d.ts`;
-    }
-
-    writeJson(tree, packageJsonPath, packageJson);
-  }
 }
