@@ -1,16 +1,16 @@
-import { useCallback } from 'react';
+import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
 import {
   ErrorToastUI,
   ExpandedTargetsProvider,
   getExternalApiService,
 } from '@nx/graph/shared';
-import { useMachine, useSelector } from '@xstate/react';
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
+import { useSelector } from '@xstate/react';
+import { useCallback } from 'react';
+import { Interpreter } from 'xstate';
 import {
   ProjectDetailsEvents,
   ProjectDetailsState,
 } from './project-details.machine';
-import { Interpreter } from 'xstate';
 
 export function ProjectDetailsApp({
   service,
@@ -25,6 +25,10 @@ export function ProjectDetailsApp({
   const connectedToCloud = useSelector(
     service,
     (state) => state.context.connectedToCloud
+  );
+  const disabledTaskSyncGenerators = useSelector(
+    service,
+    (state) => state.context.disabledTaskSyncGenerators
   );
 
   const handleViewInProjectGraph = useCallback(
@@ -83,6 +87,7 @@ export function ProjectDetailsApp({
             viewInProjectGraphPosition="bottom"
             connectedToCloud={connectedToCloud}
             onNxConnect={handleNxConnect}
+            disabledTaskSyncGenerators={disabledTaskSyncGenerators}
           />
         </ExpandedTargetsProvider>
         <ErrorToastUI errors={errors} />
