@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app generated files content - as-provided - my-app general application should add nuxt entries in .gitignore 1`] = `
-"
-# Nuxt dev/build outputs
+"# Nuxt dev/build outputs
 .output
 .data
 .nuxt
 .nitro
-.cache"
+.cache
+**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
@@ -364,13 +364,13 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add nuxt entries in .gitignore 1`] = `
-"
-# Nuxt dev/build outputs
+"# Nuxt dev/build outputs
 .output
 .data
 .nuxt
 .nitro
-.cache"
+.cache
+**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
