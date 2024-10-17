@@ -2,10 +2,10 @@ import {
   ensurePackage,
   formatFiles,
   joinPathFragments,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  updateJson,
   updateNxJson,
   updateProjectConfiguration,
   writeJson,
@@ -14,11 +14,15 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { basename, dirname, join, normalize, relative } from 'node:path/posix';
+import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../..//utils/typescript/plugin';
 import { getImportPath } from '../../utils/get-import-path';
+import {
+  getUpdatedPackageJsonContent,
+  type SupportedFormat,
+} from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
@@ -127,6 +131,7 @@ export async function setupBuildGenerator(
         project: options.project,
         skipFormat: true,
         skipValidation: true,
+        format: ['cjs'],
       });
       tasks.push(task);
       break;
@@ -199,7 +204,7 @@ export async function setupBuildGenerator(
 
       updateProjectConfiguration(tree, options.project, project);
       tasks.push(addSwcDependencies(tree));
-      addSwcConfig(tree, project.root, 'es6');
+      addSwcConfig(tree, project.root, 'commonjs');
       if (isTsSolutionSetup) {
         updatePackageJsonForSwc(tree, options, project);
       }
@@ -218,6 +223,16 @@ function updatePackageJsonForTsc(
   options: SetupBuildGeneratorSchema,
   project: ProjectConfiguration
 ) {
+  if (!ts) {
+    ts = ensureTypescript();
+  }
+
+  const tsconfig = readTsConfig(options.tsConfig, {
+    ...ts.sys,
+    readFile: (p) => tree.read(p, 'utf-8'),
+    fileExists: (p) => tree.exists(p),
+  });
+
   let main: string;
   let rootDir: string;
   let outputPath: string;
@@ -230,16 +245,6 @@ function updatePackageJsonForTsc(
     ({ main, rootDir, outputPath } = mergedTarget.options);
   } else {
     main = options.main;
-
-    if (!ts) {
-      ts = ensureTypescript();
-    }
-
-    const tsconfig = readTsConfig(options.tsConfig, {
-      ...ts.sys,
-      readFile: (p) => tree.read(p, 'utf-8'),
-      fileExists: (p) => tree.exists(p),
-    });
 
     ({ rootDir = project.root, outDir: outputPath } = tsconfig.options);
     const tsOutFile = tsconfig.options.outFile;
@@ -254,26 +259,21 @@ function updatePackageJsonForTsc(
     }
   }
 
-  const mainName = basename(main).replace(/\.[tj]s$/, '');
-  const mainDir = dirname(main);
-  const relativeMainDir = relative(
-    join(tree.root, rootDir),
-    join(tree.root, mainDir)
+  const module = Object.keys(ts.ModuleKind).find(
+    (m) => ts.ModuleKind[m] === tsconfig.options.module
   );
-  const relativeOutputPath = relative(
-    join(tree.root, project.root),
-    join(tree.root, outputPath)
-  );
-  const outputDir = `./${join(relativeOutputPath, relativeMainDir)}`;
+  const format: SupportedFormat[] = module.toLowerCase().startsWith('es')
+    ? ['esm']
+    : ['cjs'];
 
-  const packageJsonPath = joinPathFragments(project.root, 'package.json');
   updatePackageJson(
     tree,
-    packageJsonPath,
     options.project,
-    outputDir,
-    mainName,
-    relativeOutputPath
+    project.root,
+    main,
+    outputPath,
+    rootDir,
+    format
   );
 }
 
@@ -283,59 +283,58 @@ function updatePackageJsonForSwc(
   project: ProjectConfiguration
 ) {
   const mergedTarget = mergeTargetDefaults(tree, project, options.buildTarget);
-  const { main, outputPath } = mergedTarget.options;
-  const mainName = basename(main).replace(/\.[tj]s$/, '');
-  const relativeOutputPath = relative(
-    join(tree.root, project.root),
-    join(tree.root, outputPath)
-  );
-  const outputDir = `./${normalize(relativeOutputPath)}`;
+  const {
+    main,
+    outputPath,
+    swcrc: swcrcPath = join(project.root, '.swcrc'),
+  } = mergedTarget.options;
 
-  const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  const swcrc = readJson(tree, swcrcPath);
+  const format: SupportedFormat[] = swcrc.module?.type?.startsWith('es')
+    ? ['esm']
+    : ['cjs'];
+
   updatePackageJson(
     tree,
-    packageJsonPath,
     options.project,
-    outputDir,
-    mainName,
-    relativeOutputPath
+    project.root,
+    main,
+    outputPath,
+    // we set the `stripLeadingPaths` option, so the rootDir would match the dirname of the entry point
+    dirname(main),
+    format
   );
 }
 
 function updatePackageJson(
   tree: Tree,
-  packageJsonPath: string,
   projectName: string,
-  outputDir: string,
-  mainName: string,
-  relativeOutputPath: string
+  projectRoot: string,
+  main: string,
+  outputPath: string,
+  rootDir: string,
+  format?: SupportedFormat[]
 ) {
-  // TODO(tsc): consider add exports and use module
+  const packageJsonPath = join(projectRoot, 'package.json');
+  let packageJson: PackageJson;
   if (tree.exists(packageJsonPath)) {
-    if (!relativeOutputPath.startsWith('../')) {
-      // the output is contained within the project root, we ensure the main
-      // and types fields are set accordingly
-      updateJson(tree, packageJsonPath, (json) => {
-        json.main = `${outputDir}/${mainName}.js`;
-        json.types = `${outputDir}/${mainName}.d.ts`;
-        return json;
-      });
-    }
+    packageJson = readJson(tree, packageJsonPath);
   } else {
-    const importPath = getImportPath(tree, projectName);
-    const packageJson: PackageJson = {
-      name: importPath,
+    packageJson = {
+      name: getImportPath(tree, projectName),
       version: '0.0.1',
     };
-    if (!relativeOutputPath.startsWith('../')) {
-      // the output is contained within the project root, we ensure the main
-      // and types fields are set accordingly
-      packageJson.main = `${outputDir}/${mainName}.js`;
-      packageJson.types = `${outputDir}/${mainName}.d.ts`;
-    }
-
-    writeJson(tree, packageJsonPath, packageJson);
   }
+  packageJson = getUpdatedPackageJsonContent(packageJson, {
+    main,
+    outputPath,
+    projectRoot,
+    generateExportsField: true,
+    packageJsonPath,
+    rootDir,
+    format,
+  });
+  writeJson(tree, packageJsonPath, packageJson);
 }
 
 function mergeTargetDefaults(

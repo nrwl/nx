@@ -35,5 +35,5 @@ export interface NormalizedEsBuildExecutorOptions
   assets: (AssetGlob | string)[];
   singleEntry: boolean;
   external: string[];
-  userDefinedBuildOptions: esbuild.BuildOptions;
+  userDefinedBuildOptions: esbuild.BuildOptions | undefined;
 }

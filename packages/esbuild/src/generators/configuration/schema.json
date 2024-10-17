@@ -60,6 +60,15 @@
       "description": "The build target to add.",
       "type": "string",
       "default": "build"
+    },
+    "format": {
+      "description": "The format to build the library (esm or cjs).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["esm", "cjs"]
+      },
+      "default": ["esm"]
     }
   },
   "required": [],

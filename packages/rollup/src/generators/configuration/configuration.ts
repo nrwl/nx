@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -12,11 +13,11 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { readTsConfig } from '@nx/js';
+import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import * as posix from 'node:path/posix';
+import { dirname, join, relative } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
@@ -78,7 +79,7 @@ function createRollupConfig(
 ): OutputConfig {
   const project = readProjectConfiguration(tree, options.project);
   const main = options.main
-    ? `./${posix.relative(project.root, options.main)}`
+    ? `./${relative(project.root, options.main)}`
     : './src/index.ts';
   const outputPath = isTsSolutionSetup
     ? './dist'
@@ -93,7 +94,7 @@ function createRollupConfig(
     compiler: options.compiler ?? 'babel',
     main,
     tsConfig: options.tsConfig
-      ? `./${posix.relative(project.root, options.tsConfig)}`
+      ? `./${relative(project.root, options.tsConfig)}`
       : './tsconfig.lib.json',
   };
 
@@ -145,56 +146,64 @@ function updatePackageJson(
   outputConfig: OutputConfig | undefined,
   isTsSolutionSetup: boolean
 ) {
-  // TODO(rollup): consider add exports and use module
   const project = readProjectConfiguration(tree, options.project);
 
-  let main: string;
-  let outputPath: string;
-  if (outputConfig) {
-    ({ main, outputPath } = outputConfig);
-  } else {
-    // target must exist if we don't receive an outputConfig
-    const projectTarget = project.targets[options.buildTarget];
-    const nxJson = readNxJson(tree);
-    const mergedTarget = mergeTargetConfigurations(
-      projectTarget,
-      (projectTarget.executor
-        ? nxJson.targetDefaults?.[projectTarget.executor]
-        : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
-    );
-    ({ main, outputPath } = mergedTarget.options);
-  }
-
-  const mainName = posix.basename(main).replace(/\.[tj]s$/, '');
-  const relativeOutputPath = posix.relative(
-    posix.join(tree.root, project.root),
-    posix.join(tree.root, outputPath)
-  );
-  const outputDir = `./${posix.normalize(relativeOutputPath)}`;
-  const formats = options.format ?? ['esm'];
-
-  const packageJsonPath = joinPathFragments(project.root, 'package.json');
-  if (tree.exists(packageJsonPath) && isTsSolutionSetup) {
-    if (!relativeOutputPath.startsWith('../')) {
-      updateJson(tree, packageJsonPath, (json) => {
-        // the output is contained within the project root
-        updatePackageJsonFields(json, outputDir, mainName, formats);
-        return json;
-      });
+  const packageJsonPath = join(project.root, 'package.json');
+  let packageJson: PackageJson;
+  if (tree.exists(packageJsonPath)) {
+    if (!isTsSolutionSetup) {
+      return;
     }
-  } else if (!tree.exists(packageJsonPath)) {
-    const importPath =
-      options.importPath || getImportPath(tree, options.project);
-    const packageJson: PackageJson = {
-      name: importPath,
+
+    packageJson = readJson(tree, packageJsonPath);
+  } else {
+    packageJson = {
+      name: options.importPath || getImportPath(tree, options.project),
       version: '0.0.1',
     };
-    if (isTsSolutionSetup && !relativeOutputPath.startsWith('../')) {
-      // fully matches the new setup
-      updatePackageJsonFields(packageJson, outputDir, mainName, formats);
-    }
-    writeJson(tree, packageJsonPath, packageJson);
   }
+
+  if (isTsSolutionSetup) {
+    let main: string;
+    let outputPath: string;
+    if (outputConfig) {
+      ({ main, outputPath } = outputConfig);
+    } else {
+      // target must exist if we don't receive an outputConfig
+      const projectTarget = project.targets[options.buildTarget];
+      const nxJson = readNxJson(tree);
+      const mergedTarget = mergeTargetConfigurations(
+        projectTarget,
+        (projectTarget.executor
+          ? nxJson.targetDefaults?.[projectTarget.executor]
+          : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+      );
+      ({ main, outputPath } = mergedTarget.options);
+    }
+
+    packageJson = getUpdatedPackageJsonContent(packageJson, {
+      main,
+      outputPath,
+      projectRoot: project.root,
+      rootDir: dirname(main),
+      generateExportsField: true,
+      packageJsonPath,
+      format: options.format ?? ['esm'],
+      outputFileExtensionForCjs: '.cjs.js',
+      outputFileExtensionForEsm: '.esm.js',
+    });
+
+    // rollup has a specific declaration file generation not handled by the util above,
+    // adjust accordingly
+    const typingsFile = (packageJson.module ?? packageJson.main).replace(
+      /\.js$/,
+      '.d.ts'
+    );
+    packageJson.types = typingsFile;
+    packageJson.exports['.'].types = typingsFile;
+  }
+
+  writeJson(tree, packageJsonPath, packageJson);
 }
 
 function addBuildTarget(
@@ -233,7 +242,7 @@ function addBuildTarget(
     compiler: options.compiler ?? 'babel',
     project: `${project.root}/package.json`,
     external: options.external,
-    format: options.format,
+    format: options.format ?? isTsSolutionSetup ? ['esm'] : undefined,
   };
 
   if (options.rollupConfig) {
