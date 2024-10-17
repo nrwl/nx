@@ -323,7 +323,7 @@ async function getCommitForVersionPlanFile(
     exec(
       `git log --diff-filter=A --pretty=format:"%s|%h|%an|%ae|%b" -n 1 -- ${rawVersionPlan.absolutePath}`,
       {
-        windowsHide: true,
+        windowsHide: false,
       },
       (error, stdout, stderr) => {
         if (error) {

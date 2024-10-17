@@ -95,7 +95,7 @@ export async function initHandler(options: InitArgs) {
     } else {
       execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
         stdio: [0, 1, 2],
-        windowsHide: true,
+        windowsHide: false,
       });
     }
   }

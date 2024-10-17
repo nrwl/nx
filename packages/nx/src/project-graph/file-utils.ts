@@ -125,7 +125,7 @@ function defaultReadFileAtRevision(
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
           stdio: ['pipe', 'pipe', 'ignore'],
-          windowsHide: true,
+          windowsHide: false,
         })
           .toString()
           .trim();

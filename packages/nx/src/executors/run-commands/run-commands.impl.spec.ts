@@ -572,7 +572,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
-        windowsHide: true,
+        windowsHide: false,
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
@@ -580,7 +580,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -603,7 +603,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
-        windowsHide: true,
+        windowsHide: false,
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
@@ -611,7 +611,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -631,12 +631,12 @@ describe('Run Commands', () => {
       expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
-        windowsHide: true,
+        windowsHide: false,
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
-        windowsHide: true,
+        windowsHide: false,
       });
     });
   });

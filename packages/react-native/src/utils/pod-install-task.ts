@@ -72,7 +72,7 @@ export function podInstall(
       execSync('touch .xcode.env', {
         cwd: iosDirectory,
         stdio: 'inherit',
-        windowsHide: true,
+        windowsHide: false,
       });
     }
     const podCommand = [
@@ -83,7 +83,7 @@ export function podInstall(
     execSync(podCommand, {
       cwd: iosDirectory,
       stdio: 'inherit',
-      windowsHide: true,
+      windowsHide: false,
     });
   } catch (e) {
     logger.error(podInstallErrorMessage);
