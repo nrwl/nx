@@ -2,27 +2,34 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
+import {
+  getUpdatedPackageJsonContent,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'node:path/posix';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addBuildTarget,
-  addServeTarget,
   addPreviewTarget,
+  addServeTarget,
   createOrEditViteConfig,
   TargetFlags,
 } from '../../utils/generator-utils';
-
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
-import { ViteConfigurationGeneratorSchema } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { convertNonVite } from './lib/convert-non-vite';
+import { ViteConfigurationGeneratorSchema } from './schema';
 
 export function viteConfigurationGenerator(
   host: Tree,
@@ -168,6 +175,10 @@ export async function viteConfigurationGeneratorInternal(
     tasks.push(vitestTask);
   }
 
+  if (isUsingTsSolutionSetup(tree)) {
+    updatePackageJson(tree, schema);
+  }
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
@@ -176,3 +187,44 @@ export async function viteConfigurationGeneratorInternal(
 }
 
 export default viteConfigurationGenerator;
+
+function updatePackageJson(
+  tree: Tree,
+  options: ViteConfigurationGeneratorSchema
+) {
+  const project = readProjectConfiguration(tree, options.project);
+
+  const packageJsonPath = join(project.root, 'package.json');
+  let packageJson: PackageJson;
+  if (tree.exists(packageJsonPath)) {
+    packageJson = readJson(tree, packageJsonPath);
+  } else {
+    packageJson = {
+      name: getImportPath(tree, options.project),
+      version: '0.0.1',
+    };
+  }
+
+  // we always write/override the vite and project config with some set values,
+  // so we can rely on them
+  const main = join(project.root, 'src/index.ts');
+  // we configure the dts plugin with the entryRoot set to `src`
+  const rootDir = join(project.root, 'src');
+  const outputPath = joinPathFragments(project.root, 'dist');
+
+  packageJson = getUpdatedPackageJsonContent(packageJson, {
+    main,
+    outputPath,
+    projectRoot: project.root,
+    rootDir,
+    generateExportsField: true,
+    packageJsonPath,
+    format: ['esm', 'cjs'],
+    // when building both formats, we don't set the package.json "type" field, so
+    // we need to set the esm extension to ".mjs" to match vite output
+    // see the "File Extensions" callout in https://vite.dev/guide/build.html#library-mode
+    outputFileExtensionForEsm: '.mjs',
+  });
+
+  writeJson(tree, packageJsonPath, packageJson);
+}

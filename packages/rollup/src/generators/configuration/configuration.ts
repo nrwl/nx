@@ -309,22 +309,4 @@ function updateTsConfig(tree: Tree, options: RollupProjectSchema): void {
   });
 }
 
-function updatePackageJsonFields(
-  packageJson: PackageJson,
-  outputDir: string,
-  mainName: string,
-  formats: RollupProjectSchema['format']
-) {
-  if (formats.includes('cjs')) {
-    packageJson.main = `${outputDir}/${mainName}.cjs.js`;
-    packageJson.types = `${outputDir}/${mainName}.cjs.d.ts`;
-  } else if (formats.includes('esm')) {
-    packageJson.main = `${outputDir}/${mainName}.esm.js`;
-    packageJson.types = `${outputDir}/${mainName}.esm.d.ts`;
-  }
-  if (formats.includes('esm')) {
-    packageJson.module = `${outputDir}/${mainName}.esm.js`;
-  }
-}
-
 export default configurationGenerator;
