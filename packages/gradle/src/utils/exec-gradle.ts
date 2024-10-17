@@ -27,7 +27,7 @@ export function execGradleAsync(
     const cp = execFile(gradleBinaryPath, args, {
       cwd: dirname(gradleBinaryPath),
       shell: true,
-      windowsHide: false,
+      windowsHide: true,
       env: process.env,
       ...execOptions,
     });
