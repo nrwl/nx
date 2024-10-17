@@ -81,9 +81,9 @@ export default tseslint.config(
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
-/**
- * With the new ESLint “flat config” format, you can control what things override what yourself. 
- * One way of solving the above conflict is to reorder the config objects so that eslint-config-prettier is last:
- */
-  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
+  /**
+   * With the new ESLint “flat config” format, you can control what things override what yourself.
+   * One way of solving the above conflict is to reorder the config objects so that eslint-config-prettier is last:
+   */
+  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );
