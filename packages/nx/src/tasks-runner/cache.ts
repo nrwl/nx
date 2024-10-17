@@ -234,7 +234,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
-          windowsHide: true,
+          windowsHide: false,
         });
         p.unref();
       } catch (e) {

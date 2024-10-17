@@ -166,7 +166,7 @@ function getBrowsersInstallTask() {
     const pmc = getPackageManagerCommand();
     execSync(`${pmc.exec} playwright install`, {
       cwd: workspaceRoot,
-      windowsHide: true,
+      windowsHide: false,
     });
   };
 }

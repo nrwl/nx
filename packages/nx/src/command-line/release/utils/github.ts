@@ -367,7 +367,7 @@ async function resolveGithubToken(hostname: string): Promise<string | null> {
         return execSync(`gh auth token`, {
           encoding: 'utf8',
           stdio: 'pipe',
-          windowsHide: true,
+          windowsHide: false,
         }).trim();
       }
     }
