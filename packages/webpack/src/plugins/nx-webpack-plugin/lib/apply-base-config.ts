@@ -88,7 +88,9 @@ function applyNxIndependentConfig(
   config.devtool =
     options.sourceMap === 'hidden'
       ? 'hidden-source-map'
-      : options.sourceMap
+      : typeof options.sourceMap === 'string'
+      ? options.sourceMap
+      : options.sourceMap === true
       ? 'source-map'
       : false;
 
