@@ -11,7 +11,8 @@ export function getDbConnection(
   } = {}
 ) {
   opts.directory ??= workspaceDataDirectory;
-  const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
+  opts.dbName ??= 'default';
+  const key = `${opts.directory}:${opts.dbName}`;
   const connection = getEntryOrSet(dbConnectionMap, key, () =>
     connectToNxDb(opts.directory, NX_VERSION, opts.dbName)
   );
