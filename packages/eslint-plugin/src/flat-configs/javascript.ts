@@ -22,7 +22,6 @@ const isPrettierAvailable =
  * breaking changes - we should also look to replace all the @typescript-eslint
  * related plugins and rules below.
  */
-
 export default tseslint.config(
   {
     files: ['**/*.js', '**/*.jsx'],
