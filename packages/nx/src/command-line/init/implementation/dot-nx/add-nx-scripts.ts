@@ -68,7 +68,7 @@ export function generateDotNxSetup(version?: string) {
 export function normalizeVersionForNxJson(pkg: string, version: string) {
   if (!valid(version)) {
     version = execSync(`npm view ${pkg}@${version} version`, {
-      windowsHide: true,
+      windowsHide: false,
     }).toString();
   }
   return version.trimEnd();

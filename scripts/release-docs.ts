@@ -9,7 +9,7 @@ console.log(`Comparing ${currentVersion} to npm versions`);
 const majorVersion = major(currentVersion);
 const releasedVersions: string[] = JSON.parse(
   execSync(`npm show nx@^${majorVersion} version --json`, {
-    windowsHide: true,
+    windowsHide: false,
   }).toString()
 );
 
@@ -26,10 +26,10 @@ if (currentVersion && latestVersion && gte(currentVersion, latestVersion)) {
   );
   // We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
   execSync(`git branch -f ${branchName}`, {
-    windowsHide: true,
+    windowsHide: false,
   });
   execSync(`git push -f origin ${branchName}`, {
-    windowsHide: true,
+    windowsHide: false,
   });
 } else {
   console.log(`Not publishing docs to ${branchName}`);

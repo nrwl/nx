@@ -9,7 +9,7 @@ export function generateDaemonHelpOutput(): string {
    */
   const res = spawnSync(process.execPath, ['./exec-is-server-available.js'], {
     cwd: __dirname,
-    windowsHide: true,
+    windowsHide: false,
   });
 
   const isServerAvailable = res?.stdout?.toString().trim().indexOf('true') > -1;

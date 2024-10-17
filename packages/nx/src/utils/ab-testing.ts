@@ -110,7 +110,7 @@ function shouldRecordStats(): boolean {
   try {
     const stdout = execSync(pmc.getRegistryUrl, {
       encoding: 'utf-8',
-      windowsHide: true,
+      windowsHide: false,
     });
     const url = new URL(stdout.trim());
 

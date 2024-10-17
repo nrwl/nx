@@ -46,7 +46,7 @@ async function installPackage(
       exec(
         `${pmc.addDev} ${pkgName}@${version}`,
         {
-          windowsHide: true,
+          windowsHide: false,
         },
         (error, stdout) => {
           if (error) {

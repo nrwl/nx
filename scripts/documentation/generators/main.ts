@@ -44,7 +44,7 @@ async function generate() {
 
 function checkDocumentation() {
   const output = execSync('git status --porcelain ./docs', {
-    windowsHide: true,
+    windowsHide: false,
   }).toString('utf-8');
 
   if (output) {
@@ -59,7 +59,7 @@ function checkDocumentation() {
     console.log('\nChanged Docs:');
     execSync('git status --porcelain ./docs', {
       stdio: 'inherit',
-      windowsHide: true,
+      windowsHide: false,
     });
 
     process.exit(1);

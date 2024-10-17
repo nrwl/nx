@@ -1387,7 +1387,7 @@ function runInstall() {
   output.log({
     title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, { stdio: [0, 1, 2], windowsHide: true });
+  execSync(pmCommands.install, { stdio: [0, 1, 2], windowsHide: false });
 }
 
 export async function executeMigrations(
