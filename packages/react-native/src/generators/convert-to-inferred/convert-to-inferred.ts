@@ -1,10 +1,10 @@
 import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
-  migrateProjectExecutorsToPluginV1,
+  migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodes } from '../../../plugins/plugin';
+import { createNodesV2 } from '../../../plugins/plugin';
 import { postTargetTransformer } from './lib/post-target-transformer';
 import { processStartOptions } from './lib/process-start-options';
 import { createProcessOptions } from './lib/create-process-options';
@@ -17,11 +17,11 @@ interface Schema {
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
-  const migratedProjects = await migrateProjectExecutorsToPluginV1(
+  const migratedProjects = await migrateProjectExecutorsToPlugin(
     tree,
     projectGraph,
     '@nx/react-native/plugin',
-    createNodes,
+    createNodesV2,
     {
       buildAndroidTargetName: 'build-android',
       buildIosTargetName: 'build-ios',

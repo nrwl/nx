@@ -1,5 +1,5 @@
 export {
   createNodes,
-  createDependencies,
+  createNodesV2,
   ExpoPluginOptions,
 } from './plugins/plugin';
