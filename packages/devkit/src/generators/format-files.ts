@@ -10,18 +10,20 @@ import { sortObjectByKeys } from 'nx/src/devkit-internals';
  */
 export async function formatFiles(
   tree: Tree,
-  /**
-   * TODO(v21): Stop sorting tsconfig paths by default, paths are now less common/important
-   * in Nx workspace setups, and the sorting causes comments to be lost.
-   */
-  sortRootTsConfigPaths = true
+  options = {
+    /**
+     * TODO(v21): Stop sorting tsconfig paths by default, paths are now less common/important
+     * in Nx workspace setups, and the sorting causes comments to be lost.
+     */
+    sortRootTsConfigPaths: true,
+  }
 ): Promise<void> {
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
   } catch {}
 
-  if (sortRootTsConfigPaths) {
+  if (options.sortRootTsConfigPaths) {
     sortTsConfig(tree);
   }
 
