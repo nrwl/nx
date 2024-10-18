@@ -1,5 +1,4 @@
 import * as chalk from 'chalk';
-import * as stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
@@ -229,6 +228,8 @@ function generateOptionsOutput(schema: Schema): string {
       `--${optionName}` +
       (optionConfig.alias ? `, -${optionConfig.alias}` : '');
 
+    const { default: stringWidth } =
+      require('string-width') as typeof import('string-width');
     const renderedFlagAndAliasTrueWidth = stringWidth(renderedFlagAndAlias);
     if (
       renderedFlagAndAliasTrueWidth > requiredSpaceToRenderAllFlagsAndAliases
