@@ -1,5 +1,9 @@
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { createCommitMessageValues, createGitTagValues } from './shared';
+import {
+  createCommitMessageValues,
+  createGitTagValues,
+  getWorkspaceGitRootOffset,
+} from './shared';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -277,5 +281,49 @@ describe('shared', () => {
       );
       return { releaseGroup, releaseGroupToFilteredProjects };
     }
+  });
+
+  describe('getWorkspaceGitRootOffset', () => {
+    it('should return undefined when gitRoot and workspaceRoot are the same', () => {
+      const gitRoot = '/home/test/project';
+      const workspaceRoot = '/home/test/project';
+      const result = getWorkspaceGitRootOffset(gitRoot, workspaceRoot, '/');
+      expect(result).toBeUndefined();
+    });
+
+    it('should return the correct offset when workspaceRoot has a subdirectory', () => {
+      const gitRoot = '/home/test/project';
+      const workspaceRoot = '/home/test/project/workspace';
+      const result = getWorkspaceGitRootOffset(gitRoot, workspaceRoot, '/');
+      expect(result).toBe('workspace/');
+    });
+
+    it('should return undefined when gitRoot and workspaceRoot are the same in a Windows path', () => {
+      const gitRoot = 'C:\\home\\test\\project';
+      const workspaceRoot = 'C:\\home\\test\\project';
+      const result = getWorkspaceGitRootOffset(gitRoot, workspaceRoot, '\\');
+      expect(result).toBeUndefined();
+    });
+
+    it('should return the correct offset when workspaceRoot has a subdirectory in a Windows path', () => {
+      const gitRoot = 'C:\\home\\test\\project';
+      const workspaceRoot = 'C:\\home\\test\\project\\workspace';
+      const result = getWorkspaceGitRootOffset(gitRoot, workspaceRoot, '\\');
+      expect(result).toBe('workspace\\');
+    });
+
+    it('should handle complex subdirectory structures correctly', () => {
+      const gitRoot = '/home/test/project';
+      const workspaceRoot = '/home/test/project/workspace/subdir';
+      const result = getWorkspaceGitRootOffset(gitRoot, workspaceRoot, '/');
+      expect(result).toBe('workspace/subdir/');
+    });
+
+    it('should handle complex subdirectory structures in Windows paths correctly', () => {
+      const gitRoot = 'C:\\home\\test\\project';
+      const workspaceRoot = 'C:\\home\\test\\project\\workspace\\subdir';
+      const result = getWorkspaceGitRootOffset(gitRoot, workspaceRoot, '\\');
+      expect(result).toBe('workspace\\subdir\\');
+    });
   });
 });
