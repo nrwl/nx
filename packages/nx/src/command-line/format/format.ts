@@ -60,7 +60,7 @@ export async function format(
 
   switch (command) {
     case 'write':
-      if (nxArgs.sortRootTsConfigPaths) {
+      if (nxArgs.sortRootTsconfigPaths) {
         sortTsConfig();
       }
       addRootConfigFiles(chunkList, nxArgs);

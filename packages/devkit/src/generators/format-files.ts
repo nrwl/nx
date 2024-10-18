@@ -15,7 +15,7 @@ export async function formatFiles(
      * TODO(v21): Stop sorting tsconfig paths by default, paths are now less common/important
      * in Nx workspace setups, and the sorting causes comments to be lost.
      */
-    sortRootTsConfigPaths: true,
+    sortRootTsconfigPaths: true,
   }
 ): Promise<void> {
   let prettier: typeof Prettier;
@@ -23,7 +23,7 @@ export async function formatFiles(
     prettier = await import('prettier');
   } catch {}
 
-  if (options.sortRootTsConfigPaths) {
+  if (options.sortRootTsconfigPaths) {
     sortTsConfig(tree);
   }
 
