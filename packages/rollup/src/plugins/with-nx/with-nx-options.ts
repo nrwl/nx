@@ -76,6 +76,12 @@ export interface RollupWithNxPluginOptions {
    * The path to tsconfig file.
    */
   tsConfig: string;
+  /**
+   * Whether to generate a package.json file in the output path. It's not supported when the workspace is
+   * set up with TypeScript Project References along with the package managers' Workspaces feature. Otherwise,
+   * it defaults to `true`.
+   */
+  generatePackageJson?: boolean;
 }
 
 export interface AssetGlobPattern {

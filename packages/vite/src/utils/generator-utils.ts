@@ -118,11 +118,15 @@ export function addBuildTarget(
 ) {
   addBuildTargetDefaults(tree, '@nx/vite:build');
   const project = readProjectConfiguration(tree, options.project);
+
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const buildOptions: ViteBuildExecutorOptions = {
-    outputPath: joinPathFragments(
-      'dist',
-      project.root != '.' ? project.root : options.project
-    ),
+    outputPath: isTsSolutionSetup
+      ? joinPathFragments(project.root, 'dist')
+      : joinPathFragments(
+          'dist',
+          project.root != '.' ? project.root : options.project
+        ),
   };
   project.targets ??= {};
   project.targets[target] = {
@@ -405,7 +409,8 @@ export function createOrEditViteConfig(
     },
   },`;
 
-  const imports: string[] = options.imports ? options.imports : [];
+  const imports: string[] = options.imports ? [...options.imports] : [];
+  const plugins: string[] = options.plugins ? [...options.plugins] : [];
 
   if (!onlyVitest && options.includeLib) {
     imports.push(
@@ -414,11 +419,13 @@ export function createOrEditViteConfig(
     );
   }
 
-  let viteConfigContent = '';
-
-  const plugins = options.plugins
-    ? [...options.plugins, `nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`]
-    : [`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`];
+  if (!isUsingTsPlugin) {
+    imports.push(
+      `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
+      `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
+    );
+    plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
+  }
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
@@ -507,11 +514,9 @@ export function createOrEditViteConfig(
     return;
   }
 
-  viteConfigContent = `/// <reference types='vitest' />
+  const viteConfigContent = `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
