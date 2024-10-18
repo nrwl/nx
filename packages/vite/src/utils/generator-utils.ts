@@ -232,7 +232,15 @@ export function editTsConfig(
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  const config = readJson(tree, `${projectConfig.root}/tsconfig.json`);
+  let tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  if (isTsSolutionSetup) {
+    tsconfigPath = [
+      joinPathFragments(projectConfig.root, 'tsconfig.app.json'),
+      joinPathFragments(projectConfig.root, 'tsconfig.lib.json'),
+    ].find((p) => tree.exists(p));
+  }
+  const config = readJson(tree, tsconfigPath);
 
   switch (options.uiFramework) {
     case 'react':
@@ -245,21 +253,23 @@ export function editTsConfig(
       };
       break;
     case 'none':
-      config.compilerOptions = {
-        module: 'commonjs',
-        forceConsistentCasingInFileNames: true,
-        strict: true,
-        noImplicitOverride: true,
-        noPropertyAccessFromIndexSignature: true,
-        noImplicitReturns: true,
-        noFallthroughCasesInSwitch: true,
-      };
+      if (!isTsSolutionSetup) {
+        config.compilerOptions = {
+          module: 'commonjs',
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitOverride: true,
+          noPropertyAccessFromIndexSignature: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+        };
+      }
       break;
     default:
       break;
   }
 
-  writeJson(tree, `${projectConfig.root}/tsconfig.json`, config);
+  writeJson(tree, tsconfigPath, config);
 }
 
 export function deleteWebpackConfig(

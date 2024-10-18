@@ -110,20 +110,10 @@ export async function viteConfigurationGeneratorInternal(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.lib.json'),
       (json) => {
-        if (!json.compilerOptions) {
-          json.compilerOptions = {};
-        }
-        if (!json.compilerOptions.types) {
-          json.compilerOptions.types = [];
-        }
+        json.compilerOptions ??= {};
+        json.compilerOptions.types ??= [];
         if (!json.compilerOptions.types.includes('vite/client')) {
-          return {
-            ...json,
-            compilerOptions: {
-              ...json.compilerOptions,
-              types: [...json.compilerOptions.types, 'vite/client'],
-            },
-          };
+          json.compilerOptions.types.push('vite/client');
         }
         return json;
       }
