@@ -1,11 +1,11 @@
 import { CreateNodesContext } from '@nx/devkit';
 import type { NextConfig } from 'next';
 
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/next/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
 
   describe('root projects', () => {
@@ -30,7 +30,7 @@ describe('@nx/next/plugin', () => {
       const nextConfigPath = 'next.config.js';
       mockNextConfig(nextConfigPath, {});
       const nodes = await createNodesFunction(
-        nextConfigPath,
+        [nextConfigPath],
         {
           buildTargetName: 'build',
           devTargetName: 'dev',
@@ -71,7 +71,7 @@ describe('@nx/next/plugin', () => {
     it('should create nodes', async () => {
       mockNextConfig('my-app/next.config.js', {});
       const nodes = await createNodesFunction(
-        'my-app/next.config.js',
+        ['my-app/next.config.js'],
         {
           buildTargetName: 'my-build',
           devTargetName: 'my-serve',
