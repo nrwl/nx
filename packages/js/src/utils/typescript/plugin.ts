@@ -3,19 +3,14 @@ import type {
   NxJsonConfiguration,
 } from '@nx/devkit';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import type { TscPluginOptions } from '../../../plugins/typescript/plugin';
+import type { TscPluginOptions } from '../../plugins/typescript/plugin';
 
 export function ensureProjectIsIncludedInPluginRegistrations(
   nxJson: NxJsonConfiguration,
-  projectRoot: string
+  projectRoot: string,
+  buildTargetName: string = 'build'
 ): void {
-  if (
-    !nxJson.plugins?.length ||
-    !nxJson.plugins.some(isTypeScriptPluginRegistration)
-  ) {
-    return;
-  }
-
+  nxJson.plugins ??= [];
   let isIncluded = false;
   let index = 0;
   for (const registration of nxJson.plugins) {
@@ -41,8 +36,11 @@ export function ensureProjectIsIncludedInPluginRegistrations(
       );
       if (matchingConfigFiles.length) {
         // it's included by the plugin registration, check if the user-specified options would result
-        // in a `build` task being inferred, if not, we need to exclude it
-        if (registration.options?.typecheck && registration.options?.build) {
+        // in the appropriate build task being inferred, if not, we need to exclude it
+        if (
+          registration.options?.typecheck &&
+          matchesBuildTarget(registration.options?.build, buildTargetName)
+        ) {
           // it has the desired options, do nothing
           isIncluded = true;
         } else {
@@ -51,33 +49,40 @@ export function ensureProjectIsIncludedInPluginRegistrations(
           registration.exclude.push(`${projectRoot}/*`);
         }
       } else if (
+        !isIncluded &&
         registration.options?.typecheck &&
-        registration.options?.build &&
-        !registration.exclude?.length
+        matchesBuildTarget(registration.options?.build, buildTargetName)
       ) {
-        // negative pattern are not supported by the `exclude` option so we
-        // can't update it to not exclude the project, so we only update the
-        // plugin registration if there's no `exclude` option, in which case
-        // the plugin registration should have an `include` options that doesn't
-        // include the project
-        isIncluded = true;
-        registration.include ??= [];
-        registration.include.push(`${projectRoot}/*`);
+        if (!registration.exclude?.length) {
+          // negative pattern are not supported by the `exclude` option so we
+          // can't update it to not exclude the project, so we only update the
+          // plugin registration if there's no `exclude` option, in which case
+          // the plugin registration should have an `include` options that doesn't
+          // include the project
+          isIncluded = true;
+          registration.include ??= [];
+          registration.include.push(`${projectRoot}/*`);
+        } else if (registration.exclude?.includes(`${projectRoot}/*`)) {
+          isIncluded = true;
+          registration.exclude = registration.exclude.filter(
+            (e) => e !== `${projectRoot}/*`
+          );
+        }
       }
     }
     index++;
   }
 
   if (!isIncluded) {
-    // the project is not included by any plugin registration with an inferred `build` task,
-    // so we create a new plugin registration for it
+    // the project is not included by any plugin registration with an inferred build task
+    // with the given name, so we create a new plugin registration for it
     nxJson.plugins.push({
       plugin: '@nx/js/typescript',
       include: [`${projectRoot}/*`],
       options: {
         typecheck: { targetName: 'typecheck' },
         build: {
-          targetName: 'build',
+          targetName: buildTargetName,
           configName: 'tsconfig.lib.json',
         },
       },
@@ -137,5 +142,23 @@ function isTypeScriptPluginRegistration(
   return (
     (typeof plugin === 'string' && plugin === '@nx/js/typescript') ||
     (typeof plugin !== 'string' && plugin.plugin === '@nx/js/typescript')
+  );
+}
+
+function matchesBuildTarget(
+  buildOptions: TscPluginOptions['build'],
+  buildTargetName: string
+): boolean {
+  if (buildOptions === undefined || buildOptions === false) {
+    return false;
+  }
+
+  if (buildOptions === true && buildTargetName === 'build') {
+    return true;
+  }
+
+  return (
+    typeof buildOptions === 'object' &&
+    buildOptions.targetName === buildTargetName
   );
 }
