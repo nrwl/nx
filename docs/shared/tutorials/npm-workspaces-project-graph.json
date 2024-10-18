@@ -2,21 +2,21 @@
   "hash": "b403577d293fcd1162049fb6cd70752277d68eecc34268aa57452ce597b7352e",
   "projects": [
     {
-      "name": "@tuskdesign/buttons",
+      "name": "@tuskdesign/animals",
       "type": "lib",
       "data": {
         "tags": []
       }
     },
     {
-      "name": "@tuskdesign/forms",
+      "name": "@tuskdesign/names",
       "type": "lib",
       "data": {
         "tags": []
       }
     },
     {
-      "name": "@tuskdesign/demo",
+      "name": "@tuskdesign/zoo",
       "type": "lib",
       "data": {
         "tags": []
@@ -24,23 +24,23 @@
     }
   ],
   "dependencies": {
-    "@tuskdesign/buttons": [],
-    "@tuskdesign/forms": [
+    "@tuskdesign/animals": [],
+    "@tuskdesign/names": [
       {
-        "source": "@tuskdesign/forms",
-        "target": "@tuskdesign/buttons",
+        "source": "@tuskdesign/names",
+        "target": "@tuskdesign/animals",
         "type": "static"
       }
     ],
-    "@tuskdesign/demo": [
+    "@tuskdesign/zoo": [
       {
-        "source": "@tuskdesign/demo",
-        "target": "@tuskdesign/buttons",
+        "source": "@tuskdesign/zoo",
+        "target": "@tuskdesign/animals",
         "type": "static"
       },
       {
-        "source": "@tuskdesign/demo",
-        "target": "@tuskdesign/forms",
+        "source": "@tuskdesign/zoo",
+        "target": "@tuskdesign/names",
         "type": "static"
       }
     ]
