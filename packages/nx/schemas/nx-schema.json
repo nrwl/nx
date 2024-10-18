@@ -58,6 +58,8 @@
           "description": "Default folder name for apps."
         }
       },
+      "deprecated": true,
+      "deprecationMessage": "Workspace Layout will be removed in Nx v20. Pass the full `--directory` option to the generators instead.",
       "additionalProperties": false
     },
     "cli": {

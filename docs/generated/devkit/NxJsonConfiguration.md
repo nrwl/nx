@@ -303,6 +303,10 @@ Use the legacy file system cache instead of the db cache
 
 Where new apps + libs should be placed
 
+**`Deprecated`**
+
+Workspace Layout will be removed in Nx v20. Pass the full `--directory` option to the generators instead.
+
 #### Type declaration
 
 | Name       | Type     |
