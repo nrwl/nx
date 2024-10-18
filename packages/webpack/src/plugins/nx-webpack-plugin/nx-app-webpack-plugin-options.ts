@@ -180,9 +180,10 @@ export interface NxAppWebpackPluginOptions {
    */
   skipTypeChecking?: boolean;
   /**
-   * Generate source maps.
+   * Generate source maps. Valid options can be found at https://webpack.js.org/configuration/devtool/#devtool.
+   * Default to `false`.
    */
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string | 'hidden';
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */

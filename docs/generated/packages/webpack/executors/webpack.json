@@ -74,7 +74,7 @@
         "description": "Use a separate bundle containing the runtime."
       },
       "sourceMap": {
-        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment. All valid values for devTool option are also accepted.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
       },
       "progress": {
