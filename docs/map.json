@@ -1854,6 +1854,11 @@
               "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
+                  "name": "Single Tenant Nx Cloud Hosting",
+                  "id": "single-tenant",
+                  "file": "nx-cloud/enterprise/single-tenant"
+                },
+                {
                   "name": "On-Premise",
                   "id": "on-premise",
                   "description": "Manage an on-premise installation of Nx Cloud",

@@ -297,6 +297,7 @@
       - [Enable GitLab MR Integration](/ci/recipes/source-control-integration/gitlab)
       - [Enable Azure DevOps PR Integration](/ci/recipes/source-control-integration/azure-devops)
     - [Enterprise](/ci/recipes/enterprise)
+      - [Single Tenant Nx Cloud Hosting](/ci/recipes/enterprise/single-tenant)
       - [On-Premise](/ci/recipes/enterprise/on-premise)
         - [Set up Nx Cloud On-Premise](/ci/recipes/enterprise/on-premise/on-premise)
         - [Authenticate with a Single Admin](/ci/recipes/enterprise/on-premise/auth-single-admin)

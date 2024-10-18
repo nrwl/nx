@@ -5896,6 +5896,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Single Tenant Nx Cloud Hosting",
+                "path": "/ci/recipes/enterprise/single-tenant",
+                "id": "single-tenant",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "On-Premise",
                 "path": "/ci/recipes/enterprise/on-premise",
                 "id": "on-premise",
@@ -6330,6 +6338,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Single Tenant Nx Cloud Hosting",
+            "path": "/ci/recipes/enterprise/single-tenant",
+            "id": "single-tenant",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "On-Premise",
             "path": "/ci/recipes/enterprise/on-premise",
             "id": "on-premise",
@@ -6476,6 +6492,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Single Tenant Nx Cloud Hosting",
+        "path": "/ci/recipes/enterprise/single-tenant",
+        "id": "single-tenant",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
