@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { ChildProcess, fork, Serializable } from 'child_process';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
@@ -323,9 +323,11 @@ export class ForkedProcessTaskRunner {
 
             p.stdout
               .pipe(
-                logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
+                logClearLineToPrefixTransformer(
+                  pc.bold(color(prefixText)) + ' '
+                )
               )
-              .pipe(addPrefixTransformer(color.bold(prefixText)))
+              .pipe(addPrefixTransformer(pc.bold(color(prefixText))))
               .pipe(process.stdout);
             p.stderr
               .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
@@ -513,16 +515,16 @@ export class ForkedProcessTaskRunner {
 }
 
 const colors = [
-  chalk.green,
-  chalk.greenBright,
-  chalk.red,
-  chalk.redBright,
-  chalk.cyan,
-  chalk.cyanBright,
-  chalk.yellow,
-  chalk.yellowBright,
-  chalk.magenta,
-  chalk.magentaBright,
+  pc.green,
+  pc.greenBright,
+  pc.red,
+  pc.redBright,
+  pc.cyan,
+  pc.cyanBright,
+  pc.yellow,
+  pc.yellowBright,
+  pc.magenta,
+  pc.magentaBright,
 ];
 
 function getColor(projectName: string) {
