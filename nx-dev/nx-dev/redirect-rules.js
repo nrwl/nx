@@ -1144,6 +1144,16 @@ const featurePagesUpdate = {
   '/ci/features/ai-features': '/ci/concepts/ai-features',
 };
 
+const enterpriseNxSection = {
+  '/features/powerpack': '/nx-enterprise/powerpack',
+  '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
+  '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
+  '/features/powerpack/custom-caching':
+    '/nx-enterprise/powerpack/custom-caching',
+  '/recipes/installation/activate-powerpack':
+    '/nx-enterprise/activate-powerpack',
+};
+
 /**
  * Public export API
  */
@@ -1177,4 +1187,5 @@ module.exports = {
   decisionsSection,
   featurePagesUpdate,
   marketing,
+  enterpriseNxSection,
 };

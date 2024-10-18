@@ -18,7 +18,7 @@ In order to use `@nx/powerpack-conformance`, you need to have an active Powerpac
 
 ## Set Up @nx/powerpack-conformance
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
    ```shell
@@ -189,6 +189,7 @@ import { createConformanceRule } from '@nx/powerpack-conformance';
 
 const rule = createConformanceRule({
   name: 'local-conformance-rule-example',
+  description: 'The description of the rule',
   category: 'security', // `consistency`, `maintainability`, `reliability` or `security`
   reporter: 'project-reporter', // `project-reporter` or `project-files-reporter`
   implementation: async (context) => {

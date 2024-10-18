@@ -51,7 +51,7 @@ Are you a startup? If these features make sense for your team but the cost is a 
 
 ## Got Questions?
 
-If you’re curious to learn more about these changes for Nx and how to get started, [check out our docs](/features/powerpack).
+If you’re curious to learn more about these changes for Nx and how to get started, [check out our docs](/nx-enterprise/powerpack).
 
 ## Learn more
 

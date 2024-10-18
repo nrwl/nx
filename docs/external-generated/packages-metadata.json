@@ -14,7 +14,17 @@
         "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
       }
     ],
-    "executors": [],
+    "executors": [
+      {
+        "description": "Compile and bundle an Nx Conformance Rule",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+        "hidden": false,
+        "name": "bundle-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
+        "path": "powerpack-conformance/executors/bundle-rule",
+        "type": "executor"
+      }
+    ],
     "generators": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
