@@ -41,8 +41,7 @@
     "@rspack/plugin-react-refresh": "^1.0.0",
     "chalk": "~4.1.0",
     "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0",
-    "webpack-sources": "^3.2.3"
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "~0.6.0",
