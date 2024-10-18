@@ -6,6 +6,12 @@ tags: [nx, release]
 cover_image: /blog/images/evolving-nx/thumbnail.png
 ---
 
+_Update from Jeff Cross, October 17, 2024_
+
+In my original version of this post, I said that Powerpack is completely new functionality. I mistakenly thought that all custom remote cache solutions were using private/unsupported APIs, but I've since learned that we've had docs and some APIs that helped people build their own remote caches. I'm sorry for the error, and have updated the text to indicate that Powerpack is mostly new functionality. We've also updated the [Powerpack page](/powerpack) to make it more explicit how some teams can get free Powerpack licenses.
+
+---
+
 Over the years, Nx has grown from a small 20% side project of our consulting business into a tool that empowers millions of developers worldwide and helps Fortune 500 companies ship high-quality software faster. In the last two years, we successfully transformed our consulting business into a product company, where our team can fully focus on evolving Nx and building Nx Cloud to extend Nx’s capabilities beyond local development.
 
 This success is in large part thanks to:
@@ -21,7 +27,7 @@ When we have new ideas to make Nx better, we’ve always had two options: it cou
 
 > If you want to get into the technical details, we wrote a separate blog post diving deeper into the technical details: [Introducing Nx Powerpack](/blog/introducing-nx-powerpack).
 
-Everything in Powerpack is new functionality, not previously free features that we’re now putting behind a paywall. However, this change coincides with some Nx improvements that will eventually interfere with users who were relying on our original filesystem-based implementation of local caching. We’ve completely rewritten Nx's local caching to be faster and more secure, partly by using a local database instead of checking the filesystem for artifact metadata. With this rewrite, any custom remote caches that rely on metadata reflected in the filesystem will not work as of Nx 21. This is why we decided to build an API into Powerpack to be able to connect Nx’s cache to different clouds and data sources. Now with Powerpack, teams can use an officially-supported implementation of remote caching, without needing to use Nx Cloud.
+Powerpack is mostly new functionality. However, this change coincides with some Nx improvements that will eventually interfere with users who were relying on our original filesystem-based implementation of local caching. We’ve completely rewritten Nx's local caching to be faster and more secure, partly by using a local database instead of checking the filesystem for artifact metadata. With this rewrite, any custom remote caches that rely on metadata reflected in the filesystem will not work as of Nx 21. This is why we decided to build an API into Powerpack to be able to connect Nx’s cache to different clouds and data sources. Now with Powerpack, teams can use an officially-supported implementation of remote caching, without needing to use Nx Cloud.
 
 There’s a Steve Jobs quote that I think rings true with all of us at Nx:
 
