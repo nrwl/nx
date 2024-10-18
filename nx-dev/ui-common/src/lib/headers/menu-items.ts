@@ -89,7 +89,7 @@ export const featuresItems: MenuItem[] = [
   {
     name: 'Run Conformance Rules',
     description: null,
-    href: '/features/powerpack/conformance',
+    href: '/nx-enterprise/powerpack/conformance',
     icon: CheckBadgeIcon,
     isNew: false,
     isHighlight: false,
@@ -97,7 +97,7 @@ export const featuresItems: MenuItem[] = [
   {
     name: 'Define Project Owners',
     description: null,
-    href: '/features/powerpack/owners',
+    href: '/nx-enterprise/powerpack/owners',
     icon: UserGroupIcon,
     isNew: false,
     isHighlight: false,

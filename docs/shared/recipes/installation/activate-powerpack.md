@@ -2,9 +2,9 @@
 
 Nx Powerpack unlocks features of Nx that are particularly useful for larger organizations. Powerpack is available for Nx version 19.8 and higher. The features include the ability to:
 
-- [Run language-agnostic conformance rules](/features/powerpack/conformance)
-- [Define code ownership at the project level](/features/powerpack/owners)
-- [Change the remote cache storage location](/features/powerpack/custom-caching)
+- [Run language-agnostic conformance rules](/nx-enterprise/powerpack/conformance)
+- [Define code ownership at the project level](/nx-enterprise/powerpack/owners)
+- [Change the remote cache storage location](/nx-enterprise/powerpack/custom-caching)
 
 Activating Powerpack is a two step process.
 
