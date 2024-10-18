@@ -1,4 +1,4 @@
-import { registerTsProject } from '@nx/js/src/internal';
+import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   // Don't transpile non-TS files. This prevents workspaces libs from being registered via tsconfig-paths.
@@ -7,10 +7,9 @@ export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
     return require(path);
   }
 
-  const cleanupTranspiler = registerTsProject(tsConfig);
-  const maybeCustomWebpackConfig = require(path);
-  cleanupTranspiler();
+  tsNodeRegister(path, tsConfig);
 
+  const maybeCustomWebpackConfig = require(path);
   // If the user provides a configuration in TS file
   // then there are 3 cases for exporing an object. The first one is:
   // `module.exports = { ... }`. And the second one is:
