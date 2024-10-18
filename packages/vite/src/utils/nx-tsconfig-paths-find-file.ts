@@ -1,21 +1,18 @@
 import { existsSync } from 'node:fs';
-import { parse, resolve } from 'node:path';
+import { resolve, basename, dirname } from 'node:path';
 
 export function findFile(
-  /**
-   * File path without extension
-   */
   path: string,
   extensions: string[],
   existsSyncImpl: typeof existsSync = existsSync
 ): string {
   for (const ext of extensions) {
-    /**
-     * Support file extensions such as .css and .js in the import path.
-     *
-     *  NOTE: We should concatenate the `path` with `ext` because filenames with dot suffixes, e.g., `filename.suffix`, resolve incorrectly.
-     */
-    const { dir, name } = parse(path + ext);
+    // Support file extensions such as .css and .js in the import path.
+    const [dir, name] = [
+      dirname(path),
+      basename(path.replace(/\?\S*$/, ''), ext),
+    ];
+
     const resolvedPath = resolve(dir, name + ext);
     if (existsSyncImpl(resolvedPath)) {
       return resolvedPath;

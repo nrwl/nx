@@ -1,11 +1,11 @@
 import { findFile as findFileMain } from './nx-tsconfig-paths-find-file';
 
 describe('@nx/vite nx-tsconfig-paths-find-file', () => {
-  const extensions = ['.ts', '.js'];
+  const extensions = ['.ts', '.js', '.mts'];
   const fs = new Set<string>();
   const existsSyncImpl = (path: string) => fs.has(path);
-  const findFile = (path: string): string =>
-    findFileMain(path, extensions, existsSyncImpl);
+  const findFile = (path: string, exts: string[] = extensions): string =>
+    findFileMain(path, exts, existsSyncImpl);
 
   beforeAll(() => {
     [
@@ -17,6 +17,7 @@ describe('@nx/vite nx-tsconfig-paths-find-file', () => {
       '/dir4/file.css',
       '/dir5/file.suffix.ts.js',
       '/dir6/inner.suffix/index.ts',
+      '/file1.mts',
     ].forEach((item) => fs.add(item));
   });
 
@@ -28,6 +29,7 @@ describe('@nx/vite nx-tsconfig-paths-find-file', () => {
     title: string;
     path: string;
     expected: string | undefined;
+    extensions?: string[];
   }> = [
     {
       title: 'Should return undefined for missing file',
@@ -85,11 +87,37 @@ describe('@nx/vite nx-tsconfig-paths-find-file', () => {
       path: '/dir6/inner.suffix',
       expected: '/dir6/inner.suffix/index.ts',
     },
+    {
+      title: 'Should return file for import with extension',
+      path: '/dir1/file.ts',
+      expected: '/dir1/file.ts',
+    },
+    {
+      title: 'Should return file with .js ext instead of .ts',
+      path: '/dir2/inner/index.js',
+      expected: '/dir2/inner/index.js',
+    },
+    {
+      title: 'Should return css file that imported with query',
+      path: '/dir4/file.css?inline',
+      expected: '/dir4/file.css',
+      extensions: ['.js', '.css'],
+    },
+    {
+      title: 'Should return file with .mts',
+      path: '/file1.mts',
+      expected: '/file1.mts',
+    },
+    {
+      title: 'Should return file',
+      path: '/file1',
+      expected: '/file1.mts',
+    },
   ];
 
-  cases.forEach(({ title, path, expected }) => {
+  cases.forEach(({ title, path, expected, extensions }) => {
     it(title, () => {
-      expect(findFile(path)).toEqual(expected);
+      expect(findFile(path, extensions)).toEqual(expected);
     });
   });
 });
