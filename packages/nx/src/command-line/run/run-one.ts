@@ -115,7 +115,7 @@ const targetAliases = {
   t: 'test',
 };
 
-function parseRunOneOptions(
+export function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
   projectGraph: ProjectGraph,
@@ -143,6 +143,12 @@ function parseRunOneOptions(
       target = project;
       project = defaultProjectName;
     }
+  } else if (parsedArgs.project && parsedArgs.target?.indexOf(':') > -1) {
+    // infix case
+    [project, target, configuration] = splitTarget(
+      `${parsedArgs.project}:${parsedArgs.target}`,
+      projectGraph
+    );
   } else {
     target = parsedArgs.target ?? parsedArgs['project:target:configuration'];
   }

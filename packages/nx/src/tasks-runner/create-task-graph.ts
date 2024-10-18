@@ -313,7 +313,7 @@ export class ProcessTasks {
     resolvedConfiguration: string | undefined,
     overrides: Object
   ): Task {
-    if (!project.data.targets[target]) {
+    if (!projectHasTarget(project, target)) {
       throw new Error(
         `Cannot find configuration for task ${project.name}:${target}`
       );
@@ -356,7 +356,7 @@ export class ProcessTasks {
     project: ProjectGraphProjectNode,
     target: string,
     configuration: string | undefined
-  ) {
+  ): string | undefined {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;

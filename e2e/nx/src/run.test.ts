@@ -161,7 +161,7 @@ describe('Nx Running Tests', () => {
       }
 
       expect(runCLI(`echo:fail ${mylib}`, { silenceError: true })).toContain(
-        `Cannot find configuration for task ${mylib}:echo:fail`
+        `Cannot find configuration for task ${mylib}:echo`
       );
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);
@@ -346,6 +346,7 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app apps/${myapp}`);
 
       runCLI(`build ${myapp}`);
+      runCLI(`build:production ${myapp}`);
     }, 10000);
 
     it('should support project name positional arg non-consecutive to target', () => {
