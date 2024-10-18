@@ -2970,6 +2970,15 @@
         "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
         "path": "rspack/generators/application",
         "type": "generator"
+      },
+      {
+        "description": "Convert a webpack application to use rspack.",
+        "file": "generated/packages/rspack/generators/convert-webpack.json",
+        "hidden": false,
+        "name": "convert-webpack",
+        "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
+        "path": "rspack/generators/convert-webpack",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
