@@ -1,13 +1,13 @@
 import {
-  ChangeType,
-  ProjectConfiguration,
-  StringChange,
-  Tree,
   applyChangesToString,
+  ChangeType,
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
+  ProjectConfiguration,
   readJson,
+  StringChange,
+  Tree,
   visitNotIgnoredFiles,
   writeJson,
 } from '@nx/devkit';
@@ -17,6 +17,8 @@ import { getImportPath } from '../../../utilities/get-import-path';
 import {
   findNodes,
   getRootTsConfigPathInTree,
+  TSConfig,
+  type TSConfigFileName,
 } from '../../../utilities/ts-config';
 import { ensureTypescript } from '../../../utilities/typescript';
 import { NormalizedSchema } from '../schema';
@@ -43,28 +45,29 @@ export function updateImports(
 
   // use the source root to find the from location
   // this attempts to account for libs that have been created with --importPath
-  const tsConfigPath = getRootTsConfigPathInTree(tree);
-  let tsConfig: any;
-  let mainEntryPointImportPath: string;
-  let secondaryEntryPointImportPaths: string[];
-  let serverEntryPointImportPath: string;
+  const tsConfigPath: TSConfigFileName | null = getRootTsConfigPathInTree(tree);
+  let tsConfig: TSConfig | undefined;
+  let paths: string[] = [];
+
+  let mainEntryPointImportPath: string | undefined;
+  let secondaryEntryPointImportPaths: string[] = [];
+  let serverEntryPointImportPath: string | undefined;
+
   if (tree.exists(tsConfigPath)) {
     tsConfig = readJson(tree, tsConfigPath);
     const sourceRoot =
       project.sourceRoot ?? joinPathFragments(project.root, 'src');
 
-    mainEntryPointImportPath = Object.keys(
-      tsConfig.compilerOptions?.paths ?? {}
-    ).find((path) =>
+    paths = Object.keys(tsConfig?.compilerOptions.paths ?? {});
+
+    mainEntryPointImportPath = paths.find((path) =>
       tsConfig.compilerOptions.paths[path].some((x) =>
         x.startsWith(ensureTrailingSlash(sourceRoot))
       )
     );
-    secondaryEntryPointImportPaths = Object.keys(
-      tsConfig.compilerOptions?.paths ?? {}
-    ).filter((path) =>
+    secondaryEntryPointImportPaths = paths.filter((path) =>
       tsConfig.compilerOptions.paths[path].some(
-        (x) =>
+        (x: string) =>
           x.startsWith(ensureTrailingSlash(project.root)) &&
           !x.startsWith(ensureTrailingSlash(sourceRoot))
       )
@@ -72,9 +75,7 @@ export function updateImports(
 
     // Next.js libs have a custom path for the server we need to update that as well
     // example "paths": { @acme/lib/server : ['libs/lib/src/server.ts'] }
-    serverEntryPointImportPath = Object.keys(
-      tsConfig.compilerOptions?.paths ?? {}
-    ).find((path) =>
+    serverEntryPointImportPath = paths.find((path) =>
       tsConfig.compilerOptions.paths[path].some(
         (x) =>
           x.startsWith(ensureTrailingSlash(sourceRoot)) &&
@@ -148,8 +149,8 @@ export function updateImports(
       to: schema.relativeToRootDestination,
     };
 
-    if (tsConfig) {
-      const path = tsConfig.compilerOptions.paths[projectRef.from] as string[];
+    if (tsConfig && paths.length > 0) {
+      const path = tsConfig.compilerOptions.paths[projectRef.from];
       if (!path) {
         throw new Error(
           [
@@ -170,9 +171,9 @@ export function updateImports(
       } else {
         tsConfig.compilerOptions.paths[projectRef.from] = updatedPath;
       }
-    }
 
-    writeJson(tree, tsConfigPath, tsConfig);
+      writeJson(tree, tsConfigPath, tsConfig);
+    }
   }
 }
 
