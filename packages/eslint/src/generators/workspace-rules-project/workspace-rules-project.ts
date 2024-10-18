@@ -16,8 +16,13 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { join } from 'path';
-import { nxVersion, typescriptESLintVersion } from '../../utils/versions';
+import {
+  eslint9__typescriptESLintVersion,
+  nxVersion,
+  typescriptESLintVersion,
+} from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
+import { useFlatConfig } from '../../utils/flat-config';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 
@@ -119,7 +124,9 @@ export async function lintWorkspaceRulesProjectGenerator(
       tree,
       {},
       {
-        '@typescript-eslint/utils': typescriptESLintVersion,
+        '@typescript-eslint/utils': useFlatConfig(tree)
+          ? eslint9__typescriptESLintVersion
+          : typescriptESLintVersion,
       }
     )
   );
