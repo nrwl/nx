@@ -7,7 +7,7 @@ import {
   readNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
@@ -55,12 +55,12 @@ export async function nextInitGeneratorInternal(
 
   schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
-    const { createNodes } = await import('../../plugins/plugin');
-    await addPluginV1(
+    const { createNodesV2 } = await import('../../plugins/plugin');
+    await addPlugin(
       host,
       await createProjectGraphAsync(),
       '@nx/next/plugin',
-      createNodes,
+      createNodesV2,
       {
         startTargetName: ['start', 'next:start', 'next-start'],
         buildTargetName: ['build', 'next:build', 'next-build'],

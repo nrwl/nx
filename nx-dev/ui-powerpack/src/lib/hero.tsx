@@ -62,13 +62,14 @@ export function Hero(): ReactElement {
           </a>
         </div>
         <p className="mt-6 text-sm italic">
-          Want to use Powerpack for OSS?{' '}
+          Want to use Powerpack for OSS?
+          <br />
           <Link
             href="/powerpack/special-offer"
             prefetch={false}
             className="font-semibold underline"
           >
-            Apply here.
+            Apply for a free OSS license.
           </Link>
         </p>
       </div>

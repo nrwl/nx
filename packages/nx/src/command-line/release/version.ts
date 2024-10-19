@@ -762,7 +762,7 @@ function runPreVersionCommand(
       maxBuffer: LARGE_BUFFER,
       stdio,
       env,
-      windowsHide: true,
+      windowsHide: false,
     });
   } catch (e) {
     const title = verbose

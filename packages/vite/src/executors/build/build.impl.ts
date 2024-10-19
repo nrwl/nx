@@ -34,8 +34,7 @@ export async function* viteBuildExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, build, loadConfigFromFile } =
-    await loadViteDynamicImport();
+  const { mergeConfig, build, resolveConfig } = await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const tsConfigForBuild = createBuildableTsConfig(
@@ -56,23 +55,24 @@ export async function* viteBuildExecutor(
 
   const { buildOptions, otherOptions } = await getBuildExtraArgs(options);
 
-  const resolved = await loadConfigFromFile(
+  const resolved = await resolveConfig(
     {
+      configFile: viteConfigPath,
       mode: otherOptions?.mode ?? 'production',
-      command: 'build',
     },
-    viteConfigPath
+    'build',
+    otherOptions?.mode ?? 'production'
   );
 
   const outDir =
     joinPathFragments(offsetFromRoot(projectRoot), options.outputPath) ??
-    resolved?.config?.build?.outDir;
+    resolved?.build?.outDir;
 
   const buildConfig = mergeConfig(
     {
       // This should not be needed as it's going to be set in vite.config.ts
       // but leaving it here in case someone did not migrate correctly
-      root: resolved.config.root ?? root,
+      root: resolved.root ?? root,
       configFile: viteConfigPath,
     },
     {
@@ -89,7 +89,7 @@ export async function* viteBuildExecutor(
       workspaceRoot: context.root,
       tsconfig: tsConfigForBuild,
       isVueProject: Boolean(
-        resolved.config.plugins?.find(
+        resolved.plugins?.find(
           (plugin: Plugin) =>
             typeof plugin === 'object' && plugin?.name === 'vite:vue'
         )

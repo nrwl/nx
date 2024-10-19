@@ -159,7 +159,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       execSync(`npx -y nuxi prepare`, {
         cwd: options.appProjectRoot,
 
-        windowsHide: true,
+        windowsHide: false,
       });
     } catch (e) {
       console.error(

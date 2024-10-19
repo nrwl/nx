@@ -252,14 +252,14 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
 function _getLatestVersionOfNx(): string {
   try {
     return execSync('npm view nx@latest version', {
-      windowsHide: true,
+      windowsHide: false,
     })
       .toString()
       .trim();
   } catch {
     try {
       return execSync('pnpm view nx@latest version', {
-        windowsHide: true,
+        windowsHide: false,
       })
         .toString()
         .trim();
