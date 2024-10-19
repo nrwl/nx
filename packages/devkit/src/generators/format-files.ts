@@ -8,13 +8,24 @@ import { sortObjectByKeys } from 'nx/src/devkit-internals';
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
  */
-export async function formatFiles(tree: Tree): Promise<void> {
+export async function formatFiles(
+  tree: Tree,
+  options = {
+    /**
+     * TODO(v21): Stop sorting tsconfig paths by default, paths are now less common/important
+     * in Nx workspace setups, and the sorting causes comments to be lost.
+     */
+    sortRootTsconfigPaths: true,
+  }
+): Promise<void> {
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
   } catch {}
 
-  sortTsConfig(tree);
+  if (options.sortRootTsconfigPaths) {
+    sortTsConfig(tree);
+  }
 
   if (!prettier) return;
 

@@ -60,7 +60,9 @@ export async function format(
 
   switch (command) {
     case 'write':
-      sortTsConfig();
+      if (nxArgs.sortRootTsconfigPaths) {
+        sortTsConfig();
+      }
       addRootConfigFiles(chunkList, nxArgs);
       chunkList.forEach((chunk) => write(chunk));
       break;
