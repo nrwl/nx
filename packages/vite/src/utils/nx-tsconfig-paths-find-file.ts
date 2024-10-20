@@ -6,12 +6,12 @@ export function findFile(
   extensions: string[],
   existsSyncImpl: typeof existsSync = existsSync
 ): string {
+  const queryLessPath = path.replace(/\?\S*$/, '');
+
   for (const ext of extensions) {
+    const dir = dirname(path);
     // Support file extensions such as .css and .js in the import path.
-    const [dir, name] = [
-      dirname(path),
-      basename(path.replace(/\?\S*$/, ''), ext),
-    ];
+    const name = basename(queryLessPath, ext);
 
     const resolvedPath = resolve(dir, name + ext);
     if (existsSyncImpl(resolvedPath)) {
