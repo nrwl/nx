@@ -1,5 +1,5 @@
-use rusqlite::{Connection, Error, Params, Row, Statement};
 use anyhow::Result;
+use rusqlite::{Connection, Error, Params, Row, Statement};
 use std::thread;
 use std::time::{Duration, Instant};
 use tracing::trace;
@@ -23,46 +23,56 @@ impl NxDbConnection {
             .map_err(|e| anyhow::anyhow!("DB execute batch: \"{}\", {:?}", sql, e))
     }
 
-    pub fn prepare(&self, sql: &str) -> Result<Statement<'_>> {
-        self.conn.prepare(sql)
+    pub fn prepare(&self, sql: &str) -> Result<Statement> {
+        self.retry_on_busy(|conn| conn.prepare(sql))
             .map_err(|e| anyhow::anyhow!("DB prepare: \"{}\", {:?}", sql, e))
     }
 
     pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> rusqlite::Result<T>
     where
-        P: Params,
-        F: FnOnce(&Row<'_>) -> rusqlite::Result<T>,
+        P: Params + Clone,
+        F: FnOnce(&Row<'_>) -> rusqlite::Result<T> + Clone,
     {
-        self.conn.query_row(sql, params, f)
-            .inspect_err(|e| trace!("Db query: \"{}\", {:?}", sql, e))
+        self.retry_on_busy(move |conn| {
+            conn.query_row(sql, params.clone(), f.clone())
+                .inspect_err(|e| {
+                    if !matches!(e, Error::QueryReturnedNoRows) {
+                        trace!("Db query: \"{}\", {:?}", sql, e)
+                    }
+                })
+        })
     }
 
     pub fn close(self) -> rusqlite::Result<(), (Connection, Error)> {
-        self.conn.close()
+        self.conn
+            .close()
             .inspect_err(|e| trace!("Error in close: {:?}", e))
     }
 
-    fn retry_on_busy<F, T>(&self,  operation: F) -> rusqlite::Result<T>
+    #[allow(clippy::needless_lifetimes)]
+    fn retry_on_busy<'a, F, T,>(&'a self, operation: F) -> rusqlite::Result<T>
     where
-        F: Fn(&Connection) -> rusqlite::Result<T>,
+        F: Fn(&'a Connection) -> rusqlite::Result<T>,
     {
         let start = Instant::now();
         let max_retries: u64 = 5;
         let retry_delay = Duration::from_millis(25);
 
-        for  i in 0..max_retries {
+        for i in 0..max_retries {
             match operation(&self.conn) {
                 Ok(result) => return Ok(result),
                 Err(Error::SqliteFailure(err, _))
                     if err.code == rusqlite::ErrorCode::DatabaseBusy =>
                 {
                     trace!("Database busy. Retrying{}", ".".repeat(i as usize));
-                    if start.elapsed() >= Duration::from_millis(max_retries * retry_delay.as_millis() as u64) {
+                    if start.elapsed()
+                        >= Duration::from_millis(max_retries * retry_delay.as_millis() as u64)
+                    {
                         break;
                     }
                     thread::sleep(retry_delay);
                 }
-               err @ Err(_) => return err
+                err @ Err(_) => return err,
             }
         }
 
