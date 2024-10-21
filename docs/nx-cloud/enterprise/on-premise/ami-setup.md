@@ -180,3 +180,16 @@ And apply the changes:
 ```bash
 scp -r ./myconfiguration.yaml nx-cloud@<your-instance-ip>:~/config/user/update.yaml
 ```
+
+## On Premise Docs
+
+- [Set up Nx Cloud On-Premise](/ci/recipes/enterprise/on-premise/on-premise)
+- [Authenticate with a Single Admin](/ci/recipes/enterprise/on-premise/auth-single-admin)
+- [Authenticate with GitHub](/ci/recipes/enterprise/on-premise/auth-github)
+- [On-Prem VM Setup](/ci/recipes/enterprise/on-premise/ami-setup)
+- [Authenticate with GitLab](/ci/recipes/enterprise/on-premise/auth-gitlab)
+- [Authenticate with BitBucket](/ci/recipes/enterprise/on-premise/auth-bitbucket)
+- [Authenticate with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center)
+- [Authenticate via SAML](/ci/recipes/enterprise/on-premise/auth-saml)
+- [Advanced Configuration](/ci/recipes/enterprise/on-premise/advanced-config)
+- [Custom GitHub App](/ci/recipes/enterprise/on-premise/custom-github-app)
