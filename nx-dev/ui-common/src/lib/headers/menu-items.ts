@@ -88,7 +88,26 @@ export const featuresItems: Record<string, MenuItem[]> = {
       isHighlight: false,
     },
   ],
-  'Paid Enterprise Features': [
+  'Nx Cloud Features': [
+    {
+      name: 'Use Remote Caching (Nx Replay)',
+      description: 'Zero-config, fast & secure remote cache solution.',
+      href: '/ci/features/remote-cache',
+      icon: NxReplayIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Distribute Task Execution (Nx Agents)',
+      description:
+        'One-line config for distributing tasks across multiple machines',
+      href: '/ci/features/distribute-task-execution',
+      icon: NxAgentsIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+  ],
+  'Nx Powerpack Features (Paid Enterprise Extensions)': [
     {
       name: 'Run Conformance Rules',
       description: null,
@@ -104,25 +123,6 @@ export const featuresItems: Record<string, MenuItem[]> = {
       icon: UserGroupIcon,
       isNew: false,
       isHighlight: false,
-    },
-  ],
-  'Nx Cloud Features': [
-    {
-      name: 'Use Remote Caching (Nx Replay)',
-      description: 'Zero-config, fast & secure remote cache solution.',
-      href: '/ci/features/remote-cache',
-      icon: NxReplayIcon,
-      isNew: false,
-      isHighlight: true,
-    },
-    {
-      name: 'Distribute Task Execution (Nx Agents)',
-      description:
-        'One-line config for distributing tasks across multiple machines',
-      href: '/ci/features/distribute-task-execution',
-      icon: NxAgentsIcon,
-      isNew: false,
-      isHighlight: true,
     },
   ],
 };
