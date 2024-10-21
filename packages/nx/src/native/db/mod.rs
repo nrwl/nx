@@ -1,8 +1,10 @@
-use rusqlite::OpenFlags;
-use std::fs::{create_dir_all, remove_file};
-use std::path::PathBuf;
-use std::time::Duration;
+pub mod connection;
 
+use rusqlite::OpenFlags;
+use std::fs::{create_dir_all, remove_file, File};
+use std::path::{Path, PathBuf};
+use fs4::fs_std::FileExt;
+use crate::native::db::connection::NxDbConnection;
 use crate::native::machine_id::get_machine_id;
 use napi::bindgen_prelude::External;
 use rusqlite::Connection;
@@ -13,7 +15,7 @@ pub fn connect_to_nx_db(
     cache_dir: String,
     nx_version: String,
     db_name: Option<String>,
-) -> anyhow::Result<External<Connection>> {
+) -> anyhow::Result<External<NxDbConnection>> {
     let cache_dir_buf = PathBuf::from(cache_dir);
     let db_path = cache_dir_buf.join(format!("{}.db", db_name.unwrap_or_else(get_machine_id)));
     create_dir_all(cache_dir_buf)?;
@@ -64,25 +66,63 @@ pub fn connect_to_nx_db(
     Ok(External::new(c))
 }
 
-fn create_connection(db_path: &PathBuf) -> anyhow::Result<Connection> {
+fn create_connection(db_path: &PathBuf) -> anyhow::Result<NxDbConnection> {
     debug!("Creating connection to {:?}", db_path);
-    let c = Connection::open_with_flags(
+    let lock_file = create_lock_file(db_path)?;
+
+    match open_database_connection(db_path) {
+        Ok(connection) => {
+            configure_database(&connection).inspect_err(|_| {
+                unlock_file(lock_file);
+            })?;
+            Ok(connection)
+        }
+        err @ Err(_) => {
+            unlock_file(lock_file);
+            err
+        }
+    }
+}
+
+fn create_lock_file(db_path: &Path) -> anyhow::Result<File> {
+    let lock_file_path = db_path.with_extension("lock");
+    let lock_file = File::create(&lock_file_path)
+        .map_err(|e| anyhow::anyhow!("Unable to create db lock file: {:?}", e))?;
+
+    lock_file
+        .lock_exclusive()
+        .map_err(|e| anyhow::anyhow!("Unable to lock the db lock file: {:?}", e))?;
+    Ok(lock_file)
+}
+
+fn open_database_connection(db_path: &PathBuf) -> anyhow::Result<NxDbConnection> {
+    Connection::open_with_flags(
         db_path,
         OpenFlags::SQLITE_OPEN_READ_WRITE
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_URI
             | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
     )
-    .map_err(anyhow::Error::from)?;
+    .map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
+    .map(NxDbConnection::new)
+}
 
-    // This allows writes at the same time as reads
-    c.pragma_update(None, "journal_mode", "WAL")?;
+fn configure_database(connection: &NxDbConnection) -> anyhow::Result<()> {
+    connection
+        .conn
+        .pragma_update(None, "journal_mode", "WAL")
+        .map_err(|e| anyhow::anyhow!("Unable to set journal_mode: {:?}", e))?;
+    connection
+        .conn
+        .pragma_update(None, "synchronous", "NORMAL")
+        .map_err(|e| anyhow::anyhow!("Unable to set synchronous: {:?}", e))?;
+    connection
+        .conn
+        .busy_handler(Some(|tries| tries < 6))
+        .map_err(|e| anyhow::anyhow!("Unable to set busy handler: {:?}", e))?;
+    Ok(())
+}
 
-    // This makes things less synchronous than default
-    c.pragma_update(None, "synchronous", "NORMAL")?;
-
-    c.busy_timeout(Duration::from_millis(25))?;
-    c.busy_handler(Some(|tries| tries < 6))?;
-
-    Ok(c)
+fn unlock_file(lock_file: File) {
+    lock_file.unlock().expect("Failed to unlock the database");
 }

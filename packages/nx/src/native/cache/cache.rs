@@ -5,11 +5,12 @@ use std::time::Instant;
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, OptionalExtension};
 use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
+use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 
 #[napi(object)]
@@ -25,7 +26,7 @@ pub struct NxCache {
     pub cache_directory: String,
     workspace_root: PathBuf,
     cache_path: PathBuf,
-    db: External<Connection>,
+    db: External<NxDbConnection>,
     link_task_details: bool,
 }
 
@@ -35,7 +36,7 @@ impl NxCache {
     pub fn new(
         workspace_root: String,
         cache_path: String,
-        db_connection: External<Connection>,
+        db_connection: External<NxDbConnection>,
         link_task_details: Option<bool>,
     ) -> anyhow::Result<Self> {
         let cache_path = PathBuf::from(&cache_path);
@@ -119,7 +120,7 @@ impl NxCache {
                 },
             )
             .optional()
-            .map_err(anyhow::Error::new)?;
+            .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(r)
     }
