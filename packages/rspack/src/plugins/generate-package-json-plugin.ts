@@ -12,8 +12,11 @@ import {
   getLockFileName,
   readTsConfig,
 } from '@nx/js';
-import { type Compiler, type RspackPluginInstance } from '@rspack/core';
-import { RawSource } from 'webpack-sources';
+import {
+  type Compiler,
+  type RspackPluginInstance,
+  sources,
+} from '@rspack/core';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -71,12 +74,12 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
 
           compilation.emitAsset(
             'package.json',
-            new RawSource(serializeJson(packageJson))
+            new sources.RawSource(serializeJson(packageJson))
           );
           const packageManager = detectPackageManager(this.context.root);
           compilation.emitAsset(
             getLockFileName(packageManager),
-            new RawSource(
+            new sources.RawSource(
               createLockFile(packageJson, this.projectGraph, packageManager)
             )
           );
