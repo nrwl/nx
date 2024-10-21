@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-import { env } from 'node:process';
 import { sep } from 'node:path';
 
 /*
@@ -11,7 +10,6 @@ import { sep } from 'node:path';
  */
 
 export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
-const npm_config_user_agent = process.env.npm_config_user_agent || '';
 
 export type PackageManager = (typeof packageManagerList)[number];
 
@@ -143,17 +141,17 @@ export function getPackageManagerVersion(
  * Default to 'npm'
  */
 export function detectInvokedPackageManager(): PackageManager {
-  if (env.npm_config_user_agent) {
+  if (process.env.npm_config_user_agent) {
     for (const pm of packageManagerList) {
-      if (env.npm_config_user_agent.startsWith(`${pm}/`)) {
+      if (process.env.npm_config_user_agent.startsWith(`${pm}/`)) {
         return pm;
       }
     }
   }
 
-  if (env.npm_execpath) {
+  if (process.env.npm_execpath) {
     for (const pm of packageManagerList) {
-      if (env.npm_execpath.split(sep).includes(pm)) {
+      if (process.env.npm_execpath.split(sep).includes(pm)) {
         return pm;
       }
     }
