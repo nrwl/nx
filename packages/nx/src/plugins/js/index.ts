@@ -56,7 +56,7 @@ export const createNodes: CreateNodes = [
         ? readFileSync(lockFilePath).toString()
         : execSync(`bun ${lockFilePath}`, {
             maxBuffer: 1024 * 1024 * 10,
-            windowsHide: true,
+            windowsHide: false,
           }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
@@ -102,7 +102,7 @@ export const createDependencies: CreateDependencies = (
         ? readFileSync(lockFilePath).toString()
         : execSync(`bun ${lockFilePath}`, {
             maxBuffer: 1024 * 1024 * 10,
-            windowsHide: true,
+            windowsHide: false,
           }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 

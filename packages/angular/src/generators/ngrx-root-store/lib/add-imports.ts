@@ -181,15 +181,6 @@ export function addImportsToModule(
     sourceFile = addImport(sourceFile, 'EffectsModule', '@ngrx/effects');
   }
 
-  sourceFile = addRootStoreImport(
-    tree,
-    isParentStandalone,
-    sourceFile,
-    parentPath,
-    provideRootStore,
-    storeForRoot
-  );
-
   sourceFile = addRootEffectsImport(
     tree,
     isParentStandalone,
@@ -197,6 +188,25 @@ export function addImportsToModule(
     parentPath,
     provideRootEffects,
     effectsForEmptyRoot
+  );
+
+  if (options.addDevTools) {
+    sourceFile = addStoreDevTools(
+      tree,
+      sourceFile,
+      parentPath,
+      isParentStandalone,
+      addImport
+    );
+  }
+
+  sourceFile = addRootStoreImport(
+    tree,
+    isParentStandalone,
+    sourceFile,
+    parentPath,
+    provideRootStore,
+    storeForRoot
   );
 
   // this is just a heuristic
@@ -209,16 +219,6 @@ export function addImportsToModule(
       addImport,
       parentPath,
       storeRouterModule
-    );
-  }
-
-  if (options.addDevTools) {
-    sourceFile = addStoreDevTools(
-      tree,
-      sourceFile,
-      parentPath,
-      isParentStandalone,
-      addImport
     );
   }
 }

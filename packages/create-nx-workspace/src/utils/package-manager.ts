@@ -123,7 +123,7 @@ export function getPackageManagerVersion(
   const version = execSync(`${packageManager} --version`, {
     cwd,
     encoding: 'utf-8',
-    windowsHide: true,
+    windowsHide: false,
   }).trim();
   pmVersionCache.set(packageManager, version);
   return version;

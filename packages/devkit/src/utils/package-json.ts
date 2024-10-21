@@ -497,7 +497,7 @@ export function ensurePackage<T extends any = any>(
     execSync(preInstallCommand, {
       cwd: tempDir,
       stdio: isVerbose ? 'inherit' : 'ignore',
-      windowsHide: true,
+      windowsHide: false,
     });
   }
   let addCommand = getPackageManagerCommand(packageManager).addDev;
@@ -508,7 +508,7 @@ export function ensurePackage<T extends any = any>(
   execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
-    windowsHide: true,
+    windowsHide: false,
   });
 
   addToNodePath(join(workspaceRoot, 'node_modules'));

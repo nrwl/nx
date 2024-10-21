@@ -65,7 +65,7 @@ function getPublishedVersion(): Promise<string | undefined> {
     exec(
       'npm view nx@latest version',
       {
-        windowsHide: true,
+        windowsHide: false,
       },
       (error, stdout, stderr) => {
         if (error) {

@@ -10,7 +10,7 @@ export async function execCommand(
       ...options,
       stdio: ['pipe', 'pipe', 'pipe'], // stdin, stdout, stderr
       encoding: 'utf-8',
-      windowsHide: true,
+      windowsHide: false,
     });
 
     let stdout = '';

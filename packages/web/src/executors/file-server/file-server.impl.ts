@@ -172,7 +172,7 @@ export default async function* fileServerExecutor(
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
             shell: true,
-            windowsHide: true,
+            windowsHide: false,
           });
         } catch {
           throw new Error(

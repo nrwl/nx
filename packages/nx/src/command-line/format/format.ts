@@ -60,7 +60,9 @@ export async function format(
 
   switch (command) {
     case 'write':
-      sortTsConfig();
+      if (nxArgs.sortRootTsconfigPaths) {
+        sortTsConfig();
+      }
       addRootConfigFiles(chunkList, nxArgs);
       chunkList.forEach((chunk) => write(chunk));
       break;
@@ -211,7 +213,7 @@ function write(patterns: string[]) {
       )}`,
       {
         stdio: [0, 1, 2],
-        windowsHide: true,
+        windowsHide: false,
       }
     );
 
@@ -222,7 +224,7 @@ function write(patterns: string[]) {
         )} --parser json`,
         {
           stdio: [0, 1, 2],
-          windowsHide: true,
+          windowsHide: false,
         }
       );
     }
@@ -239,7 +241,7 @@ async function check(patterns: string[]): Promise<string[]> {
   return new Promise((resolve) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
-      { encoding: 'utf-8', windowsHide: true },
+      { encoding: 'utf-8', windowsHide: false },
       (error, stdout) => {
         if (error) {
           // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.

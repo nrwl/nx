@@ -8,6 +8,7 @@ import {
   names,
   readProjectConfiguration,
   runTasksInSerial,
+  stripIndents,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -25,7 +26,10 @@ import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { maybeJs } from '../../utils/maybe-js';
 import { isValidVariable } from '@nx/js';
-import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import {
+  moduleFederationEnhancedVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -119,6 +123,16 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   }
 
   await ensureProjectName(host, options, 'application');
+  const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
+  const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
+  if (!remoteNameRegex.test(options.projectName)) {
+    throw new Error(
+      stripIndents`Invalid remote name: ${options.projectName}. Remote project names must:
+      - Start with a letter, dollar sign ($) or underscore (_)
+      - Followed by any valid character (letters, digits, underscores, or dollar signs)
+      The regular expression used is ${REMOTE_NAME_REGEX}.`
+    );
+  }
   const initAppTask = await applicationGenerator(host, {
     ...options,
     name: options.projectName,
@@ -211,7 +225,10 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   const installTask = addDependenciesToPackageJson(
     host,
     {},
-    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+    {
+      '@module-federation/enhanced': moduleFederationEnhancedVersion,
+      '@nx/web': nxVersion,
+    }
   );
   tasks.push(installTask);
 

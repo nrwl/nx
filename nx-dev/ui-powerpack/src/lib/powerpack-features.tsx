@@ -8,7 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import {
+  ButtonLink,
+  SectionHeading,
+  Strong,
+  TextLink,
+} from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
@@ -35,7 +40,14 @@ export function PowerpackFeatures(): ReactElement {
                 Nx Powerpack enables you to use <Strong>Amazon S3</Strong> or a{' '}
                 <Strong>shared network drive</Strong> as your remote cache
                 storage, offering a flexible, self-managed solution for faster
-                builds.
+                builds. Nx Powerpack self-hosted cache storage is{' '}
+                <TextLink
+                  href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  title="Get a Powerpack license"
+                >
+                  free for small existing teams
+                </TextLink>
+                .
               </p>
               <div className="mt-16">
                 <ButtonLink

@@ -134,7 +134,7 @@ async function printTargetRunHelpInternal(
     } else {
       const cp = exec(helpCommand, {
         env,
-        windowsHide: true,
+        windowsHide: false,
       });
       cp.on('exit', (code) => {
         process.exit(code);

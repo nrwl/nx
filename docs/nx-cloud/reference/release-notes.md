@@ -165,11 +165,11 @@ Along with all the UI changes to support agents (following their logs and track 
 
 When upgrading to this version and anything above it, you will need to use Helm version 0.12.0+:
 
-| Chart Version | Compatible Images                  |
-| ------------- | ---------------------------------- |
+| Chart Version |         Compatible Images          |
+| :-----------: | :--------------------------------: |
 | <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
-| >= `0.11.0`   | `2308.22.7` **and later**          |
-| >= `0.12.0`   | `2312.11.7` **and later**          |
+|  >= `0.11.0`  |     `2308.22.7` **and later**      |
+|  >= `0.12.0`  |     `2312.11.7` **and later**      |
 
 ##### New UI features and improvements
 
@@ -268,10 +268,10 @@ product. It's faster, it handles resource caching better, and should allow the f
 
 When upgrading to this version and anything above it, you will need to use Helm version 0.11.1:
 
-| Chart Version | Compatible Images                  |
-| ------------- | ---------------------------------- |
+| Chart Version |         Compatible Images          |
+| :-----------: | :--------------------------------: |
 | <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
-| >= `0.11.0`   | `2308.22.7` **and later**          |
+|  >= `0.11.0`  |     `2308.22.7` **and later**      |
 
 ##### VCS proxy support
 

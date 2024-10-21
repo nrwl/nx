@@ -23,7 +23,7 @@ describe('git utils tests', () => {
       expect(result).toBe('origin-user/repo-name');
       expect(execSync).toHaveBeenCalledWith('git remote -v', {
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -35,7 +35,7 @@ describe('git utils tests', () => {
       expect(result).toBe('github');
       expect(execSync).toHaveBeenCalledWith('git remote -v', {
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -49,7 +49,7 @@ describe('git utils tests', () => {
       expect(result).toBe('github');
       expect(execSync).toHaveBeenCalledWith('git remote -v', {
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -64,7 +64,7 @@ describe('git utils tests', () => {
       expect(result).toBe('upstream-user/repo-name');
       expect(execSync).toHaveBeenCalledWith('git remote -v', {
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -79,7 +79,7 @@ describe('git utils tests', () => {
       expect(result).toBeNull();
       expect(execSync).toHaveBeenCalledWith('git remote -v', {
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       });
     });
 
@@ -94,7 +94,7 @@ describe('git utils tests', () => {
       expect(result).toBe('origin-user/repo-name');
       expect(execSync).toHaveBeenCalledWith('git remote -v', {
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       });
     });
   });
