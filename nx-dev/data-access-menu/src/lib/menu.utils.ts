@@ -14,7 +14,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||
-          m.id === 'enterprise' ||
+          m.id === 'nx-enterprise' ||
           m.id === 'showcase' ||
           m.id === 'reference' ||
           m.id === 'troubleshooting'
