@@ -59,29 +59,26 @@ impl NxCache {
 
     fn setup(&self) -> anyhow::Result<()> {
         let query = if self.link_task_details {
-            "BEGIN;
-                CREATE TABLE IF NOT EXISTS cache_outputs (
+            "CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (hash) REFERENCES task_details (hash)
-                );
-                COMMIT;
+              );
             "
         } else {
-            "BEGIN;
-                CREATE TABLE IF NOT EXISTS cache_outputs (
+            "CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-                COMMIT;
-            "
+                "
         };
 
-        self.db.execute_batch(query).map_err(anyhow::Error::from)
+        self.db.execute(query, []).map_err(anyhow::Error::from)?;
+        Ok(())
     }
 
     #[napi]

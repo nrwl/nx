@@ -1,4 +1,5 @@
-use rusqlite::{Connection, Error, Params, Result, Row, Statement};
+use rusqlite::{Connection, Error, Params, Row, Statement};
+use anyhow::Result;
 use std::thread;
 use std::time::{Duration, Instant};
 use tracing::trace;
@@ -14,36 +15,36 @@ impl NxDbConnection {
 
     pub fn execute<P: Params + Clone>(&self, sql: &str, params: P) -> Result<usize> {
         self.retry_on_busy(|conn| conn.execute(sql, params.clone()))
-            .inspect_err(|e| trace!("Error in execute: {:?}", e))
+            .map_err(|e| anyhow::anyhow!("DB execute: \"{}\", {:?}", sql, e))
     }
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
         self.retry_on_busy(|conn| conn.execute_batch(sql))
-            .inspect_err(|e| trace!("Error in execute_batch: {:?}", e))
+            .map_err(|e| anyhow::anyhow!("DB execute batch: \"{}\", {:?}", sql, e))
     }
 
     pub fn prepare(&self, sql: &str) -> Result<Statement<'_>> {
         self.conn.prepare(sql)
-            .inspect_err(|e| trace!("Error in prepare: {:?}", e))
+            .map_err(|e| anyhow::anyhow!("DB prepare: \"{}\", {:?}", sql, e))
     }
 
-    pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<T>
+    pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> rusqlite::Result<T>
     where
         P: Params,
-        F: FnOnce(&Row<'_>) -> Result<T>,
+        F: FnOnce(&Row<'_>) -> rusqlite::Result<T>,
     {
         self.conn.query_row(sql, params, f)
-            .inspect_err(|e| trace!("Error in query_row: {:?}", e))
+            .inspect_err(|e| trace!("Db query: \"{}\", {:?}", sql, e))
     }
 
-    pub fn close(self) -> Result<(), (Connection, Error)> {
+    pub fn close(self) -> rusqlite::Result<(), (Connection, Error)> {
         self.conn.close()
             .inspect_err(|e| trace!("Error in close: {:?}", e))
     }
 
-    fn retry_on_busy<F, T>(&self,  operation: F) -> Result<T>
+    fn retry_on_busy<F, T>(&self,  operation: F) -> rusqlite::Result<T>
     where
-        F: Fn(&Connection) -> Result<T>,
+        F: Fn(&Connection) -> rusqlite::Result<T>,
     {
         let start = Instant::now();
         let max_retries: u64 = 5;
