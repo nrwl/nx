@@ -1,5 +1,6 @@
+use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::*;
-use rusqlite::{params, Connection};
+use rusqlite::params;
 
 #[napi(object)]
 #[derive(Default, Clone)]
@@ -12,13 +13,13 @@ pub struct HashedTask {
 
 #[napi]
 struct TaskDetails {
-    db: External<Connection>,
+    db: External<NxDbConnection>,
 }
 
 #[napi]
 impl TaskDetails {
     #[napi(constructor)]
-    pub fn new(db: External<Connection>) -> anyhow::Result<Self> {
+    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
         let r = Self { db };
 
         r.setup()?;

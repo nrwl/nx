@@ -546,6 +546,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs4"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec6fcfb3c0c1d71612528825042261419d5dade9678c39a781e05b63677d9b32"
+dependencies = [
+ "rustix",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1472,6 +1482,7 @@ dependencies = [
  "crossterm",
  "dashmap",
  "dunce",
+ "fs4",
  "fs_extra",
  "globset",
  "hashbrown 0.14.5",
