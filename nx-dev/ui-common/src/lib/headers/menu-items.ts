@@ -149,40 +149,6 @@ export const solutions: MenuItem[] = [
     isHighlight: false,
   },
 ];
-const useCaseItems: MenuItem[] = [
-  {
-    name: 'Get actionable feedback',
-    description: 'Enhanced analysis & analytics of your workflows.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Reduce CI timings with remote caching',
-    description: 'Share task results & artifacts between CI & teams.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Performant task distribution at scale',
-    description: 'Faster & cheaper CI workflows.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Improve E2E time execution on CI',
-    description: 'Automatic task splitting.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-];
 export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
