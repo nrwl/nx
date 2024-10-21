@@ -21,7 +21,7 @@ export function ensureProjectIsIncludedInPluginRegistrations(
 
     if (typeof registration === 'string') {
       // if it's a string all projects are included but the are no user-specified options
-      // and the `build` task is not inferred by default, so we need to exclude it
+      // and the build task is not inferred by default, so we need to exclude it
       nxJson.plugins[index] = {
         plugin: '@nx/js/typescript',
         exclude: [`${projectRoot}/*`],
@@ -38,19 +38,20 @@ export function ensureProjectIsIncludedInPluginRegistrations(
         // it's included by the plugin registration, check if the user-specified options would result
         // in the appropriate build task being inferred, if not, we need to exclude it
         if (
-          registration.options?.typecheck &&
+          registration.options?.typecheck !== false &&
           matchesBuildTarget(registration.options?.build, buildTargetName)
         ) {
-          // it has the desired options, do nothing
+          // it has the desired options, do nothing, but continue processing
+          // other registrations to exclude as needed
           isIncluded = true;
         } else {
-          // it would not have the `build` task inferred, so we need to exclude it
+          // it would not have the typecheck or build task inferred, so we need to exclude it
           registration.exclude ??= [];
           registration.exclude.push(`${projectRoot}/*`);
         }
       } else if (
         !isIncluded &&
-        registration.options?.typecheck &&
+        registration.options?.typecheck !== false &&
         matchesBuildTarget(registration.options?.build, buildTargetName)
       ) {
         if (!registration.exclude?.length) {
@@ -67,6 +68,10 @@ export function ensureProjectIsIncludedInPluginRegistrations(
           registration.exclude = registration.exclude.filter(
             (e) => e !== `${projectRoot}/*`
           );
+          if (!registration.exclude.length) {
+            // if there's no `exclude` option left, we can remove the exclude option
+            delete registration.exclude;
+          }
         }
       }
     }
