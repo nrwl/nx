@@ -8,7 +8,7 @@ use crate::native::db::connection::NxDbConnection;
 use crate::native::machine_id::get_machine_id;
 use napi::bindgen_prelude::External;
 use rusqlite::Connection;
-use tracing::debug;
+use tracing::{debug, trace};
 
 #[napi]
 pub fn connect_to_nx_db(
@@ -96,14 +96,27 @@ fn create_lock_file(db_path: &Path) -> anyhow::Result<File> {
 }
 
 fn open_database_connection(db_path: &PathBuf) -> anyhow::Result<NxDbConnection> {
-    Connection::open_with_flags(
-        db_path,
-        OpenFlags::SQLITE_OPEN_READ_WRITE
-            | OpenFlags::SQLITE_OPEN_CREATE
-            | OpenFlags::SQLITE_OPEN_URI
-            | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-    )
-    .map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
+    let conn = if cfg!(target_family = "unix") && ci_info::is_ci() {
+        trace!("Opening connection with unix-dotfile"); 
+        Connection::open_with_flags_and_vfs(
+            db_path,
+            OpenFlags::SQLITE_OPEN_READ_WRITE
+                | OpenFlags::SQLITE_OPEN_CREATE
+                | OpenFlags::SQLITE_OPEN_URI
+                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
+            "unix-dotfile"
+        )
+    } else {
+        Connection::open_with_flags(
+            db_path,
+            OpenFlags::SQLITE_OPEN_READ_WRITE
+                | OpenFlags::SQLITE_OPEN_CREATE
+                | OpenFlags::SQLITE_OPEN_URI
+                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
+        )
+    };
+
+    conn.map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
     .map(NxDbConnection::new)
 }
 
