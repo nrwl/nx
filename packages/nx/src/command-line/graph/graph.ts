@@ -22,7 +22,7 @@ import {
   relative,
 } from 'path';
 import { performance } from 'perf_hooks';
-import { readNxJson, workspaceLayout } from '../../config/configuration';
+import { readNxJson } from '../../config/configuration';
 import {
   FileData,
   ProjectFileMap,
@@ -76,7 +76,6 @@ export interface ProjectGraphClientResponse {
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   fileMap?: ProjectFileMap;
-  layout: { appsDir: string; libsDir: string };
   affected: string[];
   focus: string;
   groupByFolder: boolean;
@@ -692,10 +691,6 @@ let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
   projects: [],
   dependencies: {},
   fileMap: {},
-  layout: {
-    appsDir: '',
-    libsDir: '',
-  },
   affected: [],
   focus: null,
   groupByFolder: false,
@@ -818,14 +813,12 @@ async function createProjectGraphAndSourceMapClientResponse(
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 
-  const layout = workspaceLayout();
   const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
   hasher.update(
     JSON.stringify({
-      layout,
       projects,
       dependencies,
       sourceMaps,
@@ -855,7 +848,6 @@ async function createProjectGraphAndSourceMapClientResponse(
     projectGraphClientResponse: {
       ...currentProjectGraphClientResponse,
       hash,
-      layout,
       projects,
       dependencies,
       affected,
