@@ -11,8 +11,6 @@ The quickest and easiest way to start using Nx Cloud is by utilizing our pre-exi
 - [https://nx.app/](https://nx.app/)
 - Enterprise customers can contact their developer productivity engineer (DPE) to configure the EU hosted version of Nx Cloud.
 
-You get the **same level of security**, **dedicated support**, and **predictable seat-based pricing** as all our other hosting options. But you won't have to manage the instance yourself.
-
 We also offer an uptime SLA guarantee of 99.98% for our Enterprise customers, SOC certificates on request, and we're happy to meet with your security teams if they have questions, or fill in security questionnaires. We also maintain a [Status Page here](https://status.nx.app/).
 
 To start with this option, it's as easy as creating an account on [nx.app](https://cloud.nx.app) and connecting your repository.

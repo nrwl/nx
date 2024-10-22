@@ -59,6 +59,6 @@ Organization permissions:
 
 Provide the following values to your developer productivity engineer so they can help connect Nx Cloud to your custom GitHub app:
 
-- `NX_CLOUD_GITHUB_APP_CLIENT_ID`
-- `NX_CLOUD_GITHUB_APP_CLIENT_SECRET`
-- `NX_CLOUD_GITHUB_APP_APP_ID`
+- Github App Client ID
+- Github App Client Secret
+- Github App App ID

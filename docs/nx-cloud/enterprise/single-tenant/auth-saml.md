@@ -77,12 +77,12 @@ if you are interested.
 
 13. Extract the downloaded certificate value as a one-line string:
     1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' azure_cert_file.cer`
-    2. We’ll use this in a bit to initialize an environment variable
+    2. We’ll use this later
 14. Copy the Login URL:
 
     ![Step 15](/nx-cloud/enterprise/on-premise/images/saml/azure_15.png)
 
-15. Then add these two env vars to your Nx Cloud cluster secrets (see [Helm config](#helm-config) below):
+15. Save the following information to send to your DPE:
     1. `SAML_CERT=<your-cert-string-from-above>`
     2. `SAML_ENTRY_POINT=<your-login-url-from-above>`
 
@@ -126,7 +126,7 @@ if you are interested.
 
 9. Extract the downloaded certificate value as a one-line string:
    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' okta.cert`
-   2. We will use this in a bit to initialize and environment variable
+   2. We'll use this later
 10. Then view the ldP metadata:
 
     ![Okta 9](/nx-cloud/enterprise/on-premise/images/saml/okta_9.png)

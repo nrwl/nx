@@ -41,4 +41,4 @@ And then generate a new client secret, and save it somewhere secure (we'll use i
 
 ## Configure Nx Cloud Installation
 
-Contact your developer productivity engineer to connect your Nx Cloud instance to the newly created BitBucket data center app.
+Contact your developer productivity engineer to connect your Nx Cloud instance to the newly created GitHub OAuth app.
