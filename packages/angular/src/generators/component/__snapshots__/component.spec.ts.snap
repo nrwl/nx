@@ -18,6 +18,7 @@ exports[`component Generator compat should inline styles when --inline-style=tru
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styles: \`\`
 })
@@ -30,6 +31,7 @@ exports[`component Generator secondary entry points should create the component 
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -47,6 +49,7 @@ exports[`component Generator should create component files correctly: component 
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css',
 })
@@ -96,6 +99,7 @@ exports[`component Generator should create the component correctly and export it
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -128,6 +132,7 @@ exports[`component Generator should create the component correctly and not expor
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -155,6 +160,7 @@ exports[`component Generator should create the component correctly and not expor
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -167,6 +173,7 @@ exports[`component Generator should create the component correctly but not expor
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -179,6 +186,7 @@ exports[`component Generator should inline styles when --inline-style=true 1`] =
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styles: \`\`
 })
@@ -191,6 +199,7 @@ exports[`component Generator should inline template when --inline-template=true 
 
 @Component({
   selector: 'example',
+  standalone: false,
   template: \`<p>example works!</p>\`,
   styleUrl: './example.component.css'
 })
