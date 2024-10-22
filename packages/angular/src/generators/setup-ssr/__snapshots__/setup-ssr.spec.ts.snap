@@ -79,8 +79,8 @@ exports[`setupSSR with application builder should create the files correctly for
           "type": "initial",
         },
         {
-          "maximumError": "4kb",
-          "maximumWarning": "2kb",
+          "maximumError": "8kb",
+          "maximumWarning": "4kb",
           "type": "anyComponentStyle",
         },
       ],
@@ -121,7 +121,7 @@ exports[`setupSSR with application builder should create the files correctly for
 
 exports[`setupSSR with application builder should create the files correctly for ssr 2`] = `
 "import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
@@ -199,8 +199,8 @@ exports[`setupSSR with application builder should create the files correctly for
           "type": "initial",
         },
         {
-          "maximumError": "4kb",
-          "maximumWarning": "2kb",
+          "maximumError": "8kb",
+          "maximumWarning": "4kb",
           "type": "anyComponentStyle",
         },
       ],
@@ -241,7 +241,7 @@ exports[`setupSSR with application builder should create the files correctly for
 
 exports[`setupSSR with application builder should create the files correctly for ssr when app is standalone 2`] = `
 "import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
@@ -334,7 +334,7 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -437,7 +437,7 @@ exports[`setupSSR with browser builder should create the files correctly for ssr
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
