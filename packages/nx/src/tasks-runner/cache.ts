@@ -112,15 +112,6 @@ export class DbCache {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
       if (this.remoteCache) {
-        if (this.isVerbose) {
-          output.log({
-            title: 'Storing remote cache',
-            bodyLines: [
-              `terminalOutput: ${typeof terminalOutput}`,
-              `code: ${typeof code}`,
-            ],
-          });
-        }
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,
