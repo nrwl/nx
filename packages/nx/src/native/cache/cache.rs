@@ -166,6 +166,7 @@ impl NxCache {
         hash: String,
         result: CachedResult,
     ) -> anyhow::Result<()> {
+        trace!("applying remote cache results: {:?} ({})", &hash, &result.outputs_path);
         let terminal_output = result.terminal_output;
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
@@ -185,6 +186,7 @@ impl NxCache {
     }
 
     fn record_to_cache(&self, hash: String, code: i16) -> anyhow::Result<()> {
+        trace!("Recording to cache: {}, {}", &hash, code);
         self.db.execute(
             "INSERT OR REPLACE INTO cache_outputs (hash, code) VALUES (?1, ?2)",
             params![hash, code],
@@ -233,7 +235,7 @@ impl NxCache {
 
                 Ok(vec![
                     self.cache_path.join(&hash),
-                    self.get_task_outputs_path_internal(&hash).into(),
+                    self.get_task_outputs_path_internal(&hash),
                 ])
             })?
             .filter_map(anyhow::Result::ok)
