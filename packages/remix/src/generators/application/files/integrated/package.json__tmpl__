@@ -1,8 +1,6 @@
 {
   "private": true,
   "name": "<%= projectName %>",
-  "description": "",
-  "license": "",
   "scripts": {},
   "type": "module",
   "dependencies": {
@@ -18,10 +16,11 @@
     "@types/react": "<%= typesReactVersion %>",
     "@types/react-dom": "<%= typesReactDomVersion %>",
     "eslint": "<%= eslintVersion %>",
-    "typescript": "<%= typescriptVersion %>"
+    "typescript": "<%= typescriptVersion %>",
+    "vite": "<%= viteVersion %>",
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=20"
   },
   "sideEffects": false
 }
