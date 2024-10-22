@@ -11,7 +11,9 @@ import { TaskResult } from './life-cycle';
 
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
-  loadRootEnvFiles();
+  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
+    loadRootEnvFiles();
+  }
   const nxJson = readNxJson();
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';

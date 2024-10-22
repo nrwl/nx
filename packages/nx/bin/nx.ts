@@ -35,11 +35,12 @@ function main() {
 
   const workspace = findWorkspaceRoot(process.cwd());
 
-  performance.mark('loading dotenv files:start');
-  if (workspace) {
+  if (workspace && process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
+    performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
+    performance.mark('loading dotenv files:end');
   }
-  performance.mark('loading dotenv files:end');
+
   performance.measure(
     'loading dotenv files',
     'loading dotenv files:start',

@@ -1,7 +1,6 @@
-import { config as loadDotEnvFile } from 'dotenv';
-import { expand } from 'dotenv-expand';
 import { workspaceRoot } from './workspace-root';
 import { join } from 'path';
+import { loadAndExpandDotEnvFile } from '../tasks-runner/task-env';
 
 /**
  * This loads dotenv files from:
@@ -11,9 +10,6 @@ import { join } from 'path';
  */
 export function loadRootEnvFiles(root = workspaceRoot) {
   for (const file of ['.local.env', '.env.local', '.env']) {
-    const myEnv = loadDotEnvFile({
-      path: join(root, file),
-    });
-    expand(myEnv);
+    loadAndExpandDotEnvFile(join(root, file), process.env);
   }
 }
