@@ -137,6 +137,7 @@ describe('Tailwind support', () => {
   
         @Component({
           selector: '${project}-foo',
+          standalone: false,
           template: '<button class="custom-btn text-white ${buttonBgColor}">Click me!</button>',
           styles: [\`
             .custom-btn {
