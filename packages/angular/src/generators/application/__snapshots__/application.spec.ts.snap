@@ -25,6 +25,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -85,6 +86,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -545,6 +547,7 @@ exports[`app format files should format files 2`] = `
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -618,8 +621,8 @@ exports[`app nested should create project configs 1`] = `
               "type": "initial",
             },
             {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
+              "maximumError": "8kb",
+              "maximumWarning": "4kb",
               "type": "anyComponentStyle",
             },
           ],
@@ -734,8 +737,8 @@ exports[`app not nested should create project configs 1`] = `
               "type": "initial",
             },
             {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
+              "maximumError": "8kb",
+              "maximumWarning": "4kb",
               "type": "anyComponentStyle",
             },
           ],

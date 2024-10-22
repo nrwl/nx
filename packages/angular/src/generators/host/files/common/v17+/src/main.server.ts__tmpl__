@@ -1,7 +1,7 @@
 import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';

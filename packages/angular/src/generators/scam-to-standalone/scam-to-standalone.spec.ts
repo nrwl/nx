@@ -40,6 +40,7 @@ describe('scam-to-standalone', () => {
         standalone: true,
         imports: [CommonModule],
         selector: 'app-bar',
+        standalone: false,
         templateUrl: './bar.component.html',
         styleUrl: './bar.component.css',
       })
