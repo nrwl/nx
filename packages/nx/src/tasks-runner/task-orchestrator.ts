@@ -421,12 +421,6 @@ export class TaskOrchestrator {
             relative(task.projectRoot ?? workspaceRoot, process.cwd()),
             process.env.NX_VERBOSE_LOGGING === 'true'
           );
-          if (combinedOptions.env) {
-            env = {
-              ...env,
-              ...combinedOptions.env,
-            };
-          }
           if (streamOutput) {
             const args = getPrintableCommandArgsForTask(task);
             output.logCommand(args.join(' '));
@@ -434,9 +428,9 @@ export class TaskOrchestrator {
           const { success, terminalOutput } = await runCommandsImpl(
             {
               ...combinedOptions,
-              env,
               usePty: isRunOne && !this.tasksSchedule.hasTasks(),
               streamOutput,
+              taskEnv: env,
             },
             {
               root: workspaceRoot, // only root is needed in runCommandsImpl

@@ -13,6 +13,7 @@ import { signalToCode } from '../../utils/exit-codes';
 import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
+  unloadDotEnvFiles,
 } from '../../tasks-runner/task-env';
 
 export const LARGE_BUFFER = 1024 * 1000000;
@@ -60,6 +61,7 @@ export interface RunCommandsOptions extends Json {
   usePty?: boolean;
   streamOutput?: boolean;
   tty?: boolean;
+  taskEnv?: Record<string, string>;
 }
 
 const propKeys = [
@@ -295,7 +297,8 @@ async function runSerially(
         options.usePty,
         options.streamOutput,
         options.tty,
-        options.envFile
+        options.envFile,
+        options.taskEnv
       );
     terminalOutput += result.terminalOutput;
     if (!result.success) {
@@ -326,9 +329,10 @@ async function createProcess(
   usePty: boolean = true,
   streamOutput: boolean = true,
   tty: boolean,
-  envFile?: string
+  envFile?: string,
+  taskEnv?: Record<string, string>
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  env = processEnv(color, cwd, env, envFile);
+  env = processEnv(color, cwd, env, envFile, taskEnv);
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
   // currently does not work properly in windows
   if (
@@ -478,21 +482,27 @@ function processEnv(
   color: boolean,
   cwd: string,
   envOptionFromExecutor: Record<string, string>,
-  envFile?: string
+  envFile?: string,
+  taskEnv?: Record<string, string>
 ) {
+  const inlineEnvs = unloadDotEnvFiles({ ...process.env });
+  const envsFromEnvFile = {};
+  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
+    loadEnvVarsFile(envFile, envsFromEnvFile);
+  }
+  let res: Record<string, string> = {
+    ...(taskEnv ?? {}),
+    ...envsFromEnvFile,
+    ...envOptionFromExecutor,
+    ...inlineEnvs,
+  };
+
   let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
   localEnv = {
     ...process.env,
     ...localEnv,
   };
 
-  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
-    loadEnvVarsFile(envFile, localEnv);
-  }
-  let res: Record<string, string> = {
-    ...localEnv,
-    ...envOptionFromExecutor,
-  };
   // need to override PATH to make sure we are using the local node_modules
   if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like
   if (localEnv.Path) res.Path = localEnv.Path; // Windows
