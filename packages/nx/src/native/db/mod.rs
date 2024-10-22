@@ -56,10 +56,10 @@ fn initialize_db(
         },
     );
     let c = match db_version {
-        Ok(version) if version == nx_version => c,
+        Ok(Some(version)) if version == nx_version => c,
         // If there is no version, it means that this database is new, and we can use it
         // we don't have to recreate it. 
-        Err(rusqlite::Error::QueryReturnedNoRows) => c,
+        Ok(None) => c,
         _ => {
             debug!("Disconnecting from existing incompatible database");
             c.close().map_err(|(_, error)| anyhow::Error::from(error))?;

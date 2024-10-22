@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rusqlite::{Connection, Error, Params, Row, Statement};
+use rusqlite::{Connection, Error, OptionalExtension, Params, Row, Statement};
 use std::thread;
 use std::time::{Duration, Instant};
 use tracing::trace;
@@ -28,19 +28,13 @@ impl NxDbConnection {
             .map_err(|e| anyhow::anyhow!("DB prepare: \"{}\", {:?}", sql, e))
     }
 
-    pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> rusqlite::Result<T>
+    pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<Option<T>>
     where
         P: Params + Clone,
         F: FnOnce(&Row<'_>) -> rusqlite::Result<T> + Clone,
     {
-        self.retry_on_busy(move |conn| {
-            conn.query_row(sql, params.clone(), f.clone())
-                .inspect_err(|e| {
-                    if !matches!(e, Error::QueryReturnedNoRows) {
-                        trace!("Db query: \"{}\", {:?}", sql, e)
-                    }
-                })
-        })
+        self.retry_on_busy(|conn| conn.query_row(sql, params.clone(), f.clone()).optional())
+            .map_err(|e| anyhow::anyhow!("Db query: \"{}\", {:?}", sql, e))
     }
 
     pub fn close(self) -> rusqlite::Result<(), (Connection, Error)> {
@@ -50,7 +44,7 @@ impl NxDbConnection {
     }
 
     #[allow(clippy::needless_lifetimes)]
-    fn retry_on_busy<'a, F, T,>(&'a self, operation: F) -> rusqlite::Result<T>
+    fn retry_on_busy<'a, F, T>(&'a self, operation: F) -> rusqlite::Result<T>
     where
         F: Fn(&'a Connection) -> rusqlite::Result<T>,
     {

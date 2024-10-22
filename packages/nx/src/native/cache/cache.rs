@@ -112,7 +112,6 @@ impl NxCache {
                     })
                 },
             )
-            .optional()
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(r)
@@ -155,7 +154,6 @@ impl NxCache {
             }
         }
 
-        trace!("Recording to cache: {:?}", &hash);
         self.record_to_cache(hash, code)?;
         Ok(())
     }
@@ -166,7 +164,11 @@ impl NxCache {
         hash: String,
         result: CachedResult,
     ) -> anyhow::Result<()> {
-        trace!("applying remote cache results: {:?} ({})", &hash, &result.outputs_path);
+        trace!(
+            "applying remote cache results: {:?} ({})",
+            &hash,
+            &result.outputs_path
+        );
         let terminal_output = result.terminal_output;
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
@@ -252,14 +254,15 @@ impl NxCache {
         // Checks that the number of cache records in the database
         // matches the number of cache directories on the filesystem.
         // If they don't match, it means that the cache is out of sync.
-        let cache_records_exist =
-            self.db
-                .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
-                    let exists: bool = row.get(0)?;
-                    Ok(exists)
-                })?;
+        let cache_records_exist = self
+            .db
+            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
+                let exists: bool = row.get(0)?;
+                Ok(exists)
+            })?
+            .unwrap_or(false);
 
-        if !cache_records_exist {
+        if cache_records_exist {
             let hash_regex = Regex::new(r"^\d+$").expect("Hash regex is invalid");
             let fs_entries = std::fs::read_dir(&self.cache_path).map_err(anyhow::Error::from)?;
 
