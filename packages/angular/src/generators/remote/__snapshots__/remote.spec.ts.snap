@@ -127,7 +127,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -236,6 +236,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
 
 @Component({
   selector: 'app-test-entry',
+  standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}
@@ -359,7 +360,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -469,6 +470,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 
 @Component({
   selector: 'app-test-entry',
+  standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
