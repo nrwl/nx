@@ -8,7 +8,8 @@ use rusqlite::Connection;
 use rusqlite::OpenFlags;
 use std::fs::{create_dir_all, remove_file, File};
 use std::path::{Path, PathBuf};
-use tracing::{debug, trace};
+use std::process;
+use tracing::{debug, trace, trace_span};
 
 struct LockFile {
     file: File,
@@ -25,25 +26,21 @@ pub fn connect_to_nx_db(
     let db_path = cache_dir_buf.join(format!("{}.db", db_name.unwrap_or_else(get_machine_id)));
     create_dir_all(cache_dir_buf)?;
 
-    debug!("Creating connection to {:?}", db_path);
+    let _ = trace_span!("process", id = process::id()).entered();
+    trace!("Creating connection to {:?}", db_path);
     let lock_file = create_lock_file(&db_path)?;
 
-    let c =
-        initialize_db(nx_version, &db_path, &lock_file).inspect_err(|_| unlock_file(&lock_file))?;
+    let c = initialize_db(nx_version, &db_path).inspect_err(|_| unlock_file(&lock_file))?;
 
     unlock_file(&lock_file);
 
     Ok(External::new(c))
 }
 
-fn initialize_db(
-    nx_version: String,
-    db_path: &PathBuf,
-    lock_file: &LockFile,
-) -> anyhow::Result<NxDbConnection> {
-    let c = create_connection(db_path).inspect_err(|_| unlock_file(lock_file))?;
+fn initialize_db(nx_version: String, db_path: &PathBuf) -> anyhow::Result<NxDbConnection> {
+    let c = create_connection(db_path)?;
 
-    debug!(
+    trace!(
         "Checking if current existing database is compatible with Nx {}",
         nx_version
     );
@@ -56,26 +53,30 @@ fn initialize_db(
         },
     );
     let c = match db_version {
-        Ok(Some(version)) if version == nx_version => c,
-        // If there is no version, it means that this database is new, and we can use it
-        // we don't have to recreate it. 
-        Ok(None) => c,
+        Ok(Some(version)) if version == nx_version => {
+            trace!("Database is compatible with Nx {}", nx_version);
+            c
+        }
+        // If there is no version, it means that this database is new
+        Ok(None) => {
+            trace!("Recording Nx Version: {}", nx_version);
+            c.execute(
+                "INSERT OR REPLACE INTO metadata (key, value) VALUES ('NX_VERSION', ?)",
+                [nx_version],
+            )?;
+            c
+        }
         _ => {
-            debug!("Disconnecting from existing incompatible database");
+            trace!("Disconnecting from existing incompatible database");
             c.close().map_err(|(_, error)| anyhow::Error::from(error))?;
-            debug!("Removing existing incompatible database");
+            trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 
-            debug!("Creating a new connection to a new database");
+            trace!("Creating a new connection to a new database");
             create_connection(db_path)?
         }
     };
 
-    debug!("Recording Nx Version: {}", nx_version);
-    c.execute(
-        "INSERT OR REPLACE INTO metadata (key, value) VALUES ('NX_VERSION', ?)",
-        [nx_version],
-    )?;
     Ok(c)
 }
 
@@ -91,7 +92,7 @@ fn create_connection(db_path: &PathBuf) -> anyhow::Result<NxDbConnection> {
 }
 
 fn create_metadata_table(c: &NxDbConnection) -> anyhow::Result<()> {
-    debug!("Creating table for metadata");
+    debug!("Creating table for metadata if it does not exist");
     c.execute(
         "CREATE TABLE IF NOT EXISTS metadata (
             key TEXT NOT NULL PRIMARY KEY,
@@ -107,8 +108,10 @@ fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
     let lock_file = File::create(&lock_file_path)
         .map_err(|e| anyhow::anyhow!("Unable to create db lock file: {:?}", e))?;
 
+    trace!("Getting lock on db lock file");
     lock_file
         .lock_exclusive()
+        .inspect(|_| trace!("Got lock on db lock file"))
         .map_err(|e| anyhow::anyhow!("Unable to lock the db lock file: {:?}", e))?;
     Ok(LockFile {
         file: lock_file,
