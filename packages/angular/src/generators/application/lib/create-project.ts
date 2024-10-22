@@ -29,8 +29,8 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
         { type: 'initial', maximumWarning: '500kb', maximumError: '1mb' },
         {
           type: 'anyComponentStyle',
-          maximumWarning: '2kb',
-          maximumError: '4kb',
+          maximumWarning: '4kb',
+          maximumError: '8kb',
         },
       ];
     } else {
