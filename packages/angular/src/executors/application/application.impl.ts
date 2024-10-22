@@ -42,7 +42,6 @@ export default async function* applicationExecutor(
     ? await loadIndexHtmlTransformer(indexHtmlTransformerPath, options.tsConfig)
     : undefined;
 
-  const { buildApplication } = await import('@angular-devkit/build-angular');
   const builderContext = await createBuilderContext(
     {
       builderName: 'application',
@@ -54,12 +53,14 @@ export default async function* applicationExecutor(
 
   const { version: angularVersion } = getInstalledAngularVersionInfo();
   if (gte(angularVersion, '17.1.0')) {
+    const { buildApplication } = await import('@angular-devkit/build-angular');
     return yield* buildApplication(delegateExecutorOptions, builderContext, {
       codePlugins: plugins,
       indexHtmlTransformer,
     });
   }
 
+  const { buildApplication } = require('@angular-devkit/build-angular');
   return yield* buildApplication(
     delegateExecutorOptions,
     builderContext,
