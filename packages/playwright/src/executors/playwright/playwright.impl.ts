@@ -22,6 +22,7 @@ export interface PlaywrightExecutorSchema {
   globalTimeout?: number;
   grepInvert?: string;
   testFiles?: string[];
+  testProject?: string[];
   headed?: boolean;
   ignoreSnapshots?: boolean;
   workers?: number | string;
@@ -85,6 +86,10 @@ export async function playwrightExecutor(
     });
   }
 
+  if (options.testProject) {
+    options.project = options.testProject;
+  }
+
   const args = createArgs(options);
   const p = runPlaywright(args, context.root);
   p.stdout.on('data', (message) => {
@@ -103,7 +108,7 @@ export async function playwrightExecutor(
 
 function createArgs(
   opts: PlaywrightExecutorSchema,
-  exclude: string[] = ['skipInstall']
+  exclude: string[] = ['skipInstall', 'testProject']
 ): string[] {
   const args: string[] = [];
 
