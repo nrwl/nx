@@ -18,7 +18,7 @@ In order to use `@nx/powerpack-conformance`, you need to have an active Powerpac
 
 ## Set Up @nx/powerpack-conformance
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
    ```shell

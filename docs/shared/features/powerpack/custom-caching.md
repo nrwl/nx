@@ -12,7 +12,7 @@ The options range from fully opting in to Nx's management of the remote cache to
 
 ## Setup
 
-The `@nx/powerpack-s3-cache` and `@nx/powerpack-shared-fs-cache` plugins require an Nx Powerpack license to function. [Activating Powerpack](/recipes/installation/activate-powerpack) is a simple process.
+The `@nx/powerpack-s3-cache` and `@nx/powerpack-shared-fs-cache` plugins require an Nx Powerpack license to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
 
 {% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of the Nx CLI" url="https://cloud.nx.app/powerpack/purchase" /%}
 

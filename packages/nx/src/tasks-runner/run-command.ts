@@ -804,7 +804,7 @@ export function getRunner(
         title: `Custom task runners will no longer be supported in Nx 21.`,
         bodyLines: [
           `Use Nx Cloud or the Nx Powerpack caches instead.`,
-          `For more information, see https://nx.dev/features/powerpack/custom-caching`,
+          `For more information, see https://nx.dev/nx-enterprise/powerpack/custom-caching`,
         ],
       });
     }

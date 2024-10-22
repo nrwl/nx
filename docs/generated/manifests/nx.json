@@ -439,51 +439,6 @@
         "tags": ["nx-release"]
       },
       {
-        "id": "powerpack",
-        "name": "Powerpack Features",
-        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/index",
-        "itemList": [
-          {
-            "id": "conformance",
-            "name": "Run Language-Agnostic Conformance Rules",
-            "description": "Write and apply rules for your Nx workspace",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/conformance",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/features/powerpack/conformance",
-            "tags": ["conformance"]
-          },
-          {
-            "id": "owners",
-            "name": "Define Code Ownership at the Project Level",
-            "description": "Configure and maintain code owners for projects in an Nx workspace",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/owners",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/features/powerpack/owners",
-            "tags": ["owners"]
-          },
-          {
-            "id": "custom-caching",
-            "name": "Self-Host the Remote Cache",
-            "description": "Host the remote cache without using Nx Cloud",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/custom-caching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/features/powerpack/custom-caching",
-            "tags": ["custom-caching"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/features/powerpack",
-        "tags": []
-      },
-      {
         "id": "ci-features",
         "name": "CI Features",
         "description": "Features of Nx and Nx Cloud that improve CI",
@@ -642,84 +597,6 @@
     "isExternal": false,
     "path": "/features/manage-releases",
     "tags": ["nx-release"]
-  },
-  "/features/powerpack": {
-    "id": "powerpack",
-    "name": "Powerpack Features",
-    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/index",
-    "itemList": [
-      {
-        "id": "conformance",
-        "name": "Run Language-Agnostic Conformance Rules",
-        "description": "Write and apply rules for your Nx workspace",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/conformance",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/powerpack/conformance",
-        "tags": ["conformance"]
-      },
-      {
-        "id": "owners",
-        "name": "Define Code Ownership at the Project Level",
-        "description": "Configure and maintain code owners for projects in an Nx workspace",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/owners",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/powerpack/owners",
-        "tags": ["owners"]
-      },
-      {
-        "id": "custom-caching",
-        "name": "Self-Host the Remote Cache",
-        "description": "Host the remote cache without using Nx Cloud",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/custom-caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/powerpack/custom-caching",
-        "tags": ["custom-caching"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/features/powerpack",
-    "tags": []
-  },
-  "/features/powerpack/conformance": {
-    "id": "conformance",
-    "name": "Run Language-Agnostic Conformance Rules",
-    "description": "Write and apply rules for your Nx workspace",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/conformance",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/powerpack/conformance",
-    "tags": ["conformance"]
-  },
-  "/features/powerpack/owners": {
-    "id": "owners",
-    "name": "Define Code Ownership at the Project Level",
-    "description": "Configure and maintain code owners for projects in an Nx workspace",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/owners",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/powerpack/owners",
-    "tags": ["owners"]
-  },
-  "/features/powerpack/custom-caching": {
-    "id": "custom-caching",
-    "name": "Self-Host the Remote Cache",
-    "description": "Host the remote cache without using Nx Cloud",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/custom-caching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/powerpack/custom-caching",
-    "tags": ["custom-caching"]
   },
   "/features/ci-features": {
     "id": "ci-features",
@@ -1577,17 +1454,6 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
-          {
-            "id": "activate-powerpack",
-            "name": "Activate Powerpack",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/activate-powerpack",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/activate-powerpack",
-            "tags": ["installation"]
-          },
           {
             "id": "install-non-javascript",
             "name": "Install Nx in a Non-Javascript Repo",
@@ -2932,17 +2798,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "activate-powerpack",
-        "name": "Activate Powerpack",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/activate-powerpack",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/activate-powerpack",
-        "tags": ["installation"]
-      },
-      {
         "id": "install-non-javascript",
         "name": "Install Nx in a Non-Javascript Repo",
         "description": "",
@@ -2968,17 +2823,6 @@
     "isExternal": false,
     "path": "/recipes/installation",
     "tags": []
-  },
-  "/recipes/installation/activate-powerpack": {
-    "id": "activate-powerpack",
-    "name": "Activate Powerpack",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/activate-powerpack",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/activate-powerpack",
-    "tags": ["installation"]
   },
   "/recipes/installation/install-non-javascript": {
     "id": "install-non-javascript",
@@ -5439,6 +5283,163 @@
     "isExternal": false,
     "path": "/recipes/nx-release/build-before-versioning",
     "tags": ["nx-release"]
+  },
+  "/nx-enterprise": {
+    "id": "nx-enterprise",
+    "name": "Enterprise",
+    "description": "Enterprise solutions for the Nx CLI",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "activate-powerpack",
+        "name": "Activate Powerpack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/activate-powerpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/activate-powerpack",
+        "tags": ["installation"]
+      },
+      {
+        "id": "powerpack",
+        "name": "Powerpack Features",
+        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/index",
+        "itemList": [
+          {
+            "id": "conformance",
+            "name": "Run Language-Agnostic Conformance Rules",
+            "description": "Write and apply rules for your Nx workspace",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/conformance",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/conformance",
+            "tags": ["conformance"]
+          },
+          {
+            "id": "owners",
+            "name": "Define Code Ownership at the Project Level",
+            "description": "Configure and maintain code owners for projects in an Nx workspace",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/owners",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/owners",
+            "tags": ["owners"]
+          },
+          {
+            "id": "custom-caching",
+            "name": "Self-Host the Remote Cache",
+            "description": "Host the remote cache without using Nx Cloud",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/custom-caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/custom-caching",
+            "tags": ["custom-caching"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-enterprise",
+    "tags": []
+  },
+  "/nx-enterprise/activate-powerpack": {
+    "id": "activate-powerpack",
+    "name": "Activate Powerpack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/activate-powerpack",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/activate-powerpack",
+    "tags": ["installation"]
+  },
+  "/nx-enterprise/powerpack": {
+    "id": "powerpack",
+    "name": "Powerpack Features",
+    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/index",
+    "itemList": [
+      {
+        "id": "conformance",
+        "name": "Run Language-Agnostic Conformance Rules",
+        "description": "Write and apply rules for your Nx workspace",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/conformance",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/conformance",
+        "tags": ["conformance"]
+      },
+      {
+        "id": "owners",
+        "name": "Define Code Ownership at the Project Level",
+        "description": "Configure and maintain code owners for projects in an Nx workspace",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/owners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/owners",
+        "tags": ["owners"]
+      },
+      {
+        "id": "custom-caching",
+        "name": "Self-Host the Remote Cache",
+        "description": "Host the remote cache without using Nx Cloud",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/custom-caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/custom-caching",
+        "tags": ["custom-caching"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack",
+    "tags": []
+  },
+  "/nx-enterprise/powerpack/conformance": {
+    "id": "conformance",
+    "name": "Run Language-Agnostic Conformance Rules",
+    "description": "Write and apply rules for your Nx workspace",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/conformance",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/conformance",
+    "tags": ["conformance"]
+  },
+  "/nx-enterprise/powerpack/owners": {
+    "id": "owners",
+    "name": "Define Code Ownership at the Project Level",
+    "description": "Configure and maintain code owners for projects in an Nx workspace",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/owners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/owners",
+    "tags": ["owners"]
+  },
+  "/nx-enterprise/powerpack/custom-caching": {
+    "id": "custom-caching",
+    "name": "Self-Host the Remote Cache",
+    "description": "Host the remote cache without using Nx Cloud",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/custom-caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/custom-caching",
+    "tags": ["custom-caching"]
   },
   "/showcase": {
     "id": "showcase",

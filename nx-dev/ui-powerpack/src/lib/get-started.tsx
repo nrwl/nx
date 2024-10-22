@@ -143,21 +143,21 @@ export function GetStarted(): ReactElement {
                 <p className="mt-2">
                   Install Powerpack plugins such as{' '}
                   <TextLink
-                    href="/features/powerpack/custom-caching"
+                    href="/nx-enterprise/powerpack/custom-caching"
                     title="Self-hosted cache storage"
                   >
                     Self-hosted cache storage
                   </TextLink>
                   ,{' '}
                   <TextLink
-                    href="/features/powerpack/conformance"
+                    href="/nx-enterprise/powerpack/conformance"
                     title="Workspace conformance"
                   >
                     workspace conformance
                   </TextLink>
                   , and{' '}
                   <TextLink
-                    href="/features/powerpack/owners"
+                    href="/nx-enterprise/powerpack/owners"
                     title="Codeowners for monorepos"
                   >
                     Codeowners for monorepos

@@ -51,7 +51,7 @@ export function PowerpackFeatures(): ReactElement {
               </p>
               <div className="mt-16">
                 <ButtonLink
-                  href="/features/powerpack/custom-caching"
+                  href="/nx-enterprise/powerpack/custom-caching"
                   title="Learn more about self-hosted cache storage"
                   variant="secondary"
                   size="default"
@@ -92,7 +92,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href="/features/powerpack/owners"
+                href="/nx-enterprise/powerpack/owners"
                 title="Learn more about codeowners"
                 variant="secondary"
                 size="default"
@@ -134,7 +134,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href="/features/powerpack/conformance"
+                href="/nx-enterprise/powerpack/conformance"
                 title="Learn how to set up conformance rules"
                 variant="secondary"
                 size="default"
