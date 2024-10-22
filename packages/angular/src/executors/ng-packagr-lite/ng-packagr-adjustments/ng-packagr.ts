@@ -6,6 +6,17 @@ export async function getNgPackagrInstance(
   options: BuildAngularLibraryExecutorOptions
 ): Promise<NgPackagr> {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
+  if (angularMajorVersion >= 19) {
+    const { STYLESHEET_PROCESSOR } = await import(
+      '../../utilities/ng-packagr/stylesheet-processor.di.js'
+    );
+
+    const packagr = ngPackagr();
+    packagr.withProviders([STYLESHEET_PROCESSOR]);
+
+    return packagr;
+  }
+
   if (angularMajorVersion >= 17) {
     const { WRITE_BUNDLES_TRANSFORM } = await import(
       './v17+/ng-package/entry-point/write-bundles.di.js'
