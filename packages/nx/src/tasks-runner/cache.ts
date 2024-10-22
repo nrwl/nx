@@ -54,6 +54,8 @@ export class DbCache {
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
 
   async init() {
@@ -110,6 +112,15 @@ export class DbCache {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
       if (this.remoteCache) {
+        if (this.isVerbose) {
+          output.log({
+            title: 'Storing remote cache',
+            bodyLines: [
+              `terminalOutput: ${typeof terminalOutput}`,
+              `code: ${typeof code}`,
+            ],
+          });
+        }
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,

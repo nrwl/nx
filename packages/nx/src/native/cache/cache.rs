@@ -5,7 +5,7 @@ use std::time::Instant;
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
-use rusqlite::{params, OptionalExtension};
+use rusqlite::params;
 use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
