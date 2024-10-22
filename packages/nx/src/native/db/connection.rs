@@ -15,17 +15,17 @@ impl NxDbConnection {
 
     pub fn execute<P: Params + Clone>(&self, sql: &str, params: P) -> Result<usize> {
         self.retry_on_busy(|conn| conn.execute(sql, params.clone()))
-            .map_err(|e| anyhow::anyhow!("DB execute: \"{}\", {:?}", sql, e))
+            .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))
     }
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
         self.retry_on_busy(|conn| conn.execute_batch(sql))
-            .map_err(|e| anyhow::anyhow!("DB execute batch: \"{}\", {:?}", sql, e))
+            .map_err(|e| anyhow::anyhow!("DB execute batch error: \"{}\", {:?}", sql, e))
     }
 
     pub fn prepare(&self, sql: &str) -> Result<Statement> {
         self.retry_on_busy(|conn| conn.prepare(sql))
-            .map_err(|e| anyhow::anyhow!("DB prepare: \"{}\", {:?}", sql, e))
+            .map_err(|e| anyhow::anyhow!("DB prepare error: \"{}\", {:?}", sql, e))
     }
 
     pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<Option<T>>
@@ -34,7 +34,7 @@ impl NxDbConnection {
         F: FnOnce(&Row<'_>) -> rusqlite::Result<T> + Clone,
     {
         self.retry_on_busy(|conn| conn.query_row(sql, params.clone(), f.clone()).optional())
-            .map_err(|e| anyhow::anyhow!("Db query: \"{}\", {:?}", sql, e))
+            .map_err(|e| anyhow::anyhow!("DB query error: \"{}\", {:?}", sql, e))
     }
 
     pub fn close(self) -> rusqlite::Result<(), (Connection, Error)> {

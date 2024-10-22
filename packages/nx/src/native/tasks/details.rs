@@ -12,7 +12,7 @@ pub struct HashedTask {
 }
 
 #[napi]
-struct TaskDetails {
+pub struct TaskDetails {
     db: External<NxDbConnection>,
 }
 
@@ -29,8 +29,7 @@ impl TaskDetails {
 
     fn setup(&self) -> anyhow::Result<()> {
         self.db.execute(
-            "
-            CREATE TABLE IF NOT EXISTS task_details (
+            "CREATE TABLE IF NOT EXISTS task_details (
                 hash    TEXT PRIMARY KEY NOT NULL,
                 project  TEXT NOT NULL,
                 target  TEXT NOT NULL,
