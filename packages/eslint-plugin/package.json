@@ -34,7 +34,6 @@
     }
   },
   "dependencies": {
-    "@eslint/compat": "^1.1.1",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@typescript-eslint/type-utils": "^8.0.0",
