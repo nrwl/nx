@@ -1140,7 +1140,7 @@ export function generateAst<T>(
       input.map((item) =>
         generateAst<ts.Expression>(item, propertyAssignmentReplacer)
       ),
-      input.length > 1 // multiline only if more than one item
+      true // Always treat as multiline, using item.length does not work in all cases
     ) as T;
   }
   if (input === null) {
@@ -1152,7 +1152,7 @@ export function generateAst<T>(
         input,
         propertyAssignmentReplacer
       ),
-      Object.keys(input).length > 1 // multiline only if more than one property
+      true // Always treat as multiline, using  Object.keys(input).length > 1 does not work in all cases
     ) as T;
   }
   if (typeof input === 'string') {
