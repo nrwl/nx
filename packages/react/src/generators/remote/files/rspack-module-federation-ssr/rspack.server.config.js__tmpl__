@@ -4,7 +4,7 @@ const {withModuleFederationForSSR} = require('@nx/rspack/module-federation');
 const baseConfig = require("./module-federation.server.config");
 
 const defaultConfig = {
-    ...baseConfig,
+  ...baseConfig,
 };
 
 // Nx plugins for rspack to build config object from Nx options and context.

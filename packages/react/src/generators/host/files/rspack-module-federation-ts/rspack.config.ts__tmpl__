@@ -4,7 +4,7 @@ import {withModuleFederation, ModuleFederationConfig} from '@nx/rspack/module-fe
 import baseConfig from './module-federation.config';
 
 const config: ModuleFederationConfig = {
-    ...baseConfig,
+  ...baseConfig,
 };
 
 // Nx plugins for rspack to build config object from Nx options and context.

@@ -59,10 +59,14 @@ describe('ast-utils', () => {
                 b: "off",
                 c: [
                     "error",
-                    { some: { rich: [
+                    {
+                        some: {
+                            rich: [
                                 "config",
                                 "options"
-                            ] } }
+                            ]
+                        }
+                    }
                 ]
             }
         }"
@@ -73,7 +77,13 @@ describe('ast-utils', () => {
         getOutput({
           files: '*.ts', //  old single * syntax should be replaced by **/*
         })
-      ).toMatchInlineSnapshot(`"{ files: ["**/*.ts"] }"`);
+      ).toMatchInlineSnapshot(`
+        "{
+            files: [
+                "**/*.ts"
+            ]
+        }"
+      `);
 
       expect(
         getOutput({
@@ -82,7 +92,9 @@ describe('ast-utils', () => {
         })
       ).toMatchInlineSnapshot(`
         "{
-            languageOptions: { parser: require("jsonc-eslint-parser") }
+            languageOptions: {
+                parser: require("jsonc-eslint-parser")
+            }
         }"
       `);
 
@@ -95,14 +107,22 @@ describe('ast-utils', () => {
         })
       ).toMatchInlineSnapshot(`
         "{
-            languageOptions: { parserOptions: { foo: "bar" } }
+            languageOptions: {
+                parserOptions: {
+                    foo: "bar"
+                }
+            }
         }"
       `);
 
       // It should add the compat tooling for extends, and spread the rules object to allow for easier editing by users
       expect(getOutput({ extends: ['plugin:@nx/typescript'] }))
         .toMatchInlineSnapshot(`
-        "...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+        "...compat.config({
+            extends: [
+                "plugin:@nx/typescript"
+            ]
+        }).map(config => ({
             ...config,
             rules: {
                 ...config.rules
@@ -113,7 +133,11 @@ describe('ast-utils', () => {
       // It should add the compat tooling for plugins, and spread the rules object to allow for easier editing by users
       expect(getOutput({ plugins: ['@nx/eslint-plugin'] }))
         .toMatchInlineSnapshot(`
-        "...compat.config({ plugins: ["@nx/eslint-plugin"] }).map(config => ({
+        "...compat.config({
+            plugins: [
+                "@nx/eslint-plugin"
+            ]
+        }).map(config => ({
             ...config,
             rules: {
                 ...config.rules
@@ -123,7 +147,11 @@ describe('ast-utils', () => {
 
       // It should add the compat tooling for env, and spread the rules object to allow for easier editing by users
       expect(getOutput({ env: { jest: true } })).toMatchInlineSnapshot(`
-        "...compat.config({ env: { jest: true } }).map(config => ({
+        "...compat.config({
+            env: {
+                jest: true
+            }
+        }).map(config => ({
             ...config,
             rules: {
                 ...config.rules
@@ -134,7 +162,11 @@ describe('ast-utils', () => {
       // Files for the compat tooling should be added appropriately
       expect(getOutput({ env: { jest: true }, files: ['*.ts', '*.tsx'] }))
         .toMatchInlineSnapshot(`
-        "...compat.config({ env: { jest: true } }).map(config => ({
+        "...compat.config({
+            env: {
+                jest: true
+            }
+        }).map(config => ({
             ...config,
             files: [
                 "**/*.ts",
@@ -184,8 +216,12 @@ describe('ast-utils', () => {
                 },
                 { ignores: ["my-lib/.cache/**/*"] },
             {
-                files: ["**/*.svg"],
-                rules: { "@nx/do-something-with-svg": "error" }
+                files: [
+                    "**/*.svg"
+                ],
+                rules: {
+                    "@nx/do-something-with-svg": "error"
+                }
             },
             ];"
       `);

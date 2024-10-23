@@ -1,8 +1,8 @@
 import * as React from 'react'
 <%- importStatement %>
 
-<% for (let cmp of components) { %>
-describe(<%= cmp.name %>.name, () => {<% if (cmp.props.length > 0) { %>
+<%_ for (let cmp of components) { _%>
+describe(<%= cmp.name %>.name, () => {<%_ if (cmp.props.length > 0) { _%>
   let props: <% if (cmp.typeName) { %><%= cmp.typeName %><% } else if (cmp.inlineTypeString) { %><%- cmp.inlineTypeString %><% } else { %>unknown<% } %>;
 
   beforeEach(() => {
@@ -13,9 +13,9 @@ describe(<%= cmp.name %>.name, () => {<% if (cmp.props.length > 0) { %>
 
   it('renders', () => {
     cy.mount(<<%= cmp.name %> {...props}/>)
-  })<% } else { %>
+  })<%_ } else { _%>
   it('renders', () => {
     cy.mount(<<%= cmp.name %> />)
-  })<% } %>
+  })<%_ } _%>
 })
-<% } %>
+<%_ } _%>

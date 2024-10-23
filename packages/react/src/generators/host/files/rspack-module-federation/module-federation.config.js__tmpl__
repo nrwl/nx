@@ -13,9 +13,9 @@ module.exports = {
    *
    */
   remotes: [
-    <% if (static) { 
-         remotes.forEach(function(r) { %> "<%= r.fileName %>", <% }); 
-       }
-    %>
+    <%_ if (static) { 
+      remotes.forEach(function(r) { %> 
+    "<%= r.fileName %>", 
+      <%_ }); } _%>
   ],
 };

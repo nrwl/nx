@@ -441,12 +441,16 @@ module.exports = [
 
         module.exports = [
           ...baseConfig,
-            ...compat.config({ extends: [
+            ...compat.config({
+                extends: [
                     "plugin:@nx/angular",
                     "plugin:@angular-eslint/template/process-inline-templates"
-                ] }).map(config => ({
+                ]
+            }).map(config => ({
                 ...config,
-                files: ["**/*.ts"],
+                files: [
+                    "**/*.ts"
+                ],
                 rules: {
                     ...config.rules,
                     "@angular-eslint/directive-selector": [
@@ -467,9 +471,15 @@ module.exports = [
                     ]
                 }
             })),
-            ...compat.config({ extends: ["plugin:@nx/angular-template"] }).map(config => ({
+            ...compat.config({
+                extends: [
+                    "plugin:@nx/angular-template"
+                ]
+            }).map(config => ({
                 ...config,
-                files: ["**/*.html"],
+                files: [
+                    "**/*.html"
+                ],
                 rules: {
                     ...config.rules
                 }

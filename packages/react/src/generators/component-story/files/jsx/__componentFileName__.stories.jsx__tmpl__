@@ -1,8 +1,8 @@
 import componentName from './<%= componentImportFileName %>';
-<% if ( interactionTests ) { %>
+<%_ if ( interactionTests ) { _%>
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-<% } %>
+<%_ } _%>
 
 export default {
   component: <%= componentName %>,
@@ -10,7 +10,7 @@ export default {
   argTypes: {<% for (let argType of argTypes) { %>
     <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
 }
-   <% } %> 
+   <%_ } _%> 
 };
 
 export const Primary = {
@@ -19,11 +19,11 @@ export const Primary = {
   },
 };
 
-<% if ( interactionTests ) { %>
+<%_ if ( interactionTests ) { _%>
 export const Heading: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/Welcome to <%=componentName%>!/gi)).toBeTruthy();
   },
 };
-<% } %>
+<%_ } _%>
