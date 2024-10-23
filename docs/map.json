@@ -1861,6 +1861,49 @@
               "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
+                  "name": "Single Tenant",
+                  "id": "single-tenant",
+                  "description": "Manage an on-premise installation of Nx Cloud",
+                  "itemList": [
+                    {
+                      "name": "Single Tenant Nx Cloud Hosting",
+                      "id": "overview",
+                      "tags": ["single-tenant"],
+                      "file": "nx-cloud/enterprise/single-tenant/overview"
+                    },
+                    {
+                      "name": "Authenticate with GitHub",
+                      "id": "auth-github",
+                      "file": "nx-cloud/enterprise/single-tenant/auth-github"
+                    },
+                    {
+                      "name": "Authenticate with GitLab",
+                      "id": "auth-gitlab",
+                      "file": "nx-cloud/enterprise/single-tenant/auth-gitlab"
+                    },
+                    {
+                      "name": "Authenticate with BitBucket",
+                      "id": "auth-bitbucket",
+                      "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket"
+                    },
+                    {
+                      "name": "Authenticate with BitBucket Data Center",
+                      "id": "auth-bitbucket-data-center",
+                      "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center"
+                    },
+                    {
+                      "name": "Authenticate via SAML",
+                      "id": "auth-saml",
+                      "file": "nx-cloud/enterprise/single-tenant/auth-saml"
+                    },
+                    {
+                      "name": "Custom GitHub App",
+                      "id": "custom-github-app",
+                      "file": "nx-cloud/enterprise/single-tenant/custom-github-app"
+                    }
+                  ]
+                },
+                {
                   "name": "On-Premise",
                   "id": "on-premise",
                   "description": "Manage an on-premise installation of Nx Cloud",
