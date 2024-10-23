@@ -31,6 +31,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       viewEncapsulation: options.viewEncapsulation,
       displayBlock: options.displayBlock,
       selector: options.selector,
+      setStandaloneFalse: angularMajorVersion >= 18,
       angularMajorVersion,
       tpl: '',
     }

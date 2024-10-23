@@ -178,7 +178,7 @@ async function handleMessage(socket, data: string) {
     await respondWithErrorAndExit(
       socket,
       `Daemon outdated`,
-      new Error(outdated)
+      new Error(outdated + ' ===> payload: ' + data)
     );
   }
 

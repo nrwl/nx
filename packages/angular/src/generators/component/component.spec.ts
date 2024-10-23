@@ -205,6 +205,7 @@ describe('component Generator', () => {
 
       @Component({
         selector: 'example',
+        standalone: false,
         templateUrl: './example.component.html'
       })
       export class ExampleComponent {}

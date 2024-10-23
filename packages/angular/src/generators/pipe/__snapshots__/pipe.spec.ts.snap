@@ -17,6 +17,7 @@ exports[`pipe generator --no-standalone should generate a pipe with test files a
 
 @Pipe({
   name: 'test',
+  standalone: false,
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {
@@ -54,7 +55,8 @@ exports[`pipe generator --no-standalone should import the pipe correctly when fi
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
+  standalone: false
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {
@@ -92,7 +94,8 @@ exports[`pipe generator --no-standalone should import the pipe correctly when fi
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test'
+  name: 'test',
+  standalone: false
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {

@@ -1085,8 +1085,8 @@ describe('app', () => {
             "type": "initial",
           },
           {
-            "maximumError": "4kb",
-            "maximumWarning": "2kb",
+            "maximumError": "8kb",
+            "maximumWarning": "4kb",
             "type": "anyComponentStyle",
           },
         ]
@@ -1120,8 +1120,8 @@ describe('app', () => {
             "type": "initial",
           },
           {
-            "maximumError": "4kb",
-            "maximumWarning": "2kb",
+            "maximumError": "8kb",
+            "maximumWarning": "4kb",
             "type": "anyComponentStyle",
           },
         ]

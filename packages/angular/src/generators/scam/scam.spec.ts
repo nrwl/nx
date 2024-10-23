@@ -31,6 +31,7 @@ describe('SCAM Generator', () => {
 
       @Component({
         selector: 'example',
+        standalone: false,
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
@@ -162,6 +163,7 @@ describe('SCAM Generator', () => {
 
         @Component({
           selector: 'example',
+          standalone: false,
           templateUrl: './example.component.html',
           styleUrl: './example.component.css'
         })
@@ -205,6 +207,7 @@ describe('SCAM Generator', () => {
 
         @Component({
           selector: 'example',
+          standalone: false,
           templateUrl: './example.component.html',
           styleUrl: './example.component.css'
         })

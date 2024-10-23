@@ -636,7 +636,11 @@ describe('Linter', () => {
 
     function verifySuccessfulMigratedSetup(myapp: string, mylib: string) {
       expect(
-        runCLI(`lint ${myapp}`, { silenceError: true, env: { CI: 'false' } })
+        runCLI(`lint ${myapp} --verbose`, {
+          silenceError: true,
+          env: { CI: 'false' },
+          verbose: true,
+        })
       ).toContain('Successfully ran target lint');
       expect(
         runCLI(`lint e2e`, { silenceError: true, env: { CI: 'false' } })
