@@ -45,7 +45,7 @@ export function PowerpackFeatures(): ReactElement {
                   href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
                   title="Get a Powerpack license"
                 >
-                  free for small existing teams
+                  free for small teams
                 </TextLink>
                 .
               </p>
