@@ -9,11 +9,7 @@ export function GetStarted(): ReactElement {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h2" variant="title">
-            Premium features, <br /> carefully crafted DX
-          </SectionHeading>
-          <SectionHeading as="p" variant="subtitle" className="text mt-6">
-            Expand your capabilities with Nx Powerpack, <br /> a suite of
-            advanced tools designed for enterprises.
+            Get started in minutes
           </SectionHeading>
         </div>
 
