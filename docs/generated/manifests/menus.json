@@ -5897,6 +5897,71 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Single Tenant",
+                "path": "/ci/recipes/enterprise/single-tenant",
+                "id": "single-tenant",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Single Tenant Nx Cloud Hosting",
+                    "path": "/ci/recipes/enterprise/single-tenant/overview",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with GitHub",
+                    "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+                    "id": "auth-github",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with GitLab",
+                    "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+                    "id": "auth-gitlab",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with BitBucket",
+                    "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+                    "id": "auth-bitbucket",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with BitBucket Data Center",
+                    "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+                    "id": "auth-bitbucket-data-center",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate via SAML",
+                    "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+                    "id": "auth-saml",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Custom GitHub App",
+                    "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+                    "id": "custom-github-app",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
                 "name": "On-Premise",
                 "path": "/ci/recipes/enterprise/on-premise",
                 "id": "on-premise",
@@ -6331,6 +6396,71 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Single Tenant",
+            "path": "/ci/recipes/enterprise/single-tenant",
+            "id": "single-tenant",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Single Tenant Nx Cloud Hosting",
+                "path": "/ci/recipes/enterprise/single-tenant/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitHub",
+                "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+                "id": "auth-github",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitLab",
+                "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+                "id": "auth-gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket",
+                "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+                "id": "auth-bitbucket",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket Data Center",
+                "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+                "id": "auth-bitbucket-data-center",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML",
+                "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+                "id": "auth-saml",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Custom GitHub App",
+                "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+                "id": "custom-github-app",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "On-Premise",
             "path": "/ci/recipes/enterprise/on-premise",
             "id": "on-premise",
@@ -6477,6 +6607,127 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Single Tenant",
+        "path": "/ci/recipes/enterprise/single-tenant",
+        "id": "single-tenant",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Single Tenant Nx Cloud Hosting",
+            "path": "/ci/recipes/enterprise/single-tenant/overview",
+            "id": "overview",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with GitHub",
+            "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+            "id": "auth-github",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with GitLab",
+            "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+            "id": "auth-gitlab",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with BitBucket",
+            "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+            "id": "auth-bitbucket",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with BitBucket Data Center",
+            "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+            "id": "auth-bitbucket-data-center",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate via SAML",
+            "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+            "id": "auth-saml",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Custom GitHub App",
+            "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+            "id": "custom-github-app",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Single Tenant Nx Cloud Hosting",
+        "path": "/ci/recipes/enterprise/single-tenant/overview",
+        "id": "overview",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with GitHub",
+        "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+        "id": "auth-github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with GitLab",
+        "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+        "id": "auth-gitlab",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with BitBucket",
+        "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+        "id": "auth-bitbucket",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with BitBucket Data Center",
+        "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+        "id": "auth-bitbucket-data-center",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate via SAML",
+        "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+        "id": "auth-saml",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom GitHub App",
+        "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+        "id": "custom-github-app",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
