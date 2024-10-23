@@ -54,6 +54,8 @@ export class DbCache {
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
 
   async init() {
