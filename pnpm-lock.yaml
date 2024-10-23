@@ -145,8 +145,8 @@ importers:
         specifier: ^1.2.14
         version: 1.2.14(@react-spring/three@9.7.4(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1))(@react-three/drei@9.112.0(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(@types/react@18.3.1)(@types/three@0.166.0)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
       string-width:
-        specifier: ^4.2.3
-        version: 4.2.3
+        specifier: ^7.2.0
+        version: 7.2.0
       tailwind-merge:
         specifier: ^2.4.0
         version: 2.5.2
