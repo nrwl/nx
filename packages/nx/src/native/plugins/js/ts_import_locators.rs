@@ -541,13 +541,16 @@ fn process_file(
     (source_project, file_path): (&String, &String),
 ) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
+    trace!("processing {}", file_path);
     let cm = Arc::<SourceMap>::default()
         .load_file(Path::new(file_path))
         .map_err(|e| anyhow!("Unable to load {}: {}", file_path, e))?;
+    trace!("loaded {} as typescript", file_path);
 
     let comments = SingleThreadedComments::default();
 
     let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
+    trace!("created a lexer for {}", file_path);
     let lexer = Lexer::new(
         Syntax::Typescript(TsConfig {
             tsx,
@@ -567,6 +570,7 @@ fn process_file(
     let mut static_import_expressions: Vec<(String, BytePos)> = vec![];
     let mut dynamic_import_expressions: Vec<(String, BytePos)> = vec![];
 
+    trace!("processing tokens in {}", file_path);
     loop {
         let current_token = state.next();
 
@@ -615,8 +619,6 @@ fn process_file(
             }
         }
     }
-
-    trace!("finding imports in {} {:.2?}", file_path, now.elapsed());
 
     // These are errors from the lexer. They don't always mean something is broken
     let mut errs = state.take_errors();
@@ -669,6 +671,8 @@ fn process_file(
         .filter_map(code_is_not_ignored)
         .collect();
 
+    trace!("found imports in {} {:.2?}", file_path, now.elapsed());
+
     Ok(Some(ImportResult {
         file: file_path.clone(),
         source_project: source_project.clone(),
@@ -688,10 +692,14 @@ fn find_imports(
         .flat_map(|(project_name, files)| files.iter().map(move |file| (project_name, file)))
         .collect();
 
+    let start = Instant::now();
+    let files_count = files_to_process.len();
+    trace!("processing {} files", files_count);
     let (successes, errors): (Vec<_>, Vec<_>) = files_to_process
         .into_par_iter()
         .map(process_file)
         .partition(|r| r.is_ok());
+    trace!("processing {} files took{:.2?}", files_count, start.elapsed());
 
     if !errors.is_empty() {
         let errors = errors
