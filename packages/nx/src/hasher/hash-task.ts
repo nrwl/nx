@@ -24,7 +24,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   const tasksToHash = tasksWithHashers
     .filter(({ task, customHasher }) => {
       // If a task has a custom hasher, it might depend on the outputs of other tasks
-      if (customHasher) {
+      if (customHasher && customHasher.name !== 'eslint-hasher') {
         return false;
       }
 
