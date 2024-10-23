@@ -329,7 +329,7 @@ function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
 
   for (const targetConfig of Object.values(rootProject.data.targets ?? {})) {
     if (
-      ['@nx/eslint:lint', '@nrwl/linter:eslint', '@nx/linter:eslint'].includes(
+      ['@nx/eslint:lint', '@nx/linter:eslint'].includes(
         targetConfig.executor
       ) ||
       (targetConfig.executor === 'nx:run-commands' &&
