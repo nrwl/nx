@@ -63,3 +63,16 @@ If you use an external file storage and an external MongoDB instance, you don't 
 See note above about setting a cache expiration time. For Azure blob
 storage, [see this guide](https://docs.microsoft.com/en-us/azure/cdn/cdn-manage-expiration-of-blob-content).
 {% /callout %}
+
+## On Premise Docs
+
+- [Set up Nx Cloud On-Premise](/ci/recipes/enterprise/on-premise/on-premise)
+- [Authenticate with a Single Admin](/ci/recipes/enterprise/on-premise/auth-single-admin)
+- [Authenticate with GitHub](/ci/recipes/enterprise/on-premise/auth-github)
+- [On-Prem VM Setup](/ci/recipes/enterprise/on-premise/ami-setup)
+- [Authenticate with GitLab](/ci/recipes/enterprise/on-premise/auth-gitlab)
+- [Authenticate with BitBucket](/ci/recipes/enterprise/on-premise/auth-bitbucket)
+- [Authenticate with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center)
+- [Authenticate via SAML](/ci/recipes/enterprise/on-premise/auth-saml)
+- [Advanced Configuration](/ci/recipes/enterprise/on-premise/advanced-config)
+- [Custom GitHub App](/ci/recipes/enterprise/on-premise/custom-github-app)

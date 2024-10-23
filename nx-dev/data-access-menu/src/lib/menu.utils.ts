@@ -94,6 +94,17 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
           m.id === 'troubleshooting'
       )
       .map((m) => {
+        if (m.id === 'recipes') {
+          m.children.map((recipesChild) => {
+            if (recipesChild.id !== 'enterprise') {
+              return recipesChild;
+            }
+            recipesChild.children = recipesChild.children.filter(
+              (enterpriseChild) => enterpriseChild.id !== 'on-premise'
+            );
+            return recipesChild;
+          });
+        }
         return {
           ...m,
           disableCollapsible:

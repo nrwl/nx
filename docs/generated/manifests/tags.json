@@ -1188,6 +1188,15 @@
       "path": "/ci/features/remote-cache"
     }
   ],
+  "single-tenant": [
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/single-tenant/overview",
+      "id": "overview",
+      "name": "Single Tenant Nx Cloud Hosting",
+      "path": "/ci/recipes/enterprise/single-tenant/overview"
+    }
+  ],
   "on-premise": [
     {
       "description": "Set up Nx Cloud on machines that you control",
