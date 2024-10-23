@@ -324,39 +324,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Powerpack Features",
-            "path": "/features/powerpack",
-            "id": "powerpack",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Run Language-Agnostic Conformance Rules",
-                "path": "/features/powerpack/conformance",
-                "id": "conformance",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Define Code Ownership at the Project Level",
-                "path": "/features/powerpack/owners",
-                "id": "owners",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Self-Host the Remote Cache",
-                "path": "/features/powerpack/custom-caching",
-                "id": "custom-caching",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "CI Features",
             "path": "/features/ci-features",
             "id": "ci-features",
@@ -468,63 +435,6 @@
         "name": "Manage Releases",
         "path": "/features/manage-releases",
         "id": "manage-releases",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Powerpack Features",
-        "path": "/features/powerpack",
-        "id": "powerpack",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Run Language-Agnostic Conformance Rules",
-            "path": "/features/powerpack/conformance",
-            "id": "conformance",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Define Code Ownership at the Project Level",
-            "path": "/features/powerpack/owners",
-            "id": "owners",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Self-Host the Remote Cache",
-            "path": "/features/powerpack/custom-caching",
-            "id": "custom-caching",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Run Language-Agnostic Conformance Rules",
-        "path": "/features/powerpack/conformance",
-        "id": "conformance",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Define Code Ownership at the Project Level",
-        "path": "/features/powerpack/owners",
-        "id": "owners",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Self-Host the Remote Cache",
-        "path": "/features/powerpack/custom-caching",
-        "id": "custom-caching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1155,14 +1065,6 @@
             "id": "installation",
             "isExternal": false,
             "children": [
-              {
-                "name": "Activate Powerpack",
-                "path": "/recipes/installation/activate-powerpack",
-                "id": "activate-powerpack",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Install Nx in a Non-Javascript Repo",
                 "path": "/recipes/installation/install-non-javascript",
@@ -2145,14 +2047,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Activate Powerpack",
-            "path": "/recipes/installation/activate-powerpack",
-            "id": "activate-powerpack",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Install Nx in a Non-Javascript Repo",
             "path": "/recipes/installation/install-non-javascript",
             "id": "install-non-javascript",
@@ -2169,14 +2063,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Activate Powerpack",
-        "path": "/recipes/installation/activate-powerpack",
-        "id": "activate-powerpack",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3969,6 +3855,121 @@
         "name": "Build Before Versioning",
         "path": "/recipes/nx-release/build-before-versioning",
         "id": "build-before-versioning",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enterprise",
+        "path": "/nx-enterprise",
+        "id": "nx-enterprise",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Activate Powerpack",
+            "path": "/nx-enterprise/activate-powerpack",
+            "id": "activate-powerpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Powerpack Features",
+            "path": "/nx-enterprise/powerpack",
+            "id": "powerpack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Run Language-Agnostic Conformance Rules",
+                "path": "/nx-enterprise/powerpack/conformance",
+                "id": "conformance",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Define Code Ownership at the Project Level",
+                "path": "/nx-enterprise/powerpack/owners",
+                "id": "owners",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Self-Host the Remote Cache",
+                "path": "/nx-enterprise/powerpack/custom-caching",
+                "id": "custom-caching",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Activate Powerpack",
+        "path": "/nx-enterprise/activate-powerpack",
+        "id": "activate-powerpack",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Powerpack Features",
+        "path": "/nx-enterprise/powerpack",
+        "id": "powerpack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Run Language-Agnostic Conformance Rules",
+            "path": "/nx-enterprise/powerpack/conformance",
+            "id": "conformance",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Define Code Ownership at the Project Level",
+            "path": "/nx-enterprise/powerpack/owners",
+            "id": "owners",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Self-Host the Remote Cache",
+            "path": "/nx-enterprise/powerpack/custom-caching",
+            "id": "custom-caching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Language-Agnostic Conformance Rules",
+        "path": "/nx-enterprise/powerpack/conformance",
+        "id": "conformance",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Define Code Ownership at the Project Level",
+        "path": "/nx-enterprise/powerpack/owners",
+        "id": "owners",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Self-Host the Remote Cache",
+        "path": "/nx-enterprise/powerpack/custom-caching",
+        "id": "custom-caching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -10191,6 +10192,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-webpack",
+                "path": "/nx-api/rspack/generators/convert-webpack",
+                "name": "convert-webpack",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -10863,6 +10872,23 @@
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "executors",
+            "path": "/nx-api/powerpack-conformance/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "bundle-rule",
+                "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
+                "name": "bundle-rule",
+                "children": [],
+                "isExternal": false,
                 "disableCollapsible": false
               }
             ],
