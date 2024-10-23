@@ -155,7 +155,12 @@ export function findNextConfigPath(
     );
   }
 
-  const candidates = ['next.config.js', 'next.config.cjs', 'next.config.mjs'];
+  const candidates = [
+    'next.config.js',
+    'next.config.cjs',
+    'next.config.mjs',
+    'next.config.ts',
+  ];
   for (const candidate of candidates) {
     if (existsSync(join(dirname, candidate))) return candidate;
   }
