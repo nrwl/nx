@@ -326,17 +326,17 @@ importers:
         specifier: 20.0.3
         version: 20.0.3(@babel/traverse@7.25.6)(@playwright/test@1.47.1)(@rspack/core@1.0.5(@swc/helpers@0.5.11))(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(esbuild@0.19.5)(eslint@8.57.0)(html-webpack-plugin@5.5.0(webpack@5.88.0))(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6))(vitest@1.3.1(@types/node@20.16.10)(jsdom@20.0.3)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6))(webpack-cli@5.1.4)
       '@nx/powerpack-enterprise-cloud':
-        specifier: 1.0.8
-        version: 1.0.8(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+        specifier: 1.0.9
+        version: 1.0.9(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/powerpack-license':
-        specifier: 1.0.8
-        version: 1.0.8
+        specifier: 1.0.9
+        version: 1.0.9
       '@nx/powerpack-s3-cache':
-        specifier: 1.0.8
-        version: 1.0.8(@aws-sdk/client-sso-oidc@3.654.0(@aws-sdk/client-sts@3.654.0))(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+        specifier: 1.0.9
+        version: 1.0.9(@aws-sdk/client-sso-oidc@3.654.0(@aws-sdk/client-sts@3.654.0))(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       '@nx/powerpack-shared-fs-cache':
-        specifier: 1.0.8
-        version: 1.0.8(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+        specifier: 1.0.9
+        version: 1.0.9(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       '@nx/react':
         specifier: 20.0.3
         version: 20.0.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(webpack@5.88.0)
@@ -4654,9 +4654,6 @@ packages:
     resolution: {integrity: sha512-y7efHHwghQfk28G2z3tlZ67pLG0XdfYbcVG26r7YIXALRsrVQcTq4/tdenSmdOrEsNahIYA/eh8aEVROWGFUDg==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@nrwl/devkit@19.8.1':
-    resolution: {integrity: sha512-Rt/tgQ8DGfOcqKVPE0KTQowibGnNdtOqIVXRtONODIr02JzdlyxXV3Y9zJz4zD45Yu3s+9YNIe5UrG4cZbTTMQ==}
-
   '@nuxt/devalue@2.0.2':
     resolution: {integrity: sha512-GBzP8zOc7CGWyFQS6dv1lQz8VVpz5C2yRszbXufwG/9zhStTIH50EtD87NmWbTMwXDvZLNg8GIpb1UFdH93JCA==}
 
@@ -4714,11 +4711,6 @@ packages:
     peerDependenciesMeta:
       cypress:
         optional: true
-
-  '@nx/devkit@19.8.1':
-    resolution: {integrity: sha512-hBfHZAQt9NUAaEgkqizEUC3t2kOt05tr1Jn+PoIPYObHXe4Q6Qd8fqNj9fdH6a+sOQvK8Foy9JSRN3RQVMtQ0A==}
-    peerDependencies:
-      nx: '>= 17 <= 20'
 
   '@nx/devkit@20.0.3':
     resolution: {integrity: sha512-tB6iQ2opvipyy+4J0eImW/Nl8SoILPpDodwnThDJ2U2mflHG6/+3Wl6Q1hXieOnjT+ZE++ve91aYDEAi9OMwvA==}
@@ -4844,72 +4836,72 @@ packages:
       '@playwright/test':
         optional: true
 
-  '@nx/powerpack-enterprise-cloud@1.0.8':
-    resolution: {integrity: sha512-PyLYHVuBe1Xpf00pE3Z4CT14UQw3mf+yHF6MB+GlyJhsBMD1ttk3y/7SvHJYNTGFXVOWkhggOM7dadSd7sg1FA==}
+  '@nx/powerpack-enterprise-cloud@1.0.9':
+    resolution: {integrity: sha512-WLEnMVftpsuko1RjGNA6rpO804tu+h/2FPtXGF29BKBJHoBCZi0thXnRa2ViAeNrSP7WflsGSe0Pz4iRqnU6nA==}
 
-  '@nx/powerpack-license-darwin-arm64@1.0.8':
-    resolution: {integrity: sha512-KzVAPjRHPFtT6vuzpM/rbk+0VuH9s66PmhqP20EcQ3tn3tz3SLuR+gqnGVuvEFynfkVC/IHxrGxh1twBUxcIeg==}
+  '@nx/powerpack-license-darwin-arm64@1.0.9':
+    resolution: {integrity: sha512-/hDOboejVJqcaYI2ZCpuNi3gjQKCBRIn24Vq12HBNtKs1BJTsqANnBM5mgySdC/nsW2XAuRzsskTHp1Tud3o2g==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@nx/powerpack-license-darwin-x64@1.0.8':
-    resolution: {integrity: sha512-dNPo/tDwa1tkH1zKLrYhHD5xqiWMCHGAbIDQYSBcNB3YveUwkoIqoZdKsqJk9JjmkExAMtXi6JQceJncFKv/CQ==}
+  '@nx/powerpack-license-darwin-x64@1.0.9':
+    resolution: {integrity: sha512-UIEMs0MjnKYuQtavn5QClNwNOEGPeBkU2t0Sxe2JOuh5RyqjUc2qMLxLRPR5jpoSkPd+XbEEIoxfndWMLaAdGQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@nx/powerpack-license-linux-arm-gnueabihf@1.0.8':
-    resolution: {integrity: sha512-yZvwB0iPEnJht8h7N6rFQktpUqWYhFgndlhwN2Kk6SyK5za/OZk3EdRq4u7JVYiF2xq0SaLMB5Yk1IMsZ769yg==}
+  '@nx/powerpack-license-linux-arm-gnueabihf@1.0.9':
+    resolution: {integrity: sha512-EH4NYAj5+cVtsTHlJrXLY1RsW21lIch6AS63Lq5PR1Rri/BqxlOFX25kU05b+YbCaV1pvwNs3YCXu2YBtnpdDg==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
 
-  '@nx/powerpack-license-linux-arm64-gnu@1.0.8':
-    resolution: {integrity: sha512-gWoQ9f7u2QUU3HYQGkDfekEXsjRwWjH5CYX154uYCQOPdJiAmYJX6QJuzGxJ7CZ1ZbWpg1EgCTZy10TppGOjcw==}
+  '@nx/powerpack-license-linux-arm64-gnu@1.0.9':
+    resolution: {integrity: sha512-oFRZyZzPXwh3Shr/iI8BSUWzZSNeizP1EUKBqHKrD4ZsQlfzmQSkfhCmhdB7ERGLDbObmz8bXVPYxyhLIPbWSA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-arm64-musl@1.0.8':
-    resolution: {integrity: sha512-3Yewi4P5K2jD9Eu+twwrdyqU3t4ga5qD3ha++udD6efEXPE1a6Yj1tN4VpjsYHmOkTgDf3Rnvqbbf31B8p6O7w==}
+  '@nx/powerpack-license-linux-arm64-musl@1.0.9':
+    resolution: {integrity: sha512-pBZgyB+pzdrj+ftcn4/sbUaPtq1XNGPGi/6ZLBGOCC7bLa5+0VXC55KeqA5/unBRyB2f9V8vaTpwDK3T2AB1Tg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-x64-gnu@1.0.8':
-    resolution: {integrity: sha512-j3hRPdTuXyTFkEQqeuYwXe8HxlMdhoheUYYnTrqwQMaJxS4Tmj0bjDU6AKEBvmCFW+vS4FGglS7OOqovlAb9MQ==}
+  '@nx/powerpack-license-linux-x64-gnu@1.0.9':
+    resolution: {integrity: sha512-VqxS5G4tJKmjHQxK/bOtnySIHojT58nQ65AUlaA6les57OXMdCEKmuIv0zaCPc61Ca3CAl037JGu1/M54GdBbA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-x64-musl@1.0.8':
-    resolution: {integrity: sha512-7CD5HL44L8WqqQfdaSnS0/CVtNThkY2ROL0vDzDkQkEE0HsBPYyQe4gaUbQXrnrIIh/me1Ydf400oxChiWV/SA==}
+  '@nx/powerpack-license-linux-x64-musl@1.0.9':
+    resolution: {integrity: sha512-NKnsN3oCmMR9xBQwgoxzAksT5nTIMn9D8+H+pgLKnv6zVUFlAuhVyNUhixuZEPsuXvRhFYPE83LtiNe8FhsdeQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@nx/powerpack-license-win32-arm64-msvc@1.0.8':
-    resolution: {integrity: sha512-bSW5R8Uv8rMQ7C4/RArDr+5bKGMTBZ/IsLD8kXrc0QYRunLiwlGbHL+jXh5yr+XhREpGfaMH+c1zzkIc2WxMkg==}
+  '@nx/powerpack-license-win32-arm64-msvc@1.0.9':
+    resolution: {integrity: sha512-OppQ7bzYOoRqIYMPKjWtjrK0fAxKkhmLgcOF7BXYzPa9gvxZmsH9S25a3SlWSowi/DLL7qRBswK7jleobbobuw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@nx/powerpack-license-win32-x64-msvc@1.0.8':
-    resolution: {integrity: sha512-wmIlJ8Ytr9LeTBt0dsPDmJW2l+7MRAOTYmG5j88hnhZysNm8kwXLLFickSXFv9X5nVv3kegheT9XNwjm3fhnjg==}
+  '@nx/powerpack-license-win32-x64-msvc@1.0.9':
+    resolution: {integrity: sha512-0E+dwSnGWEup4akqAOQOAsDzZu+DVKmksuPpGHBFB4rZwAMtOYoaQRBG93xPzN8d0BJ2thPl3dQsTROtDCbh6g==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@nx/powerpack-license@1.0.8':
-    resolution: {integrity: sha512-YdhCU6IgT0WWA+hBk1U+q+65E9oIpVqOuwahfCxl15Kaci1YiQS2o6mC0vDR1LoA6WWE3Y2i3dgTferWu9cxgA==}
+  '@nx/powerpack-license@1.0.9':
+    resolution: {integrity: sha512-culhK6umFjHBQ9eVT72yQOktRPwvassWU87p3RDM94PcCfIu6y5WOCKEtTEA1KFu7lEVjYBGvK0h5h6cJLs8Kw==}
     engines: {node: '>= 10'}
 
-  '@nx/powerpack-s3-cache@1.0.8':
-    resolution: {integrity: sha512-6BoVjOYP505KW+cSEVcVszF+TzeiLuQW73QaQ7Ckc4wFsjQ+MAZELV5vNsHbwCnPDP7SwyMcOifH3dM//qRJ8w==}
+  '@nx/powerpack-s3-cache@1.0.9':
+    resolution: {integrity: sha512-C+fwKzOfqiXcGZL+8dsOYlzxMLxtPqqpP38wel+rdFpUQhCnVUpb/QY81zLIY4qh6+6xrr4iZOEzYOhKbMq1NA==}
 
-  '@nx/powerpack-shared-fs-cache@1.0.8':
-    resolution: {integrity: sha512-jehPzgEd3vZIh0Ql1xo5oamZBIeg1u0zEi/2tTjfWQJEdJ9EnDUKKuxrJOntyMV+H7BRP/ncbq72rou4r3cu2Q==}
+  '@nx/powerpack-shared-fs-cache@1.0.9':
+    resolution: {integrity: sha512-Fc1x+mYOMOAYjtrrhKGVBswsp7C0XHF5obuspLUN0ItAbLlH5EEonx/Ap7P49UoDzMUmvXbzuh9oOX88ZlyjVg==}
 
   '@nx/react@20.0.3':
     resolution: {integrity: sha512-RICOW29hA+apdSOqklDrrw5adfbuV7NEPCFInB02qSgywFjfQ5xShfMyoetXg1Gw5mojmCZeyJFb0g1Y5FaAhQ==}
@@ -21336,12 +21328,6 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@nrwl/devkit@19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
-    dependencies:
-      '@nx/devkit': 19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-    transitivePeerDependencies:
-      - nx
-
   '@nuxt/devalue@2.0.2': {}
 
   '@nuxt/devtools-kit@1.4.2(magicast@0.3.5)(rollup@4.22.0)(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6))(webpack-sources@3.2.3)':
@@ -21639,19 +21625,6 @@ snapshots:
       - supports-color
       - typescript
       - verdaccio
-
-  '@nx/devkit@19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
-    dependencies:
-      '@nrwl/devkit': 19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-      ejs: 3.1.10
-      enquirer: 2.3.6
-      ignore: 5.3.2
-      minimatch: 9.0.3
-      nx: 20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
-      semver: 7.6.3
-      tmp: 0.2.3
-      tslib: 2.7.0
-      yargs-parser: 21.1.1
 
   '@nx/devkit@20.0.3(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
     dependencies:
@@ -22007,75 +21980,81 @@ snapshots:
       - vue-tsc
       - webpack-cli
 
-  '@nx/powerpack-enterprise-cloud@1.0.8(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+  '@nx/powerpack-enterprise-cloud@1.0.9(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
     dependencies:
-      '@nx/devkit': 19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-      '@nx/powerpack-license': 1.0.8
+      '@nx/devkit': 20.0.3(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/powerpack-license': 1.0.9
     transitivePeerDependencies:
       - nx
 
-  '@nx/powerpack-license-darwin-arm64@1.0.8':
+  '@nx/powerpack-license-darwin-arm64@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-darwin-x64@1.0.8':
+  '@nx/powerpack-license-darwin-x64@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-linux-arm-gnueabihf@1.0.8':
+  '@nx/powerpack-license-linux-arm-gnueabihf@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-linux-arm64-gnu@1.0.8':
+  '@nx/powerpack-license-linux-arm64-gnu@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-linux-arm64-musl@1.0.8':
+  '@nx/powerpack-license-linux-arm64-musl@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-linux-x64-gnu@1.0.8':
+  '@nx/powerpack-license-linux-x64-gnu@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-linux-x64-musl@1.0.8':
+  '@nx/powerpack-license-linux-x64-musl@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-win32-arm64-msvc@1.0.8':
+  '@nx/powerpack-license-win32-arm64-msvc@1.0.9':
     optional: true
 
-  '@nx/powerpack-license-win32-x64-msvc@1.0.8':
+  '@nx/powerpack-license-win32-x64-msvc@1.0.9':
     optional: true
 
-  '@nx/powerpack-license@1.0.8':
+  '@nx/powerpack-license@1.0.9':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.4
     optionalDependencies:
-      '@nx/powerpack-license-darwin-arm64': 1.0.8
-      '@nx/powerpack-license-darwin-x64': 1.0.8
-      '@nx/powerpack-license-linux-arm-gnueabihf': 1.0.8
-      '@nx/powerpack-license-linux-arm64-gnu': 1.0.8
-      '@nx/powerpack-license-linux-arm64-musl': 1.0.8
-      '@nx/powerpack-license-linux-x64-gnu': 1.0.8
-      '@nx/powerpack-license-linux-x64-musl': 1.0.8
-      '@nx/powerpack-license-win32-arm64-msvc': 1.0.8
-      '@nx/powerpack-license-win32-x64-msvc': 1.0.8
+      '@nx/powerpack-license-darwin-arm64': 1.0.9
+      '@nx/powerpack-license-darwin-x64': 1.0.9
+      '@nx/powerpack-license-linux-arm-gnueabihf': 1.0.9
+      '@nx/powerpack-license-linux-arm64-gnu': 1.0.9
+      '@nx/powerpack-license-linux-arm64-musl': 1.0.9
+      '@nx/powerpack-license-linux-x64-gnu': 1.0.9
+      '@nx/powerpack-license-linux-x64-musl': 1.0.9
+      '@nx/powerpack-license-win32-arm64-msvc': 1.0.9
+      '@nx/powerpack-license-win32-x64-msvc': 1.0.9
 
-  '@nx/powerpack-s3-cache@1.0.8(@aws-sdk/client-sso-oidc@3.654.0(@aws-sdk/client-sts@3.654.0))(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+  '@nx/powerpack-s3-cache@1.0.9(@aws-sdk/client-sso-oidc@3.654.0(@aws-sdk/client-sts@3.654.0))(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))':
     dependencies:
       '@aws-sdk/client-s3': 3.657.0
       '@aws-sdk/credential-providers': 3.654.0(@aws-sdk/client-sso-oidc@3.654.0(@aws-sdk/client-sts@3.654.0))
       '@aws-sdk/lib-storage': 3.657.0(@aws-sdk/client-s3@3.657.0)
-      '@nx/devkit': 19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-      '@nx/powerpack-license': 1.0.8
+      '@nx/devkit': 20.0.3(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/powerpack-license': 1.0.9
+      nx: 20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       semver: 7.5.4
       tar-stream: 3.1.7
     transitivePeerDependencies:
       - '@aws-sdk/client-sso-oidc'
+      - '@swc-node/register'
+      - '@swc/core'
       - aws-crt
-      - nx
+      - debug
 
-  '@nx/powerpack-shared-fs-cache@1.0.8(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+  '@nx/powerpack-shared-fs-cache@1.0.9(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))':
     dependencies:
-      '@nx/devkit': 19.8.1(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-      '@nx/powerpack-license': 1.0.8
+      '@nx/devkit': 20.0.3(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/powerpack-license': 1.0.9
+      nx: 20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       semver: 7.5.4
     transitivePeerDependencies:
-      - nx
+      - '@swc-node/register'
+      - '@swc/core'
+      - debug
 
   '@nx/react@20.0.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@20.0.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(webpack@5.88.0)':
     dependencies:
