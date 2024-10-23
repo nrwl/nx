@@ -262,7 +262,7 @@ export function DocumentationHeader({
                     leaveTo="opacity-0 translate-y-1"
                   >
                     <Popover.Panel className="absolute z-30 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <TwoColumnsMenu items={featuresItems} />
+                      <SectionsMenu sections={featuresItems} />
                     </Popover.Panel>
                   </Transition>
                 </>

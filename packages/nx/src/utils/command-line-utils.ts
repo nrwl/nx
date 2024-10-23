@@ -41,6 +41,7 @@ export interface NxArgs {
   batch?: boolean;
   excludeTaskDependencies?: boolean;
   skipSync?: boolean;
+  sortRootTsconfigPaths?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {

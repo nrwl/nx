@@ -22,14 +22,14 @@ Here's the source code of the final result for this tutorial.
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces" /%} -->
 
-{% youtube
+<!-- {% youtube
 src="https://www.youtube.com/embed/ZA9K4iT3ANc"
 title="Nx NPM Workspaces Tutorial Walkthrough"
-/%}
+/%} -->
 
 ## Starting Repository
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=51" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=51" /%} -->
 
 To get started, fork [the sample repository](https://github.com/nrwl/tuskydesign/fork) and clone it on your local machine:
 
@@ -37,11 +37,11 @@ To get started, fork [the sample repository](https://github.com/nrwl/tuskydesign
 git clone https://github.com/<your-username>/tuskydesign.git
 ```
 
-The repository has two React packages (under `packages/buttons` and `packages/forms`) that are used in a `demo` application (located in `apps/demo`) that was designed to be used with the Vite CLI. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
+The repository has three TypeScript packages under `packages/animals`, `packages/names` and `packages/zoo`. The `zoo` package uses `animals` and `names` to generate a random message. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["packages/*", "apps/*"]
+  "workspaces": ["packages/*"]
 }
 ```
 
@@ -51,32 +51,34 @@ Because of this setting, when the install command is run at the root, the correc
 npm install
 ```
 
-Now let's try running some tasks. To lint the `demo` app, use the `lint` npm script:
+Now let's try running some tasks. To build the `animals` package, use the `build` npm script:
 
-```text {% command="npm run lint -w @tuskdesign/demo" path="~/tuskydesigns" %}
-> @tuskdesign/demo@0.0.0 lint
-> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+```text {% command="npm run build -w @tuskdesign/animals" path="~/tuskydesigns" %}
+> @tuskdesign/animals@1.2.0 build
+> tsc --build tsconfig.lib.json
 ```
 
-If you try to build the `demo` app, it will fail.
+The repository is set up using [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html) so building the `zoo` package will automatically build all its dependencies.
 
-```text
-Error: Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
+```text {% command="npm run build -w @tuskdesign/zoo" path="~/tuskydesigns" %}
+> @tuskdesign/zoo@1.2.0 build
+> tsc --build tsconfig.lib.json
 ```
 
-The `build` script fails because it needs the `buttons` and `forms` projects to be built first in order to work correctly. To do this, lets return to the root of the repository and run the `build` task for every project in the repo:
+To run the `zoo` package use the `serve` script:
 
-```shell {% path="~/tuskydesigns" %}
-npm run build --ws
+```text {% command="npm run serve -w @tuskdesign/zoo" path="~/tuskydesigns" %}
+> @tuskdesign/zoo@1.2.0 serve
+> node dist/index.js
+
+Bo the pig says oink!
 ```
-
-When the `buttons` and `forms` projects are built first, the `demo` app can build successfully.
 
 Now that you have a basic understanding of the repository we're working with, let's see how Nx can help us.
 
 ## Smart Monorepo
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=170" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=170" /%} -->
 
 Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
@@ -97,20 +99,19 @@ First, the script will propose installing some plugins based on the packages tha
 Second, the script asks a series of questions to help set up caching for you.
 
 - `Which scripts need to be run in order?` - Choose `build`
-- `Which scripts are cacheable?` - Choose `typecheck`, `build` and `lint`
-- `Does the "typecheck" script create any outputs?` - Enter nothing
+- `Which scripts are cacheable?` - Choose `build` and `typecheck`
 - `Does the "build" script create any outputs?` - Enter `dist`
-- `Does the "lint" script create any outputs?` - Enter nothing
+- `Does the "typecheck" script create any outputs?` - Enter nothing
 - `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
 ### Explore Your Workspace
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=250" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=250" /%} -->
 
 If you run `nx graph` as instructed, you'll see the dependencies between your projects.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx graph --focus=@tuskdesign/demo
+npx nx graph --focus=@tuskdesign/zoo
 ```
 
 {% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/npm-workspaces-project-graph.json" %}
@@ -120,12 +121,12 @@ Nx uses this graph to determine the order tasks are run and enforce module bound
 
 ### Caching Pre-configured
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=285" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=285" /%} -->
 
 Nx has been configured to run your `build`, `typecheck` and `lint` tasks. You can run a single task like this:
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx build @tuskdesign/demo
+npx nx build @tuskdesign/zoo
 ```
 
 Or all tasks with a certain name like this:
@@ -156,23 +157,23 @@ During the `init` script, Nx also configured caching for these tasks. You can se
 }
 ```
 
-Try running `build` for the `demo` app a second time:
+Try running `build` for the `zoo` app a second time:
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx build @tuskdesign/demo
+npx nx build @tuskdesign/zoo
 ```
 
-The first time `nx build` was run, it took about 5 seconds - just like running `npm run build`. But the second time you run `nx build`, it completes instantly and displays this message:
+The first time `nx build` was run, it took about 1 second - just like running `npm run build`. But the second time you run `nx build`, it completes instantly and displays this message:
 
 ```text
 Nx read the output from the cache instead of running the command for 3 out of 3 tasks.
 ```
 
-You can see the same caching behavior working when you run `npx nx lint` or `npx nx typecheck`.
+You can see the same caching behavior working when you run `npx nx typecheck`.
 
 ### Use Task Pipelines
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=358" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=358" /%} -->
 
 You may be wondering why the caching message in the previous section mentioned 3 tasks when you only ran the `build` task from the terminal. When we said that `build` tasks must be run in order during the setup script, Nx created a simple task pipeline. You can see the configuration for it in the `nx.json` file:
 
@@ -195,135 +196,159 @@ npx nx graph
 Alternatively, you can pass the `--graph` option to the run command to inspect the task graph.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx run @tuskdesign/demo:build --graph
+npx nx run @tuskdesign/zoo:build --graph
 ```
 
 {% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks1.json" %}
 {% /graph %}
 
-With this pipeline in place, you will never run into the error we hit at the beginning of the tutorial where the `forms` and `buttons` packages weren't built so the `demo` app couldn't build. Test this out by deleting the `packages/forms/dist` folder and then re-running the `build` task for the `demo` app.
-
-```text {% command="npx nx build @tuskdesign/demo" path="~/tuskydesigns" %}
-...
-
- NX   Successfully ran target build for project @tuskdesign/demo and 2 tasks it depends on (40ms)
-
-Nx read the output from the cache instead of running the command for 3 out of 3 tasks.
-```
-
-Not only does the build complete successfully, but it finishes instantly and the `packages/forms/dist` folder is put back in place thanks to the caching.
-
 ### Create a Task Pipeline
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=450" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=450" /%} -->
 
-You may have noticed in the `apps/demo/package.json` file, there is a `prebuild` script that runs `typecheck` before the `build` script in order to catch any type errors. Let's set up this same behavior in the Nx task pipeline as well.
+You may have noticed in the `packages/zoo/package.json` file, there is a `serve` script that expects the `build` task to already have created the `dist` folder. Let's set up a task pipeline that will guarantee that the project's `build` task has been run.
 
 ```json {% fileName="nx.json" highlightLines=[5] %}
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
+    "serve": {
+      "dependsOn": ["build"]
+    },
     "build": {
-      "dependsOn": ["^build", "typecheck"],
+      "dependsOn": ["^build"],
       "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
     "typecheck": {
       "cache": true
-    },
-    "lint": {
-      "cache": true
     }
   },
   "defaultBase": "main"
 }
 ```
 
-The `dependsOn` line makes Nx run the `typecheck` task for the current project and the `build` task for any dependencies before running the current project's `build` task. Now `nx build` will run the `typecheck` task just like `npm run build` does.
+The `serve` target's `dependsOn` line makes Nx run the `build` task for the current project before running the current project's `build` task. Now `nx serve` will run the `build` task before running the `serve` task.
 
-### Use Nx Plugins to Enhance Vite Tasks with Caching
+### Use Nx Plugins to Enhance Your Workspace
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=507" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=507" /%} -->
 
-You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. They directly infer information from the actual tooling configuration files (`vite.config.ts` in this case).
+We mentioned earlier that this repository is using TypeScript project references defined in the `tsconfig.json` files to incrementally build each project so that the output is available for other projects in the repository. In order for this feature to work, the `references` section in the `tsconfig.json` files for each project need to accurately reflect the actual dependencies of that project. This can be difficult to maintain, but Nx already knows the dependencies of every project and you can use the `@nx/js` plugin to automatically keep the TypeScript project references in sync with the code base.
 
 Nx plugins can:
 
 - automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
 - infer tasks that can be run on a project because of the tooling present
+- keep tooling configuration in sync with the structure of your codebase
 - provide code generators to help scaffold out projects
 - automatically keep the tooling versions and configuration files up to date
 
-For this tutorial, we'll just focus on the automatic caching configuration.
+For this tutorial, we'll focus on inferring tasks and keeping tooling configuration in sync.
 
-First, let's delete the `outputs` array from `nx.json` so that we don't override the inferred values from the plugin. Your `nx.json` should look like this:
+First, let's remove the existing `build` and `typecheck` scripts from each project's `package.json` files to allow the `@nx/js` plugin to infer those tasks for us.
 
-```json {% fileName="nx.json" %}
+```json {% fileName="packages/animals/package.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build", "typecheck"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
+  "scripts": {}
 }
 ```
 
-Now let's add the `@nx/vite` plugin:
-
-```{% command="npx nx add @nx/vite" path="~/tuskydesign" %}
-✔ Installing @nx/vite...
-✔ Initializing @nx/vite...
-
- NX   Package @nx/vite added successfully.
+```json {% fileName="packages/names/package.json" %}
+{
+  "scripts": {}
+}
 ```
 
-The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/vite`, the initialization script registers the plugin in the `plugins` array of `nx.json` and updates any `package.json` scripts that execute Vite related tasks. Open the project details view for the `demo` app and look at the `build` task.
+```json {% fileName="packages/zoo/package.json" %}
+{
+  "scripts": {
+    "serve": "node dist/index.js"
+  }
+}
+```
+
+Now let's add the `@nx/js` plugin:
+
+```{% command="npx nx add @nx/js" path="~/tuskydesign" %}
+✔ Installing @nx/js...
+✔ Initializing @nx/js...
+ NX  Generating @nx/js:init
+
+UPDATE nx.json
+UPDATE package.json
+
+ NX   Package @nx/js added successfully.
+```
+
+The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/js`, the initialization script registers the plugin in the `plugins` array of `nx.json`. The registered plugin automatically infers `build` and `typecheck` tasks for any project with a `tsconfig.json` file. Open the project details view for the `zoo` package and look at the `build` task.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx show project @tuskdesign/demo
+npx nx show project @tuskdesign/zoo
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/npm-workspaces-pdv.json" %}
 {% /project-details %}
 
-If you hover over the settings for the `vite:build` task, you can see where those settings come from. The `inputs` and `outputs` are defined by the `@nx/vite` plugin from the `vite.config.ts` file where as the `dependsOn` property we set earlier in the tutorial in the `targetDefaults` in the `nx.json` file.
+Notice that the `inputs` that are inferred for the `build` task match the `include` and `exclude` settings in the `tsconfig.lib.json` file. As those settings are changed, the cache `inputs` will automatically update to the correct values.
 
-Now let's change where the `build` results are output to in the `vite.config.ts` file.
+The `build` task also has a [sync generator](/concepts/sync-generators) defined. The `@nx/js:typescript-sync` generator will automatically update the `references` property in the `tsconfig.json` files across the repository to match the actual dependencies in your code.
 
-```ts {% fileName="apps/demo/vite.config.ts" highlightLines=[7-9] %}
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+Let's see this behavior in action by extracting some common code into a new `util` library.
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  build: {
-    outDir: '../../dist/demo',
-  },
-});
+First, create a library with `@nx/js:lib` generator:
+
+```shell
+nx g @nx/js:lib packages/util
 ```
 
-Now if you look at project details view again, you'll see that the `outputs` property for Nx's caching has been updated to stay in sync with the setting in the `vite.config.ts` file.
+Set the bundler to `tsc`, the linter to `none` and the unit test runner to `none`.
 
-You can also add the `@nx/eslint` plugin to see how it infers `lint` tasks based on the ESLint configuration files.
+Now we can move the `getRandomItem` function from `packages/names/names.ts` and `packages/animals/animals.ts` into the `packages/util/src/lib/util.ts` file.
+
+```ts {% fileName="packages/util/src/lib/util.ts" %}
+export function getRandomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+```
+
+```ts {% fileName="packages/animals/animals.ts" %}
+import { getRandomItem } from '@tuskdesign/util';
+
+// ...
+```
+
+```ts {% fileName="packages/names/names.ts" %}
+import { getRandomItem } from '@tuskdesign/util';
+
+// ...
+```
+
+Now if you run run the build, Nx will notice that the TypeScript project references need to be updated and ask your permission to update them.
+
+```text {% command="nx build @tuskdesign/zoo" path="~/tuskydesigns" %}
+ NX   The workspace is out of sync
+
+The @nx/js:typescript-sync sync generator identified 6 files in the workspace that are out of sync:
+Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.
+
+Please note that having the workspace out of sync will result in an error in CI.
+
+? Would you like to sync the identified changes to get your workspace up to date? …
+❯ Yes, sync the changes and run the tasks
+  No, run the tasks without syncing the changes
+```
+
+Allow the sync to happen and you'll see that the `tsconfig.json` and `tsconfig.lib.json` files have been updated to include references to the new `util` library. With this system in place, no matter how your codebase changes, the TypeScript project references will always be correct.
 
 ### Checkpoint
 
 At this point, the repository is still using all the same tools to run tasks, but now Nx runs those tasks in a smarter way. The tasks are efficiently cached so that there is no repeated work and the cache configuration settings are automatically synced with your tooling configuration files by Nx plugins. Also, any task dependencies are automatically executed whenever needed because we configured task pipelines for the projects.
 
-Open up the task graph for `demo` app's `build` task again to see the changes.
+Open up the task graph for `zoo` app's `serve` task again to see the changes.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx run @tuskdesign/demo:build --graph
+npx nx run @tuskdesign/zoo:serve --graph
 ```
 
 {% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks2.json" %}
@@ -331,9 +356,9 @@ npx nx run @tuskdesign/demo:build --graph
 
 ## Manage Releases
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=713" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=713" /%} -->
 
-If you decide to publish the `forms` or `buttons` packages on NPM, Nx can also help you [manage the release process](/features/manage-releases). Release management involves updating the version of your package, populating a changelog, and publishing the new version to the NPM registry.
+If you decide to publish the `animals` or `names` packages on NPM, Nx can also help you [manage the release process](/features/manage-releases). Release management involves updating the version of your package, populating a changelog, and publishing the new version to the NPM registry.
 
 First you'll need to define which projects Nx should manage releases for by setting the `release.projects` property in `nx.json`:
 
@@ -345,7 +370,7 @@ First you'll need to define which projects Nx should manage releases for by sett
 }
 ```
 
-Now you're ready to use the `nx release` command to publish the `forms` and `buttons` packages. The first time you run `nx release`, you need to add the `--first-release` flag so that Nx doesn't try to find the previous version to compare against. It's also recommended to use the `--dry-run` flag until you're sure about the results of the `nx release` command, then you can run it a final time without the `--dry-run` flag.
+Now you're ready to use the `nx release` command to publish the `animals` and `names` packages. The first time you run `nx release`, you need to add the `--first-release` flag so that Nx doesn't try to find the previous version to compare against. It's also recommended to use the `--dry-run` flag until you're sure about the results of the `nx release` command, then you can run it a final time without the `--dry-run` flag.
 
 To preview your first release, run:
 
@@ -363,7 +388,7 @@ After this first release, you can remove the `--first-release` flag and just run
 
 ## Fast CI ⚡ {% highlightColor="green" %}
 
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%}
+<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%} -->
 
 {% callout type="check" title="Forked repository with Nx" %}
 Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can fork the [sample repository with Nx already added](https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces).
@@ -415,7 +440,7 @@ Use the following command to generate a CI workflow file.
 npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also [distribute tasks across multiple machines](/ci/features/distribute-task-execution) to ensure fast and reliable CI runs.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line.
 
 The key lines in the CI pipeline are:
 
@@ -432,8 +457,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -475,4 +500,4 @@ Connect with the rest of the Nx community with these resources:
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
+- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for zoos and Nx insights

@@ -148,6 +148,7 @@ const ignoreAnchorUrls = [
   '/blog',
   '/pricing',
   '/ci/reference',
+  '/changelog',
   '/conf',
 ];
 

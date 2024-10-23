@@ -575,33 +575,6 @@
       "path": "/nx-api/nx/documents/release"
     }
   ],
-  "conformance": [
-    {
-      "description": "Write and apply rules for your Nx workspace",
-      "file": "shared/features/powerpack/conformance",
-      "id": "conformance",
-      "name": "Run Language-Agnostic Conformance Rules",
-      "path": "/features/powerpack/conformance"
-    }
-  ],
-  "owners": [
-    {
-      "description": "Configure and maintain code owners for projects in an Nx workspace",
-      "file": "shared/features/powerpack/owners",
-      "id": "owners",
-      "name": "Define Code Ownership at the Project Level",
-      "path": "/features/powerpack/owners"
-    }
-  ],
-  "custom-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/features/powerpack/custom-caching",
-      "id": "custom-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/features/powerpack/custom-caching"
-    }
-  ],
   "intro": [
     {
       "description": "",
@@ -813,13 +786,6 @@
   "installation": [
     {
       "description": "",
-      "file": "shared/recipes/installation/activate-powerpack",
-      "id": "activate-powerpack",
-      "name": "Activate Powerpack",
-      "path": "/recipes/installation/activate-powerpack"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/installation/install-non-javascript",
       "id": "install-non-javascript",
       "name": "Install Nx in a Non-Javascript Repo",
@@ -831,6 +797,13 @@
       "id": "update-global-installation",
       "name": "Update Your Global Nx Installation",
       "path": "/recipes/installation/update-global-installation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
     }
   ],
   "workspace-watching": [
@@ -1103,6 +1076,33 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "conformance": [
+    {
+      "description": "Write and apply rules for your Nx workspace",
+      "file": "shared/features/powerpack/conformance",
+      "id": "conformance",
+      "name": "Run Language-Agnostic Conformance Rules",
+      "path": "/nx-enterprise/powerpack/conformance"
+    }
+  ],
+  "owners": [
+    {
+      "description": "Configure and maintain code owners for projects in an Nx workspace",
+      "file": "shared/features/powerpack/owners",
+      "id": "owners",
+      "name": "Define Code Ownership at the Project Level",
+      "path": "/nx-enterprise/powerpack/owners"
+    }
+  ],
+  "custom-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/features/powerpack/custom-caching",
+      "id": "custom-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/nx-enterprise/powerpack/custom-caching"
+    }
+  ],
   "database": [
     {
       "description": "",
@@ -1186,6 +1186,15 @@
       "id": "remote-cache",
       "name": "Use Remote Caching (Nx Replay)",
       "path": "/ci/features/remote-cache"
+    }
+  ],
+  "single-tenant": [
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/single-tenant/overview",
+      "id": "overview",
+      "name": "Single Tenant Nx Cloud Hosting",
+      "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
   "on-premise": [

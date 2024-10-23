@@ -52,7 +52,12 @@ where
         .filter_map(move |entry| {
             entry
                 .ok()
-                .and_then(|e| e.path().strip_prefix(&base_dir).ok().map(|p| p.to_owned()))
+                .and_then(|e|
+                    e.path()
+                    .strip_prefix(&base_dir).ok()
+                    .filter(|p| !p.to_string_lossy().is_empty())
+                    .map(|p| p.to_owned())
+                )
         })
 }
 
