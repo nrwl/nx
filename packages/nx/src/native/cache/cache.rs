@@ -262,7 +262,7 @@ impl NxCache {
             })?
             .unwrap_or(false);
 
-        if cache_records_exist {
+        if !cache_records_exist {
             let hash_regex = Regex::new(r"^\d+$").expect("Hash regex is invalid");
             let fs_entries = std::fs::read_dir(&self.cache_path).map_err(anyhow::Error::from)?;
 
