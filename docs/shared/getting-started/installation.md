@@ -79,7 +79,7 @@ npm add --global nx@latest
 ```
 
 {% /tab %}
-{% tab label="yarn" %}
+{% tab label="yarn (v1 only)" %}
 
 ```shell
 yarn global add nx@latest
