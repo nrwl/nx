@@ -1,13 +1,13 @@
 import {ModuleFederationConfig} from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-    name: '<%= projectName %>',
-    <% if (dynamic) { %>
-   library: { type: 'var', name: '<%= projectName %>'},
-   <% } %>
-    exposes: {
-        './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
-    },
+  name: '<%= projectName %>',
+  <%_ if (dynamic) { _%>
+  library: { type: 'var', name: '<%= projectName %>'},
+  <%_ } _%>
+  exposes: {
+    './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
+  },
 };
 
 export default config;

@@ -5,7 +5,7 @@ import {withModuleFederationForSSR} from '@nx/react/module-federation';
 import baseConfig from './module-federation.config';
 
 const defaultConfig = {
-    ...baseConfig
+  ...baseConfig
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.

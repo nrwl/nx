@@ -84,19 +84,29 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
-              rules: { "@nx/enforce-module-boundaries": [
+              rules: {
+                  "@nx/enforce-module-boundaries": [
                       "error",
                       {
                           enforceBuildableLibDependency: true,
                           allow: [],
-                          depConstraints: [{
+                          depConstraints: [
+                              {
                                   sourceTag: "*",
-                                  onlyDependOnLibsWithTags: ["*"]
-                              }]
+                                  onlyDependOnLibsWithTags: [
+                                      "*"
+                                  ]
+                              }
+                          ]
                       }
-                  ] }
+                  ]
+              }
           },
-          ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+          ...compat.config({
+              extends: [
+                  "plugin:@nx/typescript"
+              ]
+          }).map(config => ({
               ...config,
               files: [
                   "**/*.ts",
@@ -106,7 +116,11 @@ describe('convertEslintJsonToFlatConfig', () => {
                   ...config.rules
               }
           })),
-          ...compat.config({ env: { jest: true } }).map(config => ({
+          ...compat.config({
+              env: {
+                  jest: true
+              }
+          }).map(config => ({
               ...config,
               files: [
                   "**/*.spec.ts",
@@ -118,8 +132,16 @@ describe('convertEslintJsonToFlatConfig', () => {
                   ...config.rules
               }
           })),
-          { ignores: ["src/ignore/to/keep.ts"] },
-          { ignores: ["something/else"] }
+          {
+              ignores: [
+                  "src/ignore/to/keep.ts"
+              ]
+          },
+          {
+              ignores: [
+                  "something/else"
+              ]
+          }
       ];
       "
     `);
@@ -195,7 +217,11 @@ describe('convertEslintJsonToFlatConfig', () => {
           ...baseConfig,
           ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
           { languageOptions: { globals: { ...globals.jest } } },
-          { rules: { "@next/next/no-html-link-for-pages": "off" } },
+          {
+              rules: {
+                  "@next/next/no-html-link-for-pages": "off"
+              }
+          },
           {
               files: [
                   "**/*.ts",
@@ -203,10 +229,12 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
-              rules: { "@next/next/no-html-link-for-pages": [
+              rules: {
+                  "@next/next/no-html-link-for-pages": [
                       "error",
                       "apps/test-next/pages"
-                  ] }
+                  ]
+              }
           },
           {
               files: [
@@ -225,12 +253,26 @@ describe('convertEslintJsonToFlatConfig', () => {
               rules: {}
           },
           {
-              files: ["**/*.json"],
-              rules: { "@nx/dependency-checks": "error" },
-              languageOptions: { parser: require("jsonc-eslint-parser") }
+              files: [
+                  "**/*.json"
+              ],
+              rules: {
+                  "@nx/dependency-checks": "error"
+              },
+              languageOptions: {
+                  parser: require("jsonc-eslint-parser")
+              }
           },
-          { ignores: [".next/**/*"] },
-          { ignores: ["something/else"] }
+          {
+              ignores: [
+                  ".next/**/*"
+              ]
+          },
+          {
+              ignores: [
+                  "something/else"
+              ]
+          }
       ];
       "
     `);

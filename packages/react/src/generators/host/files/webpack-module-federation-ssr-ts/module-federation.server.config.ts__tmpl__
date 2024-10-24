@@ -1,12 +1,12 @@
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-    name: '<%= projectName %>',
-    remotes: [
-      <% if (static) { 
-         remotes.forEach(function(r) { %> "<%= r.fileName %>", <% }); 
-       }
-    %>
+  name: '<%= projectName %>',
+  remotes: [
+    <%_ if (static) { 
+        remotes.forEach(function(r) { _%> 
+    "<%= r.fileName %>", 
+    <%_ }); } _%>
   ],
 };
 

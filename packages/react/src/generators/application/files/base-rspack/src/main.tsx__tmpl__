@@ -1,11 +1,31 @@
-<% if (strict) { %>import { StrictMode } from 'react';<% } %>
+<%_ if (strict) { _%>import { StrictMode } from 'react';<%_ } _%>
 import * as ReactDOM from 'react-dom/client';
-<% if (routing) { %>import { BrowserRouter } from 'react-router-dom';<% } %>
+<%_ if (routing) { _%>import { BrowserRouter } from 'react-router-dom';<%_ } _%>
 
 import App from './app/<%= fileName %>';
 import './styles.<%= style %>'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+<%_ if(strict && !routing) { _%>
 root.render(
-<% if (strict) { %><StrictMode><% } %><% if (routing) { %><BrowserRouter><% } %><App /><% if (routing) { %></BrowserRouter><% } %><% if (strict) { %></StrictMode><% } %>
-);
+  <StrictMode>
+    <App/>
+  </StrictMode>
+)
+<%_ } _%>
+<%_ if(!strict && routing) { _%>
+root.render(
+  <BrowserRouter>
+    <App/>
+  </BrowserRouter>
+)
+<%_ } _%>
+<%_ if(strict && routing) { _%>
+root.render(
+  <StrictMode>
+    <BrowserRouter>
+      <App/>
+    </BrowserRouter>
+  </StrictMode>
+)
+<%_ } _%>
