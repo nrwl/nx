@@ -93,7 +93,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
-    packageManagerCommands: getPackageManagerCommand('npm'),
+    packageManagerCommands: getPackageManagerCommand(),
     pluginPackageName,
   });
 }
