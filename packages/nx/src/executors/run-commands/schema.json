@@ -169,6 +169,14 @@
       "type": "boolean",
       "description": "Whether commands should be run with a tty terminal",
       "hidden": true
+    },
+    "taskEnv": {
+      "type": "object",
+      "description": "Task specific environment variables",
+      "hidden": true,
+      "additionalProperties": {
+        "type": "string"
+      }
     }
   },
   "additionalProperties": true,

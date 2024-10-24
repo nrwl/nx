@@ -227,7 +227,7 @@ function loadDotEnvFilesForTask(
   return environmentVariables;
 }
 
-function unloadDotEnvFiles(environmentVariables: NodeJS.ProcessEnv) {
+export function unloadDotEnvFiles(environmentVariables: NodeJS.ProcessEnv) {
   for (const file of ['.env', '.local.env', '.env.local']) {
     unloadDotEnvFile(join(workspaceRoot, file), environmentVariables);
   }
