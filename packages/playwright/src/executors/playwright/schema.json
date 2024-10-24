@@ -55,6 +55,10 @@
         "type": "string"
       }
     },
+    "testProject": {
+      "type": "string",
+      "description": "Playwright TestProject to use for running tests"
+    },
     "headed": {
       "type": "boolean",
       "description": "Run tests in headed browsers",
