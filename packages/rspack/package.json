@@ -30,7 +30,7 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "enquirer": "~2.3.6",
     "express": "^4.19.2",
-    "http-proxy-middleware": "^3.0.0",
+    "http-proxy-middleware": "^3.0.3",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "sass-loader": "^12.2.0",
