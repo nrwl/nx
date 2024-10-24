@@ -199,7 +199,7 @@ export function PowerpackFeatures(): ReactElement {
                   licensing model that reduces red tape and speeds up
                   procurement processes
                 </Strong>
-                .Your teams can get started quickly without lengthy
+                . Your teams can get started quickly without lengthy
                 negotiations, ensuring a faster go-to-market.
               </p>
             </div>
@@ -217,7 +217,7 @@ export function PowerpackFeatures(): ReactElement {
               <p className="mt-6 text-pretty text-lg">
                 <Strong>
                   Nx Powerpack is included at no extra cost for Nx Enterprise
-                  customer
+                  customers
                 </Strong>
                 , unlocking additional capabilities without needing to manage
                 more tools or onboard a new vendor.
