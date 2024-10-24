@@ -156,10 +156,12 @@ export async function createRunOneDynamicOutputRenderer({
 
     if (totalFailedTasks > 0) {
       linesToRender.push(
-        output.colors.red.dim(
-          `${LEFT_PAD}${output.colors.red(
-            figures.cross
-          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
+        output.colors.red(
+          output.dim(
+            `${LEFT_PAD}${output.colors.red(
+              figures.cross
+            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
+          )
         )
       );
     }
@@ -288,11 +290,15 @@ export async function createRunOneDynamicOutputRenderer({
       if (Object.keys(overrides).length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim(
+            output.colors.green('With additional flags:')
+          )}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim(
+              output.colors.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            )
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -328,11 +334,15 @@ export async function createRunOneDynamicOutputRenderer({
       if (Object.keys(overrides).length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim(
+            output.colors.red('With additional flags:')
+          )}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim(
+              output.colors.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            )
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }

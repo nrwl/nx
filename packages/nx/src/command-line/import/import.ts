@@ -1,7 +1,7 @@
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { minimatch } from 'minimatch';
 import { existsSync, promises as fsp } from 'node:fs';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
@@ -423,7 +423,7 @@ async function warnOnMissingWorkspacesEntry(
           : [
               `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
               `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
-              chalk.bold(`packages:\n  - '${pkgPath}'`),
+              pc.bold(`packages:\n  - '${pkgPath}'`),
               `See: https://pnpm.io/workspaces`,
             ],
     });

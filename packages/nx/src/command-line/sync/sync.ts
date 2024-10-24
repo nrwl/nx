@@ -13,7 +13,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../../utils/sync-generators';
 import type { SyncArgs } from './command-object';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 interface SyncOptions extends SyncArgs {
   check?: boolean;
@@ -48,7 +48,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           : 'The workspace is already up to date',
         bodyLines: syncGenerators.map(
           (generator) =>
-            `The ${chalk.bold(
+            `The ${pc.bold(
               generator
             )} sync generator didn't identify any files in the workspace that are out of sync.`
         ),

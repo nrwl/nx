@@ -4,7 +4,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { serializeTarget } from '../utils/serialize-target';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 
 function _findCycle(
   graph: { dependencies: Record<string, string[]> },
