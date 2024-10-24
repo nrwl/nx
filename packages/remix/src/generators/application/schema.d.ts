@@ -4,7 +4,6 @@ export interface NxRemixGeneratorSchema {
   directory: string;
   name?: string;
   tags?: string;
-  js?: boolean;
   linter?: Linter | LinterType;
   unitTestRunner?: 'vitest' | 'jest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';

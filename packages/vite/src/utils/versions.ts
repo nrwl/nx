@@ -1,4 +1,5 @@
 export const nxVersion = require('../../package.json').version;
+// Also update @nx/remix/utils/versions when changing vite version
 export const viteVersion = '^5.0.0';
 export const vitestVersion = '^1.3.1';
 export const vitePluginReactVersion = '^4.2.0';

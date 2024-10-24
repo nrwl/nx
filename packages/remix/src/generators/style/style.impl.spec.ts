@@ -9,7 +9,7 @@ import presetGenerator from '../preset/preset.impl';
 import routeGenerator from '../route/route.impl';
 import styleGenerator from './style.impl';
 
-describe('route', () => {
+describe('style', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -63,21 +63,10 @@ describe('route', () => {
   it('should place styles correctly when app dir is changed', async () => {
     await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
 
-    tree.write(
-      'apps/demo/remix.config.js',
-      `
-    /**
-     * @type {import('@remix-run/dev').AppConfig}
-     */
-    module.exports = {
-      ignoredRouteFiles: ["**/.*"],
-      appDirectory: "my-custom-dir",
-    };`
-    );
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-        appDirectory: 'my-custom-dir',
+        appDirectory: 'apps/demo/my-custom-dir',
       })
     );
 

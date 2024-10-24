@@ -338,17 +338,22 @@ async function getBuildPaths(
       // do nothing
     }
     const { resolveConfig } = await loadViteDynamicImport();
-    const viteBuildConfig = await resolveConfig(
+    const viteBuildConfig = (await resolveConfig(
       {
         configFile: configPath,
         mode: 'development',
       },
       'build'
-    );
+    )) as any;
 
     return {
       buildDirectory: viteBuildConfig.build?.outDir ?? 'build',
-      serverBuildPath: viteBuildConfig.build?.outDir ?? 'build',
+      serverBuildPath: viteBuildConfig.build?.outDir
+        ? join(
+            dirname(viteBuildConfig.build?.outDir),
+            `server/${viteBuildConfig.__remixPluginContext?.remixConfig.serverBuildFile}`
+          )
+        : 'build',
       assetsBuildDirectory: 'build/client',
     };
   }

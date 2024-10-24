@@ -30,7 +30,7 @@ describe('Remix Application', () => {
       // ASSERT
       expectTargetsToBeCorrect(tree, '.');
 
-      expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('remix.config.js')).toBeFalsy();
       expect(tree.read('app/root.tsx', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app/routes/_index.tsx', 'utf-8')).toMatchSnapshot();
       expect(
@@ -38,29 +38,6 @@ describe('Remix Application', () => {
       ).toMatchSnapshot();
       expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
-    });
-
-    describe(`--js`, () => {
-      it('should create the application correctly', async () => {
-        // ARRANGE
-        const tree = createTreeWithEmptyWorkspace();
-
-        // ACT
-        await applicationGenerator(tree, {
-          name: 'test',
-          directory: '.',
-          js: true,
-          rootProject: true,
-          addPlugin: true,
-        });
-
-        // ASSERT
-        expectTargetsToBeCorrect(tree, '.');
-
-        expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
-        expect(tree.read('app/root.js', 'utf-8')).toMatchSnapshot();
-        expect(tree.read('app/routes/_index.js', 'utf-8')).toMatchSnapshot();
-      });
     });
 
     describe('--unitTestRunner', () => {
@@ -80,7 +57,7 @@ describe('Remix Application', () => {
         // ASSERT
         expectTargetsToBeCorrect(tree, '.');
 
-        expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
+        expect(tree.exists('remix.config.js')).toBeFalsy();
         expect(tree.read('vitest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
@@ -105,7 +82,7 @@ describe('Remix Application', () => {
         // ASSERT
         expectTargetsToBeCorrect(tree, '.');
 
-        expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
+        expect(tree.exists('remix.config.js')).toBeFalsy();
         expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
         expect(
@@ -186,37 +163,13 @@ describe('Remix Application', () => {
       // ASSERT
       expectTargetsToBeCorrect(tree, appDir);
 
-      expect(tree.read(`${appDir}/remix.config.js`, 'utf-8')).toMatchSnapshot();
+      expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
       expect(tree.read(`${appDir}/app/root.tsx`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`${appDir}/app/routes/_index.tsx`, 'utf-8')
       ).toMatchSnapshot();
     });
 
-    describe('--js', () => {
-      it('should create the application correctly', async () => {
-        // ARRANGE
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-        // ACT
-        await applicationGenerator(tree, {
-          directory: 'test',
-          js: true,
-          addPlugin: true,
-        });
-
-        // ASSERT
-        expectTargetsToBeCorrect(tree, appDir);
-
-        expect(
-          tree.read(`${appDir}/remix.config.js`, 'utf-8')
-        ).toMatchSnapshot();
-        expect(tree.read(`${appDir}/app/root.js`, 'utf-8')).toMatchSnapshot();
-        expect(
-          tree.read(`${appDir}/app/routes/_index.js`, 'utf-8')
-        ).toMatchSnapshot();
-      });
-    });
     describe('--directory', () => {
       it('should create the application correctly', async () => {
         // ARRANGE
@@ -233,9 +186,7 @@ describe('Remix Application', () => {
         // ASSERT
         expectTargetsToBeCorrect(tree, newAppDir);
 
-        expect(
-          tree.read(`${newAppDir}/remix.config.js`, 'utf-8')
-        ).toMatchSnapshot();
+        expect(tree.exists(`${newAppDir}/remix.config.js`)).toBeFalsy();
         expect(
           tree.read(`${newAppDir}/app/root.tsx`, 'utf-8')
         ).toMatchSnapshot();
@@ -259,9 +210,7 @@ describe('Remix Application', () => {
         // ASSERT
         expectTargetsToBeCorrect(tree, newAppDir);
 
-        expect(
-          tree.read(`${newAppDir}/remix.config.js`, 'utf-8')
-        ).toMatchSnapshot();
+        expect(tree.exists(`${newAppDir}/remix.config.js`)).toBeFalsy();
         expect(
           tree.read(`${newAppDir}/app/root.tsx`, 'utf-8')
         ).toMatchSnapshot();
@@ -286,9 +235,7 @@ describe('Remix Application', () => {
         // ASSERT
         expectTargetsToBeCorrect(tree, appDir);
 
-        expect(
-          tree.read(`${appDir}/remix.config.js`, 'utf-8')
-        ).toMatchSnapshot();
+        expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
         expect(
           tree.read(`${appDir}/vitest.config.ts`, 'utf-8')
         ).toMatchSnapshot();
@@ -312,9 +259,7 @@ describe('Remix Application', () => {
         // ASSERT
         expectTargetsToBeCorrect(tree, appDir);
 
-        expect(
-          tree.read(`${appDir}/remix.config.js`, 'utf-8')
-        ).toMatchSnapshot();
+        expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
         expect(
           tree.read(`${appDir}/jest.config.ts`, 'utf-8')
         ).toMatchSnapshot();

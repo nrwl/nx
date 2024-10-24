@@ -2,16 +2,19 @@
   "extends": "<%= offsetFromRoot %>tsconfig.base.json",
   "compilerOptions": {
       "lib": ["DOM", "DOM.Iterable", "ES2019"],
+      "types": ["@remix-run/node", "vite/client"],
       "isolatedModules": true,
       "esModuleInterop": true,
       "jsx": "react-jsx",
-      "moduleResolution": "node",
+      "module": "ESNext",
+      "moduleResolution": "Bundler",
       "resolveJsonModule": true,
-      "target": "ES2019",
+      "target": "ES2022",
       "strict": true,
       "allowJs": true,
+      "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      // Remix takes care of building everything in `remix build`.
+      // Vite takes care of building everything.
       "noEmit": true
     },
     "include": [],

@@ -61,7 +61,7 @@ describe('Remix E2E Tests', () => {
 
         const result = runCLI(`build ${plugin}`);
         expect(result).toContain('Successfully ran target build');
-        checkFilesExist(`subdir/build/index.js`);
+        checkFilesExist(`subdir/build/server/index.js`);
       }, 120000);
     });
 
