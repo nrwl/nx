@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { copyFileSync, existsSync } from 'node:fs';
-import { join, parse, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
   loadConfig,
   createMatchPath,
@@ -18,6 +18,7 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { Plugin } from 'vite';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
+import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 
 export interface nxViteTsPathsOptions {
   /**
@@ -241,27 +242,12 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
         );
 
         resolvedFile = findFile(
-          importPath.replace(normalizedImport, joinedPath)
+          importPath.replace(normalizedImport, joinedPath),
+          options.extensions
         );
       }
     }
 
     return resolvedFile;
-  }
-
-  function findFile(path: string): string {
-    for (const ext of options.extensions) {
-      // Support file extensions such as .css and .js in the import path.
-      const { dir, name } = parse(path);
-      const resolvedPath = resolve(dir, name + ext);
-      if (existsSync(resolvedPath)) {
-        return resolvedPath;
-      }
-
-      const resolvedIndexPath = resolve(path, `index${ext}`);
-      if (existsSync(resolvedIndexPath)) {
-        return resolvedIndexPath;
-      }
-    }
   }
 }

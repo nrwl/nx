@@ -158,7 +158,7 @@ describe('@nx/vite/plugin', () => {
         `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
       );
       updateFile(`libs/${mylib}/src/styles.css`, `.foo {}`);
-      updateFile(`libs/${mylib}/src/foo.mts`, `export const foo = 'foo';`);
+      updateFile(`libs/${mylib}/src/foo.mjs`, `export const foo = 'foo';`);
       updateFile(
         `libs/${mylib}/src/foo.spec.ts`,
         `
