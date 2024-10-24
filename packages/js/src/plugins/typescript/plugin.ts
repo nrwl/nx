@@ -173,16 +173,25 @@ async function createNodesInternal(
    * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
    *   - current config file
    *   - config files extended by the current config file (recursively up to the root config file)
+   *   - referenced config files that are internal to the owning Nx project of the current config file
    *   - lock file
    * - hash of the plugin options
    * - current config file path
    */
-  const extendedConfigFiles = getExtendedConfigFiles(
-    fullConfigPath,
-    readCachedTsConfig(fullConfigPath)
+  const tsConfig = readCachedTsConfig(fullConfigPath);
+  const extendedConfigFiles = getExtendedConfigFiles(fullConfigPath, tsConfig);
+  const internalReferencedFiles = resolveInternalProjectReferences(
+    tsConfig,
+    context.workspaceRoot,
+    projectRoot
   );
   const nodeHash = hashArray([
-    ...[configFilePath, ...extendedConfigFiles, lockFileName].map(hashFile),
+    ...[
+      configFilePath,
+      ...extendedConfigFiles,
+      ...Object.keys(internalReferencedFiles),
+      lockFileName,
+    ].map(hashFile),
     hashObject(options),
   ]);
   const cacheKey = `${nodeHash}_${configFilePath}`;
