@@ -195,7 +195,7 @@ The Nx Agents feature
 - collects the results and logs of all the tasks and presents them in a single view
 - automatically shuts down agents when they are no longer needed
 
-To enable Nx Agents, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
+To enable Nx Agents, make sure the `nx-cloud start-ci-run` line is uncommented in the `.github/workflows/ci.yml` file and the `nx affected` line runs the `e2e-ci` task instead of `e2e`.
 
 ```yml {% fileName=".github/workflows/ci.yml" highlightLines=[19] %}
 name: CI
