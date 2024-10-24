@@ -1,27 +1,34 @@
 import { MigrationsJson, MigrationsJsonEntry } from '../config/misc-interfaces';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
-  let hasTests = false;
   Object.entries(json.generators).forEach(([generator, m]) => {
-    hasTests = true;
     it(`should have valid path generator: ${generator}`, () => {
       validateMigration(m, root);
     });
   });
 
   Object.entries(json.schematics ?? {}).forEach(([schematic, m]) => {
-    hasTests = true;
     it(`should have valid path schematic: ${schematic}`, () => {
       validateMigration(m, root);
     });
   });
 
-  if (!hasTests) {
-    it('should pass without migrations', () => {
-      // no-op
-    });
-  }
+  it('should contain all folders under ./src/migrations', () => {
+    const migrationsPath = path.join(root, 'src/migrations');
+    if (!fs.existsSync(migrationsPath)) return;
+    const dirs = fs.readdirSync(migrationsPath);
+    const knownDirs = new Set<string>(['utils']);
+    const migrations = Object.values(json.generators);
+    for (const m of migrations) {
+      const impl = m.factory ?? m.implementation;
+      knownDirs.add(path.basename(path.dirname(impl)));
+    }
+    for (const dir of dirs) {
+      expect(knownDirs).toContain(dir);
+    }
+  });
 }
 
 function validateMigration(m: MigrationsJsonEntry, root: string) {

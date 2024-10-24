@@ -19,6 +19,11 @@
       "version": "19.6.0-beta.0",
       "description": "Add dependsOn: [build] to preview targets using preview-server",
       "implementation": "./src/migrations/update-19-6-0/add-depends-on-for-preview"
+    },
+    "update-20-0-4": {
+      "version": "20.0.4-beta.0",
+      "description": "Add gitignore entry for temporary vite config files.",
+      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
     }
   },
   "packageJsonUpdates": {

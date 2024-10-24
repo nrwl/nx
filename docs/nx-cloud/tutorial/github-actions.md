@@ -80,7 +80,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - uses: actions/setup-node@v3
@@ -215,7 +215,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Uncomment this line to enable task distribution
       - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - uses: actions/setup-node@v3

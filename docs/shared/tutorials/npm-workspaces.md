@@ -440,7 +440,7 @@ Use the following command to generate a CI workflow file.
 npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also [distribute tasks across multiple machines](/ci/features/distribute-task-execution) to ensure fast and reliable CI runs.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line.
 
 The key lines in the CI pipeline are:
 
@@ -457,8 +457,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
       - uses: actions/setup-node@v3
         with:
           node-version: 20

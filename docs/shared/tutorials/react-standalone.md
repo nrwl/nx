@@ -1033,7 +1033,7 @@ Use the following command to generate a CI workflow file.
 npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line.
 
 The key lines in the CI pipeline are:
 

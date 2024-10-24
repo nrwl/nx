@@ -44,13 +44,9 @@ import {
   createProjectGraphAsync,
   handleProjectGraphError,
 } from '../../project-graph/project-graph';
-import {
-  createTaskGraph,
-  mapTargetDefaultsToDependencies,
-} from '../../tasks-runner/create-task-graph';
+import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
@@ -887,7 +883,7 @@ async function createTaskGraphClientResponse(
   const nxJson = readNxJson();
 
   performance.mark('task graph generation:start');
-  const taskGraphs = getAllTaskGraphsForWorkspace(nxJson, graph);
+  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
   performance.mark('task graph generation:end');
 
   const planner = new HashPlanner(
@@ -957,17 +953,10 @@ async function createExpandedTaskInputResponse(
   return response;
 }
 
-function getAllTaskGraphsForWorkspace(
-  nxJson: NxJsonConfiguration,
-  projectGraph: ProjectGraph
-): {
+function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
   taskGraphs: Record<string, TaskGraph>;
   errors: Record<string, string>;
 } {
-  const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-    nxJson.targetDefaults
-  );
-
   const taskGraphs: Record<string, TaskGraph> = {};
   const taskGraphErrors: Record<string, string> = {};
 
@@ -981,7 +970,7 @@ function getAllTaskGraphsForWorkspace(
       try {
         taskGraphs[taskId] = createTaskGraph(
           projectGraph,
-          defaultDependencyConfigs,
+          {},
           [projectName],
           [target],
           undefined,
@@ -1007,7 +996,7 @@ function getAllTaskGraphsForWorkspace(
           try {
             taskGraphs[taskId] = createTaskGraph(
               projectGraph,
-              defaultDependencyConfigs,
+              {},
               [projectName],
               [target],
               configuration,
@@ -1221,15 +1210,9 @@ async function createJsonOutput(
   };
 
   if (targets?.length) {
-    const nxJson = readNxJson();
-
-    const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-      nxJson.targetDefaults
-    );
-
     const taskGraph = createTaskGraph(
       rawGraph,
-      defaultDependencyConfigs,
+      {},
       projects,
       targets,
       undefined,

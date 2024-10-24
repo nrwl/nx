@@ -47,9 +47,11 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci --legacy-peer-deps
+      - script: npx cypress install
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -77,9 +79,11 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # Uncomment this line to enable task distribution
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
+            - npx cypress install
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
@@ -123,9 +127,11 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -167,7 +173,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -176,6 +183,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -209,7 +217,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -218,6 +227,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -277,7 +287,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -309,7 +320,8 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -360,7 +372,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -408,7 +421,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -448,7 +462,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -477,7 +492,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
     - NX_HEAD=$CI_COMMIT_SHA
@@ -537,7 +553,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
@@ -567,7 +584,8 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -612,7 +630,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
       - nx/set-shas:
@@ -656,7 +675,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -698,7 +718,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -731,7 +752,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
@@ -794,7 +816,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -826,7 +849,8 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -877,7 +901,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -925,7 +950,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -971,7 +997,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1006,7 +1033,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1066,7 +1094,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1096,7 +1125,8 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1141,7 +1171,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -1185,7 +1216,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1227,7 +1259,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1260,7 +1293,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1320,10 +1354,11 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci --legacy-peer-deps
+      - script: npx cypress install
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -1351,10 +1386,11 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
+            - npx cypress install
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
@@ -1399,10 +1435,11 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -1444,7 +1481,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
@@ -1454,6 +1491,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1487,7 +1525,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
@@ -1497,6 +1535,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1556,7 +1595,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
@@ -1589,7 +1628,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
@@ -1642,7 +1681,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
@@ -1691,7 +1730,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
@@ -1732,7 +1771,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
@@ -1762,7 +1801,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
@@ -1823,7 +1862,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
@@ -1854,7 +1893,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
@@ -1901,7 +1940,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
@@ -1946,7 +1985,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -1989,7 +2028,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2023,7 +2062,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci --legacy-peer-deps
@@ -2087,7 +2126,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
@@ -2120,7 +2159,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
@@ -2173,7 +2212,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
@@ -2222,7 +2261,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2269,7 +2308,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2305,7 +2344,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
@@ -2366,7 +2405,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
@@ -2397,7 +2436,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
@@ -2444,7 +2483,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
@@ -2489,7 +2528,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2532,7 +2571,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2566,7 +2605,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile

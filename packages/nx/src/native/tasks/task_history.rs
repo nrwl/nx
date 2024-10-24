@@ -1,11 +1,10 @@
-use std::rc::Rc;
-use std::collections::HashMap;
-use itertools::Itertools;
+use crate::native::db::connection::NxDbConnection;
+use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::*;
 use rusqlite::vtab::array;
-use rusqlite::{params, types::Value, Connection};
-
-use crate::native::tasks::types::TaskTarget;
+use rusqlite::{params, types::Value};
+use std::collections::HashMap;
+use std::rc::Rc;
 
 #[napi(object)]
 pub struct TaskRun {
@@ -18,13 +17,13 @@ pub struct TaskRun {
 
 #[napi]
 pub struct NxTaskHistory {
-    db: External<Connection>,
+    db: External<NxDbConnection>,
 }
 
 #[napi]
 impl NxTaskHistory {
     #[napi(constructor)]
-    pub fn new(db: External<Connection>) -> anyhow::Result<Self> {
+    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
         let s = Self { db };
 
         s.setup()?;
@@ -33,11 +32,11 @@ impl NxTaskHistory {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        array::load_module(&self.db)?;
+        array::load_module(&self.db.conn)?;
         self.db
             .execute_batch(
                 "
-            BEGIN;
+            BEGIN IMMEDIATE;
             CREATE TABLE IF NOT EXISTS task_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 hash TEXT NOT NULL,
@@ -99,16 +98,21 @@ impl NxTaskHistory {
     }
 
     #[napi]
-    pub fn get_estimated_task_timings(&self, targets: Vec<TaskTarget>) -> anyhow::Result<HashMap<String, f64>> {
+    pub fn get_estimated_task_timings(
+        &self,
+        targets: Vec<TaskTarget>,
+    ) -> anyhow::Result<HashMap<String, f64>> {
         let values = Rc::new(
             targets
                 .iter()
-                .map(|t| Value::from(
-                    match &t.configuration {
-                        Some(configuration) => format!("{}:{}:{}", t.project, t.target, configuration),
-                        _ => format!("{}:{}", t.project, t.target)
-                    }
-                ))
+                .map(|t| {
+                    Value::from(match &t.configuration {
+                        Some(configuration) => {
+                            format!("{}:{}:{}", t.project, t.target, configuration)
+                        }
+                        _ => format!("{}:{}", t.project, t.target),
+                    })
+                })
                 .collect::<Vec<Value>>(),
         );
 
