@@ -39,6 +39,7 @@
               "prettier",
               "jest",
               "@jest/types",
+              "jest-runtime",
               // require.resolve is used for these packages
               "identity-obj-proxy"
             ]
