@@ -12,8 +12,7 @@ import { existsSync } from 'fs';
 export function jsPluginConfig(
   nxJson: NxJsonConfiguration
 ): Required<NrwlJsPluginConfig> {
-  const nxJsonConfig: NrwlJsPluginConfig =
-    nxJson?.pluginsConfig?.['@nx/js'] ?? nxJson?.pluginsConfig?.['@nrwl/js'];
+  const nxJsonConfig: NrwlJsPluginConfig = nxJson?.pluginsConfig?.['@nx/js'];
 
   // using lerna _before_ installing deps is causing an issue when parsing lockfile.
   // See: https://github.com/lerna/lerna/issues/3807
@@ -58,14 +57,7 @@ export function jsPluginConfig(
     packageJsonDeps['@nx/next'] ||
     packageJsonDeps['@nx/react'] ||
     packageJsonDeps['@nx/angular'] ||
-    packageJsonDeps['@nx/web'] ||
-    packageJsonDeps['@nrwl/workspace'] ||
-    packageJsonDeps['@nrwl/js'] ||
-    packageJsonDeps['@nrwl/node'] ||
-    packageJsonDeps['@nrwl/next'] ||
-    packageJsonDeps['@nrwl/react'] ||
-    packageJsonDeps['@nrwl/angular'] ||
-    packageJsonDeps['@nrwl/web']
+    packageJsonDeps['@nx/web']
   ) {
     return {
       analyzePackageJson: true,

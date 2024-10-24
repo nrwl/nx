@@ -49,11 +49,7 @@ function updateProjectBuildTargets(
 ) {
   for (const target of projectTargets) {
     const targetConfiguration = projectConfiguration.targets[target];
-    if (
-      !targetConfiguration ||
-      (targetConfiguration.executor !== '@nx/js:tsc' &&
-        targetConfiguration.executor !== '@nrwl/js:tsc')
-    )
+    if (!targetConfiguration || targetConfiguration.executor !== '@nx/js:tsc')
       continue;
     targetConfiguration.executor = '@nx/js:swc';
   }

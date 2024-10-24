@@ -298,7 +298,7 @@ ${content}`;
   it.skip('should CT vite projects importing other projects', () => {
     const viteLibName = uniq('vite-lib');
     runCLI(
-      `generate @nrwl/react:lib ${viteLibName} --bundler=vite --no-interactive`
+      `generate @nx/react:lib ${viteLibName} --bundler=vite --no-interactive`
     );
 
     updateFile(`libs/${viteLibName}/src/lib/${viteLibName}.tsx`, () => {
@@ -316,7 +316,7 @@ export default MyComponent;`;
     });
 
     runCLI(
-      `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
+      `generate @nx/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
     );
     if (runE2ETests()) {
       expect(runCLI(`component-test ${viteLibName}`)).toContain(

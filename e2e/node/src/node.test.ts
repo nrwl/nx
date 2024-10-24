@@ -359,7 +359,7 @@ module.exports = {
     const esmapp = uniq('esmapp');
 
     runCLI(
-      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
+      `generate @nx/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
     );
     updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
       config.module = 'esnext';

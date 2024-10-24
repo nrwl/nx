@@ -201,25 +201,20 @@ async function getGithubStars(repos: { owner: string; repo: string }[]) {
 
 async function getNxVersion(data: any) {
   const latest = data['dist-tags'].latest;
-  const nxPackages = [
-    '@nx/devkit',
-    '@nrwl/devkit',
-    '@nx/workspace',
-    '@nrwl/workspace',
-  ];
+  const nxPackages = ['@nx/devkit', '@nx/workspace'];
   let devkitVersion = '';
   for (let i = 0; i < nxPackages.length && !devkitVersion; i++) {
     const packageName = nxPackages[i];
     if (data.versions[latest]?.dependencies) {
       devkitVersion = data.versions[latest]?.dependencies[packageName];
       if (devkitVersion) {
-        return await findNxRange(packageName, devkitVersion);
+        return await findNxRange(devkitVersion);
       }
     }
     if (!devkitVersion && data.versions[latest]?.peerDependencies) {
       devkitVersion = data.versions[latest]?.peerDependencies[packageName];
       if (devkitVersion) {
-        return await findNxRange(packageName, devkitVersion);
+        return await findNxRange(devkitVersion);
       }
     }
   }
@@ -227,20 +222,17 @@ async function getNxVersion(data: any) {
   return devkitVersion;
 }
 
-async function findNxRange(packageName: string, devkitVersion: string) {
+async function findNxRange(devkitVersion: string) {
   devkitVersion = devkitVersion
     .replace('^', '')
     .replace('>=', '')
     .replace('>', '');
-  const lookupPackage = packageName.includes('@nx')
-    ? '@nx/devkit'
-    : '@nrwl/devkit';
   const { data: devkitData } = await axios.get(
-    `https://registry.npmjs.org/${lookupPackage}`
+    `https://registry.npmjs.org/@nx/devkit`
   );
   if (!devkitData.versions[devkitVersion]?.peerDependencies) {
     const dependencies = devkitData.versions[devkitVersion]?.dependencies;
-    return dependencies && (dependencies?.nx || dependencies['@nrwl/tao']);
+    return dependencies?.nx;
   }
   return devkitData.versions[devkitVersion]?.peerDependencies.nx;
 }

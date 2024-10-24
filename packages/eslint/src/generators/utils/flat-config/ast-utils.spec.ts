@@ -959,7 +959,7 @@ module.exports = [
           rules: {}
         })),
         { ignores: ["src/ignore/to/keep.ts"] },
-        ...compat.config({ extends: ["plugin:@nrwl/javascript"] }).map(config => ({
+        ...compat.config({ extends: ["plugin:@nx/javascript"] }).map(config => ({
           files: ['*.js', '*.jsx'],
           ...config,
           rules: {}
@@ -969,8 +969,6 @@ module.exports = [
       const result = removeCompatExtends(content, [
         'plugin:@nx/typescript',
         'plugin:@nx/javascript',
-        'plugin:@nrwl/typescript',
-        'plugin:@nrwl/javascript',
       ]);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
