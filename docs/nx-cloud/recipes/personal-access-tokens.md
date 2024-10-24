@@ -1,5 +1,7 @@
 # Nx Cloud and Personal Access Tokens
 
+{% youtube src="https://www.youtube.com/watch?v=vX-wgI1zlao" title="Configure your Nx Cloud Personal Access Token" /%}
+
 From Nx 19.7 repositories are connected to Nx Cloud via a property in `nx.json` called `nxCloudId`. By default this value allows anyone who clones the repository `read-write` access to Nx Cloud features for that workspace. These permissions can be updated in the workspace settings. To disallow access to anonymous users or allow `read-write` access to known users it is required that all users provision their own personal access token. To do that they need to use [`npx nx login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
 
 {% callout type="warning" title="Personal Access Tokens require the `nxCloudId` field in `nx.json`" %}
