@@ -90,20 +90,8 @@ export async function determineProjectNameAndRootOptions(
 
   let importPath: string | undefined = undefined;
   if (options.projectType === 'library') {
-    importPath = options.importPath;
-
-    if (!importPath) {
-      if (name.startsWith('@')) {
-        importPath = name;
-      } else {
-        const npmScope = getNpmScope(tree);
-        importPath =
-          projectRoot === '.'
-            ? readJson<{ name?: string }>(tree, 'package.json').name ??
-              getImportPath(npmScope, name)
-            : getImportPath(npmScope, name);
-      }
-    }
+    importPath =
+      options.importPath ?? resolveImportPath(tree, name, projectRoot);
   }
 
   return {
@@ -115,6 +103,26 @@ export async function determineProjectNameAndRootOptions(
     importPath,
     projectRoot,
   };
+}
+
+export function resolveImportPath(
+  tree: Tree,
+  projectName: string,
+  projectRoot: string
+): string {
+  let importPath: string;
+  if (projectName.startsWith('@')) {
+    importPath = projectName;
+  } else {
+    const npmScope = getNpmScope(tree);
+    importPath =
+      projectRoot === '.'
+        ? readJson<{ name?: string }>(tree, 'package.json').name ??
+          getImportPath(npmScope, projectName)
+        : getImportPath(npmScope, projectName);
+  }
+
+  return importPath;
 }
 
 export async function ensureProjectName(

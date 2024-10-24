@@ -21,6 +21,12 @@
         "x-priority": "important",
         "default": "e2e"
       },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["none", "eslint"],
+        "x-priority": "important"
+      },
       "js": {
         "type": "boolean",
         "description": "Generate JavaScript files rather than TypeScript files.",
@@ -33,12 +39,6 @@
       "webServerAddress": {
         "type": "string",
         "description": "The address of the web server."
-      },
-      "linter": {
-        "description": "The tool to use for running lint checks.",
-        "type": "string",
-        "enum": ["eslint", "none"],
-        "default": "eslint"
       },
       "setParserOptionsProject": {
         "type": "boolean",
