@@ -6380,6 +6380,7 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
 exports[`@nx/workspace:generateWorkspaceFiles should recommend vscode extensions (angular) 1`] = `
 [
   "nrwl.angular-console",
+  "dbaeumer.vscode-eslint",
   "esbenp.prettier-vscode",
 ]
 `;
@@ -6387,6 +6388,7 @@ exports[`@nx/workspace:generateWorkspaceFiles should recommend vscode extensions
 exports[`@nx/workspace:generateWorkspaceFiles should recommend vscode extensions 1`] = `
 [
   "nrwl.angular-console",
+  "dbaeumer.vscode-eslint",
   "esbenp.prettier-vscode",
 ]
 `;
