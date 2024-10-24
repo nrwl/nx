@@ -26,11 +26,14 @@ jobs:
           - macos-latest
         node_version:
           - 20
-          - 18
+          - 21
+          - 22
         exclude:
           # run just node v20 on macos
           - os: macos-latest
-            node_version: 18
+            node_version: 22
+          - os: macos-latest
+            node_version: 21
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
@@ -39,17 +42,17 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8
+          npm install -g @pnpm/exe@9.8.0
 
       - name: Set node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           lookup-only: true
           path: '**/node_modules'
@@ -71,7 +74,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           lookup-only: true
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
@@ -81,7 +84,7 @@ jobs:
 
       - name: Cache Cypress
         id: cache-cypress
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           lookup-only: true
           path: '${{ github.workspace }}/.cypress'
@@ -105,7 +108,8 @@ jobs:
           - macos-latest
         node_version:
           - 20
-          - 18
+          - 21
+          - 22
         package_manager:
           - npm
           - yarn
@@ -216,55 +220,105 @@ jobs:
           - os: ubuntu-latest
             project: e2e-expo
           # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 18
+          - node_version: 21
             project: e2e-angular
-          - node_version: 18
+          - node_version: 21
             project: e2e-cypress
-          - node_version: 18
+          - node_version: 21
             project: e2e-detox
-          - node_version: 18
+          - node_version: 21
             project: e2e-esbuild
-          - node_version: 18
+          - node_version: 21
             project: e2e-expo
-          - node_version: 18
+          - node_version: 21
             project: e2e-gradle
-          - node_version: 18
+          - node_version: 21
             project: e2e-jest
-          - node_version: 18
+          - node_version: 21
             project: e2e-js
-          - node_version: 18
+          - node_version: 21
             project: e2e-eslint
-          - node_version: 18
+          - node_version: 21
             project: e2e-next
-          - node_version: 18
+          - node_version: 21
             project: e2e-node
-          - node_version: 18
+          - node_version: 21
             project: e2e-nuxt
-          - node_version: 18
+          - node_version: 21
             project: e2e-nx-init
-          - node_version: 18
+          - node_version: 21
             project: e2e-nx
-          - node_version: 18
+          - node_version: 21
             project: e2e-plugin
-          - node_version: 18
+          - node_version: 21
             project: e2e-playwright
-          - node_version: 18
+          - node_version: 21
             project: e2e-react
-          - node_version: 18
+          - node_version: 21
             project: e2e-react-native
-          - node_version: 18
+          - node_version: 21
             project: e2e-web
-          - node_version: 18
+          - node_version: 21
             project: e2e-remix
-          - node_version: 18
+          - node_version: 21
             project: e2e-rollup
-          - node_version: 18
+          - node_version: 21
             project: e2e-storybook
-          - node_version: 18
+          - node_version: 21
             project: e2e-vite
-          - node_version: 18
+          - node_version: 21
             project: e2e-vue
-          - node_version: 18
+          - node_version: 21
+            project: e2e-webpack
+          - node_version: 22
+            project: e2e-angular
+          - node_version: 22
+            project: e2e-cypress
+          - node_version: 22
+            project: e2e-detox
+          - node_version: 22
+            project: e2e-esbuild
+          - node_version: 22
+            project: e2e-expo
+          - node_version: 22
+            project: e2e-gradle
+          - node_version: 22
+            project: e2e-jest
+          - node_version: 22
+            project: e2e-js
+          - node_version: 22
+            project: e2e-eslint
+          - node_version: 22
+            project: e2e-next
+          - node_version: 22
+            project: e2e-node
+          - node_version: 22
+            project: e2e-nuxt
+          - node_version: 22
+            project: e2e-nx-init
+          - node_version: 22
+            project: e2e-nx
+          - node_version: 22
+            project: e2e-plugin
+          - node_version: 22
+            project: e2e-playwright
+          - node_version: 22
+            project: e2e-react
+          - node_version: 22
+            project: e2e-react-native
+          - node_version: 22
+            project: e2e-web
+          - node_version: 22
+            project: e2e-remix
+          - node_version: 22
+            project: e2e-rollup
+          - node_version: 22
+            project: e2e-storybook
+          - node_version: 22
+            project: e2e-vite
+          - node_version: 22
+            project: e2e-vue
+          - node_version: 22
             project: e2e-webpack
           # run just npm v20 on macos
           - os: macos-latest
@@ -272,7 +326,9 @@ jobs:
           - os: macos-latest
             package_manager: pnpm
           - os: macos-latest
-            node_version: 18
+            node_version: 21
+          - os: macos-latest
+            node_version: 22
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
@@ -285,17 +341,17 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8
+          npm install -g @pnpm/exe@9.8.0
 
       - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
@@ -322,7 +378,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
           key: brew-${{ matrix.node_version }}
@@ -331,7 +387,7 @@ jobs:
 
       - name: Cache Cypress
         id: cache-cypress
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
@@ -396,7 +452,7 @@ jobs:
           echo "$matrix" > $path
 
       - name: Upload matrix config
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: outputs
@@ -418,7 +474,7 @@ jobs:
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
       - name: Load outputs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: outputs
           path: outputs

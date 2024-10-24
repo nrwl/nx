@@ -23,7 +23,7 @@ jobs:
       matrix:
         node_version:
           - 20
-          - 18
+          - 22
 
     name: Cache install (node v${{ matrix.node_version }})
     steps:
@@ -33,11 +33,11 @@ jobs:
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Set node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
@@ -55,7 +55,7 @@ jobs:
 
       - name: Cache Cypress
         id: cache-cypress
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           lookup-only: true
           path: '${{ github.workspace }}/.cypress'
@@ -75,7 +75,7 @@ jobs:
       matrix:
         node_version:
           - 20
-          - 18
+          - 22
         package_manager:
           - npm
         project:
@@ -163,47 +163,47 @@ jobs:
             codeowners: 'S04SYHYKGNP'
         exclude:
           # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 18
+          - node_version: 22
             project: e2e-angular
-          - node_version: 18
+          - node_version: 22
             project: e2e-cypress
-          - node_version: 18
+          - node_version: 22
             project: e2e-esbuild
-          - node_version: 18
+          - node_version: 22
             project: e2e-jest
-          - node_version: 18
+          - node_version: 22
             project: e2e-js
-          - node_version: 18
+          - node_version: 22
             project: e2e-eslint
-          - node_version: 18
+          - node_version: 22
             project: e2e-next
-          - node_version: 18
+          - node_version: 22
             project: e2e-node
-          - node_version: 18
+          - node_version: 22
             project: e2e-nuxt
-          - node_version: 18
+          - node_version: 22
             project: e2e-nx-init
-          - node_version: 18
+          - node_version: 22
             project: e2e-nx
-          - node_version: 18
+          - node_version: 22
             project: e2e-plugin
-          - node_version: 18
+          - node_version: 22
             project: e2e-playwright
-          - node_version: 18
+          - node_version: 22
             project: e2e-react
-          - node_version: 18
+          - node_version: 22
             project: e2e-web
-          - node_version: 18
+          - node_version: 22
             project: e2e-remix
-          - node_version: 18
+          - node_version: 22
             project: e2e-rollup
-          - node_version: 18
+          - node_version: 22
             project: e2e-storybook
-          - node_version: 18
+          - node_version: 22
             project: e2e-vite
-          - node_version: 18
+          - node_version: 22
             project: e2e-vue
-          - node_version: 18
+          - node_version: 22
             project: e2e-webpack
       fail-fast: false
 
@@ -222,14 +222,14 @@ jobs:
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
@@ -239,7 +239,7 @@ jobs:
 
       - name: Cache Cypress
         id: cache-cypress
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
@@ -289,7 +289,7 @@ jobs:
           echo "$matrix" > $path
 
       - name: Upload matrix config
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: outputs
@@ -311,7 +311,7 @@ jobs:
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
       - name: Load outputs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: outputs
           path: outputs
