@@ -73,12 +73,12 @@ export async function expoLibraryGeneratorInternal(
   }
   initRootBabelConfig(host);
 
+  createFiles(host, options);
+
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {
     tasks.push(addProjectTask);
   }
-
-  createFiles(host, options);
 
   const lintTask = await addLinting(host, {
     ...options,
