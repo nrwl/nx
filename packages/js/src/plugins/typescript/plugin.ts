@@ -182,7 +182,9 @@ async function createNodesInternal(
     readCachedTsConfig(fullConfigPath)
   );
   const nodeHash = hashArray([
-    ...[configFilePath, ...extendedConfigFiles, lockFileName].map(hashFile),
+    ...[configFilePath, ...extendedConfigFiles.files, lockFileName].map(
+      hashFile
+    ),
     hashObject(options),
   ]);
   const cacheKey = `${nodeHash}_${configFilePath}`;
@@ -334,14 +336,16 @@ function getInputs(
   projectRoot: string
 ): TargetConfiguration['inputs'] {
   const configFiles = new Set<string>();
-  const includePaths = new Set<string>();
-  const excludePaths = new Set<string>();
+  const externalDependencies = ['typescript'];
 
   const extendedConfigFiles = getExtendedConfigFiles(configFilePath, tsConfig);
-  extendedConfigFiles.forEach((configPath) => {
+  extendedConfigFiles.files.forEach((configPath) => {
     configFiles.add(configPath);
   });
+  externalDependencies.push(...extendedConfigFiles.packages);
 
+  const includePaths = new Set<string>();
+  const excludePaths = new Set<string>();
   const projectTsConfigFiles: [string, ParsedCommandLine][] = [
     [configFilePath, tsConfig],
     ...Object.entries(internalProjectReferences),
@@ -429,7 +433,7 @@ function getInputs(
     inputs.push('production' in namedInputs ? '^production' : '^default');
   }
 
-  inputs.push({ externalDependencies: ['typescript'] });
+  inputs.push({ externalDependencies });
 
   return inputs;
 }
@@ -537,23 +541,36 @@ function pathToInputOrOutput(
 function getExtendedConfigFiles(
   tsConfigPath: string,
   tsConfig: ParsedCommandLine
-): string[] {
+): {
+  files: string[];
+  packages: string[];
+} {
   const extendedConfigFiles = new Set<string>();
+  const extendedExternalPackages = new Set<string>();
 
   let currentConfigPath = tsConfigPath;
   let currentConfig = tsConfig;
   while (currentConfig.raw?.extends) {
-    const extendedConfigPath = join(
-      dirname(currentConfigPath),
-      currentConfig.raw.extends
+    const extendedConfigPath = resolveExtendedTsConfigPath(
+      currentConfig.raw.extends,
+      dirname(currentConfigPath)
     );
-    extendedConfigFiles.add(extendedConfigPath);
-    const extendedConfig = readCachedTsConfig(extendedConfigPath);
-    currentConfigPath = extendedConfigPath;
-    currentConfig = extendedConfig;
+    if (!extendedConfigPath) {
+      break;
+    }
+    if (extendedConfigPath.externalPackage) {
+      extendedExternalPackages.add(extendedConfigPath.externalPackage);
+      break;
+    }
+    extendedConfigFiles.add(extendedConfigPath.filePath);
+    currentConfig = readCachedTsConfig(extendedConfigPath.filePath);
+    currentConfigPath = extendedConfigPath.filePath;
   }
 
-  return Array.from(extendedConfigFiles);
+  return {
+    files: Array.from(extendedConfigFiles),
+    packages: Array.from(extendedExternalPackages),
+  };
 }
 
 function resolveInternalProjectReferences(
@@ -741,4 +758,28 @@ function normalizePluginOptions(
     typecheck,
     build,
   };
+}
+
+function resolveExtendedTsConfigPath(
+  tsConfigPath: string,
+  directory?: string
+): { filePath: string; externalPackage?: string } | null {
+  try {
+    const resolvedPath = require.resolve(tsConfigPath, {
+      paths: directory ? [directory] : undefined,
+    });
+
+    if (tsConfigPath.startsWith('.')) {
+      return { filePath: resolvedPath };
+    }
+
+    // parse the package from the tsconfig path
+    const packageName = tsConfigPath.startsWith('@')
+      ? tsConfigPath.split('/').slice(0, 2).join('/')
+      : tsConfigPath.split('/')[0];
+
+    return { filePath: resolvedPath, externalPackage: packageName };
+  } catch {
+    return null;
+  }
 }
