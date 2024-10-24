@@ -39,7 +39,7 @@
   "dependencies": {
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "3.0.0-rc.46",
+    "@yarnpkg/parsers": "3.0.2",
     "@zkochan/js-yaml": "0.0.7",
     "axios": "^1.7.4",
     "chalk": "^4.1.0",
