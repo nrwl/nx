@@ -19,7 +19,7 @@
       "name": {
         "type": "string",
         "description": "The name of the remote application to generate the Module Federation configuration",
-        "pattern": "^[a-zA-Z][^:]*$",
+        "pattern": "^[a-zA-Z_$][a-zA-Z_$0-9]*$",
         "x-priority": "important"
       },
       "dynamic": {
