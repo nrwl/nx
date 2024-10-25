@@ -50,13 +50,15 @@ export default async function run(
       hashes.push(res.details.nodes[d]);
     }
   }
-  return {
+  const hashResult = {
     value: hashArray([command, selfSource, ...hashes, tags]),
     details: {
       command,
       nodes: { [task.target.project]: selfSource, tags, ...nodes },
     },
   };
+  hashResult['name'] = 'eslint-hasher';
+  return hashResult;
 }
 
 function allDeps(
