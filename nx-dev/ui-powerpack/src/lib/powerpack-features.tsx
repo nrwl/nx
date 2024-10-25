@@ -42,7 +42,7 @@ export function PowerpackFeatures(): ReactElement {
                 storage, offering a flexible, self-managed solution for faster
                 builds. Nx Powerpack self-hosted cache storage is{' '}
                 <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
                   title="Get a Powerpack license"
                 >
                   free for small teams
