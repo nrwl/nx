@@ -34,7 +34,7 @@ jobs:
           - os: macos-latest
             node_version: 18
           - os: macos-latest
-            node_version: 23
+            node_version: 22
           - os: macos-latest
             node_version: 23
 
