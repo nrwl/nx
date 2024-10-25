@@ -2,22 +2,33 @@ import {
   ArrowUpRightIcon,
   ChevronRightIcon,
   ComputerDesktopIcon,
-  DocumentIcon,
   MicrophoneIcon,
   NewspaperIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
 import {
   DiscordIcon,
+  GithubIcon,
   SectionHeading,
   Strong,
   TextLink,
 } from '@nx/nx-dev/ui-common';
-import { YoutubeIcon } from '@nx/nx-dev/ui-icons';
+import { XIcon, YoutubeIcon } from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
+import type { ReactElement } from 'react';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 const yearsAgo = new Date().getFullYear() - 2017;
 
-export function TeamAndCommunity(): JSX.Element {
+export function TeamAndCommunity(): ReactElement {
+  const handleClick = (eventAction: string) => {
+    sendCustomEvent(
+      eventAction,
+      'githubstars-community-section',
+      'githubstarswidget'
+    );
+  };
+
   return (
     <section className="mx-auto max-w-7xl px-6 lg:px-8">
       <article className="max-w-5xl">
@@ -61,21 +72,32 @@ export function TeamAndCommunity(): JSX.Element {
       </article>
 
       <div className="mx-auto mt-24">
-        <div className="grid grid-cols-2 gap-12 sm:grid-cols-3 sm:gap-8 lg:grid-cols-6 lg:gap-6">
+        <div className="flex justify-center rounded-md print:hidden">
+          <a
+            onClick={() => handleClick('githubstars_buttonclick')}
+            href="https://github.com/nrwl/nx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 hover:underline"
+          >
+            <GithubIcon className="h-5 w-5" />
+            <span className="text-md font-semibold">
+              Give us a star on GitHub!
+            </span>
+            <StarIcon aria-hidden="true" className="h-4 w-4" />
+          </a>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-12 sm:grid-cols-3 sm:gap-8 lg:grid-cols-6 lg:gap-6">
           <div>
             <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
-              <DocumentIcon aria-hidden="true" className="size-6 shrink-0" />
-              <Link
-                href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
-                className="grow text-base"
-                prefetch={false}
-              >
+              <XIcon aria-hidden="true" className="size-6 shrink-0" />
+              <a href="https://x.com/NxDevTools" className="grow text-base">
                 <span className="absolute inset-0" />
-                Docs
-              </Link>
-              <ChevronRightIcon
+                Follow us
+              </a>
+              <ArrowUpRightIcon
                 aria-hidden="true"
-                className="size-4 shrink-0 transition group-hover/item:translate-x-1 "
+                className="size-4 shrink-0 transition group-hover/item:-translate-y-1 group-hover/item:translate-x-1"
               />
             </div>
           </div>
