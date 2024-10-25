@@ -239,7 +239,8 @@
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static"
       }
-    }
+    },
+    "@nx/powerpack-enterprise-cloud"
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",

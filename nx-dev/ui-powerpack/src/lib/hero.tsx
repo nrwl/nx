@@ -35,8 +35,9 @@ export function Hero(): ReactElement {
           Nx Powerpack
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6 text-center">
-          A suite of paid extensions for the Nx CLI specifically designed for
-          enterprises, <Strong>built and supported by the Nx core team</Strong>.
+          A suite of paid extensions for the Nx CLI{' '}
+          <Strong>specifically designed for enterprises</Strong>, built and
+          supported by the Nx core team.
         </SectionHeading>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <ButtonLink
