@@ -58,7 +58,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e
 "
 `;
 
@@ -88,8 +89,8 @@ pipelines:
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-            - npx nx affected --base=origin/main -t lint test build
-            - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
+            # When you enable task distribution, run the e2e-ci task instead of e2e
+            - npx nx affected --base=origin/main -t lint test build e2e
 
   branches:
     main:
@@ -138,7 +139,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 
 workflows:
   version: 2
@@ -189,7 +191,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -233,7 +236,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -382,7 +386,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: bun nx affected -t lint test build
 
 workflows:
   version: 2
@@ -502,7 +506,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - bun nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - bun nx affected -t lint test build
 "
 `;
 
@@ -640,7 +644,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: npx nx affected -t lint test build
 
 workflows:
   version: 2
@@ -762,7 +766,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - npx nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - npx nx affected -t lint test build
 "
 `;
 
@@ -911,7 +915,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: pnpm exec nx affected -t lint test build
 
 workflows:
   version: 2
@@ -1043,7 +1047,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - pnpm exec nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -1181,7 +1185,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: yarn nx affected -t lint test build
 
 workflows:
   version: 2
@@ -1303,7 +1307,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - yarn nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - yarn nx affected -t lint test build
 "
 `;
 
@@ -1365,7 +1369,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e
 "
 `;
 
@@ -1395,8 +1400,8 @@ pipelines:
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-            - npx nx affected --base=origin/main -t lint test build
-            - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
+            # When you enable task distribution, run the e2e-ci task instead of e2e
+            - npx nx affected --base=origin/main -t lint test build e2e
 
   branches:
     main:
@@ -1446,7 +1451,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 
 workflows:
   version: 2
@@ -1497,7 +1503,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -1541,7 +1548,8 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -1691,7 +1699,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: bun nx affected -t lint test build
 
 workflows:
   version: 2
@@ -1811,7 +1819,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - bun nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - bun nx affected -t lint test build
 "
 `;
 
@@ -1950,7 +1958,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: npx nx affected -t lint test build
 
 workflows:
   version: 2
@@ -2072,7 +2080,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - npx nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - npx nx affected -t lint test build
 "
 `;
 
@@ -2222,7 +2230,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: pnpm exec nx affected -t lint test build
 
 workflows:
   version: 2
@@ -2354,7 +2362,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - pnpm exec nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -2493,7 +2501,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: yarn nx affected -t lint test build
 
 workflows:
   version: 2
@@ -2615,6 +2623,6 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - yarn nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - yarn nx affected -t lint test build
 "
 `;
