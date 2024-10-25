@@ -41,6 +41,7 @@ out
 .env.local
 .bashrc
 .nx
+!.nx/workflows/
 
 *.node
 

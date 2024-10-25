@@ -1,0 +1,36 @@
+distribute-on:
+  small-changeset: 2 linux-medium-v10, 2 linux-medium-v11, 4 linux-large
+  medium-changeset: 2 linux-medium-v10, 3 linux-medium-v11, 5 linux-large
+  large-changeset: 2 linux-medium-v10, 5 linux-medium-v11, 5 linux-large
+
+assignment-rules:
+  - target: lint
+    runs-on:
+      - linux-medium-v10
+
+  - target: package
+    runs-on:
+      - linux-large
+
+  - target: build
+    runs-on:
+      - linux-medium-v11
+      - linux-large
+
+  - project: playwright
+    runs-on:
+      - linux-large
+
+  - project: expo
+    target: lint
+    runs-on:
+      - linux-medium-v11
+
+  - target: build
+    project: jest
+    runs-on:
+      - linux-medium-v11
+
+  - target: test
+    runs-on:
+      - linux-medium-v10
