@@ -230,9 +230,9 @@ The Nx Agents feature
 - collects the results and logs of all the tasks and presents them in a single view
 - automatically shuts down agents when they are no longer needed
 
-To enable Nx Agents, make sure the following line is uncommented in the `.circleci/config.yml` file.
+To enable Nx Agents, make sure the `nx-cloud start-ci-run` line is uncommented in the `.circleci/config.yml` file and the `nx affected` line runs the `e2e-ci` task instead of `e2e`.
 
-```yml {% fileName=".circleci/config.yml" highlightLines=["21"] %}
+```yml {% fileName=".circleci/config.yml" highlightLines=["21","29"] %}
 version: 2.1
 
 orbs:
