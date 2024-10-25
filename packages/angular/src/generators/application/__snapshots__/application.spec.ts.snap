@@ -58,7 +58,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 4`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -116,7 +117,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 4`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 
@@ -160,7 +161,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 3`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -202,7 +204,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 3`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 

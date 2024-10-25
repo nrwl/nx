@@ -44,7 +44,6 @@ describe('MyLibComponent', () => {
 
 exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 1`] = `
 "export * from './lib/lib.routes';
-
 export * from './lib/my-lib.component';"
 `;
 
@@ -220,7 +219,6 @@ describe('MyLibComponent', () => {
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 1`] = `
 "export * from './lib/lib.routes';
-
 export * from './lib/my-lib/my-lib.component';"
 `;
 
@@ -276,7 +274,6 @@ describe('MyLibComponent', () => {
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 1`] = `
 "export * from './lib/lib.routes';
-
 export * from './lib/my-lib/my-lib.component';"
 `;
 
@@ -300,7 +297,6 @@ export const appRoutes: Route[] = [
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 1`] = `
 "export * from './lib/lib.routes';
-
 export * from './lib/my-lib/my-lib.component';"
 `;
 

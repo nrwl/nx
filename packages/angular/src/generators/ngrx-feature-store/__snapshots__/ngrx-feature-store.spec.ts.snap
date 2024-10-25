@@ -1108,7 +1108,6 @@ export * from './lib/+state/users.selectors';
 export * from './lib/+state/users.reducer';
 export * from './lib/+state/users.actions';
 export * from './lib/lib.routes';
-
 export * from './lib/feature/feature.component';"
 `;
 
@@ -1125,6 +1124,5 @@ export * from './lib/+state/users.models';
 
 export { UsersActions, UsersFeature, UsersSelectors };
 export * from './lib/lib.routes';
-
 export * from './lib/feature/feature.component';"
 `;
