@@ -117,7 +117,11 @@ describe('updateEslint', () => {
 
           ...baseConfig,
           ...nx.configs["flat/react-typescript"],
-          { ignores: [".next/**/*"] }
+          {
+              ignores: [
+                  ".next/**/*"
+              ]
+          }
       ];
       "
     `);

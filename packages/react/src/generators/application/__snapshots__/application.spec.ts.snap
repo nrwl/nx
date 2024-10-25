@@ -1,26 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app --minimal should create default application without Nx welcome component 1`] = `
-"
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+"// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './app.module.css';
 
-
-
 export function App() {
-
   return (
     <div>
-      
       <h1>
         <span> Hello there, </span>
         Welcome plain 👋
       </h1>
-     
-    </div>);
-
+    </div>
+  );
 }
-
 
 export default App;
 
@@ -36,16 +29,15 @@ if (import.meta.vitest) {
     render = (await import('@testing-library/react')).render;
   });
 
-  
-it('should render successfully', () => {
-  const { baseElement } = render(<App />);
-  expect(baseElement).toBeTruthy();
-});
+  it('should render successfully', () => {
+    const { baseElement } = render(<App />);
+    expect(baseElement).toBeTruthy();
+  });
 
-it('should have a greeting as the title', () => {
-  const { getByText } = render(<App />);
-  expect(getByText(/Welcome plain/gi)).toBeTruthy();
-});
+  it('should have a greeting as the title', () => {
+    const { getByText } = render(<App />);
+    expect(getByText(/Welcome plain/gi)).toBeTruthy();
+  });
 
 }
  
@@ -53,8 +45,7 @@ it('should have a greeting as the title', () => {
 `;
 
 exports[`app --style @emotion/styled should exclude styles 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -89,7 +80,6 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;
 
@@ -129,8 +119,7 @@ export default defineConfig({
 `;
 
 exports[`app --style none should exclude styles 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -165,7 +154,6 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;
 
@@ -253,7 +241,6 @@ export default defineConfig({
 exports[`app not nested should generate files 1`] = `
 "// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './app.module.css';
-
 import NxWelcome from './nx-welcome';
 
 export function App() {
@@ -317,8 +304,7 @@ export default defineConfig({
 exports[`app setup React app with --bundler=vite should setup targets with vite configuration 1`] = `null`;
 
 exports[`app should add custom webpack config 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -353,30 +339,21 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;
 
 exports[`app should create Nx specific template 1`] = `
-"
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+"// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './app.module.css';
-
 import NxWelcome from "./nx-welcome";
 
-
-
 export function App() {
-
   return (
     <div>
-      
       <NxWelcome title="my-app"/>
-     
-    </div>);
-
+    </div>
+  );
 }
-
 
 export default App;
 
@@ -420,8 +397,7 @@ export default defineConfig({
 `;
 
 exports[`app should setup webpack 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -456,6 +432,5 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;

@@ -28,11 +28,10 @@ exports[`remote generator bundler=webpack should create the remote with the corr
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
 module.exports = {
-   name: 'test',
-   
-   exposes: {
-     './Module': './src/remote-entry.ts',
-   },
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
 };
 "
 `;
@@ -65,11 +64,10 @@ exports[`remote generator bundler=webpack should create the remote with the corr
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
 module.exports = {
-   name: 'test',
-   
-   exposes: {
-     './Module': './src/remote-entry.js',
-   },
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.js',
+  },
 };
 "
 `;
@@ -109,7 +107,6 @@ exports[`remote generator bundler=webpack should create the remote with the corr
 
 const config: ModuleFederationConfig = {
   name: 'test',
-
   exposes: {
     './Module': './src/remote-entry.ts',
   },
@@ -130,7 +127,7 @@ const {withModuleFederationForSSR} = require('@nx/react/module-federation');
 const baseConfig = require("./module-federation.server.config");
 
 const defaultConfig = {
-    ...baseConfig,
+  ...baseConfig,
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.
@@ -148,10 +145,10 @@ exports[`remote generator bundler=webpack should generate correct remote with co
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
 module.exports = {
-    name: 'test',
-   exposes: {
-     './Module': 'test/src/remote-entry.ts',
-   },
+  name: 'test',
+  exposes: {
+    './Module': 'test/src/remote-entry.ts',
+  },
 };
 "
 `;

@@ -1,6 +1,6 @@
-<%_ if(displayBlock){ if(style != 'sass') { _%>:host {
+<% if(displayBlock){ if(style != 'sass') { %>:host {
   display: block;
 }
-<%_ } else { _%>\:host
+<% } else { %>\:host
   display: block
-<%_ }} _%>
+<% }} %>

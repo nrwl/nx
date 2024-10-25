@@ -283,12 +283,16 @@ module.exports = [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parserOptions: { parser: require('@typescript-eslint/parser') },
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    rules: { 'vue/multi-word-component-names': 'off' },
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
   },
 ];
 "

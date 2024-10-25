@@ -27,6 +27,7 @@ export class App extends Component {
 export function App() {
   return (
     <div>
+      <style jsx>{`/** your style here **/`}</style>
     <%_ if (!minimal) { _%>
       <NxWelcome title="<%= projectName %>"/>
     <%_ } else { _%>
