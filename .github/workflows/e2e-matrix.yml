@@ -25,15 +25,18 @@ jobs:
           - ubuntu-latest
           - macos-latest
         node_version:
+          - 18
           - 20
-          - 21
           - 22
+          - 23
         exclude:
           # run just node v20 on macos
           - os: macos-latest
-            node_version: 22
+            node_version: 18
           - os: macos-latest
-            node_version: 21
+            node_version: 23
+          - os: macos-latest
+            node_version: 23
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
@@ -109,9 +112,10 @@ jobs:
           - ubuntu-latest
           - macos-latest
         node_version:
+          - 18
           - 20
-          - 21
           - 22
+          - 23
         package_manager:
           - npm
           - yarn
@@ -222,55 +226,55 @@ jobs:
           - os: ubuntu-latest
             project: e2e-expo
           # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 21
+          - node_version: 18
             project: e2e-angular
-          - node_version: 21
+          - node_version: 18
             project: e2e-cypress
-          - node_version: 21
+          - node_version: 18
             project: e2e-detox
-          - node_version: 21
+          - node_version: 18
             project: e2e-esbuild
-          - node_version: 21
+          - node_version: 18
             project: e2e-expo
-          - node_version: 21
+          - node_version: 18
             project: e2e-gradle
-          - node_version: 21
+          - node_version: 18
             project: e2e-jest
-          - node_version: 21
+          - node_version: 18
             project: e2e-js
-          - node_version: 21
+          - node_version: 18
             project: e2e-eslint
-          - node_version: 21
+          - node_version: 18
             project: e2e-next
-          - node_version: 21
+          - node_version: 18
             project: e2e-node
-          - node_version: 21
+          - node_version: 18
             project: e2e-nuxt
-          - node_version: 21
+          - node_version: 18
             project: e2e-nx-init
-          - node_version: 21
+          - node_version: 18
             project: e2e-nx
-          - node_version: 21
+          - node_version: 18
             project: e2e-plugin
-          - node_version: 21
+          - node_version: 18
             project: e2e-playwright
-          - node_version: 21
+          - node_version: 18
             project: e2e-react
-          - node_version: 21
+          - node_version: 18
             project: e2e-react-native
-          - node_version: 21
+          - node_version: 18
             project: e2e-web
-          - node_version: 21
+          - node_version: 18
             project: e2e-remix
-          - node_version: 21
+          - node_version: 18
             project: e2e-rollup
-          - node_version: 21
+          - node_version: 18
             project: e2e-storybook
-          - node_version: 21
+          - node_version: 18
             project: e2e-vite
-          - node_version: 21
+          - node_version: 18
             project: e2e-vue
-          - node_version: 21
+          - node_version: 18
             project: e2e-webpack
           - node_version: 22
             project: e2e-angular
@@ -321,6 +325,56 @@ jobs:
           - node_version: 22
             project: e2e-vue
           - node_version: 22
+            project: e2e-webpack
+          - node_version: 23
+            project: e2e-angular
+          - node_version: 23
+            project: e2e-cypress
+          - node_version: 23
+            project: e2e-detox
+          - node_version: 23
+            project: e2e-esbuild
+          - node_version: 23
+            project: e2e-expo
+          - node_version: 23
+            project: e2e-gradle
+          - node_version: 23
+            project: e2e-jest
+          - node_version: 23
+            project: e2e-js
+          - node_version: 23
+            project: e2e-eslint
+          - node_version: 23
+            project: e2e-next
+          - node_version: 23
+            project: e2e-node
+          - node_version: 23
+            project: e2e-nuxt
+          - node_version: 23
+            project: e2e-nx-init
+          - node_version: 23
+            project: e2e-nx
+          - node_version: 23
+            project: e2e-plugin
+          - node_version: 23
+            project: e2e-playwright
+          - node_version: 23
+            project: e2e-react
+          - node_version: 23
+            project: e2e-react-native
+          - node_version: 23
+            project: e2e-web
+          - node_version: 23
+            project: e2e-remix
+          - node_version: 23
+            project: e2e-rollup
+          - node_version: 23
+            project: e2e-storybook
+          - node_version: 23
+            project: e2e-vite
+          - node_version: 23
+            project: e2e-vue
+          - node_version: 23
             project: e2e-webpack
           # run just npm v20 on macos
           - os: macos-latest
@@ -328,9 +382,11 @@ jobs:
           - os: macos-latest
             package_manager: pnpm
           - os: macos-latest
-            node_version: 21
+            node_version: 18
           - os: macos-latest
             node_version: 22
+          - os: macos-latest
+            node_version: 23
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
