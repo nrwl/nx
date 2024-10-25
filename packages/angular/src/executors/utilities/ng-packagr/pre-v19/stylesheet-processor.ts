@@ -12,11 +12,11 @@ import { dirname, join } from 'path';
 const Piscina = require('piscina');
 import { colors } from 'ng-packagr/lib/utils/color';
 // using this instead of the one from ng-packagr
-import { getTailwindConfigPath } from './tailwindcss';
+import { getTailwindConfigPath } from '../tailwindcss';
 import { workspaceRoot } from '@nx/devkit';
 import type { PostcssConfiguration } from 'ng-packagr/lib/styles/postcss-configuration';
 import { gt, gte } from 'semver';
-import { getInstalledPackageVersionInfo } from '../angular-version-utils';
+import { getInstalledPackageVersionInfo } from '../../angular-version-utils';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
 const maxThreads =
