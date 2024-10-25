@@ -40,9 +40,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install PNPM
-        run: |
-          npm install -g @pnpm/exe@9.8.0
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.8.0
+          run_install: false
 
       - name: Set node
         uses: actions/setup-node@v4
@@ -56,7 +58,7 @@ jobs:
         with:
           lookup-only: true
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Ensure Python setuptools Installed on Macos
         if: ${{ matrix.os == 'macos-latest' }}
@@ -339,9 +341,11 @@ jobs:
       - name: Prepare dir for output
         run: mkdir -p outputs
 
-      - name: Install PNPM
-        run: |
-          npm install -g @pnpm/exe@9.8.0
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.8.0
+          run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v4
@@ -354,7 +358,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
+          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install packages
         run: pnpm install --frozen-lockfile
@@ -456,6 +460,8 @@ jobs:
         if: ${{ always() }}
         with:
           name: outputs
+          overwrite: true
+          if-no-files-found: 'ignore'
           path: ${{ steps.save-matrix.outputs.path }}
 
       - name: Setup tmate session
