@@ -19,7 +19,7 @@ import {
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { basename, dirname, join, normalize, relative } from 'node:path';
+import { basename, dirname, join, normalize, relative, sep } from 'node:path';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
@@ -456,21 +456,30 @@ function getOutputs(
       const outFileName = basename(config.options.outFile, '.js');
       const outFileDir = dirname(config.options.outFile);
       outputs.add(
-        joinPathFragments(
-          '{workspaceRoot}',
-          relative(workspaceRoot, config.options.outFile)
-        )
+        pathToInputOrOutput(config.options.outFile, workspaceRoot, projectRoot)
       );
       // outFile is not be used with .cjs, .mjs, .jsx, so the list is simpler
       const outDir = relative(workspaceRoot, outFileDir);
       outputs.add(
-        joinPathFragments('{workspaceRoot}', outDir, `${outFileName}.js.map`)
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.js.map`),
+          workspaceRoot,
+          projectRoot
+        )
       );
       outputs.add(
-        joinPathFragments('{workspaceRoot}', outDir, `${outFileName}.d.ts`)
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.d.ts`),
+          workspaceRoot,
+          projectRoot
+        )
       );
       outputs.add(
-        joinPathFragments('{workspaceRoot}', outDir, `${outFileName}.d.ts.map`)
+        pathToInputOrOutput(
+          joinPathFragments(outDir, `${outFileName}.d.ts.map`),
+          workspaceRoot,
+          projectRoot
+        )
       );
       // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
       outputs.add(
@@ -480,19 +489,32 @@ function getOutputs(
               workspaceRoot,
               projectRoot
             )
-          : joinPathFragments(
-              '{workspaceRoot}',
-              outDir,
-              `${outFileName}.tsbuildinfo`
+          : pathToInputOrOutput(
+              joinPathFragments(outDir, `${outFileName}.tsbuildinfo`),
+              workspaceRoot,
+              projectRoot
             )
       );
     } else if (config.options.outDir) {
       outputs.add(
-        joinPathFragments(
-          '{workspaceRoot}',
-          relative(workspaceRoot, config.options.outDir)
-        )
+        pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
       );
+
+      if (
+        config.options.tsBuildInfoFile &&
+        !normalize(config.options.tsBuildInfoFile).startsWith(
+          `${normalize(config.options.outDir)}${sep}`
+        )
+      ) {
+        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+        outputs.add(
+          pathToInputOrOutput(
+            config.options.tsBuildInfoFile,
+            workspaceRoot,
+            projectRoot
+          )
+        );
+      }
     } else if (config.fileNames.length) {
       // tsc produce files in place when no outDir or outFile is set
       outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
