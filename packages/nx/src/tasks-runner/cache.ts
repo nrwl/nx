@@ -54,6 +54,8 @@ export class DbCache {
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
 
   async init() {
@@ -158,6 +160,8 @@ export class DbCache {
       return (
         (await this.getPowerpackS3Cache()) ??
         (await this.getPowerpackSharedCache()) ??
+        (await this.getPowerpackGcsCache()) ??
+        (await this.getPowerpackAzureCache()) ??
         null
       );
     }
@@ -169,6 +173,14 @@ export class DbCache {
 
   private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
     return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  }
+
+  private getPowerpackGcsCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-gcs-cache');
+  }
+
+  private getPowerpackAzureCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-azure-cache');
   }
 
   private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {

@@ -24,7 +24,7 @@
       "name": {
         "type": "string",
         "description": "The name to give to the remote Angular app.",
-        "pattern": "^[a-zA-Z][^:]*$",
+        "pattern": "^[a-zA-Z_$][a-zA-Z_$0-9]*$",
         "x-priority": "important"
       },
       "host": {

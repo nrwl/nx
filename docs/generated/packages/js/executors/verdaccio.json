@@ -25,7 +25,8 @@
       },
       "listenAddress": {
         "type": "string",
-        "description": "Listen address that Verdaccio should listen to"
+        "description": "Listen address that Verdaccio should listen to",
+        "default": "localhost"
       },
       "config": {
         "type": "string",

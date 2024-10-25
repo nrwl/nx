@@ -1,6 +1,6 @@
 import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 
-const COLLAPSIBLE_SECTIONS = ['concepts', 'recipes'];
+const COLLAPSIBLE_SECTIONS = ['concepts', 'recipes', 'enterprise'];
 
 export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {
@@ -14,6 +14,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||
+          m.id === 'nx-enterprise' ||
           m.id === 'showcase' ||
           m.id === 'reference' ||
           m.id === 'troubleshooting'
@@ -93,6 +94,17 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
           m.id === 'troubleshooting'
       )
       .map((m) => {
+        if (m.id === 'recipes') {
+          m.children.map((recipesChild) => {
+            if (recipesChild.id !== 'enterprise') {
+              return recipesChild;
+            }
+            recipesChild.children = recipesChild.children.filter(
+              (enterpriseChild) => enterpriseChild.id !== 'on-premise'
+            );
+            return recipesChild;
+          });
+        }
         return {
           ...m,
           disableCollapsible:
