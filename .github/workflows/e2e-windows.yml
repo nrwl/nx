@@ -25,7 +25,7 @@ jobs:
           - 18
           - 20
           - 22
-          - 23
+          # - 23
 
     name: Cache install (node v${{ matrix.node_version }})
     steps:
@@ -80,7 +80,7 @@ jobs:
           - 18
           - 20
           - 22
-          - 23
+          # - 23
         package_manager:
           - npm
         project:
@@ -114,14 +114,8 @@ jobs:
             codeowners: 'S04SS457V38'
           - project: e2e-cypress
             codeowners: 'S04T16BTJJY'
-          - project: e2e-detox
-            codeowners: 'S04TNCNJG5N'
           - project: e2e-esbuild
             codeowners: 'S04SJ6HHP0X'
-          - project: e2e-expo
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-gradle
-            codeowners: 'S04TNCNJG5N'
           - project: e2e-jest
             codeowners: 'S04T16BTJJY'
           - project: e2e-js
@@ -143,8 +137,6 @@ jobs:
           - project: e2e-release
             codeowners: 'S04SYHYKGNP'
           - project: e2e-react
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-react-native
             codeowners: 'S04TNCNJG5N'
           - project: e2e-web
             codeowners: 'S04SJ6PL98X'
@@ -252,48 +244,48 @@ jobs:
             project: e2e-vue
           - node_version: 22
             project: e2e-webpack
-          - node_version: 23
-            project: e2e-angular
-          - node_version: 23
-            project: e2e-cypress
-          - node_version: 23
-            project: e2e-esbuild
-          - node_version: 23
-            project: e2e-jest
-          - node_version: 23
-            project: e2e-js
-          - node_version: 23
-            project: e2e-eslint
-          - node_version: 23
-            project: e2e-next
-          - node_version: 23
-            project: e2e-node
-          - node_version: 23
-            project: e2e-nuxt
-          - node_version: 23
-            project: e2e-nx-init
-          - node_version: 23
-            project: e2e-nx
-          - node_version: 23
-            project: e2e-plugin
-          - node_version: 23
-            project: e2e-playwright
-          - node_version: 23
-            project: e2e-react
-          - node_version: 23
-            project: e2e-web
-          - node_version: 23
-            project: e2e-remix
-          - node_version: 23
-            project: e2e-rollup
-          - node_version: 23
-            project: e2e-storybook
-          - node_version: 23
-            project: e2e-vite
-          - node_version: 23
-            project: e2e-vue
-          - node_version: 23
-            project: e2e-webpack
+          # - node_version: 23
+          #   project: e2e-angular
+          # - node_version: 23
+          #   project: e2e-cypress
+          # - node_version: 23
+          #   project: e2e-esbuild
+          # - node_version: 23
+          #   project: e2e-jest
+          # - node_version: 23
+          #   project: e2e-js
+          # - node_version: 23
+          #   project: e2e-eslint
+          # - node_version: 23
+          #   project: e2e-next
+          # - node_version: 23
+          #   project: e2e-node
+          # - node_version: 23
+          #   project: e2e-nuxt
+          # - node_version: 23
+          #   project: e2e-nx-init
+          # - node_version: 23
+          #   project: e2e-nx
+          # - node_version: 23
+          #   project: e2e-plugin
+          # - node_version: 23
+          #   project: e2e-playwright
+          # - node_version: 23
+          #   project: e2e-react
+          # - node_version: 23
+          #   project: e2e-web
+          # - node_version: 23
+          #   project: e2e-remix
+          # - node_version: 23
+          #   project: e2e-rollup
+          # - node_version: 23
+          #   project: e2e-storybook
+          # - node_version: 23
+          #   project: e2e-vite
+          # - node_version: 23
+          #   project: e2e-vue
+          # - node_version: 23
+          #   project: e2e-webpack
       fail-fast: false
 
     name: ${{ matrix.project }} (v${{ matrix.node_version }})
