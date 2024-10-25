@@ -63,6 +63,7 @@ export async function createApplicationFiles(
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     appTests,
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
+    style: options.style === 'tailwind' ? 'css' : options.style,
   };
 
   if (options.bundler === 'vite') {
