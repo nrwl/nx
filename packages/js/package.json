@@ -43,7 +43,7 @@
     "@nx/workspace": "file:../workspace",
     "@zkochan/js-yaml": "0.0.7",
     "babel-plugin-const-enum": "^1.0.1",
-    "babel-plugin-macros": "^2.8.0",
+    "babel-plugin-macros": "^3.1.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
