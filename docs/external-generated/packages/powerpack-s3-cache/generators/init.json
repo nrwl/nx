@@ -1,0 +1,30 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/generator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "Init",
+    "title": "",
+    "type": "object",
+    "properties": {
+      "region": {
+        "type": "string",
+        "description": "The AWS region the bucket is located in",
+        "x-prompt": "Which AWS region is the bucket located in?"
+      },
+      "bucket": {
+        "type": "string",
+        "description": "The the name of the S3 Bucket to store the Nx Cache in",
+        "x-prompt": "What is the name of the S3 Bucket to store the Nx Cache in?"
+      }
+    },
+    "required": ["region", "bucket"],
+    "presets": []
+  },
+  "description": "Initialize the S3 Cache",
+  "implementation": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
+  "type": "generator"
+}

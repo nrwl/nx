@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app generated files content - as-provided - my-app general application should add nuxt entries in .gitignore 1`] = `
-"
-# Nuxt dev/build outputs
+"# Nuxt dev/build outputs
 .output
 .data
 .nuxt
 .nitro
-.cache"
+.cache
+**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
@@ -18,19 +18,46 @@ exports[`app generated files content - as-provided - my-app general application 
 }
 `;
 
-exports[`app generated files content - as-provided - my-app general application should configure eslint correctly 1`] = `
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
   "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "vue/multi-word-component-names": "off"
-      }
+      "rules": {}
     }
   ]
 }
+"
+`;
+
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+const baseConfig = require('../eslint.config.js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: { parser: require('@typescript-eslint/parser') },
+    },
+  },
+  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+];
 "
 `;
 
@@ -104,14 +131,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
-
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     watch: false,
     globals: true,
@@ -340,13 +364,13 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add nuxt entries in .gitignore 1`] = `
-"
-# Nuxt dev/build outputs
+"# Nuxt dev/build outputs
 .output
 .data
 .nuxt
 .nitro
-.cache"
+.cache
+**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
@@ -357,19 +381,46 @@ exports[`app generated files content - as-provided - myApp general application s
 }
 `;
 
-exports[`app generated files content - as-provided - myApp general application should configure eslint correctly 1`] = `
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
   "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "vue/multi-word-component-names": "off"
-      }
+      "rules": {}
     }
   ]
 }
+"
+`;
+
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+const baseConfig = require('../eslint.config.js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: { parser: require('@typescript-eslint/parser') },
+    },
+  },
+  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+];
 "
 `;
 
@@ -443,14 +494,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/myApp',
-
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     watch: false,
     globals: true,

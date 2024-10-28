@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pipe generator --no-standalone should export the pipe correctly when flat=false and path is nested deeper 1`] = `
+exports[`pipe generator --no-standalone should export the pipe correctly when directory is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
 @NgModule({
@@ -50,7 +50,7 @@ export class TestModule {}
 "
 `;
 
-exports[`pipe generator --no-standalone should import the pipe correctly when flat=false 1`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when files are flat 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -64,7 +64,7 @@ export class TestPipe implements PipeTransform {
 "
 `;
 
-exports[`pipe generator --no-standalone should import the pipe correctly when flat=false 2`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when files are flat 2`] = `
 "import { TestPipe } from './test.pipe';
 
 describe('TestPipe', () => {
@@ -76,7 +76,7 @@ describe('TestPipe', () => {
 "
 `;
 
-exports[`pipe generator --no-standalone should import the pipe correctly when flat=false 3`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when files are flat 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './test/test.pipe';
 @NgModule({
@@ -88,7 +88,7 @@ export class TestModule {}
 "
 `;
 
-exports[`pipe generator --no-standalone should import the pipe correctly when flat=false and path is nested deeper 1`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when files are flat but deeply nested 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -102,7 +102,7 @@ export class TestPipe implements PipeTransform {
 "
 `;
 
-exports[`pipe generator --no-standalone should import the pipe correctly when flat=false and path is nested deeper 2`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when files are flat but deeply nested 2`] = `
 "import { TestPipe } from './test.pipe';
 
 describe('TestPipe', () => {
@@ -114,7 +114,7 @@ describe('TestPipe', () => {
 "
 `;
 
-exports[`pipe generator --no-standalone should import the pipe correctly when flat=false and path is nested deeper 3`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when files are flat but deeply nested 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
 @NgModule({

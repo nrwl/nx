@@ -8,7 +8,9 @@ console.log(`Comparing ${currentVersion} to npm versions`);
 
 const majorVersion = major(currentVersion);
 const releasedVersions: string[] = JSON.parse(
-  execSync(`npm show nx@^${majorVersion} version --json`).toString()
+  execSync(`npm show nx@^${majorVersion} version --json`, {
+    windowsHide: false,
+  }).toString()
 );
 
 const latestVersion = maxSatisfying(releasedVersions, `^${majorVersion}`);
@@ -23,8 +25,12 @@ if (currentVersion && latestVersion && gte(currentVersion, latestVersion)) {
     `Publishing docs site for ${process.env.GITHUB_REF_NAME} to ${branchName}`
   );
   // We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-  execSync(`git branch -f ${branchName}`);
-  execSync(`git push -f origin ${branchName}`);
+  execSync(`git branch -f ${branchName}`, {
+    windowsHide: false,
+  });
+  execSync(`git push -f origin ${branchName}`, {
+    windowsHide: false,
+  });
 } else {
   console.log(`Not publishing docs to ${branchName}`);
 }

@@ -363,7 +363,7 @@ export function getNextConfig(
 
         const svgrOptions =
           typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
-        // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
+        // TODO(v21): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
         // It should be:
         // use: [{
         //   test: /\.svg$/i,

@@ -88,7 +88,7 @@ export async function commitChanges({
   isDryRun?: boolean;
   isVerbose?: boolean;
   gitCommitMessages?: string[];
-  gitCommitArgs?: string;
+  gitCommitArgs?: string | string[];
 }) {
   if (!changedFiles?.length && !deletedFiles?.length) {
     throw new Error('Error: No changed files to commit');

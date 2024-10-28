@@ -5,6 +5,8 @@ import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+  workspaceRoot,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -34,6 +36,7 @@ import type {
   Schema,
   SchemaWithBrowserTarget,
 } from './schema';
+import { readNxJson } from 'nx/src/config/configuration';
 
 type BuildTargetOptions = {
   tsConfig: string;
@@ -55,11 +58,16 @@ export function executeDevServerBuilder(
 
   const options = normalizeOptions(rawOptions);
 
+  const projectGraph = readCachedProjectGraph();
+
   const parsedBuildTarget = parseTargetString(options.buildTarget, {
     cwd: context.currentDirectory,
-    projectGraph: readCachedProjectGraph(),
+    projectGraph,
     projectName: context.target.project,
+    projectsConfigurations:
+      readProjectsConfigurationFromProjectGraph(projectGraph),
     root: context.workspaceRoot,
+    nxJsonConfiguration: readNxJson(workspaceRoot),
     isVerbose: false,
   });
   const browserTargetProjectConfiguration = readCachedProjectConfiguration(

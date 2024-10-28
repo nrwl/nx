@@ -1,5 +1,4 @@
-import { existsSync } from 'fs';
-import { ensureDirSync, renameSync } from 'fs-extra';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
@@ -23,7 +22,6 @@ import { nxVersion } from '../utils/versions';
 export interface FileMapCache {
   version: string;
   nxVersion: string;
-  deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
@@ -39,7 +37,7 @@ export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 export function ensureCacheDirectory(): void {
   try {
     if (!existsSync(workspaceDataDirectory)) {
-      ensureDirSync(workspaceDataDirectory);
+      mkdirSync(workspaceDataDirectory, { recursive: true });
     }
   } catch (e) {
     /*
@@ -114,7 +112,6 @@ export function createProjectFileMapCache(
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
-    deps: packageJsonDeps, // TODO(v19): We can remove this in favor of nxVersion
     // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,

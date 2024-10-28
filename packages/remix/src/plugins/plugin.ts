@@ -34,6 +34,7 @@ export interface RemixPluginOptions {
   staticServeTargetName?: string;
   serveStaticTargetName?: string;
 }
+
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(
@@ -56,7 +57,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs}';
+const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
 export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
   remixConfigGlob,
@@ -371,13 +372,17 @@ function determineIsRemixVite(configFilePath: string, workspaceRoot: string) {
     return RemixCompiler.IsClassic;
   }
 
+  const VITE_PLUGIN_REGEX = /vitePlugin\(\s*(.|\n)*?\s*\)/;
+  const REMIX_PLUGIN_REGEX = /remix\(\s*(.|\n)*?\s*\)/;
+
   const fileContents = readFileSync(
     join(workspaceRoot, configFilePath),
     'utf8'
   );
   if (
     fileContents.includes('@remix-run/dev') &&
-    (fileContents.includes('vitePlugin()') || fileContents.includes('remix()'))
+    (VITE_PLUGIN_REGEX.test(fileContents) ||
+      REMIX_PLUGIN_REGEX.test(fileContents))
   ) {
     return RemixCompiler.IsVte;
   } else {

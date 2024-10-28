@@ -1,9 +1,6 @@
 import { env as appendLocalEnv } from 'npm-run-path';
-import {
-  combineOptionsForExecutor,
-  handleErrors,
-  Schema,
-} from '../../utils/params';
+import { combineOptionsForExecutor, Schema } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { printHelp } from '../../utils/print-help';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { relative } from 'path';
@@ -137,6 +134,7 @@ async function printTargetRunHelpInternal(
     } else {
       const cp = exec(helpCommand, {
         env,
+        windowsHide: false,
       });
       cp.on('exit', (code) => {
         process.exit(code);
@@ -192,7 +190,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       projectsConfigurations,
       nxJsonConfiguration,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,

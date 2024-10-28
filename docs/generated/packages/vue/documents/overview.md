@@ -51,13 +51,13 @@ npm add -D @nx/vue
 To generate a Vue application, run the following:
 
 ```shell
-nx g @nx/vue:app my-app
+nx g @nx/vue:app apps/my-app
 ```
 
 To generate a Vue library, run the following:
 
 ```shell
-nx g @nx/vue:lib my-lib
+nx g @nx/vue:lib libs/my-lib
 ```
 
 ## More Documentation

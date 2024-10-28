@@ -5,7 +5,7 @@ import {
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export interface NxShowArgs {
   json?: boolean;

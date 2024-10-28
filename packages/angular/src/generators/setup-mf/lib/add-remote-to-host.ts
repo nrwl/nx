@@ -166,8 +166,11 @@ function addLazyLoadedRouteToHostAppModule(
     : 'RemoteEntryModule';
   const routeToAdd =
     hostFederationType === 'dynamic'
-      ? `loadRemoteModule('${options.appName}', './${routePathName}')`
-      : `import('${options.appName}/${routePathName}')`;
+      ? `loadRemoteModule('${options.appName.replace(
+          /-/g,
+          '_'
+        )}', './${routePathName}')`
+      : `import('${options.appName.replace(/-/g, '_')}/${routePathName}')`;
 
   addRoute(
     tree,

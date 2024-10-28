@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs-extra';
+import { readFileSync } from 'node:fs';
 import ignore from 'ignore';
 import { readFileIfExisting } from './fileutils';
 import { joinPathFragments } from './path';

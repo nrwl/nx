@@ -56,7 +56,6 @@ import { pill } from './lib/tags/pill.schema';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
-
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
 

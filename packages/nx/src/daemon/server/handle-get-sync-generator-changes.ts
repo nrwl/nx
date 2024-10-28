@@ -6,12 +6,16 @@ export async function handleGetSyncGeneratorChanges(
 ): Promise<HandlerResult> {
   const changes = await getCachedSyncGeneratorChanges(generators);
 
-  // strip out the content of the changes and any potential callback
-  const result = changes.map((change) => ({
-    generatorName: change.generatorName,
-    changes: change.changes.map((c) => ({ ...c, content: null })),
-    outOfSyncMessage: change.outOfSyncMessage,
-  }));
+  const result = changes.map((change) =>
+    'error' in change
+      ? change
+      : // strip out the content of the changes and any potential callback
+        {
+          generatorName: change.generatorName,
+          changes: change.changes.map((c) => ({ ...c, content: null })),
+          outOfSyncMessage: change.outOfSyncMessage,
+        }
+  );
 
   return {
     response: JSON.stringify(result),

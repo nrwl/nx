@@ -78,12 +78,15 @@ function startWebServer(webServerCommand: string) {
     // Windows is fine so we leave it attached to this process
     detached: process.platform !== 'win32',
     stdio: 'inherit',
+    windowsHide: false,
   });
 
   return () => {
     if (process.platform === 'win32') {
       try {
-        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F');
+        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F', {
+          windowsHide: false,
+        });
       } catch (e) {
         if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.error(e);

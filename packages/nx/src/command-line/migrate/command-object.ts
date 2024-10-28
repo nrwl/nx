@@ -128,6 +128,7 @@ function runMigration() {
       }
       execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
+        windowsHide: false,
       });
     }
   } else {
@@ -155,12 +156,14 @@ function nxCliPath() {
       execSync(pmc.preInstall, {
         cwd: tmpDir,
         stdio: ['ignore', 'ignore', 'ignore'],
+        windowsHide: false,
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
         execSync('yarn config set nodeLinker node-modules', {
           cwd: tmpDir,
           stdio: ['ignore', 'ignore', 'ignore'],
+          windowsHide: false,
         });
       }
     }
@@ -168,6 +171,7 @@ function nxCliPath() {
     execSync(pmc.install, {
       cwd: tmpDir,
       stdio: ['ignore', 'ignore', 'ignore'],
+      windowsHide: false,
     });
 
     // Set NODE_PATH so that these modules can be used for module resolution

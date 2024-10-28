@@ -5,7 +5,6 @@ authors: ['Philip Fulcher']
 tags: [nx-cloud]
 cover_image: /blog/images/2024-09-10/personal-access-tokens-header.avif
 youtubeUrl: https://youtu.be/i51LPtagb2s
-published: false
 ---
 
 Today, Nx Cloud gets a huge upgrade to managing access to your cached artifacts
@@ -39,14 +38,10 @@ platform so that they're no longer committed to your repo.
 ## What are personal access tokens?
 
 [Personal access tokens](/ci/recipes/security/personal-access-tokens) are a new type of access token that is scoped to
-an individual user. This means that this token lives and dies with that member's access to your Nx Cloud workspace.
-Users must log in to Nx Cloud and they are a member of a workspace before a personal access token can be created.
-Once created, we validate that token for access each time you use the distributed cache. As soon as a user loses access,
-the personal access token no
-longer works, and access to the cache is removed.
+an individual user, rather than the workspace. This token authenticates the user with Nx Cloud when running tasks, so that we can validate their access to the distributed cache for a workspace. As soon as a user loses access to an Nx Cloud organization, they will no longer be able to access the cache for any of the organization's workspaces. The user's token belongs to them and will still allow access to their remaining organizations.
 
-This gets even more powerful when combined with the GitHub VCS integration. When a user's GitHub access is removed from
-a GitHub-connected organization, their access to Nx Cloud is removed, and their personal access token is invalidated.
+This gets even more powerful when combined with the [GitHub integration](/ci/features/github-integration). When a user's GitHub access is removed from
+a GitHub-connected organization, their access to your Nx Cloud organization is removed, and their access to the cache for any of the organization's workspaces is removed.
 This means that Nx Cloud can fit into existing user de-provisioning processes you already have.
 
 Open source teams also benefit from personal access tokens. You can configure your access to allow anonymous users to
@@ -72,7 +67,7 @@ can [find more details in our docs](/ci/recipes/security/personal-access-tokens)
    CI
    access token defined in the `nxCloudAccessToken` property. This command will replace that with `nxCloudId`, a generic
    id that references your workspace but no longer provides access to the cache.
-2. **Generate a personal access token by running `npx nx-cloud login`** - Follow the directions in your terminal to log
+2. **Generate a personal access token by running `npx nx login`** - Follow the directions in your terminal to log
    in
    to Nx Cloud. Each contributor with access to the workspace will need to complete this step.
 3. **Move CI access tokens to environment variables** - Now that the access token is no longer committed to your
@@ -96,4 +91,4 @@ can [find more details in our docs](/ci/recipes/security/personal-access-tokens)
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

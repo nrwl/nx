@@ -17,7 +17,7 @@ import { nxVersion, storybookVersion } from '../../utils/versions';
 import configurationGenerator from './configuration';
 import * as variousProjects from './test-configs/various-projects.json';
 
-// nested code imports graph from the repo, which might have innacurate graph version
+// nested code imports graph from the repo, which might have inaccurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
   createProjectGraphAsync: jest
@@ -32,9 +32,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await libraryGenerator(tree, {
-        name: 'test-ui-lib',
+        directory: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         addPlugin: true,
       });
@@ -399,9 +398,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         return json;
       });
       await libraryGenerator(tree, {
-        name: 'test-ui-lib',
+        directory: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       writeJson(tree, 'package.json', {
@@ -479,9 +477,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
     it("should update the project's .eslintrc.json if config exists", async () => {
       await libraryGenerator(tree, {
-        name: 'test-ui-lib2',
+        directory: 'test-ui-lib2',
         linter: Linter.EsLint,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -511,9 +508,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
     it('should have the proper typings', async () => {
       await libraryGenerator(tree, {
-        name: 'test-ui-lib2',
+        directory: 'test-ui-lib2',
         linter: Linter.EsLint,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -589,9 +585,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await libraryGenerator(tree, {
-        name: 'test-ui-lib',
+        directory: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         addPlugin: true,
       });

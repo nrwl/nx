@@ -26,9 +26,7 @@ describe('Remix E2E Tests', () => {
 
     it('should not cause peer dependency conflicts', async () => {
       const plugin = uniq('remix');
-      runCLI(
-        `generate @nx/remix:app ${plugin} --projectNameAndRootFormat=as-provided`
-      );
+      runCLI(`generate @nx/remix:app ${plugin}`);
 
       await runCommandAsync('npm install');
     }, 120000);
@@ -55,24 +53,10 @@ describe('Remix E2E Tests', () => {
     }, 120000);
 
     describe('--directory', () => {
-      it('should create src in the specified directory --projectNameAndRootFormat=derived', async () => {
-        const plugin = uniq('remix');
-        const appName = `sub-${plugin}`;
-        runCLI(
-          `generate @nx/remix:app ${plugin} --directory=sub --projectNameAndRootFormat=derived --rootProject=false --no-interactive`
-        );
-
-        const result = runCLI(`build ${appName}`);
-        expect(result).toContain('Successfully ran target build');
-
-        // TODO(colum): uncomment line below when fixed
-        checkFilesExist(`apps/sub/${plugin}/build/index.js`);
-      }, 120000);
-
-      it('should create src in the specified directory --projectNameAndRootFormat=as-provided', async () => {
+      it('should create src in the specified directory', async () => {
         const plugin = uniq('remix');
         runCLI(
-          `generate @nx/remix:app ${plugin} --directory=subdir --projectNameAndRootFormat=as-provided --rootProject=false --no-interactive`
+          `generate @nx/remix:app --name=${plugin} --directory=subdir --rootProject=false --no-interactive`
         );
 
         const result = runCLI(`build ${plugin}`);
@@ -84,7 +68,9 @@ describe('Remix E2E Tests', () => {
     describe('--tags', () => {
       it('should add tags to the project', async () => {
         const plugin = uniq('remix');
-        runCLI(`generate @nx/remix:app ${plugin} --tags e2etag,e2ePackage`);
+        runCLI(
+          `generate @nx/remix:app apps/${plugin} --tags e2etag,e2ePackage`
+        );
         const project = readJson(`apps/${plugin}/project.json`);
         expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
       }, 120000);
@@ -131,18 +117,20 @@ describe('Remix E2E Tests', () => {
       const plugin = uniq('remix');
 
       beforeAll(async () => {
-        runCLI(`generate @nx/remix:app ${plugin} --tags e2etag,e2ePackage`);
+        runCLI(
+          `generate @nx/remix:app apps/${plugin} --tags e2etag,e2ePackage`
+        );
       }, 120000);
 
       it('should check for un-escaped dollar signs in routes', async () => {
         await expect(async () =>
           runCLI(
-            `generate @nx/remix:route --project ${plugin} --path="my.route.$withParams.tsx"`
+            `generate @nx/remix:route --path="apps/${plugin}/app/my.route.$withParams.tsx"`
           )
         ).rejects.toThrow();
 
         runCLI(
-          `generate @nx/remix:route --project ${plugin} --path="my.route.\\$withParams.tsx"`
+          `generate @nx/remix:route --path="apps/${plugin}/app/routes/my.route.\\$withParams.tsx"`
         );
 
         expect(() =>
@@ -152,7 +140,7 @@ describe('Remix E2E Tests', () => {
 
       it('should pass un-escaped dollar signs in routes with skipChecks flag', async () => {
         await runCommandAsync(
-          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --project ${plugin} --path="my.route.$someWeirdUseCase.tsx" --force`
+          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --path="apps/${plugin}/app/routes/my.route.$someWeirdUseCase.tsx" --force`
         );
 
         expect(() =>
@@ -165,12 +153,12 @@ describe('Remix E2E Tests', () => {
       it('should check for un-escaped dollar signs in resource routes', async () => {
         await expect(async () =>
           runCLI(
-            `generate @nx/remix:resource-route --project ${plugin} --path="my.route.$withParams.ts"`
+            `generate @nx/remix:resource-route --path="apps/${plugin}/app/routes/my.route.$withParams.ts"`
           )
         ).rejects.toThrow();
 
         runCLI(
-          `generate @nx/remix:resource-route --project ${plugin} --path="my.route.\\$withParams.ts"`
+          `generate @nx/remix:resource-route --path="apps/${plugin}/app/routes/my.route.\\$withParams.ts"`
         );
 
         expect(() =>
@@ -180,7 +168,7 @@ describe('Remix E2E Tests', () => {
 
       xit('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
         await runCommandAsync(
-          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --project ${plugin} --path="my.route.$someWeirdUseCase.ts" --force`
+          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --path="apps/${plugin}/app/routes/my.route.$someWeirdUseCase.ts" --force`
         );
 
         expect(() =>
@@ -204,7 +192,9 @@ describe('Remix E2E Tests', () => {
 
     it('should create a standalone remix app', async () => {
       const appName = uniq('remix');
-      runCLI(`generate @nx/remix:preset --name ${appName} --verbose`);
+      runCLI(
+        `generate @nx/remix:preset --name ${appName} --directory=apps/${appName} --verbose`
+      );
 
       // Can import using ~ alias like a normal Remix setup.
       updateFile(`app/foo.ts`, `export const foo = 'foo';`);

@@ -21,6 +21,7 @@ describe('normalizeOptions', () => {
     cwd: '/',
     isVerbose: false,
     projectName: 'myapp',
+    nxJsonConfiguration: {},
     projectsConfigurations: {
       version: 2,
       projects: {

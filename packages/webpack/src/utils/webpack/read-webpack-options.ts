@@ -1,6 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import { isNxWebpackComposablePlugin } from '../config';
 import { Configuration } from 'webpack';
+import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
 
 /**
  * Reads the webpack options from a give webpack configuration. The configuration can be:
@@ -28,7 +29,14 @@ export async function readWebpackOptions(
           outputPath: undefined,
           assets: undefined,
         },
-        context: { root: workspaceRoot, cwd: undefined, isVerbose: false },
+        context: {
+          root: workspaceRoot,
+          cwd: undefined,
+          isVerbose: false,
+          projectsConfigurations: null,
+          projectGraph: null,
+          nxJsonConfiguration: readNxJsonFromDisk(workspaceRoot),
+        },
       }
     );
   } else if (typeof webpackConfig === 'function') {

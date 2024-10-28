@@ -14,7 +14,7 @@ import {
   eventItems,
   featuresItems,
   learnItems,
-  plans,
+  solutions,
   resourceMenuItems,
   solutionsMenuItems,
 } from './menu-items';
@@ -107,7 +107,7 @@ export function Header(): JSX.Element {
                     leaveTo="opacity-0 translate-y-1"
                   >
                     <Popover.Panel className="absolute z-10 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <TwoColumnsMenu items={featuresItems} />
+                      <SectionsMenu sections={featuresItems} />
                     </Popover.Panel>
                   </Transition>
                 </>
@@ -397,12 +397,14 @@ export function Header(): JSX.Element {
                                   as="ul"
                                   className="space-y-1 pb-2"
                                 >
-                                  {featuresItems.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
+                                  {Object.values(featuresItems)
+                                    .flat()
+                                    .map((item) => (
+                                      <MobileMenuItem
+                                        key={item.name}
+                                        item={item}
+                                      />
+                                    ))}
                                 </Disclosure.Panel>
                               </>
                             )}
@@ -431,7 +433,7 @@ export function Header(): JSX.Element {
                                   />
                                 </Disclosure.Button>
                                 <Disclosure.Panel as="ul" className="space-y-1">
-                                  {plans.map((item) => (
+                                  {solutions.map((item) => (
                                     <MobileMenuItem
                                       key={item.name}
                                       item={item}

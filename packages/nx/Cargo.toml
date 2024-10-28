@@ -13,6 +13,7 @@ strip = "none"
 
 [dependencies]
 anyhow = "1.0.71"
+ci_info = "0.14.14"
 colored = "2"
 crossbeam-channel = '0.5'
 dashmap = { version = "5.5.3", features = ["rayon"] }
@@ -34,7 +35,6 @@ nom = '7.1.3'
 regex = "1.9.1"
 rayon = "1.7.0"
 rkyv = { version = "0.7", features = ["validation"] }
-rusqlite = { version = "0.29.0", features = ["bundled", "array", "vtab", "wasm32-wasi-vfs"] }
 thiserror = "1.0.40"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
@@ -51,10 +51,13 @@ winapi = { version = "0.3", features = ["fileapi"] }
 [target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
 mio = "0.8"
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
 crossterm = "0.27.0"
 ignore-files = "2.1.0"
+fs4 = "0.10.0"
+rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 watchexec = "3.0.1"
 watchexec-events = "2.0.1"
 watchexec-filterer-ignore = "3.0.0"

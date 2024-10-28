@@ -135,6 +135,9 @@ export function formatDescription(
   if (!deprecated) {
     return description;
   }
+  if (!description) {
+    return `${bold('Deprecated:')} ${deprecated}`;
+  }
   return deprecated === true
     ? `${bold('Deprecated:')} ${description}`
     : mdLines(`${bold('Deprecated:')} ${deprecated}`, description);

@@ -104,21 +104,64 @@ async function _addPluginInternal<PluginOptions>(
 
   let pluginOptions: PluginOptions;
   let projConfigs: ConfigurationResult;
-  const combinations = generateCombinations(options);
-  optionsLoop: for (const _pluginOptions of combinations) {
-    pluginOptions = _pluginOptions as PluginOptions;
 
-    nxJson.plugins ??= [];
-    if (
-      nxJson.plugins.some((p) =>
-        typeof p === 'string'
-          ? p === pluginName
-          : p.plugin === pluginName && !p.include
-      )
-    ) {
-      // Plugin has already been added
-      return;
+  if (Object.keys(options).length > 0) {
+    const combinations = generateCombinations(options);
+    optionsLoop: for (const _pluginOptions of combinations) {
+      pluginOptions = _pluginOptions as PluginOptions;
+
+      nxJson.plugins ??= [];
+      if (
+        nxJson.plugins.some((p) =>
+          typeof p === 'string'
+            ? p === pluginName
+            : p.plugin === pluginName && !p.include
+        )
+      ) {
+        // Plugin has already been added
+        return;
+      }
+      global.NX_GRAPH_CREATION = true;
+      try {
+        projConfigs = await retrieveProjectConfigurations(
+          [pluginFactory(pluginOptions)],
+          tree.root,
+          nxJson
+        );
+      } catch (e) {
+        // Errors are okay for this because we're only running 1 plugin
+        if (e instanceof ProjectConfigurationsError) {
+          projConfigs = e.partialProjectConfigurationsResult;
+        } else {
+          throw e;
+        }
+      }
+      global.NX_GRAPH_CREATION = false;
+
+      for (const projConfig of Object.values(projConfigs.projects)) {
+        const node = graphNodes.find(
+          (node) => node.data.root === projConfig.root
+        );
+
+        if (!node) {
+          continue;
+        }
+
+        for (const targetName in projConfig.targets) {
+          if (node.data.targets[targetName]) {
+            // Conflicting Target Name, check the next one
+            pluginOptions = null;
+            continue optionsLoop;
+          }
+        }
+      }
+
+      break;
     }
+  } else {
+    // If the plugin does not take in options, we add the plugin with empty options.
+    nxJson.plugins ??= [];
+    pluginOptions = {} as unknown as PluginOptions;
     global.NX_GRAPH_CREATION = true;
     try {
       projConfigs = await retrieveProjectConfigurations(
@@ -135,26 +178,6 @@ async function _addPluginInternal<PluginOptions>(
       }
     }
     global.NX_GRAPH_CREATION = false;
-
-    for (const projConfig of Object.values(projConfigs.projects)) {
-      const node = graphNodes.find(
-        (node) => node.data.root === projConfig.root
-      );
-
-      if (!node) {
-        continue;
-      }
-
-      for (const targetName in projConfig.targets) {
-        if (node.data.targets[targetName]) {
-          // Conflicting Target Name, check the next one
-          pluginOptions = null;
-          continue optionsLoop;
-        }
-      }
-    }
-
-    break;
   }
 
   if (!pluginOptions) {

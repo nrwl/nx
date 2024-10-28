@@ -1,6 +1,6 @@
 import { exec, execSync } from 'child_process';
 import { copyFileSync, existsSync, writeFileSync } from 'fs';
-import { remove } from 'fs-extra';
+import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt } from 'semver';
 import { dirSync } from 'tmp';
@@ -351,7 +351,7 @@ export function createTempNpmDirectory() {
 
   const cleanup = async () => {
     try {
-      await remove(dir);
+      await rm(dir, { recursive: true, force: true });
     } catch {
       // It's okay if this fails, the OS will clean it up eventually
     }

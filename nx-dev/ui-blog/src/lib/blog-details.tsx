@@ -87,9 +87,9 @@ export function BlogDetails({ post }: BlogDetailsProps) {
           </div>
         ) : (
           post.cover_image && (
-            <div className="mx-auto mb-16 aspect-[1.7] w-full max-w-screen-md">
+            <div className="mx-auto mb-16 w-full max-w-screen-md">
               <Image
-                className="h-full w-full object-cover md:rounded-md"
+                className="w-full object-cover md:rounded-md"
                 src={post.cover_image}
                 alt={post.title}
                 width={1400}

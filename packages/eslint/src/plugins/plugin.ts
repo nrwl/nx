@@ -96,7 +96,9 @@ const internalCreateNodes = async (
   ).sort((a, b) => (a !== b && isSubDir(a, b) ? -1 : 1));
   const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
-  const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+  const ESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: isFlatConfig(configFilePath),
+  });
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};
@@ -180,7 +182,9 @@ const internalCreateNodesV2 = async (
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
-  const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+  const ESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: isFlatConfig(configFilePath),
+  });
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};

@@ -86,8 +86,7 @@ jest.mock('@nx/devkit', () => {
   };
 });
 
-// TODO(colum): turn these on when rspack is moved into the main repo
-xdescribe('remote generator', () => {
+describe('remote generator', () => {
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
 
@@ -104,14 +103,13 @@ xdescribe('remote generator', () => {
     it('should create the remote with the correct config files', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'rspack',
       });
@@ -137,14 +135,13 @@ xdescribe('remote generator', () => {
     it('should create the remote with the correct config files when --js=true', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         js: true,
         bundler: 'rspack',
@@ -171,14 +168,13 @@ xdescribe('remote generator', () => {
     it('should create the remote with the correct config files when --typescriptConfiguration=true', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'rspack',
       });
@@ -199,14 +195,13 @@ xdescribe('remote generator', () => {
     it('should install @nx/web for the file-server executor', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'rspack',
       });
 
@@ -217,14 +212,13 @@ xdescribe('remote generator', () => {
     it('should not set the remote as the default project', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'rspack',
       });
 
@@ -236,7 +230,7 @@ xdescribe('remote generator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
@@ -244,7 +238,6 @@ xdescribe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'rspack',
       });
 
@@ -257,7 +250,7 @@ xdescribe('remote generator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
@@ -265,7 +258,6 @@ xdescribe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'rspack',
       });
@@ -287,7 +279,7 @@ xdescribe('remote generator', () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await remote(tree, {
-        name: 'test',
+        directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
         linter: Linter.EsLint,
@@ -295,7 +287,6 @@ xdescribe('remote generator', () => {
         style: 'css',
         unitTestRunner: 'jest',
         ssr: true,
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'rspack',
       });
@@ -318,7 +309,7 @@ xdescribe('remote generator', () => {
       const name = 'invalid-dynamic-remote-name';
       await expect(
         remote(tree, {
-          name,
+          directory: name,
           devServerPort: 4209,
           dynamic: true,
           e2eTestRunner: 'cypress',
@@ -327,11 +318,33 @@ xdescribe('remote generator', () => {
           style: 'css',
           unitTestRunner: 'jest',
           ssr: true,
-          projectNameAndRootFormat: 'as-provided',
           typescriptConfiguration: true,
           bundler: 'rspack',
         })
       ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+    });
+
+    it('should throw an error when an invalid remote name is used', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await expect(
+        remote(tree, {
+          directory: 'test/my-app',
+          devServerPort: 4209,
+          e2eTestRunner: 'cypress',
+          linter: Linter.EsLint,
+          skipFormat: false,
+          style: 'css',
+          unitTestRunner: 'jest',
+          ssr: true,
+          typescriptConfiguration: true,
+          bundler: 'rspack',
+        })
+      ).rejects.toMatchInlineSnapshot(`
+        [Error: Invalid remote name: my-app. Remote project names must:
+        - Start with a letter, dollar sign ($) or underscore (_)
+        - Followed by any valid character (letters, digits, underscores, or dollar signs)
+        The regular expression used is ^[a-zA-Z_$][a-zA-Z_$0-9]*$.]
+      `);
     });
   });
 });

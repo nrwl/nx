@@ -187,8 +187,10 @@ function buildTarget(
           externalDependencies: [
             'storybook',
             '@storybook/angular',
-            '@storybook/test-runner',
-          ],
+            isStorybookTestRunnerInstalled()
+              ? '@storybook/test-runner'
+              : undefined,
+          ].filter(Boolean),
         },
       ],
     };
@@ -203,7 +205,12 @@ function buildTarget(
           ? ['production', '^production']
           : ['default', '^default']),
         {
-          externalDependencies: ['storybook', '@storybook/test-runner'],
+          externalDependencies: [
+            'storybook',
+            isStorybookTestRunnerInstalled()
+              ? '@storybook/test-runner'
+              : undefined,
+          ].filter(Boolean),
         },
       ],
     };

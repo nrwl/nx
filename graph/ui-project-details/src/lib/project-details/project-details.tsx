@@ -8,6 +8,7 @@ import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
 import { TagList } from '../tag-list/tag-list';
+import { OwnersList } from '../owners-list/owners-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
@@ -18,6 +19,7 @@ export interface ProjectDetailsProps {
   errors?: GraphError[];
   variant?: 'default' | 'compact';
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
   onViewInProjectGraph?: (data: { projectName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
@@ -44,6 +46,7 @@ export const ProjectDetails = ({
   onNxConnect,
   viewInProjectGraphPosition = 'top',
   connectedToCloud,
+  disabledTaskSyncGenerators,
 }: ProjectDetailsProps) => {
   const projectData = project.data;
   const isCompact = variant === 'compact';
@@ -90,7 +93,7 @@ export const ProjectDetails = ({
           </div>
           {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
             <ViewInProjectGraphButton
-              callback={() =>
+              onClick={() =>
                 onViewInProjectGraph({ projectName: project.name })
               }
             />
@@ -103,17 +106,24 @@ export const ProjectDetails = ({
                 {projectData.metadata?.description}
               </p>
             ) : null}
+            {projectData.metadata?.owners &&
+            Object.keys(projectData.metadata?.owners).length ? (
+              <OwnersList
+                className="mb-2"
+                owners={Object.keys(projectData.metadata?.owners)}
+              />
+            ) : null}
             {projectData.tags && projectData.tags.length ? (
-              <TagList tags={projectData.tags} />
+              <TagList className="mb-2" tags={projectData.tags} />
             ) : null}
             {projectData.root ? (
-              <p>
+              <p className="mb-2">
                 <span className="font-medium">Root:</span>
                 <span className="font-mono"> {projectData.root.trim()}</span>
               </p>
             ) : null}
             {projectData.projectType ?? typeToProjectType[project.type] ? (
-              <p>
+              <p className="mb-2">
                 <span className="font-medium">Type:</span>
                 <span className="ml-2 font-mono capitalize">
                   {projectData.projectType ?? typeToProjectType[project.type]}
@@ -125,7 +135,7 @@ export const ProjectDetails = ({
             {onViewInProjectGraph &&
               viewInProjectGraphPosition === 'bottom' && (
                 <ViewInProjectGraphButton
-                  callback={() =>
+                  onClick={() =>
                     onViewInProjectGraph({ projectName: project.name })
                   }
                 />
@@ -153,6 +163,7 @@ export const ProjectDetails = ({
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
           connectedToCloud={connectedToCloud}
+          disabledTaskSyncGenerators={disabledTaskSyncGenerators}
           onNxConnect={onNxConnect}
         />
       </div>
@@ -162,11 +173,11 @@ export const ProjectDetails = ({
 
 export default ProjectDetails;
 
-function ViewInProjectGraphButton({ callback }: { callback: () => void }) {
+function ViewInProjectGraphButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
-      onClick={() => callback()}
+      onClick={() => onClick()}
     >
       <EyeIcon className="h-5 w-5 "></EyeIcon>
       <span>View In Graph</span>

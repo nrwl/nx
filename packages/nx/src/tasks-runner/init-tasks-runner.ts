@@ -1,4 +1,3 @@
-import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
 import { readNxJson } from '../config/configuration';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -13,7 +12,6 @@ import { TaskResult } from './life-cycle';
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
   loadRootEnvFiles();
-  workspaceConfigurationCheck();
   const nxJson = readNxJson();
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
@@ -24,7 +22,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       tasks: Task[];
       parallel: number;
     }): Promise<{
-      status: number;
+      status: NodeJS.Process['exitCode'];
       taskGraph: TaskGraph;
       taskResults: Record<string, TaskResult>;
     }> => {
@@ -51,7 +49,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
         }, {} as any),
       };
 
-      const status = await invokeTasksRunner({
+      const taskResults = await invokeTasksRunner({
         tasks: opts.tasks,
         projectGraph,
         taskGraph,
@@ -63,9 +61,14 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       });
 
       return {
-        status,
+        status: Object.values(taskResults).some(
+          (taskResult) =>
+            taskResult.status === 'failure' || taskResult.status === 'skipped'
+        )
+          ? 1
+          : 0,
         taskGraph,
-        taskResults: lifeCycle.getTaskResults(),
+        taskResults,
       };
     },
   };

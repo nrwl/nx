@@ -269,7 +269,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx generate @nx/js:library --name=Counter --directory=libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter
+nx generate @nx/js:library libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter
 ```
 
 Create the Counter component at `libs/counter/src/lib/Counter.svelte` and copy the contents of your `src/App.svelte` file into it.

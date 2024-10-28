@@ -6,7 +6,7 @@
 Create an application named `my-app`:
 
 ```bash
-nx g @nx/angular:application my-app
+nx g @nx/angular:application apps/my-app
 ```
 
 {% /tab %}
@@ -20,7 +20,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```bash
-nx g @nx/angular:app my-app --directory=my-dir/my-app --style=scss
+nx g @nx/angular:app my-dir/my-app --style=scss
 ```
 
 {% /tab %}
@@ -30,7 +30,7 @@ nx g @nx/angular:app my-app --directory=my-dir/my-app --style=scss
 Create an application with Single File Components (inline styles and inline templates):
 
 ```bash
-nx g @nx/angular:app my-app --inlineStyle --inlineTemplate
+nx g @nx/angular:app apps/my-app --inlineStyle --inlineTemplate
 ```
 
 {% /tab %}
@@ -40,7 +40,7 @@ nx g @nx/angular:app my-app --inlineStyle --inlineTemplate
 Set the prefix to apply to generated selectors and add tags to the application (used for linting).
 
 ```bash
-nx g @nx/angular:app my-app --prefix=admin --tags=scope:admin,type:ui
+nx g @nx/angular:app apps/my-app --prefix=admin --tags=scope:admin,type:ui
 ```
 
 {% /tab %}

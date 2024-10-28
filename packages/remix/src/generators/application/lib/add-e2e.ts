@@ -2,10 +2,7 @@ import {
   type Tree,
   addProjectConfiguration,
   joinPathFragments,
-  readProjectConfiguration,
-  updateProjectConfiguration,
   ensurePackage,
-  getPackageManagerCommand,
   readNxJson,
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';

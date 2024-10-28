@@ -1,0 +1,21 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "id": "NxPowerpackOwnersInit",
+    "title": "Add Powerpack Owners Configuration to the workspace",
+    "type": "object",
+    "cli": "nx",
+    "properties": {},
+    "additionalProperties": false,
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize Nx Powerpack Owners config",
+  "implementation": "/libs/nx-packages/powerpack-owners/src/generators/init/init.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/libs/nx-packages/powerpack-owners/src/generators/init/schema.json",
+  "type": "generator"
+}

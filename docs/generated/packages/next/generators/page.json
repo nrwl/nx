@@ -1,6 +1,6 @@
 {
   "name": "page",
-  "factory": "./src/generators/page/page#pageGeneratorInternal",
+  "factory": "./src/generators/page/page",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -9,30 +9,18 @@
     "description": "Create a Page for Next.",
     "type": "object",
     "properties": {
-      "project": {
+      "path": {
         "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
+        "description": "Path where the page will be generated.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Where should the page be generated?",
+        "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?",
+        "description": "The name of the page.",
+        "x-prompt": "What name would you like to use for the page?",
         "x-priority": "important"
-      },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the page file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "alias": "dir",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -98,12 +86,12 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page my-page --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"[id]\" --project=my-app --directory=products\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "required": ["path"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page apps/my-app/pages/my-page\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"apps/my-app/pages/products/[id]\"\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Create a page.",
-  "implementation": "/packages/next/src/generators/page/page#pageGeneratorInternal.ts",
+  "implementation": "/packages/next/src/generators/page/page.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/next/src/generators/page/schema.json",

@@ -3,25 +3,25 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'path';
-import { LibraryGeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema } from '../library/schema';
 import { libraryGenerator as jsLibraryGenerator } from '../library/library';
 import { convertToSwcGenerator } from './convert-to-swc';
 
 describe('convert to swc', () => {
   let tree: Tree;
 
-  const defaultLibGenerationOptions: Omit<LibraryGeneratorSchema, 'name'> = {
-    skipTsConfig: false,
-    unitTestRunner: 'jest',
-    skipFormat: false,
-    linter: 'eslint',
-    testEnvironment: 'jsdom',
-    js: false,
-    pascalCaseFiles: false,
-    strict: true,
-    config: 'project',
-    bundler: 'tsc',
-  };
+  const defaultLibGenerationOptions: Omit<LibraryGeneratorSchema, 'directory'> =
+    {
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      skipFormat: false,
+      linter: 'eslint',
+      testEnvironment: 'jsdom',
+      js: false,
+      strict: true,
+      config: 'project',
+      bundler: 'tsc',
+    };
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -32,9 +32,8 @@ describe('convert to swc', () => {
   it('should convert tsc to swc', async () => {
     await jsLibraryGenerator(tree, {
       ...defaultLibGenerationOptions,
-      name: 'tsc-lib',
+      directory: 'tsc-lib',
       bundler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(

@@ -42,6 +42,7 @@ Nx.json configuration
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
+- [useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
@@ -170,7 +171,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 ---
 
@@ -261,7 +262,10 @@ Dependencies between different target names across all projects
 
 • `Optional` **tasksRunnerOptions**: `Object`
 
-Available Task Runners
+**`Deprecated`**
+
+Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+Available Task Runners for Nx to use
 
 #### Index signature
 
@@ -282,6 +286,14 @@ Set this to false to disable the daemon.
 • `Optional` **useInferencePlugins**: `boolean`
 
 Set this to false to disable adding inference plugins when generating new projects
+
+---
+
+### useLegacyCache
+
+• `Optional` **useLegacyCache**: `boolean`
+
+Use the legacy file system cache instead of the db cache
 
 ---
 

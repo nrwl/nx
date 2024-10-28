@@ -1,13 +1,11 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
 
 export interface CreatePackageSchema {
   name: string;
   project: string;
+  directory: string;
 
   // options to create cli package, passed to js library generator
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   skipFormat: boolean;
   tags?: string;
   unitTestRunner: 'jest' | 'none';

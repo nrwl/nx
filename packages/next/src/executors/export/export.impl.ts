@@ -13,7 +13,7 @@ import {
 import nextTrace = require('next/dist/trace');
 import { platform } from 'os';
 import { execFileSync } from 'child_process';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { satisfies } from 'semver';
 
 // platform specific command name
@@ -51,7 +51,7 @@ export default async function exportExecutor(
       stdio: [0, 1, 2],
     });
   } catch {
-    throw new Error(`Build target failed: ${chalk.bold(options.buildTarget)}`);
+    throw new Error(`Build target failed: ${pc.bold(options.buildTarget)}`);
   }
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(

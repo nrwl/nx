@@ -167,7 +167,6 @@ export async function addE2e(
         ...options,
         e2eName: options.e2eProjectName,
         e2eDirectory: options.e2eProjectRoot,
-        projectNameAndRootFormat: 'as-provided',
         appProject: options.projectName,
         appDisplayName: options.displayName,
         appName: options.name,

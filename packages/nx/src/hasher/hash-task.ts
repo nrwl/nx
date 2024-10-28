@@ -5,14 +5,14 @@ import { getInputs, TaskHasher } from './task-hasher';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
-import { IS_WASM, TaskDetails } from '../native';
+import { HashedTask, IS_WASM, TaskDetails } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 
 let taskDetails: TaskDetails;
 
-function getTaskDetails() {
+export function getTaskDetails(): TaskDetails | null {
   // TODO: Remove when wasm supports sqlite
-  if (IS_WASM) {
+  if (process.env.NX_DISABLE_DB === 'true' || IS_WASM) {
     return null;
   }
   if (!taskDetails) {
@@ -25,11 +25,10 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  tasksDetails: TaskDetails | null
 ) {
   performance.mark('hashMultipleTasks:start');
-
-  const taskDetails = getTaskDetails();
 
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
@@ -42,7 +41,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   const tasksToHash = tasksWithHashers
     .filter(({ task, customHasher }) => {
       // If a task has a custom hasher, it might depend on the outputs of other tasks
-      if (customHasher) {
+      if (customHasher && customHasher.name !== 'eslint-hasher') {
         return false;
       }
 
@@ -58,9 +57,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
   }
-  // TODO: Remove if when wasm supports sqlite
-  if (taskDetails) {
-    taskDetails.recordTaskDetails(
+  if (tasksDetails?.recordTaskDetails) {
+    tasksDetails.recordTaskDetails(
       tasksToHash.map((task) => ({
         hash: task.hash,
         project: task.target.project,
@@ -83,11 +81,11 @@ export async function hashTask(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   task: Task,
-  env: NodeJS.ProcessEnv
+  env: NodeJS.ProcessEnv,
+  taskDetails: TaskDetails | null
 ) {
   performance.mark('hashSingleTask:start');
 
-  const taskDetails = getTaskDetails();
   const customHasher = getCustomHasher(task, projectGraph);
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
@@ -106,8 +104,7 @@ export async function hashTask(
   task.hash = value;
   task.hashDetails = details;
 
-  // TODO: Remove if when wasm supports sqlite
-  if (taskDetails) {
+  if (taskDetails?.recordTaskDetails) {
     taskDetails.recordTaskDetails([
       {
         hash: task.hash,

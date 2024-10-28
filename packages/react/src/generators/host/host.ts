@@ -24,24 +24,18 @@ import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
 import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return hostGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(host, 'react', 'host');
 
-export async function hostGeneratorInternal(
-  host: Tree,
-  schema: Schema
-): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
+    ...(await normalizeOptions<Schema>(host, schema)),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
       ? false
@@ -65,8 +59,11 @@ export async function hostGeneratorInternal(
     });
   }
 
+  await ensureProjectName(host, options, 'application');
   const initTask = await applicationGenerator(host, {
     ...options,
+    directory: options.appProjectRoot,
+    name: options.projectName,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
     skipFormat: true,
@@ -91,11 +88,10 @@ export async function hostGeneratorInternal(
         devServerPort: remotePort,
         ssr: options.ssr,
         skipFormat: true,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
         js: options.js,
         dynamic: options.dynamic,
-        host: options.name,
+        host: options.projectName,
         skipPackageJson: options.skipPackageJson,
         bundler: options.bundler,
       });

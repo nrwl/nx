@@ -29,6 +29,7 @@ import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
+import { isCI } from '../src/utils/ci/is-ci';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -36,9 +37,10 @@ interface BaseArguments extends CreateWorkspaceOptions {
 
 interface NoneArguments extends BaseArguments {
   stack: 'none';
-  workspaceType: 'package-based' | 'integrated' | 'standalone';
-  js: boolean;
-  appName: string | undefined;
+  workspaceType?: 'package-based' | 'integrated' | 'standalone';
+  js?: boolean;
+  appName?: string | undefined;
+  formatter?: 'none' | 'prettier';
 }
 
 interface ReactArguments extends BaseArguments {
@@ -320,13 +322,13 @@ async function determineFolder(
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
   if (folderName) return folderName;
-
   const reply = await enquirer.prompt<{ folderName: string }>([
     {
       name: 'folderName',
       message: `Where would you like to create your workspace?`,
       initial: 'org',
       type: 'input',
+      skip: !parsedArgs.interactive || isCI(),
     },
   ]);
 
@@ -369,6 +371,7 @@ async function determineStack(
         return 'vue';
       case Preset.Nest:
       case Preset.NodeStandalone:
+      case Preset.NodeMonorepo:
       case Preset.Express:
         return 'node';
       case Preset.Apps:
@@ -392,7 +395,11 @@ async function determineStack(
       choices: [
         {
           name: `none`,
-          message: `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
+          message:
+            process.env.NX_ADD_PLUGINS !== 'false' &&
+            process.env.NX_ADD_TS_PLUGIN !== 'false'
+              ? `None:          Configures a TypeScript/JavaScript monorepo.`
+              : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
         },
         {
           name: `react`,
@@ -439,34 +446,15 @@ async function determinePresetOptions(
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
-  let preset: Preset;
-  let workspaceType: 'package-based' | 'standalone' | 'integrated' | undefined =
-    undefined;
-  let appName: string | undefined = undefined;
-  let js: boolean | undefined;
-
-  if (parsedArgs.preset) {
-    preset = parsedArgs.preset;
-  } else {
-    workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
-    if (workspaceType === 'standalone') {
-      preset = Preset.TsStandalone;
-    } else if (workspaceType === 'integrated') {
-      preset = Preset.Apps;
-    } else {
-      preset = Preset.NPM;
-    }
-  }
-
-  if (parsedArgs.js !== undefined) {
-    js = parsedArgs.js;
-  } else if (preset === Preset.TsStandalone) {
-    // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
-    appName = parsedArgs.name;
-    const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
+  if (
+    (!parsedArgs.preset || parsedArgs.preset === Preset.TS) &&
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    process.env.NX_ADD_TS_PLUGIN !== 'false'
+  ) {
+    const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
       {
-        name: 'ts',
-        message: `Would you like to use TypeScript with this project?`,
+        name: 'prettier',
+        message: `Would you like to use Prettier for code formatting?`,
         type: 'autocomplete',
         choices: [
           {
@@ -476,13 +464,68 @@ async function determineNoneOptions(
             name: 'No',
           },
         ],
-        initial: 0,
+        initial: 1,
+        skip: !parsedArgs.interactive || isCI(),
       },
     ]);
-    js = reply.ts === 'No';
-  }
+    return {
+      preset: Preset.TS,
+      formatter: reply.prettier === 'Yes' ? 'prettier' : 'none',
+    };
+  } else {
+    let preset: Preset;
+    let workspaceType:
+      | 'package-based'
+      | 'standalone'
+      | 'integrated'
+      | undefined = undefined;
+    let appName: string | undefined = undefined;
+    let js: boolean | undefined;
 
-  return { preset, js, appName };
+    if (parsedArgs.preset) {
+      preset = parsedArgs.preset;
+    } else {
+      workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
+      if (workspaceType === 'standalone') {
+        preset = Preset.TsStandalone;
+      } else if (workspaceType === 'integrated') {
+        preset = Preset.Apps;
+      } else {
+        preset = Preset.NPM;
+      }
+    }
+
+    if (preset === Preset.TS) {
+      return { preset, formatter: 'prettier' };
+    }
+
+    if (parsedArgs.js !== undefined) {
+      js = parsedArgs.js;
+    } else if (preset === Preset.TsStandalone) {
+      // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
+      appName = parsedArgs.name;
+      const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
+        {
+          name: 'ts',
+          message: `Would you like to use TypeScript with this project?`,
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+            {
+              name: 'No',
+            },
+          ],
+          initial: 0,
+          skip: !parsedArgs.interactive || isCI(),
+        },
+      ]);
+      js = reply.ts === 'No';
+    }
+
+    return { preset, js, appName };
+  }
 }
 
 async function determineReactOptions(
@@ -578,6 +621,7 @@ async function determineReactOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -678,6 +722,7 @@ async function determineVueOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -764,6 +809,7 @@ async function determineAngularOptions(
         name: 'bundler',
         message: `Which bundler would you like to use?`,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'esbuild',
@@ -789,6 +835,7 @@ async function determineAngularOptions(
         message: `Default stylesheet format`,
         initial: 0,
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'css',
@@ -819,6 +866,7 @@ async function determineAngularOptions(
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,
+        skip: !parsedArgs.interactive || isCI(),
       },
     ]);
     ssr = reply.ssr === 'Yes';
@@ -887,6 +935,7 @@ async function determineNodeOptions(
         message:
           'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
         type: 'autocomplete',
+        skip: !parsedArgs.interactive || isCI(),
         choices: [
           {
             name: 'Yes',
@@ -1000,6 +1049,7 @@ async function determineAppName(
       message: `Application name`,
       type: 'input',
       initial: parsedArgs.name,
+      skip: !parsedArgs.interactive || isCI(),
     },
   ]);
   invariant(appName, {
@@ -1059,6 +1109,7 @@ async function determineReactBundler(
       name: 'bundler',
       message: `Which bundler would you like to use?`,
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'vite',
@@ -1073,6 +1124,7 @@ async function determineReactBundler(
           message: 'Rspack  [ https://www.rspack.dev/ ]',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.bundler;
@@ -1087,6 +1139,7 @@ async function determineNextAppDir(
       name: 'nextAppDir',
       message: 'Would you like to use the App Router (recommended)?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'Yes',
@@ -1110,6 +1163,7 @@ async function determineNextSrcDir(
       name: 'nextSrcDir',
       message: 'Would you like to use the src/ directory?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'Yes',
@@ -1135,6 +1189,7 @@ async function determineVueFramework(
       name: 'framework',
       message: 'What framework would you like to use?',
       type: 'autocomplete',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'none',
@@ -1155,7 +1210,7 @@ async function determineVueFramework(
 async function determineNodeFramework(
   parsedArgs: yargs.Arguments<NodeArguments>
 ): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
-  if (parsedArgs.framework) return parsedArgs.framework;
+  if (!!parsedArgs.framework) return parsedArgs.framework;
   const reply = await enquirer.prompt<{
     framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   }>([
@@ -1163,6 +1218,7 @@ async function determineNodeFramework(
       message: 'What framework should be used?',
       type: 'autocomplete',
       name: 'framework',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'none',
@@ -1185,6 +1241,7 @@ async function determineNodeFramework(
           message: 'NestJs  [ https://nestjs.com/     ]',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.framework;
@@ -1203,6 +1260,7 @@ async function determineE2eTestRunner(
       message: 'Test runner to use for end to end (E2E) tests',
       type: 'autocomplete',
       name: 'e2eTestRunner',
+      skip: !parsedArgs.interactive || isCI(),
       choices: [
         {
           name: 'playwright',
@@ -1217,6 +1275,7 @@ async function determineE2eTestRunner(
           message: 'None',
         },
       ],
+      initial: 0,
     },
   ]);
   return reply.e2eTestRunner;

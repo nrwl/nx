@@ -3,8 +3,7 @@
  * location within the OS's tmp directory where we write log files for background processes
  * and where we create the actual unix socket/named pipe for the daemon.
  */
-import { statSync, writeFileSync } from 'fs';
-import { ensureDirSync, rmSync } from 'fs-extra';
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
@@ -64,7 +63,7 @@ export function getSocketDir(alreadyUnique = false) {
       process.env.NX_SOCKET_DIR ??
       process.env.NX_DAEMON_SOCKET_DIR ??
       (alreadyUnique ? tmpdir : socketDirName());
-    ensureDirSync(dir);
+    mkdirSync(dir, { recursive: true });
 
     return dir;
   } catch (e) {

@@ -1,5 +1,5 @@
-import { builtinModules } from 'node:module';
-import { dirname, join, parse, posix, relative } from 'node:path';
+import { isBuiltin } from 'node:module';
+import { dirname, join, posix, relative } from 'node:path';
 import { clean } from 'semver';
 import {
   ProjectGraphExternalNode,
@@ -31,21 +31,11 @@ type NpmResolutionCache = Map<string, string | null>;
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
 
-const builtInModuleSet = new Set<string>([
-  ...builtinModules,
-  ...builtinModules.map((x) => `node:${x}`),
-  // These are missing in the builtinModules list
-  // See: https://github.com/nodejs/node/issues/42785
-  // TODO(v20): We should be safe to use `isBuiltin` function instead of keep the set here (https://nodejs.org/api/module.html#moduleisbuiltinmodulename)
-  'test',
-  'node:test',
-  'node:sea',
-  'node:sqlite',
-]);
+const experimentalNodeModules = new Set(['node:sqlite']);
 
 export function isBuiltinModuleImport(importExpr: string): boolean {
   const packageName = getPackageNameFromImportPath(importExpr);
-  return builtInModuleSet.has(packageName);
+  return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
 }
 
 export class TargetProjectLocator {

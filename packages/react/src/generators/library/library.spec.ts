@@ -23,7 +23,7 @@ describe('lib', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   let defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: true,
     skipTsConfig: false,
@@ -266,7 +266,8 @@ describe('lib', () => {
     it('should update tags and implicitDependencies', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        directory: 'myDir',
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
         tags: 'one',
       });
       const myLib = readProjectConfiguration(tree, 'my-dir-my-lib');
@@ -278,8 +279,8 @@ describe('lib', () => {
 
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib2',
-        directory: 'myDir',
+        name: 'my-dir-my-lib2',
+        directory: 'my-dir/my-lib-2',
         tags: 'one,two',
       });
 
@@ -292,7 +293,12 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+        name: 'my-dir-my-lib',
+      });
+
       expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
@@ -309,7 +315,7 @@ describe('lib', () => {
     it('should update jest.config.ts for babel', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
         buildable: true,
         compiler: 'babel',
       });
@@ -319,7 +325,11 @@ describe('lib', () => {
     });
 
     it('should update project configurations', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+        name: 'my-dir-my-lib',
+      });
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
       expect(config).toMatchInlineSnapshot(`
@@ -336,18 +346,25 @@ describe('lib', () => {
     });
 
     it('should update root tsconfig.base.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+      });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['my-dir/my-lib/src/index.ts']
-      );
+
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'my-dir/my-lib/src/index.ts',
+      ]);
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
     });
 
     it('should create a local tsconfig.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+      });
 
       const tsconfigJson = readJson(tree, 'my-dir/my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toBe('../../tsconfig.base.json');
@@ -444,17 +461,15 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'my-app',
+        directory: 'my-app',
         routing: true,
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -473,16 +488,14 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'my-app',
+        directory: 'my-app',
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -701,7 +714,7 @@ module.exports = withNx(
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
         importPath: '@myorg/lib',
       });
       const packageJson = readJson(tree, 'my-dir/my-lib/package.json');
@@ -716,7 +729,7 @@ module.exports = withNx(
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib1',
+        directory: 'my-lib-1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -724,7 +737,7 @@ module.exports = withNx(
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'myLib2',
+          directory: 'my-lib-2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -802,7 +815,7 @@ module.exports = withNx(
       await libraryGenerator(tree, {
         ...defaultSchema,
         simpleName: true,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
       });
 
       const indexFile = tree.read('my-dir/my-lib/src/index.ts', 'utf-8');
@@ -831,7 +844,7 @@ module.exports = withNx(
         ...defaultSchema,
         style,
         compiler: 'babel',
-        name: 'myLib',
+        name: 'my-lib',
       });
 
       expect(() => {
@@ -852,7 +865,7 @@ module.exports = withNx(
         style,
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        name: 'myLib',
+        name: 'my-lib',
       });
 
       expect(readJson(tree, 'package.json')).toMatchObject({

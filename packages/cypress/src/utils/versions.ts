@@ -1,5 +1,5 @@
 export const nxVersion = require('../../package.json').version;
-export const eslintPluginCypressVersion = '^2.13.4';
+export const eslintPluginCypressVersion = '^3.5.0';
 export const typesNodeVersion = '18.16.9';
 export const cypressViteDevServerVersion = '^2.2.1';
 export const cypressVersion = '^13.13.0';

@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom/client';
 <% if (routing) { %>import { BrowserRouter } from 'react-router-dom';<% } %>
 
 import App from './app/<%= fileName %>';
+import './styles.<%= style %>'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(

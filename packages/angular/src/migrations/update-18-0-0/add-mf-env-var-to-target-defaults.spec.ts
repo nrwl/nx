@@ -30,8 +30,8 @@ describe('addMfEnvVarToTargetDefaults', () => {
             "^build",
           ],
           "inputs": [
-            "production",
-            "^production",
+            "default",
+            "^default",
             {
               "env": "NX_MF_DEV_REMOTES",
             },

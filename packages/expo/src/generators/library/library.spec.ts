@@ -17,14 +17,13 @@ describe('lib', () => {
   let appTree: Tree;
 
   const defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',
     strict: true,
     js: false,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   };
 
@@ -115,8 +114,8 @@ describe('lib', () => {
     it('should update project.json with two libs', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        projectNameAndRootFormat: 'derived',
-        directory: 'my-dir',
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
         tags: 'one',
       });
 
@@ -130,10 +129,9 @@ describe('lib', () => {
 
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'my-lib2',
-        directory: 'my-dir',
+        name: 'my-dir-my-lib2',
+        directory: 'my-dir/my-lib2',
         tags: 'one,two',
-        projectNameAndRootFormat: 'derived',
       });
 
       const lib2ProjectConfiguration = readProjectConfiguration(
@@ -148,8 +146,8 @@ describe('lib', () => {
     it('should update project.json', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        directory: 'my-dir',
-        projectNameAndRootFormat: 'derived',
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
       });
       const projectConfiguration = readProjectConfiguration(
         appTree,
@@ -172,6 +170,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         directory: 'my-dir',
+        name: 'my-lib',
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
@@ -385,7 +384,7 @@ describe('lib', () => {
       try {
         await expoLibraryGenerator(appTree, {
           ...defaultSchema,
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

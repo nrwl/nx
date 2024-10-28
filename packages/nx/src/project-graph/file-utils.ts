@@ -28,7 +28,7 @@ import {
 import { globWithWorkspaceContextSync } from '../utils/workspace-context';
 import { buildProjectFromProjectJson } from '../plugins/project-json/build-nodes/project-json';
 import { PackageJson } from '../utils/package-json';
-import { NxJsonConfiguration } from '../devkit-exports';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export interface Change {
   type: string;
@@ -125,6 +125,7 @@ function defaultReadFileAtRevision(
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
           stdio: ['pipe', 'pipe', 'ignore'],
+          windowsHide: false,
         })
           .toString()
           .trim();
@@ -134,8 +135,8 @@ function defaultReadFileAtRevision(
 }
 
 /**
- * TODO(v20): Remove this function
- * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v20.
+ * TODO(v21): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v21.
  */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
@@ -179,7 +180,7 @@ export function readPackageJson(): any {
 export { FileData };
 
 /**
- * TODO(v20): Remove this function.
+ * TODO(v21): Remove this function.
  */
 function getProjectsSync(
   root: string,

@@ -1,19 +1,17 @@
 import {
+  chmodSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
+  rmSync,
   statSync,
   writeFileSync,
-  ensureDirSync,
-  removeSync,
-  chmodSync,
-} from 'fs-extra';
-import type { Mode } from 'fs';
+} from 'node:fs';
+import type { Mode } from 'node:fs';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
-import { gt } from 'semver';
-import { nxVersion } from '../utils/versions';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
@@ -439,14 +437,14 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
-      ensureDirSync(dirname(fpath));
+      mkdirSync(dirname(fpath), { recursive: true });
       writeFileSync(fpath, f.content);
       if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
       if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'DELETE') {
-      removeSync(fpath);
+      rmSync(fpath, { recursive: true, force: true });
     }
   });
 }

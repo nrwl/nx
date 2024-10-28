@@ -12,6 +12,7 @@ import {
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { nxVersion } from '../../utils/versions';
 import { maybeJs } from '../../utils/maybe-js';
@@ -31,12 +32,13 @@ import { setDefaults } from './lib/set-defaults';
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
 
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'react', 'library');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(host, schema);
@@ -159,6 +161,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
       testEnvironment: 'jsdom',
       addPlugin: options.addPlugin,
+      compiler: options.compiler,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -186,16 +189,13 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   if (options.component) {
     const relativeCwd = getRelativeCwd();
-    const name = joinPathFragments(
+    const path = joinPathFragments(
       options.projectRoot,
       'src/lib',
       options.fileName
     );
     const componentTask = await componentGenerator(host, {
-      nameAndDirectoryFormat: 'as-provided',
-      name: relativeCwd ? relative(relativeCwd, name) : name,
-      project: options.name,
-      flat: true,
+      path: relativeCwd ? relative(relativeCwd, path) : path,
       style: options.style,
       skipTests:
         options.unitTestRunner === 'none' ||
@@ -203,7 +203,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       export: true,
       routing: options.routing,
       js: options.js,
-      pascalCaseFiles: options.pascalCaseFiles,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       globalCss: options.globalCss,

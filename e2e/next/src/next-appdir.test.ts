@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   killPorts,
   newProject,
@@ -29,8 +30,11 @@ describe('Next.js App Router', () => {
     );
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
+    checkFilesExist(`${appName}/src/app/page.tsx`);
+    checkFilesExist(`${appName}-e2e/src/example.spec.ts`);
+
     updateFile(
-      `apps/${appName}/src/app/page.tsx`,
+      `${appName}/src/app/page.tsx`,
       `
         import React from 'react';
         import { ${jsLib} } from '@${proj}/${jsLib}';
@@ -44,7 +48,7 @@ describe('Next.js App Router', () => {
     );
 
     updateFile(
-      `apps/${appName}-e2e/src/example.spec.ts`,
+      `${appName}-e2e/src/example.spec.ts`,
       `
       import { test, expect } from '@playwright/test';
 

@@ -10,6 +10,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
   readTargetOptions,
   stripIndents,
   workspaceRoot,
@@ -24,6 +25,7 @@ import {
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
 import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
+import { readNxJson } from 'nx/src/config/configuration';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,
@@ -71,6 +73,8 @@ export function nxComponentTestingPreset(
     const parsedBuildTarget = parseTargetString(buildTarget, {
       cwd: process.cwd(),
       root: workspaceRoot,
+      projectsConfigurations: readProjectsConfigurationFromProjectGraph(graph),
+      nxJsonConfiguration: readNxJson(workspaceRoot),
       isVerbose: false,
       projectName: ctProjectName,
       projectGraph: graph,

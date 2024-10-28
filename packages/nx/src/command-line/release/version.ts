@@ -19,7 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { combineOptionsForGenerator } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
@@ -52,6 +52,7 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
+import { handleErrors } from '../../utils/handle-errors';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -85,15 +86,21 @@ export interface ReleaseVersionGeneratorSchema {
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
   deleteVersionPlans?: boolean;
   /**
-   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
-   * This is only applicable to independently released projects.
+   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects. 'never' will cause dependents to not be updated.
    */
-  updateDependents?: 'never' | 'auto';
+  updateDependents?: 'auto' | 'never';
   /**
    * Whether or not to completely omit project logs when that project has no applicable changes. This can be useful for
    * large monorepos which have a large number of projects, especially when only a subset are released together.
    */
   logUnchangedProjects?: boolean;
+  /**
+   * Whether or not to keep local dependency protocols (e.g. file:, workspace:) when updating dependencies in
+   * package.json files. This is `false` by default as not all package managers support publishing with these protocols
+   * still present in the package.json.
+   */
+  preserveLocalDependencyProtocols?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -375,6 +382,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
+
+      runPreVersionCommand(
+        releaseGroup.version.groupPreVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        releaseGroup
+      );
+
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
         releaseGroup,
@@ -714,13 +731,18 @@ function resolveGeneratorData({
 }
 function runPreVersionCommand(
   preVersionCommand: string,
-  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
+  releaseGroup?: ReleaseGroupWithName
 ) {
   if (!preVersionCommand) {
     return;
   }
 
-  output.logSingleLine(`Executing pre-version command`);
+  output.logSingleLine(
+    releaseGroup
+      ? `Executing release group pre-version command for "${releaseGroup.name}"`
+      : `Executing pre-version command`
+  );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);
     console.log(preVersionCommand);
@@ -740,6 +762,7 @@ function runPreVersionCommand(
       maxBuffer: LARGE_BUFFER,
       stdio,
       env,
+      windowsHide: false,
     });
   } catch (e) {
     const title = verbose

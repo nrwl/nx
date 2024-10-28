@@ -25,77 +25,77 @@
       "description": "Create a new NestJS library."
     },
     "class": {
-      "factory": "./src/generators/class/class#classGeneratorInternal",
+      "factory": "./src/generators/class/class",
       "schema": "./src/generators/class/schema.json",
       "description": "Run the `class` NestJS generator with Nx project support."
     },
     "controller": {
-      "factory": "./src/generators/controller/controller#controllerGeneratorInternal",
+      "factory": "./src/generators/controller/controller",
       "schema": "./src/generators/controller/schema.json",
       "description": "Run the `controller` NestJS generator with Nx project support."
     },
     "decorator": {
-      "factory": "./src/generators/decorator/decorator#decoratorGeneratorInternal",
+      "factory": "./src/generators/decorator/decorator",
       "schema": "./src/generators/decorator/schema.json",
       "description": "Run the `decorator` NestJS generator with Nx project support."
     },
     "filter": {
-      "factory": "./src/generators/filter/filter#filterGeneratorInternal",
+      "factory": "./src/generators/filter/filter",
       "schema": "./src/generators/filter/schema.json",
       "description": "Run the `filter` NestJS generator with Nx project support."
     },
     "gateway": {
-      "factory": "./src/generators/gateway/gateway#gatewayGeneratorInternal",
+      "factory": "./src/generators/gateway/gateway",
       "schema": "./src/generators/gateway/schema.json",
       "description": "Run the `gateway` NestJS generator with Nx project support."
     },
     "guard": {
-      "factory": "./src/generators/guard/guard#guardGeneratorInternal",
+      "factory": "./src/generators/guard/guard",
       "schema": "./src/generators/guard/schema.json",
       "description": "Run the `guard` NestJS generator with Nx project support."
     },
     "interceptor": {
-      "factory": "./src/generators/interceptor/interceptor#interceptorGeneratorInternal",
+      "factory": "./src/generators/interceptor/interceptor",
       "schema": "./src/generators/interceptor/schema.json",
       "description": "Run the `interceptor` NestJS generator with Nx project support."
     },
     "interface": {
-      "factory": "./src/generators/interface/interface#interfaceGeneratorInternal",
+      "factory": "./src/generators/interface/interface",
       "schema": "./src/generators/interface/schema.json",
       "description": "Run the `interface` NestJS generator with Nx project support."
     },
     "middleware": {
-      "factory": "./src/generators/middleware/middleware#middlewareGeneratorInternal",
+      "factory": "./src/generators/middleware/middleware",
       "schema": "./src/generators/middleware/schema.json",
       "description": "Run the `middleware` NestJS generator with Nx project support."
     },
     "module": {
-      "factory": "./src/generators/module/module#moduleGeneratorInternal",
+      "factory": "./src/generators/module/module",
       "schema": "./src/generators/module/schema.json",
       "description": "Run the `module` NestJS generator with Nx project support."
     },
     "pipe": {
-      "factory": "./src/generators/pipe/pipe#pipeGeneratorInternal",
+      "factory": "./src/generators/pipe/pipe",
       "schema": "./src/generators/pipe/schema.json",
       "description": "Run the `pipe` NestJS generator with Nx project support."
     },
     "provider": {
-      "factory": "./src/generators/provider/provider#providerGeneratorInternal",
+      "factory": "./src/generators/provider/provider",
       "schema": "./src/generators/provider/schema.json",
       "description": "Run the `provider` NestJS generator with Nx project support."
     },
     "resolver": {
-      "factory": "./src/generators/resolver/resolver#resolverGeneratorInternal",
+      "factory": "./src/generators/resolver/resolver",
       "schema": "./src/generators/resolver/schema.json",
       "description": "Run the `resolver` NestJS generator with Nx project support."
     },
     "resource": {
-      "factory": "./src/generators/resource/resource#resourceGeneratorInternal",
+      "factory": "./src/generators/resource/resource",
       "schema": "./src/generators/resource/schema.json",
       "description": "Run the `resource` NestJS generator with Nx project support."
     },
     "service": {
-      "factory": "./src/generators/service/service#serviceGeneratorInternal",
+      "factory": "./src/generators/service/service",
       "schema": "./src/generators/service/schema.json",
       "description": "Run the `service` NestJS generator with Nx project support."
     }

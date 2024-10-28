@@ -14,16 +14,6 @@ import { addImport } from './lib/add-import';
 import { dirname, join, parse, relative } from 'path';
 
 export async function expoComponentGenerator(host: Tree, schema: Schema) {
-  return expoComponentGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function expoComponentGeneratorInternal(
-  host: Tree,
-  schema: Schema
-) {
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 

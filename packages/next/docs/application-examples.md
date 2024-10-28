@@ -8,21 +8,21 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g app myapp --directory=apps/nested/myapp
+nx g app apps/nested/myapp
 ```
 
 {% /tab %}
 {% tab label="Use a custom Express server" %}
 
 ```shell
-nx g app myapp --custom-server
+nx g app apps/myapp --custom-server
 ```
 
 {% /tab %}
 {% tab label="Use plain JavaScript (not TypeScript)" %}
 
 ```shell
-nx g app myapp --js
+nx g app apps/myapp --js
 ```
 
 {% /tab %}

@@ -12,11 +12,11 @@ import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 
-describe('lib', () => {
+describe('library', () => {
   let tree: Tree;
 
   let defaultSchema: Schema = {
-    name: 'myLib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -220,7 +220,8 @@ module.exports = [
     it('should update tags and implicitDependencies', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        directory: 'myDir',
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
         tags: 'one',
       });
       const myLib = readProjectConfiguration(tree, 'my-dir-my-lib');
@@ -232,8 +233,8 @@ module.exports = [
 
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib2',
-        directory: 'myDir',
+        name: 'my-dir-my-lib2',
+        directory: 'my-dir/my-lib2',
         tags: 'one,two',
       });
 
@@ -246,7 +247,11 @@ module.exports = [
     });
 
     it('should generate files', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
+      });
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.vue')
@@ -257,14 +262,23 @@ module.exports = [
     });
 
     it('should update project configurations', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
+      });
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
       expect(config.root).toEqual('my-dir/my-lib');
     });
 
     it('should update root tsconfig.base.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        name: 'my-dir-my-lib',
+        importPath: '@proj/my-dir/my-lib',
+        directory: 'my-dir/my-lib',
+      });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['my-dir/my-lib/src/index.ts']
@@ -275,7 +289,10 @@ module.exports = [
     });
 
     it('should create a local tsconfig.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+      });
 
       const tsconfigJson = readJson(tree, 'my-dir/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchSnapshot();
@@ -358,7 +375,7 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
         importPath: '@myorg/lib',
       });
       const packageJson = readJson(tree, 'my-dir/my-lib/package.json');
@@ -373,7 +390,7 @@ module.exports = [
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -381,7 +398,7 @@ module.exports = [
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'myLib2',
+          directory: 'myLib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

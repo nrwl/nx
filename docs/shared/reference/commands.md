@@ -60,7 +60,7 @@ nx add my-plugin
 Runs a generator that creates and/or modifies files based on a generator from a plugin.
 
 ```shell
-nx generate @nx/react:component my-component
+nx generate @nx/react:component libs/my-lib/src/lib/my-component
 ```
 
 {% cards %}
@@ -82,6 +82,20 @@ nx migrate --run-migrations
 {% link-card title="Automate Updating Dependencies" type="Feature" url="/features/automate-updating-dependencies" /%}
 {% /cards %}
 
+### import
+
+Import code and git history from another repository into this repository.
+
+```shell
+nx import https://github.com/myorg/inventory-app.git apps/inventory
+nx import ../inventory-app apps/inventory
+```
+
+{% cards %}
+{% link-card title="nx import" type="API Reference" url="/nx-api/nx/documents/import" /%}
+{% link-card title="Import an Existing Project into an Nx Workspace" type="Recipe" url="/recipes/adopting-nx/import-project" /%}
+{% /cards %}
+
 ### repair
 
 Repair any configuration that is no longer supported by Nx.
@@ -96,6 +110,22 @@ nx repair
 
 {% cards %}
 {% link-card title="nx repair" type="API Reference" url="/nx-api/nx/documents/repair" /%}
+{% /cards %}
+
+### sync
+
+Run all sync generators
+
+```shell
+nx sync
+nx sync:check
+```
+
+{% cards %}
+{% link-card title="nx sync" type="API Reference" url="/nx-api/nx/documents/sync" /%}
+{% link-card title="nx sync:check" type="API Reference" url="/nx-api/nx/documents/sync-check" /%}
+{% link-card title="Sync Generators" type="Concept" url="/concepts/sync-generators" /%}
+{% link-card title="Register a Sync Generator" type="Recipe" url="/extending-nx/recipes/create-sync-generator" /%}
 {% /cards %}
 
 ### format
@@ -297,7 +327,7 @@ nx connect
 
 ### login
 
-Connect an Nx workspace to Nx Cloud
+Login to Nx Cloud. This command is an alias for [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
 
 ```shell
 nx login
@@ -310,7 +340,7 @@ nx login
 
 ### logout
 
-Connect an Nx workspace to Nx Cloud
+Logout from Nx Cloud. This command is an alias for [`nx-cloud logout`](/ci/reference/nx-cloud-cli#npx-nxcloud-logout).
 
 ```shell
 nx logout

@@ -27,7 +27,6 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "fs-extra": "^11.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",

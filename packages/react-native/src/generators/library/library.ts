@@ -32,6 +32,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -39,7 +40,6 @@ export async function reactNativeLibraryGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -48,6 +48,8 @@ export async function reactNativeLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(host, 'react-native', 'library');
+
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(

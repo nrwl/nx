@@ -4,17 +4,22 @@ import * as ora from 'ora';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import type { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
-import { runNxAsync } from '../../utils/child-process';
+import { runNxAsync, runNxSync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import { handleErrors } from '../../utils/params';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  getPackageManagerVersion,
+} from '../../utils/package-manager';
+import { handleErrors } from '../../utils/handle-errors';
 import { getPluginCapabilities } from '../../utils/plugins';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
+import { gte } from 'semver';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -41,21 +46,35 @@ async function installPackage(
   spinner.start();
 
   if (existsSync('package.json')) {
-    const pmc = getPackageManagerCommand();
-    await new Promise<void>((resolve) =>
-      exec(`${pmc.addDev} ${pkgName}@${version}`, (error, stdout) => {
-        if (error) {
-          spinner.fail();
-          output.addNewline();
-          logger.error(stdout);
-          output.error({
-            title: `Failed to install ${pkgName}. Please check the error above for more details.`,
-          });
-          process.exit(1);
-        }
+    const pm = detectPackageManager();
+    const pmv = getPackageManagerVersion(pm);
+    const pmc = getPackageManagerCommand(pm);
 
-        return resolve();
-      })
+    // if we explicitly specify latest in yarn berry, it won't resolve the version
+    const command =
+      pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
+        ? `${pmc.addDev} ${pkgName}`
+        : `${pmc.addDev} ${pkgName}@${version}`;
+    await new Promise<void>((resolve) =>
+      exec(
+        command,
+        {
+          windowsHide: false,
+        },
+        (error, stdout) => {
+          if (error) {
+            spinner.fail();
+            output.addNewline();
+            logger.error(stdout);
+            output.error({
+              title: `Failed to install ${pkgName}. Please check the error above for more details.`,
+            });
+            process.exit(1);
+          }
+
+          return resolve();
+        }
+      )
     );
   } else {
     nxJson.installation.plugins ??= {};
@@ -129,13 +148,13 @@ async function initializePlugin(
       args.push(...options.__overrides_unparsed__);
     }
 
-    await runNxAsync(`g ${pkgName}:${initGenerator} ${args.join(' ')}`, {
-      silent: !options.verbose,
+    runNxSync(`g ${pkgName}:${initGenerator} ${args.join(' ')}`, {
+      stdio: [0, 1, 2],
     });
   } catch (e) {
     spinner.fail();
     output.addNewline();
-    logger.error(e.message);
+    logger.error(e);
     output.error({
       title: `Failed to initialize ${pkgName}. Please check the error above for more details.`,
     });

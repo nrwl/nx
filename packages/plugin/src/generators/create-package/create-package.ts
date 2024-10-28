@@ -14,6 +14,7 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from 'nx/src/utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
@@ -26,16 +27,8 @@ export async function createPackageGenerator(
   host: Tree,
   schema: CreatePackageSchema
 ) {
-  return await createPackageGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'create-package');
 
-export async function createPackageGeneratorInternal(
-  host: Tree,
-  schema: CreatePackageSchema
-) {
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeSchema(host, schema);
@@ -80,10 +73,9 @@ async function addPresetGenerator(
   if (!hasGenerator(host, schema.project, 'preset')) {
     await generatorGenerator(host, {
       name: 'preset',
-      directory: join(projectRoot, 'src/generators/preset'),
+      path: join(projectRoot, 'src/generators/preset'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
@@ -97,6 +89,7 @@ async function createCliPackage(
 ) {
   await jsLibraryGenerator(host, {
     ...options,
+    directory: options.directory,
     rootProject: false,
     config: 'project',
     publishable: true,

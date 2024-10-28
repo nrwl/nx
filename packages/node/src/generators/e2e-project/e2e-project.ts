@@ -33,7 +33,6 @@ import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...options,
   });
 }
@@ -185,16 +184,12 @@ async function normalizeOptions(
 ): Promise<
   Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
 > {
+  options.directory = options.directory ?? `${options.project}-e2e`;
   const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
     await determineProjectNameAndRootOptions(tree, {
-      name: options.name ?? `${options.project}-e2e`,
+      name: options.name,
       projectType: 'library',
       directory: options.rootProject ? 'e2e' : options.directory,
-      projectNameAndRootFormat: options.rootProject
-        ? 'as-provided'
-        : options.projectNameAndRootFormat,
-      // this is an internal generator, don't save defaults
-      callingGenerator: null,
     });
 
   const nxJson = readNxJson(tree);

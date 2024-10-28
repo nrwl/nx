@@ -10,6 +10,7 @@ export async function generateDevkitDocumentation() {
   const execSyncOptions: ExecSyncOptions = {
     stdio: 'true' === 'true' ? 'inherit' : 'ignore',
     // stdio: process.env.CI === 'true' ? 'inherit' : 'ignore',
+    windowsHide: false,
   };
 
   execSync('nx run-many -t build -p devkit,typedoc-theme', execSyncOptions);

@@ -8,6 +8,7 @@ import {
   names,
   readProjectConfiguration,
   runTasksInSerial,
+  stripIndents,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -25,14 +26,19 @@ import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { maybeJs } from '../../utils/maybe-js';
 import { isValidVariable } from '@nx/js';
-import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import {
+  moduleFederationEnhancedVersion,
+  nxVersion,
+} from '../../utils/versions';
+import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function addModuleFederationFiles(
   host: Tree,
   options: NormalizedSchema<Schema>
 ) {
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectName),
     ...options,
     tmpl: '',
   };
@@ -89,16 +95,11 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
-  return await remoteGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(host, 'react', 'remote');
 
-export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
+    ...(await normalizeOptions<Schema>(host, schema)),
     // when js is set to true, we want to use the js configuration
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
@@ -113,16 +114,28 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   if (options.dynamic) {
     // Dynamic remotes generate with library { type: 'var' } by default.
     // We need to ensure that the remote name is a valid variable name.
-    const isValidRemote = isValidVariable(options.name);
+    const isValidRemote = isValidVariable(options.projectName);
     if (!isValidRemote.isValid) {
       throw new Error(
-        `Invalid remote name provided: ${options.name}. ${isValidRemote.message}`
+        `Invalid remote name provided: ${options.projectName}. ${isValidRemote.message}`
       );
     }
   }
 
+  await ensureProjectName(host, options, 'application');
+  const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
+  const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
+  if (!remoteNameRegex.test(options.projectName)) {
+    throw new Error(
+      stripIndents`Invalid remote name: ${options.projectName}. Remote project names must:
+      - Start with a letter, dollar sign ($) or underscore (_)
+      - Followed by any valid character (letters, digits, underscores, or dollar signs)
+      The regular expression used is ${REMOTE_NAME_REGEX}.`
+    );
+  }
   const initAppTask = await applicationGenerator(host, {
     ...options,
+    name: options.projectName,
     skipFormat: true,
   });
   tasks.push(initAppTask);
@@ -201,7 +214,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     );
     addRemoteToDynamicHost(
       host,
-      options.name,
+      options.projectName,
       options.devServerPort,
       pathToMFManifest
     );
@@ -212,7 +225,10 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const installTask = addDependenciesToPackageJson(
     host,
     {},
-    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+    {
+      '@module-federation/enhanced': moduleFederationEnhancedVersion,
+      '@nx/web': nxVersion,
+    }
   );
   tasks.push(installTask);
 

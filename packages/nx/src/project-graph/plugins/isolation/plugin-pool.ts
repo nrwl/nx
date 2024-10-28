@@ -190,26 +190,6 @@ function createWorkerHandler(
                   );
                 }
               : undefined,
-            processProjectGraph: result.hasProcessProjectGraph
-              ? (graph, ctx) => {
-                  const tx =
-                    pluginName + worker.pid + ':processProjectGraph:' + txId++;
-                  return registerPendingPromise(
-                    tx,
-                    pending,
-                    () => {
-                      sendMessageOverSocket(socket, {
-                        type: 'processProjectGraph',
-                        payload: { graph, ctx, tx },
-                      });
-                    },
-                    {
-                      operation: 'processProjectGraph',
-                      plugin: pluginName,
-                    }
-                  );
-                }
-              : undefined,
             createMetadata: result.hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
@@ -247,14 +227,6 @@ function createWorkerHandler(
         const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.result);
-        } else if (result.success === false) {
-          rejector(result.error);
-        }
-      },
-      processProjectGraphResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
-        if (result.success) {
-          resolver(result.graph);
         } else if (result.success === false) {
           rejector(result.error);
         }

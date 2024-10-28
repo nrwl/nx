@@ -1,7 +1,7 @@
+import { mkdtemp, writeFile } from 'node:fs/promises';
 import { hashArray, hashFile } from '../index';
 
 import { tmpdir } from 'os';
-import { mkdtemp, writeFile } from 'fs-extra';
 import { join } from 'path';
 
 describe('hasher', () => {

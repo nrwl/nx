@@ -21,7 +21,7 @@ Since we are using Nx, we will create a library for this module.
 **Create a library**
 
 ```shell
-nx generate @nx/js:library --name=hello --unitTestRunner=jest --projectNameAndRootFormat=as-provided
+nx generate @nx/js:library hello --unitTestRunner=jest --projectNameAndRootFormat=as-provided
 ```
 
 Update the `hello.ts` file with the following code:
@@ -46,14 +46,14 @@ Now that we have created the module, we need to configure it to be federated.
 {%tab label="React"%}
 
 ```shell
-nx generate @nx/react:federate-module hello/src/index.ts --name=hello --remote=greeting --projectNameAndRootFormat=as-provided
+nx generate @nx/react:federate-module hello/src/index.ts --name=hello --remote=greeting
 ```
 
 {% /tab %}
 {%tab label="Angular"%}
 
 ```shell
-nx generate @nx/angular:federate-module hello/src/index.ts --name=hello --remote=greeting --projectNameAndRootFormat=as-provided
+nx generate @nx/angular:federate-module hello/src/index.ts --name=hello --remote=greeting
 ```
 
 {% /tab %}

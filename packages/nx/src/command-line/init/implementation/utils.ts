@@ -68,24 +68,28 @@ function deduceDefaultBase() {
   try {
     execSync(`git rev-parse --verify main`, {
       stdio: ['ignore', 'ignore', 'ignore'],
+      windowsHide: false,
     });
     return 'main';
   } catch {
     try {
       execSync(`git rev-parse --verify dev`, {
         stdio: ['ignore', 'ignore', 'ignore'],
+        windowsHide: false,
       });
       return 'dev';
     } catch {
       try {
         execSync(`git rev-parse --verify develop`, {
           stdio: ['ignore', 'ignore', 'ignore'],
+          windowsHide: false,
         });
         return 'develop';
       } catch {
         try {
           execSync(`git rev-parse --verify next`, {
             stdio: ['ignore', 'ignore', 'ignore'],
+            windowsHide: false,
           });
           return 'next';
         } catch {
@@ -140,7 +144,11 @@ export function runInstall(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
-  execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
+  execSync(pmc.install, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+    windowsHide: false,
+  });
 }
 
 export async function initCloud(

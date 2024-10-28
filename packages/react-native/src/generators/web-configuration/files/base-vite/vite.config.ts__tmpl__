@@ -34,14 +34,12 @@ export default defineConfig({
   define: {
     global: 'window',
   },
-
   resolve: {
     extensions,
     alias: {
       'react-native': 'react-native-web',
     },
   },
-
   build: {
     reportCompressedSize: true,
     commonjsOptions: { transformMixedEsModules: true },
@@ -50,7 +48,6 @@ export default defineConfig({
       plugins: [rollupPlugin([/react-native-vector-icons/])],
     },
   },
-
   server: {
     port: 4200,
     host: 'localhost',
@@ -59,12 +56,10 @@ export default defineConfig({
       allow: ['..'],
     },
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   optimizeDeps: {
     esbuildOptions: {
       resolveExtensions: extensions,
@@ -72,9 +67,7 @@ export default defineConfig({
       loader: { '.js': 'jsx' },
     },
   },
-
   plugins: [react(), nxViteTsPaths()],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],

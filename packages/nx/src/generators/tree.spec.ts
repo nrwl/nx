@@ -1,5 +1,11 @@
-import { lstatSync, Mode, readFileSync, writeFileSync } from 'fs';
-import { removeSync, ensureDirSync } from 'fs-extra';
+import {
+  lstatSync,
+  mkdirSync,
+  Mode,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirSync, file } from 'tmp';
 import * as path from 'path';
 import {
@@ -22,7 +28,7 @@ describe('tree', () => {
       console.log = jest.fn();
 
       dir = dirSync().name;
-      ensureDirSync(path.join(dir, 'parent/child'));
+      mkdirSync(path.join(dir, 'parent/child'), { recursive: true });
       writeFileSync(path.join(dir, 'root-file.txt'), 'root content');
       writeFileSync(
         path.join(dir, 'parent', 'parent-file.txt'),
@@ -41,7 +47,7 @@ describe('tree', () => {
     });
 
     afterEach(() => {
-      removeSync(dir);
+      rmSync(dir, { recursive: true, force: true });
     });
 
     afterAll(() => {

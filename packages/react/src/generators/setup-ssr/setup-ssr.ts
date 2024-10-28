@@ -124,6 +124,12 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     );
   }
 
+  if (projectConfig.targets.build.executor === '@nx/rspack:rspack') {
+    options.bundler = 'rspack';
+  } else if (projectConfig.targets.build.executor === '@nx/webpack:webpack') {
+    options.bundler = 'webpack';
+  }
+
   projectConfig.targets = {
     ...projectConfig.targets,
     server: {

@@ -5,7 +5,6 @@ jest.mock('nx/src/project-graph/plugins/loader', () => ({
   }),
 }));
 import {
-  readJson,
   readNxJson,
   readProjectConfiguration,
   Tree,
@@ -23,7 +22,7 @@ describe('@nx/storybook:cypress-project', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'apps/test-ui-lib',
     });
   });
   afterEach(() => jest.clearAllMocks());
@@ -31,6 +30,7 @@ describe('@nx/storybook:cypress-project', () => {
   it('should generate files', async () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
+      directory: 'apps/test-ui-lib-e2e',
       linter: Linter.EsLint,
     });
 
@@ -45,6 +45,7 @@ describe('@nx/storybook:cypress-project', () => {
   it('should update `angular.json` file', async () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
+      directory: 'apps/test-ui-lib-e2e',
       linter: Linter.EsLint,
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib-e2e');
@@ -62,12 +63,10 @@ describe('@nx/storybook:cypress-project', () => {
   it('should generate in the correct folder', async () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
-      directory: 'one/two',
+      directory: 'apps/one/two/test-ui-lib-e2e',
       linter: Linter.EsLint,
     });
-    expect(
-      readProjectConfiguration(tree, 'one-two-test-ui-lib-e2e')
-    ).toBeDefined();
+    expect(readProjectConfiguration(tree, 'test-ui-lib-e2e')).toBeDefined();
     expect(
       tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts')
     ).toBeTruthy();
@@ -83,6 +82,7 @@ describe('@nx/storybook:cypress-project', () => {
     // ACT
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
+      directory: 'apps/test-ui-lib-e2e',
       linter: Linter.EsLint,
     });
 

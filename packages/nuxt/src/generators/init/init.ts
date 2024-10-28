@@ -1,11 +1,14 @@
 import { createProjectGraphAsync, GeneratorCallback, Tree } from '@nx/devkit';
 import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { createNodes } from '../../plugins/plugin';
 import { InitSchema } from './schema';
 import { updateDependencies } from './lib/utils';
 
 export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
+  assertNotUsingTsSolutionSetup(host, 'nuxt', 'init');
+
   await addPluginV1(
     host,
     await createProjectGraphAsync(),

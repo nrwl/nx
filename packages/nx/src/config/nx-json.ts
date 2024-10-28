@@ -79,7 +79,17 @@ export interface NxReleaseChangelogConfiguration {
    * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
    * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
-  createRelease?: 'github' | false;
+  createRelease?:
+    | false
+    | 'github'
+    | {
+        provider: 'github-enterprise-server';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      };
   /**
    * This can either be set to a string value that will be written to the changelog file(s)
    * at the workspace root and/or within project directories, or set to `false` to specify
@@ -123,9 +133,9 @@ export interface NxReleaseGitConfiguration {
    */
   commitMessage?: string;
   /**
-   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes. May be a string or array of strings.
    */
-  commitArgs?: string;
+  commitArgs?: string | string[];
   /**
    * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
    */
@@ -139,9 +149,9 @@ export interface NxReleaseGitConfiguration {
    */
   tagMessage?: string;
   /**
-   * Additional arguments to pass to the `git tag` command invoked behind the scenes
+   * Additional arguments to pass to the `git tag` command invoked behind the scenes. . May be a string or array of strings.
    */
-  tagArgs?: string;
+  tagArgs?: string | string[];
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
@@ -210,7 +220,15 @@ export interface NxReleaseConfiguration {
        *
        * NOTE: git configuration is not supported at the group level, only the root/command level
        */
-      version?: NxReleaseVersionConfiguration;
+      version?: NxReleaseVersionConfiguration & {
+        /**
+         * A command to run after validation of nx release configuration, but before versioning begins.
+         * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
+         * with the NX_DRY_RUN environment variable set to 'true'.
+         * It will run in addition to the global `preVersionCommand`
+         */
+        groupPreVersionCommand?: string;
+      };
       /**
        * Project changelogs are disabled by default.
        *
@@ -375,7 +393,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * Available Task Runners
+   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
@@ -488,7 +507,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to false to disable connection to Nx Cloud
+   * Set this to true to disable connection to Nx Cloud
    */
   neverConnectToCloud?: boolean;
 
@@ -496,6 +515,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Use the legacy file system cache instead of the db cache
+   */
+  useLegacyCache?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

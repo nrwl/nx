@@ -37,6 +37,7 @@ interface Schema {
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
+  formatter?: 'none' | 'prettier';
 }
 
 export interface NormalizedSchema extends Schema {
@@ -63,6 +64,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+          windowsHide: false,
         });
       }
       installPackagesTask(

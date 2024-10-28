@@ -229,10 +229,12 @@ export default async function* moduleFederationDevServer(
 
   // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
   process.env.NX_MF_DEV_REMOTES = JSON.stringify([
-    ...(remotes.devRemotes.map((r) =>
-      typeof r === 'string' ? r : r.remoteName
-    ) ?? []),
-    p.name,
+    ...(
+      remotes.devRemotes.map((r) =>
+        typeof r === 'string' ? r : r.remoteName
+      ) ?? []
+    ).map((r) => r.replace(/-/g, '_')),
+    p.name.replace(/-/g, '_'),
   ]);
 
   const staticRemotesConfig = parseStaticRemotesConfig(

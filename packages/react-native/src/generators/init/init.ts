@@ -9,6 +9,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodes } from '../../../plugins/plugin';
 import {
   nxVersion,
@@ -30,6 +31,8 @@ export async function reactNativeInitGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
+  assertNotUsingTsSolutionSetup(host, 'react-native', 'init');
+
   addGitIgnoreEntry(host);
 
   const nxJson = readNxJson(host);

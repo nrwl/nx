@@ -36,6 +36,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     shell: true,
     cwd: join(host.root, opts.directory),
+    windowsHide: false,
   };
   const pmc = getPackageManagerCommand();
   const executable = `${pmc.exec} nx`;
@@ -83,6 +84,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.ssr ? `--ssr` : null,
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
+      opts.formatter ? `--formatter=${opts.formatter}` : null,
     ].filter((e) => !!e);
   }
 }

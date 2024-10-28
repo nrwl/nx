@@ -106,7 +106,10 @@ export async function getLegacyMigrationFunctionIfApplicable(
     );
 
     output.log({ title: '📝 Setting up workspace' });
-    execSync(`${pmc.exec} ${legacyMigrationCommand}`, { stdio: [0, 1, 2] });
+    execSync(`${pmc.exec} ${legacyMigrationCommand}`, {
+      stdio: [0, 1, 2],
+      windowsHide: false,
+    });
 
     if (useNxCloud) {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
@@ -146,7 +149,7 @@ async function installDependencies(
   }
   writeJsonFile(`package.json`, json);
 
-  execSync(pmc.install, { stdio: [0, 1, 2] });
+  execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: false });
 }
 
 async function resolvePackageVersion(

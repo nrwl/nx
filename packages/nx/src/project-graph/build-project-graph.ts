@@ -13,7 +13,6 @@ import {
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import { LoadedNxPlugin } from './plugins/internal-api';
-import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -32,7 +31,6 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
-import { output } from '../utils/output';
 import { NxWorkspaceFilesExternals } from '../native';
 import {
   AggregateProjectGraphError,
@@ -40,7 +38,6 @@ import {
   isAggregateProjectGraphError,
   isWorkspaceValidityError,
   ProcessDependenciesError,
-  ProcessProjectGraphError,
   WorkspaceValidityError,
 } from './error-types';
 import {
@@ -99,10 +96,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
 
   const errors: Array<
-    | CreateMetadataError
-    | ProcessDependenciesError
-    | ProcessProjectGraphError
-    | WorkspaceValidityError
+    CreateMetadataError | ProcessDependenciesError | WorkspaceValidityError
   > = [];
 
   const nxJson = readNxJson();
@@ -306,52 +300,7 @@ async function updateProjectGraphWithPlugins(
   sourceMap: ConfigurationSourceMaps
 ) {
   let graph = initProjectGraph;
-  const errors: Array<
-    ProcessDependenciesError | ProcessProjectGraphError | CreateMetadataError
-  > = [];
-  for (const plugin of plugins) {
-    try {
-      if (
-        isNxPluginV1(plugin) &&
-        plugin.processProjectGraph &&
-        !plugin.createDependencies
-      ) {
-        output.warn({
-          title: `${plugin.name} is a v1 plugin.`,
-          bodyLines: [
-            'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `createNodes` and `createDependencies` instead.',
-          ],
-        });
-        performance.mark(`${plugin.name}:processProjectGraph - start`);
-        graph = await plugin.processProjectGraph(graph, {
-          ...context,
-          projectsConfigurations: {
-            projects: context.projects,
-            version: 2,
-          },
-          fileMap: context.fileMap.projectFileMap,
-          filesToProcess: context.filesToProcess.projectFileMap,
-          workspace: {
-            version: 2,
-            projects: context.projects,
-            ...context.nxJsonConfiguration,
-          },
-        });
-        performance.mark(`${plugin.name}:processProjectGraph - end`);
-        performance.measure(
-          `${plugin.name}:processProjectGraph`,
-          `${plugin.name}:processProjectGraph - start`,
-          `${plugin.name}:processProjectGraph - end`
-        );
-      }
-    } catch (e) {
-      errors.push(
-        new ProcessProjectGraphError(plugin.name, {
-          cause: e,
-        })
-      );
-    }
-  }
+  const errors: Array<ProcessDependenciesError | CreateMetadataError> = [];
 
   const builder = new ProjectGraphBuilder(
     graph,
@@ -360,7 +309,7 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
+    (plugin) => plugin.createDependencies
   );
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
@@ -439,10 +388,10 @@ export async function applyProjectMetadata(
   const errors: CreateMetadataError[] = [];
 
   const promises = plugins.map(async (plugin) => {
-    if (isNxPluginV2(plugin) && plugin.createMetadata) {
+    if (plugin.createMetadata) {
       performance.mark(`${plugin.name}:createMetadata - start`);
       try {
-        const metadata = await plugin.createMetadata(graph, undefined, context);
+        const metadata = await plugin.createMetadata(graph, context);
         results.push({ metadata, pluginName: plugin.name });
       } catch (e) {
         errors.push(new CreateMetadataError(e, plugin.name));

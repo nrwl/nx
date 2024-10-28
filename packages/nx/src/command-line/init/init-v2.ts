@@ -22,7 +22,7 @@ import {
 import { prompt } from 'enquirer';
 import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
-import { globWithWorkspaceContext } from '../../utils/workspace-context';
+import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
@@ -55,10 +55,11 @@ export function installPlugins(
     execSync(
       `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
         updatePackageScripts ? '--updatePackageScripts' : ''
-      } --no-interactive`,
+      }`,
       {
         stdio: [0, 1, 2],
         cwd: repoRoot,
+        windowsHide: false,
       }
     );
   }
@@ -157,7 +158,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   });
 }
 
-const npmPackageToPluginMap: Record<string, string> = {
+const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
   eslint: '@nx/eslint',
   storybook: '@nx/storybook',
@@ -181,13 +182,14 @@ const npmPackageToPluginMap: Record<string, string> = {
 
 export async function detectPlugins(
   nxJson: NxJsonConfiguration,
-  interactive: boolean
+  interactive: boolean,
+  includeAngularCli?: boolean
 ): Promise<{
   plugins: string[];
   updatePackageScripts: boolean;
 }> {
   let files = ['package.json'].concat(
-    await globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
+    globWithWorkspaceContextSync(process.cwd(), ['**/*/package.json'])
   );
 
   const currentPlugins = new Set(
@@ -214,13 +216,26 @@ export async function detectPlugins(
       ...packageJson.devDependencies,
     };
 
-    for (const [dep, plugin] of Object.entries(npmPackageToPluginMap)) {
+    const _npmPackageToPluginMap = {
+      ...npmPackageToPluginMap,
+    };
+    if (includeAngularCli) {
+      _npmPackageToPluginMap['@angular/cli'] = '@nx/angular';
+    }
+    for (const [dep, plugin] of Object.entries(_npmPackageToPluginMap)) {
       if (deps[dep]) {
         detectedPlugins.add(plugin);
       }
     }
   }
-  if (existsSync('gradlew') || existsSync('gradlew.bat')) {
+
+  let gradlewFiles = ['gradlew', 'gradlew.bat'].concat(
+    globWithWorkspaceContextSync(process.cwd(), [
+      '**/gradlew',
+      '**/gradlew.bat',
+    ])
+  );
+  if (gradlewFiles.some((f) => existsSync(f))) {
     detectedPlugins.add('@nx/gradle');
   }
 

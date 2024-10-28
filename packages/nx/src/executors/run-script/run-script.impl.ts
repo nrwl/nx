@@ -54,6 +54,7 @@ function nodeProcess(
     stdio: ['inherit', 'inherit', 'inherit'],
     cwd,
     env,
+    windowsHide: false,
   });
 }
 

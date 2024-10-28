@@ -9,8 +9,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
 
@@ -29,7 +29,6 @@ import {
   findMetroConfig,
   findNextConfig,
   findViteConfig,
-  getE2EProjectName,
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
@@ -61,6 +60,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'storybook', 'configuration');
+
   const storybookMajor = storybookMajorVersion();
   if (storybookMajor > 0 && storybookMajor === 6) {
     throw new Error(pleaseUpgrade());
@@ -195,29 +196,6 @@ export async function configurationGeneratorInternal(
     }
   } else {
     devDeps['storybook'] = storybookVersion;
-  }
-
-  // TODO(katerina): Nx 19 -> remove Cypress
-  if (schema.configureCypress) {
-    const e2eProject = await getE2EProjectName(tree, schema.project);
-    if (!e2eProject) {
-      const cypressTask = await cypressProjectGenerator(tree, {
-        name: schema.project,
-        js: schema.js,
-        linter: schema.linter,
-        directory: schema.cypressDirectory,
-        standaloneConfig: schema.standaloneConfig,
-        ciTargetName: schema.configureStaticServe
-          ? 'static-storybook'
-          : undefined,
-        skipFormat: true,
-      });
-      tasks.push(cypressTask);
-    } else {
-      logger.warn(
-        `There is already an e2e project setup for ${schema.project}, called ${e2eProject}.`
-      );
-    }
   }
 
   if (schema.tsConfiguration) {

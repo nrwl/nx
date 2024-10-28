@@ -18,6 +18,7 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { updateGitIgnore } from '../../utils/update-gitignore';
 import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
@@ -33,6 +34,8 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'nuxt', 'application');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);
@@ -153,7 +156,11 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   tasks.push(() => {
     try {
-      execSync(`npx -y nuxi prepare`, { cwd: options.appProjectRoot });
+      execSync(`npx -y nuxi prepare`, {
+        cwd: options.appProjectRoot,
+
+        windowsHide: false,
+      });
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`

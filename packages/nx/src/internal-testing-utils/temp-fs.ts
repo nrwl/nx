@@ -1,17 +1,18 @@
-import { dirname, join } from 'path';
-import { tmpdir } from 'os';
 import {
-  emptyDirSync,
-  mkdirpSync,
+  appendFileSync,
+  existsSync,
+  mkdirSync,
   mkdtempSync,
-  outputFile,
-  readFile,
   realpathSync,
+  renameSync,
   rmSync,
   unlinkSync,
-} from 'fs-extra';
+  writeFileSync,
+} from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'path';
+import { tmpdir } from 'os';
 import { joinPathFragments } from '../utils/path';
-import { appendFileSync, existsSync, renameSync, writeFileSync } from 'fs';
 import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 
 type NestedFiles = {
@@ -47,13 +48,17 @@ export class TempFs {
   }
 
   async createFile(filePath: string, content: string) {
-    await outputFile(joinPathFragments(this.tempDir, filePath), content);
+    const dir = joinPathFragments(this.tempDir, dirname(filePath));
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
+    await writeFile(joinPathFragments(this.tempDir, filePath), content);
   }
 
   createFileSync(filePath: string, content: string) {
     let dir = joinPathFragments(this.tempDir, dirname(filePath));
     if (!existsSync(dir)) {
-      mkdirpSync(dir);
+      mkdirSync(dir, { recursive: true });
     }
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
   }
@@ -81,11 +86,12 @@ export class TempFs {
   }
 
   cleanup() {
-    rmSync(this.tempDir, { recursive: true });
+    rmSync(this.tempDir, { recursive: true, force: true });
     setWorkspaceRoot(this.previousWorkspaceRoot);
   }
 
   reset() {
-    emptyDirSync(this.tempDir);
+    rmSync(this.tempDir, { recursive: true, force: true });
+    mkdirSync(this.tempDir, { recursive: true });
   }
 }

@@ -15,9 +15,9 @@ export function readNxCloudToken(directory: string) {
     // nx-ignore-next-line
   )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
-  const { accessToken } = getCloudOptions(directory);
+  const { accessToken, nxCloudId } = getCloudOptions(directory);
   nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
-  return accessToken;
+  return accessToken || nxCloudId;
 }
 
 export async function getOnboardingInfo(

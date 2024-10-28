@@ -49,7 +49,7 @@ import {
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
@@ -1387,7 +1387,7 @@ function runInstall() {
   output.log({
     title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, { stdio: [0, 1, 2] });
+  execSync(pmCommands.install, { stdio: [0, 1, 2], windowsHide: false });
 }
 
 export async function executeMigrations(

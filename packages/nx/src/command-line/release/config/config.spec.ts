@@ -274,6 +274,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -449,6 +450,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -627,6 +629,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -836,6 +839,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1029,6 +1033,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1230,6 +1235,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1432,6 +1438,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1614,6 +1621,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1795,6 +1803,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1978,6 +1987,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "optionsOverride": "something",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -1992,6 +2002,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@custom/generator-alternative",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -2184,6 +2195,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -2370,6 +2382,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -2395,6 +2408,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -2579,6 +2593,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -2766,6 +2781,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "foo": "bar",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -2949,6 +2965,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -3133,6 +3150,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -3313,6 +3331,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -3333,6 +3352,190 @@ describe('createNxReleaseConfig()', () => {
                 "tagMessage": "",
               },
               "preVersionCommand": "nx run-many -t build",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuration of preVersionCommand for a group', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            version: {
+              groupPreVersionCommand: 'nx run-many -t build -p lib-a',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "nx run-many -t build -p lib-a",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
             },
             "versionPlans": false,
           },
@@ -3511,6 +3714,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -3691,6 +3895,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -3893,6 +4098,7 @@ describe('createNxReleaseConfig()', () => {
                     "currentVersionResolver": "git-tag",
                     "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -4065,6 +4271,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -4278,6 +4485,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -4481,6 +4689,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -4662,6 +4871,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -4684,6 +4894,924 @@ describe('createNxReleaseConfig()', () => {
               "preVersionCommand": "",
             },
             "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname and set a default apiBaseUrl for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "https://github.example.com/api/v3",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname AND a custom apiBaseUrl for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+              apiBaseUrl: 'http://something-custom.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "http://something-custom.com",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should return an error if an invalid provider, hostname or apiBaseUrl is specified for createRelease for the workspace changelog', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'something-invalid',
+            } as any,
+          },
+        },
+      });
+      expect(res1.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER",
+          "data": {
+            "provider": "something-invalid",
+            "supportedProviders": [
+              "github-enterprise-server",
+            ],
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'not_a_hostname',
+            },
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME",
+          "data": {
+            "hostname": "not_a_hostname",
+          },
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'example.com',
+              apiBaseUrl: 'not_a_url',
+            },
+          },
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL",
+          "data": {
+            "apiBaseUrl": "not_a_url",
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname and set a default apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: false,
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": {
+                "createRelease": {
+                  "apiBaseUrl": "https://github.example.com/api/v3",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                "file": "{projectRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "https://github.example.com/api/v3",
+                    "hostname": "github.example.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "authors": true,
+                    "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname AND a custom apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: false,
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+              apiBaseUrl: 'http://something-custom.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": {
+                "createRelease": {
+                  "apiBaseUrl": "http://something-custom.com",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                "file": "{projectRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "http://something-custom.com",
+                    "hostname": "github.example.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "authors": true,
+                    "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should return an error if an invalid provider, hostname or apiBaseUrl is specified for createRelease for project changelogs', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: {
+              provider: 'something-invalid',
+            } as any,
+          },
+        },
+      });
+      expect(res1.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER",
+          "data": {
+            "provider": "something-invalid",
+            "supportedProviders": [
+              "github-enterprise-server",
+            ],
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'not_a_hostname',
+            },
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME",
+          "data": {
+            "hostname": "not_a_hostname",
+          },
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'example.com',
+              apiBaseUrl: 'not_a_url',
+            },
+          },
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL",
+          "data": {
+            "apiBaseUrl": "not_a_url",
           },
         }
       `);
@@ -4843,6 +5971,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -5022,6 +6151,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -5237,6 +6367,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -5428,6 +6559,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -5622,6 +6754,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -5817,6 +6950,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -6015,6 +7149,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -6214,7 +7349,11 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": {
-                  "createRelease": "github",
+                  "createRelease": {
+                    "apiBaseUrl": "https://api.github.com",
+                    "hostname": "github.com",
+                    "provider": "github",
+                  },
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
@@ -6234,6 +7373,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -6248,6 +7388,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -6273,6 +7414,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -6335,7 +7477,11 @@ describe('createNxReleaseConfig()', () => {
                 "tagMessage": "",
               },
               "projectChangelogs": {
-                "createRelease": "github",
+                "createRelease": {
+                  "apiBaseUrl": "https://api.github.com",
+                  "hostname": "github.com",
+                  "provider": "github",
+                },
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
@@ -6347,7 +7493,11 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "<dirname>/release/changelog-renderer",
               },
               "workspaceChangelog": {
-                "createRelease": "github",
+                "createRelease": {
+                  "apiBaseUrl": "https://api.github.com",
+                  "hostname": "github.com",
+                  "provider": "github",
+                },
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
@@ -6466,7 +7616,11 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "foo": {
                 "changelog": {
-                  "createRelease": "github",
+                  "createRelease": {
+                    "apiBaseUrl": "https://api.github.com",
+                    "hostname": "github.com",
+                    "provider": "github",
+                  },
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
@@ -6486,6 +7640,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -6530,6 +7685,483 @@ describe('createNxReleaseConfig()', () => {
             },
           },
           "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname and set a default apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'custom-github-enterprise-server.com',
+              },
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "foo": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "https://custom-github-enterprise-server.com/api/v3",
+                    "hostname": "custom-github-enterprise-server.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "authors": true,
+                    "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname AND a custom apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'custom-github-enterprise-server.com',
+                apiBaseUrl:
+                  'https://custom-github-enterprise-server.com/api/v99',
+              },
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "foo": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "https://custom-github-enterprise-server.com/api/v99",
+                    "hostname": "custom-github-enterprise-server.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "authors": true,
+                    "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should return an error if an invalid provider, hostname or apiBaseUrl is specified for createRelease for project changelogs', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'something-invalid',
+              } as any,
+            },
+          },
+        },
+      });
+      expect(res1.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER",
+          "data": {
+            "provider": "something-invalid",
+            "supportedProviders": [
+              "github-enterprise-server",
+            ],
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'not_a_hostname',
+              },
+            },
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME",
+          "data": {
+            "hostname": "not_a_hostname",
+          },
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'example.com',
+                apiBaseUrl: 'not_a_url',
+              },
+            },
+          },
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL",
+          "data": {
+            "apiBaseUrl": "not_a_url",
+          },
         }
       `);
     });
@@ -6859,6 +8491,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -7219,6 +8852,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -7234,6 +8868,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -7402,6 +9037,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -7590,6 +9226,7 @@ describe('createNxReleaseConfig()', () => {
                     "currentVersionResolver": "git-tag",
                     "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -7777,6 +9414,7 @@ describe('createNxReleaseConfig()', () => {
                     "currentVersionResolver": "registry",
                     "specifierSource": "prompt",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -7963,6 +9601,7 @@ describe('createNxReleaseConfig()', () => {
                     "currentVersionResolver": "git-tag",
                     "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -8152,6 +9791,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -8342,6 +9982,7 @@ describe('createNxReleaseConfig()', () => {
                     "someUnrelatedOption": "foobar",
                     "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -8571,6 +10212,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "specifierSource": "version-plans",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": true,
               },
@@ -8758,6 +10400,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "specifierSource": "version-plans",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [
@@ -8949,6 +10592,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "specifierSource": "version-plans",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": true,
               },
@@ -8963,6 +10607,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -9144,6 +10789,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "specifierSource": "version-plans",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [
@@ -9162,6 +10808,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -9341,6 +10988,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -9357,6 +11005,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "specifierSource": "version-plans",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": true,
               },
@@ -9540,6 +11189,7 @@ describe('createNxReleaseConfig()', () => {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": false,
               },
@@ -9556,6 +11206,7 @@ describe('createNxReleaseConfig()', () => {
                   "generatorOptions": {
                     "specifierSource": "version-plans",
                   },
+                  "groupPreVersionCommand": "",
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [

@@ -177,7 +177,7 @@ export function buildProjectConfigurationFromPackageJson(
     sourceRoot: projectRoot,
     name,
     ...packageJson.nx,
-    targets: readTargetsFromPackageJson(packageJson),
+    targets: readTargetsFromPackageJson(packageJson, nxJson),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(packageJson),
   };

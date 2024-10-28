@@ -338,6 +338,13 @@
       "path": "/extending-nx/recipes/modifying-files"
     },
     {
+      "description": "",
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/generate",
       "id": "generate",
@@ -575,13 +582,6 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
     }
   ],
   "inferred-tasks": [
@@ -670,36 +670,6 @@
       "id": "nx-devkit-angular-devkit",
       "name": "Nx Devkit and Angular Devkit",
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
-    }
-  ],
-  "repository-types": [
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/package-based-in-integrated",
-      "id": "package-based-in-integrated",
-      "name": "Add a Package-based Project in an Integrated Repo",
-      "path": "/recipes/tips-n-tricks/package-based-in-integrated"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/integrated-in-package-based",
-      "id": "integrated-in-package-based",
-      "name": "Add an Integrated Project in a Package-based Repo",
-      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/standalone-to-integrated",
-      "id": "standalone-to-integrated",
-      "name": "Convert from a Standalone Repository to an Integrated Repository",
-      "path": "/recipes/tips-n-tricks/standalone-to-integrated"
     }
   ],
   "module-federation": [
@@ -827,6 +797,13 @@
       "id": "update-global-installation",
       "name": "Update Your Global Nx Installation",
       "path": "/recipes/installation/update-global-installation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
     }
   ],
   "workspace-watching": [
@@ -1099,6 +1076,33 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "conformance": [
+    {
+      "description": "Write and apply rules for your Nx workspace",
+      "file": "shared/features/powerpack/conformance",
+      "id": "conformance",
+      "name": "Run Language-Agnostic Conformance Rules",
+      "path": "/nx-enterprise/powerpack/conformance"
+    }
+  ],
+  "owners": [
+    {
+      "description": "Configure and maintain code owners for projects in an Nx workspace",
+      "file": "shared/features/powerpack/owners",
+      "id": "owners",
+      "name": "Define Code Ownership at the Project Level",
+      "path": "/nx-enterprise/powerpack/owners"
+    }
+  ],
+  "custom-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/features/powerpack/custom-caching",
+      "id": "custom-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/nx-enterprise/powerpack/custom-caching"
+    }
+  ],
   "database": [
     {
       "description": "",
@@ -1182,6 +1186,15 @@
       "id": "remote-cache",
       "name": "Use Remote Caching (Nx Replay)",
       "path": "/ci/features/remote-cache"
+    }
+  ],
+  "single-tenant": [
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/single-tenant/overview",
+      "id": "overview",
+      "name": "Single Tenant Nx Cloud Hosting",
+      "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
   "on-premise": [

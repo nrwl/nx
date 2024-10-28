@@ -3,37 +3,28 @@
 exports[`lib --bundler none, unit test runner vitest should configure vite 1`] = `
 "
 import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-      
-      export default defineConfig({
-        root: __dirname,
-        cacheDir: '../node_modules/.vite/my-lib',
-        
-        
-        
-        plugins: [react(),
-nxViteTsPaths(),
-nxCopyAssetsPlugin(['*.md']),
-],
-        
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [ nxViteTsPaths() ],
-    // },
-        
-        
-        test: {
-          'watch': false,
-'globals': true,
-'environment': "jsdom",
-'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-'reporters': ["default"],
-'coverage': {"reportsDirectory":"../coverage/my-lib","provider":"v8"},
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-        },
-      });"
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-lib',
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), ],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    'watch': false,
+    'globals': true,
+    'environment': "jsdom",
+    'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    'reporters': ["default"],
+    'coverage': {"reportsDirectory":"../coverage/my-lib","provider":"v8"},
+  },
+});
+"
 `;
 
 exports[`lib should add vite types to tsconfigs 1`] = `
@@ -48,7 +39,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -58,12 +48,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -87,7 +75,6 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
-
   test: {
     watch: false,
     globals: true,

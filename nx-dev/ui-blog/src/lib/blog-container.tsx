@@ -78,8 +78,8 @@ export function sortFirstFivePosts(
   posts: BlogPostDataEntry[]
 ): BlogPostDataEntry[] {
   return posts
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+    .slice(0, 5)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {

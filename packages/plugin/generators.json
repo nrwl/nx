@@ -4,12 +4,12 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "plugin": {
-      "factory": "./src/generators/plugin/plugin#pluginGeneratorInternal",
+      "factory": "./src/generators/plugin/plugin",
       "schema": "./src/generators/plugin/schema.json",
       "description": "Create a Nx Plugin."
     },
     "create-package": {
-      "factory": "./src/generators/create-package/create-package#createPackageGeneratorInternal",
+      "factory": "./src/generators/create-package/create-package",
       "schema": "./src/generators/create-package/schema.json",
       "description": "Create a package which can be used by npx to create a new workspace"
     },
@@ -19,17 +19,17 @@
       "description": "Create a E2E application for a Nx Plugin."
     },
     "migration": {
-      "factory": "./src/generators/migration/migration#migrationGeneratorInternal",
+      "factory": "./src/generators/migration/migration",
       "schema": "./src/generators/migration/schema.json",
       "description": "Create a migration for an Nx Plugin."
     },
     "generator": {
-      "factory": "./src/generators/generator/generator#generatorGeneratorInternal",
+      "factory": "./src/generators/generator/generator",
       "schema": "./src/generators/generator/schema.json",
       "description": "Create a generator for an Nx Plugin."
     },
     "executor": {
-      "factory": "./src/generators/executor/executor#executorGeneratorInternal",
+      "factory": "./src/generators/executor/executor",
       "schema": "./src/generators/executor/schema.json",
       "description": "Create an executor for an Nx Plugin."
     },

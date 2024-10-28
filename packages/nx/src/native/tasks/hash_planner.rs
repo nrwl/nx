@@ -71,11 +71,14 @@ impl HashPlanner {
                 let mut inputs: Vec<HashInstruction> = target
                     .unwrap_or(vec![])
                     .into_iter()
-                    .chain(vec![HashInstruction::WorkspaceFileSet(vec![
-                        "{workspaceRoot}/nx.json".to_string(),
-                        "{workspaceRoot}/.gitignore".to_string(),
-                        "{workspaceRoot}/.nxignore".to_string(),
-                    ])])
+                    .chain(vec![
+                        HashInstruction::Environment("NX_CLOUD_ENCRYPTION_KEY".into()),
+                        HashInstruction::WorkspaceFileSet(vec![
+                            "{workspaceRoot}/nx.json".to_string(),
+                            "{workspaceRoot}/.gitignore".to_string(),
+                            "{workspaceRoot}/.nxignore".to_string(),
+                        ]),
+                    ])
                     .chain(self_inputs)
                     .collect();
 

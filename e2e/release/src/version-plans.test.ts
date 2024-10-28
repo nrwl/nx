@@ -54,7 +54,6 @@ describe('nx release version plans', () => {
 
   beforeEach(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -175,11 +174,9 @@ Here is another line in the message.
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -191,11 +188,9 @@ Here is another line in the message.
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -207,13 +202,11 @@ Here is another line in the message.
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
 +   Here is another line in the message.
-+
 +
 + ### ❤️  Thank You
 +
@@ -226,13 +219,11 @@ Here is another line in the message.
 
 + ## 0.1.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
 +   Here is another line in the message.
-+
 +
 + ### ❤️  Thank You
 +
@@ -245,13 +236,11 @@ Here is another line in the message.
 
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
 +   Here is another line in the message.
-+
 +
 + ### ❤️  Thank You
 +
@@ -324,16 +313,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #1
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -346,11 +332,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -364,11 +348,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.2 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #1
-+
 +
 + ### ❤️  Thank You
 +
@@ -382,11 +364,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -400,11 +380,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -512,12 +490,16 @@ const yargs = require('yargs');
     verbose: options.verbose,
   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
+  const publishProjectsResult = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-  process.exit(publishStatus);
+  // Derive an overall exit code from the publish projects result
+  process.exit(
+    Object.values(publishProjectsResult).every((result) => result.code === 0)
+      ? 0
+      : 1
+  );
 })();
 `
     );
@@ -563,11 +545,9 @@ const yargs = require('yargs');
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -579,11 +559,9 @@ const yargs = require('yargs');
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.
-+
 +
 + ### ❤️  Thank You
 +
@@ -595,11 +573,9 @@ const yargs = require('yargs');
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
-+
 +
 + ### ❤️  Thank You
 +
@@ -612,11 +588,9 @@ const yargs = require('yargs');
 
 + ## 0.1.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
-+
 +
 + ### ❤️  Thank You
 +
@@ -629,11 +603,9 @@ const yargs = require('yargs');
 
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
-+
 +
 + ### ❤️  Thank You
 +
@@ -709,16 +681,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #1
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -731,11 +700,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -749,11 +716,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.2 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #1
-+
 +
 + ### ❤️  Thank You
 +
@@ -767,11 +732,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -785,11 +748,9 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
-+
 +
 + ### ❤️  Thank You
 +
@@ -851,7 +812,6 @@ Update packages in both groups with a mix #2
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.`
@@ -861,7 +821,6 @@ Update packages in both groups with a mix #2
 
 
 + ## 0.1.0 (YYYY-MM-DD)
-+
 +
 + ### 🚀 Features
 +

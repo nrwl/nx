@@ -21,14 +21,13 @@ describe('app', () => {
 
   it('should update workspace', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
       unitTestRunner: 'none',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projects = getProjects(appTree);
 
@@ -37,7 +36,7 @@ describe('app', () => {
 
   it('should update nx.json', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
       linter: Linter.EsLint,
@@ -45,7 +44,6 @@ describe('app', () => {
       skipFormat: false,
       js: false,
       unitTestRunner: 'none',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectConfiguration = readProjectConfiguration(appTree, 'my-app');
@@ -56,14 +54,13 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
     expect(appTree.exists('my-app/src/app/App.tsx')).toBeTruthy();
     expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBeTruthy();
@@ -76,14 +73,13 @@ describe('app', () => {
 
   it('should generate js files', async () => {
     await expoApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
     expect(appTree.exists('my-app/src/app/App.js')).toBeTruthy();
     expect(appTree.exists('my-app/src/app/App.spec.js')).toBeTruthy();
@@ -104,7 +100,6 @@ describe('app', () => {
         js: false,
         skipFormat: false,
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(appTree.exists('my-dir-e2e/.detoxrc.json')).toBeTruthy();
@@ -160,13 +155,12 @@ describe('app', () => {
 
     it('should create e2e app without directory', async () => {
       await expoApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(appTree.exists('my-app-e2e/.detoxrc.json')).toBeTruthy();
@@ -221,7 +215,7 @@ describe('app', () => {
 
     it('should create e2e app with display name', async () => {
       await expoApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         displayName: 'my app name',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
@@ -294,7 +288,6 @@ describe('app', () => {
         js: false,
         skipFormat: false,
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -320,7 +313,6 @@ describe('app', () => {
         js: false,
         skipFormat: false,
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 

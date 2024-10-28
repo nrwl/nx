@@ -149,7 +149,7 @@ describe('cache', () => {
 
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:library ${mylib}`);
+    runCLI(`generate @nx/js:library ${mylib} --directory=libs/${mylib}`);
     updateJson(join('libs', mylib, 'project.json'), (c) => {
       c.targets.build = {
         cache: true,
@@ -248,9 +248,9 @@ describe('cache', () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');
     const child2 = uniq('child2');
-    runCLI(`generate @nx/js:lib ${parent}`);
-    runCLI(`generate @nx/js:lib ${child1}`);
-    runCLI(`generate @nx/js:lib ${child2}`);
+    runCLI(`generate @nx/js:lib libs/${parent}`);
+    runCLI(`generate @nx/js:lib libs/${child1}`);
+    runCLI(`generate @nx/js:lib libs/${child2}`);
     updateJson(`nx.json`, (c) => {
       c.namedInputs = {
         default: ['{projectRoot}/**/*'],
@@ -315,7 +315,7 @@ describe('cache', () => {
 
   it('should support ENV as an input', () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib}`);
+    runCLI(`generate @nx/js:lib libs/${lib}`);
     updateJson(`nx.json`, (c) => {
       c.targetDefaults = {
         echo: {

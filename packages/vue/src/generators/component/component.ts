@@ -7,16 +7,6 @@ export async function componentGenerator(
   host: Tree,
   schema: ComponentGeneratorSchema
 ) {
-  return componentGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function componentGeneratorInternal(
-  host: Tree,
-  schema: ComponentGeneratorSchema
-) {
   const options = await normalizeOptions(host, schema);
 
   createComponentFiles(host, options);

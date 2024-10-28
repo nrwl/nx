@@ -1,7 +1,7 @@
-import { type ProjectGraph } from '../../../devkit-exports';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 import { filterReleaseGroups } from './filter-release-groups';
+import type { ProjectGraph } from '../../../config/project-graph';
 
 describe('filterReleaseGroups()', () => {
   let projectGraph: ProjectGraph;
@@ -102,6 +102,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -130,6 +131,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -142,6 +144,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -165,6 +168,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           },
@@ -181,6 +185,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           },
@@ -201,6 +206,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           } => Set {
@@ -219,6 +225,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           } => Set {
@@ -238,6 +245,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -265,6 +273,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -277,6 +286,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -305,6 +315,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -317,6 +328,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -340,6 +352,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           },
@@ -360,6 +373,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           } => Set {
@@ -395,6 +409,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -407,6 +422,7 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
           versionPlans: false,
@@ -430,6 +446,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           },
@@ -450,6 +467,7 @@ describe('filterReleaseGroups()', () => {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
             "versionPlans": false,
           } => Set {

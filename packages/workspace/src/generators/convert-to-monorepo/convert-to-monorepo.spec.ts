@@ -23,8 +23,12 @@ describe('monorepo generator', () => {
     tree.write('README.md', '');
     tree.write('tools/scripts/custom_script.sh', '');
 
-    await libraryGenerator(tree, { name: 'my-lib', rootProject: true });
-    await libraryGenerator(tree, { name: 'other-lib' });
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      directory: '.',
+      rootProject: true,
+    });
+    await libraryGenerator(tree, { directory: 'other-lib' });
 
     await monorepoGenerator(tree, {
       appsDir: 'apps',
@@ -60,6 +64,7 @@ describe('monorepo generator', () => {
   it('should convert root React app (Vite, Vitest)', async () => {
     await reactAppGenerator(tree, {
       name: 'demo',
+      directory: '.',
       style: 'css',
       bundler: 'vite',
       unitTestRunner: 'vitest',
@@ -81,6 +86,7 @@ describe('monorepo generator', () => {
   it('should respect nested libraries', async () => {
     await reactAppGenerator(tree, {
       name: 'demo',
+      directory: '.',
       style: 'css',
       bundler: 'vite',
       unitTestRunner: 'vitest',
@@ -91,7 +97,7 @@ describe('monorepo generator', () => {
 
     await libraryGenerator(tree, {
       name: 'my-lib',
-      directory: 'inner',
+      directory: 'inner/my-lib',
       style: 'css',
       bundler: 'vite',
       unitTestRunner: 'none',
@@ -109,6 +115,7 @@ describe('monorepo generator', () => {
   it('should convert root Next.js app with existing libraries', async () => {
     await nextAppGenerator(tree, {
       name: 'demo',
+      directory: '.',
       style: 'css',
       unitTestRunner: 'jest',
       e2eTestRunner: 'none',
@@ -117,7 +124,7 @@ describe('monorepo generator', () => {
       linter: 'eslint',
       rootProject: true,
     });
-    await libraryGenerator(tree, { name: 'util' });
+    await libraryGenerator(tree, { directory: 'util' });
 
     await monorepoGenerator(tree, {});
 

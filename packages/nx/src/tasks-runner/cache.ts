@@ -1,5 +1,4 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
@@ -8,15 +7,19 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { existsSync, mkdirSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
 import { NxCache, CachedResult as NativeCacheResult } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { readNxJson } from '../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
+import { isCI } from '../utils/is-ci';
+import { output } from '../utils/output';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -26,27 +29,42 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function getCache(options: DefaultTasksRunnerOptions) {
-  return process.env.NX_DB_CACHE === 'true'
+export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
+  return (
+    process.env.NX_DISABLE_DB !== 'true' &&
+    nxJson.useLegacyCache !== true &&
+    process.env.NX_DB_CACHE !== 'false'
+  );
+}
+
+// Do not change the order of these arguments as this function is used by nx cloud
+export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
+  const nxJson = readNxJson();
+  return dbCacheEnabled(nxJson)
     ? new DbCache({
         // Remove this in Nx 21
-        nxCloudRemoteCache: isNxCloudUsed(readNxJson())
-          ? options.remoteCache
-          : null,
+        nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
       })
     : new Cache(options);
 }
 
 export class DbCache {
   private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
-  async setup() {
-    this.remoteCache = await this.getRemoteCache();
-  }
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+
+  async init() {
+    // This should be cheap because we've already loaded
+    this.remoteCache = await this.getRemoteCache();
+    if (!this.remoteCache) {
+      this.assertCacheIsValid();
+    }
+  }
 
   async get(task: Task): Promise<CachedResult | null> {
     const res = this.cache.get(task.hash);
@@ -57,7 +75,6 @@ export class DbCache {
         remote: false,
       };
     }
-    await this.setup();
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
@@ -94,7 +111,6 @@ export class DbCache {
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
 
-      await this.setup();
       if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
@@ -141,7 +157,66 @@ export class DbCache {
         return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
       }
     } else {
+      return (
+        (await this.getPowerpackS3Cache()) ??
+        (await this.getPowerpackSharedCache()) ??
+        (await this.getPowerpackGcsCache()) ??
+        (await this.getPowerpackAzureCache()) ??
+        null
+      );
+    }
+  }
+
+  private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-s3-cache');
+  }
+
+  private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  }
+
+  private getPowerpackGcsCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-gcs-cache');
+  }
+
+  private getPowerpackAzureCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-azure-cache');
+  }
+
+  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
+    let getRemoteCache = null;
+    try {
+      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
+    } catch {
       return null;
+    }
+    return getRemoteCache();
+  }
+
+  private resolvePackage(pkg: string) {
+    return require.resolve(pkg, {
+      paths: [process.cwd(), workspaceRoot, __dirname],
+    });
+  }
+
+  private assertCacheIsValid() {
+    // User has customized the cache directory - this could be because they
+    // are using a shared cache in the custom directory. The db cache is not
+    // stored in the cache directory, and is keyed by machine ID so they would
+    // hit issues. If we detect this, we can create a fallback db cache in the
+    // custom directory, and check if the entries are there when the main db
+    // cache misses.
+    if (isCI() && !this.cache.checkCacheFsInSync()) {
+      const warningLines = [
+        `Nx found unrecognized artifacts in the cache directory and will not be able to use them.`,
+        `Nx can only restore artifacts it has metadata about.`,
+        `Read about this warning and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
+        ``,
+      ];
+      output.warn({
+        title: 'Unrecognized Cache Artifacts',
+        bodyLines: warningLines,
+      });
     }
   }
 }
@@ -171,6 +246,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
+          windowsHide: false,
         });
         p.unref();
       } catch (e) {
@@ -229,7 +305,7 @@ export class Cache {
       await this.remove(tdCommit);
       await this.remove(td);
 
-      await mkdir(td);
+      await mkdir(td, { recursive: true });
       await writeFile(
         join(td, 'terminalOutput'),
         terminalOutput ?? 'no terminal output'
@@ -241,7 +317,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
-          if (await pathExists(src)) {
+          if (existsSync(src)) {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
@@ -279,7 +355,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (await pathExists(cached)) {
+          if (existsSync(cached)) {
             const src = join(this.root, f);
             await this.remove(src);
             await this.copy(cached, src);
@@ -354,7 +430,7 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (await pathExists(tdCommit)) {
+    if (existsSync(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
         'utf-8'

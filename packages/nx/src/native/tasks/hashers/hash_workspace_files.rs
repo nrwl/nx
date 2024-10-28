@@ -53,7 +53,8 @@ pub fn hash_workspace_files(
         .filter(|file| glob.is_match(&file.file))
     {
         trace!("{:?} was found with glob {:?}", file.file, globs);
-        hashes.push(file.hash.clone())
+        hashes.push(file.hash.clone());
+        hashes.push(file.file.clone());
     }
     hasher.update(hashes.join(",").as_bytes());
     let hashed_value = hasher.digest().to_string();
@@ -110,6 +111,9 @@ mod test {
             Arc::new(DashMap::new()),
         )
         .unwrap();
-        assert_eq!(result, hash(gitignore_file.hash.as_bytes()));
+        assert_eq!(result, hash([
+            gitignore_file.hash,
+            gitignore_file.file
+        ].join(",").as_bytes()));
     }
 }

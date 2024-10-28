@@ -42,7 +42,7 @@ export async function withModuleFederation(
       plugins: [
         ...(config.plugins ?? []),
         new ModuleFederationPlugin({
-          name: options.name,
+          name: options.name.replace(/-/g, '_'),
           filename: 'remoteEntry.mjs',
           exposes: options.exposes,
           remotes: mappedRemotes,

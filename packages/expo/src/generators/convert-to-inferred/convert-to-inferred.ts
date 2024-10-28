@@ -5,7 +5,10 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { migrateProjectExecutorsToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import {
+  migrateProjectExecutorsToPluginV1,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { createNodes } from '../../../plugins/plugin';
 import { processBuildOptions } from './lib/process-build-options';
 import { postTargetTransformer } from './lib/post-target-transformer';
@@ -140,7 +143,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   );
 
   if (migratedProjects.size === 0) {
-    throw new Error('Could not find any targets to migrate.');
+    throw new NoTargetsToMigrateError();
   }
 
   if (!options.skipFormat) {

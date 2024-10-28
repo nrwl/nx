@@ -80,6 +80,7 @@ export const allowedWorkspaceExtensions = [
   'useInferencePlugins',
   'neverConnectToCloud',
   'sync',
+  'useLegacyCache',
 ] as const;
 
 if (!patched) {

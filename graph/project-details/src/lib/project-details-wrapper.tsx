@@ -22,6 +22,7 @@ interface ProjectDetailsProps {
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
 }
 
 export function ProjectDetailsWrapper({
@@ -29,6 +30,7 @@ export function ProjectDetailsWrapper({
   sourceMap,
   errors,
   connectedToCloud,
+  disabledTaskSyncGenerators,
 }: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
@@ -174,6 +176,7 @@ export function ProjectDetailsWrapper({
         }
         connectedToCloud={connectedToCloud}
         onNxConnect={environment === 'nx-console' ? handleNxConnect : undefined}
+        disabledTaskSyncGenerators={disabledTaskSyncGenerators}
       />
       <ErrorToast errors={errors} />
     </>

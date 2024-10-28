@@ -1,8 +1,13 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
-import { readFileSync, statSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { FileHandle, open } from 'fs/promises';
-import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -28,7 +33,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun } from '../../native';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -44,7 +49,9 @@ import {
 } from '../message-types/get-files-in-directory';
 import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
 import {
+  GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
+  HandleGetEstimatedTaskTimings,
   HandleGetFlakyTasks,
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
@@ -54,7 +61,10 @@ import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
-import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import type {
+  FlushSyncGeneratorChangesResult,
+  SyncGeneratorRunResult,
+} from '../../utils/sync-generators';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
@@ -113,10 +123,7 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
-      // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
-      const useDaemonProcessOption =
-        this.nxJson?.useDaemonProcess ??
-        this.nxJson?.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+      const useDaemonProcessOption = this.nxJson?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
       // env takes precedence
@@ -354,6 +361,17 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  async getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>> {
+    const message: HandleGetEstimatedTaskTimings = {
+      type: GET_ESTIMATED_TASK_TIMINGS,
+      targets,
+    };
+
+    return this.sendToDaemonViaQueue(message);
+  }
+
   recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
     const message: HandleRecordTaskRunsMessage = {
       type: RECORD_TASK_RUNS,
@@ -364,7 +382,7 @@ export class DaemonClient {
 
   getSyncGeneratorChanges(
     generators: string[]
-  ): Promise<SyncGeneratorChangesResult[]> {
+  ): Promise<SyncGeneratorRunResult[]> {
     const message: HandleGetSyncGeneratorChangesMessage = {
       type: GET_SYNC_GENERATOR_CHANGES,
       generators,
@@ -372,7 +390,9 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+  flushSyncGeneratorChangesToDisk(
+    generators: string[]
+  ): Promise<FlushSyncGeneratorChangesResult> {
     const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
       type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
       generators,
@@ -380,7 +400,10 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getRegisteredSyncGenerators(): Promise<string[]> {
+  getRegisteredSyncGenerators(): Promise<{
+    globalGenerators: string[];
+    taskGenerators: string[];
+  }> {
     const message: HandleGetRegisteredSyncGeneratorsMessage = {
       type: GET_REGISTERED_SYNC_GENERATORS,
     };
@@ -556,8 +579,10 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
-    ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
+    mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
+    if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
+      writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
+    }
 
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
@@ -569,7 +594,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: true,
+        windowsHide: false,
         shell: false,
         env: {
           ...process.env,
@@ -611,7 +636,7 @@ export class DaemonClient {
       output.error({
         title:
           err?.message ||
-          'Something unexpected went wrong when stopping the server',
+          'Something unexpected went wrong when stopping the daemon server',
       });
     }
 

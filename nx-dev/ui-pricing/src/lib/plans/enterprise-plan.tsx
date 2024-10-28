@@ -83,6 +83,24 @@ export function EnterprisePlan({
             outputs.
           </p>
         </li>
+        <li className="flex gap-x-3">
+          <CheckIcon
+            className="h-6 w-5 flex-none text-blue-600 dark:text-sky-600"
+            aria-hidden="true"
+          />
+          <p>
+            <Link
+              href="/powerpack"
+              title="Learn more about Nx Powerpack"
+              prefetch={false}
+              className="font-medium text-slate-700 underline dark:text-slate-300"
+            >
+              Nx Powerpack
+            </Link>
+            : a suite of premium extensions for the Nx CLI specifically designed
+            for enterprises.
+          </p>
+        </li>
       </ul>
     </article>
   );

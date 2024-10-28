@@ -15,6 +15,7 @@ import {
   GlobeAltIcon,
   MicrophoneIcon,
   VideoCameraIcon,
+  CheckBadgeIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -30,80 +31,102 @@ export interface MenuItem {
   isNew: boolean;
 }
 
-export const featuresItems: MenuItem[] = [
-  {
-    name: 'Run Tasks',
-    // description: 'Run one or many tasks in parallel.',
-    description: null,
-    href: '/features/run-tasks',
-    icon: BoltIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Cache Task Results',
-    // description: 'Speeds up your local workflow.',
-    description: null,
-    href: '/features/cache-task-results',
-    icon: CircleStackIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Explore Your Workspace',
-    // description: 'See interactions for tasks and modules.',
-    description: null,
-    href: '/features/explore-graph',
-    icon: ShareIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Automate Updating Dependencies',
-    // description: 'Keep running on latest without effort.',
-    description: null,
-    href: '/features/automate-updating-dependencies',
-    icon: ArrowUpCircleIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Enforce Module Boundaries',
-    // description: 'Partition your code into defined units.',
-    description: null,
-    href: '/features/enforce-module-boundaries',
-    icon: Squares2X2Icon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Manage Releases',
-    // description: 'Versioning, changelog, publishing.',
-    description: null,
-    href: '/features/manage-releases',
-    icon: CubeIcon,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Use Remote Caching (Nx Replay)',
-    description: 'Zero-config, fast & secure remote cache solution.',
-    href: '/ci/features/remote-cache',
-    icon: NxReplayIcon,
-    isNew: false,
-    isHighlight: true,
-  },
-  {
-    name: 'Distribute Task Execution (Nx Agents)',
-    description:
-      'One-line config for distributing tasks across multiple machines',
-    href: '/ci/features/distribute-task-execution',
-    icon: NxAgentsIcon,
-    isNew: false,
-    isHighlight: true,
-  },
-];
-export const plans: MenuItem[] = [
+export const featuresItems: Record<string, MenuItem[]> = {
+  '': [
+    {
+      name: 'Run Tasks',
+      // description: 'Run one or many tasks in parallel.',
+      description: null,
+      href: '/features/run-tasks',
+      icon: BoltIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Cache Task Results',
+      // description: 'Speeds up your local workflow.',
+      description: null,
+      href: '/features/cache-task-results',
+      icon: CircleStackIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Explore Your Workspace',
+      // description: 'See interactions for tasks and modules.',
+      description: null,
+      href: '/features/explore-graph',
+      icon: ShareIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Automate Updating Dependencies',
+      // description: 'Keep running on latest without effort.',
+      description: null,
+      href: '/features/automate-updating-dependencies',
+      icon: ArrowUpCircleIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Enforce Module Boundaries',
+      // description: 'Partition your code into defined units.',
+      description: null,
+      href: '/features/enforce-module-boundaries',
+      icon: Squares2X2Icon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Manage Releases',
+      // description: 'Versioning, changelog, publishing.',
+      description: null,
+      href: '/features/manage-releases',
+      icon: CubeIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+  ],
+  'Nx Cloud Features': [
+    {
+      name: 'Use Remote Caching (Nx Replay)',
+      description: 'Zero-config, fast & secure remote cache solution.',
+      href: '/ci/features/remote-cache',
+      icon: NxReplayIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Distribute Task Execution (Nx Agents)',
+      description:
+        'One-line config for distributing tasks across multiple machines',
+      href: '/ci/features/distribute-task-execution',
+      icon: NxAgentsIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+  ],
+  'Nx Powerpack Features (Paid Enterprise Extensions)': [
+    {
+      name: 'Run Conformance Rules',
+      description: null,
+      href: '/nx-enterprise/powerpack/conformance',
+      icon: CheckBadgeIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Define Project Owners',
+      description: null,
+      href: '/nx-enterprise/powerpack/owners',
+      icon: UserGroupIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+  ],
+};
+export const solutions: MenuItem[] = [
   {
     name: 'Nx Cloud',
     description:
@@ -114,44 +137,19 @@ export const plans: MenuItem[] = [
     isHighlight: false,
   },
   {
+    name: 'Nx Powerpack',
+    description:
+      'A suite of paid extensions for the Nx CLI specifically designed for enterprises.',
+    href: '/powerpack',
+    icon: null,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
     name: 'Nx Enterprise',
     description:
       'The ultimate Nx & Nx Cloud toolchain, tailored to your needs.',
     href: '/enterprise',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-];
-const useCaseItems: MenuItem[] = [
-  {
-    name: 'Get actionable feedback',
-    description: 'Enhanced analysis & analytics of your workflows.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Reduce CI timings with remote caching',
-    description: 'Share task results & artifacts between CI & teams.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Performant task distribution at scale',
-    description: 'Faster & cheaper CI workflows.',
-    href: '',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Improve E2E time execution on CI',
-    description: 'Automatic task splitting.',
-    href: '',
     icon: null,
     isNew: false,
     isHighlight: false,
@@ -261,7 +259,7 @@ export const companyItems: MenuItem[] = [
   },
 ];
 export const solutionsMenuItems = {
-  'Helping you grow': plans,
+  'Helping you grow': solutions,
   // 'Use cases': useCaseItems
 };
 export const resourceMenuItems = {

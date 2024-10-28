@@ -21,9 +21,8 @@ describe('app', () => {
   it('should add a .gitkeep file to the public directory', async () => {
     const name = uniq();
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.exists(`${name}/public/.gitkeep`)).toBe(true);
@@ -32,10 +31,9 @@ describe('app', () => {
   it('should update tags and implicit dependencies', async () => {
     const name = uniq();
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
       tags: 'one,two',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const projects = Object.fromEntries(getProjects(tree));
@@ -56,9 +54,8 @@ describe('app', () => {
 
     const name = uniq();
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const tsConfig = readJson(tree, `${name}/tsconfig.json`);
@@ -69,9 +66,8 @@ describe('app', () => {
     it('should generate files for app layout', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsConfig = readJson(tree, `${name}/tsconfig.json`);
@@ -97,10 +93,9 @@ describe('app', () => {
       const name = uniq();
       await applicationGenerator(tree, {
         name,
+        directory: '.',
         style: 'css',
         appDir: true,
-        rootProject: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsConfig = readJson(tree, 'tsconfig.json');
@@ -119,10 +114,9 @@ describe('app', () => {
       const name = uniq();
       await applicationGenerator(tree, {
         name,
+        directory: '.',
         style: 'none',
         appDir: true,
-        rootProject: true,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const content = tree.read('src/app/page.tsx').toString();
@@ -137,11 +131,10 @@ describe('app', () => {
     it('should generate files for pages layout', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
         appDir: false,
         src: false,
-        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`${name}/tsconfig.json`)).toBeTruthy();
       expect(tree.exists(`${name}/pages/index.tsx`)).toBeTruthy();
@@ -152,9 +145,8 @@ describe('app', () => {
     it('should update configurations', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(readProjectConfiguration(tree, name).root).toEqual(name);
@@ -166,11 +158,10 @@ describe('app', () => {
     it('should generate an unstyled component page', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'none',
         appDir: false,
         src: false,
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const content = tree.read(`${name}/pages/index.tsx`).toString();
@@ -185,9 +176,8 @@ describe('app', () => {
     it('should generate scss styles', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'scss',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`${name}/src/app/page.module.scss`)).toBeTruthy();
@@ -224,9 +214,8 @@ describe('app', () => {
     it('should generate less styles', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'less',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(tree.exists(`${name}/src/app/page.module.less`)).toBeTruthy();
@@ -263,9 +252,8 @@ describe('app', () => {
     it('should generate styled-components styles', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'styled-components',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
@@ -347,9 +335,8 @@ describe('app', () => {
       const name = uniq();
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: '@emotion/styled',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
@@ -369,9 +356,8 @@ describe('app', () => {
       const name = uniq();
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: '@emotion/styled',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsconfigJson = readJson(tree, `${name}/tsconfig.json`);
@@ -387,9 +373,8 @@ describe('app', () => {
       const name = 'my-app';
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'styled-jsx',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
@@ -452,9 +437,8 @@ describe('app', () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
@@ -466,9 +450,8 @@ describe('app', () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
@@ -480,9 +463,8 @@ describe('app', () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
@@ -517,10 +499,9 @@ describe('app', () => {
     it('should not generate test configuration', async () => {
       const name = uniq();
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists(`${name}/specs/index.spec.tsx`)).toBeFalsy();
@@ -532,10 +513,9 @@ describe('app', () => {
       const name = uniq();
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`${name}-e2e`)).toBeFalsy();
     });
@@ -546,10 +526,9 @@ describe('app', () => {
       const name = uniq();
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
         e2eTestRunner: 'cypress',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
@@ -568,10 +547,9 @@ describe('app', () => {
       const name = uniq();
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
         e2eTestRunner: 'playwright',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
@@ -589,9 +567,8 @@ describe('app', () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
-      name,
+      directory: name,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const appContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
@@ -601,13 +578,44 @@ describe('app', () => {
 
   describe('--linter', () => {
     describe('default (eslint)', () => {
+      it('should add flat config as needed', async () => {
+        tree.write('eslint.config.js', '');
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        expect(tree.read(`${name}/eslint.config.js`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "const { FlatCompat } = require('@eslint/eslintrc');
+          const js = require('@eslint/js');
+          const nx = require('@nx/eslint-plugin');
+          const baseConfig = require('../eslint.config.js');
+
+          const compat = new FlatCompat({
+            baseDirectory: __dirname,
+            recommendedConfig: js.configs.recommended,
+          });
+
+          module.exports = [
+            ...compat.extends('next', 'next/core-web-vitals'),
+
+            ...baseConfig,
+            ...nx.configs['flat/react-typescript'],
+            { ignores: ['.next/**/*'] },
+          ];
+          "
+        `);
+      });
+
       it('should add .eslintrc.json and dependencies', async () => {
         const name = uniq();
 
         await applicationGenerator(tree, {
-          name,
+          directory: name,
           style: 'css',
-          projectNameAndRootFormat: 'as-provided',
         });
 
         const packageJson = readJson(tree, '/package.json');
@@ -660,17 +668,6 @@ describe('app', () => {
                 ],
                 "rules": {},
               },
-              {
-                "env": {
-                  "jest": true,
-                },
-                "files": [
-                  "*.spec.ts",
-                  "*.spec.tsx",
-                  "*.spec.js",
-                  "*.spec.jsx",
-                ],
-              },
             ],
           }
         `);
@@ -683,10 +680,9 @@ describe('app', () => {
 
         await applicationGenerator(tree, {
           name,
+          directory: '.',
           style: 'css',
           appDir: true,
-          rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
         });
 
         const eslintJSON = readJson(tree, '.eslintrc.json');
@@ -708,10 +704,9 @@ describe('app', () => {
 
         await applicationGenerator(tree, {
           name,
+          directory: '.',
           style: 'css',
           appDir: true,
-          rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
           src: true,
         });
 
@@ -733,10 +728,9 @@ describe('app', () => {
 
         await applicationGenerator(tree, {
           name,
+          directory: '.',
           style: 'css',
           appDir: true,
-          rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
           src: false,
         });
 
@@ -758,10 +752,9 @@ describe('app', () => {
 
         await applicationGenerator(tree, {
           name,
+          directory: '.',
           style: 'css',
           appDir: false,
-          rootProject: true,
-          projectNameAndRootFormat: 'as-provided',
           src: false,
         });
 
@@ -782,7 +775,7 @@ describe('app', () => {
       const name = uniq();
 
       await applicationGenerator(tree, {
-        name,
+        directory: name,
         style: 'css',
         js: true,
       });
@@ -807,12 +800,11 @@ describe('app (legacy)', () => {
   let originalEnv;
 
   const schema: Schema = {
-    name: 'app',
+    directory: 'app',
     appDir: true,
     unitTestRunner: 'jest',
     style: 'css',
     e2eTestRunner: 'cypress',
-    projectNameAndRootFormat: 'as-provided',
   };
 
   beforeAll(() => {

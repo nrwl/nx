@@ -1,10 +1,11 @@
 import { Tree, extractLayoutDirectory, names, readNxJson } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
-import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
-import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
 
 export function normalizeDirectory(options: Schema) {
   options.directory = options.directory?.replace(/\\{1,2}/g, '/');
@@ -20,21 +21,16 @@ export function normalizeProjectName(options: Schema) {
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
-  options: Schema,
-  callingGenerator = '@nx/react:application'
+  options: Schema
 ): Promise<NormalizedSchema<T>> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-    callingGenerator,
-  });
+  await ensureProjectName(host, options, 'application');
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
 
   const nxJson = readNxJson(host);
   const addPlugin =
@@ -44,7 +40,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
   options.addPlugin ??= addPlugin;
 
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -53,7 +48,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const fileName = options.pascalCaseFiles ? 'App' : 'app';
+  const fileName = 'app';
 
   const styledModule = /^(css|scss|less|tailwind|none)$/.test(options.style)
     ? null

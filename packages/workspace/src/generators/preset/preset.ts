@@ -29,7 +29,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return angularApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       standalone: options.standaloneApi,
@@ -48,7 +47,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return angularApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       routing: options.routing,
@@ -67,7 +65,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       bundler: options.bundler ?? 'webpack',
@@ -82,7 +79,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
@@ -99,7 +95,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return remixApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
@@ -113,7 +108,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return remixApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       rootProject: true,
@@ -128,7 +122,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return vueApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
@@ -142,7 +135,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return vueApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
@@ -158,7 +150,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nuxtApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
@@ -172,7 +163,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nuxtApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
@@ -188,7 +178,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nextApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
@@ -202,7 +191,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nextApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
@@ -218,7 +206,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return webApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       bundler: 'vite',
@@ -233,7 +220,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nestApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
@@ -245,7 +231,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return expressApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
@@ -256,7 +241,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
@@ -267,7 +251,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return expoApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
@@ -275,13 +258,17 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.TS) {
     const { initGenerator } = require('@nx' + '/js');
-    return initGenerator(tree, {});
+    return initGenerator(tree, {
+      formatter: options.formatter,
+      addTsPlugin:
+        process.env.NX_ADD_PLUGINS !== 'false' &&
+        process.env.NX_ADD_TS_PLUGIN !== 'false',
+    });
   } else if (options.preset === Preset.TsStandalone) {
     const { libraryGenerator } = require('@nx' + '/js');
     return libraryGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       bundler: 'tsc',
       unitTestRunner: 'vitest',
       testEnvironment: 'node',
@@ -297,7 +284,6 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler,
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
       framework: options.framework,
@@ -314,7 +300,6 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler,
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       framework: options.framework,
       docker: options.docker,

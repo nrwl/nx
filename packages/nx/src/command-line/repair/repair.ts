@@ -1,4 +1,4 @@
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import * as migrationsJson from '../../../migrations.json';
 import { executeMigrations } from '../migrate/migrate';
 import { output } from '../../utils/output';

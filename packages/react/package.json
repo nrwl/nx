@@ -34,11 +34,11 @@
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@svgr/webpack": "^8.0.1",
-    "chalk": "^4.1.0",
     "file-loader": "^6.2.0",
     "minimatch": "9.0.3",
+    "picocolors": "^1.1.0",
     "tslib": "^2.3.0",
-    "@module-federation/enhanced": "~0.6.0",
+    "@module-federation/enhanced": "0.6.9",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",

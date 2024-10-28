@@ -5,30 +5,25 @@
   "description": "Generate a new Remix application.",
   "type": "object",
   "properties": {
-    "name": {
+    "directory": {
       "type": "string",
-      "description": "",
+      "description": "A directory where the app is placed.",
+      "alias": "dir",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What is the name of the application?"
+      "x-prompt": "Which directory do you want to create the application in?"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the application.",
+      "x-priority": "important"
     },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
-    },
-    "directory": {
-      "type": "string",
-      "description": "A directory where the app is placed.",
-      "alias": "dir",
-      "x-priority": "important"
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -65,5 +60,6 @@
       "x-priority": "internal",
       "default": false
     }
-  }
+  },
+  "required": ["directory"]
 }

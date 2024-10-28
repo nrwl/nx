@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Module Federation Static Dev Server",
+  "description": "Serve a host application statically along with it's remotes.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "serveTarget": {
+      "type": "string"
+    }
+  },
+  "required": ["serveTarget"]
+}

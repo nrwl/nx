@@ -12,6 +12,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
@@ -56,13 +57,16 @@ export async function configurationGenerator(
 }
 
 function createRollupConfig(tree: Tree, options: RollupProjectSchema) {
+  const isUsingTsPlugin = isUsingTsSolutionSetup(tree);
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: RollupWithNxPluginOptions = {
-    outputPath: joinPathFragments(
-      offsetFromRoot(project.root),
-      'dist',
-      project.root === '.' ? project.name : project.root
-    ),
+    outputPath: isUsingTsPlugin
+      ? './dist'
+      : joinPathFragments(
+          offsetFromRoot(project.root),
+          'dist',
+          project.root === '.' ? project.name : project.root
+        ),
     compiler: options.compiler ?? 'babel',
     main: options.main ?? './src/index.ts',
     tsConfig: options.tsConfig ?? './tsconfig.lib.json',
@@ -70,21 +74,24 @@ function createRollupConfig(tree: Tree, options: RollupProjectSchema) {
 
   tree.write(
     joinPathFragments(project.root, 'rollup.config.js'),
-    stripIndents`
-      const { withNx } = require('@nx/rollup/with-nx');
-      
-      module.exports = withNx({
-        main: '${buildOptions.main}',
-        outputPath: '${buildOptions.outputPath}',
-        tsConfig: '${buildOptions.tsConfig}',
-        compiler: '${buildOptions.compiler}',
-        format: ${JSON.stringify(options.format ?? ['esm'])},
-        assets:[{ input: '.', output: '.', glob:'*.md'}],
-      }, {
-        // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
-        // e.g. 
-        // output: { sourcemap: true },
-      });`
+    `const { withNx } = require('@nx/rollup/with-nx');
+
+module.exports = withNx(
+  {
+    main: '${buildOptions.main}',
+    outputPath: '${buildOptions.outputPath}',
+    tsConfig: '${buildOptions.tsConfig}',
+    compiler: '${buildOptions.compiler}',
+    format: ${JSON.stringify(options.format ?? ['esm'])},
+    assets: [{ input: '.', output: '.', glob:'*.md' }],
+  },
+  {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    // e.g.
+    // output: { sourcemap: true },
+  }
+);
+`
   );
 }
 

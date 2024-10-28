@@ -53,6 +53,11 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "inputs": [
                 "production",
                 "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
               ],
               "metadata": {
                 "description": "Run Typechecking",

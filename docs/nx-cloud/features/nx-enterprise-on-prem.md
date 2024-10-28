@@ -35,7 +35,7 @@ We'll be able to discuss specific requirements such as:
 - Static IPs (if you need to open up connections in your corporate network)
 - VPC peering on GCloud or AWS Private Link
 
-This would be a "best of both worlds" option, as it would free you up from managing the instance yourself, but you will get to define specific parameters of how it should it run.
+This would be a "best of both worlds" option, as it would free you up from managing the instance yourself, but you will get to define specific parameters of how it should run.
 Your data and the Nx Cloud will run in complete isolation and will only serve your company. There will be no external API calls to any services outside of the clusters we set-up for you.
 
 Once you let us know you'd like this option, depending on the agreed requirements, it might take a few days to get it set up.
@@ -55,4 +55,16 @@ We also offer a multi-node Kubernetes setup, that is deployed via Helm. You can 
 ## Resources
 
 - [Integration with your source control provider](/ci/recipes/source-control-integration)
-- [On-Prem specific features](/ci/recipes/enterprise/on-premise/auth-single-admin)
+
+## On Premise Docs
+
+- [Set up Nx Cloud On-Premise](/ci/recipes/enterprise/on-premise/on-premise)
+- [Authenticate with a Single Admin](/ci/recipes/enterprise/on-premise/auth-single-admin)
+- [Authenticate with GitHub](/ci/recipes/enterprise/on-premise/auth-github)
+- [On-Prem VM Setup](/ci/recipes/enterprise/on-premise/ami-setup)
+- [Authenticate with GitLab](/ci/recipes/enterprise/on-premise/auth-gitlab)
+- [Authenticate with BitBucket](/ci/recipes/enterprise/on-premise/auth-bitbucket)
+- [Authenticate with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center)
+- [Authenticate via SAML](/ci/recipes/enterprise/on-premise/auth-saml)
+- [Advanced Configuration](/ci/recipes/enterprise/on-premise/advanced-config)
+- [Custom GitHub App](/ci/recipes/enterprise/on-premise/custom-github-app)

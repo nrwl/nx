@@ -5,21 +5,21 @@ import { interceptorGenerator } from './interceptor';
 
 describe('interceptor generator', () => {
   let tree: Tree;
-  const project = 'api';
+  const path = 'api';
   const options: InterceptorGeneratorOptions = {
     name: 'test',
-    project,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
     await expect(
-      interceptorGenerator(tree, options)
-    ).resolves.not.toThrowError();
+      interceptorGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

@@ -250,6 +250,17 @@
         "isExternal": false,
         "path": "/ci/features/explain-with-ai",
         "tags": []
+      },
+      {
+        "id": "github-integration",
+        "name": "GitHub Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/github-integration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/github-integration",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -331,6 +342,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/explain-with-ai",
+    "tags": []
+  },
+  "/ci/features/github-integration": {
+    "id": "github-integration",
+    "name": "GitHub Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/github-integration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/github-integration",
     "tags": []
   },
   "/ci/concepts": {
@@ -659,6 +681,95 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
+          {
+            "id": "single-tenant",
+            "name": "Single Tenant",
+            "description": "Manage an on-premise installation of Nx Cloud",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Single Tenant Nx Cloud Hosting",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/overview",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/overview",
+                "tags": ["single-tenant"]
+              },
+              {
+                "id": "auth-github",
+                "name": "Authenticate with GitHub",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/auth-github",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+                "tags": []
+              },
+              {
+                "id": "auth-gitlab",
+                "name": "Authenticate with GitLab",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/auth-gitlab",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+                "tags": []
+              },
+              {
+                "id": "auth-bitbucket",
+                "name": "Authenticate with BitBucket",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+                "tags": []
+              },
+              {
+                "id": "auth-bitbucket-data-center",
+                "name": "Authenticate with BitBucket Data Center",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+                "tags": []
+              },
+              {
+                "id": "auth-saml",
+                "name": "Authenticate via SAML",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/auth-saml",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+                "tags": []
+              },
+              {
+                "id": "custom-github-app",
+                "name": "Custom GitHub App",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/single-tenant/custom-github-app",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant",
+            "tags": []
+          },
           {
             "id": "on-premise",
             "name": "On-Premise",
@@ -1255,6 +1366,95 @@
     "file": "",
     "itemList": [
       {
+        "id": "single-tenant",
+        "name": "Single Tenant",
+        "description": "Manage an on-premise installation of Nx Cloud",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Single Tenant Nx Cloud Hosting",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/overview",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/overview",
+            "tags": ["single-tenant"]
+          },
+          {
+            "id": "auth-github",
+            "name": "Authenticate with GitHub",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/auth-github",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+            "tags": []
+          },
+          {
+            "id": "auth-gitlab",
+            "name": "Authenticate with GitLab",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/auth-gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+            "tags": []
+          },
+          {
+            "id": "auth-bitbucket",
+            "name": "Authenticate with BitBucket",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+            "tags": []
+          },
+          {
+            "id": "auth-bitbucket-data-center",
+            "name": "Authenticate with BitBucket Data Center",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+            "tags": []
+          },
+          {
+            "id": "auth-saml",
+            "name": "Authenticate via SAML",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/auth-saml",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+            "tags": []
+          },
+          {
+            "id": "custom-github-app",
+            "name": "Custom GitHub App",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/single-tenant/custom-github-app",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant",
+        "tags": []
+      },
+      {
         "id": "on-premise",
         "name": "On-Premise",
         "description": "Manage an on-premise installation of Nx Cloud",
@@ -1457,6 +1657,172 @@
     ],
     "isExternal": false,
     "path": "/ci/recipes/enterprise",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant": {
+    "id": "single-tenant",
+    "name": "Single Tenant",
+    "description": "Manage an on-premise installation of Nx Cloud",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Single Tenant Nx Cloud Hosting",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/overview",
+        "tags": ["single-tenant"]
+      },
+      {
+        "id": "auth-github",
+        "name": "Authenticate with GitHub",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/auth-github",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+        "tags": []
+      },
+      {
+        "id": "auth-gitlab",
+        "name": "Authenticate with GitLab",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/auth-gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+        "tags": []
+      },
+      {
+        "id": "auth-bitbucket",
+        "name": "Authenticate with BitBucket",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+        "tags": []
+      },
+      {
+        "id": "auth-bitbucket-data-center",
+        "name": "Authenticate with BitBucket Data Center",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+        "tags": []
+      },
+      {
+        "id": "auth-saml",
+        "name": "Authenticate via SAML",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/auth-saml",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+        "tags": []
+      },
+      {
+        "id": "custom-github-app",
+        "name": "Custom GitHub App",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/single-tenant/custom-github-app",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant/overview": {
+    "id": "overview",
+    "name": "Single Tenant Nx Cloud Hosting",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/overview",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/overview",
+    "tags": ["single-tenant"]
+  },
+  "/ci/recipes/enterprise/single-tenant/auth-github": {
+    "id": "auth-github",
+    "name": "Authenticate with GitHub",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/auth-github",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/auth-github",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant/auth-gitlab": {
+    "id": "auth-gitlab",
+    "name": "Authenticate with GitLab",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/auth-gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/auth-gitlab",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant/auth-bitbucket": {
+    "id": "auth-bitbucket",
+    "name": "Authenticate with BitBucket",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center": {
+    "id": "auth-bitbucket-data-center",
+    "name": "Authenticate with BitBucket Data Center",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant/auth-saml": {
+    "id": "auth-saml",
+    "name": "Authenticate via SAML",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/auth-saml",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/auth-saml",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/single-tenant/custom-github-app": {
+    "id": "custom-github-app",
+    "name": "Custom GitHub App",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/single-tenant/custom-github-app",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
     "tags": []
   },
   "/ci/recipes/enterprise/on-premise": {

@@ -1,12 +1,16 @@
 'use client';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
-import { BlurFade } from '@nx/nx-dev/ui-animations';
+import { BlurFade, usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
-import { MonorepoWorldIcon } from '@nx/nx-dev/ui-icons';
+import {
+  MonorepoWorldIcon,
+  RustIcon,
+  TypeScriptIcon,
+} from '@nx/nx-dev/ui-icons';
 import { motion, MotionConfig } from 'framer-motion';
 
 export function Hero(): JSX.Element {
@@ -80,57 +84,13 @@ export function Hero(): JSX.Element {
               Contact us
             </ButtonLink>
           </div>
-          <div className="mt-12 flex justify-center">
-            <MotionConfig reducedMotion="user">
-              <motion.div
-                initial={{
-                  y: 16,
-                  opacity: 0,
-                }}
-                whileInView={{
-                  y: 0,
-                  opacity: 1,
-                }}
-                viewport={{ once: true }}
-                transition={{
-                  ease: 'easeOut',
-                  duration: 0.225,
-                  delay: 1,
-                }}
-                className="pointer-events-auto relative mx-auto w-full max-w-lg overflow-hidden rounded-lg bg-slate-950 text-left text-white shadow-lg ring-1 ring-white ring-opacity-5 transition hover:bg-slate-800"
-              >
-                <div className="p-4">
-                  <div className="flex items-start gap-6">
-                    <div className="-m-4 hidden flex-shrink-0 sm:block">
-                      <img
-                        src="/images/conferences/monorepoworld-vertical-banner.avif"
-                        alt="MonorepoWorld conference image"
-                        className="size-32"
-                      />
-                    </div>
-                    <div className="w-0 flex-1 pt-1">
-                      <p className="text-base font-semibold">
-                        <a
-                          href="https://monorepo.world/?utm_source=nxdev&utm_medium=website&utm_campaign=homepage_banner&utm_campaign=monorepoworld"
-                          title="Join us at Monorepo World"
-                          target="_blank"
-                        >
-                          <span className="absolute inset-0" />
-                          The Nx team will be at Monorepo World!
-                        </a>
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">
-                        The ultimate conference for{' '}
-                        <span className="text-[#DDFB24]">monorepos</span> and
-                        developer{' '}
-                        <span className="text-[#DDFB24]">tooling</span> on 0ct.
-                        7. 2024, Mountain View, CA.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </MotionConfig>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm italic">
+            Built with
+            <RustIcon aria-hidden="true" className="size-5 shrink-0" />
+            <span className="sr-only">Rust</span> for speed &
+            <TypeScriptIcon aria-hidden="true" className="size-4 shrink-0" />
+            <span className="sr-only">TypeScript</span> for extensibility.
           </div>
         </div>
       </div>
@@ -141,6 +101,8 @@ export function Hero(): JSX.Element {
 function ShaderGradientElement() {
   const [theme] = useTheme();
   const [displayTheme, setDisplayTheme] = useState<Theme>('system');
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   useIsomorphicLayoutEffect(() => {
     const matchMedia: any = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -169,6 +131,10 @@ function ShaderGradientElement() {
       }
     };
   }, [theme]);
+
+  if (prefersReducedMotion) {
+    return;
+  }
 
   if (displayTheme === 'dark')
     return (

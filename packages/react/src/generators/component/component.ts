@@ -22,13 +22,6 @@ import { NormalizedSchema, Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
-  return componentGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function componentGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 

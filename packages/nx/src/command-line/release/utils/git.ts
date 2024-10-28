@@ -3,7 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
-import { workspaceRoot } from '../../../utils/app-root';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -122,12 +122,15 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
+  // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
+  const separator = '§§§';
+
   // https://git-scm.com/docs/pretty-formats
   const r = await execCommand('git', [
     '--no-pager',
     'log',
     range,
-    '--pretty="----%n%s|%h|%an|%ae%n%b"',
+    `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
     '--name-status',
   ]);
 
@@ -137,7 +140,7 @@ export async function getGitDiff(
     .map((line) => {
       const [firstLine, ..._body] = line.split('\n');
       const [message, shortHash, authorName, authorEmail] =
-        firstLine.split('|');
+        firstLine.split(separator);
       const r: RawGitCommit = {
         message,
         shortHash,
@@ -248,7 +251,7 @@ export async function gitCommit({
   logFn,
 }: {
   messages: string[];
-  additionalArgs?: string;
+  additionalArgs?: string | string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
@@ -260,7 +263,11 @@ export async function gitCommit({
     commandArgs.push('--message', message);
   }
   if (additionalArgs) {
-    commandArgs.push(...additionalArgs.split(' '));
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
   }
 
   if (verbose) {
@@ -302,7 +309,7 @@ export async function gitTag({
 }: {
   tag: string;
   message?: string;
-  additionalArgs?: string;
+  additionalArgs?: string | string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
@@ -318,7 +325,11 @@ export async function gitTag({
     message || tag,
   ];
   if (additionalArgs) {
-    commandArgs.push(...additionalArgs.split(' '));
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
   }
 
   if (verbose) {

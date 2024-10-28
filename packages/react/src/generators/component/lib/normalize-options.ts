@@ -18,18 +18,10 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'component',
-    callingGenerator: '@nx/react:component',
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    derivedDirectory: options.derivedDirectory ?? options.directory,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
     fileName: options.fileName,
-    pascalCaseFile: options.pascalCaseFiles,
-    pascalCaseDirectory: options.pascalCaseDirectory,
   });
 
   const project = readProjectConfiguration(tree, projectName);
@@ -62,8 +54,8 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    projectName,
     directory,
+    projectName,
     styledModule,
     hasStyles: options.style !== 'none',
     className,

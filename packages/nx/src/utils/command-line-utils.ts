@@ -14,6 +14,9 @@ export interface RawNxArgs extends NxArgs {
 export interface NxArgs {
   targets?: string[];
   configuration?: string;
+  /**
+   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   */
   runner?: string;
   parallel?: number;
   untracked?: boolean;
@@ -38,6 +41,7 @@ export interface NxArgs {
   batch?: boolean;
   excludeTaskDependencies?: boolean;
   skipSync?: boolean;
+  sortRootTsconfigPaths?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -214,47 +218,37 @@ function normalizeNxArgsRunner(
   options: { printWarnings: boolean }
 ) {
   if (!nxArgs.runner) {
-    // TODO: Remove NX_RUNNER environment variable support in Nx v17
-    for (const envKey of ['NX_TASKS_RUNNER', 'NX_RUNNER']) {
-      const runner = process.env[envKey];
-      if (runner) {
-        const runnerExists = nxJson.tasksRunnerOptions?.[runner];
-        if (options.printWarnings) {
-          if (runnerExists) {
-            output.note({
-              title: `No explicit --runner argument provided, but found environment variable ${envKey} so using its value: ${output.bold(
-                `${runner}`
-              )}`,
-            });
-          } else if (
-            nxArgs.verbose ||
-            process.env.NX_VERBOSE_LOGGING === 'true'
-          ) {
-            output.warn({
-              title: `Could not find ${output.bold(
-                `${runner}`
-              )} within \`nx.json\` tasksRunnerOptions.`,
-              bodyLines: [
-                `${output.bold(`${runner}`)} was set by ${envKey}`,
-                ``,
-                `To suppress this message, either:`,
-                `  - provide a valid task runner with --runner`,
-                `  - ensure NX_TASKS_RUNNER matches a task runner defined in nx.json`,
-              ],
-            });
-          }
-        }
+    const envKey = 'NX_TASKS_RUNNER';
+    const runner = process.env[envKey];
+    if (runner) {
+      const runnerExists = nxJson.tasksRunnerOptions?.[runner];
+      if (options.printWarnings) {
         if (runnerExists) {
-          // TODO: Remove in v17
-          if (envKey === 'NX_RUNNER' && options.printWarnings) {
-            output.warn({
-              title:
-                'NX_RUNNER is deprecated, please use NX_TASKS_RUNNER instead.',
-            });
-          }
-          nxArgs.runner = runner;
+          output.note({
+            title: `No explicit --runner argument provided, but found environment variable ${envKey} so using its value: ${output.bold(
+              `${runner}`
+            )}`,
+          });
+        } else if (
+          nxArgs.verbose ||
+          process.env.NX_VERBOSE_LOGGING === 'true'
+        ) {
+          output.warn({
+            title: `Could not find ${output.bold(
+              `${runner}`
+            )} within \`nx.json\` tasksRunnerOptions.`,
+            bodyLines: [
+              `${output.bold(`${runner}`)} was set by ${envKey}`,
+              ``,
+              `To suppress this message, either:`,
+              `  - provide a valid task runner with --runner`,
+              `  - ensure NX_TASKS_RUNNER matches a task runner defined in nx.json`,
+            ],
+          });
         }
-        break;
+      }
+      if (runnerExists) {
+        nxArgs.runner = runner;
       }
     }
   }
@@ -306,6 +300,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
       maxBuffer: TEN_MEGABYTES,
       cwd: workspaceRoot,
       stdio: 'pipe',
+      windowsHide: false,
     })
       .toString()
       .trim();
@@ -315,6 +310,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
         maxBuffer: TEN_MEGABYTES,
         cwd: workspaceRoot,
         stdio: 'pipe',
+        windowsHide: false,
       })
         .toString()
         .trim();
@@ -331,7 +327,11 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
 }
 
 function parseGitOutput(command: string): string[] {
-  return execSync(command, { maxBuffer: TEN_MEGABYTES, cwd: workspaceRoot })
+  return execSync(command, {
+    maxBuffer: TEN_MEGABYTES,
+    cwd: workspaceRoot,
+    windowsHide: false,
+  })
     .toString('utf-8')
     .split('\n')
     .map((a) => a.trim())

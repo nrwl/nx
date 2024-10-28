@@ -20,13 +20,17 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { configurationGenerator } from '@nx/jest';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
   tsConfigBaseOptions,
 } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
@@ -235,9 +239,6 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
   if (options.js) {
     toJS(tree);
   }
-  if (options.pascalCaseFiles) {
-    logger.warn('NOTE: --pascalCaseFiles is a noop');
-  }
 }
 
 function addProxy(tree: Tree, options: NormalizedSchema) {
@@ -385,12 +386,13 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'node', 'application');
+
   const options = await normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [];
 
@@ -493,7 +495,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       projectType: options.framework === 'none' ? 'cli' : 'server',
       name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
       directory: options.rootProject ? 'e2e' : `${options.appProjectRoot}-e2e`,
-      projectNameAndRootFormat: 'as-provided',
       project: options.name,
       port: options.port,
       isNest: options.isNest,
@@ -535,20 +536,15 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-    callingGenerator: '@nx/node:application',
-  });
+  await ensureProjectName(host, options, 'application');
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   options.bundler = options.bundler ?? 'esbuild';
   options.e2eTestRunner = options.e2eTestRunner ?? 'jest';

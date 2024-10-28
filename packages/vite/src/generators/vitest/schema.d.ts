@@ -8,4 +8,6 @@ export interface VitestGeneratorSchema {
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
   addPlugin?: boolean;
+  runtimeTsconfigFileName?: string;
+  compiler?: 'babel' | 'swc'; // default: babel
 }

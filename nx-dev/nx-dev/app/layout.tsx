@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-
+import { LiveStreamNotifier } from '@nx/nx-dev/ui-common';
 import '../styles/main.css';
 
 // Metadata for the entire site
@@ -80,6 +80,7 @@ export default function RootLayout({
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
         {children}
+        <LiveStreamNotifier />
         <GlobalScripts gaMeasurementId={gaMeasurementId} />
       </body>
     </html>

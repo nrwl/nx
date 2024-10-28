@@ -1,0 +1,10 @@
+{
+  "name": "e2e-rspack",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "e2e/rspack",
+  "// targets": "to see all targets run: nx show project e2e-rspack --web",
+  "targets": {},
+  "tags": [],
+  "implicitDependencies": ["rspack"]
+}

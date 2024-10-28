@@ -1,5 +1,7 @@
 # Workspace Watching
 
+{% youtube src="https://youtu.be/0eVplUl1zBE?si=KtmiyRm1AcYc01td" title="Workspace watching" /%}
+
 Nx can watch your workspace and execute commands based on project or files changes.
 
 Imagine the following project graph with these projects:
@@ -156,3 +158,15 @@ To watch for a project and it's dependencies, run this command:
 ```shell
 nx watch --projects=app1 --includeDependentProjects -- echo \$NX_PROJECT_NAME
 ```
+
+### Rebuilding dependent projects while developing an application
+
+In a monorepo setup, your application might rely on several libraries that need to be built before they can be used in the application. While the [task pipeline](/recipes/running-tasks/defining-task-pipeline) automatically handles this during builds, you'd want the same behavior during development when serving your application with a dev server.
+
+To watch and rebuild the dependent libraries of an application, use the following command:
+
+```shell
+nx watch --projects=my-app --includeDependentProjects -- nx run-many -t build -p \$NX_PROJECT_NAME --exclude=my-app
+```
+
+`--includeDependentProjects` ensures that any changes to projects your application depends on trigger a rebuild, while `--exclude=my-app` skips rebuilding the app itself since it's already being served by the development server.

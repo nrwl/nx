@@ -8,15 +8,21 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 
+import * as devkitExports from 'nx/src/devkit-exports';
+
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 describe('application generator', () => {
   let tree: Tree;
-  const options: Schema = { name: 'test' } as Schema;
+  const options: Schema = { directory: 'test' } as Schema;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkitExports, 'getPackageManagerCommand')
+      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
   });
 
   it('should run successfully', async () => {
@@ -82,20 +88,6 @@ describe('application generator', () => {
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
-  });
-
-  it('should set up project correctly with PascalCase name', async () => {
-    await applicationGenerator(tree, {
-      ...options,
-      name: 'TestApp',
-      unitTestRunner: 'vitest',
-      projectNameAndRootFormat: 'as-provided',
-    });
-    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('TestApp/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('TestApp/.eslintrc.json', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('TestApp/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
-    expect(listFiles(tree)).toMatchSnapshot();
   });
 
   it('should not use stylesheet if --style=none', async () => {

@@ -5,12 +5,12 @@ import {
   useEnvironmentConfig,
   usePoll,
 } from '@nx/graph/shared';
-import { ErrorRenderer } from '@nx/graph/ui-components';
 import {
   isRouteErrorResponse,
   useParams,
   useRouteError,
 } from 'react-router-dom';
+import { ErrorPage } from './error-page';
 
 export function ErrorBoundary() {
   let error = useRouteError();
@@ -63,38 +63,11 @@ export function ErrorBoundary() {
   return (
     <div className="flex h-screen w-full flex-col items-center">
       {environment !== 'nx-console' && <ProjectDetailsHeader />}
-      <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
-        <h1 className="mb-4 text-4xl dark:text-slate-100">Error</h1>
-        <div>
-          <ErrorWithStack message={message} stack={stack} />
-        </div>
-        {hasErrorData && (
-          <div>
-            <p className="text-md mb-4 dark:text-slate-200">
-              Nx encountered the following issues while processing the project
-              graph:{' '}
-            </p>
-            <div>
-              <ErrorRenderer errors={error.data.errors} />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ErrorWithStack({
-  message,
-  stack,
-}: {
-  message: string | JSX.Element;
-  stack?: string;
-}) {
-  return (
-    <div>
-      <p className="mb-4 text-lg dark:text-slate-100">{message}</p>
-      {stack && <p className="text-sm">Error message: {stack}</p>}
+      <ErrorPage
+        message={message}
+        stack={stack}
+        errors={hasErrorData ? error.data.errors : undefined}
+      />
     </div>
   );
 }

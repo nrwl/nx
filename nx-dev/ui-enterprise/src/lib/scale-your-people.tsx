@@ -3,11 +3,10 @@ import {
   Cog6ToothIcon,
   CubeTransparentIcon,
   IdentificationIcon,
-  PhotoIcon,
   SquaresPlusIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import { SectionHeading } from './temp/typography';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function ScaleYourPeople(): JSX.Element {
   return (
@@ -250,28 +249,6 @@ export function ScaleYourPeople(): JSX.Element {
             </div>
           </div>
         </div>
-        {/*<div className="mt-16">*/}
-        {/*  <picture className="block py-12">*/}
-        {/*    <img*/}
-        {/*      src="/images/enterprise/graphs.jpg"*/}
-        {/*      alt="Product screenshot"*/}
-        {/*      className="mx-auto max-w-full rounded-xl shadow-xl ring-1 ring-slate-400/10"*/}
-        {/*      width={2500}*/}
-        {/*      height={1616}*/}
-        {/*    />*/}
-        {/*  </picture>*/}
-        {/*  <div className="mx-auto mt-4 max-w-2xl">*/}
-        {/*    <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">*/}
-        {/*      Crystal clear organizations*/}
-        {/*    </h4>*/}
-        {/*    <p>*/}
-        {/*      Regardless of how many Nx Workspaces your company has, Nx Enterprise*/}
-        {/*      can give you the visibility you need to understand what they have in*/}
-        {/*      common, how they relate, and how they differ. Developers are no*/}
-        {/*      longer relegated to contributing to one Nx Workspace.*/}
-        {/*    </p>*/}
-        {/*  </div>*/}
-        {/*</div>*/}
       </div>
     </section>
   );

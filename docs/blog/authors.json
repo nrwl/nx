@@ -56,7 +56,6 @@
   {
     "name": "Philip Fulcher",
     "image": "/blog/images/Philip Fulcher.jpeg",
-    "twitter": "philipjfulcher",
     "github": "philipjfulcher"
   },
   {
@@ -64,5 +63,77 @@
     "image": "/blog/images/Mike Hartington.png",
     "twitter": "mhartington",
     "github": "mhartington"
+  },
+  {
+    "name": "Benjamin Cabanes",
+    "image": "/blog/images/Benjamin Cabanes.jpeg",
+    "twitter": "bencabanes",
+    "github": "bcabanes"
+  },
+  {
+    "name": "Brandon Roberts",
+    "image": "/blog/images/Brandon Roberts.jpeg",
+    "twitter": "brandontroberts",
+    "github": "brandontroberts"
+  },
+  {
+    "name": "Chau Tran",
+    "image": "/blog/images/Chau Tran.jpeg",
+    "twitter": "Nartc1410",
+    "github": "nartc"
+  },
+  {
+    "name": "Daniel Muller",
+    "image": "/blog/images/Daniel Muller.jpeg",
+    "twitter": "the_meku",
+    "github": "mrmeku"
+  },
+  {
+    "name": "Jack Hsu",
+    "image": "/blog/images/Jack Hsu.jpeg",
+    "twitter": "jay_soo",
+    "github": "jaysoo"
+  },
+  {
+    "name": "Jo Hanna Pearce",
+    "image": "/blog/images/Jo Hanna Pearce.jpeg",
+    "github": "jdpearce",
+    "twitter": "jhannapearce"
+  },
+  {
+    "name": "Leosvel Pérez Espinosa",
+    "image": "/blog/images/Leosvel Pérez Espinosa.jpeg",
+    "twitter": "leosvelperez_",
+    "github": "leosvelperez"
+  },
+  {
+    "name": "Miroslav Jonaš",
+    "image": "/blog/images/Miroslav Jonaš.jpeg",
+    "twitter": "meeroslav",
+    "github": "meeroslav"
+  },
+  {
+    "name": "Nicholas Cunningham",
+    "image": "/blog/images/Nicholas Cunningham.jpeg",
+    "twitter": "ndcunningham",
+    "github": "ndcunningham"
+  },
+  {
+    "name": "Torgeir Helgevold",
+    "image": "/blog/images/Torgeir Helgevold.jpeg",
+    "twitter": "helgevold",
+    "github": "thelgevold"
+  },
+  {
+    "name": "Jason Jean",
+    "image": "/blog/images/Jason Jean.jpeg",
+    "twitter": "FrozenPandaz",
+    "github": "FrozenPandaz"
+  },
+  {
+    "name": "Nx",
+    "image": "/blog/images/Nx.jpeg",
+    "twitter": "NxDevTools",
+    "github": "nrwl"
   }
 ]

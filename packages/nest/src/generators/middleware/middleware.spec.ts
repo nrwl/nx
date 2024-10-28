@@ -5,21 +5,21 @@ import { middlewareGenerator } from './middleware';
 
 describe('middleware generator', () => {
   let tree: Tree;
-  const project = 'api';
+  const path = 'api';
   const options: MiddlewareGeneratorOptions = {
     name: 'test',
-    project,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
     await expect(
-      middlewareGenerator(tree, options)
-    ).resolves.not.toThrowError();
+      middlewareGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

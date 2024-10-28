@@ -827,17 +827,6 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "integrated-vs-package-based",
-        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/integrated-vs-package-based",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/integrated-vs-package-based",
-        "tags": ["intro", "repository-types"]
-      },
-      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -846,6 +835,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-daemon",
+        "tags": []
+      },
+      {
+        "id": "sync-generators",
+        "name": "Sync Generators",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/sync-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/sync-generators",
         "tags": []
       },
       {
@@ -1108,17 +1108,6 @@
     "path": "/concepts/executors-and-configurations",
     "tags": ["run-tasks"]
   },
-  "/concepts/integrated-vs-package-based": {
-    "id": "integrated-vs-package-based",
-    "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/integrated-vs-package-based",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/integrated-vs-package-based",
-    "tags": ["intro", "repository-types"]
-  },
   "/concepts/nx-daemon": {
     "id": "nx-daemon",
     "name": "Nx Daemon",
@@ -1128,6 +1117,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-daemon",
+    "tags": []
+  },
+  "/concepts/sync-generators": {
+    "id": "sync-generators",
+    "name": "Sync Generators",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/sync-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/sync-generators",
     "tags": []
   },
   "/concepts/turbo-and-nx": {
@@ -1663,6 +1663,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/adding-to-existing-project",
+            "tags": []
+          },
+          {
+            "id": "import-project",
+            "name": "Import an Existing Project into an Nx Workspace",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/migration/import-project",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/import-project",
             "tags": []
           },
           {
@@ -2372,37 +2383,15 @@
         "file": "",
         "itemList": [
           {
-            "id": "package-based-in-integrated",
-            "name": "Add a Package-based Project in an Integrated Repo",
+            "id": "standalone-to-monorepo",
+            "name": "Convert from a Standalone Repository to a Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/repo-types/package-based-in-integrated",
+            "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-            "tags": ["repository-types"]
-          },
-          {
-            "id": "integrated-in-package-based",
-            "name": "Add an Integrated Project in a Package-based Repo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/repo-types/integrated-in-package-based",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-            "tags": ["repository-types"]
-          },
-          {
-            "id": "standalone-to-integrated",
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/repo-types/standalone-to-integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "tags": ["repository-types"]
+            "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+            "tags": []
           },
           {
             "id": "eslint",
@@ -2795,29 +2784,6 @@
         "isExternal": false,
         "path": "/recipes/nx-release",
         "tags": []
-      },
-      {
-        "id": "other",
-        "name": "Other",
-        "description": "Other recipes you will find useful.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "rescope",
-            "name": "Rescope Packages from @nrwl to @nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/rescope",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/rescope",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/other",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -3197,6 +3163,17 @@
         "tags": []
       },
       {
+        "id": "import-project",
+        "name": "Import an Existing Project into an Nx Workspace",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/migration/import-project",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/import-project",
+        "tags": []
+      },
+      {
         "id": "preserving-git-histories",
         "name": "Preserving Git Histories",
         "description": "",
@@ -3254,6 +3231,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-existing-project",
+    "tags": []
+  },
+  "/recipes/adopting-nx/import-project": {
+    "id": "import-project",
+    "name": "Import an Existing Project into an Nx Workspace",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/migration/import-project",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/import-project",
     "tags": []
   },
   "/recipes/adopting-nx/preserving-git-histories": {
@@ -4520,37 +4508,15 @@
     "file": "",
     "itemList": [
       {
-        "id": "package-based-in-integrated",
-        "name": "Add a Package-based Project in an Integrated Repo",
+        "id": "standalone-to-monorepo",
+        "name": "Convert from a Standalone Repository to a Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/repo-types/package-based-in-integrated",
+        "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-        "tags": ["repository-types"]
-      },
-      {
-        "id": "integrated-in-package-based",
-        "name": "Add an Integrated Project in a Package-based Repo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/repo-types/integrated-in-package-based",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-        "tags": ["repository-types"]
-      },
-      {
-        "id": "standalone-to-integrated",
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/repo-types/standalone-to-integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "tags": ["repository-types"]
+        "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+        "tags": []
       },
       {
         "id": "eslint",
@@ -4722,38 +4688,16 @@
     "path": "/recipes/tips-n-tricks",
     "tags": []
   },
-  "/recipes/tips-n-tricks/package-based-in-integrated": {
-    "id": "package-based-in-integrated",
-    "name": "Add a Package-based Project in an Integrated Repo",
+  "/recipes/tips-n-tricks/standalone-to-monorepo": {
+    "id": "standalone-to-monorepo",
+    "name": "Convert from a Standalone Repository to a Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/repo-types/package-based-in-integrated",
+    "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/tips-n-tricks/package-based-in-integrated",
-    "tags": ["repository-types"]
-  },
-  "/recipes/tips-n-tricks/integrated-in-package-based": {
-    "id": "integrated-in-package-based",
-    "name": "Add an Integrated Project in a Package-based Repo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/repo-types/integrated-in-package-based",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/integrated-in-package-based",
-    "tags": ["repository-types"]
-  },
-  "/recipes/tips-n-tricks/standalone-to-integrated": {
-    "id": "standalone-to-integrated",
-    "name": "Convert from a Standalone Repository to an Integrated Repository",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/repo-types/standalone-to-integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-    "tags": ["repository-types"]
+    "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
+    "tags": []
   },
   "/recipes/tips-n-tricks/eslint": {
     "id": "eslint",
@@ -5340,39 +5284,162 @@
     "path": "/recipes/nx-release/build-before-versioning",
     "tags": ["nx-release"]
   },
-  "/recipes/other": {
-    "id": "other",
-    "name": "Other",
-    "description": "Other recipes you will find useful.",
+  "/nx-enterprise": {
+    "id": "nx-enterprise",
+    "name": "Enterprise",
+    "description": "Enterprise solutions for the Nx CLI",
     "mediaImage": "",
     "file": "",
     "itemList": [
       {
-        "id": "rescope",
-        "name": "Rescope Packages from @nrwl to @nx",
+        "id": "activate-powerpack",
+        "name": "Activate Powerpack",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/rescope",
+        "file": "shared/recipes/installation/activate-powerpack",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/rescope",
+        "path": "/nx-enterprise/activate-powerpack",
+        "tags": ["installation"]
+      },
+      {
+        "id": "powerpack",
+        "name": "Powerpack Features",
+        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/index",
+        "itemList": [
+          {
+            "id": "conformance",
+            "name": "Run Language-Agnostic Conformance Rules",
+            "description": "Write and apply rules for your Nx workspace",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/conformance",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/conformance",
+            "tags": ["conformance"]
+          },
+          {
+            "id": "owners",
+            "name": "Define Code Ownership at the Project Level",
+            "description": "Configure and maintain code owners for projects in an Nx workspace",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/owners",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/owners",
+            "tags": ["owners"]
+          },
+          {
+            "id": "custom-caching",
+            "name": "Self-Host the Remote Cache",
+            "description": "Host the remote cache without using Nx Cloud",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/custom-caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/custom-caching",
+            "tags": ["custom-caching"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/recipes/other",
+    "path": "/nx-enterprise",
     "tags": []
   },
-  "/recipes/other/rescope": {
-    "id": "rescope",
-    "name": "Rescope Packages from @nrwl to @nx",
+  "/nx-enterprise/activate-powerpack": {
+    "id": "activate-powerpack",
+    "name": "Activate Powerpack",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/rescope",
+    "file": "shared/recipes/installation/activate-powerpack",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/rescope",
+    "path": "/nx-enterprise/activate-powerpack",
+    "tags": ["installation"]
+  },
+  "/nx-enterprise/powerpack": {
+    "id": "powerpack",
+    "name": "Powerpack Features",
+    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/index",
+    "itemList": [
+      {
+        "id": "conformance",
+        "name": "Run Language-Agnostic Conformance Rules",
+        "description": "Write and apply rules for your Nx workspace",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/conformance",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/conformance",
+        "tags": ["conformance"]
+      },
+      {
+        "id": "owners",
+        "name": "Define Code Ownership at the Project Level",
+        "description": "Configure and maintain code owners for projects in an Nx workspace",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/owners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/owners",
+        "tags": ["owners"]
+      },
+      {
+        "id": "custom-caching",
+        "name": "Self-Host the Remote Cache",
+        "description": "Host the remote cache without using Nx Cloud",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/custom-caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/custom-caching",
+        "tags": ["custom-caching"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack",
     "tags": []
+  },
+  "/nx-enterprise/powerpack/conformance": {
+    "id": "conformance",
+    "name": "Run Language-Agnostic Conformance Rules",
+    "description": "Write and apply rules for your Nx workspace",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/conformance",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/conformance",
+    "tags": ["conformance"]
+  },
+  "/nx-enterprise/powerpack/owners": {
+    "id": "owners",
+    "name": "Define Code Ownership at the Project Level",
+    "description": "Configure and maintain code owners for projects in an Nx workspace",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/owners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/owners",
+    "tags": ["owners"]
+  },
+  "/nx-enterprise/powerpack/custom-caching": {
+    "id": "custom-caching",
+    "name": "Self-Host the Remote Cache",
+    "description": "Host the remote cache without using Nx Cloud",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/custom-caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/custom-caching",
+    "tags": ["custom-caching"]
   },
   "/showcase": {
     "id": "showcase",
@@ -6467,6 +6534,17 @@
         "tags": []
       },
       {
+        "id": "custom-task-runners",
+        "name": "Custom Task Runners",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-task-runners",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-task-runners",
+        "tags": []
+      },
+      {
         "id": "workspace-executors",
         "name": "Workspace Executors",
         "description": "",
@@ -6542,6 +6620,28 @@
         "isExternal": false,
         "path": "/deprecated/v1-nx-plugin-api",
         "tags": []
+      },
+      {
+        "id": "rescope",
+        "name": "Rescope Packages from @nrwl to @nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/rescope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/rescope",
+        "tags": []
+      },
+      {
+        "id": "integrated-vs-package-based",
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/integrated-vs-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/integrated-vs-package-based",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6601,6 +6701,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-generators",
+    "tags": []
+  },
+  "/deprecated/custom-task-runners": {
+    "id": "custom-task-runners",
+    "name": "Custom Task Runners",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-task-runners",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-task-runners",
     "tags": []
   },
   "/deprecated/workspace-executors": {
@@ -6678,6 +6789,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/v1-nx-plugin-api",
+    "tags": []
+  },
+  "/deprecated/rescope": {
+    "id": "rescope",
+    "name": "Rescope Packages from @nrwl to @nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/rescope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/rescope",
+    "tags": []
+  },
+  "/deprecated/integrated-vs-package-based": {
+    "id": "integrated-vs-package-based",
+    "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/integrated-vs-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/integrated-vs-package-based",
     "tags": []
   },
   "/see-also": {

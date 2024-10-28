@@ -28,7 +28,7 @@ export async function withModuleFederationForSSR(
     config.plugins.push(
       new (require('@module-federation/enhanced').ModuleFederationPlugin)(
         {
-          name: options.name,
+          name: options.name.replace(/-/g, '_'),
           filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,

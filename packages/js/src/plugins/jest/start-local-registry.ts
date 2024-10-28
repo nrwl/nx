@@ -46,7 +46,10 @@ export function startLocalRegistry({
         const registry = `http://localhost:${port}`;
         process.env.npm_config_registry = registry;
         execSync(
-          `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`
+          `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`,
+          {
+            windowsHide: false,
+          }
         );
 
         // yarnv1
@@ -59,7 +62,9 @@ export function startLocalRegistry({
 
         resolve(() => {
           childProcess.kill();
-          execSync(`npm config delete //localhost:${port}/:_authToken`);
+          execSync(`npm config delete //localhost:${port}/:_authToken`, {
+            windowsHide: false,
+          });
         });
         childProcess?.stdout?.off('data', listener);
       }

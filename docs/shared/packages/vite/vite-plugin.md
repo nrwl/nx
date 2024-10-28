@@ -112,19 +112,19 @@ You can generate a [React](/nx-api/react) application or library or a [Web](/nx-
 To generate a React application using Vite.js, run the following:
 
 ```bash
-nx g @nx/react:app my-app --bundler=vite
+nx g @nx/react:app apps/my-app --bundler=vite
 ```
 
 To generate a React library using Vite.js, run the following:
 
 ```bash
-nx g @nx/react:lib my-lib --bundler=vite
+nx g @nx/react:lib libs/my-lib --bundler=vite
 ```
 
 To generate a Web application using Vite.js, run the following:
 
 ```bash
-nx g @nx/web:app my-app --bundler=vite
+nx g @nx/web:app apps/my-app --bundler=vite
 ```
 
 ### Modify an existing React or Web project to use Vite.js

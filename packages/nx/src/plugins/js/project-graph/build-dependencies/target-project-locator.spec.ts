@@ -983,9 +983,9 @@ describe('TargetProjectLocator', () => {
 });
 
 describe('isBuiltinModuleImport()', () => {
-  const withExclusions = builtinModules.filter(
-    (s) => !['test/mock_loader'].includes(s)
-  );
+  const withExclusions = builtinModules
+    .concat(builtinModules.filter((a) => true).map((s) => 'node:' + s))
+    .concat(['node:test', 'node:sqlite', 'node:test']);
 
   it.each(withExclusions)(
     `should return true for %s builtin module`,

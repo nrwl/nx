@@ -11,7 +11,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
@@ -20,12 +19,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -49,7 +46,6 @@ export default defineConfig({
       external: [],
     },
   },
-
   test: {
     watch: false,
     globals: true,
@@ -89,37 +85,23 @@ exports[`@nx/vite:configuration js library with --bundler=vite should add build 
     "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vite.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
 }
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 1`] = `
-"# my-lib
-
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run \`nx build my-lib\` to build the library.
-"
-`;
-
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 2`] = `
-"{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../dist/out-tsc",
-    "declaration": true,
-    "types": ["node", "vite/client"]
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
-}
-"
-`;
-
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 3`] = `
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 1`] = `
 "# my-lib
 
 This library was generated with [Nx](https://nx.dev).
@@ -134,7 +116,7 @@ Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 4`] = `
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -148,9 +130,8 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect un
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 5`] = `
-"/* eslint-disable */
-export default {
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
+"export default {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   transform: {
@@ -159,6 +140,30 @@ export default {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/my-lib',
 };
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"]
+}
 "
 `;
 
@@ -174,7 +179,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -184,12 +188,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -229,7 +231,6 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -239,12 +240,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -268,7 +267,6 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
-
   test: {
     watch: false,
     globals: true,
@@ -350,24 +348,19 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-react-app',
     emptyOutDir: true,
@@ -409,24 +402,19 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-web-app',
     emptyOutDir: true,
@@ -468,24 +456,19 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-react-app',
     emptyOutDir: true,
@@ -494,7 +477,6 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-
   test: {
     watch: false,
     globals: true,

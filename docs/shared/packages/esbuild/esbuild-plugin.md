@@ -54,7 +54,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 You can add a new library that builds using esbuild with:
 
 ```shell
-nx g @nx/js:lib mylib --directory=libs/mylib --bundler=esbuild
+nx g @nx/js:lib libs/mylib --bundler=esbuild
 ```
 
 This command will install the esbuild plugin if needed, and set `@nx/esbuild:esbuild` executor for the `build` target.

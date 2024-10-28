@@ -16,7 +16,7 @@ describe('Invoke Runner', () => {
 
   it('should invoke runner imperatively ', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib}`);
+    runCLI(`generate @nx/js:lib libs/${mylib}`);
     updateJson(join('libs', mylib, 'project.json'), (c) => {
       c.targets['prebuild'] = {
         command: 'echo prebuild',

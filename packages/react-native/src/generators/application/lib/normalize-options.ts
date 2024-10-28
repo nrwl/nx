@@ -1,8 +1,9 @@
 import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
-import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
-import { ReactNativePluginOptions } from '../../../../plugins/plugin';
 
 export interface NormalizedSchema extends Schema {
   className: string; // app name in class case
@@ -23,19 +24,16 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'application');
   const {
     projectName: appProjectName,
     names: projectNames,
     projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/react-native:application',
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

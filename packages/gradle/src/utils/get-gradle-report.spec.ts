@@ -36,4 +36,13 @@ describe('processProjectReports', () => {
       'mylibrary',
     ]);
   });
+
+  it('should process properties report for projects without child projects', () => {
+    const report = processProjectReports([
+      '> Task :propertyReport',
+      `See the report at: file://${__dirname}/__mocks__/gradle-properties-report-no-child-projects.txt`,
+    ]);
+    expect(report.gradleProjectToProjectName.get('')).toEqual('app');
+    expect(report.gradleProjectToChildProjects.get('')).toEqual([]);
+  });
 });

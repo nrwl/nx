@@ -58,7 +58,6 @@ describe('nx release lock file updates', () => {
     process.env.SELECTED_PM = packageManager;
 
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
       packageManager,
     });

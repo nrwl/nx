@@ -6,7 +6,6 @@ describe('Vue Plugin (legacy)', () => {
   beforeAll(() => {
     proj = newProject({
       packages: ['@nx/vue'],
-      unsetProjectNameAndRootFormat: false,
     });
   });
 

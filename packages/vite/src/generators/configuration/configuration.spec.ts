@@ -10,13 +10,12 @@ import {
   mockReactAppGenerator,
   mockReactLibNonBuildableJestTestRunnerGenerator,
   mockReactLibNonBuildableVitestRunnerGenerator,
-  mockReactMixedAppGenerator,
   mockUnknownAppGenerator,
   mockWebAppGenerator,
 } from '../../utils/test-utils';
 
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
-import { LibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+import { LibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -253,7 +252,7 @@ describe('@nx/vite:configuration', () => {
   });
 
   describe('js library with --bundler=vite', () => {
-    const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
+    const defaultOptions: Omit<LibraryGeneratorSchema, 'directory'> = {
       skipTsConfig: false,
       includeBabelRc: false,
       unitTestRunner: 'jest',
@@ -261,7 +260,6 @@ describe('@nx/vite:configuration', () => {
       linter: 'eslint',
       testEnvironment: 'jsdom',
       js: false,
-      pascalCaseFiles: false,
       strict: true,
       config: 'project',
     };
@@ -273,10 +271,9 @@ describe('@nx/vite:configuration', () => {
     it('should add build and test targets with vite and vitest', async () => {
       await jsLibraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'vite',
-        unitTestRunner: undefined,
-        projectNameAndRootFormat: 'as-provided',
+        unitTestRunner: 'vitest',
       });
 
       expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
@@ -290,7 +287,10 @@ describe('@nx/vite:configuration', () => {
           '@nx/dependency-checks': [
             'error',
             {
-              ignoredFiles: ['{projectRoot}/vite.config.{js,ts,mjs,mts}'],
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+              ],
             },
           ],
         },
@@ -302,14 +302,13 @@ describe('@nx/vite:configuration', () => {
       ${'none'}      | ${undefined}
       ${'jest'}      | ${'my-lib/jest.config.ts'}
     `(
-      'should respect unitTestRunner if passed',
+      'should respect provided unitTestRunner="$unitTestRunner"',
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'vite',
           unitTestRunner,
-          projectNameAndRootFormat: 'as-provided',
         });
 
         expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();

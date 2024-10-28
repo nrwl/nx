@@ -1,5 +1,11 @@
 # Preserving Git Histories when Migrating other Projects to your Nx Workspace
 
+{% callout type="note" title="Automatically import with 'nx import'" %}
+
+In Nx 19.8 we introduced `nx import` which helps you import projects into your Nx workspace, including preserving the Git history. [Read more in the according doc](/recipes/adopting-nx/import-project).
+
+{% /callout %}
+
 The nature of a monorepo is to swallow up standalone projects as your organization buys into the benefits of a monorepo workflow.
 
 As your monorepo consumes other projects though, it's important to ensure that git history for those projects is preserved inside of our Nx Workspace.

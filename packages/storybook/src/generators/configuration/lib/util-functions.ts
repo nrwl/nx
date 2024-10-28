@@ -681,36 +681,6 @@ export function rootFileIsTs(
   }
 }
 
-export async function getE2EProjectName(
-  tree: Tree,
-  mainProject: string
-): Promise<string | undefined> {
-  let e2eProject: string;
-  const graph = await createProjectGraphAsync();
-  forEachExecutorOptions(
-    tree,
-    '@nx/cypress:cypress',
-    (options, projectName) => {
-      if (e2eProject) {
-        return;
-      }
-      if (options['devServerTarget']) {
-        const { project, target } = parseTargetString(
-          options['devServerTarget'],
-          graph
-        );
-        if (
-          (project === mainProject && target === 'serve') ||
-          (project === mainProject && target === 'storybook')
-        ) {
-          e2eProject = projectName;
-        }
-      }
-    }
-  );
-  return e2eProject;
-}
-
 export function findViteConfig(
   tree: Tree,
   projectRoot: string

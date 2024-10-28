@@ -14,7 +14,7 @@ export {
 /** @deprecated Use `configurationGenerator` instead. */
 export const webpackProjectGenerator = configurationGenerator;
 
-// TODO(v20): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
+// TODO(v21): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
 /** @deprecated Use NxAppWebpackPlugin from `@nx/webpack/app-plugin` instead. */
 export const NxWebpackPlugin = NxAppWebpackPlugin;
 /** @deprecated Use NxTsconfigPathsWebpackPlugin from `@nx/webpack/tsconfig-paths-plugin` instead. */

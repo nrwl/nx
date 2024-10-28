@@ -6,6 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -27,7 +28,6 @@ export async function expoApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await expoApplicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -36,6 +36,8 @@ export async function expoApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(host, 'expo', 'application');
+
   const options = await normalizeOptions(host, schema);
 
   const tasks: GeneratorCallback[] = [];

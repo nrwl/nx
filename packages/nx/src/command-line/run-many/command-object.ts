@@ -7,7 +7,7 @@ import {
   withOverrides,
   withBatch,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',

@@ -7,6 +7,8 @@ import reactTypescript from './configs/react-typescript';
 import angularCode from './configs/angular';
 import angularTemplate from './configs/angular-template';
 
+import flatBase from './flat-configs/base';
+
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './rules/enforce-module-boundaries';
@@ -24,6 +26,7 @@ import { workspaceRules } from './resolve-workspace-rules';
 
 module.exports = {
   configs: {
+    // eslintrc configs
     typescript,
     javascript,
     react: reactTmp,
@@ -32,6 +35,34 @@ module.exports = {
     'react-jsx': reactJsx,
     angular: angularCode,
     'angular-template': angularTemplate,
+
+    // flat configs
+    // Note: Using getters here to avoid importing packages `angular-eslint` statically, which can lead to errors if not installed.
+    'flat/base': flatBase,
+    get ['flat/typescript']() {
+      return require('./flat-configs/typescript').default;
+    },
+    get ['flat/javascript']() {
+      return require('./flat-configs/javascript').default;
+    },
+    get ['flat/react']() {
+      return require('./flat-configs/react-tmp').default;
+    },
+    get ['flat/react-base']() {
+      return require('./flat-configs/react-base').default;
+    },
+    get ['flat/react-typescript']() {
+      return require('./flat-configs/react-typescript').default;
+    },
+    get ['flat/react-jsx']() {
+      return require('./flat-configs/react-jsx').default;
+    },
+    get ['flat/angular']() {
+      return require('./flat-configs/angular').default;
+    },
+    get ['flat/angular-template']() {
+      return require('./flat-configs/angular-template').default;
+    },
   },
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,

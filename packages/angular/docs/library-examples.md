@@ -6,7 +6,7 @@
 Creates the `my-ui-lib` library with an `ui` tag:
 
 ```bash
-nx g @nx/angular:library my-ui-lib --tags=ui
+nx g @nx/angular:library libs/my-ui-lib --tags=ui
 ```
 
 {% /tab %}
@@ -16,7 +16,7 @@ nx g @nx/angular:library my-ui-lib --tags=ui
 Creates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:
 
 ```bash
-nx g @nx/angular:library my-lib --publishable --import-path=@my-org/my-lib
+nx g @nx/angular:library libs/my-lib --publishable --import-path=@my-org/my-lib
 ```
 
 {% /tab %}
@@ -26,7 +26,7 @@ nx g @nx/angular:library my-lib --publishable --import-path=@my-org/my-lib
 Creates the `my-lib` library with support for incremental builds:
 
 ```bash
-nx g @nx/angular:library my-lib --buildable
+nx g @nx/angular:library libs/my-lib --buildable
 ```
 
 {% /tab %}
@@ -39,7 +39,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```bash
-nx g @nx/angular:library --directory=libs/nested/my-lib --importPath=@myorg/nested/my-lib my-lib
+nx g @nx/angular:library libs/nested/my-lib --importPath=@myorg/nested/my-lib
 ```
 
 {% /tab %}

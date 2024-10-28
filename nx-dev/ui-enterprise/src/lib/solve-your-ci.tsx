@@ -1,6 +1,7 @@
 import {
   ArrowsRightLeftIcon,
   BanknotesIcon,
+  BoltIcon,
   ChartBarSquareIcon,
   ChevronRightIcon,
   ClipboardDocumentIcon,
@@ -12,9 +13,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
-import { SectionHeading } from './temp/typography';
 import { BentoGrid, BentoGridItem } from './bento-grid';
 import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
+import Link from 'next/link';
 
 export function SolveYourCi(): JSX.Element {
   return (
@@ -179,6 +181,28 @@ export function SolveYourCi(): JSX.Element {
                   scripts as your monorepo evolves. This simplified
                   configuration cuts down on CI maintenance and increases
                   stability.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-6">
+              <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
+                <BoltIcon className="h-5 w-5 text-slate-900 dark:text-slate-100" />
+              </div>
+              <div>
+                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                  Nx Powerpack included
+                </h4>
+                <p className="mt-2">
+                  A suite of paid extensions for the Nx CLI specifically
+                  designed for enterprises, built and supported by the Nx core
+                  team.{' '}
+                  <Link
+                    href="/powerpack"
+                    title="Learn more about Nx Powerpack"
+                    className="font-semibold underline"
+                  >
+                    Learn more about Nx Powerpack →
+                  </Link>
                 </p>
               </div>
             </div>

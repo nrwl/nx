@@ -16,10 +16,9 @@ We are going to compare the tools in three different ways: **features**, **tech 
 
 #### 1. Incremental Adoption
 
-We should distinguish between [package-based vs integrated approach](/concepts/integrated-vs-package-based) to monorepos. Turbo uses a package-based approach to monorepos, while Nx can do both. To be able to compare the two from an incremental adoption point of view, let's focus on the package-based approach for now:
+Both Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add an `nx.json`. In this initial setup, both tools enable task running and computation caching.
 
-- Both Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add an `nx.json`.
-- With Nx you have the possibility to also transition to a more [integrated monorepo style](/concepts/integrated-vs-package-based#integrated-repos) that has been proven to lead to better maintainability and DX in the long-run.
+In addition, Nx allows you to incrementally enable [plugins and supporting features](#plugins-and-supporting-features) that are not available with Turborepo.
 
 Here are some examples for Nx:
 
@@ -70,8 +69,8 @@ Local computation caching (often also refered to as "build caching") is the proc
 Local computation caching helps speed up things locally, but the real benefits start when you distribute and share that cache remotely with your CI system and teammates.
 
 - Both Nx and Turborepo support it.
-- Nx exposes a public API, which allows you to provide your own implementation of the remote cache (and some companies do). Turborepo’s implementation is not customizable, so you have to use Turborepo’s remote cache.
-- If you choose not to implement your own version of the remote cache, you can use Nx Cloud. **There is an on-prem version of Nx Cloud, so you can host your own cached artifacts. Turborepo doesn’t offer an on-prem solution.**
+- Nx's recommended remote caching implementation is included with Nx Cloud. If enterprise clients are concerned about storing their cache data on shared infrastructure, Nx Cloud can be run on a single-tenant cloud server or we can create an on-prem solution. **Turborepo doesn't offer an on-prem solution.**
+- If you want to manage your own remote cache storage, you can [purchase a Powerpack license](/powerpack) and store the remote cache on a shared network drive or AWS S3 bucket.
 
 #### 8. Distributed task execution
 

@@ -56,6 +56,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
@@ -74,12 +75,10 @@ type NxPackage = (typeof nxPackages)[number];
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
-  unsetProjectNameAndRootFormat = true,
   packages,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
-  unsetProjectNameAndRootFormat?: boolean;
   readonly packages?: Array<NxPackage>;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
@@ -103,14 +102,6 @@ export function newProject({
         createNxWorkspaceStart.name,
         createNxWorkspaceEnd.name
       );
-
-      if (unsetProjectNameAndRootFormat) {
-        console.warn(
-          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
-        );
-        createFile('apps/.gitkeep');
-        createFile('libs/.gitkeep');
-      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -527,7 +518,6 @@ export function newLernaWorkspace({
       const overrides = {
         ...json.overrides,
         nx: nxVersion,
-        '@nrwl/devkit': nxVersion,
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
