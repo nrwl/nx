@@ -119,7 +119,7 @@ export function withWeb(opts: WithWebOptions = {}) {
           ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
         }),
         new rspack.EnvironmentPlugin({
-          NODE_ENV: 'development',
+          NODE_ENV: isProd ? 'production' : 'development',
         }),
       ],
     };
