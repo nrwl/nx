@@ -67,8 +67,12 @@ impl NxDbConnection {
         let transaction = retry_db_operation_when_busy!(self.conn.transaction())
             .map_err(|e| anyhow::anyhow!("DB transaction error: {:?}", e))?;
 
-        transaction_operation(&transaction)
-            .map_err(|e| anyhow::anyhow!("DB transaction operation error: {:?}", e))
+        let result = transaction_operation(&transaction)
+            .map_err(|e| anyhow::anyhow!("DB transaction operation error: {:?}", e))?;
+
+        transaction.commit().map_err(|e| anyhow::anyhow!("DB transaction commit error: {:?}", e))?;
+
+        Ok(result)
     }
 
     pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<Option<T>>

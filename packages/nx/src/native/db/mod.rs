@@ -8,6 +8,7 @@ use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::process;
 use tracing::{trace, trace_span};
+use crate::native::logger::enable_logger;
 
 #[napi]
 pub fn connect_to_nx_db(
@@ -15,6 +16,7 @@ pub fn connect_to_nx_db(
     nx_version: String,
     db_name: Option<String>,
 ) -> anyhow::Result<External<NxDbConnection>> {
+    enable_logger();
     let cache_dir_buf = PathBuf::from(cache_dir);
     let db_path = cache_dir_buf.join(format!("{}.db", db_name.unwrap_or_else(get_machine_id)));
     create_dir_all(cache_dir_buf)?;
