@@ -2,8 +2,6 @@
 import { Component } from 'react';
 <% } if (!minimal) { %>
 import NxWelcome from "./nx-welcome";
-<% } if (bundler === "rspack") { %>
-import '../styles.css';
 <% } %>
 
 <% if (classComponent) { %>
