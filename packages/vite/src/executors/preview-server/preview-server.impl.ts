@@ -60,13 +60,17 @@ export async function* vitePreviewServerExecutor(
     configuration,
     otherOptionsFromBuild
   );
+  const defaultMode =
+    otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production';
+
   const resolved = await resolveConfig(
     {
       configFile: viteConfigPath,
-      mode: otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production',
+      mode: defaultMode,
     },
     'build',
-    otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production'
+    defaultMode,
+    process.env.NODE_ENV ?? defaultMode
   );
 
   const outDir =
