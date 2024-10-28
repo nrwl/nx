@@ -2,13 +2,13 @@ pub mod connection;
 mod initialize;
 
 use crate::native::db::connection::NxDbConnection;
+use crate::native::logger::enable_logger;
 use crate::native::machine_id::get_machine_id;
 use napi::bindgen_prelude::External;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::process;
 use tracing::{trace, trace_span};
-use crate::native::logger::enable_logger;
 
 #[napi]
 pub fn connect_to_nx_db(

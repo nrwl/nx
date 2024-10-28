@@ -9,9 +9,14 @@ pub struct NxDbConnection {
     pub conn: Connection,
 }
 
-const MAX_RETRIES: u32 = 10;
+const MAX_RETRIES: u32 = 20;
 const RETRY_DELAY: u64 = 25;
 
+/// macro for handling the db when its busy
+/// This is a macro instead of a function because some database operations need to take a &mut Connection, while returning a reference
+/// This causes some quite complex lifetime issues that are quite hard to solve
+///
+/// Using a macro inlines the retry operation where it was called, and the lifetime issues are avoided
 macro_rules! retry_db_operation_when_busy {
     ($operation:expr) => {{
         let connection = 'retry: {
@@ -22,7 +27,13 @@ macro_rules! retry_db_operation_when_busy {
                         if err.code == rusqlite::ErrorCode::DatabaseBusy =>
                     {
                         trace!("Database busy. Retrying{}", ".".repeat(i as usize));
-                        thread::sleep(Duration::from_millis(RETRY_DELAY * 2_u64.pow(i)));
+                        let sleep = Duration::from_millis(RETRY_DELAY * 2_u64.pow(i));
+                        let max_sleep = Duration::from_secs(12);
+                        if (sleep >= max_sleep) {
+                            thread::sleep(max_sleep);
+                        } else {
+                            thread::sleep(sleep);
+                        }
                     }
                     err => break 'retry err,
                 };
@@ -70,7 +81,9 @@ impl NxDbConnection {
         let result = transaction_operation(&transaction)
             .map_err(|e| anyhow::anyhow!("DB transaction operation error: {:?}", e))?;
 
-        transaction.commit().map_err(|e| anyhow::anyhow!("DB transaction commit error: {:?}", e))?;
+        transaction
+            .commit()
+            .map_err(|e| anyhow::anyhow!("DB transaction commit error: {:?}", e))?;
 
         Ok(result)
     }
