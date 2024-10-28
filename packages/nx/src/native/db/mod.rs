@@ -19,14 +19,15 @@ pub fn connect_to_nx_db(
     let db_path = cache_dir_buf.join(format!("{}.db", db_name.unwrap_or_else(get_machine_id)));
     create_dir_all(cache_dir_buf)?;
 
-    let _ = trace_span!("process", id = process::id()).entered();
-    trace!("Creating connection to {:?}", db_path);
-    let lock_file = initialize::create_lock_file(&db_path)?;
+    trace_span!("process", id = process::id()).in_scope(|| {
+        trace!("Creating connection to {:?}", db_path);
+        let lock_file = initialize::create_lock_file(&db_path)?;
 
-    let c = initialize::initialize_db(nx_version, &db_path)
-        .inspect_err(|_| initialize::unlock_file(&lock_file))?;
+        let c = initialize::initialize_db(nx_version, &db_path)
+            .inspect_err(|_| initialize::unlock_file(&lock_file))?;
 
-    initialize::unlock_file(&lock_file);
+        initialize::unlock_file(&lock_file);
 
-    Ok(External::new(c))
+        Ok(External::new(c))
+    })
 }

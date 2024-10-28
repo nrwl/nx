@@ -42,14 +42,17 @@ impl TaskDetails {
     }
 
     #[napi]
-    pub fn record_task_details(&self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
-        for task in tasks.iter() {
-            self.db.execute(
-                "INSERT OR REPLACE INTO task_details  (hash, project, target, configuration)
-                    VALUES (?1, ?2, ?3, ?4)",
-                params![task.hash, task.project, task.target, task.configuration],
-            )?;
-        }
+    pub fn record_task_details(&mut self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
+        self.db.transaction(|conn| {
+            for task in tasks.iter() {
+                conn.execute(
+                    "INSERT OR REPLACE INTO task_details (hash, project, target, configuration)
+                        VALUES (?1, ?2, ?3, ?4)",
+                    params![task.hash, task.project, task.target, task.configuration],
+                )?;
+            }
+            Ok(())
+        })?;
 
         Ok(())
     }
