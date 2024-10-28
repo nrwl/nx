@@ -116,6 +116,7 @@ export function withWeb(opts: WithWebOptions = {}) {
           template: options.indexHtml
             ? path.join(context.root, options.indexHtml)
             : path.join(projectRoot, 'src/index.html'),
+          ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
         }),
         new rspack.EnvironmentPlugin({
           NODE_ENV: 'development',
