@@ -214,14 +214,20 @@ describe('packaging libs', () => {
 
     expect(readJson(`dist/libs/${tscLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });
 
     expect(readJson(`dist/libs/${swcLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });
