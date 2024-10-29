@@ -73,7 +73,10 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
   name: 'app1',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -112,12 +115,18 @@ const config: ModuleFederationConfig = {
   remotes: ['remote1','remote2',]
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'app1',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -156,6 +165,9 @@ const config: ModuleFederationConfig = {
   remotes: ['remote1',]
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -208,7 +220,10 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 2`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
   name: 'app1',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -241,7 +256,10 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 4`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
   name: 'remote1',
   exposes: {
     './Module': 'remote1/src/app/remote-entry/entry.module.ts',
@@ -283,6 +301,9 @@ const config: ModuleFederationConfig = {
   remotes: []
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -310,6 +331,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
