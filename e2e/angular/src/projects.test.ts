@@ -574,10 +574,10 @@ describe('Angular Projects', () => {
     const lib = uniq('lib');
 
     runCLI(
-      `generate @nx/angular:app ${app} --unit-test-runner=vitest --directory=${app} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app} --unit-test-runner=vitest --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:lib ${lib} --unit-test-runner=vitest --directory=${lib} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib} --unit-test-runner=vitest --no-interactive`
     );
 
     // Make sure we are using vitest
