@@ -24,7 +24,10 @@ module.exports = composePlugins(withNx(), withReact(), withModuleFederation(conf
 exports[`remote generator bundler=webpack should create the remote with the correct config files 2`] = `"module.exports = require('./webpack.config');"`;
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files 3`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
    name: 'test',
    
    exposes: {
@@ -58,7 +61,10 @@ module.exports = composePlugins(withNx(), withReact(), withModuleFederation(conf
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./webpack.config');"`;
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 3`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
    name: 'test',
    
    exposes: {
@@ -109,6 +115,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
 export default config;
 "
 `;
@@ -135,7 +144,10 @@ module.exports = composePlugins(withNx(), withReact({ssr: true}), withModuleFede
 `;
 
 exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr 2`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
     name: 'test',
    exposes: {
      './Module': 'test/src/remote-entry.ts',
@@ -179,6 +191,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
 export default config;
 "
 `;
