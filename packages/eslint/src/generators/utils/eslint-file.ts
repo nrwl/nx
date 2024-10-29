@@ -64,7 +64,11 @@ export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   if (!eslintFile) {
     return false;
   }
-  return eslintFile.endsWith('.json') || eslintFile.endsWith('.config.js');
+  return (
+    eslintFile.endsWith('.json') ||
+    eslintFile.endsWith('.config.js') ||
+    eslintFile.endsWith('.config.cjs')
+  );
 }
 
 export function updateRelativePathsInConfig(
