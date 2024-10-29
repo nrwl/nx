@@ -155,6 +155,8 @@ function updateTsConfig(
   projectRoot: string,
   projectType: ProjectType
 ) {
+  const setupFile = tryFindSetupFile(tree, projectRoot);
+
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
     updateJson(
       tree,
@@ -168,6 +170,11 @@ function updateTsConfig(
             json.compilerOptions.types = ['vitest'];
           }
         }
+
+        if (setupFile) {
+          json.files = [...(json.files ?? []), setupFile];
+        }
+
         return json;
       }
     );
@@ -221,18 +228,11 @@ function updateTsConfig(
     }
   }
 
-  if (options.inSourceTests) {
-    if (tree.exists(runtimeTsconfigPath)) {
-      updateJson(tree, runtimeTsconfigPath, (json) => {
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      if (options.inSourceTests) {
         (json.compilerOptions.types ??= []).push('vitest/importMeta');
-        return json;
-      });
-    }
-
-    addTsLibDependencies(tree);
-  } else {
-    if (tree.exists(runtimeTsconfigPath)) {
-      updateJson(tree, runtimeTsconfigPath, (json) => {
+      } else {
         const uniqueExclude = new Set([
           ...(json.exclude || []),
           'vite.config.ts',
@@ -247,14 +247,19 @@ function updateTsConfig(
           'src/**/*.spec.jsx',
         ]);
         json.exclude = [...uniqueExclude];
-        return json;
-      });
-    } else {
-      logger.warn(
-        `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
-          `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
-      );
-    }
+      }
+
+      if (setupFile) {
+        json.exclude = [...(json.exclude ?? []), setupFile];
+      }
+
+      return json;
+    });
+  } else {
+    logger.warn(
+      `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
+        `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
+    );
   }
 }
 
@@ -287,6 +292,13 @@ function getCoverageProviderDependency(
       return {
         '@vitest/coverage-v8': vitestCoverageV8Version,
       };
+  }
+}
+
+function tryFindSetupFile(tree: Tree, projectRoot: string) {
+  const setupFile = joinPathFragments('src', 'test-setup.ts');
+  if (tree.exists(joinPathFragments(projectRoot, setupFile))) {
+    return setupFile;
   }
 }
 

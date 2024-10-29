@@ -214,11 +214,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  server:{
+  server: {
     port: 4200,
     host: 'localhost',
   },
-  preview:{
+  preview: {
     port: 4300,
     host: 'localhost',
   },
@@ -244,7 +244,7 @@ export default defineConfig({
     coverage: {
       reportsDirectory: '../coverage/my-app',
       provider: 'v8',
-    }
+    },
   },
 });
 "
@@ -278,11 +278,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  server:{
+  server: {
     port: 4200,
     host: 'localhost',
   },
-  preview:{
+  preview: {
     port: 4300,
     host: 'localhost',
   },
@@ -308,7 +308,7 @@ export default defineConfig({
     coverage: {
       reportsDirectory: '../coverage/my-app',
       provider: 'v8',
-    }
+    },
   },
 });
 "
