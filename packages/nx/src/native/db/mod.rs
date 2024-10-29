@@ -1,9 +1,9 @@
 pub mod connection;
 mod initialize;
 
-use crate::native::db::connection::NxDbConnection;
 use crate::native::logger::enable_logger;
 use crate::native::machine_id::get_machine_id;
+use crate::native::{db::connection::NxDbConnection, hasher::hash};
 use napi::bindgen_prelude::External;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
@@ -18,7 +18,14 @@ pub fn connect_to_nx_db(
 ) -> anyhow::Result<External<NxDbConnection>> {
     enable_logger();
     let cache_dir_buf = PathBuf::from(cache_dir);
-    let db_path = cache_dir_buf.join(format!("{}.db", db_name.unwrap_or_else(get_machine_id)));
+    let mut db_file_name = db_name.unwrap_or_else(get_machine_id);
+
+    if db_file_name.is_empty() {
+        trace!("Invalid db file name, using fallback name");
+        db_file_name = hash(b"machine");
+    }
+
+    let db_path = cache_dir_buf.join(format!("{}.db", db_file_name));
     create_dir_all(cache_dir_buf)?;
 
     trace_span!("process", id = process::id()).in_scope(|| {
