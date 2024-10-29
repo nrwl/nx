@@ -1,6 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'path';
 import { LibraryGeneratorSchema } from '../library/schema';
@@ -23,10 +29,8 @@ describe('convert to swc', () => {
       bundler: 'tsc',
     };
 
-  beforeAll(() => {
+  beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    tree.write('/.gitignore', '');
-    tree.write('/.gitignore', '');
   });
 
   it('should convert tsc to swc', async () => {
@@ -50,9 +54,33 @@ describe('convert to swc', () => {
         join(readProjectConfiguration(tree, 'tsc-lib').root, '.swcrc')
       )
     ).toEqual(true);
-    expect(tree.read('package.json', 'utf-8')).toContain('@swc/core');
-    expect(tree.read('tsc-lib/package.json', 'utf-8')).toContain(
-      '@swc/helpers'
-    );
+    expect(
+      readJson(tree, 'package.json').devDependencies['@swc/core']
+    ).toBeDefined();
+    expect(
+      readJson(tree, 'tsc-lib/package.json').dependencies['@swc/helpers']
+    ).toBeDefined();
+  });
+
+  it('should handle project configuration without targets', async () => {
+    addProjectConfiguration(tree, 'lib1', { root: 'lib1' });
+
+    await expect(
+      convertToSwcGenerator(tree, { project: 'lib1' })
+    ).resolves.not.toThrow();
+  });
+
+  it('should not add swc dependencies when no target was updated', async () => {
+    addProjectConfiguration(tree, 'lib1', { root: 'lib1' });
+    writeJson(tree, 'lib1/package.json', { dependencies: {} });
+
+    await convertToSwcGenerator(tree, { project: 'lib1' });
+
+    expect(
+      readJson(tree, 'package.json').devDependencies['@swc/core']
+    ).not.toBeDefined();
+    expect(
+      readJson(tree, 'lib1/package.json').dependencies['@swc/helpers']
+    ).not.toBeDefined();
   });
 });

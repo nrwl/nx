@@ -5,6 +5,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { getRemixConfigValues } from './remix-config';
+import { relative } from 'path';
 
 /**
  *
@@ -91,5 +92,10 @@ export async function resolveRemixAppDirectory(
   const project = readProjectConfiguration(tree, projectName);
   const remixConfig = await getRemixConfigValues(tree, projectName);
 
-  return joinPathFragments(project.root, remixConfig.appDirectory ?? 'app');
+  return joinPathFragments(
+    project.root,
+    remixConfig.appDirectory
+      ? relative(project.root, remixConfig.appDirectory)
+      : 'app'
+  );
 }

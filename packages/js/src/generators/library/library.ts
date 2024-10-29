@@ -26,16 +26,17 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { prompt } from 'enquirer';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
-import { isCI } from 'nx/src/utils/is-ci';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
-import { getProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
+import {
+  getProjectPackageManagerWorkspaceState,
+  getProjectPackageManagerWorkspaceStateWarningTask,
+} from '../../utils/package-manager-workspaces';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
@@ -63,11 +64,10 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import { getProjectPackageManagerWorkspaceStateWarningTask } from './utils/package-manager-workspaces';
 import {
   ensureProjectIsExcludedFromPluginRegistrations,
   ensureProjectIsIncludedInPluginRegistrations,
-} from './utils/plugin-registrations';
+} from '../../utils/typescript/plugin';
 
 const defaultOutputDirectory = 'dist';
 
@@ -678,23 +678,6 @@ function replaceJestConfig(
     projectRoot: options.projectRoot,
     testEnvironment: options.testEnvironment,
   });
-}
-
-function isNonInteractive(): boolean {
-  return (
-    isCI() || !process.stdout.isTTY || process.env.NX_INTERACTIVE !== 'true'
-  );
-}
-
-async function promptWhenInteractive<T>(
-  questions: Parameters<typeof prompt>[0],
-  defaultValue: T
-): Promise<T> {
-  if (isNonInteractive()) {
-    return defaultValue;
-  }
-
-  return await prompt(questions);
 }
 
 async function normalizeOptions(
