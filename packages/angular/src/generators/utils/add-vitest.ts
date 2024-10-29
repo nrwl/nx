@@ -1,9 +1,7 @@
 import {
   addDependenciesToPackageJson,
   ensurePackage,
-  findFileInClosestParentFolder,
   joinPathFragments,
-  readJson,
   type Tree,
 } from '@nx/devkit';
 import { analogVitestAngular, nxVersion } from '../../utils/versions';
@@ -37,12 +35,6 @@ export async function addVitest(
   >('@nx/vite', nxVersion);
 
   const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
-  const packageJsonPath = findFileInClosestParentFolder(
-    tree,
-    options.projectRoot,
-    'package.json'
-  );
-  const isEsmImplicit = readJson(tree, packageJsonPath).type === 'module';
 
   const setupFile = joinPathFragments(
     options.projectRoot,
@@ -84,7 +76,7 @@ getTestBed().initTestEnvironment(
         imports: [`import angular from '@analogjs/vite-plugin-angular'`],
         plugins: ['angular()'],
         setupFile: relativeTestSetupPath,
-        useEsmExtension: !isEsmImplicit,
+        useEsmExtension: true,
       },
       true
     );

@@ -505,7 +505,7 @@ export default defineConfig({
 "
 `;
 
-exports[`app --unit-test-runner vitest should generate vite.config.ts if package type is module 1`] = `
+exports[`app --unit-test-runner vitest should generate vite.config.mts if package type is module 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
@@ -536,7 +536,7 @@ export default defineConfig({
 "
 `;
 
-exports[`app --unit-test-runner vitest should generate vite.config.ts if workspace package type is module 1`] = `
+exports[`app --unit-test-runner vitest should generate vite.config.mts if workspace package type is module 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';

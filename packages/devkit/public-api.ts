@@ -112,8 +112,3 @@ export { convertNxExecutor } from './src/utils/convert-nx-executor';
  * @category Utils
  */
 export { moveFilesToNewDirectory } from './src/utils/move-dir';
-
-/**
- * @category Utils
- */
-export { findFileInClosestParentFolder } from './src/utils/find-file-in-closest-parent-folder';

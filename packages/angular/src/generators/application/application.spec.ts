@@ -769,7 +769,7 @@ describe('app', () => {
         expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
       });
 
-      it('should generate vite.config.ts if package type is module', async () => {
+      it('should generate vite.config.mts if package type is module', async () => {
         writeJson(appTree, 'my-app/package.json', {
           name: 'my-app',
           type: 'module',
@@ -781,11 +781,11 @@ describe('app', () => {
         });
 
         expect(
-          appTree.read('my-app/vite.config.ts', 'utf-8')
+          appTree.read('my-app/vite.config.mts', 'utf-8')
         ).toMatchSnapshot();
       });
 
-      it('should generate vite.config.ts if workspace package type is module', async () => {
+      it('should generate vite.config.mts if workspace package type is module', async () => {
         updateJson(appTree, 'package.json', (json) => ({
           ...json,
           type: 'module',
@@ -797,7 +797,7 @@ describe('app', () => {
         });
 
         expect(
-          appTree.read('my-app/vite.config.ts', 'utf-8')
+          appTree.read('my-app/vite.config.mts', 'utf-8')
         ).toMatchSnapshot();
       });
     });
