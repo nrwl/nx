@@ -273,7 +273,7 @@ function createEsLintConfiguration(
     });
     const nodeList = createNodeList(importMap, nodes);
     const content = stringifyNodeList(nodeList);
-    const ext = extendedRootConfig.endsWith('.cjs') ? '.cjs' : '.js';
+    const ext = extendedRootConfig?.endsWith('.cjs') ? '.cjs' : '.js';
     tree.write(join(projectConfig.root, `eslint.config${ext}`), content);
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
