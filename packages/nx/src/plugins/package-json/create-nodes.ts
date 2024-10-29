@@ -248,9 +248,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
-        const { packages } = readYamlFile<{ packages: string[] }>(
-          join(root, 'pnpm-workspace.yaml')
-        );
+        const { packages } =
+          readYamlFile<{ packages: string[] }>(
+            join(root, 'pnpm-workspace.yaml')
+          ) ?? {};
         patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
@@ -262,7 +263,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'lerna.json'))) {
       try {
-        const { packages } = readJson<any>('lerna.json');
+        const { packages } = readJson<any>('lerna.json') ?? {};
         patterns.push(
           ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
         );
