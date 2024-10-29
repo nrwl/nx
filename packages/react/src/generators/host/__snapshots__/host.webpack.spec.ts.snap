@@ -36,6 +36,9 @@ const moduleFederationConfig = {
   remotes: [],
 };
 
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
 module.exports = moduleFederationConfig;
 "
 `;
@@ -73,6 +76,9 @@ const config: ModuleFederationConfig = {
   remotes: [],
 };
 
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
 export default config;
 "
 `;
@@ -103,7 +109,10 @@ module.exports = composePlugins(
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=false 2`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -165,6 +174,9 @@ const config: ModuleFederationConfig = {
   ],
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
