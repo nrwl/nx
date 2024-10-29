@@ -62,7 +62,8 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
             create_metadata_table(&c, &nx_version)?;
             c
         }
-        _ => {
+        check @ _ => {
+            trace!("Incompatible database because: {:?}", check);
             trace!("Disconnecting from existing incompatible database");
             c.close().map_err(|(_, error)| anyhow::Error::from(error))?;
             trace!("Removing existing incompatible database");
@@ -134,6 +135,8 @@ fn configure_database(connection: &NxDbConnection) -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
 
+    use crate::native::logger::enable_logger;
+
     use super::*;
 
     #[test]
@@ -178,6 +181,7 @@ mod tests {
 
     #[test]
     fn initialize_db_recreates_incompatible_db() -> anyhow::Result<()> {
+        enable_logger();
         let temp_dir = tempfile::tempdir()?;
         let db_path = temp_dir.path().join("test.db");
         //
@@ -185,7 +189,7 @@ mod tests {
         let _ = initialize_db("1.0.0".to_string(), &db_path)?;
 
         // Try to initialize with different version
-        let conn = initialize_db("2.0.0".to_string(), &db_path)?;
+        let conn = initialize_db("0.0.0-pr-28667-e5533b1".to_string(), &db_path)?;
 
         let version: Option<String> = conn.query_row(
             "SELECT value FROM metadata WHERE key='NX_VERSION'",
@@ -193,7 +197,7 @@ mod tests {
             |row| row.get(0),
         )?;
 
-        assert_eq!(version.unwrap(), "2.0.0");
+        assert_eq!(version.unwrap(), "0.0.0-pr-28667-e5533b1");
         Ok(())
     }
 }
