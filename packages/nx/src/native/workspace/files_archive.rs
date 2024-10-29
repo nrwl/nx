@@ -6,7 +6,11 @@ use std::path::Path;
 
 use tracing::trace;
 
-const NX_FILES_ARCHIVE: &str = "nx_files.nxt";
+const NX_FILES_ARCHIVE: &str = "nx_files";
+
+fn nx_files_archive_name(nx_version: &str) -> String {
+    format!("{}-{}.nxt", NX_FILES_ARCHIVE, nx_version)
+}
 
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
 #[archive(check_bytes)]
@@ -38,9 +42,9 @@ impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
     }
 }
 
-pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> {
+pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P, nx_version: &str) -> Option<NxFileHashes> {
     let now = std::time::Instant::now();
-    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
+    let archive_path = cache_dir.as_ref().join(nx_files_archive_name(nx_version));
     if !archive_path.exists() {
         return None;
     }
@@ -70,19 +74,38 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> 
     }
 }
 
-pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes) {
+pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes, nx_version: &str) {
     let now = std::time::Instant::now();
-    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
+    let archive_name = nx_files_archive_name(nx_version);
+    let archive_path = cache_dir.as_ref().join(&archive_name);
+    let archive_path_temp =
+        cache_dir
+            .as_ref()
+            .join(format!("{}.{}", &archive_name, std::process::id()));
     let result = rkyv::to_bytes::<_, 2048>(&files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
-            std::fs::write(archive_path, encoded)?;
-            Ok(())
+            std::fs::write(&archive_path_temp, encoded).map_err(|e| {
+                anyhow::anyhow!(
+                    "Unable to write to {}: {:?}",
+                    &archive_path_temp.display(),
+                    e
+                )
+            })
+        })
+        .and_then(|_| {
+            std::fs::rename(&archive_path_temp, &archive_path).map_err(|e| {
+                anyhow::anyhow!(
+                    "unable to move temp archive file to {}: {:?}",
+                    &archive_path.display(),
+                    e
+                )
+            })
         });
 
     match result {
         Ok(_) => {
-            trace!("write archive in {:?}", now.elapsed());
+            trace!("wrote archive in {:?}", now.elapsed());
         }
         Err(e) => {
             trace!("could not write files archive: {:?}", e);

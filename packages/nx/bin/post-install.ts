@@ -14,8 +14,8 @@ import { logger } from '../src/utils/logger';
 (async () => {
   const start = new Date();
   try {
-    setupWorkspaceContext(workspaceRoot);
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
+      setupWorkspaceContext(workspaceRoot);
       assertSupportedPlatform();
 
       try {
