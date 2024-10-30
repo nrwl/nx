@@ -30,7 +30,7 @@ export async function addVitest(
     );
   }
 
-  const { createOrEditViteConfig, viteConfigurationGenerator } = ensurePackage<
+  const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
     typeof import('@nx/vite')
   >('@nx/vite', nxVersion);
 
@@ -58,12 +58,13 @@ getTestBed().initTestEnvironment(
 `
     );
 
-    await viteConfigurationGenerator(tree, {
+    await vitestGenerator(tree, {
       project: options.name,
-      newProject: true,
       uiFramework: 'none',
-      includeVitest: true,
+      skipViteConfig: true,
       testEnvironment: 'jsdom',
+      coverageProvider: 'v8',
+      addPlugin: false,
     });
 
     createOrEditViteConfig(
