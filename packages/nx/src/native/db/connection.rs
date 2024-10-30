@@ -20,13 +20,13 @@ const RETRY_DELAY: u64 = 25;
 macro_rules! retry_db_operation_when_busy {
     ($operation:expr) => {{
         let connection = 'retry: {
-            for i in 0..MAX_RETRIES {
+            for i in 1..MAX_RETRIES {
                 match $operation {
                     r @ Ok(_) => break 'retry r,
                     Err(Error::SqliteFailure(err, _))
                         if err.code == rusqlite::ErrorCode::DatabaseBusy =>
                     {
-                        trace!("Database busy. Retrying{}", ".".repeat(i as usize));
+                        trace!("Database busy. Retrying {} of {}", i, MAX_RETRIES);
                         let sleep = Duration::from_millis(RETRY_DELAY * 2_u64.pow(i));
                         let max_sleep = Duration::from_secs(12);
                         if (sleep >= max_sleep) {
