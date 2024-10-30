@@ -177,6 +177,35 @@ describe('@nx/vite/plugin', () => {
 
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
+
+    it('should support importing files with "." in the name in tsconfig path', () => {
+      const mylib = uniq('mylib');
+      runCLI(
+        `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
+      );
+      updateFile(`libs/${mylib}/src/styles.module.css`, `.foo {}`);
+      updateFile(`libs/${mylib}/src/foo.enum.ts`, `export const foo = 'foo';`);
+      updateFile(`libs/${mylib}/src/bar.enum.ts`, `export const bar = 'bar';`);
+      updateFile(
+        `libs/${mylib}/src/foo.spec.ts`,
+        `
+          import styles from '~/styles.module.css';
+          import { foo } from '~/foo.enum.ts';
+          import { bar } from '~/bar.enum';
+          test('should work', () => {
+            expect(styles).toBeDefined();
+            expect(foo).toBeDefined();
+            expect(bar).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
+    });
   });
 
   describe('react with vitest only', () => {
