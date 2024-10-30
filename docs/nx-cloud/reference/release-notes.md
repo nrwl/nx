@@ -12,18 +12,20 @@ The goal is to make it easier to spot how old/recent your existing NxCloud versi
 ## DTE summary table on main agent
 
 When distributing with DTE, up until now, we have been replaying all your tasks logs "as they come in" from the DTE agents back onto your main job.
-This is not that useful on big workspaces, with large task affected task graphs: when you are distributing tasks across 10 agents, each running a subset of 3 tasks in parallel, it is hard to follow the all those outputs streaming back concurrently.
-This release contains the new "CI Table Log View" summaries, where on your CI you'll see a summary of what happened on that execution, with a link to go to NxCloud for the details.
+
+This is not that useful on big workspaces, with large task affected task graphs as it can be hard to follow the all the outputs from all the agents streaming back concurrently.
+
+This release contains the new "CI Table Log View" summary, and you can read all about it [here](/blog/improved-ci-log-with-nx-cloud).
+
 If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
 
-You can read more about this feature [here](/blog/improved-ci-log-with-nx-cloud).
-
-## Personal access tokens - Nx Login
+## Personal access tokens
 
 Up until now, for developers to get access to read (and maybe write) to the cache you always needed an access token to be made available locally: either
-committed to the repo via nx.json or made available as an env variable via a .local.env file.
+committed to the repo via `nx.json` or made available as an env variable via a `.local.env` file.
 
-This flow was extremely secure as is, as even if you never rotated your access, it would still be impossible for someone to read from your cache without continuous, hourly access to your latest source code.
+This flow was secure enough as is, as even if you never rotated your access tokens, as someone would still need continuous hourly access to your source code if they wanted to retrieve any of the latest cached artefacts.
+
 But given you already manage developer access to your NxCloud workspace via the web app, we wanted to tie local cache access to that mechanism as well.
 
 This release contains the new ["Personal Access Tokens"](/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
