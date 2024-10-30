@@ -1,7 +1,6 @@
 ---
 title: 'From PNPM Workspaces to Distributed CI'
-description: ''
-slug: nx-19-8-update
+description: 'Learn how to transform a PNPM workspace monorepo into a high-performance distributed CI setup using Nx.'
 authors: [Juri Strumpflohner]
 repository: 'https://github.com/nrwl/nx-course-pnpm-nx'
 ---
