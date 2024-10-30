@@ -1,9 +1,10 @@
 use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::*;
 use rusqlite::params;
+use tracing::trace;
 
 #[napi(object)]
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct HashedTask {
     pub hash: String,
     pub project: String,
@@ -42,14 +43,17 @@ impl TaskDetails {
     }
 
     #[napi]
-    pub fn record_task_details(&self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
-        for task in tasks.iter() {
-            self.db.execute(
-                "INSERT OR REPLACE INTO task_details  (hash, project, target, configuration)
-                    VALUES (?1, ?2, ?3, ?4)",
-                params![task.hash, task.project, task.target, task.configuration],
-            )?;
-        }
+    pub fn record_task_details(&mut self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
+        trace!("Recording task details");
+        self.db.transaction(|conn| {
+            let mut stmt = conn.prepare("INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)")?;
+            for task in tasks.iter() {
+                stmt.execute(
+                    params![task.hash, task.project, task.target, task.configuration],
+                )?;
+            }
+            Ok(())
+        })?;
 
         Ok(())
     }
