@@ -33,7 +33,7 @@ export function DefaultLayout({
           {children}
         </main>
       </div>
-      {!hideFooter && <Footer />}
+      <Footer className={hideFooter ? 'hidden' : ''} />
     </div>
   );
 }
