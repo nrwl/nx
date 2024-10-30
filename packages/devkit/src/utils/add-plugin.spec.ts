@@ -54,7 +54,7 @@ describe('addPlugin', () => {
       },
     };
     createNodes = [
-      '**/next.config.{js,cjs,mjs}',
+      '**/next.config.{ts,js,cjs,mjs}',
       (_, { targetName }) => [
         [
           'app1/next.config.js',
@@ -300,7 +300,7 @@ describe('addPlugin', () => {
       });
 
       createNodes = [
-        '**/next.config.{js,cjs,mjs}',
+        '**/next.config.{ts,js,cjs,mjs}',
         () => [
           [
             'app1/next.config.js',
