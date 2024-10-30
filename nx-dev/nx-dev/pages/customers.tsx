@@ -1,7 +1,6 @@
 import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-
 import {
   EnterpriseCustomers,
   Hero,
@@ -38,7 +37,7 @@ export function Customers(): JSX.Element {
         <div>
           <Hero />
         </div>
-        <div className="mt-16 lg:mt-16">
+        <div className="mt-16">
           <EnterpriseCustomers />
         </div>
         <div className="mt-16 lg:mt-32">

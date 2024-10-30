@@ -157,7 +157,11 @@ export function MetricsAndCustomers(): JSX.Element {
               whileInView="visible"
               className="mx-auto max-w-xl"
             >
-              <DownloadCaseStudy />
+              <DownloadCaseStudy
+                title="Banking Case Study"
+                description="See how a $7B bank saved money, reduced CI times by 62% and improved developer productivity."
+                buttonHref="https://go.nx.dev/bank-case-study"
+              />
             </motion.div>
           </div>
           <div className="hidden w-1/4 items-center justify-end gap-20 lg:flex">
