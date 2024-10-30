@@ -131,18 +131,14 @@ describe('@nx/vite:init', () => {
 
   it(`should not add multiple instances of the same vite temp file glob to gitignore`, async () => {
     // ARRANGE
-    tree.write(
-      '.gitignore',
-      '**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*'
-    );
+    tree.write('.gitignore', 'vite.config.*.timestamp*');
 
     // ACT
     await initGenerator(tree, {});
 
     // ASSERT
-    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
-      "**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*
-      **/vite.config.*.timestamp*"
-    `);
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
+      `"vite.config.*.timestamp*"`
+    );
   });
 });

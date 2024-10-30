@@ -7,7 +7,7 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-**/vite.config.*.timestamp*"
+vite.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
@@ -370,7 +370,7 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-**/vite.config.*.timestamp*"
+vite.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
