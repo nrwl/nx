@@ -16,7 +16,7 @@ This is not that useful on big workspaces, with large task affected task graphs:
 This release contains the new "CI Table Log View" summaries, where on your CI you'll see a summary of what happened on that execution, with a link to go to NxCloud for the details.
 If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
 
-You can read more about this feature [here](https://nx.dev/blog/improved-ci-log-with-nx-cloud).
+You can read more about this feature [here](/blog/improved-ci-log-with-nx-cloud).
 
 ## Personal access tokens - Nx Login
 
@@ -26,16 +26,16 @@ committed to the repo via nx.json or made available as an env variable via a .lo
 This flow was extremely secure as is, as even if you never rotated your access, it would still be impossible for someone to read from your cache without continuous, hourly access to your latest source code.
 But given you already manage developer access to your NxCloud workspace via the web app, we wanted to tie local cache access to that mechanism as well.
 
-This release contains the new ["Personal Access Tokens"](https://nx.dev/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
+This release contains the new ["Personal Access Tokens"](/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
 If they are a member of the workspace, they get a local token stored on their machine that will be used to access the cache.
 The moment they get removed as a member from your workspace, they won't be able to read from the cache anymore.
 
-Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](https://nx.dev/blog/personal-access-tokens).
+Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](/blog/personal-access-tokens).
 
 ## GitHub app integration
 
 If you are using GitHub, setting up a custom GitHub app for your org is the best way to take advantage of all the latest "GitHub-specific" features we offer.
-Please see instructions [here](https://nx.dev/ci/recipes/enterprise/single-tenant/custom-github-app) on setting up an app.
+Please see instructions [here](/ci/recipes/enterprise/single-tenant/custom-github-app) on setting up an app.
 You will then need to make sure you set-up your VCS integration again through your workspace's settings screen, and use the above app you created.
 
 Part of this, you will also get the "GitHub membership management" feature, where everybody who is a collaborator of your GitHub repo will also get "read" access to your NxCloud workspace,
