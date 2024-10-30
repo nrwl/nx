@@ -13,7 +13,27 @@ describe('addViteTempFilesToGitIgnore', () => {
     // ASSERT
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
       ".idea
-      **/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
+      vite.config.*.timestamp*"
+    `);
+  });
+
+  it('should update an existing .gitignore file and remove incorrect glob and add the glob correctly', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      '.gitignore',
+      `.idea
+      **/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*`
+    );
+
+    // ACT
+    addViteTempFilesToGitIgnore(tree);
+
+    // ASSERT
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+      ".idea
+
+      vite.config.*.timestamp*"
     `);
   });
 
@@ -27,7 +47,7 @@ describe('addViteTempFilesToGitIgnore', () => {
 
     // ASSERT
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
-      `"**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"`
+      `"vite.config.*.timestamp*"`
     );
   });
 });
