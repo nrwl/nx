@@ -1,5 +1,67 @@
 # Enterprise Release Notes
 
+### 2024.10
+
+This is a big release so let's go through the highlights first. There is also an important "Breaking changes" section at the end.
+
+## New version structure
+
+We have changed our version structure to a more simplified tag: `YEAR.MM.PATCH_NUMBER`
+The goal is to make it easier to spot how old/recent your existing NxCloud version is and compare it against newer deployments.
+
+## DTE summary table on main agent
+
+When distributing with DTE, up until now, we have been replaying all your tasks logs "as they come in" from the DTE agents back onto your main job.
+This is not that useful on big workspaces, with large task affected task graphs: when you are distributing tasks across 10 agents, each running a subset of 3 tasks in parallel, it is hard to follow the all those outputs streaming back concurrently.
+This release contains the new "CI Table Log View" summaries, where on your CI you'll see a summary of what happened on that execution, with a link to go to NxCloud for the details.
+If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
+
+You can read more about this feature [here](https://nx.dev/blog/improved-ci-log-with-nx-cloud).
+
+## Personal access tokens - Nx Login
+
+Up until now, for developers to get access to read (and maybe write) to the cache you always needed an access token to be made available locally: either
+committed to the repo via nx.json or made available as an env variable via a .local.env file.
+
+This flow was extremely secure as is, as even if you never rotated your access, it would still be impossible for someone to read from your cache without continuous, hourly access to your latest source code.
+But given you already manage developer access to your NxCloud workspace via the web app, we wanted to tie local cache access to that mechanism as well.
+
+This release contains the new ["Personal Access Tokens"](https://nx.dev/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
+If they are a member of the workspace, they get a local token stored on their machine that will be used to access the cache.
+The moment they get removed as a member from your workspace, they won't be able to read from the cache anymore.
+
+Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](https://nx.dev/blog/personal-access-tokens).
+
+## GitHub app integration
+
+If you are using GitHub, setting up a custom GitHub app for your org is the best way to take advantage of all the latest "GitHub-specific" features we offer.
+Please see instructions [here](https://nx.dev/ci/recipes/enterprise/single-tenant/custom-github-app) on setting up an app.
+You will then need to make sure you set-up your VCS integration again through your workspace's settings screen, and use the above app you created.
+
+Part of this, you will also get the "GitHub membership management" feature, where everybody who is a collaborator of your GitHub repo will also get "read" access to your NxCloud workspace,
+without you having to explicitly invite them.
+
+## Misc items
+
+- improved docker agents support
+  - we fixed a few issues related to running docker builds in Nx Agents
+- big DTE performance improvements
+- Azure file storage for Nx Agents
+- auth session length has been extended to 7 days by default
+  - use NX_CLOUD_SESSION_MAX_AGE to configure this to a different value
+- various SAML fixes and improvements
+  - one highlight is that users can now login from Okta directly (while before they had to initiate login through NxCloud web app)
+
+## Breaking changes
+
+Most workspaces will not be affected by this, but if you have these values configured in your `helm-config.yaml`:
+
+- `github.pr.[...]`
+- or `gitlab.mr.[...]`
+
+they will stop working with this release (see [this](https://github.com/nrwl/nx-cloud-helm/pull/141/files) for details on what was removed).
+Please go to your workspace settings and you should be able to configure all the above values when you setup a VCS integration.
+
 ### 2406.29.1.patch1
 
 - Fix an issue with specifying custom AWS credentials in Minio instances
