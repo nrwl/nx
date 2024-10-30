@@ -7,6 +7,9 @@ declare const __webpack_share_scopes__: { default: unknown };
 
 let resolveRemoteUrl: ResolveRemoteUrlFunction;
 
+/**
+ * @deprecated Use Runtime Helpers from '@module-federation/enhanced/runtime' instead. This will be removed in Nx 22.
+ */
 export function setRemoteUrlResolver(
   _resolveRemoteUrl: ResolveRemoteUrlFunction
 ) {
@@ -15,10 +18,16 @@ export function setRemoteUrlResolver(
 
 let remoteUrlDefinitions: Record<string, string>;
 
+/**
+ * @deprecated Use init() from '@module-federation/enhanced/runtime' instead. This will be removed in Nx 22.
+ */
 export function setRemoteDefinitions(definitions: Record<string, string>) {
   remoteUrlDefinitions = definitions;
 }
 
+/**
+ * @deprecated Use registerRemotes() from '@module-federation/enhanced/runtime' instead. This will be removed in Nx 22.
+ */
 export function setRemoteDefinition(remoteName: string, remoteUrl: string) {
   remoteUrlDefinitions ??= {};
   remoteUrlDefinitions[remoteName] = remoteUrl;
@@ -27,6 +36,9 @@ export function setRemoteDefinition(remoteName: string, remoteUrl: string) {
 let remoteModuleMap = new Map<string, unknown>();
 let remoteContainerMap = new Map<string, unknown>();
 
+/**
+ * @deprecated Use loadRemote() from '@module-federation/enhanced/runtime' instead. This will be removed in Nx 22.
+ */
 export async function loadRemoteModule(remoteName: string, moduleName: string) {
   const remoteModuleKey = `${remoteName}:${moduleName}`;
   if (remoteModuleMap.has(remoteModuleKey)) {
