@@ -32,7 +32,7 @@ https://my.nx-enterprise.url:8080/callbacks/github-user
 Configure a webhook and give it a secret:
 (the URL needs to match `https://<your-NxCloud-instance-URL>/nx-cloud/github-webhook-handler`)
 
-![Step 8](/nx-cloud/enterprise/single-tenant/images/webhook.png)
+![Step 5](/nx-cloud/enterprise/single-tenant/images/webhook.png)
 
 Once you create the app, keep a note of the Client ID and App ID:
 
