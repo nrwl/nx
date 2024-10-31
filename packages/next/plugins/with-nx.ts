@@ -21,6 +21,11 @@ export interface SvgrOptions {
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
+    /**
+     * @deprecated Next.js via turbo conflicts with how webpack handles the import of SVGs.
+     * It is best to configure SVGR manually with the `@svgr/webpack` loader.
+     * We will remove this option in Nx 21.
+     * */
     svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
     fileReplacements?: { replace: string; with: string }[];
@@ -355,6 +360,12 @@ export function getNextConfig(
 
       // Default SVGR support to be on for projects.
       if (nx?.svgr !== false || typeof nx?.svgr === 'object') {
+        forNextVersion('>=15.0.0', () => {
+          // Since Next.js 15, turbopack could be enabled by default.
+          console.warn(
+            `NX: Next.js SVGR support is deprecated. If used with turbopack, it may not work as expected and is not recommended. Please configure SVGR manually.`
+          );
+        });
         const defaultSvgrOptions = {
           svgo: false,
           titleProp: true,
