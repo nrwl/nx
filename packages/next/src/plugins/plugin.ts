@@ -29,7 +29,7 @@ export interface NextPluginOptions {
   serveStaticTargetName?: string;
 }
 
-const nextConfigBlob = '**/next.config.{js,cjs,mjs}';
+const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
 function readTargetsCache(
   cachePath: string
