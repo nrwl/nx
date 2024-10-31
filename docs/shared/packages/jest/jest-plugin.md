@@ -60,12 +60,15 @@ within the same workspace. In this case, you can configure the `@nx/jest/plugin`
       "include": ["e2e/**/*"],
       "options": {
         "targetName": "e2e-local",
-        "ciTargetName": "e2e-ci"
+        "ciTargetName": "e2e-ci",
+        "disableJestRuntime": false
       }
     }
   ]
 }
 ```
+
+If you experience slowness from `@nx/jest/plugin`, then set `disableJestRuntime` to `true` to skip creating the Jest runtime. By disabling the Jest runtime, Nx will use its own utilities to find `inputs`, `outputs`, and test files for [Atomized targets](/ci/features/split-e2e-tasks). This can reduce computation time by as much as 80%.
 
 ### Splitting E2E Tests
 
