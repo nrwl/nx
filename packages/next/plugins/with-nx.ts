@@ -92,7 +92,7 @@ function getNxContext(
       parseTargetString(targetOptions.devServerTarget, partialExecutorContext)
     );
   } else if (targetOptions.buildTarget) {
-    // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
+    // Executors such as @nx/next:server define the buildTarget option.
     return getNxContext(
       graph,
       parseTargetString(targetOptions.buildTarget, partialExecutorContext)
