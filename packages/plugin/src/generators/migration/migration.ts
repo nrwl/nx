@@ -12,8 +12,8 @@ import {
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'node:path';
-import { relative } from 'node:path/posix';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
+import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import type { Schema } from './schema';
@@ -86,12 +86,12 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
 
   const generators = migrations.generators ?? {};
 
-  const dir = options.isTsSolutionSetup
-    ? `./${joinPathFragments(
-        'dist',
-        relative(options.projectSourceRoot, options.directory)
-      )}`
-    : `./${relative(options.projectRoot, options.directory)}`;
+  const dir = getArtifactMetadataDirectory(
+    host,
+    options.project,
+    options.directory,
+    options.isTsSolutionSetup
+  );
   generators[options.name] = {
     version: options.packageVersion,
     description: options.description,
@@ -120,7 +120,7 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
     (json) => {
       const addFile = (file: string) => {
         if (options.isTsSolutionSetup) {
-          const filesSet = new Set(json.files ?? []);
+          const filesSet = new Set(json.files ?? ['dist', '!**/*.tsbuildinfo']);
           filesSet.add(file.replace(/^\.\//, ''));
           json.files = [...filesSet];
         }

@@ -13,7 +13,8 @@ import {
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { join, relative } from 'path';
+import { join } from 'path';
+import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
@@ -106,7 +107,7 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
         host,
         joinPathFragments(options.projectRoot, 'package.json'),
         (json) => {
-          const filesSet = new Set(json.files ?? []);
+          const filesSet = new Set(json.files ?? ['dist', '!**/*.tsbuildinfo']);
           filesSet.add('executors.json');
           json.files = [...filesSet];
           return json;
@@ -131,12 +132,12 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
     let executors = json.executors ?? json.builders;
     executors ||= {};
 
-    const dir = options.isTsSolutionSetup
-      ? `./${joinPathFragments(
-          'dist',
-          relative(options.projectSourceRoot, options.directory)
-        )}`
-      : `./${relative(options.projectRoot, options.directory)}`;
+    const dir = getArtifactMetadataDirectory(
+      host,
+      options.project,
+      options.directory,
+      options.isTsSolutionSetup
+    );
     executors[options.name] = {
       implementation: `${dir}/${options.fileName}`,
       schema: `${dir}/schema.json`,
