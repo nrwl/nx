@@ -9,7 +9,7 @@ use tracing::trace;
 const NX_FILES_ARCHIVE: &str = "nx_files";
 
 fn nx_files_archive_name(nx_version: &str) -> String {
-    format!("{}-{}.nxt", NX_FILES_ARCHIVE, nx_version)
+    format!("{}_{}.nxt", NX_FILES_ARCHIVE, nx_version)
 }
 
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
@@ -82,6 +82,13 @@ pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes, nx
         cache_dir
             .as_ref()
             .join(format!("{}.{}", &archive_name, std::process::id()));
+
+    std::fs::create_dir_all(&cache_dir)
+        .inspect_err(|e| {
+            trace!("Error creating cache directory: {:?}", e);
+        })
+        .ok();
+
     let result = rkyv::to_bytes::<_, 2048>(&files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
