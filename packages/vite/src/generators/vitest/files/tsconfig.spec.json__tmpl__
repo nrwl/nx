@@ -1,7 +1,7 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "<%= extendedConfig %>",
   "compilerOptions": {
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "outDir": "<%= outDir %>",
     "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node"]
   },
   "include": [

@@ -202,16 +202,6 @@ export async function libraryGeneratorInternal(
       tree,
       joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
       (json) => {
-        const rootOffset = offsetFromRoot(options.projectRoot);
-        // ensure it extends from the root tsconfig.base.json
-        json.extends = joinPathFragments(rootOffset, 'tsconfig.base.json');
-        // ensure outDir is set to the correct value
-        json.compilerOptions ??= {};
-        json.compilerOptions.outDir = joinPathFragments(
-          rootOffset,
-          'dist/out-tsc',
-          options.projectRoot
-        );
         // add project reference to the runtime tsconfig.lib.json file
         json.references ??= [];
         json.references.push({ path: './tsconfig.lib.json' });
@@ -225,6 +215,7 @@ export async function libraryGeneratorInternal(
   }
 
   if (
+    !options.skipWorkspacesWarning &&
     options.isUsingTsSolutionConfig &&
     options.projectPackageManagerWorkspaceState !== 'included'
   ) {
@@ -278,7 +269,8 @@ async function configureProject(
     options.config !== 'npm-scripts' &&
     (options.bundler === 'swc' ||
       options.bundler === 'esbuild' ||
-      (!options.isUsingTsSolutionConfig && options.bundler === 'tsc'))
+      ((!options.isUsingTsSolutionConfig || options.useTscExecutor) &&
+        options.bundler === 'tsc'))
   ) {
     const outputPath = getOutputPath(options);
     const executor = getBuildExecutor(options.bundler);
@@ -305,6 +297,8 @@ async function configureProject(
     if (options.isUsingTsSolutionConfig) {
       if (options.bundler === 'esbuild') {
         projectConfiguration.targets.build.options.declarationRootDir = `${options.projectRoot}/src`;
+      } else if (options.bundler === 'swc') {
+        projectConfiguration.targets.build.options.stripLeadingPaths = true;
       }
     } else {
       projectConfiguration.targets.build.options.assets = [];
@@ -356,8 +350,6 @@ async function configureProject(
     if (!projectConfiguration.tags?.length) {
       delete projectConfiguration.tags;
     }
-    // automatically inferred as `library`
-    delete projectConfiguration.projectType;
 
     // empty targets are cleaned up automatically by `updateProjectConfiguration`
     updateProjectConfiguration(tree, options.name, projectConfiguration);
@@ -1109,10 +1101,10 @@ function determineEntryFields(
       return {
         type: 'commonjs',
         main: options.isUsingTsSolutionConfig
-          ? './dist/src/index.js'
+          ? './dist/index.js'
           : './src/index.js',
         typings: options.isUsingTsSolutionConfig
-          ? './dist/src/index.d.ts'
+          ? './dist/index.d.ts'
           : './src/index.d.ts',
       };
     case 'rollup':

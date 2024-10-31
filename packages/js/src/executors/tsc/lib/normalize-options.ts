@@ -57,5 +57,6 @@ export function normalizeOptions(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
     ),
+    generatePackageJson: options.generatePackageJson ?? true,
   };
 }
