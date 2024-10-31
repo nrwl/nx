@@ -1,14 +1,13 @@
 import { workspaceRoot } from '@nx/devkit';
-import { dirname, join, relative } from 'path';
-import { lstatSync } from 'fs';
-
-import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
-
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { execSync, spawn } from 'child_process';
+import { lstatSync } from 'fs';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
+import { dirname, join, relative } from 'path';
 import type { InlineConfig } from 'vite';
+import vitePreprocessor from '../src/plugins/preprocessor-vite';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -54,14 +53,13 @@ export function nxBaseCypressPreset(
     : dirname(pathToConfig);
   const projectPath = relative(workspaceRoot, normalizedPath);
   const offset = relative(normalizedPath, workspaceRoot);
-  const videosFolder = join(offset, 'dist', 'cypress', projectPath, 'videos');
-  const screenshotsFolder = join(
-    offset,
-    'dist',
-    'cypress',
-    projectPath,
-    'screenshots'
-  );
+  const isTsSolutionSetup = isUsingTsSolutionSetup();
+  const videosFolder = isTsSolutionSetup
+    ? join('test-output', 'cypress', 'videos')
+    : join(offset, 'dist', 'cypress', projectPath, 'videos');
+  const screenshotsFolder = isTsSolutionSetup
+    ? join('test-output', 'cypress', 'screenshots')
+    : join(offset, 'dist', 'cypress', projectPath, 'screenshots');
 
   return {
     videosFolder,
