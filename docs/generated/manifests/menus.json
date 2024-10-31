@@ -8747,14 +8747,6 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
-              },
-              {
-                "id": "export",
-                "path": "/nx-api/next/executors/export",
-                "name": "export",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,

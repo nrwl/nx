@@ -138,7 +138,7 @@ export async function vitestGeneratorInternal(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
+      `export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];`
     );
   }
 
@@ -236,7 +236,9 @@ function updateTsConfig(
         const uniqueExclude = new Set([
           ...(json.exclude || []),
           'vite.config.ts',
+          'vite.config.mts',
           'vitest.config.ts',
+          'vitest.config.mts',
           'src/**/*.test.ts',
           'src/**/*.spec.ts',
           'src/**/*.test.tsx',

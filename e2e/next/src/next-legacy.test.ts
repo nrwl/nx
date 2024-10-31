@@ -235,7 +235,6 @@ describe('@nx/next (legacy)', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: isNotWindows(),
-      checkExport: false,
       appsDir: 'packages',
     });
 

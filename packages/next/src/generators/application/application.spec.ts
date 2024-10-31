@@ -821,7 +821,7 @@ describe('app (legacy)', () => {
     }
   });
 
-  it('should generate build serve and export targets', async () => {
+  it('should generate build and serve targets', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -832,7 +832,6 @@ describe('app (legacy)', () => {
     const projectConfiguration = readProjectConfiguration(tree, name);
     expect(projectConfiguration.targets.build).toBeDefined();
     expect(projectConfiguration.targets.serve).toBeDefined();
-    expect(projectConfiguration.targets.export).toBeDefined();
   });
 });
 
