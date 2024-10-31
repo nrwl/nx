@@ -529,7 +529,6 @@
     - [executors](/nx-api/next/executors)
       - [build](/nx-api/next/executors/build)
       - [server](/nx-api/next/executors/server)
-      - [export](/nx-api/next/executors/export)
     - [generators](/nx-api/next/generators)
       - [init](/nx-api/next/generators/init)
       - [application](/nx-api/next/generators/application)
