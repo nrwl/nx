@@ -9,10 +9,10 @@ export async function printPowerpackLicense() {
 
     logger.log(
       `Nx Powerpack Licensed to ${organizationName} for ${seatCount} user${
-        seatCount > 1 ? '' : 's'
+        seatCount > 1 ? 's' : ''
       } in ${
         workspaceCount === 9999 ? 'an unlimited number of' : workspaceCount
-      } workspace${workspaceCount > 1 ? '' : 's'}`
+      } workspace${workspaceCount > 1 ? 's' : ''}`
     );
   } catch {}
 }
