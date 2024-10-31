@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readProjectConfiguration } from '@nx/devkit';
 
-import { <%= generatorFnName %> } from './generator';
+import { <%= generatorFnName %> } from './<%= fileName %>';
 import { <%= schemaInterfaceName %> } from './schema';
 
 describe('<%= name %> generator', () => {
