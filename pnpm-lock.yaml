@@ -509,7 +509,7 @@ importers:
         specifier: 18.3.0
         version: 18.3.0
       '@types/semver':
-        specifier: ^7.5.2
+        specifier: ^7.5.8
         version: 7.5.8
       '@types/tar-stream':
         specifier: ^2.2.2
@@ -923,7 +923,7 @@ importers:
         specifier: ^12.2.0
         version: 12.6.0(sass@1.55.0)(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))
       semver:
-        specifier: ^7.5.3
+        specifier: ^7.6.3
         version: 7.6.3
       source-map:
         specifier: 0.7.3
