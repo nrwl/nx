@@ -104,7 +104,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       '@types/react-dom': typesReactDomVersion,
     };
 
-    if (schema.unitTestRunner && schema.unitTestRunner !== 'none') {
+    if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
     }
 
