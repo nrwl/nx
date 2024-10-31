@@ -53,10 +53,14 @@ module.exports = [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parserOptions: { parser: require('@typescript-eslint/parser') },
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
     },
   },
-  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
 ];
 "
 `;
@@ -83,7 +87,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -261,9 +264,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.css'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -293,9 +294,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.less'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -325,9 +324,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.scss'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -357,7 +354,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -418,10 +414,14 @@ module.exports = [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parserOptions: { parser: require('@typescript-eslint/parser') },
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
     },
   },
-  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
 ];
 "
 `;
@@ -448,7 +448,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -626,9 +625,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.css'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -658,9 +655,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.less'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -690,9 +685,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.scss'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -722,7 +715,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },

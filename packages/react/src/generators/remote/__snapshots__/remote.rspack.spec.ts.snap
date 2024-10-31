@@ -27,11 +27,10 @@ exports[`remote generator bundler=rspack should create the remote with the corre
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
 module.exports = {
-   name: 'test',
-   
-   exposes: {
-     './Module': './src/remote-entry.ts',
-   },
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
 };
 "
 `;
@@ -63,11 +62,10 @@ exports[`remote generator bundler=rspack should create the remote with the corre
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
 module.exports = {
-   name: 'test',
-   
-   exposes: {
-     './Module': './src/remote-entry.js',
-   },
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.js',
+  },
 };
 "
 `;
@@ -106,7 +104,6 @@ exports[`remote generator bundler=rspack should create the remote with the corre
 
 const config: ModuleFederationConfig = {
   name: 'test',
-
   exposes: {
     './Module': './src/remote-entry.ts',
   },
@@ -126,7 +123,7 @@ const {withModuleFederationForSSR} = require('@nx/rspack/module-federation');
 const baseConfig = require("./module-federation.server.config");
 
 const defaultConfig = {
-    ...baseConfig,
+  ...baseConfig,
 };
 
 // Nx plugins for rspack to build config object from Nx options and context.
@@ -144,10 +141,10 @@ exports[`remote generator bundler=rspack should generate correct remote with con
 * Nx requires a default export of the config to allow correct resolution of the module federation graph.
 **/
 module.exports = {
-    name: 'test',
-   exposes: {
-     './Module': './src/remote-entry.ts',
-   },
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
 };
 "
 `;
