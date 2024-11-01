@@ -6,7 +6,7 @@ tags: [nx, enterprise]
 cover_image: '/blog/images/2024-10-25/header.avif'
 ---
 
-When adopting monorepos and Nx, it can feel like there's a lot that needs to be understood first before you get all the benefits. Oftentimes it's tempting to skip some fundamentals and just add all your code into one monorepo and call it a day. Following this mentality is the best way to actually _increase_ your CI run times and cost. Monorepos should simplify your architecture a d reduce costs, not cause you to spend more money and time to build, test, and deploy. To make this possible, following a simple restructure of multiple applications and investing time and effort into setting up your monorepo can pay off in the long run. But what does this ideal structure look like, and what are the benefits?
+When adopting monorepos and Nx, it can feel like there's a lot that needs to be understood first before you get all the benefits. Oftentimes it's tempting to skip some fundamentals and just add all your code into one monorepo and call it a day. Following this mentality is the best way to actually _increase_ your CI run times and cost. Monorepos should simplify your architecture and reduce costs, not cause you to spend more money and time to build, test, and deploy. To make this possible, following a simple restructure of multiple applications and investing time and effort into setting up your monorepo can pay off in the long run. But what does this ideal structure look like, and what are the benefits?
 
 ## Real World Example
 
@@ -85,7 +85,7 @@ monorepo/
     └── support-dash/
 ```
 
-![Graph of application depending on projects](/blog/images/2024-10-25/apps-with-shared-lib.avif)
+![Graph of application depending on projects](/blog/images/2024-10-25/app-with-route-projects.avif)
 
 The routes exist as projects which are then imported by the application. We can now lint and test the app and those routes individually. If we make a change to one route, we don't have to lint and test the other routes.
 

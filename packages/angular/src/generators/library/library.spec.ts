@@ -1218,7 +1218,9 @@ describe('lib', () => {
               ...nx.configs["flat/angular"],
               ...nx.configs["flat/angular-template"],
               {
-                  files: ["**/*.ts"],
+                  files: [
+                      "**/*.ts"
+                  ],
                   rules: {
                       "@angular-eslint/directive-selector": [
                           "error",
@@ -1239,7 +1241,9 @@ describe('lib', () => {
                   }
               },
               {
-                  files: ["**/*.html"],
+                  files: [
+                      "**/*.html"
+                  ],
                   // Override or add rules here
                   rules: {}
               }
