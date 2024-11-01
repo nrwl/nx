@@ -3,7 +3,7 @@
 exports[`task planner dependentTasksOutputFiles should depend on dependent tasks output files 1`] = `
 {
   "parent:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "parent:!{projectRoot}/**/*.spec.ts",
     "parent:ProjectConfiguration",
@@ -18,9 +18,9 @@ exports[`task planner dependentTasksOutputFiles should depend on dependent tasks
 exports[`task planner should be able to handle multiple filesets per project 1`] = `
 {
   "parent:test": [
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "workspace:[{workspaceRoot}/global1]",
     "workspace:[{workspaceRoot}/global2]",
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:MY_TEST_HASH_ENV",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "child:!{projectRoot}/**/*.spec.ts",
@@ -37,7 +37,7 @@ exports[`task planner should be able to handle multiple filesets per project 1`]
 exports[`task planner should build plans where the project graph has circular dependencies 1`] = `
 {
   "child:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "child:{projectRoot}/**/*",
     "parent:{projectRoot}/**/*",
@@ -48,7 +48,7 @@ exports[`task planner should build plans where the project graph has circular de
     "AllExternalDependencies",
   ],
   "parent:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "child:{projectRoot}/**/*",
     "parent:{projectRoot}/**/*",
@@ -64,8 +64,8 @@ exports[`task planner should build plans where the project graph has circular de
 exports[`task planner should hash executors 1`] = `
 {
   "proj:lint": [
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "workspace:[{workspaceRoot}/global1]",
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "proj:{projectRoot}/**/*",
     "proj:ProjectConfiguration",
@@ -79,7 +79,7 @@ exports[`task planner should hash executors 1`] = `
 exports[`task planner should include npm projects 1`] = `
 {
   "app:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "app:{projectRoot}/**/*",
     "app:ProjectConfiguration",
@@ -93,7 +93,7 @@ exports[`task planner should include npm projects 1`] = `
 exports[`task planner should make a plan with multiple filesets of a project 1`] = `
 {
   "parent:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "parent:!{projectRoot}/**/*.spec.ts",
     "parent:ProjectConfiguration",
@@ -101,7 +101,7 @@ exports[`task planner should make a plan with multiple filesets of a project 1`]
     "AllExternalDependencies",
   ],
   "parent:test": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "parent:{projectRoot}/**/*",
     "parent:ProjectConfiguration",
@@ -114,7 +114,7 @@ exports[`task planner should make a plan with multiple filesets of a project 1`]
 exports[`task planner should plan non-default filesets 1`] = `
 {
   "parent:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "child:{projectRoot}/**/*",
     "parent:!{projectRoot}/**/*.spec.ts",
@@ -130,7 +130,7 @@ exports[`task planner should plan non-default filesets 1`] = `
 exports[`task planner should plan the task where the project has dependencies 1`] = `
 {
   "parent:build": [
-    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+    "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
     "env:NX_CLOUD_ENCRYPTION_KEY",
     "child:{projectRoot}/**/*",
     "grandchild:{projectRoot}/**/*",

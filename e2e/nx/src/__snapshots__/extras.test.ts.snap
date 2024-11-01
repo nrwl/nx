@@ -3,6 +3,7 @@
 exports[`Extra Nx Misc Tests task graph inputs should correctly expand default task inputs 1`] = `
 {
   "general": [
+    ".env",
     ".gitignore",
     "nx.json",
   ],
@@ -21,6 +22,7 @@ exports[`Extra Nx Misc Tests task graph inputs should correctly expand default t
 exports[`Extra Nx Misc Tests task graph inputs should correctly expand dependent task inputs 1`] = `
 {
   "general": [
+    ".env",
     ".gitignore",
     "nx.json",
   ],

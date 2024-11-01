@@ -101,7 +101,7 @@ describe('task planner', () => {
       expect(plans).toMatchInlineSnapshot(`
         {
           "parent:build": [
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+            "workspace:[{workspaceRoot}/.env,{workspaceRoot}/.env.local,{workspaceRoot}/.local.env,{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
             "runtime:echo runtime123",
             "env:NONEXISTENTENV",
             "env:NX_CLOUD_ENCRYPTION_KEY",

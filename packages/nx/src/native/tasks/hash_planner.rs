@@ -74,6 +74,9 @@ impl HashPlanner {
                     .chain(vec![
                         HashInstruction::Environment("NX_CLOUD_ENCRYPTION_KEY".into()),
                         HashInstruction::WorkspaceFileSet(vec![
+                            "{workspaceRoot}/.env".to_string(),
+                            "{workspaceRoot}/.env.local".to_string(),
+                            "{workspaceRoot}/.local.env".to_string(),
                             "{workspaceRoot}/nx.json".to_string(),
                             "{workspaceRoot}/.gitignore".to_string(),
                             "{workspaceRoot}/.nxignore".to_string(),
