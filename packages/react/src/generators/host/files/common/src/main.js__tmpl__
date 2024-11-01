@@ -1,10 +1,13 @@
 <%_ if (dynamic) { _%>
-import { setRemoteDefinitions } from '@nx/react/mf';
+    import { init } from '@module-federation/enhanced/runtime';
 
-fetch('/assets/module-federation.manifest.json')
-.then((res) => res.json())
-.then(definitions => setRemoteDefinitions(definitions))
-.then(() =>  import('./bootstrap').catch(err => console.error(err)));
+    fetch('/assets/module-federation.manifest.json')
+    .then((res) => res.json())
+    .then((remotes: Record<string, string>) =>
+        Object.entries(remotes).map(([name, entry]) => ({ name, entry }))
+    )
+    .then((remotes) => init({ name: '<%= projectName %>', remotes }))
+    .then(() =>  import('./bootstrap').catch(err => console.error(err)));
 <%_ } else { _%>
-import('./bootstrap').catch(err => console.error(err));
+    import('./bootstrap').catch(err => console.error(err));
 <%_ } _%>
