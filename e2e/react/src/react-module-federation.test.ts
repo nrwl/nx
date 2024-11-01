@@ -987,7 +987,7 @@ describe('React Module Federation', () => {
     });
 
     afterAll(() => cleanupProject());
-    it('ttt should load remote dynamic module', async () => {
+    it('should load remote dynamic module', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
       const remotePort = 4205;
