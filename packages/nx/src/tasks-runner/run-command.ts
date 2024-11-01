@@ -55,6 +55,7 @@ import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
 import type { Observable } from 'rxjs';
 import { printPowerpackLicense } from '../utils/powerpack';
+import { databaseSupportEnabled } from '../utils/database';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -711,7 +712,7 @@ function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   }
   if (!isNxCloudUsed(readNxJson())) {
     lifeCycles.push(
-      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
+      databaseSupportEnabled() && !IS_WASM
         ? new TaskHistoryLifeCycle()
         : new LegacyTaskHistoryLifeCycle()
     );

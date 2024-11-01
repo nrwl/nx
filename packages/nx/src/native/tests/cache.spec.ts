@@ -2,7 +2,7 @@ import { TaskDetails, NxCache } from '../index';
 import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { rmSync } from 'fs';
-import { getDbConnection } from '../../utils/db-connection';
+import { getDbConnection } from '../../utils/database';
 import { randomBytes } from 'crypto';
 
 describe('Cache', () => {

@@ -13,7 +13,7 @@ import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
 import { NxCache, CachedResult as NativeCacheResult, IS_WASM } from '../native';
-import { getDbConnection } from '../utils/db-connection';
+import { databaseSupportEnabled, getDbConnection } from '../utils/database';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
@@ -32,7 +32,7 @@ export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
   return (
     !IS_WASM &&
-    process.env.NX_DISABLE_DB !== 'true' &&
+    databaseSupportEnabled() &&
     nxJson.useLegacyCache !== true &&
     process.env.NX_DB_CACHE !== 'false'
   );

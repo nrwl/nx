@@ -6,13 +6,13 @@ import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
 import { HashedTask, IS_WASM, TaskDetails } from '../native';
-import { getDbConnection } from '../utils/db-connection';
+import { databaseSupportEnabled, getDbConnection } from '../utils/database';
 
 let taskDetails: TaskDetails;
 
 export function getTaskDetails(): TaskDetails | null {
   // TODO: Remove when wasm supports sqlite
-  if (process.env.NX_DISABLE_DB === 'true' || IS_WASM) {
+  if (!databaseSupportEnabled() || IS_WASM) {
     return null;
   }
   if (!taskDetails) {

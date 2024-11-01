@@ -1,7 +1,7 @@
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { IS_WASM, NxTaskHistory, TaskRun, TaskTarget } from '../native';
-import { getDbConnection } from './db-connection';
+import { databaseSupportEnabled, getDbConnection } from './database';
 
 export class TaskHistory {
   taskHistory = new NxTaskHistory(getDbConnection());
@@ -42,7 +42,7 @@ let taskHistory: TaskHistory;
  * @returns singleton instance of TaskHistory, null if database is disabled or WASM is enabled
  */
 export function getTaskHistory(): TaskHistory | null {
-  if (process.env.NX_DISABLE_DB === 'true' || IS_WASM) {
+  if (!databaseSupportEnabled() || IS_WASM) {
     return null;
   }
 

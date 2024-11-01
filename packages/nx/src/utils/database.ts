@@ -31,3 +31,8 @@ function getEntryOrSet<TKey, TVal>(
   map.set(key, val);
   return val;
 }
+
+// database is disabled by default
+export function databaseSupportEnabled() {
+  return process.env.NX_DISABLE_DB === 'false';
+}
