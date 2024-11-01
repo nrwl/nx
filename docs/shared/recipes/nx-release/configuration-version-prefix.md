@@ -46,7 +46,6 @@ To set the versionPrefix option globally or for a specific project, add it to ei
 }
 ```
 
-
 With the `versionPrefix` option set to `^`, your `package.json` dependencies might look like this:
 
 ```json
@@ -62,4 +61,3 @@ With the `versionPrefix` option set to `^`, your `package.json` dependencies mig
 ```
 
 This configuration helps enforce a consistent approach to dependency management, allowing flexibility in how updates to dependencies are tracked and managed across your project.
-
