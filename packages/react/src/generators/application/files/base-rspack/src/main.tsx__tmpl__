@@ -1,9 +1,10 @@
 <%_ if (strict) { _%>import { StrictMode } from 'react';<%_ } _%>
 import * as ReactDOM from 'react-dom/client';
 <%_ if (routing) { _%>import { BrowserRouter } from 'react-router-dom';<%_ } _%>
-
 import App from './app/<%= fileName %>';
-import './styles.<%= style %>'
+<%_ if(hasStyleFile) { _%>
+import './styles.<%= style %>' 
+<%_ } _%>
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 <%_ if(strict && !routing) { _%>
