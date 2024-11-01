@@ -85,8 +85,7 @@ jest.mock('@nx/devkit', () => {
   };
 });
 
-// TODO(colum): turn these on when rspack is moved into the main repo
-xdescribe('hostGenerator', () => {
+describe('hostGenerator', () => {
   let tree: Tree;
 
   // TODO(@jaysoo): Turn this back to adding the plugin
@@ -121,9 +120,9 @@ xdescribe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
 
-      expect(tree.exists('test/src/bootstrap.js')).toBeTruthy();
-      expect(tree.exists('test/src/main.js')).toBeTruthy();
-      expect(tree.exists('test/src/app/app.js')).toBeTruthy();
+      expect(tree.exists('test/src/bootstrap.jsx')).toBeTruthy();
+      expect(tree.exists('test/src/main.jsx')).toBeTruthy();
+      expect(tree.exists('test/src/app/app.jsx')).toBeTruthy();
     });
 
     it('should generate host files and configs when --js=false', async () => {
@@ -206,6 +205,7 @@ xdescribe('hostGenerator', () => {
       });
 
       const packageJson = readJson(tree, 'package.json');
+      console.log(packageJson);
       expect(packageJson.devDependencies['@nx/web']).toBeDefined();
     });
 
@@ -362,6 +362,73 @@ xdescribe('hostGenerator', () => {
           bundler: 'rspack',
         })
       ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+    });
+
+    it('should generate create files with dynamic host', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const remote = 'remote1';
+
+      await hostGenerator(tree, {
+        directory: 'myhostapp',
+        remotes: [remote],
+        dynamic: true,
+        e2eTestRunner: 'none',
+        linter: Linter.None,
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+        bundler: 'rspack',
+      });
+
+      expect(tree.read('myhostapp/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { init } from '@module-federation/enhanced/runtime';
+
+        fetch('/assets/module-federation.manifest.json')
+          .then((res) => res.json())
+          .then((remotes: Record<string, string>) =>
+            Object.entries(remotes).map(([name, entry]) => ({ name, entry }))
+          )
+          .then((remotes) => init({ name: 'myhostapp', remotes }))
+          .then(() => import('./bootstrap').catch((err) => console.error(err)));
+        "
+      `);
+      expect(tree.read('myhostapp/src/app/app.tsx', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import * as React from 'react';
+
+        import NxWelcome from './nx-welcome';
+
+        import { Link, Route, Routes } from 'react-router-dom';
+
+        import { loadRemote } from '@module-federation/enhanced/runtime';
+
+        const Remote1 = React.lazy(() => loadRemote('remote1/Module') as any);
+
+        export function App() {
+          return (
+            <React.Suspense fallback={null}>
+              <ul>
+                <li>
+                  <Link to="/">Home</Link>
+                </li>
+
+                <li>
+                  <Link to="/remote1">Remote1</Link>
+                </li>
+              </ul>
+              <Routes>
+                <Route path="/" element={<NxWelcome title="myhostapp" />} />
+
+                <Route path="/remote1" element={<Remote1 />} />
+              </Routes>
+            </React.Suspense>
+          );
+        }
+
+        export default App;
+        "
+      `);
     });
   });
 });
