@@ -59,7 +59,10 @@ function runCliBuild(
       ['build', ...createBuildOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
-        env: process.env,
+        env: {
+          ...(options.local ? { YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' } : {}),
+          ...process.env,
+        },
       }
     );
 
