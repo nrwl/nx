@@ -187,10 +187,10 @@ async function createNodesInternal(
   );
   const nodeHash = hashArray([
     ...[
-      configFilePath,
+      fullConfigPath,
       ...extendedConfigFiles.files,
       ...Object.keys(internalReferencedFiles),
-      lockFileName,
+      join(context.workspaceRoot, lockFileName),
     ].map(hashFile),
     hashObject(options),
   ]);

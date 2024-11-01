@@ -61,7 +61,9 @@ describe('@nx/eslint:lint-project', () => {
           ...nx.configs["flat/typescript"],
           ...nx.configs["flat/javascript"],
           {
-              ignores: ["**/dist"]
+              ignores: [
+                  "**/dist"
+              ]
           },
           {
               files: [
@@ -70,17 +72,25 @@ describe('@nx/eslint:lint-project', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
-              rules: { "@nx/enforce-module-boundaries": [
+              rules: {
+                  "@nx/enforce-module-boundaries": [
                       "error",
                       {
                           enforceBuildableLibDependency: true,
-                          allow: ["^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"],
-                          depConstraints: [{
+                          allow: [
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                          ],
+                          depConstraints: [
+                              {
                                   sourceTag: "*",
-                                  onlyDependOnLibsWithTags: ["*"]
-                              }]
+                                  onlyDependOnLibsWithTags: [
+                                      "*"
+                                  ]
+                              }
+                          ]
                       }
-                  ] }
+                  ]
+              }
           },
           {
               files: [

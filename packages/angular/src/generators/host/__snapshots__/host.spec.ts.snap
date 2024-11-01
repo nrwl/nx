@@ -232,7 +232,10 @@ exports[`Host App Generator --ssr should generate the correct files 5`] = `
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 6`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -421,7 +424,10 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 5`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -655,6 +661,9 @@ const config: ModuleFederationConfig = {
   remotes: []
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -890,6 +899,9 @@ const config: ModuleFederationConfig = {
   remotes: []
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;

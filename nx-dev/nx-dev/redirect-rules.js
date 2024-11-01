@@ -429,9 +429,11 @@ const nxCloudUrls = {
   '/core-features/distribute-task-execution':
     '/ci/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
-  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/on-premise',
+  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/single-tenant',
   '/nx-cloud/private-cloud/get-started':
-    '/ci/recipes/enterprise/on-premise/on-premise',
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/on-premise':
+    '/ci/recipes/enterprise/single-tenant/overview',
   '/ci/features/on-premise': '/ci/recipes/enterprise/on-premise/on-premise',
   '/nx-cloud/private-cloud/auth-single-admin':
     '/ci/recipes/enterprise/on-premise/auth-single-admin',
@@ -449,19 +451,38 @@ const nxCloudUrls = {
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/advanced-config':
     '/ci/recipes/enterprise/on-premise/advanced-config',
-  '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
+  '/ci/recipes/on-premise': '/ci/recipes/enterprise/single-tenant',
+  '/ci/recipes/enterprise/on-premise': '/ci/recipes/enterprise/single-tenant',
   '/ci/recipes/on-premise/auth-single-admin':
     '/ci/recipes/enterprise/on-premise/auth-single-admin',
+  '/ci/recipes/enterprise/on-premise/auth-single-admin':
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/ami-setup':
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/advanced-config':
+    '/ci/recipes/enterprise/single-tenant/overview',
   '/ci/recipes/on-premise/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
+    '/ci/recipes/enterprise/single-tenant/auth-github',
+  '/ci/recipes/enterprise/on-premise/auth-github':
+    '/ci/recipes/enterprise/single-tenant/auth-github',
   '/ci/recipes/on-premise/ami-setup':
     '/ci/recipes/enterprise/on-premise/ami-setup',
   '/ci/recipes/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    '/ci/recipes/enterprise/single-tenant/auth-gitlab',
+  '/ci/recipes/enterprise/on-premise/auth-gitlab':
+    '/ci/recipes/enterprise/single-tenant/auth-gitlab',
   '/ci/recipes/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
+    '/ci/recipes/enterprise/single-tenant/auth-bitbucket',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket':
+    '/ci/recipes/enterprise/single-tenant/auth-bitbucket',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center':
+    '/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center',
   '/ci/recipes/on-premise/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    '/ci/recipes/enterprise/single-tenant/auth-saml',
+  '/ci/recipes/enterprise/on-premise/auth-saml':
+    '/ci/recipes/enterprise/single-tenant/auth-saml',
+  '/ci/recipes/enterprise/on-premise/custom-github-app':
+    '/ci/recipes/enterprise/single-tenant/custom-github-app',
   '/ci/recipes/on-premise/auth-saml-managed':
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/enterprise/on-premise/auth-saml-managed':

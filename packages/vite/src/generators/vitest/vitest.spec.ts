@@ -64,7 +64,9 @@ describe('vitest generator', () => {
           "extends": "./tsconfig.json",
           "include": [
             "vite.config.ts",
+            "vite.config.mts",
             "vitest.config.ts",
+            "vitest.config.mts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",

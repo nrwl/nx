@@ -1,4 +1,4 @@
-<% if (webpackPluginOptions) { %>
+<%_ if (webpackPluginOptions) { _%>
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
@@ -34,7 +34,7 @@ module.exports = {
     }),
   ],
 };
-<% } else { %>
+<%_ } else { _%>
 const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
 
@@ -52,4 +52,4 @@ module.exports = composePlugins(
     return config;
   }
 );
-<% } %>
+<%_ } _%>
