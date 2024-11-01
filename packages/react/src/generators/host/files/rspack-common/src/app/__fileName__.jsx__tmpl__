@@ -11,9 +11,9 @@ import { loadRemote } from '@module-federation/enhanced/runtime';
 <%_ if (remotes.length > 0) {
  remotes.forEach(function(r) { _%>
 <%_ if (dynamic) { _%>
- const <%= r.className %> = React.lazy(() => loadRemote('<%= r.fileName %>/Module') as any)
+const <%= r.className %> = React.lazy(() => loadRemote('<%= r.fileName %>/Module') as any)
 <%_ } else  { _%>
- const <%= r.className %> = React.lazy(() => import('<%= r.fileName %>/Module'));
+const <%= r.className %> = React.lazy(() => import('<%= r.fileName %>/Module'));
 <%_ } _%>
  <%_ }); _%>
 <%_ } _%>
