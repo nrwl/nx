@@ -9,12 +9,12 @@ import {
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Nx PowerPack',
+  title: 'Nx Powerpack',
   description:
     'Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.',
   openGraph: {
     url: 'https://nx.dev/powerpack',
-    title: 'Nx PowerPack',
+    title: 'Nx Powerpack',
     description:
       'Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.',
     images: [
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-powerpack-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx PowerPack: Advanced tools for enterprises',
+        alt: 'Nx Powerpack: Advanced tools for enterprises',
         type: 'image/jpeg',
       },
     ],
