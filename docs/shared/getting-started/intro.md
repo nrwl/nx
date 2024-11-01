@@ -2,6 +2,8 @@
 
 Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. [Check out our video](/getting-started/why-nx) to learn more about what Nx is about.
 
+{% github-repository title="Star Nx on GitHub" url="https://github.com/nrwl/nx" /%}
+
 ## Core Features
 
 - **Run Tasks Efficiently**: Nx [runs tasks in parallel](/features/run-tasks) and orders the tasks based on the dependencies between them.
