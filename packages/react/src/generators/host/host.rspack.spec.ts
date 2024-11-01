@@ -396,11 +396,8 @@ describe('hostGenerator', () => {
       expect(tree.read('myhostapp/src/app/app.tsx', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import * as React from 'react';
-
         import NxWelcome from './nx-welcome';
-
         import { Link, Route, Routes } from 'react-router-dom';
-
         import { loadRemote } from '@module-federation/enhanced/runtime';
 
         const Remote1 = React.lazy(() => loadRemote('remote1/Module') as any);
@@ -412,14 +409,12 @@ describe('hostGenerator', () => {
                 <li>
                   <Link to="/">Home</Link>
                 </li>
-
                 <li>
                   <Link to="/remote1">Remote1</Link>
                 </li>
               </ul>
               <Routes>
                 <Route path="/" element={<NxWelcome title="myhostapp" />} />
-
                 <Route path="/remote1" element={<Remote1 />} />
               </Routes>
             </React.Suspense>
