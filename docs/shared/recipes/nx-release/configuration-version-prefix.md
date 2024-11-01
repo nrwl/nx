@@ -39,7 +39,7 @@ To set the versionPrefix option globally or for a specific project, add it to ei
   "release": {
     "version": {
       "generatorOptions": {
-        "versionPrefix": "auto" // or "", "~", "^", "=" depending on your preference
+        "versionPrefix": "^" // or "", "~", "^", "=" depending on your preference
       }
     }
   }
