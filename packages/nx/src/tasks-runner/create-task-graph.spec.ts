@@ -1624,7 +1624,7 @@ describe('createTaskGraph', () => {
       }
     );
     expect(taskGraph).toEqual({
-      roots: [],
+      roots: ['lib2:build'],
       tasks: {
         'lib1:build': expect.objectContaining({
           id: 'lib1:build',
@@ -1668,7 +1668,7 @@ describe('createTaskGraph', () => {
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
-        'lib2:build': ['lib4:build'],
+        'lib2:build': [],
         'lib4:build': ['lib1:build'],
       },
     });
@@ -1870,7 +1870,7 @@ describe('createTaskGraph', () => {
     });
   });
 
-  it('should handle cycles between projects that do not create cycles between tasks and not contain the same task target (app1:build -> app2 <-> app3:build)``', () => {
+  it('should handle cycles between projects that do not create cycles between tasks and not contain the same task target (app1:build -> app2 <-> app3:build)', () => {
     projectGraph = {
       nodes: {
         app1: {
@@ -2487,6 +2487,175 @@ describe('createTaskGraph', () => {
         "lib-2:codegen": [],
       }
     `);
+  });
+
+  it('should handle mulitple projects that are dependent on each other (app1->app2->app3->app4)', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app3: {
+          name: 'app3',
+          type: 'app',
+          data: {
+            root: 'app3-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app4: {
+          name: 'app4',
+          type: 'app',
+          data: {
+            root: 'app4-root',
+            targets: {
+              precompile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'app2', type: 'implicit' }],
+        app2: [{ source: 'app2', target: 'app3', type: 'implicit' }],
+        app3: [{ source: 'app3', target: 'app4', type: 'implicit' }],
+      },
+    };
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['compile'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app4:precompile'],
+      tasks: {
+        'app1:compile': {
+          id: 'app1:compile',
+          target: {
+            project: 'app1',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+        },
+        'app4:precompile': {
+          id: 'app4:precompile',
+          target: {
+            project: 'app4',
+            target: 'precompile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app4-root',
+          parallelism: true,
+        },
+      },
+      dependencies: {
+        'app1:compile': ['app4:precompile'],
+        'app4:precompile': [],
+      },
+    });
+
+    taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app2', 'app3'],
+      ['compile'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app4:precompile'],
+      tasks: {
+        'app2:compile': {
+          id: 'app2:compile',
+          target: {
+            project: 'app2',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app2-root',
+          parallelism: true,
+        },
+        'app3:compile': {
+          id: 'app3:compile',
+          target: {
+            project: 'app3',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app3-root',
+          parallelism: true,
+        },
+        'app4:precompile': {
+          id: 'app4:precompile',
+          target: {
+            project: 'app4',
+            target: 'precompile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app4-root',
+          parallelism: true,
+        },
+      },
+      dependencies: {
+        'app2:compile': ['app4:precompile'],
+        'app3:compile': ['app4:precompile'],
+        'app4:precompile': [],
+      },
+    });
   });
 });
 
