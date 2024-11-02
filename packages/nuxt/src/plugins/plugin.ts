@@ -208,10 +208,13 @@ async function getInfoFromNuxtConfig(
 ): Promise<{
   buildDir: string;
 }> {
+  let config;
   // TODO(Colum): Once plugins are isolated we can go back to @nuxt/kit since each plugin will be run in its own worker.
-  const config = await loadConfigFile(
-    join(context.workspaceRoot, configFilePath)
-  );
+  try {
+    config = await loadConfigFile(join(context.workspaceRoot, configFilePath));
+  } catch (e) {
+    // If the config file is not found, we can't do anything
+  }
   return {
     buildDir:
       config?.buildDir ??
