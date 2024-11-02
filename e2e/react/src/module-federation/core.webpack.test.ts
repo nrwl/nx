@@ -1,23 +1,17 @@
-import { Tree, stripIndents } from '@nx/devkit';
+import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  fileExists,
   killPorts,
   killProcessAndPorts,
   newProject,
-  readJson,
   runCLI,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
-  tmpProjPath,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
-import { join } from 'path';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { readPort } from './utils';
 
 describe('React Module Federation', () => {
