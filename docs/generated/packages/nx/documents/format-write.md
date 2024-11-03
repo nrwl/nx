@@ -28,6 +28,7 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 | `--libs-and-apps`            | boolean | Format only libraries and applications files.                                                                                                     |
 | `--projects`                 | string  | Projects to format (comma/space delimited).                                                                                                       |
 | `--sort-root-tsconfig-paths` | boolean | Ensure the workspace's tsconfig compilerOptions.paths are sorted. Warning: This will cause comments in the tsconfig to be lost. (Default: `true`) |
+| `--stdin`                    | boolean | Change the way Nx is calculating the affected command by providing directly changed files from stdin, list of files delimited by commas.          |
 | `--uncommitted`              | boolean | Uncommitted changes.                                                                                                                              |
 | `--untracked`                | boolean | Untracked changes.                                                                                                                                |
 | `--version`                  | boolean | Show version number.                                                                                                                              |
