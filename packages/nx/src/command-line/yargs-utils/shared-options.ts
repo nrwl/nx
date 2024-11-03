@@ -174,6 +174,11 @@ export function withAffectedOptions(yargs: Argv) {
       requiresArg: true,
       coerce: parseCSV,
     })
+    .option('stdin', {
+      describe:
+        'Change the way Nx is calculating the affected command by providing directly changed files from stdin, list of files delimited by commas.',
+      type: 'boolean',
+    })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
       type: 'boolean',
@@ -204,9 +209,22 @@ export function withAffectedOptions(yargs: Argv) {
     .implies('head', 'base')
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head'],
+      stdin: ['uncommitted', 'untracked', 'base', 'head'],
       untracked: ['uncommitted', 'files', 'base', 'head'],
       uncommitted: ['files', 'untracked', 'base', 'head'],
-    });
+    })
+    .middleware(async (args) => {
+      if (args.stdin) {
+        const chunks: Buffer[] = [];
+        for await (const chunk of process.stdin) {
+          chunks.push(chunk);
+        }
+        const files = parseCSV(Buffer.concat(chunks).toString());
+        if (Array.isArray(args.files)) files.push(...args.files);
+        else if (typeof args.files === 'string') files.push(args.files);
+        args.files = files as any; // Yargs types don't reflect the coerce option
+      }
+    }, true);
 }
 
 export interface RunManyOptions extends RunOptions {
