@@ -8180,6 +8180,14 @@
         "disableCollapsible": false
       },
       {
+        "id": "module-federation",
+        "path": "/nx-api/module-federation",
+        "name": "module-federation",
+        "children": [],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "nest",
         "path": "/nx-api/nest",
         "name": "nest",
