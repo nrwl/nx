@@ -3,7 +3,7 @@ title: Overview of the Nx powerpack-azure-cache Plugin
 description: The powerpack-azure-cache Nx plugin enables you to use Azure Storage to host your remote cache instead of Nx Cloud
 ---
 
-The `@nx/powerpack-azure-cache` plugin enables you to use [Azure Storage](https://aws.amazon.com/azure) instead of Nx Cloud to host your remote cache.
+The `@nx/powerpack-azure-cache` plugin enables you to use [Azure Storage](https://azure.microsoft.com/en-us/products/storage/blobs) instead of Nx Cloud to host your remote cache.
 
 This plugin will enable the remote cache for your Nx workspace, but does not provide any of the other features of Nx Cloud. If you want to leverage [distributed task execution](/ci/features/distribute-task-execution), [re-running flaky tasks](/ci/features/flaky-tasks) or [automatically splitting tasks](/ci/features/split-e2e-tasks), you'll need to [connect to Nx Cloud](/ci/intro/connect-to-nx-cloud) and use [Nx Replay](/ci/features/remote-cache) instead.
 
