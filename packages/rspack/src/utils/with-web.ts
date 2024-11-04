@@ -40,6 +40,7 @@ export function withWeb(opts: WithWebOptions = {}) {
 
     return {
       ...config,
+      target: config.target ?? 'web',
       experiments: {
         css: true,
       },
