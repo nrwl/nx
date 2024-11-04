@@ -444,6 +444,9 @@ describe('app', () => {
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
+    expect(
+      readJson(tree, 'package.json').devDependencies['@testing-library/react']
+    ).toBeDefined();
   });
 
   it('should setup jest with SVGR support', async () => {
@@ -604,7 +607,9 @@ describe('app', () => {
 
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
-            { ignores: ['.next/**/*'] },
+            {
+              ignores: ['.next/**/*'],
+            },
           ];
           "
         `);

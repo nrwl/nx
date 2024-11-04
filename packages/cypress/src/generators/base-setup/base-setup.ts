@@ -4,11 +4,12 @@ import {
   generateFiles,
   joinPathFragments,
   offsetFromRoot,
+  readJson,
   readProjectConfiguration,
   updateJson,
-  readJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 
 export interface CypressBaseSetupSchema {
@@ -44,12 +45,22 @@ export function addBaseCypressSetup(
     tsConfigPath: opts.hasTsConfig
       ? `${opts.offsetFromProjectRoot}tsconfig.json`
       : getRelativePathToRootTsConfig(tree, projectConfig.root),
+    linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
   };
 
   generateFiles(
     tree,
     join(__dirname, 'files/common'),
+    projectConfig.root,
+    templateVars
+  );
+
+  generateFiles(
+    tree,
+    isUsingTsSolutionSetup(tree)
+      ? join(__dirname, 'files/tsconfig/ts-solution')
+      : join(__dirname, 'files/tsconfig/non-ts-solution'),
     projectConfig.root,
     templateVars
   );
@@ -143,4 +154,9 @@ function isEsmProject(tree: Tree, projectRoot: string) {
     packageJson = readJson(tree, 'package.json');
   }
   return packageJson.type === 'module';
+}
+
+function isEslintInstalled(tree: Tree): boolean {
+  const { dependencies, devDependencies } = readJson(tree, 'package.json');
+  return !!(dependencies?.eslint || devDependencies?.eslint);
 }

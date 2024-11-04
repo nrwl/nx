@@ -23,7 +23,10 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
-import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import {
+  moduleFederationEnhancedVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -147,8 +150,10 @@ export async function hostGenerator(
 
   const installTask = addDependenciesToPackageJson(
     host,
-    {},
-    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+    { '@module-federation/enhanced': moduleFederationEnhancedVersion },
+    {
+      '@nx/web': nxVersion,
+    }
   );
   tasks.push(installTask);
 
