@@ -2,13 +2,12 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
-  runCLI,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
-import { readPort } from './utils';
+import { readPort, runCLI } from './utils';
 
 describe('Federate Module', () => {
   let proj: string;

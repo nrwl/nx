@@ -2,21 +2,16 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  fileExists,
   killPorts,
   killProcessAndPorts,
   newProject,
-  readJson,
-  runCLI,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
-  tmpProjPath,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
-import { readPort } from './utils';
+import { readPort, runCLI } from './utils';
 
 describe('React Rspack Module Federation', () => {
   describe('Default Configuration', () => {

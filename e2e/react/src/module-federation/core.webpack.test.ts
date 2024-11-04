@@ -5,14 +5,13 @@ import {
   killPorts,
   killProcessAndPorts,
   newProject,
-  runCLI,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
-import { readPort } from './utils';
+import { readPort, runCLI } from './utils';
 
 describe('React Module Federation', () => {
   describe('Default Configuration', () => {

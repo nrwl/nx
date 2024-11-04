@@ -4,7 +4,6 @@ import {
   killProcessAndPorts,
   newProject,
   readJson,
-  runCLI,
   runCommandUntil,
   runE2ETests,
   tmpProjPath,
@@ -12,7 +11,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
-import { readPort } from './utils';
+import { readPort, runCLI } from './utils';
 
 describe('Dynamic Module Federation', () => {
   beforeAll(() => {

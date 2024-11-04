@@ -2,7 +2,6 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
-  runCLI,
   runCommandUntil,
   runE2ETests,
   uniq,
@@ -10,7 +9,7 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
-import { readPort } from './utils';
+import { readPort, runCLI } from './utils';
 
 describe('Independent Deployability', () => {
   let proj: string;
