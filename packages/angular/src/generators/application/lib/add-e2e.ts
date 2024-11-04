@@ -1,16 +1,12 @@
 import { Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
-  readProjectConfiguration,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';

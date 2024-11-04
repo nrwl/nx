@@ -4,12 +4,12 @@
 
 This is a big release so let's go through the highlights first. There is also an important "Breaking changes" section at the end.
 
-## New Version Structure
+##### New Version Structure
 
 We have changed our version structure to a more simplified tag: `YEAR.MM.PATCH_NUMBER`
 The goal is to make it easier to spot how old/recent your existing NxCloud version is and compare it against newer deployments.
 
-## DTE Summary Table on Main Agent
+##### DTE Summary Table on Main Agent
 
 When distributing with DTE, up until now, we have been replaying all your tasks logs "as they come in" from the DTE agents back onto your main job.
 
@@ -19,7 +19,7 @@ This release contains the new "CI Table Log View" summary, and you can read all 
 
 If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
 
-## Personal Access Tokens
+##### Personal Access Tokens
 
 Up until now, for developers to get access to read (and maybe write) to the cache you always needed an access token to be made available locally: either
 committed to the repo via `nx.json` or made available as an env variable via a `.local.env` file.
@@ -34,7 +34,7 @@ The moment they get removed as a member from your workspace, they won't be able 
 
 Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](/blog/personal-access-tokens).
 
-## GitHub App Integration
+##### GitHub App Integration
 
 If you are using GitHub, setting up a custom GitHub app for your org is the best way to take advantage of all the latest "GitHub-specific" features we offer.
 Please see instructions [here](/ci/recipes/enterprise/single-tenant/custom-github-app) on setting up an app.
@@ -43,7 +43,7 @@ You will then need to make sure you set up your VCS integration again through yo
 As part of this, you will also get the "GitHub membership management" feature, where everybody who is a collaborator of your GitHub repo will also get "read" access to your NxCloud workspace,
 without you having to explicitly invite them.
 
-## Misc Items
+##### Misc Items
 
 - Improved docker agents support
   - We fixed a few issues related to running docker builds in Nx Agents
@@ -54,7 +54,7 @@ without you having to explicitly invite them.
 - Various SAML fixes and improvements
   - One highlight is that users can now login from Okta directly (while before they had to initiate login through NxCloud web app)
 
-## Breaking Changes
+##### Breaking Changes
 
 Most workspaces will not be affected by this, but if you have these values configured in your `helm-config.yaml`:
 
@@ -91,7 +91,7 @@ We now have full support for BitBucket Data Center (self-hosted):
 - VCS integration for posting comments with live updates about your CI runs
 - full agents integration
 - more info about each one of your commits on the NxCloud web app
-- you can even [set-up auth with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center#bitbucket-data-center-auth)
+- you can even [set-up auth with BitBucket Data Center](/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center#bitbucket-data-center-auth)
 
 ##### Misc
 
@@ -109,7 +109,7 @@ If you are using DTE, you will now need to pass the `--distribute-on="manual"` f
 
 A few months ago, we introduced a new feature to our managed SASS NxCloud product: easy membership management via GitHub. If you create a new workspace on [https://cloud.nx.app/](https://cloud.nx.app/) right now you will be guided through how to connect it to your GitHub repository. Now everyone that has access to your GitHub repository will also get access to your NxCloud workspace. If anyone loses access to GitHub (maybe they leave the company), they will also lose access to NxCloud. This makes membership management easy and straightforward, as you don't have to manually invite users anymore. Of course, setting up this connection also gives you NxCloud run status updates directly on your PRs - a feature we've had for a long time.
 
-This feature has now been release for on-prem set-ups as well. To benefit from it, you'll need to create your own Github App with permissions to access your repository. Your on-prem NxCloud instance will then use this app to pull membership info from Github and check user permissions. You can find [the full setup instructions here](/ci/recipes/enterprise/on-premise/custom-github-app).
+This feature has now been release for on-prem set-ups as well. To benefit from it, you'll need to create your own Github App with permissions to access your repository. Your on-prem NxCloud instance will then use this app to pull membership info from Github and check user permissions. You can find [the full setup instructions here](/ci/recipes/enterprise/single-tenant/custom-github-app).
 
 ##### DTE v2 enabled by default
 

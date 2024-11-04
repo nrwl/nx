@@ -227,6 +227,18 @@ export const champions2: Champion[] = [
     ],
     location: 'USA',
   },
+  {
+    name: 'Martin Hochel',
+    expertise: 'Architecture, Scalability, Plugins, Releases, OpenSource',
+    imageUrl: '/images/champions/martin-hochel.webp',
+    contact: [
+      {
+        label: 'LinkedIn: hochelmartin',
+        link: 'https://linkedin.com/in/hochelmartin',
+      },
+    ],
+    location: 'Czechia',
+  },
 ];
 export const champions3: Champion[] = [
   {
