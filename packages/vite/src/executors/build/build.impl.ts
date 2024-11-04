@@ -54,14 +54,16 @@ export async function* viteBuildExecutor(
       : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
   const { buildOptions, otherOptions } = await getBuildExtraArgs(options);
+  const defaultMode = otherOptions?.mode ?? 'production';
 
   const resolved = await resolveConfig(
     {
       configFile: viteConfigPath,
-      mode: otherOptions?.mode ?? 'production',
+      mode: defaultMode,
     },
     'build',
-    otherOptions?.mode ?? 'production'
+    defaultMode,
+    process.env.NODE_ENV ?? defaultMode
   );
 
   const outDir =

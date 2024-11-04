@@ -26,7 +26,7 @@ export function PowerpackFeatures(): ReactElement {
     <section className="relative isolate">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mt-32 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="col-span-full flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="xl:max-w-xl">
               <SectionHeading
                 as="h2"
@@ -141,7 +141,7 @@ export function PowerpackFeatures(): ReactElement {
               </ButtonLink>
             </div>
           </div>
-          <div className="col-span-2 flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:col-span-2 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
             <div className="relative hidden h-full w-64 shrink-0 overflow-hidden lg:block">
               <img
                 src="/images/powerpack/trust-secure-light.avif"
@@ -199,8 +199,15 @@ export function PowerpackFeatures(): ReactElement {
                   licensing model that reduces red tape and speeds up
                   procurement processes
                 </Strong>
-                .Your teams can get started quickly without lengthy
-                negotiations, ensuring a faster go-to-market.
+                . Your teams can get started quickly without lengthy
+                negotiations, ensuring a faster go-to-market.{' '}
+                <TextLink
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  title="Get a Powerpack license"
+                >
+                  Free trial available for Enterprises
+                </TextLink>
+                .
               </p>
             </div>
           </div>
@@ -217,7 +224,7 @@ export function PowerpackFeatures(): ReactElement {
               <p className="mt-6 text-pretty text-lg">
                 <Strong>
                   Nx Powerpack is included at no extra cost for Nx Enterprise
-                  customer
+                  customers
                 </Strong>
                 , unlocking additional capabilities without needing to manage
                 more tools or onboard a new vendor.

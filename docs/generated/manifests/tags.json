@@ -1197,15 +1197,6 @@
       "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
-  "on-premise": [
-    {
-      "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/features/nx-enterprise-on-prem",
-      "id": "on-premise",
-      "name": "Set up Nx Cloud On-Premise",
-      "path": "/ci/recipes/enterprise/on-premise/on-premise"
-    }
-  ],
   "docker": [
     {
       "description": "",

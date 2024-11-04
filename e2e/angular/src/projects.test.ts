@@ -568,4 +568,21 @@ describe('Angular Projects', () => {
       runCLI(`server ${webpackApp} --output-hashing none`)
     ).toThrow();
   }, 500_000);
+
+  it('should generate apps and libs with vitest', async () => {
+    const app = uniq('app');
+    const lib = uniq('lib');
+
+    runCLI(
+      `generate @nx/angular:app ${app} --unit-test-runner=vitest --no-interactive`
+    );
+    runCLI(
+      `generate @nx/angular:lib ${lib} --unit-test-runner=vitest --no-interactive`
+    );
+
+    // Make sure we are using vitest
+    checkFilesExist(`${app}/vite.config.mts`, `${lib}/vite.config.mts`);
+
+    runCLI(`run-many --target test --projects=${app},${lib} --parallel`);
+  });
 });

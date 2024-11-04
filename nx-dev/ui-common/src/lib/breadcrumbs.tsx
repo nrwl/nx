@@ -18,7 +18,6 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
         current: '/' + segments.slice(0, index + 1).join('/') === cleanedPath,
       })),
   ];
-  const hasRef = path.includes('?') ? path.slice(0, path.indexOf('?')) : '';
 
   if (pages.length === 1) {
     return <></>;
@@ -51,26 +50,6 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
               </div>
             </li>
           ))}
-          {hasRef && (
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon
-                  className="h-5 w-5 flex-shrink-0 text-slate-500"
-                  aria-hidden="true"
-                />
-                <a
-                  href={path}
-                  className={classNames(
-                    'text-sm font-medium hover:text-slate-800',
-                    'ml-4 text-slate-500'
-                  )}
-                  aria-current="page"
-                >
-                  {hasRef}
-                </a>
-              </div>
-            </li>
-          )}
         </ol>
       </nav>
     </div>

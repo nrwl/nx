@@ -32,20 +32,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -86,20 +94,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -135,20 +151,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -183,21 +207,31 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  { ignores: ['ignore/me'] },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  {
+    ignores: ['ignore/me'],
+  },
 ];
 "
 `;
@@ -234,20 +268,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -292,20 +334,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -322,7 +372,11 @@ const compat = new FlatCompat({
 
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
-  { settings: { sharedData: 'Hello' } },
+  {
+    settings: {
+      sharedData: 'Hello',
+    },
+  },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -341,20 +395,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -389,20 +451,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -461,20 +531,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -533,20 +611,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -595,8 +681,12 @@ module.exports = [
     // Override or add rules here
     rules: {},
   },
-  { ignores: ['ignore/me'] },
-  { ignores: ['ignore/me/as/well'] },
+  {
+    ignores: ['ignore/me'],
+  },
+  {
+    ignores: ['ignore/me/as/well'],
+  },
 ];
 "
 `;

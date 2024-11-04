@@ -206,7 +206,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   exposes: {
     './Module': 'test/src/app/remote-entry/entry.module.ts',
@@ -441,6 +444,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -623,7 +629,10 @@ bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 2`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   exposes: {
     './Routes': 'test/src/app/remote-entry/entry.routes.ts',
@@ -691,6 +700,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;

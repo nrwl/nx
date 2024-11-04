@@ -129,7 +129,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       delete json.compilerOptions.paths;
 
       updatedJson = {
-        ...updateJson,
+        ...updatedJson,
         compilerOptions: {
           ...updatedJson.compilerOptions,
           ...appJSON.compilerOptions,

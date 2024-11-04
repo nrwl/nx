@@ -40,6 +40,7 @@ export async function createApplicationFiles(
   } else {
     styleSolutionSpecificAppFiles = '../files/style-css-module';
   }
+  const hasStyleFile = ['scss', 'css', 'less'].includes(options.style);
 
   const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     host,
@@ -63,6 +64,8 @@ export async function createApplicationFiles(
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     appTests,
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
+    style: options.style === 'tailwind' ? 'css' : options.style,
+    hasStyleFile,
   };
 
   if (options.bundler === 'vite') {

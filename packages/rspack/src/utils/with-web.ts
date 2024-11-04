@@ -116,11 +116,38 @@ export function withWeb(opts: WithWebOptions = {}) {
           template: options.indexHtml
             ? path.join(context.root, options.indexHtml)
             : path.join(projectRoot, 'src/index.html'),
+          ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
         }),
         new rspack.EnvironmentPlugin({
-          NODE_ENV: 'development',
+          NODE_ENV: isProd ? 'production' : 'development',
         }),
+        new rspack.DefinePlugin(
+          getClientEnvironment(isProd ? 'production' : undefined).stringified
+        ),
       ],
     };
   };
+}
+
+function getClientEnvironment(mode?: string) {
+  // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
+  // injected into the application via DefinePlugin in webpack configuration.
+  const nxPublicKeyRegex = /^NX_PUBLIC_/i;
+
+  const raw = Object.keys(process.env)
+    .filter((key) => nxPublicKeyRegex.test(key))
+    .reduce((env, key) => {
+      env[key] = process.env[key];
+      return env;
+    }, {});
+
+  // Stringify all values so we can feed into webpack DefinePlugin
+  const stringified = {
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {}),
+  };
+
+  return { stringified };
 }

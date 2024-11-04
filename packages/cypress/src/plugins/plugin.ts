@@ -130,6 +130,65 @@ async function createNodesInternal(
   };
 }
 
+function getTargetOutputs(outputs: string[], subfolder?: string): string[] {
+  return outputs.map((output) =>
+    subfolder ? join(output, subfolder) : output
+  );
+}
+
+function getTargetConfig(
+  cypressConfig: any,
+  outputSubfolder: string,
+  ciBaseUrl?: string
+): string {
+  const config = {};
+  if (ciBaseUrl) {
+    config['baseUrl'] = ciBaseUrl;
+  }
+
+  const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
+
+  if (videosFolder) {
+    config['videosFolder'] = join(videosFolder, outputSubfolder);
+  }
+
+  if (screenshotsFolder) {
+    config['screenshotsFolder'] = join(screenshotsFolder, outputSubfolder);
+  }
+
+  if (e2e) {
+    config['e2e'] = {};
+    if (e2e.videosFolder) {
+      config['e2e']['videosFolder'] = join(e2e.videosFolder, outputSubfolder);
+    }
+    if (e2e.screenshotsFolder) {
+      config['e2e']['screenshotsFolder'] = join(
+        e2e.screenshotsFolder,
+        outputSubfolder
+      );
+    }
+  }
+
+  if (component) {
+    config['component'] = {};
+    if (component.videosFolder) {
+      config['component']['videosFolder'] = join(
+        component.videosFolder,
+        outputSubfolder
+      );
+    }
+    if (component.screenshotsFolder) {
+      config['component']['screenshotsFolder'] = join(
+        component.screenshotsFolder,
+        outputSubfolder
+      );
+    }
+  }
+
+  // Stringify twice to escape the quotes.
+  return JSON.stringify(JSON.stringify(config));
+}
+
 function getOutputs(
   projectRoot: string,
   cypressConfig: any,
@@ -266,18 +325,24 @@ async function buildCypressTargets(
       const groupName = 'E2E (CI)';
       metadata = { targetGroups: { [groupName]: [] } };
       const ciTargetGroup = metadata.targetGroups[groupName];
+
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
+        const outputSubfolder = relativeSpecFilePath
+          .replace(/[\/\\]/g, '-')
+          .replace(/\./g, '-');
 
         ciTargetGroup.push(targetName);
         targets[targetName] = {
-          outputs,
+          outputs: getTargetOutputs(outputs, outputSubfolder),
           inputs,
           cache: true,
-          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}${
-            ciBaseUrl ? ` --config='{"baseUrl": "${ciBaseUrl}"}'` : ''
-          }`,
+          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath} --config=${getTargetConfig(
+            cypressConfig,
+            outputSubfolder,
+            ciBaseUrl
+          )}`,
           options: {
             cwd: projectRoot,
           },

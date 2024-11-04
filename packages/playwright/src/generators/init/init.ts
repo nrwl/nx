@@ -8,7 +8,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
@@ -21,8 +20,6 @@ export async function initGeneratorInternal(
   tree: Tree,
   options: InitGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'playwright', 'init');
-
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(tree);
