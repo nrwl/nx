@@ -1189,7 +1189,7 @@ describe('React Rspack Module Federation', () => {
         `${shell}/src/assets/module-federation.manifest.json`,
         (json) => {
           return {
-            [remote]: `http://localhost:${remotePort}`,
+            [remote]: `http://localhost:${remotePort}/mf-manifest.json`,
           };
         }
       );
@@ -1198,7 +1198,9 @@ describe('React Rspack Module Federation', () => {
         `${shell}/src/assets/module-federation.manifest.json`
       );
       expect(manifest[remote]).toBeDefined();
-      expect(manifest[remote]).toEqual('http://localhost:4205');
+      expect(manifest[remote]).toEqual(
+        'http://localhost:4205/mf-manifest.json'
+      );
 
       // update e2e
       updateFile(

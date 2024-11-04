@@ -987,7 +987,7 @@ describe('React Module Federation', () => {
     });
 
     afterAll(() => cleanupProject());
-    it('ttt should load remote dynamic module', async () => {
+    it('should load remote dynamic module', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
       const remotePort = 4205;
@@ -1015,7 +1015,7 @@ describe('React Module Federation', () => {
         `${shell}/src/assets/module-federation.manifest.json`,
         (json) => {
           return {
-            [remote]: `http://localhost:${remotePort}`,
+            [remote]: `http://localhost:${remotePort}/mf-manifest.json`,
           };
         }
       );
@@ -1024,7 +1024,9 @@ describe('React Module Federation', () => {
         `${shell}/src/assets/module-federation.manifest.json`
       );
       expect(manifest[remote]).toBeDefined();
-      expect(manifest[remote]).toEqual('http://localhost:4205');
+      expect(manifest[remote]).toEqual(
+        'http://localhost:4205/mf-manifest.json'
+      );
 
       // update e2e
       updateFile(

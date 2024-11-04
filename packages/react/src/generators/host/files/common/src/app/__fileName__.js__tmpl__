@@ -3,12 +3,19 @@ import * as React from 'react';
 import NxWelcome from "./nx-welcome";
 <%_ } _%>
 import { Link, Route, Routes } from 'react-router-dom';
+<%_ if (dynamic) { _%>
+import { loadRemote } from '@module-federation/enhanced/runtime';
+<%_ } _%>
 
 <%_ if (remotes.length > 0) {
-  remotes.forEach(function(r) { _%>
+ remotes.forEach(function(r) { _%>
+<%_ if (dynamic) { _%>
+const <%= r.className %> = React.lazy(() => loadRemote('<%= r.fileName %>/Module') as any)
+<%_ } else  { _%>
 const <%= r.className %> = React.lazy(() => import('<%= r.fileName %>/Module'));
-<%_ }); _%>
-<% } %>
+<%_ } _%>
+ <%_ }); _%>
+<%_ } _%>
 export function App() {
   return (
     <React.Suspense fallback={null}>

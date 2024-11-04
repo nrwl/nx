@@ -23,7 +23,7 @@ variables:
 
     - <%= packageManagerInstall %><% if(hasCypress){ %>
     - <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
-    - <%= packageManagerPrefix %> playwright install<% } %>
+    - <%= packageManagerPrefix %> playwright install --with-deps<% } %>
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 

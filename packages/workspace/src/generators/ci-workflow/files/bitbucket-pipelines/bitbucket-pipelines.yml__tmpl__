@@ -27,7 +27,7 @@ pipelines:
 
             - <%= packageManagerInstall %><% if(hasCypress){ %>
             - <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
-            - <%= packageManagerPrefix %> playwright install<% } %>
+            - <%= packageManagerPrefix %> playwright install --with-deps<% } %>
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
