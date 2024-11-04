@@ -5,10 +5,12 @@
   "projectType": "application",
   "targets": {
     "pw-e2e": {
-      "command": "echo 'pw-e2e disabled'"
+      "command": "echo 'pw-e2e disabled'",
+      "cache": true
     },
     "e2e-ci": {
-      "command": "echo 'e2e-ci disabled'"
+      "command": "echo 'e2e-ci disabled'",
+      "cache": true
     }
   },
   "tags": ["scope:nx-dev", "type:e2e"],
