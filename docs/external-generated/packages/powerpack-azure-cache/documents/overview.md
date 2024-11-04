@@ -63,6 +63,10 @@ You need to set the `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION
 
 Note: Any authentication method that [sets up the `DefaultAzureCredentials`](https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/credential-chains#use-defaultazurecredential-for-flexibility) will enable the plugin to work.
 
+{% callout type="note" title="Custom Azure Endpoint" %}
+If you are using a custom Azure endpoint, you will need to authenticate by [setting the `AZURE_STORAGE_CONNECTION_STRING` environment variable](https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string). The `@nx/powerpack-azure-cache` plugin will detect the environment variable and automatically use it to connect to Azure.
+{% /callout %}
+
 ### 3. Configure the Nx Cache to Use Azure Storage
 
 Finally, you need to configure your Nx cache in the `nx.json` file. The `container` that you specify needs to already exist - Nx doesn't create it for you.
