@@ -344,7 +344,7 @@
     "@types/three": "^0.166.0",
     "@widgetbot/react-embed": "^1.9.0",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "3.0.0-rc.46",
+    "@yarnpkg/parsers": "3.0.2",
     "axios": "^1.7.4",
     "classnames": "^2.5.1",
     "cliui": "^8.0.1",
