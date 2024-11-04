@@ -28,12 +28,8 @@ pub struct WorkspaceContext {
 
 type Files = Vec<(PathBuf, String)>;
 
-fn gather_and_hash_files(
-    workspace_root: &Path,
-    cache_dir: String,
-    nx_version: &str,
-) -> Vec<(PathBuf, String)> {
-    let archived_files = read_files_archive(&cache_dir, nx_version);
+fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathBuf, String)> {
+    let archived_files = read_files_archive(&cache_dir);
 
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
@@ -50,7 +46,7 @@ fn gather_and_hash_files(
     files.par_sort();
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
-    write_files_archive(&cache_dir, file_hashes, nx_version);
+    write_files_archive(&cache_dir, file_hashes);
 
     files
 }
@@ -58,7 +54,7 @@ fn gather_and_hash_files(
 struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
-    fn gather_files(workspace_root: &Path, cache_dir: String, nx_version: String) -> Self {
+    fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -76,7 +72,7 @@ impl FilesWorker {
             trace!("Initially locking files");
             let mut workspace_files = lock.lock().expect("Should be the first time locking files");
 
-            let files = gather_and_hash_files(&workspace_root, cache_dir, &nx_version);
+            let files = gather_and_hash_files(&workspace_root, cache_dir);
 
             *workspace_files = files;
             let files_len = workspace_files.len();
@@ -90,7 +86,7 @@ impl FilesWorker {
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn gather_files(workspace_root: &Path, cache_dir: String, nx_version: String) -> Self {
+    fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -101,7 +97,7 @@ impl FilesWorker {
 
         let workspace_root = workspace_root.to_owned();
 
-        let files = gather_and_hash_files(&workspace_root, cache_dir, &nx_version);
+        let files = gather_and_hash_files(&workspace_root, cache_dir);
 
         trace!("{} files retrieved", files.len());
 
@@ -201,7 +197,7 @@ impl FilesWorker {
 #[napi]
 impl WorkspaceContext {
     #[napi(constructor)]
-    pub fn new(workspace_root: String, cache_dir: String, nx_version: String) -> Self {
+    pub fn new(workspace_root: String, cache_dir: String) -> Self {
         enable_logger();
 
         trace!(?workspace_root);
@@ -209,11 +205,7 @@ impl WorkspaceContext {
         let workspace_root_path = PathBuf::from(&workspace_root);
 
         WorkspaceContext {
-            files_worker: FilesWorker::gather_files(
-                &workspace_root_path,
-                cache_dir.clone(),
-                nx_version,
-            ),
+            files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
         }

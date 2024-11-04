@@ -6,11 +6,7 @@ use std::path::Path;
 
 use tracing::trace;
 
-const NX_FILES_ARCHIVE: &str = "nx_files";
-
-fn nx_files_archive_name(nx_version: &str) -> String {
-    format!("{}_{}.nxt", NX_FILES_ARCHIVE, nx_version)
-}
+const NX_FILES_ARCHIVE: &str = "nx_files.nxt";
 
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
 #[archive(check_bytes)]
@@ -42,9 +38,9 @@ impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
     }
 }
 
-pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P, nx_version: &str) -> Option<NxFileHashes> {
+pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> {
     let now = std::time::Instant::now();
-    let archive_path = cache_dir.as_ref().join(nx_files_archive_name(nx_version));
+    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
     if !archive_path.exists() {
         return None;
     }
@@ -74,14 +70,13 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P, nx_version: &str) -> Opt
     }
 }
 
-pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes, nx_version: &str) {
+pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes) {
     let now = std::time::Instant::now();
-    let archive_name = nx_files_archive_name(nx_version);
-    let archive_path = cache_dir.as_ref().join(&archive_name);
+    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
     let archive_path_temp =
         cache_dir
             .as_ref()
-            .join(format!("{}.{}", &archive_name, std::process::id()));
+            .join(format!("{}.{}", NX_FILES_ARCHIVE, std::process::id()));
 
     std::fs::create_dir_all(&cache_dir)
         .inspect_err(|e| {

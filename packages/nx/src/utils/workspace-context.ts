@@ -3,7 +3,6 @@ import { performance } from 'perf_hooks';
 import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
-import { version as NX_VERSION } from '../../package.json';
 
 let workspaceContext: WorkspaceContext | undefined;
 
@@ -13,8 +12,7 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
-    workspaceDataDirectoryForWorkspace(workspaceRoot),
-    NX_VERSION
+    workspaceDataDirectoryForWorkspace(workspaceRoot)
   );
   performance.mark('workspace-context:end');
   performance.measure(
