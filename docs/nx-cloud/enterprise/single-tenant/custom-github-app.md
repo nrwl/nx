@@ -2,7 +2,7 @@
 
 Before creating your container, you'll need to create a GitHub app for your organisation.
 
-## Creating a GitHub OAuth app
+## Creating a GitHub app
 
 From GitHub, click on your profile picture and chose "Settings":
 
