@@ -2,6 +2,7 @@ import { names } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  killPorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -10,6 +11,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -31,17 +33,18 @@ describe('Angular Module Federation', () => {
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');
     const sharedLib = uniq('shared-lib');
+    const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
     const hostPort = 4300;
     const remotePort = 4301;
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --no-interactive`
     );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-standalone --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/")
@@ -56,16 +59,35 @@ describe('Angular Module Federation', () => {
 
     // generate a shared lib with a seconary entry point
     runCLI(
-      `generate @nx/angular:library ${sharedLib} --buildable --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${sharedLib} --buildable --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
+
+    // Add a library that will be accessed via a wildcard in tspath mappings
+    runCLI(
+      `generate @nx/angular:library ${wildcardLib} --buildable --no-standalone --no-interactive`
+    );
+
+    updateJson('tsconfig.base.json', (json) => {
+      delete json.compilerOptions.paths[`@${proj}/${wildcardLib}`];
+      json.compilerOptions.paths[`@${proj}/${wildcardLib}/*`] = [
+        `${wildcardLib}/src/lib/*`,
+      ];
+      return json;
+    });
+
     // update host & remote files to use shared library
     updateFile(
       `${hostApp}/src/app/app.module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
+      import { ${
+        names(wildcardLib).className
+      }Module } from '@${proj}/${wildcardLib}/${
+        names(secondaryEntry).fileName
+      }.module';
       import { ${
         names(sharedLib).className
       }Module } from '@${proj}/${sharedLib}';
@@ -81,6 +103,7 @@ describe('Angular Module Federation', () => {
         imports: [
           BrowserModule,
           ${names(sharedLib).className}Module,
+          ${names(wildcardLib).className}Module,
           RouterModule.forRoot(
             [
               {
@@ -157,10 +180,10 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --bundler=webpack --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:application ${app2} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:application ${app2} --bundler=webpack --no-interactive`
     );
 
     // convert apps
@@ -198,7 +221,7 @@ describe('Angular Module Federation', () => {
 
     // generate remote apps
     runCLI(
-      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
     );
 
     // ports
@@ -208,106 +231,47 @@ describe('Angular Module Federation', () => {
     const remote2Port = readJson(join(remote2, 'project.json')).targets.serve
       .options.port;
 
-    const processSwc = await runCommandUntil(
-      `serve-ssr ${host} --port=${hostPort}`,
-      (output) =>
-        output.includes(
-          `Node Express server listening on http://localhost:${remote1Port}`
-        ) &&
-        output.includes(
-          `Node Express server listening on http://localhost:${remote2Port}`
-        ) &&
-        output.includes(
-          `Angular Universal Live Development Server is listening`
-        )
+    [host, remote1, remote2].forEach((app) => {
+      checkFilesExist(
+        `${app}/module-federation.config.ts`,
+        `${app}/webpack.server.config.ts`
+      );
+
+      ['build', 'server'].forEach((target) => {
+        ['development', 'production'].forEach(async (configuration) => {
+          const cliOutput = runCLI(`run ${app}:${target}:${configuration}`);
+          expect(cliOutput).toContain('Successfully ran target');
+
+          await killPorts(readPort(app));
+        });
+      });
+    });
+
+    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    updateFile(
+      `${host}-e2e/src/example.spec.ts`,
+      (_) => `import { test, expect } from '@playwright/test';
+test('renders remotes', async ({ page }) => {
+  await page.goto('/');
+
+  // Expect the page to contain a specific text.
+  // get ul li text
+  const items = page.locator('ul li');
+
+  await items.nth(2).waitFor()
+  expect(await items.count()).toEqual(3);
+  expect(await items.nth(0).innerText()).toContain('Home');
+  expect(await items.nth(1).innerText()).toContain('${capitalize(remote1)}');
+  expect(await items.nth(2).innerText()).toContain('${capitalize(remote2)}');
+});`
     );
-
-    await killProcessAndPorts(
-      processSwc.pid,
-      hostPort,
-      remote1Port,
-      remote2Port
-    );
-
-    const processTsNode = await runCommandUntil(
-      `serve-ssr ${host} --port=${hostPort}`,
-      (output) =>
-        output.includes(
-          `Node Express server listening on http://localhost:${remote1Port}`
-        ) &&
-        output.includes(
-          `Node Express server listening on http://localhost:${remote2Port}`
-        ) &&
-        output.includes(
-          `Angular Universal Live Development Server is listening`
-        ),
-      { env: { NX_PREFER_TS_NODE: 'true' } }
-    );
-
-    await killProcessAndPorts(
-      processTsNode.pid,
-      hostPort,
-      remote1Port,
-      remote2Port
-    );
-  }, 20_000_000);
-
-  it('should should support generating host and remote apps with --project-name-and-root-format=derived', async () => {
-    const hostApp = uniq('host');
-    const remoteApp = uniq('remote');
-    const hostPort = 4800;
-    const remotePort = 4801;
-
-    // generate host app
-    runCLI(
-      `generate @nx/angular:host ${hostApp} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-    // generate remote app
-    runCLI(
-      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --port=${remotePort} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    // check files are generated with the layout directory ("apps/")
-    checkFilesExist(
-      `apps/${hostApp}/src/app/app.module.ts`,
-      `apps/${remoteApp}/src/app/app.module.ts`
-    );
-
-    // check default generated host is built successfully
-    const buildOutputSwc = await runCommandUntil(`build ${hostApp}`, (output) =>
-      output.includes('Successfully ran target build')
-    );
-    await killProcessAndPorts(buildOutputSwc.pid);
-
-    const buildOutputTsNode = await runCommandUntil(
-      `build ${hostApp}`,
-      (output) => output.includes('Successfully ran target build'),
-      {
-        env: { NX_PREFER_TS_NODE: 'true' },
-      }
-    );
-    await killProcessAndPorts(buildOutputTsNode.pid);
-
-    const processSwc = await runCommandUntil(
-      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
-      (output) =>
-        !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`)
-    );
-
-    await killProcessAndPorts(processSwc.pid, hostPort, remotePort);
-
-    const processTsNode = await runCommandUntil(
-      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
-      (output) =>
-        !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`),
-      {
-        env: { NX_PREFER_TS_NODE: 'true' },
-      }
-    );
-
-    await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
+    if (runE2ETests()) {
+      const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
+        output.includes(`Successfully ran target e2e for project ${host}-e2e`)
+      );
+      await killProcessAndPorts(e2eProcess.pid);
+    }
   }, 20_000_000);
 
   it('should federate a module from a library and update an existing remote', async () => {
@@ -319,12 +283,10 @@ describe('Angular Module Federation', () => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    runCLI(
-      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
     // Federate Module
     runCLI(
@@ -393,16 +355,14 @@ describe('Angular Module Federation', () => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    runCLI(
-      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
     // Federate Module
     runCLI(
-      `generate @nx/angular:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive`
+      `generate @nx/angular:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --no-interactive`
     );
 
     updateFile(`${lib}/src/index.ts`, `export { isEven } from './lib/${lib}';`);
@@ -475,3 +435,13 @@ describe('Angular Module Federation', () => {
     }
   }, 500_000);
 });
+
+function readPort(appName: string): number {
+  let config;
+  try {
+    config = readJson(join('apps', appName, 'project.json'));
+  } catch {
+    config = readJson(join(appName, 'project.json'));
+  }
+  return config.targets.serve.options.port;
+}

@@ -23,6 +23,7 @@ Target's configuration
 - [options](../../devkit/documents/TargetConfiguration#options): T
 - [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
 - [parallelism](../../devkit/documents/TargetConfiguration#parallelism): boolean
+- [syncGenerators](../../devkit/documents/TargetConfiguration#syncgenerators): string[]
 
 ## Properties
 
@@ -119,3 +120,12 @@ caching engine.
 
 Whether this target can be run in parallel with other tasks
 Default is true
+
+---
+
+### syncGenerators
+
+• `Optional` **syncGenerators**: `string`[]
+
+List of generators to run before the target to ensure the workspace
+is up to date.

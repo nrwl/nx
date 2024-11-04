@@ -2,7 +2,7 @@ import { addProjectConfiguration, joinPathFragments, Tree } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);

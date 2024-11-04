@@ -49,9 +49,6 @@
       "options": {
         "command": "node ./scripts/copy-readme.js nest"
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js nest @nrwl/nest"
     }
   },
   "implicitDependencies": ["node", "eslint"]

@@ -97,16 +97,20 @@ export function Graph({
         {title}
       </div>
       {type === 'project' ? (
-        <NxProjectGraphViz
-          height={height}
-          groupByFolder={false}
-          theme={theme}
-          projects={parsedProps.projects}
-          workspaceLayout={parsedProps.workspaceLayout}
-          dependencies={parsedProps.dependencies}
-          affectedProjectIds={parsedProps.affectedProjectIds}
-          enableTooltips={parsedProps.enableTooltips}
-        />
+        <div style={{ height }}>
+          <NxProjectGraphViz
+            renderMode="nx-docs"
+            groupByFolder={false}
+            theme={theme}
+            projects={parsedProps.projects}
+            composite={parsedProps.composite}
+            fileMap={{}}
+            workspaceLayout={parsedProps.workspaceLayout}
+            dependencies={parsedProps.dependencies}
+            affectedProjectIds={parsedProps.affectedProjectIds}
+            enableTooltips={parsedProps.enableTooltips}
+          />
+        </div>
       ) : (
         <NxTaskGraphViz
           height={height}

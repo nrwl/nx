@@ -21,6 +21,11 @@ export interface SvgrOptions {
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
+    /**
+     * @deprecated Next.js via turbo conflicts with how webpack handles the import of SVGs.
+     * It is best to configure SVGR manually with the `@svgr/webpack` loader.
+     * We will remove this option in Nx 21.
+     * */
     svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
     fileReplacements?: { replace: string; with: string }[];
@@ -92,7 +97,7 @@ function getNxContext(
       parseTargetString(targetOptions.devServerTarget, partialExecutorContext)
     );
   } else if (targetOptions.buildTarget) {
-    // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
+    // Executors such as @nx/next:server define the buildTarget option.
     return getNxContext(
       graph,
       parseTargetString(targetOptions.buildTarget, partialExecutorContext)
@@ -121,12 +126,17 @@ function withNx(
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
       'next/constants'
     );
-    // Two scenarios where we want to skip graph creation:
+    // Three scenarios where we want to skip graph creation:
     // 1. Running production server means the build is already done so we just need to start the Next.js server.
     // 2. During graph creation (i.e. create nodes), we won't have a graph to read, and it is not needed anyway since it's a build-time concern.
+    // 3. Running outside of Nx, we don't have a graph to read.
     //
     // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
-    if (PHASE_PRODUCTION_SERVER === phase || global.NX_GRAPH_CREATION) {
+    if (
+      PHASE_PRODUCTION_SERVER === phase ||
+      global.NX_GRAPH_CREATION ||
+      !process.env.NX_TASK_TARGET_TARGET
+    ) {
       const { nx, ...validNextConfig } = _nextConfig;
       return {
         distDir: '.next',
@@ -212,7 +222,12 @@ function withNx(
 
       const userWebpackConfig = nextConfig.webpack;
 
-      const { createWebpackConfig } = require('@nx/next/src/utils/config');
+      const { createWebpackConfig } = require(require.resolve(
+        '@nx/next/src/utils/config',
+        {
+          paths: [workspaceRoot],
+        }
+      )) as typeof import('@nx/next/src/utils/config');
       // If we have file replacements or assets, inside of the next config we pass the workspaceRoot as a join of the workspaceRoot and the projectDirectory
       // Because the file replacements and assets are relative to the projectRoot, not the workspaceRoot
       nextConfig.webpack = (a, b) =>
@@ -220,8 +235,9 @@ function withNx(
           _nextConfig.nx?.fileReplacements
             ? joinPathFragments(workspaceRoot, projectDirectory)
             : workspaceRoot,
-          _nextConfig.nx?.assets || options.assets,
-          _nextConfig.nx?.fileReplacements || options.fileReplacements
+          projectDirectory,
+          _nextConfig.nx?.fileReplacements || options.fileReplacements,
+          _nextConfig.nx?.assets || options.assets
         )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
 
       return nextConfig;
@@ -344,6 +360,12 @@ export function getNextConfig(
 
       // Default SVGR support to be on for projects.
       if (nx?.svgr !== false || typeof nx?.svgr === 'object') {
+        forNextVersion('>=15.0.0', () => {
+          // Since Next.js 15, turbopack could be enabled by default.
+          console.warn(
+            `NX: Next.js SVGR support is deprecated. If used with turbopack, it may not work as expected and is not recommended. Please configure SVGR manually.`
+          );
+        });
         const defaultSvgrOptions = {
           svgo: false,
           titleProp: true,
@@ -352,7 +374,7 @@ export function getNextConfig(
 
         const svgrOptions =
           typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
-        // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
+        // TODO(v21): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
         // It should be:
         // use: [{
         //   test: /\.svg$/i,

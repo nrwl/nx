@@ -6,6 +6,10 @@ The rule uses the project graph to collect all the dependencies of your project,
 
 We use the version numbers of the installed packages when checking whether the version specifier in `package.json` is correct. We do this because this is the only version for which we can "guarantee" that things work and were tested. If you specify a range outside of that version, that would mean that you are shipping potentially untested code.
 
+{% callout type="check" title="Keep the Package Manager Lock File Up-to-Date" %}
+The `@nx/dependency-checks` rule requires the presence of an up-to-date lock file in the workspace root to detect installed packages and their versions correctly. If the `package.json` file has changes that are not reflected in the lock file, make sure to perform a package installation.
+{% /callout %}
+
 ## Usage
 
 Library generators from `@nx` packages will configure this rule automatically when you opt-in for bundler/build setup. This rule is intended for publishable/buildable libraries, so it will only run if a `build` target is detected in the configuration (this name can be modified - see [options](#options)).

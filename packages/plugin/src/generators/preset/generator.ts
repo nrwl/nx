@@ -7,12 +7,15 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from '../plugin/plugin';
 import { PresetGeneratorSchema } from './schema';
 import createPackageGenerator from '../create-package/create-package';
 
 export default async function (tree: Tree, options: PresetGeneratorSchema) {
+  assertNotUsingTsSolutionSetup(tree, 'plugin', 'preset');
+
   const tasks: GeneratorCallback[] = [];
   const pluginProjectName = names(
     options.pluginName.includes('/')
@@ -26,7 +29,6 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
     linter: Linter.EsLint,
-    name: pluginProjectName,
     skipFormat: true,
     unitTestRunner: 'jest',
     importPath: options.pluginName,
@@ -35,8 +37,8 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     // when creating a CLI package, the plugin will be in the packages folder
     directory:
       options.createPackageName && options.createPackageName !== 'false'
-        ? 'packages'
-        : undefined,
+        ? `packages/${pluginProjectName}`
+        : pluginProjectName,
     rootProject: options.createPackageName ? false : true,
   });
   tasks.push(pluginTask);
@@ -46,7 +48,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   if (options.createPackageName) {
     const e2eProject = `${options.pluginName}-e2e`;
     const cliTask = await createPackageGenerator(tree, {
-      directory: 'packages',
+      directory: `packages/${options.createPackageName}`,
       name: options.createPackageName,
       e2eProject: e2eProject,
       project: options.pluginName,
@@ -62,6 +64,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 
   return runTasksInSerial(...tasks);
 }
+
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
     const nxPluginEntry = json.dependencies['@nx/plugin'];

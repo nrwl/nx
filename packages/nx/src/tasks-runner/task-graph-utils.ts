@@ -1,10 +1,6 @@
-import { readNxJson } from '../config/configuration';
 import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { TaskGraph } from '../config/task-graph';
 import { output } from '../utils/output';
-import { serializeTarget } from '../utils/serialize-target';
-import chalk = require('chalk');
 
 function _findCycle(
   graph: { dependencies: Record<string, string[]> },
@@ -99,7 +95,7 @@ export function validateNoAtomizedTasks(
     `Please enable Nx Cloud or use the slower ${nonAtomizedTasks.join(
       ','
     )} task${nonAtomizedTasks.length > 1 ? 's' : ''}.`,
-    'Learn more at https://nx.dev/ci/features/split-e2e-tasks#use-atomizer-only-with-nx-cloud-distribution',
+    'Learn more at https://nx.dev/ci/features/split-e2e-tasks#nx-cloud-is-required-to-run-atomized-tasks',
   ];
 
   if (atomizedRootTasks.length === 1) {

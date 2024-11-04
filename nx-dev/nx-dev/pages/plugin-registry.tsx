@@ -4,6 +4,7 @@ import {
   Breadcrumbs,
   DocumentationHeader,
   Footer,
+  PluginType,
   SidebarContainer,
 } from '@nx/nx-dev/ui-common';
 import { PluginDirectory } from '@nx/nx-dev/ui-community';
@@ -12,6 +13,7 @@ import { useRouter } from 'next/router';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../lib/packages.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 declare const fetch: any;
 let qualityIndicators = require('./quality-indicators.json');
@@ -20,7 +22,7 @@ interface PluginInfo {
   description: string;
   name: string;
   url: string;
-  isOfficial: boolean;
+  pluginType: PluginType;
 }
 interface BrowseProps {
   pluginList: PluginInfo[];
@@ -52,12 +54,14 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           url: plugin.path,
           ...qualityIndicators[plugin.packageName],
           nxVersion: 'official',
-          isOfficial: true,
+          pluginType: plugin.name?.startsWith('powerpack-')
+            ? 'nxPowerpack'
+            : 'nxOpenSource',
         })),
         ...pluginList.map((plugin) => ({
           ...plugin,
           ...qualityIndicators[plugin.name],
-          isOfficial: false,
+          pluginType: 'community',
         })),
       ],
       menu: menusApi.getMenu('nx', ''),
@@ -76,11 +80,11 @@ export default function Browse(props: BrowseProps): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx Plugin Listing"
+        title="Nx Plugin Registry"
         description="Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Plugin Listing',
+          title: 'Nx Plugin Registry',
           description:
             'Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins.',
           images: [
@@ -112,11 +116,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
               toggleNav={toggleNav}
             />
           </div>
-          <div
-            id="wrapper"
-            data-testid="wrapper"
-            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-          >
+          <ScrollableContent>
             <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
               <div id="content-wrapper" className="w-full flex-auto flex-col">
                 <div className="mb-6 pt-8">
@@ -130,7 +130,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
                     Are you a plugin author? You can{' '}
                     <a
                       className="underline"
-                      href="/extending-nx/tutorials/publish-plugin#list-your-nx-plugin"
+                      href="/extending-nx/recipes/publish-plugin#list-your-nx-plugin"
                     >
                       add your plugin to the registry
                     </a>{' '}
@@ -141,7 +141,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
             </div>
 
             <Footer />
-          </div>
+          </ScrollableContent>
         </main>
       </div>
     </>

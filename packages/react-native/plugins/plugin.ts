@@ -26,7 +26,7 @@ export interface ReactNativePluginOptions {
   buildAndroidTargetName?: string;
   bundleTargetName?: string;
   syncDepsTargetName?: string;
-  upgradeTargetname?: string;
+  upgradeTargetName?: string;
 }
 
 const cachePath = join(workspaceDataDirectory, 'react-native.hash');
@@ -143,7 +143,7 @@ function buildReactNativeTargets(
     [options.syncDepsTargetName]: {
       executor: '@nx/react-native:sync-deps',
     },
-    [options.upgradeTargetname]: {
+    [options.upgradeTargetName]: {
       command: `react-native upgrade`,
       options: { cwd: projectRoot },
     },
@@ -194,6 +194,6 @@ function normalizeOptions(
   options.buildAndroidTargetName ??= 'build-android';
   options.bundleTargetName ??= 'bundle';
   options.syncDepsTargetName ??= 'sync-deps';
-  options.upgradeTargetname ??= 'upgrade';
+  options.upgradeTargetName ??= 'upgrade';
   return options;
 }

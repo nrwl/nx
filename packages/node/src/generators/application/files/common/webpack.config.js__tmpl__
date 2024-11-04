@@ -1,4 +1,4 @@
-<% if (webpackPluginOptions) { %>
+<%_ if (webpackPluginOptions) { _%>
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
@@ -15,10 +15,11 @@ module.exports = {
       assets: <%- JSON.stringify(webpackPluginOptions.assets) %>,
       optimization: false,
       outputHashing: 'none',
+      generatePackageJson: true,
     })
   ],
 };
-<% } else { %>
+<%_ } else { _%>
 const { composePlugins, withNx} = require('@nx/webpack');
 
 // Nx plugins for webpack.
@@ -32,4 +33,4 @@ module.exports = composePlugins(
     return config;
   }
 );
-<% } %>
+<%_ } _%>

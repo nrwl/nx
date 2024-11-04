@@ -129,7 +129,7 @@ export default async function handler(request: NextRequest) {
 
     const response: Stream<OpenAI.Chat.Completions.ChatCompletionChunk> =
       await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo-16k',
+        model: 'gpt-4o-mini',
         messages: chatMessages,
         temperature: 0,
         stream: true,

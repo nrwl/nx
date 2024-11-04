@@ -2,16 +2,16 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  TargetConfiguration,
   detectPackageManager,
   joinPathFragments,
   parseJson,
   readJsonFile,
+  TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readFileSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
@@ -109,7 +109,7 @@ async function buildStorybookTargets(
   context: CreateNodesContext,
   projectName: string
 ) {
-  const buildOutputs = getOutputs(projectRoot);
+  const buildOutputs = getOutputs();
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -187,8 +187,10 @@ function buildTarget(
           externalDependencies: [
             'storybook',
             '@storybook/angular',
-            '@storybook/test-runner',
-          ],
+            isStorybookTestRunnerInstalled()
+              ? '@storybook/test-runner'
+              : undefined,
+          ].filter(Boolean),
         },
       ],
     };
@@ -203,7 +205,12 @@ function buildTarget(
           ? ['production', '^production']
           : ['default', '^default']),
         {
-          externalDependencies: ['storybook', '@storybook/test-runner'],
+          externalDependencies: [
+            'storybook',
+            isStorybookTestRunnerInstalled()
+              ? '@storybook/test-runner'
+              : undefined,
+          ].filter(Boolean),
         },
       ],
     };
@@ -274,25 +281,15 @@ async function getStorybookFramework(
   return typeof framework === 'string' ? framework : framework.name;
 }
 
-function getOutputs(projectRoot: string): string[] {
-  const normalizedOutputPath = normalizeOutputPath(projectRoot);
-
+function getOutputs(): string[] {
   const outputs = [
-    normalizedOutputPath,
+    `{projectRoot}/storybook-static`,
     `{options.output-dir}`,
     `{options.outputDir}`,
     `{options.o}`,
   ];
 
   return outputs;
-}
-
-function normalizeOutputPath(projectRoot: string): string | undefined {
-  if (projectRoot === '.') {
-    return `{projectRoot}/storybook-static`;
-  } else {
-    return `{workspaceRoot}/{projectRoot}/storybook-static`;
-  }
 }
 
 function normalizeOptions(

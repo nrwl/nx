@@ -3,7 +3,11 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { Generator } from '../../config/misc-interfaces';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  NxReleaseConfiguration,
+  readNxJson,
+} from '../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
@@ -15,7 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
-import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { combineOptionsForGenerator } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
@@ -26,17 +30,19 @@ import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
+import { deepMergeJson } from './config/deep-merge-json';
 import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
 import {
   readRawVersionPlans,
-  setVersionPlansOnGroups,
+  setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
 import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
+import { printConfigAndExit } from './utils/print-config';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   ReleaseVersionGeneratorResult,
@@ -46,6 +52,7 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
+import { handleErrors } from '../../utils/handle-errors';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -79,10 +86,21 @@ export interface ReleaseVersionGeneratorSchema {
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
   deleteVersionPlans?: boolean;
   /**
-   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
-   * This is only applicable to independently released projects.
+   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects. 'never' will cause dependents to not be updated.
    */
-  updateDependents?: 'never' | 'auto';
+  updateDependents?: 'auto' | 'never';
+  /**
+   * Whether or not to completely omit project logs when that project has no applicable changes. This can be useful for
+   * large monorepos which have a large number of projects, especially when only a subset are released together.
+   */
+  logUnchangedProjects?: boolean;
+  /**
+   * Whether or not to keep local dependency protocols (e.g. file:, workspace:) when updating dependencies in
+   * package.json files. This is `false` by default as not all package managers support publishing with these protocols
+   * still present in the package.json.
+   */
+  preserveLocalDependencyProtocols?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -101,114 +119,284 @@ export interface NxReleaseVersionResult {
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => releaseVersion(args));
+  handleErrors(args.verbose, () => createAPI({})(args));
 
-/**
- * NOTE: This function is also exported for programmatic usage and forms part of the public API
- * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
- * to have control over their own error handling when using the API.
- */
-export async function releaseVersion(
-  args: VersionOptions
-): Promise<NxReleaseVersionResult> {
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
-  const nxJson = readNxJson();
-
-  if (args.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
-  // Apply default configuration to any optional user configuration
-  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-    projectGraph,
-    await createProjectFileMapUsingProjectGraph(projectGraph),
-    nxJson.release
-  );
-  if (configError) {
-    return await handleNxReleaseConfigError(configError);
-  }
-
-  // The nx release top level command will always override these three git args. This is how we can tell
-  // if the top level release command was used or if the user is using the changelog subcommand.
-  // If the user explicitly overrides these args, then it doesn't matter if the top level config is set,
-  // as all of the git options would be overridden anyway.
-  if (
-    (args.gitCommit === undefined ||
-      args.gitTag === undefined ||
-      args.stageChanges === undefined) &&
-    nxJson.release?.git
-  ) {
-    const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
-      'release',
-      'git',
-    ]);
-    output.error({
-      title: `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
-      bodyLines: [nxJsonMessage],
-    });
-    process.exit(1);
-  }
-
-  const {
-    error: filterError,
-    releaseGroups,
-    releaseGroupToFilteredProjects,
-  } = filterReleaseGroups(
-    projectGraph,
-    nxReleaseConfig,
-    args.projects,
-    args.groups
-  );
-  if (filterError) {
-    output.error(filterError);
-    process.exit(1);
-  }
-  const rawVersionPlans = await readRawVersionPlans();
-  setVersionPlansOnGroups(
-    rawVersionPlans,
-    releaseGroups,
-    Object.keys(projectGraph.nodes)
-  );
-
-  if (args.deleteVersionPlans === undefined) {
-    // default to not delete version plans after versioning as they may be needed for changelog generation
-    args.deleteVersionPlans = false;
-  }
-
-  runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
-    dryRun: args.dryRun,
-    verbose: args.verbose,
-  });
-
-  const tree = new FsTree(workspaceRoot, args.verbose);
-
-  const versionData: VersionData = {};
-  const commitMessage: string | undefined =
-    args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
-  const generatorCallbacks: (() => Promise<void>)[] = [];
-
+export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   /**
-   * additionalChangedFiles are files which need to be updated as a side-effect of versioning (such as package manager lock files),
-   * and need to get staged and committed as part of the existing commit, if applicable.
+   * NOTE: This function is also exported for programmatic usage and forms part of the public API
+   * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+   * to have control over their own error handling when using the API.
    */
-  const additionalChangedFiles = new Set<string>();
-  const additionalDeletedFiles = new Set<string>();
+  return async function releaseVersion(
+    args: VersionOptions
+  ): Promise<NxReleaseVersionResult> {
+    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    const { projects } =
+      readProjectsConfigurationFromProjectGraph(projectGraph);
+    const nxJson = readNxJson();
+    const userProvidedReleaseConfig = deepMergeJson(
+      nxJson.release ?? {},
+      overrideReleaseConfig ?? {}
+    );
 
-  if (args.projects?.length) {
+    // Apply default configuration to any optional user configuration
+    const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+      projectGraph,
+      await createProjectFileMapUsingProjectGraph(projectGraph),
+      userProvidedReleaseConfig
+    );
+    if (configError) {
+      return await handleNxReleaseConfigError(configError);
+    }
+    // --print-config exits directly as it is not designed to be combined with any other programmatic operations
+    if (args.printConfig) {
+      return printConfigAndExit({
+        userProvidedReleaseConfig,
+        nxReleaseConfig,
+        isDebug: args.printConfig === 'debug',
+      });
+    }
+
+    // The nx release top level command will always override these three git args. This is how we can tell
+    // if the top level release command was used or if the user is using the changelog subcommand.
+    // If the user explicitly overrides these args, then it doesn't matter if the top level config is set,
+    // as all of the git options would be overridden anyway.
+    if (
+      (args.gitCommit === undefined ||
+        args.gitTag === undefined ||
+        args.stageChanges === undefined) &&
+      userProvidedReleaseConfig.git
+    ) {
+      const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+        'release',
+        'git',
+      ]);
+      output.error({
+        title: `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
+        bodyLines: [nxJsonMessage],
+      });
+      process.exit(1);
+    }
+
+    const {
+      error: filterError,
+      releaseGroups,
+      releaseGroupToFilteredProjects,
+    } = filterReleaseGroups(
+      projectGraph,
+      nxReleaseConfig,
+      args.projects,
+      args.groups
+    );
+    if (filterError) {
+      output.error(filterError);
+      process.exit(1);
+    }
+    if (!args.specifier) {
+      const rawVersionPlans = await readRawVersionPlans();
+      await setResolvedVersionPlansOnGroups(
+        rawVersionPlans,
+        releaseGroups,
+        Object.keys(projectGraph.nodes),
+        args.verbose
+      );
+    } else {
+      if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {
+        console.log(
+          `Skipping version plan discovery as a specifier was provided`
+        );
+      }
+    }
+
+    if (args.deleteVersionPlans === undefined) {
+      // default to not delete version plans after versioning as they may be needed for changelog generation
+      args.deleteVersionPlans = false;
+    }
+
+    runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+
+    const tree = new FsTree(workspaceRoot, args.verbose);
+
+    const versionData: VersionData = {};
+    const commitMessage: string | undefined =
+      args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
+    const generatorCallbacks: (() => Promise<void>)[] = [];
+
     /**
-     * Run versioning for all remaining release groups and filtered projects within them
+     * additionalChangedFiles are files which need to be updated as a side-effect of versioning (such as package manager lock files),
+     * and need to get staged and committed as part of the existing commit, if applicable.
+     */
+    const additionalChangedFiles = new Set<string>();
+    const additionalDeletedFiles = new Set<string>();
+
+    if (args.projects?.length) {
+      /**
+       * Run versioning for all remaining release groups and filtered projects within them
+       */
+      for (const releaseGroup of releaseGroups) {
+        const releaseGroupName = releaseGroup.name;
+        const releaseGroupProjectNames = Array.from(
+          releaseGroupToFilteredProjects.get(releaseGroup)
+        );
+        const projectBatches = batchProjectsByGeneratorConfig(
+          projectGraph,
+          releaseGroup,
+          // Only batch based on the filtered projects within the release group
+          releaseGroupProjectNames
+        );
+
+        for (const [
+          generatorConfigString,
+          projectNames,
+        ] of projectBatches.entries()) {
+          const [generatorName, generatorOptions] = JSON.parse(
+            generatorConfigString
+          );
+          // Resolve the generator for the batch and run versioning on the projects within the batch
+          const generatorData = resolveGeneratorData({
+            ...extractGeneratorCollectionAndName(
+              `batch "${JSON.stringify(
+                projectNames
+              )}" for release-group "${releaseGroupName}"`,
+              generatorName
+            ),
+            configGeneratorOptions: generatorOptions,
+            // all project data from the project graph (not to be confused with projectNamesToRunVersionOn)
+            projects,
+          });
+          const generatorCallback = await runVersionOnProjects(
+            projectGraph,
+            nxJson,
+            args,
+            tree,
+            generatorData,
+            args.generatorOptionsOverrides,
+            projectNames,
+            releaseGroup,
+            versionData,
+            nxReleaseConfig.conventionalCommits
+          );
+          // Capture the callback so that we can run it after flushing the changes to disk
+          generatorCallbacks.push(async () => {
+            const result = await generatorCallback(tree, {
+              dryRun: !!args.dryRun,
+              verbose: !!args.verbose,
+              generatorOptions: {
+                ...generatorOptions,
+                ...args.generatorOptionsOverrides,
+              },
+            });
+            const { changedFiles, deletedFiles } =
+              parseGeneratorCallbackResult(result);
+            changedFiles.forEach((f) => additionalChangedFiles.add(f));
+            deletedFiles.forEach((f) => additionalDeletedFiles.add(f));
+          });
+        }
+      }
+
+      // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+      const gitTagValues: string[] =
+        args.gitTag ?? nxReleaseConfig.version.git.tag
+          ? createGitTagValues(
+              releaseGroups,
+              releaseGroupToFilteredProjects,
+              versionData
+            )
+          : [];
+      handleDuplicateGitTags(gitTagValues);
+
+      printAndFlushChanges(tree, !!args.dryRun);
+
+      for (const generatorCallback of generatorCallbacks) {
+        await generatorCallback();
+      }
+
+      const changedFiles = [
+        ...tree.listChanges().map((f) => f.path),
+        ...additionalChangedFiles,
+      ];
+
+      // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
+      if (!changedFiles.length) {
+        return {
+          // An overall workspace version cannot be relevant when filtering to independent projects
+          workspaceVersion: undefined,
+          projectsVersionData: versionData,
+        };
+      }
+
+      if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
+        await commitChanges({
+          changedFiles,
+          deletedFiles: Array.from(additionalDeletedFiles),
+          isDryRun: !!args.dryRun,
+          isVerbose: !!args.verbose,
+          gitCommitMessages: createCommitMessageValues(
+            releaseGroups,
+            releaseGroupToFilteredProjects,
+            versionData,
+            commitMessage
+          ),
+          gitCommitArgs:
+            args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs,
+        });
+      } else if (
+        args.stageChanges ??
+        nxReleaseConfig.version.git.stageChanges
+      ) {
+        output.logSingleLine(`Staging changed files with git`);
+        await gitAdd({
+          changedFiles,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
+      }
+
+      if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
+        output.logSingleLine(`Tagging commit with git`);
+        for (const tag of gitTagValues) {
+          await gitTag({
+            tag,
+            message:
+              args.gitTagMessage || nxReleaseConfig.version.git.tagMessage,
+            additionalArgs:
+              args.gitTagArgs || nxReleaseConfig.version.git.tagArgs,
+            dryRun: args.dryRun,
+            verbose: args.verbose,
+          });
+        }
+      }
+
+      return {
+        // An overall workspace version cannot be relevant when filtering to independent projects
+        workspaceVersion: undefined,
+        projectsVersionData: versionData,
+      };
+    }
+
+    /**
+     * Run versioning for all remaining release groups
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
-      const releaseGroupProjectNames = Array.from(
-        releaseGroupToFilteredProjects.get(releaseGroup)
+
+      runPreVersionCommand(
+        releaseGroup.version.groupPreVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        releaseGroup
       );
+
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
         releaseGroup,
-        // Only batch based on the filtered projects within the release group
-        releaseGroupProjectNames
+        // Batch based on all projects within the release group
+        releaseGroup.projects
       );
 
       for (const [
@@ -277,16 +465,28 @@ export async function releaseVersion(
       await generatorCallback();
     }
 
+    // Only applicable when there is a single release group with a fixed relationship
+    let workspaceVersion: string | null | undefined = undefined;
+    if (releaseGroups.length === 1) {
+      const releaseGroup = releaseGroups[0];
+      if (releaseGroup.projectsRelationship === 'fixed') {
+        const releaseGroupProjectNames = Array.from(
+          releaseGroupToFilteredProjects.get(releaseGroup)
+        );
+        workspaceVersion = versionData[releaseGroupProjectNames[0]].newVersion; // all projects have the same version so we can just grab the first
+      }
+    }
+
     const changedFiles = [
       ...tree.listChanges().map((f) => f.path),
       ...additionalChangedFiles,
     ];
+    const deletedFiles = Array.from(additionalDeletedFiles);
 
     // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
-    if (!changedFiles.length) {
+    if (!changedFiles.length && !deletedFiles.length) {
       return {
-        // An overall workspace version cannot be relevant when filtering to independent projects
-        workspaceVersion: undefined,
+        workspaceVersion,
         projectsVersionData: versionData,
       };
     }
@@ -294,7 +494,7 @@ export async function releaseVersion(
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
       await commitChanges({
         changedFiles,
-        deletedFiles: Array.from(additionalDeletedFiles),
+        deletedFiles,
         isDryRun: !!args.dryRun,
         isVerbose: !!args.verbose,
         gitCommitMessages: createCommitMessageValues(
@@ -310,6 +510,7 @@ export async function releaseVersion(
       output.logSingleLine(`Staging changed files with git`);
       await gitAdd({
         changedFiles,
+        deletedFiles,
         dryRun: args.dryRun,
         verbose: args.verbose,
       });
@@ -330,155 +531,9 @@ export async function releaseVersion(
     }
 
     return {
-      // An overall workspace version cannot be relevant when filtering to independent projects
-      workspaceVersion: undefined,
-      projectsVersionData: versionData,
-    };
-  }
-
-  /**
-   * Run versioning for all remaining release groups
-   */
-  for (const releaseGroup of releaseGroups) {
-    const releaseGroupName = releaseGroup.name;
-    const projectBatches = batchProjectsByGeneratorConfig(
-      projectGraph,
-      releaseGroup,
-      // Batch based on all projects within the release group
-      releaseGroup.projects
-    );
-
-    for (const [
-      generatorConfigString,
-      projectNames,
-    ] of projectBatches.entries()) {
-      const [generatorName, generatorOptions] = JSON.parse(
-        generatorConfigString
-      );
-      // Resolve the generator for the batch and run versioning on the projects within the batch
-      const generatorData = resolveGeneratorData({
-        ...extractGeneratorCollectionAndName(
-          `batch "${JSON.stringify(
-            projectNames
-          )}" for release-group "${releaseGroupName}"`,
-          generatorName
-        ),
-        configGeneratorOptions: generatorOptions,
-        // all project data from the project graph (not to be confused with projectNamesToRunVersionOn)
-        projects,
-      });
-      const generatorCallback = await runVersionOnProjects(
-        projectGraph,
-        nxJson,
-        args,
-        tree,
-        generatorData,
-        args.generatorOptionsOverrides,
-        projectNames,
-        releaseGroup,
-        versionData,
-        nxReleaseConfig.conventionalCommits
-      );
-      // Capture the callback so that we can run it after flushing the changes to disk
-      generatorCallbacks.push(async () => {
-        const result = await generatorCallback(tree, {
-          dryRun: !!args.dryRun,
-          verbose: !!args.verbose,
-          generatorOptions: {
-            ...generatorOptions,
-            ...args.generatorOptionsOverrides,
-          },
-        });
-        const { changedFiles, deletedFiles } =
-          parseGeneratorCallbackResult(result);
-        changedFiles.forEach((f) => additionalChangedFiles.add(f));
-        deletedFiles.forEach((f) => additionalDeletedFiles.add(f));
-      });
-    }
-  }
-
-  // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
-  const gitTagValues: string[] =
-    args.gitTag ?? nxReleaseConfig.version.git.tag
-      ? createGitTagValues(
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          versionData
-        )
-      : [];
-  handleDuplicateGitTags(gitTagValues);
-
-  printAndFlushChanges(tree, !!args.dryRun);
-
-  for (const generatorCallback of generatorCallbacks) {
-    await generatorCallback();
-  }
-
-  // Only applicable when there is a single release group with a fixed relationship
-  let workspaceVersion: string | null | undefined = undefined;
-  if (releaseGroups.length === 1) {
-    const releaseGroup = releaseGroups[0];
-    if (releaseGroup.projectsRelationship === 'fixed') {
-      const releaseGroupProjectNames = Array.from(
-        releaseGroupToFilteredProjects.get(releaseGroup)
-      );
-      workspaceVersion = versionData[releaseGroupProjectNames[0]].newVersion; // all projects have the same version so we can just grab the first
-    }
-  }
-
-  const changedFiles = [
-    ...tree.listChanges().map((f) => f.path),
-    ...additionalChangedFiles,
-  ];
-
-  // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
-  if (!changedFiles.length) {
-    return {
       workspaceVersion,
       projectsVersionData: versionData,
     };
-  }
-
-  if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
-    await commitChanges({
-      changedFiles,
-      deletedFiles: Array.from(additionalDeletedFiles),
-      isDryRun: !!args.dryRun,
-      isVerbose: !!args.verbose,
-      gitCommitMessages: createCommitMessageValues(
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        versionData,
-        commitMessage
-      ),
-      gitCommitArgs:
-        args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs,
-    });
-  } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
-    output.logSingleLine(`Staging changed files with git`);
-    await gitAdd({
-      changedFiles,
-      dryRun: args.dryRun,
-      verbose: args.verbose,
-    });
-  }
-
-  if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
-    output.logSingleLine(`Tagging commit with git`);
-    for (const tag of gitTagValues) {
-      await gitTag({
-        tag,
-        message: args.gitTagMessage || nxReleaseConfig.version.git.tagMessage,
-        additionalArgs: args.gitTagArgs || nxReleaseConfig.version.git.tagArgs,
-        dryRun: args.dryRun,
-        verbose: args.verbose,
-      });
-    }
-  }
-
-  return {
-    workspaceVersion,
-    projectsVersionData: versionData,
   };
 }
 
@@ -676,13 +731,18 @@ function resolveGeneratorData({
 }
 function runPreVersionCommand(
   preVersionCommand: string,
-  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
+  releaseGroup?: ReleaseGroupWithName
 ) {
   if (!preVersionCommand) {
     return;
   }
 
-  output.logSingleLine(`Executing pre-version command`);
+  output.logSingleLine(
+    releaseGroup
+      ? `Executing release group pre-version command for "${releaseGroup.name}"`
+      : `Executing pre-version command`
+  );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);
     console.log(preVersionCommand);
@@ -702,6 +762,7 @@ function runPreVersionCommand(
       maxBuffer: LARGE_BUFFER,
       stdio,
       env,
+      windowsHide: false,
     });
   } catch (e) {
     const title = verbose

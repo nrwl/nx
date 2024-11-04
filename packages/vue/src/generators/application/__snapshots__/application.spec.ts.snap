@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`application generator should set up project correctly with PascalCase name 1`] = `
+exports[`application generator should set up project correctly for cypress 1`] = `
 "{
   "root": true,
   "ignorePatterns": ["**/*"],
@@ -39,51 +39,45 @@ exports[`application generator should set up project correctly with PascalCase n
 "
 `;
 
-exports[`application generator should set up project correctly with PascalCase name 2`] = `
+exports[`application generator should set up project correctly for cypress 2`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../node_modules/.vite/TestApp',
-
+  cacheDir: '../node_modules/.vite/test',
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
-  plugins: [vue(), nxViteTsPaths()],
-
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
-    outDir: '../dist/TestApp',
+    outDir: '../dist/test',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../coverage/TestApp',
+      reportsDirectory: '../coverage/test',
       provider: 'v8',
     },
   },
@@ -91,7 +85,7 @@ export default defineConfig({
 "
 `;
 
-exports[`application generator should set up project correctly with PascalCase name 3`] = `
+exports[`application generator should set up project correctly for cypress 3`] = `
 "{
   "extends": [
     "plugin:vue/vue3-essential",
@@ -113,51 +107,41 @@ exports[`application generator should set up project correctly with PascalCase n
 "
 `;
 
-exports[`application generator should set up project correctly with PascalCase name 4`] = `
+exports[`application generator should set up project correctly for cypress 4`] = `
 "import { describe, it, expect } from 'vitest';
-
 import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, {});
-
-    expect(wrapper.text()).toContain('Welcome TestApp 👋');
+    expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
 "
 `;
 
-exports[`application generator should set up project correctly with PascalCase name 5`] = `
-[
-  ".eslintignore",
-  ".eslintrc.json",
-  ".prettierignore",
-  ".prettierrc",
-  ".vscode/extensions.json",
-  "nx.json",
-  "package.json",
-  "TestApp-e2e/.eslintrc.json",
-  "TestApp-e2e/playwright.config.ts",
-  "TestApp-e2e/project.json",
-  "TestApp-e2e/src/example.spec.ts",
-  "TestApp-e2e/tsconfig.json",
-  "TestApp/.eslintrc.json",
-  "TestApp/index.html",
-  "TestApp/project.json",
-  "TestApp/src/app/App.spec.ts",
-  "TestApp/src/app/App.vue",
-  "TestApp/src/app/NxWelcome.vue",
-  "TestApp/src/main.ts",
-  "TestApp/src/styles.css",
-  "TestApp/tsconfig.app.json",
-  "TestApp/tsconfig.json",
-  "TestApp/tsconfig.spec.json",
-  "TestApp/vite.config.ts",
-  "tsconfig.base.json",
-  "vitest.workspace.ts",
-]
+exports[`application generator should set up project correctly for cypress 5`] = `
+"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'npx nx run test:serve',
+        production: 'npx nx run test:preview',
+      },
+      ciWebServerCommand: 'npx nx run test:preview',
+      ciBaseUrl: 'http://localhost:4300',
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+});
+"
 `;
 
 exports[`application generator should set up project correctly with given options 1`] = `
@@ -204,28 +188,24 @@ exports[`application generator should set up project correctly with given option
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
-  plugins: [vue(), nxViteTsPaths()],
-
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../dist/test',
     emptyOutDir: true,
@@ -234,13 +214,11 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
@@ -275,14 +253,12 @@ exports[`application generator should set up project correctly with given option
 
 exports[`application generator should set up project correctly with given options 4`] = `
 "import { describe, it, expect } from 'vitest';
-
 import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, {});
-
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
@@ -290,9 +266,83 @@ describe('App', () => {
 `;
 
 exports[`application generator should set up project correctly with given options 5`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'npx nx run test:preview',
+    url: 'http://localhost:4300',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
+});
+"
+`;
+
+exports[`application generator should set up project correctly with given options 6`] = `
 [
   ".eslintignore",
   ".eslintrc.json",
+  ".gitignore",
   ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",

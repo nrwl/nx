@@ -62,20 +62,20 @@ describe('@nx/next (legacy)', () => {
       env: { NX_ADD_PLUGINS: 'false' },
     });
 
-    updateFile(`apps/${appName}/redirects.js`, 'module.exports = [];');
+    updateFile(`${appName}/redirects.js`, 'module.exports = [];');
     updateFile(
-      `apps/${appName}/nested/headers.js`,
+      `${appName}/nested/headers.js`,
       `module.exports = require('./headers-2');`
     );
-    updateFile(`apps/${appName}/nested/headers-2.js`, 'module.exports = [];');
-    updateFile(`apps/${appName}/next.config.js`, (content) => {
+    updateFile(`${appName}/nested/headers-2.js`, 'module.exports = [];');
+    updateFile(`${appName}/next.config.js`, (content) => {
       return `const redirects = require('./redirects');\nconst headers = require('./nested/headers.js');\n${content}`;
     });
 
     runCLI(`build ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/redirects.js`);
-    checkFilesExist(`dist/apps/${appName}/nested/headers.js`);
-    checkFilesExist(`dist/apps/${appName}/nested/headers-2.js`);
+    checkFilesExist(`dist/${appName}/redirects.js`);
+    checkFilesExist(`dist/${appName}/nested/headers.js`);
+    checkFilesExist(`dist/${appName}/nested/headers-2.js`);
   }, 120_000);
 
   it('should build and install pruned lock file', () => {
@@ -87,10 +87,10 @@ describe('@nx/next (legacy)', () => {
     const result = runCLI(`build ${appName} --generateLockfile=true`);
     expect(result).not.toMatch(/Graph is not consistent/);
     checkFilesExist(
-      `dist/apps/${appName}/${packageManagerLockFile[packageManager]}`
+      `dist/${appName}/${packageManagerLockFile[packageManager]}`
     );
     runCommand(`${getPackageManagerCommand().ciInstall}`, {
-      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', appName),
+      cwd: joinPathFragments(tmpProjPath(), 'dist', appName),
     });
   }, 1_000_000);
 
@@ -235,7 +235,6 @@ describe('@nx/next (legacy)', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: isNotWindows(),
-      checkExport: false,
       appsDir: 'packages',
     });
 

@@ -91,6 +91,13 @@ export function registerTsProject(
   //       Based on limited testing, it doesn't seem to matter if we register it multiple times, but just in
   //       case let's keep a flag to prevent it.
   if (!isTsEsmLoaderRegistered) {
+    // We need a way to ensure that `.ts` files are treated as ESM not CJS.
+    // Since there is no way to pass compilerOptions like we do with the programmatic API, we should default
+    // the environment variable that ts-node checks.
+    process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+    });
     const module = require('node:module');
     if (module.register && packageIsInstalled('ts-node/esm')) {
       const url = require('node:url');

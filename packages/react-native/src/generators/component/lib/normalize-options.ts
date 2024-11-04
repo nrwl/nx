@@ -3,6 +3,7 @@ import { Schema } from '../schema';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 export interface NormalizedSchema extends Schema {
+  directory: string;
   projectSourceRoot: string;
   fileName: string;
   className: string;
@@ -14,8 +15,6 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
-
   const {
     artifactName: name,
     directory,
@@ -23,17 +22,12 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/react-native:component',
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
-    pascalCaseFile: options.pascalCaseFiles,
   });
+
+  assertValidOptions({ name, directory });
 
   const project = getProjects(host).get(projectName);
 
@@ -51,6 +45,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    name,
     directory,
     className,
     fileName,
@@ -60,7 +55,7 @@ export async function normalizeOptions(
   };
 }
 
-function assertValidOptions(options: Schema) {
+function assertValidOptions(options: { name: string; directory: string }) {
   const slashes = ['/', '\\'];
   slashes.forEach((s) => {
     if (options.name.indexOf(s) !== -1) {
@@ -70,7 +65,7 @@ function assertValidOptions(options: Schema) {
         suggestion = `${options.directory}${s}${suggestion}`;
       }
       throw new Error(
-        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
+        `Found "${s}" in the component name. Did you mean to use the --path option (e.g. \`nx g c ${suggestion}/${name} \`)?`
       );
     }
   });

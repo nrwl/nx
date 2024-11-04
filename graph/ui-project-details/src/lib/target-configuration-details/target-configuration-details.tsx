@@ -1,22 +1,23 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { JsonCodeBlock } from '@nx/graph/ui-code-block';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { FadingCollapsible } from './fading-collapsible';
-import { TargetConfigurationProperty } from './target-configuration-property';
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { TooltipTriggerText } from './tooltip-trigger-text';
-import { Pill } from '../pill';
-import { TargetConfigurationDetailsHeader } from '../target-configuration-details-header/target-configuration-details-header';
+import { JsonCodeBlock } from '@nx/graph-internal/ui-code-block';
 import { ExpandedTargetsContext } from '@nx/graph/shared';
-import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
+import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Pill } from '../pill';
+import { ShowOptionsHelp } from '../show-all-options/show-options-help';
+import { TargetConfigurationDetailsHeader } from '../target-configuration-details-header/target-configuration-details-header';
 import { TargetExecutor } from '../target-executor/target-executor';
 import { TargetExecutorTitle } from '../target-executor/target-executor-title';
-import { TargetSourceInfo } from '../target-source-info/target-source-info';
 import { getTargetExecutorSourceMapKey } from '../target-source-info/get-target-executor-source-map-key';
-import { ShowOptionsHelp } from '../show-all-options/show-options-help';
+import { TargetSourceInfo } from '../target-source-info/target-source-info';
+import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { getTaskSyncGenerators } from '../utils/sync-generators';
+import { FadingCollapsible } from './fading-collapsible';
+import { TargetConfigurationProperty } from './target-configuration-property';
+import { TooltipTriggerText } from './tooltip-trigger-text';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -24,6 +25,7 @@ interface TargetConfigurationDetailsProps {
   targetConfiguration: TargetConfiguration;
   sourceMap: Record<string, string[]>;
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
   variant?: 'default' | 'compact';
   onCollapse?: (targetName: string) => void;
   onExpand?: (targetName: string) => void;
@@ -43,6 +45,7 @@ export default function TargetConfigurationDetails({
   targetConfiguration,
   sourceMap,
   connectedToCloud,
+  disabledTaskSyncGenerators,
   onViewInTaskGraph,
   onRunTarget,
   onNxConnect,
@@ -84,6 +87,9 @@ export default function TargetConfigurationDetails({
       ? Object.keys(configurations).length
       : true);
 
+  const { enabledSyncGenerators, disabledSyncGenerators } =
+    getTaskSyncGenerators(targetConfiguration, disabledTaskSyncGenerators);
+
   return (
     <div className="relative rounded-md border border-slate-200 dark:border-slate-700/60">
       <TargetConfigurationDetailsHeader
@@ -103,6 +109,25 @@ export default function TargetConfigurationDetails({
       {/* body */}
       {!collapsed && (
         <div className="p-4 text-base">
+          {targetConfiguration.metadata?.description && (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <span className="font-medium">Description</span>
+                <span className="mb-1 ml-2 hidden group-hover:inline">
+                  <CopyToClipboardButton
+                    text={`"metadata": ${JSON.stringify({
+                      description: targetConfiguration.metadata?.description,
+                    })}`}
+                    tooltipText="Copy Description"
+                  />
+                </span>
+              </h4>
+              <p className="pl-5">
+                {targetConfiguration.metadata?.description}
+              </p>
+            </div>
+          )}
+
           <div className="group mb-4">
             <h4 className="mb-4">
               <TargetExecutorTitle {...displayHeader} />
@@ -345,7 +370,7 @@ export default function TargetConfigurationDetails({
                 </Tooltip>
               </h4>
               <div className="group/line overflow-hidden whitespace-nowrap pl-5">
-                <TargetConfigurationProperty data={{ paralelism: false }}>
+                <TargetConfigurationProperty data={{ parallelism: false }}>
                   <TargetSourceInfo
                     className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
                     propertyKey={`targets.${targetName}.parallelism`}
@@ -355,6 +380,68 @@ export default function TargetConfigurationDetails({
               </div>
             </div>
           ) : null}
+
+          {enabledSyncGenerators.length > 0 && (
+            <div className="group">
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={
+                    (<PropertyInfoTooltip type="syncGenerators" />) as any
+                  }
+                >
+                  <span className="font-medium">
+                    <TooltipTriggerText>Sync Generators</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+              </h4>
+              <ul className="mb-4 list-disc pl-5">
+                {enabledSyncGenerators.map((generator, idx) => (
+                  <li
+                    className="group/line overflow-hidden whitespace-nowrap"
+                    key={`syncGenerators-${idx}`}
+                  >
+                    <TargetConfigurationProperty data={generator}>
+                      <TargetSourceInfo
+                        className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                        propertyKey={`targets.${targetName}.syncGenerators`}
+                        sourceMap={sourceMap}
+                      />
+                    </TargetConfigurationProperty>
+                  </li>
+                ))}
+                {disabledSyncGenerators.length > 0 &&
+                  disabledSyncGenerators.map((generator, idx) => (
+                    <li
+                      className="group/line overflow-hidden whitespace-nowrap"
+                      key={`syncGenerators-${idx}`}
+                    >
+                      <TargetConfigurationProperty
+                        data={generator}
+                        disabled={true}
+                        disabledTooltip={
+                          <p className="max-w-sm whitespace-pre-wrap py-2 font-mono text-sm normal-case text-slate-700 dark:text-slate-400">
+                            The Sync Generator is disabled in the{' '}
+                            <code className="font-bold italic">
+                              sync.disabledTaskSyncGenerators
+                            </code>{' '}
+                            property in the{' '}
+                            <code className="font-bold italic">nx.json</code>{' '}
+                            file.
+                          </p>
+                        }
+                      >
+                        <TargetSourceInfo
+                          className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                          propertyKey={`targets.${targetName}.syncGenerators`}
+                          sourceMap={sourceMap}
+                        />
+                      </TargetConfigurationProperty>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

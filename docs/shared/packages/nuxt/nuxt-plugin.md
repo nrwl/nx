@@ -74,7 +74,7 @@ The `buildStaticTargetName` and `serveStaticTargetName` options control the name
 ### Generate a new Nuxt app
 
 ```shell
-nx g @nx/nuxt:app my-app
+nx g @nx/nuxt:app apps/my-app
 ```
 
 ### Deploy a Nuxt app

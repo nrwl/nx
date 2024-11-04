@@ -85,9 +85,8 @@ function serveAsync(
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (
-        data
-          .toString()
-          .includes('Bundling complete' || data.toString().includes('Bundled'))
+        data.toString().includes('Bundling complete') ||
+        data.toString().includes('Bundled')
       ) {
         resolve(childProcess);
       }

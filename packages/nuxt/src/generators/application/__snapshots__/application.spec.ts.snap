@@ -1,28 +1,67 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app generated files content - as-provided - my-app general application should add nuxt entries in .gitignore 1`] = `
-"
-# Nuxt dev/build outputs
+"# Nuxt dev/build outputs
 .output
 .data
 .nuxt
 .nitro
-.cache"
+.cache
+vite.config.*.timestamp*"
 `;
 
-exports[`app generated files content - as-provided - my-app general application should configure eslint correctly 1`] = `
+exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
+{
+  "dependsOn": [
+    "^build-static",
+  ],
+}
+`;
+
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
   "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "vue/multi-word-component-names": "off"
-      }
+      "rules": {}
     }
   ]
 }
+"
+`;
+
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+const baseConfig = require('../eslint.config.js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
 "
 `;
 
@@ -48,7 +87,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -91,24 +129,21 @@ exports[`app generated files content - as-provided - my-app general application 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
-
-  plugins: [vue(), nxViteTsPaths()],
-
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-app',
@@ -136,7 +171,9 @@ exports[`app generated files content - as-provided - my-app general application 
   "include": [
     ".nuxt/nuxt.d.ts",
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -180,13 +217,13 @@ exports[`app generated files content - as-provided - my-app general application 
   "my-app/.npmrc",
   "my-app/nuxt.config.ts",
   "my-app/src/app.vue",
-  "my-app/src/components/NxWelcome.vue",
   "my-app/src/pages/about.vue",
   "my-app/src/pages/index.vue",
   "my-app/src/public/.gitkeep",
   "my-app/src/public/favicon.ico",
   "my-app/src/server/api/greet.ts",
   "my-app/src/server/tsconfig.json",
+  "my-app/src/components/NxWelcome.vue",
   "my-app/tsconfig.app.json",
   "my-app/tsconfig.json",
   ".gitignore",
@@ -227,9 +264,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.css'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -259,9 +294,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.less'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -291,9 +324,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.scss'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -323,7 +354,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -332,28 +362,67 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add nuxt entries in .gitignore 1`] = `
-"
-# Nuxt dev/build outputs
+"# Nuxt dev/build outputs
 .output
 .data
 .nuxt
 .nitro
-.cache"
+.cache
+vite.config.*.timestamp*"
 `;
 
-exports[`app generated files content - as-provided - myApp general application should configure eslint correctly 1`] = `
+exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
+{
+  "dependsOn": [
+    "^build-static",
+  ],
+}
+`;
+
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
   "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "vue/multi-word-component-names": "off"
-      }
+      "rules": {}
     }
   ]
 }
+"
+`;
+
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+const baseConfig = require('../eslint.config.js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
 "
 `;
 
@@ -379,7 +448,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -422,24 +490,21 @@ exports[`app generated files content - as-provided - myApp general application s
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/myApp',
-
-  plugins: [vue(), nxViteTsPaths()],
-
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/myApp',
@@ -467,7 +532,9 @@ exports[`app generated files content - as-provided - myApp general application s
   "include": [
     ".nuxt/nuxt.d.ts",
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -511,13 +578,13 @@ exports[`app generated files content - as-provided - myApp general application s
   "myApp/.npmrc",
   "myApp/nuxt.config.ts",
   "myApp/src/app.vue",
-  "myApp/src/components/NxWelcome.vue",
   "myApp/src/pages/about.vue",
   "myApp/src/pages/index.vue",
   "myApp/src/public/.gitkeep",
   "myApp/src/public/favicon.ico",
   "myApp/src/server/api/greet.ts",
   "myApp/src/server/tsconfig.json",
+  "myApp/src/components/NxWelcome.vue",
   "myApp/tsconfig.app.json",
   "myApp/tsconfig.json",
   ".gitignore",
@@ -558,9 +625,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.css'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -590,9 +655,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.less'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -622,9 +685,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.scss'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -654,7 +715,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },

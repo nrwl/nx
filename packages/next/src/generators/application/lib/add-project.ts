@@ -5,7 +5,7 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
@@ -54,13 +54,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
           buildTarget: `${options.projectName}:build:production`,
           dev: false,
         },
-      },
-    };
-
-    targets.export = {
-      executor: '@nx/next:export',
-      options: {
-        buildTarget: `${options.projectName}:build:production`,
       },
     };
   }

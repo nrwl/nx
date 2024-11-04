@@ -123,21 +123,21 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/run",
+      "file": "generated/packages/nx/documents/run",
       "id": "run",
       "name": "run",
       "path": "/nx-api/nx/documents/run"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/run-many",
+      "file": "generated/packages/nx/documents/run-many",
       "id": "run-many",
       "name": "run-many",
       "path": "/nx-api/nx/documents/run-many"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/affected",
+      "file": "generated/packages/nx/documents/affected",
       "id": "affected",
       "name": "affected",
       "path": "/nx-api/nx/documents/affected"
@@ -230,14 +230,14 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
+      "file": "generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/reset",
+      "file": "generated/packages/nx/documents/reset",
       "id": "reset",
       "name": "reset",
       "path": "/nx-api/nx/documents/reset"
@@ -269,12 +269,12 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/dep-graph",
+      "file": "generated/packages/nx/documents/dep-graph",
       "id": "dep-graph",
       "name": "graph",
       "path": "/nx-api/nx/documents/dep-graph"
@@ -338,8 +338,15 @@
       "path": "/extending-nx/recipes/modifying-files"
     },
     {
+      "description": "",
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/generate",
+      "file": "generated/packages/nx/documents/generate",
       "id": "generate",
       "name": "generate",
       "path": "/nx-api/nx/documents/generate"
@@ -352,6 +359,13 @@
       "id": "automate-updating-dependencies",
       "name": "Automate Updating Dependencies",
       "path": "/features/automate-updating-dependencies"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
     },
     {
       "description": "",
@@ -369,7 +383,7 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/migrate",
+      "file": "generated/packages/nx/documents/migrate",
       "id": "migrate",
       "name": "migrate",
       "path": "/nx-api/nx/documents/migrate"
@@ -441,14 +455,14 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/format-check",
+      "file": "generated/packages/nx/documents/format-check",
       "id": "format-check",
       "name": "format:check",
       "path": "/nx-api/nx/documents/format-check"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/format-write",
+      "file": "generated/packages/nx/documents/format-write",
       "id": "format-write",
       "name": "format:write",
       "path": "/nx-api/nx/documents/format-write"
@@ -482,6 +496,20 @@
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
       "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+      "id": "customize-conventional-commit-types",
+      "name": "Customize Conventional Commit Types",
+      "path": "/recipes/nx-release/customize-conventional-commit-types"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+      "id": "file-based-versioning-version-plans",
+      "name": "File Based Versioning (Version Plans)",
+      "path": "/recipes/nx-release/file-based-versioning-version-plans"
     },
     {
       "description": "",
@@ -520,13 +548,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-      "id": "customize-conventional-commit-types",
-      "name": "Customize Conventional Commit Types",
-      "path": "/recipes/nx-release/customize-conventional-commit-types"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/nx-release/configure-changelog-format",
       "id": "configure-changelog-format",
       "name": "Configure Changelog Format",
@@ -540,8 +561,15 @@
       "path": "/recipes/nx-release/publish-custom-dist-directory"
     },
     {
+      "description": "",
+      "file": "shared/recipes/nx-release/build-before-versioning",
+      "id": "build-before-versioning",
+      "name": "Build Before Versioning",
+      "path": "/recipes/nx-release/build-before-versioning"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/release",
+      "file": "generated/packages/nx/documents/release",
       "id": "release",
       "name": "release",
       "path": "/nx-api/nx/documents/release"
@@ -554,13 +582,6 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
     }
   ],
   "inferred-tasks": [
@@ -587,9 +608,16 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     }
   ],
@@ -626,45 +654,22 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
+      "description": "",
+      "file": "shared/recipes/plugins/publish-plugin",
+      "id": "publish-plugin",
+      "name": "Publish a Plugin",
+      "path": "/extending-nx/recipes/publish-plugin"
+    },
+    {
       "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-      "file": "generated/packages/generated/packages/angular/documents/nx-devkit-angular-devkit",
+      "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
       "id": "nx-devkit-angular-devkit",
       "name": "Nx Devkit and Angular Devkit",
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
-    }
-  ],
-  "repository-types": [
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/package-based-in-integrated",
-      "id": "package-based-in-integrated",
-      "name": "Add a Package-based Project in an Integrated Repo",
-      "path": "/recipes/tips-n-tricks/package-based-in-integrated"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/integrated-in-package-based",
-      "id": "integrated-in-package-based",
-      "name": "Add an Integrated Project in a Package-based Repo",
-      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/standalone-to-integrated",
-      "id": "standalone-to-integrated",
-      "name": "Convert from a Standalone Repository to an Integrated Repository",
-      "path": "/recipes/tips-n-tricks/standalone-to-integrated"
     }
   ],
   "module-federation": [
@@ -674,6 +679,13 @@
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+      "id": "nx-module-federation-technical-overview",
+      "name": "Nx Module Federation Technical Overview",
+      "path": "/concepts/module-federation/nx-module-federation-technical-overview"
     },
     {
       "description": "",
@@ -714,6 +726,13 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+      "id": "nx-module-federation-technical-overview",
+      "name": "Nx Module Federation Technical Overview",
+      "path": "/concepts/module-federation/nx-module-federation-technical-overview"
+    },
+    {
+      "description": "",
       "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
@@ -744,6 +763,13 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+      "id": "nx-module-federation-technical-overview",
+      "name": "Nx Module Federation Technical Overview",
+      "path": "/concepts/module-federation/nx-module-federation-technical-overview"
+    },
+    {
+      "description": "",
       "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
@@ -771,6 +797,13 @@
       "id": "update-global-installation",
       "name": "Update Your Global Nx Installation",
       "path": "/recipes/installation/update-global-installation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
     }
   ],
   "workspace-watching": [
@@ -783,7 +816,7 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/watch",
+      "file": "generated/packages/nx/documents/watch",
       "id": "watch",
       "name": "watch",
       "path": "/nx-api/nx/documents/watch"
@@ -1043,6 +1076,33 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "conformance": [
+    {
+      "description": "Write and apply rules for your Nx workspace",
+      "file": "shared/features/powerpack/conformance",
+      "id": "conformance",
+      "name": "Run Language-Agnostic Conformance Rules",
+      "path": "/nx-enterprise/powerpack/conformance"
+    }
+  ],
+  "owners": [
+    {
+      "description": "Configure and maintain code owners for projects in an Nx workspace",
+      "file": "shared/features/powerpack/owners",
+      "id": "owners",
+      "name": "Define Code Ownership at the Project Level",
+      "path": "/nx-enterprise/powerpack/owners"
+    }
+  ],
+  "custom-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/features/powerpack/custom-caching",
+      "id": "custom-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/nx-enterprise/powerpack/custom-caching"
+    }
+  ],
   "database": [
     {
       "description": "",
@@ -1113,7 +1173,7 @@
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
+      "file": "generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
@@ -1128,13 +1188,13 @@
       "path": "/ci/features/remote-cache"
     }
   ],
-  "on-premise": [
+  "single-tenant": [
     {
-      "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/features/nx-enterprise-on-prem",
-      "id": "on-premise",
-      "name": "Set up Nx Cloud On-Premise",
-      "path": "/ci/recipes/enterprise/on-premise/on-premise"
+      "description": "",
+      "file": "nx-cloud/enterprise/single-tenant/overview",
+      "id": "overview",
+      "name": "Single Tenant Nx Cloud Hosting",
+      "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
   "docker": [

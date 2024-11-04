@@ -48,7 +48,7 @@ commands:
             - run:
                 name: Install pnpm package manager (linux)
                 command: |
-                  npm install --prefix=$HOME/.local -g @pnpm/exe@8
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@9.8.0
       - when:
           condition:
             equal: [<< parameters.os >>, macos]
@@ -56,7 +56,7 @@ commands:
             - run:
                 name: Install pnpm package manager (macos)
                 command: |
-                  npm install -g @pnpm/exe@8
+                  npm install -g @pnpm/exe@9.8.0
       - run:
           name: Install Dependencies
           command: |
@@ -82,16 +82,18 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
+      NX_CLOUD_NO_TIMEOUTS: 'true'
     steps:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e" --require-explicit-completion
       - run:
           command: |
             sudo apt-get update
@@ -121,6 +123,10 @@ jobs:
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
+      - run:
+          name: End CI Run
+          command: npx nx-cloud@next complete-ci-run
+          no_output_timeout: 20m
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
@@ -160,7 +166,7 @@ jobs:
           command: |
             HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
             if $HAS_CHANGED; then
-              pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+              pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
             else
               echo "Skip E2E tests for macOS as there are no changes in React Native projects."
             fi

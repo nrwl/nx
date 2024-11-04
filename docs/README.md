@@ -32,7 +32,6 @@ We also have different audiences in mind when writing docs:
 👦 Intermediate User
 
 - They know how to create an Nx repo or add Nx to an existing repo
-- They have heard the terms integrated and package-based
 - They know what a project is and how to make one
 - They understand how to run a task and the basics of caching
 - They can launch the graph
@@ -94,14 +93,14 @@ Your content goes here.
 {% /callout %}
 ```
 
-#### Disclosure
+#### Deep Dives
 
-A disclosure can be used for less important information that is initially collapsed.
+These are special callouts that are collapsed with the intention of containing more deep-dive information about the topic which isn't required to understand right away.
 
 ```markdown
-{% disclosure title="string" %}
-Your content goes here.
-{% /disclosure %}
+{% callout type="deepdive" title="string" %}
+Your deep-dive content goes here.
+{% /callout %}
 ```
 
 #### Cards
@@ -416,6 +415,28 @@ Embed an Nx Graph visualization that can be panned by the user.
 
 {% /graph %}
 ````
+
+## Generating API Documentation
+
+To generate API documentation for the codebase and update the menu for the docs on nx.dev, you can run:
+
+```
+nx documentation
+```
+
+This will happen automatically in a `git push` hook, so you'll be reminded if you forget.
+
+### Generate API Documentation for Ocean Plugins
+
+To generate API documentation for plugins in the ocean repository, run the `nx documentation` command with the `NX_OCEAN_RELATIVE_PATH` environment variable set to the relative path to your checked out copy of the ocean repo.
+
+```
+NX_OCEAN_RELATIVE_PATH=../ocean nx documentation
+```
+
+This will create generated API documentation in the `docs/external-generated` folder. This API will be merged into the normal `docs/generated` documentation when the docs site is built.
+
+Because there are two separate output folders, if someone runs `nx documentation` without the `NX_OCEAN_RELATIVE_PATH` environment variable, the ocean documentation will not be overwritten. The ocean documentation will only be updated or deleted when someone explicitly chooses to do so.
 
 ## Publishing Process
 

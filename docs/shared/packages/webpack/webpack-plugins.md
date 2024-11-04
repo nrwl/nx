@@ -23,9 +23,9 @@ the [Nx Webpack configuration guide](/recipes/webpack/webpack-config-setup).
 
 The basic plugins work with a standard webpack configuration file by adding them to the `plugins` option.
 
-### NxWebpackPlugin
+### NxAppWebpackPlugin
 
-The `NxWebpackPlugin` plugin provides common configuration for the build, including TypeScript support and linking
+The `NxAppWebpackPlugin` plugin provides common configuration for the build, including TypeScript support and linking
 workspace libraries (via tsconfig paths).
 
 #### Options
@@ -70,6 +70,12 @@ If true, Babel will look for a babel.config.json up the directory tree.
 Type: `string`
 
 Set `<base href>` for the resulting index.html.
+
+##### buildLibsFromSource
+
+Type: `boolean`
+
+Build the libraries from source. Default is `true`.
 
 ##### compiler
 
@@ -208,6 +214,18 @@ Add an additional chunk for the Webpack runtime. Defaults to `true` when `target
 Type: `string[]`
 
 External scripts that will be included before the main application entry.
+
+##### skipOverrides
+
+Type: `boolean`
+
+Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
+##### skipPackageManager
+
+Type: `boolean`
+
+Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
 
 ##### skipTypeChecking
 

@@ -1,8 +1,10 @@
-import { readFileSync, readdirSync } from 'fs';
-import { pathExists, stat } from 'fs-extra';
+import { exec } from 'node:child_process';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { join } from 'path';
 import { RELEASE_TYPES, ReleaseType } from 'semver';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { RawGitCommit } from '../utils/git';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
 const fm = require('front-matter');
@@ -21,10 +23,27 @@ export interface RawVersionPlan extends VersionPlanFile {
 
 export interface VersionPlan extends VersionPlanFile {
   message: string;
+  /**
+   * The commit that added the version plan file, will be null if the file was never committed.
+   * For optimal performance, we don't apply it at the time of reading the raw contents, because
+   * it hasn't yet passed further validation at that point.
+   */
+  commit: RawGitCommit | null;
 }
 
 export interface GroupVersionPlan extends VersionPlan {
   groupVersionBump: ReleaseType;
+  /**
+   * The commit that added the version plan file, will be null if the file was never committed.
+   * For optimal performance, we don't apply it at the time of reading the raw contents, because.
+   * it hasn't yet passed validation.
+   */
+  commit: RawGitCommit | null;
+  /**
+   * Will not be set if the group name was the trigger, otherwise will be a list of
+   * all the individual project names explicitly found in the version plan file.
+   */
+  triggeredByProjects?: string[];
 }
 
 export interface ProjectsVersionPlan extends VersionPlan {
@@ -35,8 +54,7 @@ const versionPlansDirectory = join('.nx', 'version-plans');
 
 export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   const versionPlansPath = getVersionPlansAbsolutePath();
-  const versionPlansPathExists = await pathExists(versionPlansPath);
-  if (!versionPlansPathExists) {
+  if (!existsSync(versionPlansPath)) {
     return [];
   }
 
@@ -54,7 +72,7 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
       relativePath: join(versionPlansDirectory, versionPlanFile),
       fileName: versionPlanFile,
       content: parsedContent.attributes,
-      message: getSingleLineMessage(parsedContent.body),
+      message: parsedContent.body,
       createdOnMs: versionPlanStats.birthtimeMs,
     });
   }
@@ -62,11 +80,12 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   return versionPlans;
 }
 
-export function setVersionPlansOnGroups(
+export async function setResolvedVersionPlansOnGroups(
   rawVersionPlans: RawVersionPlan[],
   releaseGroups: ReleaseGroupWithName[],
-  allProjectNamesInWorkspace: string[]
-): ReleaseGroupWithName[] {
+  allProjectNamesInWorkspace: string[],
+  isVerbose: boolean
+): Promise<ReleaseGroupWithName[]> {
   const groupsByName = releaseGroups.reduce(
     (acc, group) => acc.set(group.name, group),
     new Map<string, ReleaseGroupWithName>()
@@ -74,11 +93,17 @@ export function setVersionPlansOnGroups(
   const isDefaultGroup = isDefault(releaseGroups);
 
   for (const rawVersionPlan of rawVersionPlans) {
+    if (!rawVersionPlan.message) {
+      throw new Error(
+        `Please add a changelog message to version plan: '${rawVersionPlan.fileName}'`
+      );
+    }
+
     for (const [key, value] of Object.entries(rawVersionPlan.content)) {
       if (groupsByName.has(key)) {
         const group = groupsByName.get(key);
 
-        if (!group.versionPlans) {
+        if (!group.resolvedVersionPlans) {
           if (isDefaultGroup) {
             throw new Error(
               `Found a version bump in '${rawVersionPlan.fileName}' but version plans are not enabled.`
@@ -123,7 +148,7 @@ export function setVersionPlansOnGroups(
         }
 
         const existingPlan = <GroupVersionPlan>(
-          group.versionPlans.find(
+          group.resolvedVersionPlans.find(
             (plan) => plan.fileName === rawVersionPlan.fileName
           )
         );
@@ -140,13 +165,17 @@ export function setVersionPlansOnGroups(
             }
           }
         } else {
-          group.versionPlans.push(<GroupVersionPlan>{
+          group.resolvedVersionPlans.push(<GroupVersionPlan>{
             absolutePath: rawVersionPlan.absolutePath,
             relativePath: rawVersionPlan.relativePath,
             fileName: rawVersionPlan.fileName,
             createdOnMs: rawVersionPlan.createdOnMs,
             message: rawVersionPlan.message,
             groupVersionBump: value,
+            commit: await getCommitForVersionPlanFile(
+              rawVersionPlan,
+              isVerbose
+            ),
           });
         }
       } else {
@@ -171,7 +200,7 @@ export function setVersionPlansOnGroups(
           }
         }
 
-        if (!groupForProject.versionPlans) {
+        if (!groupForProject.resolvedVersionPlans) {
           if (isDefaultGroup) {
             throw new Error(
               `Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but version plans are not enabled.`
@@ -195,14 +224,14 @@ export function setVersionPlansOnGroups(
 
         if (groupForProject.projectsRelationship === 'independent') {
           const existingPlan = <ProjectsVersionPlan>(
-            groupForProject.versionPlans.find(
+            groupForProject.resolvedVersionPlans.find(
               (plan) => plan.fileName === rawVersionPlan.fileName
             )
           );
           if (existingPlan) {
             existingPlan.projectVersionBumps[key] = value;
           } else {
-            groupForProject.versionPlans.push(<ProjectsVersionPlan>{
+            groupForProject.resolvedVersionPlans.push(<ProjectsVersionPlan>{
               absolutePath: rawVersionPlan.absolutePath,
               relativePath: rawVersionPlan.relativePath,
               fileName: rawVersionPlan.fileName,
@@ -211,11 +240,15 @@ export function setVersionPlansOnGroups(
               projectVersionBumps: {
                 [key]: value,
               },
+              commit: await getCommitForVersionPlanFile(
+                rawVersionPlan,
+                isVerbose
+              ),
             });
           }
         } else {
           const existingPlan = <GroupVersionPlan>(
-            groupForProject.versionPlans.find(
+            groupForProject.resolvedVersionPlans.find(
               (plan) => plan.fileName === rawVersionPlan.fileName
             )
           );
@@ -232,16 +265,24 @@ export function setVersionPlansOnGroups(
                   `Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' that conflicts with another project's version bump in the same release group '${groupForProject.name}'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.`
                 );
               }
+            } else {
+              existingPlan.triggeredByProjects.push(key);
             }
           } else {
-            groupForProject.versionPlans.push(<GroupVersionPlan>{
+            groupForProject.resolvedVersionPlans.push(<GroupVersionPlan>{
               absolutePath: rawVersionPlan.absolutePath,
               relativePath: rawVersionPlan.relativePath,
               fileName: rawVersionPlan.fileName,
               createdOnMs: rawVersionPlan.createdOnMs,
               message: rawVersionPlan.message,
               // This is a fixed group, so the version bump is for the group, even if a project within it was specified
+              // but we track the projects that triggered the version bump so that we can accurately produce changelog entries.
               groupVersionBump: value,
+              triggeredByProjects: [key],
+              commit: await getCommitForVersionPlanFile(
+                rawVersionPlan,
+                isVerbose
+              ),
             });
           }
         }
@@ -251,8 +292,8 @@ export function setVersionPlansOnGroups(
 
   // Order the plans from newest to oldest
   releaseGroups.forEach((group) => {
-    if (group.versionPlans) {
-      group.versionPlans.sort((a, b) => b.createdOnMs - a.createdOnMs);
+    if (group.resolvedVersionPlans) {
+      group.resolvedVersionPlans.sort((a, b) => b.createdOnMs - a.createdOnMs);
     }
   });
 
@@ -274,7 +315,45 @@ function isReleaseType(value: string): value is ReleaseType {
   return RELEASE_TYPES.includes(value as ReleaseType);
 }
 
-// changelog messages may only be a single line long, so ignore anything else
-function getSingleLineMessage(message: string) {
-  return message.trim().split('\n')[0];
+async function getCommitForVersionPlanFile(
+  rawVersionPlan: RawVersionPlan,
+  isVerbose: boolean
+): Promise<RawGitCommit | null> {
+  return new Promise((resolve) => {
+    exec(
+      `git log --diff-filter=A --pretty=format:"%s|%h|%an|%ae|%b" -n 1 -- ${rawVersionPlan.absolutePath}`,
+      {
+        windowsHide: false,
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          if (isVerbose) {
+            console.error(
+              `Error executing git command for ${rawVersionPlan.relativePath}: ${error.message}`
+            );
+          }
+          return resolve(null);
+        }
+        if (stderr) {
+          if (isVerbose) {
+            console.error(
+              `Git command stderr for ${rawVersionPlan.relativePath}: ${stderr}`
+            );
+          }
+          return resolve(null);
+        }
+
+        const [message, shortHash, authorName, authorEmail, ...body] = stdout
+          .trim()
+          .split('|');
+        const commitDetails: RawGitCommit = {
+          message: message || '',
+          shortHash: shortHash || '',
+          author: { name: authorName || '', email: authorEmail || '' },
+          body: body.join('|') || '', // Handle case where body might be empty or contain multiple '|'
+        };
+        return resolve(commitDetails);
+      }
+    );
+  });
 }

@@ -3,6 +3,7 @@ import { Schema } from '../schema';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 export interface NormalizedSchema extends Schema {
+  directory: string;
   projectSourceRoot: string;
   fileName: string;
   className: string;
@@ -18,21 +19,14 @@ export async function normalizeOptions(
 
   const {
     artifactName: name,
-    directory,
     fileName,
     filePath,
+    directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/expo:component',
     name: options.name,
-    directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
+    path: options.path,
     fileExtension: 'tsx',
-    pascalCaseFile: options.pascalCaseFiles,
   });
 
   const project = getProjects(host).get(projectName);
@@ -66,8 +60,8 @@ function assertValidOptions(options: Schema) {
     if (options.name.indexOf(s) !== -1) {
       const [name, ...rest] = options.name.split(s).reverse();
       let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
+      if (options.path) {
+        suggestion = `${options.path}${s}${suggestion}`;
       }
       throw new Error(
         `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`

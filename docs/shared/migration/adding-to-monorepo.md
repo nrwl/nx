@@ -6,14 +6,12 @@ powering Nx underneath. As a result, Lerna gets all the modern features such as 
 on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first-class support for [monorepos](/getting-started/tutorials/npm-workspaces-tutorial). As a result, if you have
+Nx has first-class support for [monorepos](/getting-started/tutorials/npm-workspaces-tutorial). If you have
 an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/features/run-tasks)
-- support for [task pipelines](/concepts/task-pipeline-configuration)
-- [caching](/features/cache-task-results)
-- [remote caching with Nx Cloud](/ci/features/remote-cache)
-- [distributed task execution with Nx Cloud](/ci/features/distribute-task-execution)
+- high-performance task [caching](/features/cache-task-results)
+- [fast CI ⚡](#fast-ci) with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution)
 
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and
 add an `nx.json` for configuring caching and task pipelines.
@@ -112,7 +110,7 @@ details in a browser window.
 nx show project my-workspace --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {
@@ -307,7 +305,7 @@ pnpm run -r test
 
 This allows for incrementally adopting Nx in your existing workspace.
 
-## Set Up CI for Your Workspace
+## Fast CI ⚡ {% highlightColor="green" %}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -316,7 +314,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
@@ -346,9 +344,9 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow
+### Create a CI Workflow {% highlightColor="green" %}
 
 Use the following command to generate a CI workflow file.
 
@@ -385,7 +383,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request
+### Open a Pull Request {% highlightColor="green" %}
 
 Commit the changes and open a new PR on GitHub.
 
@@ -423,8 +421,5 @@ url="/reference/nxignore" /%}
 
 {% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
 /concepts/turbo-and-nx" /%}
-
-{% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="
-/concepts/integrated-vs-package-based" /%}
 
 {% /cards %}

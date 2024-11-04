@@ -62,6 +62,8 @@ function createPost(data: {
     title: data.title,
     description: '',
     authors: [],
+    ogImage: '',
+    ogImageType: '',
     cover_image: '',
     tags: [],
     reposts: [],

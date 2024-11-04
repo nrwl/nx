@@ -4,7 +4,9 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   offsetFromRoot,
+  ProjectType,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -44,6 +46,10 @@ export async function vitestGeneratorInternal(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
+  // Setting default to jsdom since it is the most common use case (React, Web).
+  // The @nx/js:lib generator specifically sets this to node to be more generic.
+  schema.testEnvironment ??= 'jsdom';
+
   const tasks: GeneratorCallback[] = [];
 
   const { root, projectType } = readProjectConfiguration(tree, schema.project);
@@ -83,7 +89,11 @@ export async function vitestGeneratorInternal(
             "'react-dom'",
             "'react/jsx-runtime'",
           ],
-          imports: [`import react from '@vitejs/plugin-react'`],
+          imports: [
+            schema.compiler === 'swc'
+              ? `import react from '@vitejs/plugin-react-swc'`
+              : `import react from '@vitejs/plugin-react'`,
+          ],
           plugins: ['react()'],
           coverageProvider: schema.coverageProvider,
         },
@@ -103,7 +113,7 @@ export async function vitestGeneratorInternal(
   }
 
   createFiles(tree, schema, root);
-  updateTsConfig(tree, schema, root);
+  updateTsConfig(tree, schema, root, projectType);
 
   const coverageProviderDependency = getCoverageProviderDependency(
     schema.coverageProvider
@@ -128,7 +138,7 @@ export async function vitestGeneratorInternal(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
+      `export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];`
     );
   }
 
@@ -142,8 +152,11 @@ export async function vitestGeneratorInternal(
 function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string
+  projectRoot: string,
+  projectType: ProjectType
 ) {
+  const setupFile = tryFindSetupFile(tree, projectRoot);
+
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
     updateJson(
       tree,
@@ -157,6 +170,11 @@ function updateTsConfig(
             json.compilerOptions.types = ['vitest'];
           }
         }
+
+        if (setupFile) {
+          json.files = [...(json.files ?? []), setupFile];
+        }
+
         return json;
       }
     );
@@ -194,30 +212,56 @@ function updateTsConfig(
     );
   }
 
-  if (options.inSourceTests) {
-    const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');
-    const tsconfigAppPath = joinPathFragments(projectRoot, 'tsconfig.app.json');
-    if (tree.exists(tsconfigLibPath)) {
-      updateJson(
-        tree,
-        joinPathFragments(projectRoot, 'tsconfig.lib.json'),
-        (json) => {
-          (json.compilerOptions.types ??= []).push('vitest/importMeta');
-          return json;
-        }
-      );
-    } else if (tree.exists(tsconfigAppPath)) {
-      updateJson(
-        tree,
-        joinPathFragments(projectRoot, 'tsconfig.app.json'),
-        (json) => {
-          (json.compilerOptions.types ??= []).push('vitest/importMeta');
-          return json;
-        }
+  let runtimeTsconfigPath = joinPathFragments(
+    projectRoot,
+    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json'
+  );
+  if (options.runtimeTsconfigFileName) {
+    runtimeTsconfigPath = joinPathFragments(
+      projectRoot,
+      options.runtimeTsconfigFileName
+    );
+    if (!tree.exists(runtimeTsconfigPath)) {
+      throw new Error(
+        `Cannot find the specified runtimeTsConfigFileName ("${options.runtimeTsconfigFileName}") at the project root "${projectRoot}".`
       );
     }
+  }
 
-    addTsLibDependencies(tree);
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      if (options.inSourceTests) {
+        (json.compilerOptions.types ??= []).push('vitest/importMeta');
+      } else {
+        const uniqueExclude = new Set([
+          ...(json.exclude || []),
+          'vite.config.ts',
+          'vite.config.mts',
+          'vitest.config.ts',
+          'vitest.config.mts',
+          'src/**/*.test.ts',
+          'src/**/*.spec.ts',
+          'src/**/*.test.tsx',
+          'src/**/*.spec.tsx',
+          'src/**/*.test.js',
+          'src/**/*.spec.js',
+          'src/**/*.test.jsx',
+          'src/**/*.spec.jsx',
+        ]);
+        json.exclude = [...uniqueExclude];
+      }
+
+      if (setupFile) {
+        json.exclude = [...(json.exclude ?? []), setupFile];
+      }
+
+      return json;
+    });
+  } else {
+    logger.warn(
+      `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
+        `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
+    );
   }
 }
 
@@ -250,6 +294,13 @@ function getCoverageProviderDependency(
       return {
         '@vitest/coverage-v8': vitestCoverageV8Version,
       };
+  }
+}
+
+function tryFindSetupFile(tree: Tree, projectRoot: string) {
+  const setupFile = joinPathFragments('src', 'test-setup.ts');
+  if (tree.exists(joinPathFragments(projectRoot, setupFile))) {
+    return setupFile;
   }
 }
 

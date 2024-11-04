@@ -20,7 +20,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Output Style', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
-      runCLI(`generate @nx/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
 
       updateJson(join('apps', myapp, 'project.json'), (c) => {
         c.targets['inner'] = {
@@ -55,32 +55,43 @@ describe('Extra Nx Misc Tests', () => {
       const nxJson = readJson('nx.json');
       nxJson.plugins = ['./tools/plugin'];
       updateFile('nx.json', JSON.stringify(nxJson));
+      updateFile('test/project.txt', 'plugin-node');
+      updateFile('test2/project.txt', 'plugin-node2');
+      updateFile('test2/dependencies.txt', 'plugin-node');
       updateFile(
         'tools/plugin.js',
         `
+      const { readFileSync } = require('fs');
+      const { dirname } = require('path');
       module.exports = {
-        processProjectGraph: (graph) => {
-          const Builder = require('@nx/devkit').ProjectGraphBuilder;
-          const builder = new Builder(graph);
-          builder.addNode({
-            name: 'plugin-node',
-            type: 'lib',
-            data: {
-              root: 'test'
+        createNodesV2: ['**/project.txt', (configFiles) => {
+          const results = [];
+          for (const configFile of configFiles) {
+            const name = readFileSync(configFile, 'utf8');
+            results.push([configFile, {
+              projects: {
+                [dirname(configFile)]: {
+                  name: name,
+                }
+              }
+            }]);
+          }
+          
+          return results;
+        }],
+        createDependencies: () => {
+          return [
+            {
+              
+              source: 'plugin-node',
+              /**
+               * The name of a {@link ProjectGraphProjectNode} that the source project depends on
+               */
+              target: 'plugin-node2',
+            
+              type: 'implicit'
             }
-          });
-          builder.addNode({
-            name: 'plugin-node2',
-            type: 'lib',
-            data: {
-              root: 'test2'
-            }
-          });
-          builder.addImplicitDependency(
-            'plugin-node',
-            'plugin-node2'
-          );
-          return builder.getUpdatedProjectGraph();
+          ];
         }
       };
     `
@@ -103,7 +114,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Run Commands', () => {
     const mylib = uniq('lib');
     beforeAll(() => {
-      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
     });
 
     it('should not override environment variables already set when setting a custom env file path', async () => {
@@ -249,7 +260,7 @@ describe('Extra Nx Misc Tests', () => {
 
       const folder = `dist/libs/${mylib}/some-folder`;
 
-      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
 
       runCLI(
         `generate @nx/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
@@ -296,7 +307,7 @@ describe('Extra Nx Misc Tests', () => {
 
     beforeAll(() => {
       runCLI(
-        `generate @nx/js:lib ${libName} --bundler=none --unitTestRunner=none --no-interactive`
+        `generate @nx/js:lib libs/${libName} --bundler=none --unitTestRunner=none --no-interactive`
       );
     });
 
@@ -366,7 +377,7 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
 
     const baseLib = 'lib-base-123';
     beforeAll(() => {
-      runCLI(`generate @nx/js:lib ${baseLib}`);
+      runCLI(`generate @nx/js:lib libs/${baseLib}`);
     });
 
     it('should correctly expand default task inputs', () => {
@@ -387,7 +398,7 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
 
     it('should correctly expand dependent task inputs', () => {
       const dependentLib = 'lib-dependent-123';
-      runCLI(`generate @nx/js:lib ${dependentLib}`);
+      runCLI(`generate @nx/js:lib libs/${dependentLib}`);
 
       updateJson(join('libs', baseLib, 'project.json'), (config) => {
         config.targets['build'].inputs = ['default', '^default'];

@@ -61,7 +61,10 @@ export default function NxCloudPage(): JSX.Element {
         <Statistics />
       </div>
       <div className="mt-32 lg:mt-56">
-        <CallToAction />
+        <CallToAction
+          mainActionTitle="Learn more about Nx Cloud on CI"
+          mainActionLink="/ci/intro/ci-with-nx"
+        />
       </div>
     </DefaultLayout>
   );

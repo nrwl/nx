@@ -45,7 +45,9 @@ interface Substitutes {
   packageManagerPrefix: string;
   packageManagerPreInstallPrefix: string;
   nxCloudHost: string;
+  hasCypress: boolean;
   hasE2E: boolean;
+  hasPlaywright: boolean;
   tmpl: '';
   connectedToCloud: boolean;
 }
@@ -73,8 +75,9 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     ...packageJson.devDependencies,
   };
 
-  const hasE2E =
-    allDependencies['@nx/cypress'] || allDependencies['@nx/playwright'];
+  const hasCypress = allDependencies['@nx/cypress'];
+  const hasPlaywright = allDependencies['@nx/playwright'];
+  const hasE2E = hasCypress || hasPlaywright;
 
   const connectedToCloud = isNxCloudUsed(readJson(tree, 'nx.json'));
 
@@ -86,7 +89,9 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManagerPrefix,
     packageManagerPreInstallPrefix,
     mainBranch: deduceDefaultBase(),
+    hasCypress,
     hasE2E,
+    hasPlaywright,
     nxCloudHost,
     tmpl: '',
     connectedToCloud,
@@ -125,4 +130,14 @@ function addWorkflowFileToSharedGlobals(
   nxJson.namedInputs ??= {};
   nxJson.namedInputs.sharedGlobals ??= [];
   nxJson.namedInputs.sharedGlobals.push(input);
+
+  // Ensure 'default' named input exists and includes 'sharedGlobals'
+  if (!nxJson.namedInputs.default) {
+    nxJson.namedInputs.default = ['sharedGlobals'];
+  } else if (
+    Array.isArray(nxJson.namedInputs.default) &&
+    !nxJson.namedInputs.default.includes('sharedGlobals')
+  ) {
+    nxJson.namedInputs.default.push('sharedGlobals');
+  }
 }

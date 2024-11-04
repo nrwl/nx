@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { BlogAuthors } from './authors';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { EpisodePlayer } from './episode-player';
+import { YouTube } from '@nx/nx-dev/ui-common';
 
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
@@ -32,6 +34,7 @@ export async function generateMetadata({ post }: BlogDetailsProps) {
 export function BlogDetails({ post }: BlogDetailsProps) {
   const { node } = renderMarkdown(post.content, {
     filePath: post.filePath ?? '',
+    headingClass: 'scroll-mt-20',
   });
 
   const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
@@ -64,16 +67,36 @@ export function BlogDetails({ post }: BlogDetailsProps) {
             {post.title}
           </h1>
         </header>
-        {post.cover_image && (
-          <div className="mx-auto mb-16 aspect-[1.7] w-full max-w-screen-md">
-            <Image
-              className="h-full w-full object-cover md:rounded-md"
-              src={post.cover_image}
-              alt={post.title}
-              width={1400}
-              height={735}
+        {post.podcastYoutubeId && post.podcastSpotifyId ? (
+          <div className="mx-auto mb-16 w-full max-w-screen-md">
+            <EpisodePlayer
+              podcastYoutubeId={post.podcastYoutubeId}
+              podcastSpotifyId={post.podcastSpotifyId}
+              amazonUrl={post.podcastAmazonUrl}
+              appleUrl={post.podcastAppleUrl}
+              iHeartUrl={post.podcastIHeartUrl}
             />
           </div>
+        ) : post.youtubeUrl ? (
+          <div className="mx-auto mb-16 w-full max-w-screen-md">
+            <YouTube
+              src={post.youtubeUrl}
+              title={post.title}
+              caption={post.description}
+            />
+          </div>
+        ) : (
+          post.cover_image && (
+            <div className="mx-auto mb-16 w-full max-w-screen-md">
+              <Image
+                className="w-full object-cover md:rounded-md"
+                src={post.cover_image}
+                alt={post.title}
+                width={1400}
+                height={735}
+              />
+            </div>
+          )
         )}
         <div className="mx-auto min-w-0 max-w-3xl flex-auto px-4 pb-24 lg:px-0 lg:pb-16">
           <div className="relative">

@@ -4,6 +4,7 @@ export type ResetCommandOptions = {
   onlyCache?: boolean;
   onlyDaemon?: boolean;
   onlyWorkspaceData?: boolean;
+  onlyCloud?: boolean;
 };
 
 export const yargsResetCommand: CommandModule<
@@ -26,9 +27,14 @@ export const yargsResetCommand: CommandModule<
           'Stops the Nx Daemon, it will be restarted fresh when the next Nx command is run.',
         type: 'boolean',
       })
+      .option('onlyCloud', {
+        description:
+          'Resets the Nx Cloud client. NOTE: Does not clear the remote cache.',
+        type: 'boolean',
+      })
       .option('onlyWorkspaceData', {
         description:
-          'Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc)',
+          'Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc).',
         type: 'boolean',
       }),
   handler: async (argv) => (await import('./reset')).resetHandler(argv),

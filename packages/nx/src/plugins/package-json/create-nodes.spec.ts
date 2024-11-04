@@ -570,12 +570,16 @@ describe('nx package.json workspaces plugin', () => {
             name: 'root',
             scripts: {
               build: 'echo build',
+              test: 'echo test',
             },
           }),
           'packages/a/project.json': JSON.stringify({
             targets: {
               'something-other-than-build': {
                 command: 'echo something-other-than-build',
+              },
+              test: {
+                dependsOn: ['build-native'],
               },
             },
           }),
@@ -597,6 +601,7 @@ describe('nx package.json workspaces plugin', () => {
                     "targetGroups": {
                       "NPM Scripts": [
                         "build",
+                        "test",
                       ],
                     },
                   },
@@ -623,6 +628,16 @@ describe('nx package.json workspaces plugin', () => {
                       ],
                       "executor": "@nx/js:release-publish",
                       "options": {},
+                    },
+                    "test": {
+                      "executor": "nx:run-script",
+                      "metadata": {
+                        "runCommand": "npm run test",
+                        "scriptContent": "echo test",
+                      },
+                      "options": {
+                        "script": "test",
+                      },
                     },
                   },
                 },

@@ -1,6 +1,6 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
-import { cacheDirectoryForWorkspace } from './cache-directory';
+import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 
@@ -12,7 +12,7 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
-    cacheDirectoryForWorkspace(workspaceRoot)
+    workspaceDataDirectoryForWorkspace(workspaceRoot)
   );
   performance.mark('workspace-context:end');
   performance.measure(
@@ -74,10 +74,41 @@ export async function hashWithWorkspaceContext(
   return daemonClient.hashGlob(globs, exclude);
 }
 
-export function updateFilesInContext(
+export async function updateContextWithChangedFiles(
+  workspaceRoot: string,
+  createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
+  if (!daemonClient.enabled()) {
+    updateFilesInContext(
+      workspaceRoot,
+      [...createdFiles, ...updatedFiles],
+      deletedFiles
+    );
+  } else if (isOnDaemon()) {
+    // make sure to only import this when running on the daemon
+    const { addUpdatedAndDeletedFiles } = await import(
+      '../daemon/server/project-graph-incremental-recomputation'
+    );
+    // update files for the incremental graph recomputation on the daemon
+    addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
+  } else {
+    // daemon is enabled but we are not running on it, ask the daemon to update the context
+    await daemonClient.updateWorkspaceContext(
+      createdFiles,
+      updatedFiles,
+      deletedFiles
+    );
+  }
+}
+
+export function updateFilesInContext(
+  workspaceRoot: string,
+  updatedFiles: string[],
+  deletedFiles: string[]
+) {
+  ensureContextAvailable(workspaceRoot);
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
 

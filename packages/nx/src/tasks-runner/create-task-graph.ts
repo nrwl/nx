@@ -6,8 +6,11 @@ import {
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
-import { TargetDependencyConfig } from '../devkit-exports';
 import { output } from '../utils/output';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { findCycle } from './task-graph-utils';
+
+const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -81,10 +84,14 @@ export class ProcessTasks {
       }
     }
 
-    for (const projectName of Object.keys(this.dependencies)) {
-      if (this.dependencies[projectName].length > 1) {
-        this.dependencies[projectName] = [
-          ...new Set(this.dependencies[projectName]).values(),
+    this.filterDummyTasks();
+
+    for (const taskId of Object.keys(this.dependencies)) {
+      if (this.dependencies[taskId].length > 0) {
+        this.dependencies[taskId] = [
+          ...new Set(
+            this.dependencies[taskId].filter((d) => d !== taskId)
+          ).values(),
         ];
       }
     }
@@ -99,7 +106,7 @@ export class ProcessTasks {
     projectUsedToDeriveDependencies: string,
     configuration: string,
     overrides: Object
-  ) {
+  ): void {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
       return;
@@ -227,7 +234,15 @@ export class ProcessTasks {
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
-  ) {
+  ): void {
+    if (
+      !this.projectGraph.dependencies.hasOwnProperty(
+        projectUsedToDeriveDependencies
+      )
+    ) {
+      return;
+    }
+
     for (const dep of this.projectGraph.dependencies[
       projectUsedToDeriveDependencies
     ]) {
@@ -272,9 +287,24 @@ export class ProcessTasks {
           );
         }
       } else {
-        this.processTask(task, depProject.name, configuration, overrides);
+        const dummyId = this.getId(
+          depProject.name,
+          DUMMY_TASK_TARGET,
+          undefined
+        );
+        this.dependencies[task.id].push(dummyId);
+        this.dependencies[dummyId] ??= [];
+        const noopTask = this.createDummyTask(dummyId, task);
+        this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private createDummyTask(id: string, task: Task): Task {
+    return {
+      ...task,
+      id,
+    };
   }
 
   createTask(
@@ -347,6 +377,62 @@ export class ProcessTasks {
     }
     return id;
   }
+
+  /**
+   * this function is used to get the non dummy dependencies of a task recursively
+   * For example, when we have the following dependencies:
+   * {
+   *   'app1:compile': [ 'app2:__nx_dummy_task__' ],
+   *   'app2:__nx_dummy_task__': [ 'app3:__nx_dummy_task__' ],
+   *   'app3:__nx_dummy_task__': [ 'app4:precompile' ],
+   *   'app4:precompile': []
+   * }
+   * getNonDummyDeps('app1:compile') will return ['app1:compile']
+   * getNonDummyDeps('app2:__nx_dummy_task__') will return ['app4:precompile']
+   * getNonDummyDeps('app3:__nx_dummy_task__') will return ['app4:precompile']
+   * getNonDummyDeps('app4:precompile') will return ['app4:precompile']
+   */
+  private getNonDummyDeps(
+    currentTask: string,
+    originalTask: string,
+    cycle?: string[]
+  ): string[] {
+    if (currentTask === originalTask) {
+      return [];
+    } else if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+      if (cycle?.length && cycle?.includes(currentTask)) {
+        return [];
+      }
+      // if not a cycle, recursively get the non dummy dependencies
+      return (
+        this.dependencies[currentTask]?.flatMap((dep) =>
+          this.getNonDummyDeps(dep, originalTask, cycle)
+        ) ?? []
+      );
+    } else {
+      return [currentTask];
+    }
+  }
+
+  private filterDummyTasks() {
+    const cycle = findCycle({ dependencies: this.dependencies });
+    for (const [key, deps] of Object.entries(this.dependencies)) {
+      if (!key.endsWith(DUMMY_TASK_TARGET)) {
+        const normalizedDeps = [];
+        for (const dep of deps) {
+          normalizedDeps.push(...this.getNonDummyDeps(dep, key, cycle));
+        }
+
+        this.dependencies[key] = normalizedDeps;
+      }
+    }
+
+    for (const key of Object.keys(this.dependencies)) {
+      if (key.endsWith(DUMMY_TASK_TARGET)) {
+        delete this.dependencies[key];
+      }
+    }
+  }
 }
 
 export function createTaskGraph(
@@ -366,6 +452,7 @@ export function createTaskGraph(
     overrides,
     excludeTaskDependencies
   );
+
   return {
     roots,
     tasks: p.tasks,

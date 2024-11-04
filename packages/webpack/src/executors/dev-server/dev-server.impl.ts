@@ -3,7 +3,6 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-  targetToTargetString,
 } from '@nx/devkit';
 
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';

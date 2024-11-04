@@ -28,6 +28,7 @@ import {
   extractFileFromTarball,
   fileExists,
   JsonReadOptions,
+  JsonWriteOptions,
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
@@ -48,13 +49,13 @@ import {
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -66,6 +67,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1105,17 +1107,17 @@ function readPackageMigrationConfig(
   }
 }
 
-function createMigrationsFile(
+async function createMigrationsFile(
   root: string,
   migrations: {
     package: string;
     name: string;
   }[]
 ) {
-  writeJsonFile(join(root, 'migrations.json'), { migrations });
+  await writeFormattedJsonFile(join(root, 'migrations.json'), { migrations });
 }
 
-function updatePackageJson(
+async function updatePackageJson(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
 ) {
@@ -1145,7 +1147,7 @@ function updatePackageJson(
     }
   });
 
-  writeJsonFile(packageJsonPath, json, {
+  await writeFormattedJsonFile(packageJsonPath, json, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1178,7 +1180,7 @@ async function updateInstallationDetails(
     }
   }
 
-  writeJsonFile(nxJsonPath, nxJson, {
+  await writeFormattedJsonFile(nxJsonPath, nxJson, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1238,11 +1240,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
       await migrator.migrate(opts.targetPackage, opts.targetVersion);
 
-    updatePackageJson(root, packageUpdates);
+    await updatePackageJson(root, packageUpdates);
     await updateInstallationDetails(root, packageUpdates);
 
     if (migrations.length > 0) {
-      createMigrationsFile(root, [
+      await createMigrationsFile(root, [
         ...addSplitConfigurationMigrationIfAvailable(from, packageUpdates),
         ...migrations,
       ] as any);
@@ -1318,6 +1320,26 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 }
 
+async function writeFormattedJsonFile(
+  filePath: string,
+  content: any,
+  options?: JsonWriteOptions
+): Promise<void> {
+  const formattedContent = await formatFilesWithPrettierIfAvailable(
+    [{ path: filePath, content: JSON.stringify(content) }],
+    workspaceRoot,
+    { silent: true }
+  );
+
+  if (formattedContent.has(filePath)) {
+    writeFileSync(filePath, formattedContent.get(filePath)!, {
+      encoding: 'utf-8',
+    });
+  } else {
+    writeJsonFile(filePath, content, options);
+  }
+}
+
 function addSplitConfigurationMigrationIfAvailable(
   from: string,
   packageJson: any
@@ -1365,7 +1387,7 @@ function runInstall() {
   output.log({
     title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, { stdio: [0, 1, 2] });
+  execSync(pmCommands.install, { stdio: [0, 1, 2], windowsHide: false });
 }
 
 export async function executeMigrations(
@@ -1405,7 +1427,14 @@ export async function executeMigrations(
       : 1;
   });
 
+  logger.info(`Running the following migrations:`);
+  sortedMigrations.forEach((m) =>
+    logger.info(`- ${m.package}: ${m.name} (${m.description})`)
+  );
+  logger.info(`---------------------------------------------------------\n`);
+
   for (const m of sortedMigrations) {
+    logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,
@@ -1419,15 +1448,17 @@ export async function executeMigrations(
           m.name
         );
 
+        logger.info(`Ran ${m.name} from ${m.package}`);
+        logger.info(`  ${m.description}\n`);
         if (changes.length < 1) {
+          logger.info(`No changes were made\n`);
           migrationsWithNoChanges.push(m);
-          // If no changes are made, continue on without printing anything
           continue;
         }
 
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
+        logger.info('Changes:');
         printChanges(changes, '  ');
+        logger.info('');
       } else {
         const ngCliAdapter = await getNgCompatLayer();
         const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
@@ -1440,15 +1471,17 @@ export async function executeMigrations(
           isVerbose
         );
 
+        logger.info(`Ran ${m.name} from ${m.package}`);
+        logger.info(`  ${m.description}\n`);
         if (!madeChanges) {
+          logger.info(`No changes were made\n`);
           migrationsWithNoChanges.push(m);
-          // If no changes are made, continue on without printing anything
           continue;
         }
 
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
+        logger.info('Changes:');
         loggingQueue.forEach((log) => logger.info('  ' + log));
+        logger.info('');
       }
 
       if (shouldCreateCommits) {
@@ -1603,10 +1636,6 @@ export async function migrate(
   args: { [k: string]: any },
   rawArgs: string[]
 ) {
-  if (args['verbose']) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
   await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
@@ -1670,62 +1699,21 @@ function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-// TODO (v17): This should just become something like:
-// ```
-// return !collection.generators[name] && collection.schematics[name]
-// ```
+// TODO (v21): Remove CLI determination of Angular Migration
 function isAngularMigration(
   collection: MigrationsJson,
   collectionPath: string,
   name: string
 ) {
   const entry = collection.generators?.[name] || collection.schematics?.[name];
-
-  // In the future we will determine this based on the location of the entry in the collection.
-  // If the entry is under `schematics`, it will be assumed to be an angular cli migration.
-  // If the entry is under `generators`, it will be assumed to be an nx migration.
-  // For now, we will continue to obey the cli property, if it exists.
-  // If it doesn't exist, we will check if the implementation references @angular/devkit.
   const shouldBeNx = !!collection.generators?.[name];
   const shouldBeNg = !!collection.schematics?.[name];
-  let useAngularDevkitToRunMigration = false;
-
-  const { path: implementationPath } = getImplementationPath(
-    collection,
-    collectionPath,
-    name
-  );
-  const implStringContents = readFileSync(implementationPath, 'utf-8');
-  // TODO (v17): Remove this check and the cli property access - it is only here for backwards compatibility.
-  if (
-    ['@angular/material', '@angular/cdk'].includes(collection.name) ||
-    [
-      "import('@angular-devkit",
-      'import("@angular-devkit',
-      "require('@angular-devkit",
-      'require("@angular-devkit',
-      "from '@angular-devkit",
-      'from "@angular-devkit',
-    ].some((s) => implStringContents.includes(s))
-  ) {
-    useAngularDevkitToRunMigration = true;
-  }
-
-  if (useAngularDevkitToRunMigration && shouldBeNx) {
+  if (entry.cli && entry.cli !== 'nx' && collection.generators?.[name]) {
     output.warn({
       title: `The migration '${collection.name}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
       bodyLines: [
-        'In Nx 17, migrations inside `generators` will be treated as Angular Devkit migrations.',
-        "Please open an issue on the plugin's repository if you believe this is an error.",
-      ],
-    });
-  }
-
-  if (!useAngularDevkitToRunMigration && entry.cli === 'nx' && shouldBeNg) {
-    output.warn({
-      title: `The migration '${collection.name}:${name}' appears to be an Nx migration, but is located in the 'schematics' section of migrations.json.`,
-      bodyLines: [
-        'In Nx 17, migrations inside `generators` will be treated as nx devkit migrations.',
+        'In Nx 21, migrations inside `generators` will be treated as Nx Devkit migrations and therefore may not run correctly if they are using Angular Devkit.',
+        'If the migration should be run with Angular Devkit, please place the migration inside `schematics` instead.',
         "Please open an issue on the plugin's repository if you believe this is an error.",
       ],
     });
@@ -1733,7 +1721,7 @@ function isAngularMigration(
 
   // Currently, if the cli property exists we listen to it. If its nx, its not an ng cli migration.
   // If the property is not set, we will fall back to our intuition.
-  return entry.cli ? entry.cli !== 'nx' : useAngularDevkitToRunMigration;
+  return entry.cli ? entry.cli !== 'nx' : !shouldBeNx && shouldBeNg;
 }
 
 const getNgCompatLayer = (() => {

@@ -1,12 +1,25 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import {
+  DefaultTasksRunnerOptions,
+  RemoteCache,
+  RemoteCacheV2,
+} from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { existsSync, mkdirSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
+import { NxCache, CachedResult as NativeCacheResult, IS_WASM } from '../native';
+import { getDbConnection } from '../utils/db-connection';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
+import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
+import { isCI } from '../utils/is-ci';
+import { output } from '../utils/output';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -16,6 +29,202 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
+export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
+  return (
+    !IS_WASM &&
+    process.env.NX_DISABLE_DB !== 'true' &&
+    nxJson.useLegacyCache !== true &&
+    process.env.NX_DB_CACHE !== 'false'
+  );
+}
+
+// Do not change the order of these arguments as this function is used by nx cloud
+export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
+  const nxJson = readNxJson();
+  return dbCacheEnabled(nxJson)
+    ? new DbCache({
+        // Remove this in Nx 21
+        nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
+      })
+    : new Cache(options);
+}
+
+export class DbCache {
+  private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+
+  private remoteCache: RemoteCacheV2 | null;
+  private remoteCachePromise: Promise<RemoteCacheV2>;
+
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
+  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+
+  async init() {
+    // This should be cheap because we've already loaded
+    this.remoteCache = await this.getRemoteCache();
+    if (!this.remoteCache) {
+      this.assertCacheIsValid();
+    }
+  }
+
+  async get(task: Task): Promise<CachedResult | null> {
+    const res = this.cache.get(task.hash);
+
+    if (res) {
+      return {
+        ...res,
+        remote: false,
+      };
+    }
+    if (this.remoteCache) {
+      // didn't find it locally but we have a remote cache
+      // attempt remote cache
+      const res = await this.remoteCache.retrieve(
+        task.hash,
+        this.cache.cacheDirectory
+      );
+
+      if (res) {
+        this.applyRemoteCacheResults(task.hash, res);
+
+        return {
+          ...res,
+          remote: true,
+        };
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  private applyRemoteCacheResults(hash: string, res: NativeCacheResult) {
+    return this.cache.applyRemoteCacheResults(hash, res);
+  }
+
+  async put(
+    task: Task,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ) {
+    return tryAndRetry(async () => {
+      this.cache.put(task.hash, terminalOutput, outputs, code);
+
+      if (this.remoteCache) {
+        await this.remoteCache.store(
+          task.hash,
+          this.cache.cacheDirectory,
+          terminalOutput,
+          code
+        );
+      }
+    });
+  }
+
+  copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
+    return tryAndRetry(async () =>
+      this.cache.copyFilesFromCache(cachedResult, outputs)
+    );
+  }
+
+  removeOldCacheRecords() {
+    return this.cache.removeOldCacheRecords();
+  }
+
+  temporaryOutputPath(task: Task) {
+    return this.cache.getTaskOutputsPath(task.hash);
+  }
+
+  private async getRemoteCache(): Promise<RemoteCacheV2 | null> {
+    if (this.remoteCachePromise) {
+      return this.remoteCachePromise;
+    }
+
+    this.remoteCachePromise = this._getRemoteCache();
+    return this.remoteCachePromise;
+  }
+
+  private async _getRemoteCache(): Promise<RemoteCacheV2 | null> {
+    const nxJson = readNxJson();
+    if (isNxCloudUsed(nxJson)) {
+      const options = getCloudOptions();
+      const { nxCloudClient } = await verifyOrUpdateNxCloudClient(options);
+      if (nxCloudClient.getRemoteCache) {
+        return nxCloudClient.getRemoteCache();
+      } else {
+        // old nx cloud instance
+        return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
+      }
+    } else {
+      return (
+        (await this.getPowerpackS3Cache()) ??
+        (await this.getPowerpackSharedCache()) ??
+        (await this.getPowerpackGcsCache()) ??
+        (await this.getPowerpackAzureCache()) ??
+        null
+      );
+    }
+  }
+
+  private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-s3-cache');
+  }
+
+  private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  }
+
+  private getPowerpackGcsCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-gcs-cache');
+  }
+
+  private getPowerpackAzureCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-azure-cache');
+  }
+
+  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
+    let getRemoteCache = null;
+    try {
+      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
+    } catch {
+      return null;
+    }
+    return getRemoteCache();
+  }
+
+  private resolvePackage(pkg: string) {
+    return require.resolve(pkg, {
+      paths: [process.cwd(), workspaceRoot, __dirname],
+    });
+  }
+
+  private assertCacheIsValid() {
+    // User has customized the cache directory - this could be because they
+    // are using a shared cache in the custom directory. The db cache is not
+    // stored in the cache directory, and is keyed by machine ID so they would
+    // hit issues. If we detect this, we can create a fallback db cache in the
+    // custom directory, and check if the entries are there when the main db
+    // cache misses.
+    if (isCI() && !this.cache.checkCacheFsInSync()) {
+      const warningLines = [
+        `Nx found unrecognized artifacts in the cache directory and will not be able to use them.`,
+        `Nx can only restore artifacts it has metadata about.`,
+        `Read about this warning and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
+        ``,
+      ];
+      output.warn({
+        title: 'Unrecognized Cache Artifacts',
+        bodyLines: warningLines,
+      });
+    }
+  }
+}
+
+/**
+ * @deprecated Use the {@link DbCache} class instead. This will be removed in Nx 21.
+ */
 export class Cache {
   root = workspaceRoot;
   cachePath = this.createCacheDir();
@@ -34,10 +243,11 @@ export class Cache {
     if (shouldSpawnProcess) {
       const scriptPath = require.resolve('./remove-old-cache-records.js');
       try {
-        const p = spawn('node', [scriptPath, `"${this.cachePath}"`], {
+        const p = spawn('node', [scriptPath, `${this.cachePath}`], {
           stdio: 'ignore',
           detached: true,
           shell: false,
+          windowsHide: false,
         });
         p.unref();
       } catch (e) {
@@ -52,7 +262,7 @@ export class Cache {
       try {
         this._currentMachineId = await machineId();
       } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING == 'true') {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.log(`Unable to get machineId. Error: ${e.message}`);
         }
         this._currentMachineId = '';
@@ -85,7 +295,10 @@ export class Cache {
     outputs: string[],
     code: number
   ) {
-    return this.tryAndRetry(async () => {
+    return tryAndRetry(async () => {
+      /**
+       * This is the directory with the cached artifacts
+       */
       const td = join(this.cachePath, task.hash);
       const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
@@ -93,7 +306,7 @@ export class Cache {
       await this.remove(tdCommit);
       await this.remove(td);
 
-      await mkdir(td);
+      await mkdir(td, { recursive: true });
       await writeFile(
         join(td, 'terminalOutput'),
         terminalOutput ?? 'no terminal output'
@@ -105,7 +318,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
-          if (await pathExists(src)) {
+          if (existsSync(src)) {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
@@ -135,7 +348,7 @@ export class Cache {
     cachedResult: CachedResult,
     outputs: string[]
   ) {
-    return this.tryAndRetry(async () => {
+    return tryAndRetry(async () => {
       const expandedOutputs = await this.expandOutputsInCache(
         outputs,
         cachedResult
@@ -143,7 +356,7 @@ export class Cache {
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
-          if (await pathExists(cached)) {
+          if (existsSync(cached)) {
             const src = join(this.root, f);
             await this.remove(src);
             await this.copy(cached, src);
@@ -218,7 +431,7 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
 
-    if (await pathExists(tdCommit)) {
+    if (existsSync(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
         'utf-8'
@@ -273,26 +486,25 @@ export class Cache {
     mkdirSync(path, { recursive: true });
     return path;
   }
+}
 
-  private tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
-    let attempts = 0;
-    const baseTimeout = 5;
-    // Generate a random number between 2 and 4 to raise to the power of attempts
-    const baseExponent = Math.random() * 2 + 2;
-    const _try = async () => {
-      try {
-        attempts++;
-        return await fn();
-      } catch (e) {
-        // Max time is 5 * 4^3 = 20480ms
-        if (attempts === 6) {
-          // After enough attempts, throw the error
-          throw e;
-        }
-        await new Promise((res) => setTimeout(res, baseExponent ** attempts));
-        return await _try();
+function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let attempts = 0;
+  // Generate a random number between 2 and 4 to raise to the power of attempts
+  const baseExponent = Math.random() * 2 + 2;
+  const _try = async () => {
+    try {
+      attempts++;
+      return await fn();
+    } catch (e) {
+      // Max time is 5 * 4^3 = 20480ms
+      if (attempts === 6) {
+        // After enough attempts, throw the error
+        throw e;
       }
-    };
-    return _try();
-  }
+      await new Promise((res) => setTimeout(res, baseExponent ** attempts));
+      return await _try();
+    }
+  };
+  return _try();
 }

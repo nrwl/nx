@@ -1,7 +1,8 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
-  InputDefinition,
+  ProjectConfiguration,
   ProjectMetadata,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
@@ -13,12 +14,8 @@ import {
   getPackageManagerCommand,
 } from './package-manager';
 
-export interface NxProjectPackageJsonConfiguration {
-  name?: string;
-  implicitDependencies?: string[];
-  tags?: string[];
-  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
-  targets?: Record<string, TargetConfiguration>;
+export interface NxProjectPackageJsonConfiguration
+  extends Partial<ProjectConfiguration> {
   includedScripts?: string[];
 }
 
@@ -58,6 +55,9 @@ export interface PackageJson {
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, { optional: boolean }>;
   resolutions?: Record<string, string>;
+  pnpm?: {
+    overrides?: PackageOverride;
+  };
   overrides?: PackageOverride;
   bin?: Record<string, string> | string;
   workspaces?:
@@ -66,6 +66,7 @@ export interface PackageJson {
         packages: string[];
       };
   publishConfig?: Record<string, string>;
+  files?: string[];
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;
@@ -167,7 +168,10 @@ export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
   return tags;
 }
 
-export function readTargetsFromPackageJson(packageJson: PackageJson) {
+export function readTargetsFromPackageJson(
+  packageJson: PackageJson,
+  nxJson: NxJsonConfiguration
+) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
@@ -186,12 +190,24 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
    * Add implicit nx-release-publish target for all package.json files that are
    * not marked as `"private": true` to allow for lightweight configuration for
    * package based repos.
+   *
+   * Any targetDefaults for the nx-release-publish target set by the user should
+   * be merged with the implicit target.
    */
   if (!isPrivate && !res['nx-release-publish']) {
+    const nxReleasePublishTargetDefaults =
+      nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
     res['nx-release-publish'] = {
-      dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',
-      options: {},
+      ...nxReleasePublishTargetDefaults,
+      dependsOn: [
+        // For maximum correctness, projects should only ever be published once their dependencies are successfully published
+        '^nx-release-publish',
+        ...(nxReleasePublishTargetDefaults.dependsOn ?? []),
+      ],
+      options: {
+        ...(nxReleasePublishTargetDefaults.options ?? {}),
+      },
     };
   }
 

@@ -1,11 +1,11 @@
 ---
 title: 'run-many - CLI command'
-description: 'Run target for multiple listed projects'
+description: 'Run target for multiple listed projects.'
 ---
 
 # run-many
 
-Run target for multiple listed projects
+Run target for multiple listed projects.
 
 ## Usage
 
@@ -91,117 +91,23 @@ Print the task graph to the console:
 
 ## Options
 
-### all
-
-Type: `boolean`
-
-Default: `true`
-
-[deprecated] `run-many` runs all targets on all projects in the workspace if no projects are provided. This option is no longer required.
-
-### batch
-
-Type: `boolean`
-
-Default: `false`
-
-Run task(s) in batches for executors which support batches
-
-### configuration
-
-Type: `string`
-
-This is the configuration to use when performing tasks on projects
-
-### exclude
-
-Type: `string`
-
-Exclude certain projects from being processed
-
-### graph
-
-Type: `string`
-
-Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.
-
-### help
-
-Type: `boolean`
-
-Show help
-
-### nxBail
-
-Type: `boolean`
-
-Default: `false`
-
-Stop command execution after the first failed task
-
-### nxIgnoreCycles
-
-Type: `boolean`
-
-Default: `false`
-
-Ignore cycles in the task graph
-
-### output-style
-
-Type: `string`
-
-Choices: [dynamic, static, stream, stream-without-prefixes]
-
-Defines how Nx emits outputs tasks logs
-
-| option                  | description                                                                                                                                                                                                                         |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| dynamic                 | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
-| static                  | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments.                                                                         |
-| stream                  | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr                                                                                                                        |
-| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output                                                                                                                   |
-
-### parallel
-
-Type: `string`
-
-Max number of parallel processes [default is 3]
-
-### projects
-
-Type: `string`
-
-Projects to run. (comma/space delimited project names and/or patterns)
-
-### runner
-
-Type: `string`
-
-This is the name of the tasks runner configured in nx.json
-
-### skipNxCache
-
-Type: `boolean`
-
-Default: `false`
-
-Rerun the tasks even when the results are available in the cache
-
-### targets
-
-Type: `string`
-
-Tasks to run for affected projects
-
-### verbose
-
-Type: `boolean`
-
-Prints additional information about the commands (e.g., stack traces)
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option                      | Type                                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--all`                     | boolean                                                  | [deprecated] `run-many` runs all targets on all projects in the workspace if no projects are provided. This option is no longer required. (Default: `true`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `--batch`                   | boolean                                                  | Run task(s) in batches for executors which support batches. (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `--configuration`           | string                                                   | This is the configuration to use when performing tasks on projects.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--exclude`                 | string                                                   | Exclude certain projects from being processed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `--excludeTaskDependencies` | boolean                                                  | Skips running dependent tasks first. (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `--graph`                   | string                                                   | Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `--help`                    | boolean                                                  | Show help.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--nxBail`                  | boolean                                                  | Stop command execution after the first failed task. (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--nxIgnoreCycles`          | boolean                                                  | Ignore cycles in the task graph. (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--output-style`            | `dynamic`, `static`, `stream`, `stream-without-prefixes` | Defines how Nx emits outputs tasks logs. **dynamic**: use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output. |
+| `--parallel`                | string                                                   | Max number of parallel processes [default is 3].                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--projects`                | string                                                   | Projects to run. (comma/space delimited project names and/or patterns).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `--runner`                  | string                                                   | This is the name of the tasks runner configured in nx.json.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `--skipNxCache`             | boolean                                                  | Rerun the tasks even when the results are available in the cache. (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `--skipSync`                | boolean                                                  | Skips running the sync generators associated with the tasks. (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `--targets`                 | string                                                   | Tasks to run for affected projects.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--verbose`                 | boolean                                                  | Prints additional information about the commands (e.g., stack traces).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--version`                 | boolean                                                  | Show version number.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |

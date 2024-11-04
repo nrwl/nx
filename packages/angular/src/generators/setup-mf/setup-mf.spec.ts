@@ -3,13 +3,14 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   readJson,
   readProjectConfiguration,
-  Tree,
   updateJson,
+  type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { E2eTestRunner } from '../../utils/test-runners';
+import { nxVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
-import { E2eTestRunner } from '../../utils/test-runners';
 
 describe('Init MF', () => {
   let tree: Tree;
@@ -17,13 +18,13 @@ describe('Init MF', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       routing: true,
       standalone: false,
       skipFormat: true,
     });
     await generateTestApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -346,7 +347,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       standalone: false,
       skipFormat: true,
     });
@@ -388,7 +389,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already when --typescriptConfiguration=true', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       standalone: false,
       skipFormat: true,
     });
@@ -430,7 +431,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications router config', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -473,7 +474,7 @@ describe('Init MF', () => {
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'test-app',
+      directory: 'test-app',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -573,7 +574,7 @@ describe('Init MF', () => {
       expect(
         readJson(tree, 'app1/public/module-federation.manifest.json')
       ).toEqual({
-        remote1: 'http://localhost:4201',
+        remote1: 'http://localhost:4201/mf-manifest.json',
       });
       expect(
         tree.read('app1/src/app/app.routes.ts', 'utf-8')
@@ -608,7 +609,7 @@ describe('Init MF', () => {
       expect(
         readJson(tree, 'app1/public/module-federation.manifest.json')
       ).toEqual({
-        remote1: 'http://localhost:4201',
+        remote1: 'http://localhost:4201/mf-manifest.json',
       });
       expect(
         tree.read('app1/src/app/app.routes.ts', 'utf-8')
@@ -647,7 +648,7 @@ describe('Init MF', () => {
     expect(
       readJson(tree, 'app1/public/module-federation.manifest.json')
     ).toEqual({
-      remote1: 'http://localhost:4201',
+      remote1: 'http://localhost:4201/mf-manifest.json',
     });
     expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
   });
@@ -683,7 +684,7 @@ describe('Init MF', () => {
     expect(
       readJson(tree, 'app1/public/module-federation.manifest.json')
     ).toEqual({
-      remote1: 'http://localhost:4201',
+      remote1: 'http://localhost:4201/mf-manifest.json',
     });
     expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
   });
@@ -758,6 +759,42 @@ describe('Init MF', () => {
       });
       "
     `);
+  });
+
+  it('should move the @nx/angular plugin to dependencies when --mfType=host', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: {
+        ...json.devDependencies,
+        '@nx/angular': nxVersion,
+      },
+    }));
+
+    await setupMf(tree, { appName: 'app1', mfType: 'host' });
+
+    const { devDependencies, dependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/angular']).toBeUndefined();
+    expect(dependencies['@nx/angular']).toBe(nxVersion);
+  });
+
+  it('should move the @nx/angular plugin to dependencies when --federationType=dynamic', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: {
+        ...json.devDependencies,
+        '@nx/angular': nxVersion,
+      },
+    }));
+
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'remote',
+      federationType: 'dynamic',
+    });
+
+    const { devDependencies, dependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/angular']).toBeUndefined();
+    expect(dependencies['@nx/angular']).toBe(nxVersion);
   });
 
   describe('angular compat support', () => {

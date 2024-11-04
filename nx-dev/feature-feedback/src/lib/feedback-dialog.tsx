@@ -1,6 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { ChangeEvent, Fragment, useState } from 'react';
+import { ChangeEvent, Fragment, useMemo, useState } from 'react';
 import { GithubIcon } from '@nx/nx-dev/ui-common';
+import { cx } from '@nx/nx-dev/ui-primitives';
 
 import styles from './feature-feedback.module.css';
 
@@ -18,6 +19,8 @@ function FeedbackDialog({
   let [isIdea, setShowIdea] = useState<boolean | null>(null);
   let [feedback, setFeedback] = useState('');
 
+  const formDisabled = useMemo(() => feedback.trim() === '', [feedback]);
+
   // since HTMLInputElement type does not come with value we can add it to the type
   function handleFeedbackSelectionChange(
     event: ChangeEvent<HTMLInputElement> & { currentTarget: { value: string } }
@@ -30,9 +33,7 @@ function FeedbackDialog({
       currentTarget: { value: string };
     }
   ) {
-    if (event.currentTarget?.value) {
-      setFeedback(event.currentTarget.value.trim());
-    }
+    setFeedback(event.currentTarget.value);
   }
 
   function submitFeedback() {
@@ -50,6 +51,7 @@ function FeedbackDialog({
 
   function closeDialog() {
     setShowIdea(null);
+    setFeedback('');
     onClose();
   }
 
@@ -223,6 +225,7 @@ function FeedbackDialog({
                       <textarea
                         rows={5}
                         className="box-border w-full rounded dark:bg-gray-800"
+                        required
                         value={feedback}
                         onChange={updateFeedback}
                       ></textarea>
@@ -230,7 +233,15 @@ function FeedbackDialog({
                     <Dialog.Description className="relative mt-4 flex justify-end rounded-l-md">
                       <button
                         onClick={submitFeedback}
-                        className="dark:hover:bg-slate-800border rounded-md border border-slate-200 border-slate-200 bg-white bg-white px-4 px-4 py-2 py-2 text-base text-xs font-medium font-medium text-slate-600 text-slate-600 focus-within:ring-blue-500 focus-within:ring-blue-500 hover:bg-slate-50 hover:bg-slate-50 focus:z-10 focus:z-10 focus:outline-none focus:outline-none focus:ring-1 focus:ring-1 dark:border-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:bg-slate-800/60 dark:text-slate-400 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                        disabled={formDisabled}
+                        className={cx(
+                          'rounded-md border border-slate-200 bg-white px-4 py-2 text-base font-medium text-slate-600  dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400',
+                          { 'cursor-not-allowed': formDisabled },
+                          {
+                            'focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800':
+                              !formDisabled,
+                          }
+                        )}
                       >
                         Done
                       </button>

@@ -12,6 +12,7 @@
   "targets": {
     "build-native-wasm": {
       "cache": true,
+      "inputs": ["native"],
       "outputs": [
         "{projectRoot}/src/native/*.wasm",
         "{projectRoot}/src/native/*.js",
@@ -132,9 +133,6 @@
         ],
         "parallel": false
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
     },
     "test-native": {}
   }

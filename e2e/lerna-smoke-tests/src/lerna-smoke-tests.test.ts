@@ -39,7 +39,15 @@ describe('Lerna Smoke Tests', () => {
     // If this snapshot fails it means that nx repair generators are making assumptions which don't hold true for lerna workspaces
     it('should complete successfully on a new lerna workspace', async () => {
       let result = runLernaCLI(`repair`);
-      result = result.replace(/.*\/node_modules\/.*\n/, ''); // yarn adds "$ /node_modules/.bin/lerna repair" to the output
+      result = result
+        .replace(/.*\/node_modules\/.*\n/, '') // yarn adds "$ /node_modules/.bin/lerna repair" to the output
+        .replace(
+          /Running the following migrations:\n(?:.*\n)*---------------------------------------------------------\n\n/,
+          ''
+        ) // sorted list of all migrations to be run
+        .replace(/Running migration.*\n/g, '') // start of individual migration run
+        .replace(/Ran .* from .*\n  .*\n\n/g, '') // end of individual migration run
+        .replace(/No changes were made\n\n/g, ''); // no changes during individual migration run
       expect(result).toMatchInlineSnapshot(`
 
         Lerna   No changes were necessary. This workspace is up to date!

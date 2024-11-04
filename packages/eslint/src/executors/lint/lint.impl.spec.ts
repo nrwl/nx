@@ -95,6 +95,22 @@ describe('Linter Builder', () => {
       projectName,
       root: tempFs.tempDir,
       cwd: tempFs.tempDir,
+      projectGraph: {
+        nodes: {
+          [projectName]: {
+            type: 'app',
+            name: projectName,
+            data: {
+              root: `apps/${projectName}`,
+              sourceRoot: `apps/${projectName}/src`,
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          [projectName]: [],
+        },
+      },
       projectsConfigurations: {
         version: 2,
         projects: {

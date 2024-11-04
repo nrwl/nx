@@ -46,6 +46,26 @@ export function ContactLinks(): JSX.Element {
         </div>
         <div>
           <div className="flex items-center gap-2">
+            <AcademicCapIcon aria-hidden="true" className="h-4 w-4" />
+            <h4 className="text-lg font-medium text-slate-700 dark:text-slate-300">
+              Documentation
+            </h4>
+          </div>
+          <p className="mt-2">
+            Get an overview of Nx's features, integrations, and how to use them.
+          </p>
+          <Link
+            href="/getting-started/intro"
+            title="Nx documentation"
+            className="mt-2 flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-800 dark:hover:text-slate-400"
+            prefetch={false}
+          >
+            <span>Nx docs</span>
+            <ChevronRightIcon aria-hidden="true" className="h-3 w-3" />
+          </Link>
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
             <svg
               aria-hidden="true"
               fill="currentColor"
@@ -133,26 +153,6 @@ export function ContactLinks(): JSX.Element {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <AcademicCapIcon aria-hidden="true" className="h-4 w-4" />
-            <h4 className="text-lg font-medium text-slate-700 dark:text-slate-300">
-              Documentation
-            </h4>
-          </div>
-          <p className="mt-2">
-            Get an overview of Nx's features, integrations, and how to use them.
-          </p>
-          <Link
-            href="/getting-started/intro"
-            title="Nx documentation"
-            className="mt-2 flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-800 dark:hover:text-slate-400"
-            prefetch={false}
-          >
-            <span>Nx docs</span>
-            <ChevronRightIcon aria-hidden="true" className="h-3 w-3" />
-          </Link>
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
             <BuildingOffice2Icon aria-hidden="true" className="h-4 w-4" />
             <h4 className="text-lg font-medium text-slate-700 dark:text-slate-300">
               Company
@@ -162,16 +162,14 @@ export function ContactLinks(): JSX.Element {
             Get to know the team behind Nx, Nx Cloud, Lerna and many other open
             source projects.
           </p>
-          <a
-            href="https://nx.app/company?utm_source=nx.dev"
-            rel="noreferrer"
-            target="_blank"
+          <Link
+            href="/company"
             title="Nx the company"
             className="mt-2 flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-800 dark:hover:text-slate-400"
           >
             <span>Nx the company</span>
-            <ArrowUpRightIcon aria-hidden="true" className="h-3 w-3" />
-          </a>
+            <ChevronRightIcon aria-hidden="true" className="h-3 w-3" />
+          </Link>
         </div>
       </div>
     </article>

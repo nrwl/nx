@@ -9,17 +9,10 @@ import loaderGenerator from '../loader/loader.impl';
 import { RemixRouteSchema } from './schema';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
-  const {
-    artifactName: name,
-    directory,
-    project: projectName,
-  } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'resource-route',
-    callingGenerator: '@nx/remix:resource-route',
-    name: options.path.replace(/^\//, '').replace(/\/$/, ''),
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
-  });
+  const { artifactName: name, directory } =
+    await determineArtifactNameAndDirectoryOptions(tree, {
+      path: options.path.replace(/^\//, '').replace(/\/$/, ''),
+    });
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {
     throw new Error(
@@ -29,11 +22,8 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
 
   const routeFilePath = await resolveRemixRouteFile(
     tree,
-    options.nameAndDirectoryFormat === 'as-provided'
-      ? joinPathFragments(directory, name)
-      : options.path,
-    options.nameAndDirectoryFormat === 'as-provided' ? undefined : projectName,
-    '.ts'
+    joinPathFragments(directory, name),
+    undefined
   );
 
   if (tree.exists(routeFilePath))

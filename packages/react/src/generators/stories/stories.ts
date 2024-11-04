@@ -1,5 +1,4 @@
 import componentStoryGenerator from '../component-story/component-story';
-import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
@@ -11,7 +10,6 @@ import {
   GeneratorCallback,
   getProjects,
   joinPathFragments,
-  logger,
   ProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -30,8 +28,6 @@ export interface StorybookStoriesSchema {
   js?: boolean;
   ignorePaths?: string[];
   skipFormat?: boolean;
-  cypressProject?: string;
-  generateCypressSpecs?: boolean;
 }
 
 export async function projectRootPath(
@@ -88,8 +84,6 @@ export async function createAllStories(
   js: boolean,
   projects: Map<string, ProjectConfiguration>,
   projectConfiguration: ProjectConfiguration,
-  generateCypressSpecs?: boolean,
-  cypressProject?: string,
   ignorePaths?: string[]
 ) {
   const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
@@ -123,15 +117,6 @@ export async function createAllStories(
     }
   });
 
-  const e2eProjectName = cypressProject || `${projectName}-e2e`;
-  const e2eProject = projects.get(e2eProjectName);
-
-  if (generateCypressSpecs && !e2eProject) {
-    logger.info(
-      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`
-    );
-  }
-
   await Promise.all(
     componentPaths.map(async (componentPath) => {
       const relativeCmpDir = componentPath.replace(join(sourceRoot, '/'), '');
@@ -146,16 +131,6 @@ export async function createAllStories(
         skipFormat: true,
         interactionTests,
       });
-
-      if (generateCypressSpecs && e2eProject) {
-        await componentCypressSpecGenerator(tree, {
-          project: projectName,
-          componentPath: relativeCmpDir,
-          js,
-          cypressProject,
-          skipFormat: true,
-        });
-      }
     })
   );
 }
@@ -174,8 +149,6 @@ export async function storiesGenerator(
     schema.js,
     projects,
     projectConfiguration,
-    schema.generateCypressSpecs,
-    schema.cypressProject,
     schema.ignorePaths
   );
 

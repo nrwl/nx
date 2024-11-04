@@ -12,7 +12,7 @@ We are very excited to announce our support for Gradle with our new plugin: `@nx
 
 The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/intro/ci-with-nx).
 
-> **Note:** this plugin is currently experimental.
+> **Update:** Learn how to import your existing Gradle projects into Nx in [our recent blog post](/blog/nx-import).
 
 This blog will show you:
 
@@ -215,4 +215,4 @@ Here is how to set up Nx with the Gradle workspace. Hopefully, this gives you a 
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

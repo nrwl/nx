@@ -1,14 +1,13 @@
 import { workspaceRoot } from '@nx/devkit';
-import { dirname, join, relative } from 'path';
-import { existsSync, lstatSync } from 'fs';
-
-import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
-
-import { spawn } from 'child_process';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { execSync, spawn } from 'child_process';
+import { lstatSync } from 'fs';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
+import { dirname, join, relative } from 'path';
 import type { InlineConfig } from 'vite';
+import vitePreprocessor from '../src/plugins/preprocessor-vite';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -54,14 +53,13 @@ export function nxBaseCypressPreset(
     : dirname(pathToConfig);
   const projectPath = relative(workspaceRoot, normalizedPath);
   const offset = relative(normalizedPath, workspaceRoot);
-  const videosFolder = join(offset, 'dist', 'cypress', projectPath, 'videos');
-  const screenshotsFolder = join(
-    offset,
-    'dist',
-    'cypress',
-    projectPath,
-    'screenshots'
-  );
+  const isTsSolutionSetup = isUsingTsSolutionSetup();
+  const videosFolder = isTsSolutionSetup
+    ? join('test-output', 'cypress', 'videos')
+    : join(offset, 'dist', 'cypress', projectPath, 'videos');
+  const screenshotsFolder = isTsSolutionSetup
+    ? join('test-output', 'cypress', 'screenshots')
+    : join(offset, 'dist', 'cypress', projectPath, 'screenshots');
 
   return {
     videosFolder,
@@ -78,11 +76,20 @@ function startWebServer(webServerCommand: string) {
     // Windows is fine so we leave it attached to this process
     detached: process.platform !== 'win32',
     stdio: 'inherit',
+    windowsHide: false,
   });
 
   return () => {
     if (process.platform === 'win32') {
-      serverProcess.kill();
+      try {
+        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F', {
+          windowsHide: false,
+        });
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error(e);
+        }
+      }
     } else {
       // child.kill() does not work on linux
       // process.kill will kill the whole process group on unix
@@ -125,6 +132,7 @@ export function nxE2EPreset(
       webServerCommand: options?.webServerCommands?.default,
       webServerCommands: options?.webServerCommands,
       ciWebServerCommand: options?.ciWebServerCommand,
+      ciBaseUrl: options?.ciBaseUrl,
     },
 
     async setupNodeEvents(on, config) {
@@ -261,6 +269,11 @@ export type NxCypressE2EPresetOptions = {
    * A command to start the web server - used for e2e tests distributed by Nx.
    */
   ciWebServerCommand?: string;
+
+  /**
+   * The url of the web server for ciWebServerCommand
+   */
+  ciBaseUrl?: string;
 
   /**
    * Configures how the web server command is started and monitored.

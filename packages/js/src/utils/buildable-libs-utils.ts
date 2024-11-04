@@ -16,7 +16,7 @@ import { unlinkSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
 import { output } from 'nx/src/utils/output';
-import { dirname, join, relative, isAbsolute } from 'path';
+import { dirname, join, relative, isAbsolute, extname } from 'path';
 import type * as ts from 'typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
 
@@ -521,6 +521,10 @@ export function updatePaths(
   const pathsKeys = Object.keys(paths);
   // For each registered dependency
   dependencies.forEach((dep) => {
+    if (dep.node.type === 'npm') {
+      return;
+    }
+
     // If there are outputs
     if (dep.outputs && dep.outputs.length > 0) {
       // Directly map the dependency name to the output paths (dist/packages/..., etc.)
@@ -535,21 +539,29 @@ export function updatePaths(
         if (path.startsWith(nestedName)) {
           const nestedPart = path.slice(nestedName.length);
 
-          // Bind secondary endpoints for ng-packagr projects
+          // Bind potential secondary endpoints for ng-packagr projects
           let mappedPaths = dep.outputs.map(
             (output) => `${output}/${nestedPart}`
           );
 
-          // Get the dependency's package name
-          const { root } = (dep.node?.data || {}) as any;
-          if (root) {
-            // Update nested mappings to point to the dependency's output paths
-            mappedPaths = mappedPaths.concat(
-              paths[path].flatMap((path) =>
-                dep.outputs.map((output) => path.replace(root, output))
-              )
-            );
-          }
+          const { root } = dep.node.data;
+          // Update nested mappings to point to the dependency's output paths
+          mappedPaths = mappedPaths.concat(
+            paths[path].flatMap((p) =>
+              dep.outputs.flatMap((output) => {
+                const basePath = p.replace(root, output);
+                return [
+                  // extension-less path to support compiled output
+                  basePath.replace(
+                    new RegExp(`${extname(basePath)}$`, 'gi'),
+                    ''
+                  ),
+                  // original path with the root re-mapped to the output path
+                  basePath,
+                ];
+              })
+            )
+          );
 
           paths[path] = mappedPaths;
         }

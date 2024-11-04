@@ -182,8 +182,7 @@ export async function createTestUILib(
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'none',
-    name: libName,
-    projectNameAndRootFormat: 'as-provided',
+    directory: libName,
   });
 
   return appTree;

@@ -47,7 +47,7 @@ describe('updateTsconfig', () => {
 
   it('should delete project ref from the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
 
     graph = {
@@ -72,7 +72,7 @@ describe('updateTsconfig', () => {
   it('should delete project ref not under libs from the root tsconfig.base.json', async () => {
     tree.delete('libs');
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
 
     graph = {
@@ -96,7 +96,7 @@ describe('updateTsconfig', () => {
 
   it('should delete project ref with importPath from the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
 
       importPath: '@proj/whatever-name',
     });
@@ -123,7 +123,7 @@ describe('updateTsconfig', () => {
   it('should delete project ref from the root tsconfig.json when no tsconfig.base.json', async () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
     });
 
     graph = {
@@ -148,7 +148,7 @@ describe('updateTsconfig', () => {
   it('should delete project ref with importPath from the root tsconfig.json when no tsconfig.base.json', async () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
 
       importPath: '@proj/whatever-name',
     });
@@ -174,13 +174,13 @@ describe('updateTsconfig', () => {
 
   it('should not delete importPaths of nested projects from tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
 
       importPath: '@proj/whatever-name',
     });
     await libraryGenerator(tree, {
-      name: 'nested-lib',
-      directory: 'libs/my-lib',
+      name: 'my-lib-nested-lib',
+      directory: 'libs/my-lib/nested-lib',
 
       importPath: '@proj/nested/whatever-name',
     });

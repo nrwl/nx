@@ -4,10 +4,10 @@ import { getPackageManagerCommand } from '../package-manager';
 
 export const NxCloudChoices = [
   'github',
-  'circleci',
   'gitlab',
   'azure',
   'bitbucket-pipelines',
+  'circleci',
   'skip',
   'yes', // Deprecated but still handled
 ];
@@ -23,10 +23,10 @@ const messageOptions: Record<string, MessageData[]> = {
       initial: 0,
       choices: [
         { value: 'github', name: 'GitHub Actions' },
-        { value: 'circleci', name: 'Circle CI' },
         { value: 'gitlab', name: 'Gitlab' },
         { value: 'azure', name: 'Azure DevOps' },
         { value: 'bitbucket-pipelines', name: 'BitBucket Pipelines' },
+        { value: 'circleci', name: 'Circle CI' },
         { value: 'skip', name: '\nDo it later' },
       ],
       footer:
@@ -137,7 +137,10 @@ function shouldRecordStats(): boolean {
     return true;
   }
   try {
-    const stdout = execSync(pmc.getRegistryUrl, { encoding: 'utf-8' });
+    const stdout = execSync(pmc.getRegistryUrl, {
+      encoding: 'utf-8',
+      windowsHide: false,
+    });
     const url = new URL(stdout.trim());
 
     // don't record stats when testing locally

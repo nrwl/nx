@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxReactNativeConvertToInferred",
+  "description": "Convert existing React Native project(s) using `@nx/react-native:*` executors to use `@nx/react-native/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "title": "Convert React Native project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/react-native:*` executors to use `@nx/react-native/plugin`.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files at the end of the migration.",
+      "default": false
+    }
+  }
+}

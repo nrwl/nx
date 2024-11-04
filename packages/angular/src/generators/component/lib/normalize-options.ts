@@ -17,13 +17,8 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'component',
-    callingGenerator: '@nx/angular:component',
     name: options.name,
-    directory: options.directory ?? options.path,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
+    path: options.path,
     suffix: options.type ?? 'component',
   });
 

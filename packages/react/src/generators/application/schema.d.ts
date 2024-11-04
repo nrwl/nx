@@ -1,19 +1,16 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
-  name: string;
+  directory: string;
+  name?: string;
   style: SupportedStyles;
   skipFormat?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: Linter;
-  pascalCaseFiles?: boolean;
+  linter: Linter | LinterType;
   classComponent?: boolean;
   routing?: boolean;
   skipNxJson?: boolean;
@@ -29,6 +26,7 @@ export interface Schema {
   bundler?: 'webpack' | 'vite' | 'rspack';
   minimal?: boolean;
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
@@ -36,9 +34,6 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2ePort: number;
   parsedTags: string[];
   fileName: string;
   styledModule: null | SupportedStyles;

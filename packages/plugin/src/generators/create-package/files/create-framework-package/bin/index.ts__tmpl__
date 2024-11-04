@@ -12,14 +12,17 @@ async function main() {
 
   // This assumes "<%= preset %>" and "<%= projectName %>" are at the same version
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const presetVersion = require('../package.json').version,
+  const presetVersion = require('../package.json').version;
 
   // TODO: update below to customize the workspace
-  const { directory } = await createWorkspace(`<%= preset %>@${presetVersion}`, {
-    name,
-    nxCloud: 'skip',
-    packageManager: 'npm',
-  });
+  const { directory } = await createWorkspace(
+    `<%= preset %>@${presetVersion}`,
+    {
+      name,
+      nxCloud: 'skip',
+      packageManager: 'npm',
+    }
+  );
 
   console.log(`Successfully created the workspace: ${directory}.`);
 }

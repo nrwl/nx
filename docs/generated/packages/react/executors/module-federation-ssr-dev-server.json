@@ -41,6 +41,33 @@
         "type": "string",
         "description": "Host to listen on.",
         "default": "localhost"
+      },
+      "staticRemotesPort": {
+        "type": "number",
+        "description": "The port at which to serve the file-server for the static remotes."
+      },
+      "pathToManifestFile": {
+        "type": "string",
+        "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using HTTPS.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving HTTPS."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving HTTPS."
+      },
+      "isInitialHost": {
+        "type": "boolean",
+        "description": "Whether the host that is running this executor is the first in the project tree to do so.",
+        "default": true,
+        "x-priority": "internal"
       }
     },
     "required": ["browserTarget", "serverTarget"],

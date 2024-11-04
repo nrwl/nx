@@ -1,9 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import {
-  joinPathFragments,
-  normalizePath,
-  visitNotIgnoredFiles,
-} from '@nx/devkit';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
+import { relative } from 'node:path';
 import type { GeneratorOptions } from '../../schema';
 import type {
   MigrationProjectConfiguration,
@@ -78,6 +75,7 @@ export class ProjectMigrator<
   override migrate(): void | Promise<void> {
     const validationResult = this.validate();
     if (!validationResult) {
+      this.updateGitAndPrettierIgnore();
       return;
     }
 
@@ -226,7 +224,7 @@ export class ProjectMigrator<
   }
 
   protected moveDir(from: string, to: string): void {
-    visitNotIgnoredFiles(this.tree, from, (file) => {
+    this.visitFiles(from, (file) => {
       this.moveFile(file, normalizePath(file).replace(from, to), true);
     });
   }
@@ -236,6 +234,49 @@ export class ProjectMigrator<
       Array.isArray(this.skipMigration) &&
       this.skipMigration.includes(targetType)
     );
+  }
+
+  protected visitFiles(dirPath: string, visitor: (path: string) => void): void {
+    dirPath = normalizePath(
+      relative(this.tree.root, joinPathFragments(this.tree.root, dirPath))
+    );
+    for (const child of this.tree.children(dirPath)) {
+      const fullPath = joinPathFragments(dirPath, child);
+      if (this.tree.isFile(fullPath)) {
+        visitor(fullPath);
+      } else {
+        this.visitFiles(fullPath, visitor);
+      }
+    }
+  }
+
+  private updateGitAndPrettierIgnore(): void {
+    if (
+      !this.tree.exists('.prettierignore') &&
+      !this.tree.exists('.gitignore')
+    ) {
+      return;
+    }
+
+    let from = this.project.oldRoot;
+    let to = this.project.newRoot;
+    if (this.project.oldRoot === '') {
+      from = this.project.oldSourceRoot;
+      to = this.project.newSourceRoot;
+    }
+    const regex = new RegExp(`(^!?\\/?)(${from})(\\/|$)`, 'gm');
+
+    if (this.tree.exists('.gitignore')) {
+      const gitignore = this.tree.read('.gitignore', 'utf-8');
+      const content = gitignore.replace(regex, `$1${to}$3`);
+      this.tree.write('.gitignore', content);
+    }
+
+    if (this.tree.exists('.prettierignore')) {
+      const prettierIgnore = this.tree.read('.prettierignore', 'utf-8');
+      const content = prettierIgnore.replace(regex, `$1${to}$3`);
+      this.tree.write('.prettierignore', content);
+    }
   }
 
   private collectTargetNames(): void {

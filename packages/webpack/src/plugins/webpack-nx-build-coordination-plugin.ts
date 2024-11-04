@@ -52,7 +52,9 @@ export class WebpackNxBuildCoordinationPlugin {
     this.currentlyRunning = 'nx-build';
     try {
       return await new Promise<void>((res) => {
-        this.buildCmdProcess = exec(this.buildCmd);
+        this.buildCmdProcess = exec(this.buildCmd, {
+          windowsHide: false,
+        });
 
         this.buildCmdProcess.stdout.pipe(process.stdout);
         this.buildCmdProcess.stderr.pipe(process.stderr);

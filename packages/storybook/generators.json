@@ -32,6 +32,12 @@
       "schema": "./src/generators/migrate-7/schema.json",
       "description": "Migrate to Storybook version 7.",
       "hidden": false
+    },
+    "migrate-8": {
+      "factory": "./src/generators/migrate-8/migrate-8",
+      "schema": "./src/generators/migrate-8/schema.json",
+      "description": "Migrate to Storybook version 8.",
+      "hidden": false
     }
   }
 }

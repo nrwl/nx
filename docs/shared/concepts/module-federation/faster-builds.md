@@ -103,22 +103,22 @@ Next, generate the host and remote applications.
 {% tab label="React" %}
 
 ```shell
-nx g @nx/react:host host --remotes=shop,cart,about
+nx g @nx/react:host apps/host --remotes=shop,cart,about
 ```
 
 {% /tab %}
 {% tab label="Angular" %}
 
 ```shell
-nx g @nx/angular:host host --remotes=shop,cart,about
+nx g @nx/angular:host apps/host --remotes=shop,cart,about
 ```
 
 {% /tab %}
 {% /tabs %}
 
 {% callout type="note" title="More details" %}
-You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host`
-or `nx g @nx/angular:remote shop --host=host`.
+You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote apps/shop --host=host`
+or `nx g @nx/angular:remote apps/shop --host=host`.
 {% /callout %}
 
 Now, serve `host` to view it in your browser.
@@ -249,10 +249,11 @@ manually.
 ## What does `withModuleFederation` do?
 
 In the previous section, we saw `withModuleFederation` used in the webpack config. This function is an abstraction on
-top of webpack's `ModuleFederationPlugin` with some Nx-specific behavior.
+top of `@module-federation/enhanced` with some Nx-specific behavior.
 
 - All libraries (npm and workspace) are shared singletons by default, so you don't manually configure them.
 - Remotes are referenced by name only, since Nx knows which ports each remote is running on (in development mode).
+- Access to the latest features of Module Federation (such as RuntimePlugins). Learn more at [module-federation.io](https://module-federation.io).
 
 With Nx, the developer experience (DX) when working with Module Federation matches more closely to development on a SPA.
 You don't have to worry about managing a bunch of configuration, and most things just work out of the box.

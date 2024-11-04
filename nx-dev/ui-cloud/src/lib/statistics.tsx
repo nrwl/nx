@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 
 /**
  * Calculate the total number of years worth of compute.
@@ -71,6 +72,8 @@ const stats = [
 ];
 
 export function Statistics(): JSX.Element {
+  const shouldReduceMotion = usePrefersReducedMotion();
+
   const variants = {
     hidden: {
       opacity: 0,
@@ -81,7 +84,7 @@ export function Statistics(): JSX.Element {
     visible: (i: number) => ({
       opacity: 1,
       transition: {
-        delay: i || 0,
+        delay: shouldReduceMotion ? 0 : i || 0,
       },
     }),
   };
@@ -90,8 +93,8 @@ export function Statistics(): JSX.Element {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.25,
-        duration: 0.65,
+        delay: shouldReduceMotion ? 0 : i * 0.25,
+        duration: shouldReduceMotion ? 0 : 0.65,
         ease: 'easeOut',
         when: 'beforeChildren',
         staggerChildren: 0.3,

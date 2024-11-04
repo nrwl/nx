@@ -53,7 +53,7 @@ function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
           >
             <Link
               href={d.path}
-              className="flex flex-grow items-center justify-between no-underline hover:text-sky-600 hover:underline dark:hover:text-sky-400"
+              className="flex flex-grow items-center justify-between no-underline transition-colors ease-out hover:text-blue-700 hover:underline dark:text-sky-500 dark:hover:text-sky-400"
               prefetch={false}
             >
               <span>{d.name}</span>

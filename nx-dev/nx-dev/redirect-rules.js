@@ -415,51 +415,74 @@ const nxCloudUrls = {
   '/nx-cloud/intro/what-is-nx-cloud': '/ci/intro/ci-with-nx',
   '/nx-cloud/set-up': '/ci/recipes/set-up',
   '/nx-cloud/set-up/record-commands': '/ci/recipes/other/record-commands',
-  '/nx-cloud/set-up/github':
-    '/nx-cloud/recipes/source-control-integration/github',
+  '/nx-cloud/set-up/github': '/ci/recipes/source-control-integration/github',
+  '/nx-cloud/recipes/source-control-integration/github':
+    '/ci/recipes/source-control-integration/github',
   '/nx-cloud/set-up/bitbucket-cloud':
     '/ci/recipes/source-control-integration/bitbucket',
   '/nx-cloud/recipes/source-control-integration/bitbucket-cloud':
     '/ci/recipes/source-control-integration/bitbucket',
-  '/nx-cloud/set-up/gitlab':
-    '/nx-cloud/recipes/source-control-integration/gitlab',
+  '/ci/recipes/source-control-integration/bitbucket-cloud':
+    '/ci/recipes/source-control-integration/bitbucket',
+  '/nx-cloud/set-up/gitlab': '/ci/recipes/source-control-integration/gitlab',
   '/core-features/remote-cache': '/ci/features/remote-cache',
   '/core-features/distribute-task-execution':
-    '/nx-cloud/features/distribute-task-execution',
+    '/ci/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
-  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/on-premise',
+  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/single-tenant',
   '/nx-cloud/private-cloud/get-started':
-    '/ci/recipes/enterprise/on-premise/on-premise',
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/on-premise':
+    '/ci/recipes/enterprise/single-tenant/overview',
   '/ci/features/on-premise': '/ci/recipes/enterprise/on-premise/on-premise',
   '/nx-cloud/private-cloud/auth-single-admin':
-    '/nx-cloud/recipes/enterprise/on-premise/auth-single-admin',
+    '/ci/recipes/enterprise/on-premise/auth-single-admin',
   '/nx-cloud/private-cloud/auth-github':
-    '/nx-cloud/recipes/enterprise/on-premise/auth-github',
+    '/ci/recipes/enterprise/on-premise/auth-github',
   '/nx-cloud/private-cloud/ami-setup':
     '/ci/recipes/enterprise/on-premise/ami-setup',
   '/nx-cloud/private-cloud/auth-gitlab':
-    '/nx-cloud/recipes/enterprise/on-premise/auth-gitlab',
+    '/ci/recipes/enterprise/on-premise/auth-gitlab',
   '/nx-cloud/private-cloud/auth-bitbucket':
-    '/nx-cloud/recipes/enterprise/on-premise/auth-bitbucket',
+    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
   '/nx-cloud/private-cloud/auth-saml':
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/auth-saml-managed':
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/advanced-config':
-    '/nx-cloud/recipes/enterprise/on-premise/advanced-config',
-  '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
+    '/ci/recipes/enterprise/on-premise/advanced-config',
+  '/ci/recipes/on-premise': '/ci/recipes/enterprise/single-tenant',
+  '/ci/recipes/enterprise/on-premise': '/ci/recipes/enterprise/single-tenant',
   '/ci/recipes/on-premise/auth-single-admin':
     '/ci/recipes/enterprise/on-premise/auth-single-admin',
+  '/ci/recipes/enterprise/on-premise/auth-single-admin':
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/ami-setup':
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/advanced-config':
+    '/ci/recipes/enterprise/single-tenant/overview',
   '/ci/recipes/on-premise/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
+    '/ci/recipes/enterprise/single-tenant/auth-github',
+  '/ci/recipes/enterprise/on-premise/auth-github':
+    '/ci/recipes/enterprise/single-tenant/auth-github',
   '/ci/recipes/on-premise/ami-setup':
     '/ci/recipes/enterprise/on-premise/ami-setup',
   '/ci/recipes/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    '/ci/recipes/enterprise/single-tenant/auth-gitlab',
+  '/ci/recipes/enterprise/on-premise/auth-gitlab':
+    '/ci/recipes/enterprise/single-tenant/auth-gitlab',
   '/ci/recipes/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
+    '/ci/recipes/enterprise/single-tenant/auth-bitbucket',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket':
+    '/ci/recipes/enterprise/single-tenant/auth-bitbucket',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center':
+    '/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center',
   '/ci/recipes/on-premise/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    '/ci/recipes/enterprise/single-tenant/auth-saml',
+  '/ci/recipes/enterprise/on-premise/auth-saml':
+    '/ci/recipes/enterprise/single-tenant/auth-saml',
+  '/ci/recipes/enterprise/on-premise/custom-github-app':
+    '/ci/recipes/enterprise/single-tenant/custom-github-app',
   '/ci/recipes/on-premise/auth-saml-managed':
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/enterprise/on-premise/auth-saml-managed':
@@ -485,6 +508,8 @@ const nxCloudUrls = {
   '/core-features/:path*': '/features/:path*',
   '/ci/recipes/set-up/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
   '/ci/intro/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
+  '/pricing/special-offer': 'https://forms.gle/FBzvsspz1o63fDAz6',
+  '/powerpack/special-offer': 'https://forms.gle/mWjQo6Vrv5Kt6WYh9',
 };
 
 /**
@@ -802,7 +827,11 @@ const nested5minuteTutorialUrls = {
 
 const pluginUrls = {
   '/plugin-features/create-your-own-plugin':
-    '/extending-nx/tutorials/create-plugin',
+    '/extending-nx/tutorials/organization-specific-plugin',
+  '/extending-nx/tutorials/create-plugin':
+    '/extending-nx/tutorials/organization-specific-plugin',
+  '/extending-nx/tutorials/publish-plugin':
+    '/extending-nx/tutorials/tooling-plugin',
   '/recipes/advanced-plugins': '/extending-nx/recipes',
   '/recipes/advanced-plugins/create-preset':
     '/extending-nx/recipes/create-preset',
@@ -853,6 +882,10 @@ const missingAndCatchAllRedirects = {
   // Nx Console
   '/nx-console': '/using-nx/console',
   '/packages/:path*': '/nx-api/:path*',
+};
+
+const marketing = {
+  '/conf': 'https://monorepo.world',
 };
 
 const movePluginFeaturesToCore = {
@@ -971,7 +1004,7 @@ const latestRecipesRefactoring = {
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
 
-  '/reference/commands': '/packages/nx',
+  '/reference/commands': '/reference/nx-commands',
 };
 
 const coreFeatureAndConceptsRefactoring = {
@@ -1038,6 +1071,15 @@ const troubleshootingOutOfRecipes = {
  * Removed deprecated URLs
  */
 const removedDeprecatedUrls = {
+  '/concepts/integrated-vs-package-based':
+    '/deprecated/integrated-vs-package-based',
+  '/recipes/tips-n-tricks/package-based-in-integrated':
+    '/deprecated/integrated-vs-package-based',
+  '/recipes/tips-n-tricks/integrated-in-package-based':
+    '/deprecated/integrated-vs-package-based',
+  '/recipes/tips-n-tricks/standalone-to-integrated':
+    '/recipes/tips-n-tricks/standalone-to-monorepo',
+  '/recipes/other/rescope': '/deprecated/rescope', // Removed in Nx 20
   '/nx-api/nx/documents/affected-dep-graph': '/deprecated/affected-graph', // nx affected:graph was removed in Nx 19
   '/cli/affected-dep-graph': '/deprecated/affected-graph',
   '/nx/affected-dep-graph': '/deprecated/affected-graph',
@@ -1118,6 +1160,21 @@ const blogPosts = {
     '/blog/nx-cloud-3-0-faster-more-efficient-modernized',
 };
 
+const featurePagesUpdate = {
+  '/ci/troubleshooting/explain-with-ai': '/ci/features/explain-with-ai',
+  '/ci/features/ai-features': '/ci/concepts/ai-features',
+};
+
+const enterpriseNxSection = {
+  '/features/powerpack': '/nx-enterprise/powerpack',
+  '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
+  '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
+  '/features/powerpack/custom-caching':
+    '/nx-enterprise/powerpack/custom-caching',
+  '/recipes/installation/activate-powerpack':
+    '/nx-enterprise/activate-powerpack',
+};
+
 /**
  * Public export API
  */
@@ -1149,4 +1206,7 @@ module.exports = {
   troubleshootingOutOfRecipes,
   blogPosts,
   decisionsSection,
+  featurePagesUpdate,
+  marketing,
+  enterpriseNxSection,
 };

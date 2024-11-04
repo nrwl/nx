@@ -23,6 +23,7 @@ interface NormalizedWebStaticServeSchema extends WebStaticServeSchema {
   projectName: string;
   targetName: string;
   spa: boolean;
+  parsedBuildTarget: string;
 }
 
 export async function webStaticServeGenerator(
@@ -49,6 +50,7 @@ async function normalizeOptions(
     targetName: options.targetName || 'serve-static',
     projectName: target.project,
     spa: options.spa ?? true,
+    parsedBuildTarget: target.target,
   };
 
   const projectConfig = readProjectConfiguration(tree, target.project);
@@ -109,6 +111,7 @@ function addStaticConfig(tree: Tree, opts: NormalizedWebStaticServeSchema) {
     Partial<FileServerExecutorSchema>
   > = {
     executor: '@nx/web:file-server',
+    dependsOn: [opts.parsedBuildTarget],
     options: {
       buildTarget: opts.buildTarget,
       staticFilePath: opts.outputPath,

@@ -2,9 +2,13 @@ import { getPackageManagerCommand } from '../../utils/package-manager';
 import { execSync } from 'child_process';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { output } from '../../utils/output';
-import { runNxSync } from '../../utils/child-process';
 import { readNxJson } from '../../config/nx-json';
-import { connectExistingRepoToNxCloudPrompt } from './connect-to-nx-cloud';
+import {
+  connectExistingRepoToNxCloudPrompt,
+  connectWorkspaceToCloud,
+} from './connect-to-nx-cloud';
+import { printSuccessMessage } from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+import { repoUsesGithub } from '../../nx-cloud/utilities/url-shorten';
 
 export async function viewLogs(): Promise<number> {
   const cloudUsed = isNxCloudUsed(readNxJson());
@@ -30,12 +34,11 @@ export async function viewLogs(): Promise<number> {
     output.log({
       title: 'Connecting to Nx Cloud',
     });
-    runNxSync(
-      `g nx:connect-to-nx-cloud --installation-source=view-logs --quiet --no-interactive`,
-      {
-        stdio: 'ignore',
-      }
-    );
+    const token = await connectWorkspaceToCloud({
+      installationSource: 'view-logs',
+    });
+
+    await printSuccessMessage(token, 'view-logs', await repoUsesGithub());
   } catch (e) {
     output.log({
       title: 'Failed to connect to Nx Cloud',
@@ -47,6 +50,7 @@ export async function viewLogs(): Promise<number> {
   const pmc = getPackageManagerCommand();
   execSync(`${pmc.exec} nx-cloud upload-and-show-run-details`, {
     stdio: [0, 1, 2],
+    windowsHide: false,
   });
 
   if (!cloudUsed) {

@@ -1,12 +1,13 @@
 import type { Tree } from 'nx/src/devkit-exports';
-import type { ScriptTarget, ModuleKind } from 'typescript';
+import type { ModuleKind, ScriptTarget } from 'typescript';
 import { typescriptVersion } from '../utils/versions';
 import { ensurePackage } from '../utils/package-json';
 
 export type ToJSOptions = {
-  target?: ScriptTarget;
+  extension?: '.js' | '.mjs' | '.cjs';
   module?: ModuleKind;
-  extension: '.js' | '.mjs' | '.cjs';
+  target?: ScriptTarget;
+  useJsx?: boolean;
 };
 
 /**
@@ -32,10 +33,15 @@ export function toJS(tree: Tree, options?: ToJSOptions): void {
           module: options?.module ?? ModuleKind.ESNext,
         })
       );
-      tree.rename(
-        c.path,
-        c.path.replace(/\.tsx?$/, options?.extension ?? '.js')
-      );
+      tree.rename(c.path, c.path.replace(/\.ts$/, options?.extension ?? '.js'));
+      if (options?.useJsx) {
+        tree.rename(c.path, c.path.replace(/\.tsx$/, '.jsx'));
+      } else {
+        tree.rename(
+          c.path,
+          c.path.replace(/\.tsx$/, options?.extension ?? '.js')
+        );
+      }
     }
   }
 }

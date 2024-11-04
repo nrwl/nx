@@ -1,11 +1,17 @@
 'use client';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
-import { BlurFade } from '@nx/nx-dev/ui-animations';
+import { BlurFade, usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
+import {
+  MonorepoWorldIcon,
+  RustIcon,
+  TypeScriptIcon,
+} from '@nx/nx-dev/ui-icons';
+import { motion, MotionConfig } from 'framer-motion';
 
 export function Hero(): JSX.Element {
   return (
@@ -23,23 +29,6 @@ export function Hero(): JSX.Element {
       </div>
       <div className="z-20 mx-auto grid h-screen max-w-6xl grid-cols-1 place-items-center text-center">
         <div className="container">
-          <div className="-mt-16 hidden sm:mb-8 sm:flex sm:justify-center">
-            <div className="relative rounded-full bg-white px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 transition-all hover:ring-slate-900/20 dark:bg-slate-950 dark:ring-slate-100/10 dark:hover:ring-slate-100/20">
-              <span className="text-blue-500 dark:text-sky-500">
-                Monorepo World
-              </span>{' '}
-              - The conf for monorepos and dev tooling.{' '}
-              <Link
-                href="https://monorepo.world"
-                title="Discover Nx Agents"
-                className="font-semibold text-blue-500 dark:text-sky-500"
-                prefetch={false}
-              >
-                <span className="absolute inset-0" aria-hidden="true"></span>
-                Find out more <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-          </div>
           <SectionHeading as="h1" variant="display" data-cy="primary-heading">
             <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
               Smart
@@ -63,15 +52,14 @@ export function Hero(): JSX.Element {
             variant="subtitle"
             className="mx-auto mt-6 max-w-4xl"
           >
-            {/*Structured, maintainable and efficient monorepos. Locally and on CI, easy as that.*/}
             <Strong>Build system</Strong>, optimized for monorepos, with plugins
             for popular frameworks and tools and{' '}
             <Strong>advanced CI capabilities</Strong> including caching and
             distribution.
           </SectionHeading>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
-              href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started#try-nx-yourself"
+              href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
               title="Get started"
               variant="primary"
               size="default"
@@ -81,12 +69,28 @@ export function Hero(): JSX.Element {
 
             <ButtonLink
               href="ci/intro/ci-with-nx?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started&utm_source=nxdev"
-              title="Get started"
+              title="Learn about Nx on CI"
               variant="contrast"
               size="default"
             >
               Learn about Nx on CI
             </ButtonLink>
+            <ButtonLink
+              href="/contact?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
+              title="Get started"
+              variant="secondary"
+              size="default"
+            >
+              Contact us
+            </ButtonLink>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm italic">
+            Built with
+            <RustIcon aria-hidden="true" className="size-5 shrink-0" />
+            <span className="sr-only">Rust</span> for speed &
+            <TypeScriptIcon aria-hidden="true" className="size-4 shrink-0" />
+            <span className="sr-only">TypeScript</span> for extensibility.
           </div>
         </div>
       </div>
@@ -97,6 +101,8 @@ export function Hero(): JSX.Element {
 function ShaderGradientElement() {
   const [theme] = useTheme();
   const [displayTheme, setDisplayTheme] = useState<Theme>('system');
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   useIsomorphicLayoutEffect(() => {
     const matchMedia: any = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -125,6 +131,10 @@ function ShaderGradientElement() {
       }
     };
   }, [theme]);
+
+  if (prefersReducedMotion) {
+    return;
+  }
 
   if (displayTheme === 'dark')
     return (

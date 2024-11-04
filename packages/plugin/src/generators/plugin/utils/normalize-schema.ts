@@ -1,5 +1,8 @@
 import { Tree, extractLayoutDirectory, getWorkspaceLayout } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -12,38 +15,26 @@ export interface NormalizedSchema extends Schema {
   bundler: 'swc' | 'tsc';
   publishable: boolean;
 }
+
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'application');
   const {
     projectName,
     projectRoot,
     importPath: npmPackageName,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/plugin:plugin',
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   options.rootProject = projectRoot === '.';
 
-  let projectDirectory = projectRoot;
-  if (options.projectNameAndRootFormat === 'derived') {
-    let { layoutDirectory } = extractLayoutDirectory(options.directory);
-    if (!layoutDirectory) {
-      const { libsDir } = getWorkspaceLayout(host);
-      layoutDirectory = libsDir;
-    }
-    if (projectRoot.startsWith(`${layoutDirectory}/`)) {
-      projectDirectory = projectRoot.replace(`${layoutDirectory}/`, '');
-    }
-  }
+  const projectDirectory = projectRoot;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

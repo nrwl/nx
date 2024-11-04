@@ -108,7 +108,7 @@ export async function addNxToMonorepo(options: Options) {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initCloud(repoRoot, 'nx-init-monorepo');
+    await initCloud('nx-init-monorepo');
   }
 }
 

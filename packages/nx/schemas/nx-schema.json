@@ -89,6 +89,10 @@
       "type": "string",
       "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
     },
+    "neverConnectToCloud": {
+      "type": "boolean",
+      "description": "Set this to true to disable all connections to Nx Cloud."
+    },
     "parallel": {
       "type": "number",
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
@@ -152,25 +156,7 @@
                 ]
               },
               "version": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
-                  },
-                  {
-                    "allOf": [
-                      {
-                        "not": {
-                          "required": ["git"]
-                        }
-                      },
-                      {
-                        "not": {
-                          "required": ["preVersionCommand"]
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "$ref": "#/definitions/NxReleaseGroupVersionConfiguration"
               },
               "changelog": {
                 "oneOf": [
@@ -186,8 +172,15 @@
                 "type": "string"
               },
               "versionPlans": {
-                "type": "boolean",
-                "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+                  },
+                  {
+                    "type": "boolean",
+                    "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                  }
+                ]
               }
             },
             "required": ["projects"]
@@ -239,13 +232,52 @@
           "$ref": "#/definitions/NxReleaseVersionConfiguration"
         },
         "versionPlans": {
-          "type": "boolean",
-          "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+          "oneOf": [
+            {
+              "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+            },
+            {
+              "type": "boolean",
+              "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+            }
+          ]
         },
         "releaseTagPattern": {
           "type": "string"
         }
       }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Configuration for the `nx sync` command",
+      "properties": {
+        "globalGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of workspace-wide sync generators to be run (not attached to targets)"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "description": "Options for the sync generators.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "applyChanges": {
+          "type": "boolean",
+          "description": "Whether to automatically apply sync generator changes when running tasks. If not set, the user will be prompted. If set to `true`, the user will not be prompted and the changes will be applied. If set to `false`, the user will not be prompted and the changes will not be applied."
+        },
+        "disabledTaskSyncGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of registered task sync generators to disable."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "definitions": {
@@ -397,6 +429,9 @@
             "accessToken": {
               "type": "string"
             },
+            "nxCloudId": {
+              "type": "string"
+            },
             "captureStderr": {
               "type": "boolean",
               "description": "Defines whether the cache captures stderr or just stdout."
@@ -456,6 +491,11 @@
           "additionalProperties": {
             "type": "object"
           }
+        },
+        "parallelism": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this target can be run in parallel with other tasks"
         },
         "inputs": {
           "$ref": "#/definitions/inputs"
@@ -580,7 +620,7 @@
           "description": "Custom git commit message to use when committing the changes made by this command"
         },
         "commitArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
         },
         "stageChanges": {
@@ -596,7 +636,7 @@
           "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
         },
         "tagArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
         }
       }
@@ -621,9 +661,32 @@
         },
         "preVersionCommand": {
           "type": "string",
-          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         }
-      }
+      },
+      "additionalProperties": false
+    },
+    "NxReleaseGroupVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "groupPreVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration AND after the release.version.preVersionCommand (if any), but before versioning begins for this specific group. Useful for preparing build artifacts for the group. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+        }
+      },
+      "additionalProperties": false
     },
     "NxReleaseChangelogConfiguration": {
       "type": "object",
@@ -637,6 +700,9 @@
             {
               "type": "boolean",
               "enum": [false]
+            },
+            {
+              "$ref": "#/definitions/CreateReleaseProviderConfiguration"
             }
           ]
         },
@@ -667,6 +733,36 @@
         },
         "renderOptions": {
           "$ref": "#/definitions/ChangelogRenderOptions"
+        }
+      }
+    },
+    "CreateReleaseProviderConfiguration": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["github-enterprise-server"]
+        },
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the VCS provider instance, e.g. github.example.com"
+        },
+        "apiBaseUrl": {
+          "type": "string",
+          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3`"
+        }
+      },
+      "required": ["provider", "hostname"]
+    },
+    "NxReleaseVersionPlansConfiguration": {
+      "type": "object",
+      "properties": {
+        "ignorePatternsForPlanCheck": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check` command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files."
         }
       }
     },

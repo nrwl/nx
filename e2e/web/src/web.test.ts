@@ -5,6 +5,7 @@ import {
   createFile,
   isNotWindows,
   killPorts,
+  listFiles,
   newProject,
   readFile,
   runCLI,
@@ -25,7 +26,7 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -34,7 +35,7 @@ describe('Web Components Applications', () => {
     const testResults = await runCLIAsync(`test ${appName}`);
 
     expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
+      `Successfully ran target test for project ${appName}`
     );
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -79,22 +80,27 @@ describe('Web Components Applications', () => {
       'none'
     );
     runCLI(`build ${appName}`);
+    const images = listFiles(`dist/apps/${appName}`).filter((f) =>
+      f.endsWith('.png')
+    );
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/emitted.png`,
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.css`
     );
-    checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
+    expect(images.some((f) => f.startsWith('emitted.'))).toBe(true);
+    expect(images.some((f) => f.startsWith('inlined.'))).toBe(false);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'data:image/png;base64'
     );
     // Should not be a JS module but kept as a PNG
-    expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
-      'export default'
-    );
+    expect(
+      readFile(
+        `dist/apps/${appName}/${images.find((f) => f.startsWith('emitted.'))}`
+      )
+    ).not.toContain('export default');
 
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       '<link rel="stylesheet" href="styles.css">'
@@ -104,7 +110,7 @@ describe('Web Components Applications', () => {
   it('should emit decorator metadata when --compiler=babel and it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -169,7 +175,7 @@ describe('Web Components Applications', () => {
   it('should emit decorator metadata when using --compiler=swc', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --compiler=swc --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -217,7 +223,7 @@ describe('Web Components Applications', () => {
     const appName = uniq('app1');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -279,7 +285,7 @@ describe('CLI - Environment Variables', () => {
       `;
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
 
     const content = readFile(main);
@@ -304,7 +310,7 @@ describe('CLI - Environment Variables', () => {
     const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_PUBLIC_WS_BASE, process.env.NX_PUBLIC_WS_ENV_LOCAL, process.env.NX_PUBLIC_WS_LOCAL_ENV, process.env.NX_PUBLIC_APP_BASE, process.env.NX_PUBLIC_APP_ENV_LOCAL, process.env.NX_PUBLIC_APP_LOCAL_ENV, process.env.NX_PUBLIC_SHARED_ENV];`;
 
     runCLI(
-      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
+      `generate @nx/web:app apps/${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
 
     const content2 = readFile(main2);
@@ -345,7 +351,7 @@ describe('index.html interpolation', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive`
     );
 
     const srcPath = `apps/${appName}/src`;

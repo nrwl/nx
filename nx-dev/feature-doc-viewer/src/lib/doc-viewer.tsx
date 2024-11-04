@@ -37,6 +37,7 @@ export function DocViewer({
     document.content.toString(),
     {
       filePath: document.filePath,
+      headingClass: 'scroll-mt-8',
     }
   );
 
@@ -71,14 +72,14 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.'
+          'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
+            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${router.asPath
@@ -118,9 +119,16 @@ export function DocViewer({
               {!hideTableOfContent && (
                 <div
                   className={cx(
-                    'fixed right-[max(2rem,calc(50%-55rem))] top-48 z-20 hidden w-60 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                    'fixed right-[max(2rem,calc(50%-55rem))] top-44 z-20 hidden w-60 space-y-6 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
                   )}
                 >
+                  {widgetData.githubStarsCount > 0 && (
+                    <div className="px-6">
+                      <GitHubStarWidget
+                        starsCount={widgetData.githubStarsCount}
+                      />
+                    </div>
+                  )}
                   <TableOfContents
                     elementRef={ref}
                     path={router.basePath}
@@ -128,11 +136,6 @@ export function DocViewer({
                     document={document}
                   >
                     <>
-                      {widgetData.githubStarsCount > 0 && (
-                        <GitHubStarWidget
-                          starsCount={widgetData.githubStarsCount}
-                        />
-                      )}
                       <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
                         <button
                           type="button"

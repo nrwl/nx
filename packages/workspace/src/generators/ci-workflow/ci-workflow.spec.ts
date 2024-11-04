@@ -244,4 +244,34 @@ describe('CI Workflow generator', () => {
       '{workspaceRoot}/.gitlab-ci.yml',
     ]);
   });
+
+  it('should add workflow files to namedInputs.sharedGlobals and update default', async () => {
+    await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+
+    const nxJson = readJson(tree, 'nx.json');
+    expect(nxJson.namedInputs.sharedGlobals).toEqual([
+      '{workspaceRoot}/.github/workflows/ci.yml',
+    ]);
+    expect(nxJson.namedInputs.default).toEqual(['sharedGlobals']);
+  });
+
+  it('should append sharedGlobals to existing default namedInput', async () => {
+    // Set up initial nx.json with existing default namedInput
+    const initialNxJson = readJson(tree, 'nx.json');
+    initialNxJson.namedInputs = {
+      default: ['existing'],
+    };
+    writeJson(tree, 'nx.json', initialNxJson);
+
+    await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+
+    const updatedNxJson = readJson(tree, 'nx.json');
+    expect(updatedNxJson.namedInputs.sharedGlobals).toEqual([
+      '{workspaceRoot}/.github/workflows/ci.yml',
+    ]);
+    expect(updatedNxJson.namedInputs.default).toEqual([
+      'existing',
+      'sharedGlobals',
+    ]);
+  });
 });

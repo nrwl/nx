@@ -371,6 +371,12 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
+      command: 'show projects --projects tag:ui-*',
+      description:
+        'Show all projects with a tag starting with "ui-". The "projects" option is useful to see which projects would be selected by run-many',
+    },
+
+    {
       command: 'show projects --with-target serve',
       description: 'Show all projects with a serve target',
     },

@@ -36,6 +36,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     shell: true,
     cwd: join(host.root, opts.directory),
+    windowsHide: false,
   };
   const pmc = getPackageManagerCommand();
   const executable = `${pmc.exec} nx`;
@@ -82,6 +83,8 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         : null,
       opts.ssr ? `--ssr` : null,
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
+      opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
+      opts.formatter ? `--formatter=${opts.formatter}` : null,
     ].filter((e) => !!e);
   }
 }
@@ -102,9 +105,10 @@ function getPresetDependencies({
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
       return {
-        dependencies: { '@nx/angular': nxVersion },
+        dependencies: {},
         dev: {
           '@angular-devkit/core': angularCliVersion,
+          '@nx/angular': nxVersion,
           typescript: typescriptVersion,
         },
       };
@@ -157,7 +161,9 @@ function getPresetDependencies({
         dependencies: {},
         dev: {
           '@nx/react': nxVersion,
-          '@nx/cypress': e2eTestRunner !== 'none' ? nxVersion : undefined,
+          '@nx/cypress': e2eTestRunner === 'cypress' ? nxVersion : undefined,
+          '@nx/playwright':
+            e2eTestRunner === 'playwright' ? nxVersion : undefined,
           '@nx/jest': bundler !== 'vite' ? nxVersion : undefined,
           '@nx/vite': bundler === 'vite' ? nxVersion : undefined,
           '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,

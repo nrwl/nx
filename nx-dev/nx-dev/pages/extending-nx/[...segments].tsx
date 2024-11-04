@@ -11,6 +11,7 @@ import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPluginsApi } from '../../lib/plugins.api';
 import { tagsApi } from '../../lib/tags.api';
 import { fetchGithubStarCount } from '../../lib/githubStars.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 export default function Pages({
   document,
@@ -23,25 +24,7 @@ export default function Pages({
   relatedDocuments: RelatedDocument[];
   widgetData: { githubStarsCount: number };
 }): JSX.Element {
-  const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
-
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
-
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
-
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
 
   const vm: {
     document: ProcessedDocument;
@@ -70,18 +53,13 @@ export default function Pages({
           navIsOpen={navIsOpen}
           toggleNav={toggleNav}
         />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
+        <ScrollableContent resetScrollOnNavigation={true}>
           <DocViewer
             document={vm.document}
             relatedDocuments={vm.relatedDocuments}
             widgetData={widgetData}
           />
-        </div>
+        </ScrollableContent>
       </main>
     </div>
   );

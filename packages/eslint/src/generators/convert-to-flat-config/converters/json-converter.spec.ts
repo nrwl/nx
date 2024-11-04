@@ -67,12 +67,12 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
-      const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
 
       const compat = new FlatCompat({
-          baseDirectory: __dirname,
-          recommendedConfig: js.configs.recommended,
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
       });
 
       module.exports = [
@@ -84,19 +84,29 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
-              rules: { "@nx/enforce-module-boundaries": [
+              rules: {
+                  "@nx/enforce-module-boundaries": [
                       "error",
                       {
                           enforceBuildableLibDependency: true,
                           allow: [],
-                          depConstraints: [{
+                          depConstraints: [
+                              {
                                   sourceTag: "*",
-                                  onlyDependOnLibsWithTags: ["*"]
-                              }]
+                                  onlyDependOnLibsWithTags: [
+                                      "*"
+                                  ]
+                              }
+                          ]
                       }
-                  ] }
+                  ]
+              }
           },
-          ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+          ...compat.config({
+              extends: [
+                  "plugin:@nx/typescript"
+              ]
+          }).map(config => ({
               ...config,
               files: [
                   "**/*.ts",
@@ -106,7 +116,11 @@ describe('convertEslintJsonToFlatConfig', () => {
                   ...config.rules
               }
           })),
-          ...compat.config({ env: { jest: true } }).map(config => ({
+          ...compat.config({
+              env: {
+                  jest: true
+              }
+          }).map(config => ({
               ...config,
               files: [
                   "**/*.spec.ts",
@@ -118,8 +132,16 @@ describe('convertEslintJsonToFlatConfig', () => {
                   ...config.rules
               }
           })),
-          { ignores: ["src/ignore/to/keep.ts"] },
-          { ignores: ["something/else"] }
+          {
+              ignores: [
+                  "src/ignore/to/keep.ts"
+              ]
+          },
+          {
+              ignores: [
+                  "something/else"
+              ]
+          }
       ];
       "
     `);
@@ -182,20 +204,24 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
+      const js = require("@eslint/js");
       const baseConfig = require("../../eslint.config.js");
       const globals = require("globals");
-      const js = require("@eslint/js");
 
       const compat = new FlatCompat({
-          baseDirectory: __dirname,
-          recommendedConfig: js.configs.recommended,
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
       });
 
       module.exports = [
           ...baseConfig,
           ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
           { languageOptions: { globals: { ...globals.jest } } },
-          { rules: { "@next/next/no-html-link-for-pages": "off" } },
+          {
+              rules: {
+                  "@next/next/no-html-link-for-pages": "off"
+              }
+          },
           {
               files: [
                   "**/*.ts",
@@ -203,16 +229,19 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
-              rules: { "@next/next/no-html-link-for-pages": [
+              rules: {
+                  "@next/next/no-html-link-for-pages": [
                       "error",
                       "apps/test-next/pages"
-                  ] }
+                  ]
+              }
           },
           {
               files: [
                   "**/*.ts",
                   "**/*.tsx"
               ],
+              // Override or add rules here
               rules: {}
           },
           {
@@ -220,18 +249,30 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
+              // Override or add rules here
               rules: {}
           },
-          ...compat.config({ parser: "jsonc-eslint-parser" }).map(config => ({
-              ...config,
-              files: ["**/*.json"],
+          {
+              files: [
+                  "**/*.json"
+              ],
               rules: {
-                  ...config.rules,
                   "@nx/dependency-checks": "error"
+              },
+              languageOptions: {
+                  parser: require("jsonc-eslint-parser")
               }
-          })),
-          { ignores: [".next/**/*"] },
-          { ignores: ["something/else"] }
+          },
+          {
+              ignores: [
+                  ".next/**/*"
+              ]
+          },
+          {
+              ignores: [
+                  "something/else"
+              ]
+          }
       ];
       "
     `);

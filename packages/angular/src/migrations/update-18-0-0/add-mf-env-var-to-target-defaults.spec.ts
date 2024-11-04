@@ -25,9 +25,13 @@ describe('addMfEnvVarToTargetDefaults', () => {
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "@nx/angular:webpack-browser": {
+          "cache": true,
+          "dependsOn": [
+            "^build",
+          ],
           "inputs": [
-            "production",
-            "^production",
+            "default",
+            "^default",
             {
               "env": "NX_MF_DEV_REMOTES",
             },
@@ -106,6 +110,10 @@ describe('addMfEnvVarToTargetDefaults', () => {
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "@nx/angular:webpack-browser": {
+          "cache": true,
+          "dependsOn": [
+            "^build",
+          ],
           "inputs": [
             "^build",
             {

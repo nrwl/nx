@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [
+        "node",
+        "@nx/react/typings/cssmodule.d.ts",
+        "@nx/react/typings/image.d.ts"
+    ]
+  },
+  "include": [
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "rspack.config.ts",
+    "rspack.prod.config.ts"
+  ]
+}

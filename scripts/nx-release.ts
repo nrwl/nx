@@ -31,17 +31,11 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
   }
 
-  const buildCommand = 'pnpm build';
-  console.log(`> ${buildCommand}`);
-  execSync(buildCommand, {
-    stdio: [0, 1, 2],
-    maxBuffer: LARGE_BUFFER,
-  });
-
   // Ensure all the native-packages directories are available at the top level of the build directory, enabling consistent packageRoot structure
   execSync(`pnpm nx copy-native-package-directories nx`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
+    windowsHide: false,
   });
 
   // Expected to run as part of the Github `publish` workflow
@@ -51,11 +45,13 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync('find ./build -name "*.node" -delete', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
     });
 
     execSync('pnpm nx run-many --target=artifacts', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
     });
   }
 
@@ -73,6 +69,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
     });
   };
 
@@ -81,7 +78,9 @@ const VALID_AUTHORS_FOR_LATEST = [
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
-    execSync('git status --ahead-behind');
+    execSync('git status --ahead-behind', {
+      windowsHide: false,
+    });
 
     if (isRelativeVersionKeyword(options.version)) {
       throw new Error(
@@ -94,6 +93,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
     });
 
     let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
@@ -113,6 +113,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
     });
 
     console.log(
@@ -126,6 +127,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
+    windowsHide: false,
   });
 
   const distTag = determineDistTag(options.version);
@@ -181,12 +183,17 @@ const VALID_AUTHORS_FOR_LATEST = [
   execSync(publishCommand, {
     stdio: [0, 1, 2],
     maxBuffer: LARGE_BUFFER,
+    windowsHide: false,
   });
 
   if (!options.dryRun) {
     let version;
     if (['minor', 'major', 'patch'].includes(options.version)) {
-      version = execSync(`npm view nx@${distTag} version`).toString().trim();
+      version = execSync(`npm view nx@${distTag} version`, {
+        windowsHide: false,
+      })
+        .toString()
+        .trim();
     } else {
       version = options.version;
     }
@@ -263,10 +270,14 @@ function parseArgs() {
          * Handle the special case of `canary`
          */
 
-        const currentLatestVersion = execSync('npm view nx@latest version')
+        const currentLatestVersion = execSync('npm view nx@latest version', {
+          windowsHide: false,
+        })
           .toString()
           .trim();
-        const currentNextVersion = execSync('npm view nx@next version')
+        const currentNextVersion = execSync('npm view nx@next version', {
+          windowsHide: false,
+        })
           .toString()
           .trim();
 
@@ -297,7 +308,11 @@ function parseArgs() {
         const YYYYMMDD = `${year}${month}${day}`;
 
         // Get the current short git sha
-        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+        const gitSha = execSync('git rev-parse --short HEAD', {
+          windowsHide: false,
+        })
+          .toString()
+          .trim();
 
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
@@ -365,7 +380,13 @@ function parseArgs() {
 }
 
 function getRegistry() {
-  return new URL(execSync('npm config get registry').toString().trim());
+  return new URL(
+    execSync('npm config get registry', {
+      windowsHide: false,
+    })
+      .toString()
+      .trim()
+  );
 }
 
 function determineDistTag(
@@ -399,7 +420,9 @@ function determineDistTag(
     );
   }
 
-  const currentLatestVersion = execSync('npm view nx version')
+  const currentLatestVersion = execSync('npm view nx version', {
+    windowsHide: false,
+  })
     .toString()
     .trim();
   const parsedCurrentLatestVersion = parse(currentLatestVersion);

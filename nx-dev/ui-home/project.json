@@ -4,13 +4,5 @@
   "sourceRoot": "nx-dev/ui-home/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
-  "targets": {
-    "xtest": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-home"],
-      "options": {
-        "jestConfig": "nx-dev/ui-home/jest.config.ts"
-      }
-    }
-  }
+  "targets": {}
 }

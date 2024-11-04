@@ -13,7 +13,7 @@
 
 # Nx: Smart Monorepos · Fast CI
 
-Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.
+Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.
 
 This package is a [Gradle plugin for Nx](https://nx.dev/gradle/overview).
 

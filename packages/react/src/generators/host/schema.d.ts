@@ -1,23 +1,21 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   classComponent?: boolean;
   compiler?: 'babel' | 'swc';
   devServerPort?: number;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   globalCss?: boolean;
   js?: boolean;
-  linter: Linter;
-  name: string;
-  pascalCaseFiles?: boolean;
+  linter: Linter | LinterType;
+  name?: string;
   remotes?: string[];
   setParserOptionsProject?: boolean;
   skipFormat?: boolean;
   skipNxJson?: boolean;
+  skipPackageJson?: boolean;
   ssr?: boolean;
   strict?: boolean;
   style: SupportedStyles;
@@ -27,6 +25,7 @@ export interface Schema {
   typescriptConfiguration?: boolean;
   dynamic?: boolean;
   addPlugin?: boolean;
+  bundler?: 'rspack' | 'webpack';
 }
 
 export interface NormalizedSchema extends Schema {

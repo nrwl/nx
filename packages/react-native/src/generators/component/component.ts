@@ -17,16 +17,6 @@ export async function reactNativeComponentGenerator(
   host: Tree,
   schema: Schema
 ) {
-  return reactNativeComponentGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function reactNativeComponentGeneratorInternal(
-  host: Tree,
-  schema: Schema
-) {
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 

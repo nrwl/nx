@@ -7,7 +7,7 @@ export const yargsListCommand: CommandModule = {
   builder: (yargs) =>
     yargs.positional('plugin', {
       type: 'string',
-      description: 'The name of an installed plugin to query',
+      description: 'The name of an installed plugin to query.',
     }),
   handler: async (args: any) => {
     await (await import('./list')).listHandler(args);

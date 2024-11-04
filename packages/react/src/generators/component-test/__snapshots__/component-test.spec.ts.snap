@@ -138,6 +138,36 @@ describe(AnotherCmp.name, () => {
 "
 `;
 
+exports[`componentTestGenerator single component per file should handle destructured props with no type 1`] = `
+"import * as React from 'react'
+import { AnotherCmp } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: {
+handleClick: unknown;
+text: unknown;
+count: unknown;
+isOkay: unknown;
+};
+
+  beforeEach(() => {
+    props = {
+      handleClick: '',
+      text: '',
+      count: '',
+      isOkay: '',
+    }
+  })
+
+  it('renders', () => {
+    cy.mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;
+
 exports[`componentTestGenerator single component per file should handle named exports 1`] = `
 "import * as React from 'react'
 import { AnotherCmpProps, AnotherCmp } from './some-lib'
@@ -184,6 +214,36 @@ import { AnotherCmpProps, AnotherCmp } from './some-lib'
 
 describe(AnotherCmp.name, () => {
   let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    cy.mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator single component per file should handle props with inline type 1`] = `
+"import * as React from 'react'
+import { AnotherCmp } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: {
+  handleClick: () => void;
+  text: string;
+  count: number;
+  isOkay: boolean;
+};
 
   beforeEach(() => {
     props = {

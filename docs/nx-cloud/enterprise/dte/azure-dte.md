@@ -32,6 +32,10 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+      - checkout: self
+        fetchDepth: 0
+        persistCredentials: true
+
       - script: npm ci
       - script: npx nx-cloud start-agent
 
@@ -41,11 +45,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       # Get last successfull commit from Azure Devops CLI
-      - displayName: 'Get last successful commit SHA'
-        condition: ne(variables['Build.Reason'], 'PullRequest')
-        env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-        bash: |
+      - bash: |
           LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
           if [ -z "$LAST_SHA" ]
           then
@@ -54,6 +54,10 @@ jobs:
             echo "Last successful commit SHA: $LAST_SHA"
             echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
           fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
       - script: git branch --track main origin/main
       - script: npm ci

@@ -108,7 +108,10 @@ function shouldRecordStats(): boolean {
     return true;
   }
   try {
-    const stdout = execSync(pmc.getRegistryUrl, { encoding: 'utf-8' });
+    const stdout = execSync(pmc.getRegistryUrl, {
+      encoding: 'utf-8',
+      windowsHide: false,
+    });
     const url = new URL(stdout.trim());
 
     // don't record stats when testing locally

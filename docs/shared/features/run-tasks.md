@@ -1,12 +1,93 @@
 # Run Tasks
 
-Monorepos can have hundreds or even thousands of projects, so being able to run actions against all (or some) of them is a key feature of a tool like Nx.
+{% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 
-## Types of Tasks
+In a monorepo setup, you don't just run tasks for a single project; you might have hundreds to manage. To help with this, Nx provides a powerful task runner that allows you to:
 
-Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/concepts/inferred-tasks), or defined in a `project.json` file. Nx will merge all three sources together to determine the tasks for a particular project.
+- easily **run multiple targets** for multiple projects **in parallel**
+- define **task pipelines** to run tasks in the correct order
+- only run tasks for **projects affected by a given change**
+- **speed up task execution** with [caching](/features/cache-task-results)
 
-Read the [Project Configuration docs](/reference/project-configuration) to see all the configuration options for a task.
+## Defining Tasks
+
+Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/concepts/inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project.
+
+{% tabs %}
+{% tab label="package.json" %}
+
+```json
+{
+  "name": "mylib",
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "test": "jest"
+  }
+}
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```json
+{
+  "root": "libs/mylib",
+  "targets": {
+    "build": {
+      "command": "tsc -p tsconfig.lib.json"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        /* ... */
+      }
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Inferred by Nx Plugins" %}
+
+[Nx plugins](/concepts/nx-plugins) can detect your tooling configuration files (e.g. `vite.config.ts` or `.eslintrc.json`) and automatically configure runnable tasks including [Nx cache](/features/cache-task-results). For example, the `@nx/jest` plugin will automatically create a `test` task for a project that uses Jest. The names can be configured in the `nx.json` file:
+
+```json
+{
+  ...
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test"
+      }
+    }
+  ],
+  ...
+}
+```
+
+Learn more about [inferred tasks here](/concepts/inferred-tasks).
+
+{% /tab %}
+{% /tabs %}
+
+The [project configuration docs](/reference/project-configuration) has the details for all the available configuration options.
 
 ## Running Tasks
 
@@ -38,13 +119,13 @@ Run the `build`, `lint` and `test` task for all projects in the repo:
 npx nx run-many -t build lint test
 ```
 
-Run the `build`, `lint` and `test` task just on the `header` and `footer` projects:
+Run the `build`, `lint`, and `test` tasks only on the `header` and `footer` projects:
 
 ```shell
 npx nx run-many -t build lint test -p header footer
 ```
 
-Note that Nx parallelizes all these tasks making sure they are also run in the right order based on their dependencies and the [task pipeline configuration](/concepts/task-pipeline-configuration). You can also [control how many tasks can run in parallel at once](/recipes/running-tasks/run-tasks-in-parallel).
+Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](/concepts/task-pipeline-configuration). You can also [control how many tasks run in parallel at once](/recipes/running-tasks/run-tasks-in-parallel).
 
 Learn more about the [run-many](/nx-api/nx/documents/run-many) command.
 
@@ -62,7 +143,7 @@ Learn more about the affected command [here](/ci/features/affected).
 
 It is pretty common to have dependencies between tasks, requiring one task to be run before another. For example, you might want to run the `build` target on the `header` project before running the `build` target on the `app` project.
 
-Nx is already able to automatically understand the dependencies between projects (see [project graph](/features/explore-graph)).
+Nx can automatically detect the dependencies between projects (see [project graph](/features/explore-graph)).
 
 {% graph height="450px" %}
 
@@ -113,7 +194,7 @@ Nx is already able to automatically understand the dependencies between projects
 
 {% /graph %}
 
-However, you need to define for which targets such ordering matters. In the following example we are telling Nx that before running the `build` target it needs to run the `build` target on all the projects the current project depends on:
+However, you need to specify for which targets this ordering is important. In the following example we are telling Nx that before running the `build` target it needs to run the `build` target on all the projects the current project depends on:
 
 ```json {% fileName="nx.json" %}
 {
@@ -126,16 +207,25 @@ However, you need to define for which targets such ordering matters. In the foll
 }
 ```
 
-Meaning, if we run `nx build myreactapp`, Nx will first run `build` on `modules-shared-ui` and `modules-products` before running `build` on `myreactapp`. You can define these task dependencies globally for your workspace in `nx.json` or individually in each project's `project.json` file.
+This means that if we run `nx build myreactapp`, Nx will first execute `build` on `modules-shared-ui` and `modules-products` before running `build` on `myreactapp`.
 
-Learn all the details:
+You can define these task dependencies globally for your workspace in `nx.json` or individually in each project's `project.json` file.
+
+Learn more about:
 
 - [What a task pipeline is all about](/concepts/task-pipeline-configuration)
 - [How to configure a task pipeline](/recipes/running-tasks/defining-task-pipeline)
 
+## Reduce repetitive configuration
+
+Learn more about leveraging `targetDefaults` to reduce repetitive configuration in the [dedicated recipe](/recipes/running-tasks/reduce-repetitive-configuration).
+
 ## Run Root-Level Tasks
 
-Sometimes you have tasks that apply to the entire codebase rather than to a single project. But you still want those tasks to go through the "Nx pipeline" in order to benefit from caching. You can define these in the root-level `package.json` as follows:
+Sometimes, you need tasks that apply to the entire codebase rather than a single project. To still benefit from caching, you can run these tasks through the "Nx pipeline". Define them in the root-level `package.json` or `project.json` as follows:
+
+{% tabs %}
+{% tab label="package.json" %}
 
 ```json {% fileName="package.json" %}
 {
@@ -149,12 +239,6 @@ Sometimes you have tasks that apply to the entire codebase rather than to a sing
 
 > Note the `nx: {}` property on the `package.json`. This is necessary to inform Nx about this root-level project. The property can also be expanded to specify cache inputs and outputs.
 
-To invoke it, use:
-
-```shell
-npx nx docs
-```
-
 If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/nx-api/nx/documents/exec) command:
 
 ```json {% fileName="package.json" %}
@@ -167,4 +251,28 @@ If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run th
 }
 ```
 
-Learn more about root-level tasks [in our dedicated recipe page](/recipes/running-tasks/root-level-scripts).
+{% /tab %}
+{% tab label="project.json" %}
+
+```json {% fileName="project.json"%}
+{
+  "name": "myorg",
+  ...
+  "targets": {
+    "docs": {
+      "command": "node ./generateDocsSite.js"
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+To invoke the task, use:
+
+```shell
+npx nx docs
+```
+
+Learn more about root-level tasks on [our dedicated recipe page](/recipes/running-tasks/root-level-scripts).

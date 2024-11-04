@@ -6,11 +6,13 @@ import {
   joinPathFragments,
   normalizePath,
   ProjectGraphProjectNode,
+  workspaceRoot,
 } from '@nx/devkit';
 
 import { getClientEnvironment } from '../../../utils/environment-variables';
 import { NormalizedEsBuildExecutorOptions } from '../schema';
 import { getEntryPoints } from '../../../utils/get-entry-points';
+import { join, relative } from 'path';
 
 const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
@@ -38,7 +40,7 @@ export function buildEsbuildOptions(
     platform: options.platform,
     target: options.target,
     metafile: options.metafile,
-    tsconfig: options.tsConfig,
+    tsconfig: relative(process.cwd(), join(context.root, options.tsConfig)),
     sourcemap:
       (options.sourcemap ?? options.userDefinedBuildOptions?.sourcemap) ||
       false,
@@ -49,7 +51,10 @@ export function buildEsbuildOptions(
   };
 
   if (options.platform === 'browser') {
-    esbuildOptions.define = getClientEnvironment();
+    esbuildOptions.define = {
+      ...getClientEnvironment(),
+      ...options.userDefinedBuildOptions?.define,
+    };
   }
 
   if (!esbuildOptions.outfile && !esbuildOptions.outdir) {
@@ -120,7 +125,7 @@ export function buildEsbuildOptions(
 
 export function getOutExtension(
   format: 'cjs' | 'esm',
-  options: NormalizedEsBuildExecutorOptions
+  options: Pick<NormalizedEsBuildExecutorOptions, 'userDefinedBuildOptions'>
 ): '.cjs' | '.mjs' | '.js' {
   const userDefinedExt = options.userDefinedBuildOptions?.outExtension?.['.js'];
   // Allow users to change the output extensions from default CJS and ESM extensions.
@@ -167,17 +172,14 @@ function writeTmpEntryWithRequireOverrides(
     tmpPath,
     `main-with-require-overrides.js`
   );
+  const mainFile = `./${path.join(
+    mainPathRelativeToDist,
+    `${mainFileName}${outExtension}`
+  )}`;
+
   writeFileSync(
     mainWithRequireOverridesInPath,
-    getRegisterFileContent(
-      project,
-      paths,
-      `./${path.join(
-        mainPathRelativeToDist,
-        `${mainFileName}${outExtension}`
-      )}`,
-      outExtension
-    )
+    getRegisterFileContent(project, paths, mainFile, outExtension)
   );
 
   let mainWithRequireOverridesOutPath: string;
@@ -286,12 +288,21 @@ function isFile(s) {
 }
 
 // Call the user-defined main.
-require('${mainFile}');
+module.exports = require('${mainFile}');
 `;
 }
 
 function getPrefixLength(pattern: string): number {
-  return pattern.substring(0, pattern.indexOf('*')).length;
+  const prefixIfWildcard = pattern.substring(0, pattern.indexOf('*')).length;
+  const prefixWithoutWildcard = pattern.substring(
+    0,
+    pattern.lastIndexOf('/')
+  ).length;
+  // if the pattern doesn't contain '*', then the length is always 0
+  // This causes issues when there are sub packages such as
+  // @nx/core
+  // @nx/core/testing
+  return prefixIfWildcard || prefixWithoutWildcard;
 }
 
 function getTsConfigCompilerPaths(context: ExecutorContext): {

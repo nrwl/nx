@@ -1,9 +1,6 @@
 import { env as appendLocalEnv } from 'npm-run-path';
-import {
-  combineOptionsForExecutor,
-  handleErrors,
-  Schema,
-} from '../../utils/params';
+import { combineOptionsForExecutor, Schema } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { printHelp } from '../../utils/print-help';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { relative } from 'path';
@@ -70,19 +67,8 @@ async function* promiseToIterator<T extends { success: boolean }>(
 async function iteratorToProcessStatusCode(
   i: AsyncIterableIterator<{ success: boolean }>
 ): Promise<number> {
-  // This is a workaround to fix an issue that only happens with
-  // the @angular-devkit/build-angular:browser builder. Starting
-  // on version 12.0.1, a SASS compilation implementation was
-  // introduced making use of workers and it's unref()-ing the worker
-  // too early, causing the process to exit early in environments
-  // like CI or when running Docker builds.
-  const keepProcessAliveInterval = setInterval(() => {}, 1000);
-  try {
-    const { success } = await getLastValueFromAsyncIterableIterator(i);
-    return success ? 0 : 1;
-  } finally {
-    clearInterval(keepProcessAliveInterval);
-  }
+  const { success } = await getLastValueFromAsyncIterableIterator(i);
+  return success ? 0 : 1;
 }
 
 async function parseExecutorAndTarget(
@@ -148,6 +134,7 @@ async function printTargetRunHelpInternal(
     } else {
       const cp = exec(helpCommand, {
         env,
+        windowsHide: false,
       });
       cp.on('exit', (code) => {
         process.exit(code);
@@ -203,7 +190,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       projectsConfigurations,
       nxJsonConfiguration,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,

@@ -1,5 +1,8 @@
 import { names, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { Schema } from '../schema';
@@ -26,6 +29,7 @@ export async function normalizeOptions(
     ...schema,
   };
 
+  await ensureProjectName(host, options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -36,8 +40,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/angular:library',
   });
 
   const fileName = options.simpleName

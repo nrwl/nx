@@ -11,6 +11,18 @@
       "version": "18.1.0-beta.3",
       "description": "Remove invalid baseUrl option from @nx/playwright:playwright targets in project.json.",
       "implementation": "./src/migrations/update-18-1-0/remove-baseUrl-from-project-json"
+    },
+    "19-6-0-use-serve-static-preview-for-command": {
+      "cli": "nx",
+      "version": "19.6.0-beta.0",
+      "description": "Use serve-static or preview for webServerCommand.",
+      "implementation": "./src/migrations/update-19-6-0/use-serve-static-preview-for-command"
+    },
+    "update-19-6-0-add-e2e-ci-target-defaults": {
+      "cli": "nx",
+      "version": "19.6.0-beta.1",
+      "description": "Add inferred ciTargetNames to targetDefaults with dependsOn to ensure dependent application builds are scheduled before atomized tasks.",
+      "implementation": "./src/migrations/update-19-6-0/add-e2e-ci-target-defaults"
     }
   }
 }

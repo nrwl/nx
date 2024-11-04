@@ -14,6 +14,7 @@ import { BentoGrid, BentoGridItem } from './elements/bento-grid';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
+import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 
 export function UnderstandWorkspace(): JSX.Element {
   return (
@@ -155,6 +156,7 @@ const Caching = () => {
 };
 
 const FlakyTasks = () => {
+  const shouldReduceMotion = usePrefersReducedMotion();
   const variants = {
     hidden: {
       opacity: 0,
@@ -171,8 +173,8 @@ const FlakyTasks = () => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.2,
-        duration: 0.275,
+        delay: shouldReduceMotion ? 0 : i * 0.2,
+        duration: shouldReduceMotion ? 0 : 0.275,
         ease: 'easeOut',
         when: 'beforeChildren',
         staggerChildren: 0.3,
@@ -439,6 +441,7 @@ const SplitE2eTests = () => {
 };
 
 const TaskDistribution = () => {
+  const shouldReduceMotion = usePrefersReducedMotion();
   const variants = {
     hidden: {
       opacity: 0,
@@ -455,8 +458,8 @@ const TaskDistribution = () => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.2,
-        duration: 0.275,
+        delay: shouldReduceMotion ? 0 : i * 0.2,
+        duration: shouldReduceMotion ? 0 : 0.275,
         ease: 'easeOut',
         when: 'beforeChildren',
         staggerChildren: 0.3,
@@ -745,6 +748,10 @@ export function Counter({
 }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, Math.round);
+  const shouldReduceMotion = usePrefersReducedMotion();
+  if (shouldReduceMotion) {
+    duration = 0;
+  }
 
   useEffect(() => {
     const animation = animate(count, value, {

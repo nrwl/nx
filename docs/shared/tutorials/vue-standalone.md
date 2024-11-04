@@ -5,14 +5,15 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building a Single Vue App with Nx
 
-In this tutorial you'll learn how to use Vue with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications). Not to be confused with the "Vue Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level.
+In this tutorial you'll learn how to use Vue with Nx in a "standalone" (non-monorepo) setup. Not to be confused with the "Vue Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level.
 
-What are you going to learn?
+What will you learn?
 
 - how to add Nx to a Vue project
 - how to run a single task (i.e. serve your app) or run multiple tasks in parallel
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
+- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 We'll start out this tutorial using Nx together with a Vue application generated with the default `npm create vue` command. Later, we'll add the `@nx/vue` plugin to show the nice enhancements that it can provide. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
@@ -405,7 +406,7 @@ More info can be found in [the editor setup page](/getting-started/editor-setup)
 
 Run the following command to generate a new "BaseButton" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/vue:component BaseButton --no-export --skipTests --directory=src/components --dry-run" path="~/vue-app" %}
+```{% command="npx nx g @nx/vue:component src/components/BaseButton --no-export --skipTests --dry-run" path="~/vue-app" %}
  NX  Generating @nx/vue:component
 
 ✔ Where should the component be generated? · src/components/BaseButton.vue
@@ -471,7 +472,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for these areas using the Vue library generator:
 
 ```
-nx g @nx/vue:library products --unitTestRunner=vitest --bundler=vite --directory=modules/products --component
+nx g @nx/vue:library modules/products --unitTestRunner=vitest --bundler=vite --component
 ```
 
 Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
@@ -589,8 +590,8 @@ export default defineConfig({
 Now that the repository is set up, let's generate the `orders` and `ui` libraries.
 
 ```
-nx g @nx/vue:library orders --unitTestRunner=vitest --bundler=vite --directory=modules/orders --component
-nx g @nx/vue:library ui --unitTestRunner=vitest --bundler=vite --directory=modules/shared/ui --component
+nx g @nx/vue:library modules/orders --unitTestRunner=vitest --bundler=vite --component
+nx g @nx/vue:library modules/ui --unitTestRunner=vitest --bundler=vite --component
 ```
 
 Running the above commands should lead to the following directory structure:
@@ -1025,9 +1026,13 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 ## Migrating to a Monorepo
 
-When you are ready to add another application to the repo, you'll probably want to move `myvueapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+When you are ready to add another application to the repo, you'll probably want to move `myvueapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-monorepo).
 
-## Set Up CI for Your Vue App
+## Fast CI ⚡ {% highlightColor="green" %}
+
+{% callout type="check" title="Repository with Nx" %}
+Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can check out the [reference code](https://github.com/nrwl/nx-recipes/tree/main/vue-app) as a starting point.
+{% /callout %}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -1036,7 +1041,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
@@ -1066,9 +1071,9 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow
+### Create a CI Workflow {% highlightColor="green" %}
 
 Use the following command to generate a CI workflow file.
 
@@ -1076,11 +1081,11 @@ Use the following command to generate a CI workflow file.
 npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx affected` line run the `e2e-ci` task instead of `e2e`.
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-23"] %}
 name: CI
 # ...
 jobs:
@@ -1093,8 +1098,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -1102,10 +1107,11 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 ```
 
-### Open a Pull Request
+### Open a Pull Request {% highlightColor="green" %}
 
 Commit the changes and open a new PR on GitHub.
 

@@ -4,7 +4,7 @@
 {% tab label="Create an app component" %}
 
 ```shell
-nx g component my-cmp --project=my-app
+nx g component apps/my-app/src/lib/my-cmp/my-cmp
 ```
 
 {% /tab %}
@@ -13,7 +13,7 @@ nx g component my-cmp --project=my-app
 Running the following will create a component under `apps/my-app/components/my-cmp.tsx` rather than `apps/my-app/components/my-cmp/my-cmp.tsx`.
 
 ```shell
-nx g component my-cmp --flat --project=my-app
+nx g component apps/my-app/src/lib/my-cmp
 ```
 
 {% /tab %}
@@ -22,7 +22,7 @@ nx g component my-cmp --flat --project=my-app
 Running the following will create a component under `apps/my-app/foo/my-cmp.tsx` rather than `apps/my-app/my-cmp/my-cmp.tsx`.
 
 ```shell
-nx g component my-cmp --directory=foo --flat --project=my-app
+nx g component apps/my-app/foo/my-cmp
 ```
 
 {% /tab %}

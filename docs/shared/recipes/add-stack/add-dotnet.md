@@ -43,6 +43,14 @@ pnpm add -D @nx-dotnet/core
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add -D @nx-dotnet/core
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Set up your workspace

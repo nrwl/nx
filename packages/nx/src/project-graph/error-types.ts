@@ -14,7 +14,6 @@ export class ProjectGraphError extends Error {
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
     | ProcessDependenciesError
-    | ProcessProjectGraphError
     | WorkspaceValidityError
   >;
   readonly #partialProjectGraph: ProjectGraph;
@@ -27,7 +26,6 @@ export class ProjectGraphError extends Error {
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
       | ProcessDependenciesError
-      | ProcessProjectGraphError
       | CreateMetadataError
       | WorkspaceValidityError
     >,
@@ -42,7 +40,7 @@ export class ProjectGraphError extends Error {
     this.#partialProjectGraph = partialProjectGraph;
     this.#partialSourceMaps = partialSourceMaps;
     this.stack = `${this.message}\n  ${errors
-      .map((error) => error.stack.split('\n').join('\n  '))
+      .map((error) => indentString(formatErrorStackAndCause(error), 2))
       .join('\n')}`;
   }
 
@@ -263,15 +261,21 @@ export class MergeNodesError extends Error {
     this.name = this.constructor.name;
     this.file = file;
     this.pluginName = pluginName;
-    this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
+    this.stack = `${this.message}\n${indentString(
+      formatErrorStackAndCause(error),
+      2
+    )}`;
   }
 }
 
 export class CreateMetadataError extends Error {
   constructor(public readonly error: Error, public readonly plugin: string) {
-    super(`The "${plugin}" plugin threw an error while creating metadata:`, {
-      cause: error,
-    });
+    super(
+      `The "${plugin}" plugin threw an error while creating metadata: ${error.message}`,
+      {
+        cause: error,
+      }
+    );
     this.name = this.constructor.name;
   }
 }
@@ -279,7 +283,7 @@ export class CreateMetadataError extends Error {
 export class ProcessDependenciesError extends Error {
   constructor(public readonly pluginName: string, { cause }) {
     super(
-      `The "${pluginName}" plugin threw an error while creating dependencies:`,
+      `The "${pluginName}" plugin threw an error while creating dependencies: ${cause.message}`,
       {
         cause,
       }
@@ -306,27 +310,10 @@ export function isWorkspaceValidityError(
       e?.name === WorkspaceValidityError.name)
   );
 }
-
-export class ProcessProjectGraphError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
-    super(
-      `The "${pluginName}" plugin threw an error while processing the project graph:`,
-      {
-        cause,
-      }
-    );
-    this.name = this.constructor.name;
-    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
-  }
-}
-
 export class AggregateProjectGraphError extends Error {
   constructor(
     public readonly errors: Array<
-      | CreateMetadataError
-      | ProcessDependenciesError
-      | ProcessProjectGraphError
-      | WorkspaceValidityError
+      CreateMetadataError | ProcessDependenciesError | WorkspaceValidityError
     >,
     public readonly partialProjectGraph: ProjectGraph
   ) {
@@ -393,4 +380,25 @@ export class LoadPluginError extends Error {
     });
     this.name = this.constructor.name;
   }
+}
+
+function indentString(str: string, indent: number): string {
+  return (
+    ' '.repeat(indent) +
+    str
+      .split('\n')
+      .map((line) => ' '.repeat(indent) + line)
+      .join('\n')
+  );
+}
+
+function formatErrorStackAndCause(error: Error): string {
+  const cause =
+    error.cause && error.cause instanceof Error ? error.cause : null;
+  return (
+    error.stack +
+    (cause
+      ? `\nCaused by: \n${indentString(cause.stack ?? cause.message, 2)}`
+      : '')
+  );
 }

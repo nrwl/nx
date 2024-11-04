@@ -35,9 +35,8 @@ describe('updateEslint', () => {
 
   it('should handle .eslintrc.json not existing', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.None,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -49,9 +48,8 @@ describe('updateEslint', () => {
 
   it('should update .eslintrc.json extends path when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
     });
     // This step is usually handled elsewhere
     tree.rename(
@@ -74,7 +72,6 @@ describe('updateEslint', () => {
       name: 'api-test',
       directory: 'api/test',
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
     });
     // This step is usually handled elsewhere
     tree.rename('api/test/.eslintrc.json', 'test/.eslintrc.json');
@@ -100,9 +97,8 @@ describe('updateEslint', () => {
 
   it('should preserve .eslintrc.json non-relative extends when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
     });
     updateJson(tree, 'my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.extends = [
@@ -134,10 +130,9 @@ describe('updateEslint', () => {
 
   it('should update .eslintrc.json overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     // This step is usually handled elsewhere
     tree.rename(
@@ -163,10 +158,9 @@ describe('updateEslint', () => {
 
   it('should update multiple .eslintrc.json overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     // Add another parser project to eslint.json
@@ -205,10 +199,9 @@ describe('updateEslint', () => {
 
   it('should update .eslintrc.json parserOptions.project as a string', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     // Add another parser project to eslint.json
@@ -255,9 +248,8 @@ describe('updateEslint (flat config)', () => {
 
   it('should handle config not existing', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.None,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -269,9 +261,8 @@ describe('updateEslint (flat config)', () => {
 
   it('should update config extends path when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
     });
     convertToFlat(tree, 'my-lib');
     // This step is usually handled elsewhere
@@ -293,7 +284,6 @@ describe('updateEslint (flat config)', () => {
       name: 'api-test',
       directory: 'api/test',
       linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
     });
     convertToFlat(tree, 'api/test');
     // This step is usually handled elsewhere
@@ -319,10 +309,9 @@ describe('updateEslint (flat config)', () => {
 
   it('should update config overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     convertToFlat(tree, 'my-lib', { hasParser: true });
     // This step is usually handled elsewhere
@@ -345,10 +334,9 @@ describe('updateEslint (flat config)', () => {
 
   it('should update multiple config overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     // Add another parser project to eslint.json
     const storybookProject = '.storybook/tsconfig.json';
@@ -376,10 +364,9 @@ describe('updateEslint (flat config)', () => {
 
   it('should update config parserOptions.project as a string', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     convertToFlat(tree, 'my-lib', { hasParser: true, isString: true });

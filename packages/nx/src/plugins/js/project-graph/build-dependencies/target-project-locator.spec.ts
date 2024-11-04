@@ -11,6 +11,8 @@ import {
   isBuiltinModuleImport,
 } from './target-project-locator';
 
+import { builtinModules } from 'node:module';
+
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
@@ -95,6 +97,14 @@ describe('TargetProjectLocator', () => {
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
           version: '1.0.0',
+        }),
+        './node_modules/lodash/package.json': JSON.stringify({
+          name: 'lodash',
+          version: '3.0.0',
+        }),
+        './node_modules/lodash-4/package.json': JSON.stringify({
+          name: 'lodash',
+          version: '4.0.0',
         }),
       };
       vol.fromJSON(fsJson, '/root');
@@ -261,6 +271,22 @@ describe('TargetProjectLocator', () => {
           data: {
             version: '1.0.0',
             packageName: '@proj/proj123-base',
+          },
+        },
+        'npm:lodash': {
+          name: 'npm:lodash',
+          type: 'npm',
+          data: {
+            version: '3.0.0',
+            packageName: 'lodash',
+          },
+        },
+        'npm:lodash-4': {
+          name: 'npm:lodash-4',
+          type: 'npm',
+          data: {
+            packageName: 'lodash-4',
+            version: 'npm:lodash@4.0.0',
           },
         },
       };
@@ -453,6 +479,20 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(proj5).toEqual('proj5');
+    });
+
+    it('should be able to resolve packages aliases', () => {
+      const lodash = targetProjectLocator.findProjectFromImport(
+        'lodash',
+        'libs/proj/index.ts'
+      );
+      expect(lodash).toEqual('npm:lodash');
+
+      const lodash4 = targetProjectLocator.findProjectFromImport(
+        'lodash-4',
+        'libs/proj/index.ts'
+      );
+      expect(lodash4).toEqual('npm:lodash-4');
     });
   });
 
@@ -861,13 +901,96 @@ describe('TargetProjectLocator', () => {
       expect(result).toEqual('npm:@json2csv/plainjs');
     });
   });
+
+  describe('findNpmProjectFromImport', () => {
+    it('should resolve external node when the version does not match its own package.json (i.e. git remote) ', () => {
+      const projects = {
+        proj: {
+          name: 'proj',
+          type: 'lib' as const,
+          data: {
+            root: 'proj',
+          },
+        },
+      };
+      const npmProjects = {
+        'npm:foo': {
+          name: 'npm:foo' as const,
+          type: 'npm' as const,
+          data: {
+            version:
+              'git+ssh://git@github.com/example/foo.git#6f4b450fc642abba540535f0755c990b42a16026',
+            packageName: 'foo',
+          },
+        },
+      };
+
+      const targetProjectLocator = new TargetProjectLocator(
+        projects,
+        npmProjects,
+        new Map()
+      );
+      targetProjectLocator['readPackageJson'] = () => ({
+        name: 'foo',
+        version: '0.0.1',
+      });
+      const result = targetProjectLocator.findNpmProjectFromImport(
+        'lodash',
+        'proj/index.ts'
+      );
+
+      expect(result).toEqual('npm:foo');
+    });
+
+    it('should resolve a specific version of external node', () => {
+      const projects = {
+        proj: {
+          name: 'proj',
+          type: 'lib' as const,
+          data: {
+            root: 'proj',
+          },
+        },
+      };
+      const npmProjects = {
+        'npm:foo@0.0.1': {
+          name: 'npm:foo@0.0.1' as const,
+          type: 'npm' as const,
+          data: {
+            version: '0.0.1',
+            packageName: 'foo',
+          },
+        },
+      };
+
+      const targetProjectLocator = new TargetProjectLocator(
+        projects,
+        npmProjects,
+        new Map()
+      );
+      targetProjectLocator['readPackageJson'] = () => ({
+        name: 'foo',
+        version: '0.0.1',
+      });
+      const result = targetProjectLocator.findNpmProjectFromImport(
+        'lodash',
+        'proj/index.ts'
+      );
+
+      expect(result).toEqual('npm:foo@0.0.1');
+    });
+  });
 });
 
 describe('isBuiltinModuleImport()', () => {
-  it('should return true for all node builtin modules', () => {
-    const allBuiltinModules = require('node:module').builtinModules;
-    allBuiltinModules.forEach((builtinModule) => {
+  const withExclusions = builtinModules
+    .concat(builtinModules.filter((a) => true).map((s) => 'node:' + s))
+    .concat(['node:test', 'node:sqlite', 'node:test']);
+
+  it.each(withExclusions)(
+    `should return true for %s builtin module`,
+    (builtinModule) => {
       expect(isBuiltinModuleImport(builtinModule)).toBe(true);
-    });
-  });
+    }
+  );
 });

@@ -1,6 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
+import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -20,6 +21,7 @@ import {
   yargsFormatWriteCommand,
 } from './format/command-object';
 import { yargsGenerateCommand } from './generate/command-object';
+import { yargsImportCommand } from './import/command-object';
 import { yargsInitCommand } from './init/command-object';
 import { yargsListCommand } from './list/command-object';
 import {
@@ -36,10 +38,14 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import { yargsLoginCommand } from './login/command-object';
+import { yargsLogoutCommand } from './logout/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
 } from './deprecated/command-objects';
+import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
+import { output } from '../utils/output';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -59,6 +65,7 @@ export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
+  .command(yargsActivatePowerpackCommand)
   .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
@@ -73,6 +80,7 @@ export const commandsObject = yargs
   .command(yargsFormatCheckCommand)
   .command(yargsFormatWriteCommand)
   .command(yargsGenerateCommand)
+  .command(yargsImportCommand)
   .command(yargsInitCommand)
   .command(yargsInternalMigrateCommand)
   .command(yargsListCommand)
@@ -86,12 +94,59 @@ export const commandsObject = yargs
   .command(yargsRunCommand)
   .command(yargsRunManyCommand)
   .command(yargsShowCommand)
+  .command(yargsSyncCommand)
+  .command(yargsSyncCheckCommand)
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
   .command(yargsNxInfixCommand)
+  .command(yargsLoginCommand)
+  .command(yargsLogoutCommand)
+  .command(resolveConformanceCommandObject())
+  .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
   .help()
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
   // so that it shows up in help. The default yargs implementation of --version is not
   // hit, as the implementation in nx.ts is hit first and calls process.exit(0).
   .version();
+
+function createMissingConformanceCommand(
+  command: 'conformance' | 'conformance:check'
+) {
+  return {
+    command,
+    // Hide from --help output in the common case of not having the plugin installed
+    describe: false,
+    handler: () => {
+      output.error({
+        title: `${command} is not available`,
+        bodyLines: [
+          `In order to use the \`nx ${command}\` command you must have an active Powerpack license and the \`@nx/powerpack-conformance\` plugin installed.`,
+          '',
+          'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
+        ],
+      });
+      process.exit(1);
+    },
+  };
+}
+
+function resolveConformanceCommandObject() {
+  try {
+    const { yargsConformanceCommand } = require('@nx/powerpack-conformance');
+    return yargsConformanceCommand;
+  } catch {
+    return createMissingConformanceCommand('conformance');
+  }
+}
+
+function resolveConformanceCheckCommandObject() {
+  try {
+    const {
+      yargsConformanceCheckCommand,
+    } = require('@nx/powerpack-conformance');
+    return yargsConformanceCheckCommand;
+  } catch {
+    return createMissingConformanceCommand('conformance:check');
+  }
+}

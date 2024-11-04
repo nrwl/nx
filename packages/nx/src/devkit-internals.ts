@@ -9,7 +9,10 @@ export { readNxJson as readNxJsonFromDisk } from './config/nx-json';
 export { calculateDefaultProjectName } from './config/calculate-default-project-name';
 export { retrieveProjectConfigurationsWithAngularProjects } from './project-graph/utils/retrieve-workspace-files';
 export { mergeTargetConfigurations } from './project-graph/utils/project-configuration-utils';
-export { readProjectConfigurationsFromRootMap } from './project-graph/utils/project-configuration-utils';
+export {
+  readProjectConfigurationsFromRootMap,
+  findMatchingConfigFiles,
+} from './project-graph/utils/project-configuration-utils';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
@@ -27,3 +30,4 @@ export { LoadedNxPlugin } from './project-graph/plugins/internal-api';
 export * from './project-graph/error-types';
 export { registerTsProject } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
+export { isCI } from './utils/is-ci';

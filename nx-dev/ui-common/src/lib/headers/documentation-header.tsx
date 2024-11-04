@@ -1,7 +1,6 @@
 'use client';
 import { Fragment, type JSX } from 'react';
 import {
-  ArrowUpRightIcon,
   Bars3Icon,
   ChevronDownIcon,
   XMarkIcon,
@@ -19,9 +18,8 @@ import {
   solutionsMenuItems,
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
-import { AnnouncementBanner } from '../announcement-banner';
 import { DiscordIcon } from '../discord-icon';
-import { NxCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -171,9 +169,6 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="hidden w-full md:block">
-        <AnnouncementBanner />
-      </div>
       <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
@@ -267,7 +262,7 @@ export function DocumentationHeader({
                     leaveTo="opacity-0 translate-y-1"
                   >
                     <Popover.Panel className="absolute z-30 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <TwoColumnsMenu items={featuresItems} />
+                      <SectionsMenu sections={featuresItems} />
                     </Popover.Panel>
                   </Transition>
                 </>
@@ -334,15 +329,14 @@ export function DocumentationHeader({
             >
               Blog
             </Link>
-            <a
-              href="https://nx.app/pricing"
+            <Link
+              href="/pricing"
               title="Nx Cloud"
-              target="_blank"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
               CI Pricing
-              <ArrowUpRightIcon className="h-2 w-2 align-super" />
-            </a>
+            </Link>
             {/*RESOURCES*/}
             <Popover className="relative">
               {({ open }) => (
@@ -405,7 +399,7 @@ export function DocumentationHeader({
               variant="secondary"
               size="small"
             >
-              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
           </nav>

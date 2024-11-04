@@ -26,11 +26,10 @@ describe('detox application generator', () => {
       });
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-app-e2e',
+        e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -64,14 +63,14 @@ describe('detox application generator', () => {
           binaryPath:
             '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -102,7 +101,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -136,14 +134,14 @@ describe('detox application generator', () => {
           binaryPath:
             '../my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -174,7 +172,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -208,14 +205,14 @@ describe('detox application generator', () => {
           binaryPath:
             '../my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -241,11 +238,10 @@ describe('detox application generator', () => {
       });
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-dir/my-app-e2e',
+        e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -279,14 +275,14 @@ describe('detox application generator', () => {
           binaryPath:
             '../../my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../../my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -311,11 +307,10 @@ describe('detox application generator', () => {
       });
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-dir/my-app-e2e',
+        e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'expo',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -355,7 +350,7 @@ describe('detox application generator', () => {
           binaryPath:
             '../../my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
@@ -368,7 +363,7 @@ describe('detox application generator', () => {
           binaryPath:
             '../../my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyDirMyApp.app',
           build:
-            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -394,7 +389,7 @@ describe('detox application generator', () => {
 
     it('should extend from tsconfig.base.json', async () => {
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-app-e2e',
+        e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
@@ -409,7 +404,7 @@ describe('detox application generator', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-app-e2e',
+        e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',

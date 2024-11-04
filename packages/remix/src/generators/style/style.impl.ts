@@ -14,17 +14,12 @@ import { insertStatementAfterImports } from '../../utils/insert-statement-after-
 import {
   normalizeRoutePath,
   resolveRemixAppDirectory,
-  resolveRemixRouteFile,
 } from '../../utils/remix-route-utils';
 
 export default async function (tree: Tree, options: RemixStyleSchema) {
   const { project: projectName, artifactName: name } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactType: 'style',
-      callingGenerator: '@nx/remix:style',
-      name: options.path,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
+      path: options.path,
     });
   const project = readProjectConfiguration(tree, projectName);
   if (!project) throw new Error(`Project does not exist: ${projectName}`);
@@ -53,9 +48,7 @@ export default async function (tree: Tree, options: RemixStyleSchema) {
     `
   );
 
-  const routeFilePath = options.nameAndDirectoryFormat
-    ? options.path
-    : await resolveRemixRouteFile(tree, options.path, options.project, '.tsx');
+  const routeFilePath = options.path;
 
   insertImport(tree, routeFilePath, 'LinksFunction', '@remix-run/node', {
     typeOnly: true,

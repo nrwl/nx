@@ -9,6 +9,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
+import { TaskHistory, getTaskHistory } from '../utils/task-history';
 
 export interface Batch {
   executorName: string;
@@ -19,17 +20,39 @@ export class TasksSchedule {
   private notScheduledTaskGraph = this.taskGraph;
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
   private reverseProjectGraph = reverse(this.projectGraph);
+  private taskHistory: TaskHistory | null = getTaskHistory();
+
   private scheduledBatches: Batch[] = [];
   private scheduledTasks: string[] = [];
   private runningTasks = new Set<string>();
   private completedTasks = new Set<string>();
   private scheduleRequestsExecutionChain = Promise.resolve();
+  private estimatedTaskTimings: Record<string, number> = {};
+  private projectDependencies: Record<string, number> = {};
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
+
+  public async init() {
+    if (this.taskHistory) {
+      this.estimatedTaskTimings =
+        await this.taskHistory.getEstimatedTaskTimings(
+          Object.values(this.taskGraph.tasks).map((t) => t.target)
+        );
+    }
+
+    for (const project of Object.values(this.taskGraph.tasks).map(
+      (t) => t.target.project
+    )) {
+      this.projectDependencies[project] ??= findAllProjectNodeDependencies(
+        project,
+        this.reverseProjectGraph
+      ).length;
+    }
+  }
 
   public async scheduleNextTasks() {
     this.scheduleRequestsExecutionChain =
@@ -112,12 +135,29 @@ export class TasksSchedule {
         const project1 = this.taskGraph.tasks[taskId1].target.project;
         const project2 = this.taskGraph.tasks[taskId2].target.project;
 
-        return (
-          findAllProjectNodeDependencies(project2, this.reverseProjectGraph)
-            .length -
-          findAllProjectNodeDependencies(project1, this.reverseProjectGraph)
-            .length
-        );
+        const project1NodeDependencies = this.projectDependencies[project1];
+        const project2NodeDependencies = this.projectDependencies[project2];
+
+        const dependenciesDiff =
+          project2NodeDependencies - project1NodeDependencies;
+
+        if (dependenciesDiff !== 0) {
+          return dependenciesDiff;
+        }
+
+        const task1Timing: number | undefined =
+          this.estimatedTaskTimings[taskId1];
+        if (!task1Timing) {
+          // if no timing or 0, put task1 at beginning
+          return -1;
+        }
+        const task2Timing: number | undefined =
+          this.estimatedTaskTimings[taskId2];
+        if (!task2Timing) {
+          // if no timing or 0, put task2 at beginning
+          return 1;
+        }
+        return task2Timing - task1Timing;
       });
     this.runningTasks.add(taskId);
   }

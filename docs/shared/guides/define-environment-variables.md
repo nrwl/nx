@@ -5,7 +5,7 @@ Environment variables are useful to store system-wide values such as the directo
 (PATH), OS version, Network Information, and custom variables. These env variables are passed at build time and used at
 the runtime of an app.
 
-## Setting environment variables
+## Set Environment Variables
 
 By default, Nx will load any environment variables you place in the following files:
 
@@ -53,7 +53,30 @@ We recommend nesting your **app** specific `env` files in `apps/your-app`, and c
 for workspace-specific settings (like the [Nx Cloud token](/ci/recipes/security/access-tokens)).
 {% /callout %}
 
-### Pointing to custom env files
+### Environment Variables for Configurations
+
+Nx will only load environment variable files for a particular configuration if that configuration is defined for a task, even if you specify that configuration name from the command line. So if there is no `development` configuration defined for the `app`'s `build` task, the following command will use `.env.build` instead of `.env.build.development`:
+
+```shell
+nx build app --development
+```
+
+In order to have Nx actually use the `.env.build.development` environment variables, the `development` configuration needs to be set for the task (even if it is empty).
+
+```jsonc {% fileName="apps/app/project.json" highlightLines=["5-7"] %}
+{
+  "targets": {
+    "build": {
+      // ...
+      "configurations": {
+        "development": {}
+      }
+    }
+  }
+}
+```
+
+### Point to Custom Env Files
 
 If you want to load variables from `env` files other than the ones listed above:
 
@@ -61,7 +84,7 @@ If you want to load variables from `env` files other than the ones listed above:
 2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
 3. Use the `envFile` option of the [run-commands](/nx-api/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
 
-### Ad-hoc variables
+### Ad-hoc Variables
 
 You can also define environment variables in an ad-hoc manner using support from your OS and shell.
 

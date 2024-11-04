@@ -9,6 +9,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { vueInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -19,12 +20,16 @@ import componentGenerator from '../component/component';
 import { addVite } from './lib/add-vite';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { relative } from 'path';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'vue', 'library');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);
@@ -62,17 +67,20 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   tasks.push(await addVite(tree, options));
 
   if (options.component) {
+    const relativeCwd = getRelativeCwd();
+    const path = joinPathFragments(
+      options.projectRoot,
+      'src/lib',
+      options.fileName
+    );
     await componentGenerator(tree, {
-      name: options.name,
-      project: options.name,
-      flat: true,
+      path: relativeCwd ? relative(relativeCwd, path) : path,
       skipTests:
         options.unitTestRunner === 'none' ||
         (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
       export: true,
       routing: options.routing,
       js: options.js,
-      pascalCaseFiles: options.pascalCaseFiles,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
     });

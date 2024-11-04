@@ -59,6 +59,7 @@ export async function addVite(
       skipFormat: true,
       testEnvironment: 'jsdom',
       addPlugin: options.addPlugin,
+      runtimeTsconfigFileName: 'tsconfig.lib.json',
     });
     tasks.push(vitestTask);
 

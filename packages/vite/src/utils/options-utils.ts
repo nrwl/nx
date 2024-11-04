@@ -18,7 +18,7 @@ export function normalizeViteConfigFilePath(
   configFile?: string
 ): string | undefined {
   if (configFile) {
-    const normalized = joinPathFragments(configFile);
+    const normalized = joinPathFragments(contextRoot, configFile);
     if (!existsSync(normalized)) {
       throw new Error(
         `Could not find vite config at provided path "${normalized}".`

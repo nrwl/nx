@@ -56,6 +56,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
@@ -74,12 +75,10 @@ type NxPackage = (typeof nxPackages)[number];
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
-  unsetProjectNameAndRootFormat = true,
   packages,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
-  unsetProjectNameAndRootFormat?: boolean;
   readonly packages?: Array<NxPackage>;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
@@ -103,14 +102,6 @@ export function newProject({
         createNxWorkspaceStart.name,
         createNxWorkspaceEnd.name
       );
-
-      if (unsetProjectNameAndRootFormat) {
-        console.warn(
-          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
-        );
-        createFile('apps/.gitkeep');
-        createFile('libs/.gitkeep');
-      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -527,7 +518,6 @@ export function newLernaWorkspace({
       const overrides = {
         ...json.overrides,
         nx: nxVersion,
-        '@nrwl/devkit': nxVersion,
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
@@ -650,8 +640,12 @@ export function createNonNxProjectDirectory(
   );
 }
 
-export function uniq(prefix: string) {
-  return `${prefix}${Math.floor(Math.random() * 10000000)}`;
+export function uniq(prefix: string): string {
+  // We need to ensure that the length of the random section of the name is of consistent length to avoid flakiness in tests
+  const randomSevenDigitNumber = Math.floor(Math.random() * 10000000)
+    .toString()
+    .padStart(7, '0');
+  return `${prefix}${randomSevenDigitNumber}`;
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions

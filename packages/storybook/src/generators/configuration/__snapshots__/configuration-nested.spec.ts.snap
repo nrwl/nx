@@ -5,9 +5,10 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 const config: StorybookConfig = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
@@ -16,7 +17,7 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [react(), nxViteTsPaths()],
     }),
 };
 
@@ -69,7 +70,7 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',

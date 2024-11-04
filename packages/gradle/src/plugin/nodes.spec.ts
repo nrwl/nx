@@ -34,6 +34,10 @@ describe('@nx/gradle/plugin', () => {
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
+      gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     cwd = process.cwd();
     process.chdir(tempFs.tempDir);
@@ -91,7 +95,7 @@ describe('@nx/gradle/plugin', () => {
                     "cache": true,
                     "command": "./gradlew proj:test",
                     "dependsOn": [
-                      "classes",
+                      "testClasses",
                     ],
                     "inputs": [
                       "default",
@@ -111,6 +115,9 @@ describe('@nx/gradle/plugin', () => {
                       "technologies": [
                         "gradle",
                       ],
+                    },
+                    "options": {
+                      "cwd": ".",
                     },
                   },
                 },
@@ -135,6 +142,10 @@ describe('@nx/gradle/plugin', () => {
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
+      gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     await tempFs.createFiles({
       'nested/nested/proj/build.gradle': ``,
@@ -171,7 +182,7 @@ describe('@nx/gradle/plugin', () => {
                     "cache": true,
                     "command": "./gradlew proj:test",
                     "dependsOn": [
-                      "classes",
+                      "testClasses",
                     ],
                     "inputs": [
                       "default",
@@ -191,6 +202,9 @@ describe('@nx/gradle/plugin', () => {
                       "technologies": [
                         "gradle",
                       ],
+                    },
+                    "options": {
+                      "cwd": ".",
                     },
                   },
                 },
@@ -216,6 +230,10 @@ describe('@nx/gradle/plugin', () => {
           ['proj', new Map([['test', 'Test']])],
         ]),
         gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+        gradleProjectNameToProjectRootMap: new Map<string, string>([
+          ['proj', 'proj'],
+        ]),
+        gradleProjectToChildProjects: new Map<string, string[]>(),
       };
       await tempFs.createFiles({
         'nested/nested/proj/build.gradle': ``,
@@ -277,7 +295,7 @@ describe('@nx/gradle/plugin', () => {
                       "cache": false,
                       "command": "./gradlew proj:test",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -297,6 +315,9 @@ describe('@nx/gradle/plugin', () => {
                         "technologies": [
                           "gradle",
                         ],
+                      },
+                      "options": {
+                        "cwd": ".",
                       },
                     },
                     "test-ci": {
@@ -345,7 +366,7 @@ describe('@nx/gradle/plugin', () => {
                       "cache": true,
                       "command": "./gradlew proj:test --tests aTest",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -367,12 +388,15 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--bTest": {
                       "cache": true,
                       "command": "./gradlew proj:test --tests bTest",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -394,12 +418,15 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--cTests": {
                       "cache": true,
                       "command": "./gradlew proj:test --tests cTests",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -420,6 +447,9 @@ describe('@nx/gradle/plugin', () => {
                         "technologies": [
                           "gradle",
                         ],
+                      },
+                      "options": {
+                        "cwd": ".",
                       },
                     },
                   },

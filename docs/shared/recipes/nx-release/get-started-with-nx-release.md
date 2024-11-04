@@ -270,6 +270,8 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
 }
 ```
 
+When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
+
 ## Future Releases
 
 After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published and therefore avoid any conflict errors, meaning you can run the same publish action multiple times without any negative side-effects.

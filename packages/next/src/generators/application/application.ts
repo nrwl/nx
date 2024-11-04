@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { setupTailwindGenerator } from '@nx/react';
 import {
   testingLibraryReactVersion,
@@ -34,12 +35,13 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'next', 'application');
+
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(host, schema);
 
@@ -102,7 +104,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       '@types/react-dom': typesReactDomVersion,
     };
 
-    if (schema.unitTestRunner && schema.unitTestRunner !== 'none') {
+    if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
     }
 

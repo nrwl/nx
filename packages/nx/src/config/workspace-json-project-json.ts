@@ -122,6 +122,20 @@ export interface ProjectMetadata {
   description?: string;
   technologies?: string[];
   targetGroups?: Record<string, string[]>;
+  owners?: {
+    [ownerId: string]: {
+      ownedFiles: {
+        files: ['*'] | string[];
+        fromConfig?: {
+          filePath: string;
+          location: {
+            startLine: number;
+            endLine: number;
+          };
+        };
+      }[];
+    };
+  };
 }
 
 export interface TargetMetadata {
@@ -236,4 +250,10 @@ export interface TargetConfiguration<T = any> {
    * Default is true
    */
   parallelism?: boolean;
+
+  /**
+   * List of generators to run before the target to ensure the workspace
+   * is up to date.
+   */
+  syncGenerators?: string[];
 }

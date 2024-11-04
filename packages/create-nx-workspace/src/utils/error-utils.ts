@@ -13,7 +13,7 @@ export function mapErrorToBodyLines(error: Error): string[] {
   const errorLines = error.message?.split('\n').filter((line) => !!line.trim());
   if (errorLines.length < 3) {
     const lines = [`Error: ${error.message}`];
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       lines.push(`Stack: ${error.stack}`);
     }
     return lines;
@@ -24,7 +24,7 @@ export function mapErrorToBodyLines(error: Error): string[] {
       ? [`Exit code: ${error.code}`, `Log file: ${error.logFile}`]
       : [];
 
-  if (process.env.NX_VERBOSE_LOGGING) {
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
     lines.push(`Error: ${error.message}`);
     lines.push(`Stack: ${error.stack}`);
   }

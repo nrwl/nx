@@ -24,6 +24,10 @@
         "type": "boolean",
         "description": "Run tests with Playwright Inspector. Shortcut for 'PWDEBUG=1' environment variable and '--timeout=0',--max-failures=1 --headed --workers=1' options"
       },
+      "lastFailed": {
+        "type": "boolean",
+        "description": "Run only the tests that failed in the last run"
+      },
       "forbidOnly": {
         "type": "boolean",
         "description": "Fail if test.only is called"
@@ -104,18 +108,7 @@
       },
       "reporter": {
         "type": "string",
-        "enum": [
-          "list",
-          "line",
-          "dot",
-          "json",
-          "junit",
-          "null",
-          "github",
-          "html",
-          "blob"
-        ],
-        "description": "Reporter to use, comma-separated, can be 'list', 'line', 'dot', 'json', 'junit', 'null', 'github', 'html', 'blob'. To configure reporter options, use the playwright configuration."
+        "description": "Common Reporter values to use, comma-separated, 'list', 'line', 'dot', 'json', 'junit', 'null', 'github', 'html', 'blob'. To configure reporter options, use the playwright configuration."
       },
       "retries": {
         "type": "number",

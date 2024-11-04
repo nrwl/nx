@@ -28,7 +28,7 @@ updating any framework dependencies as needed.
 
 ```shell
 npm add solid-js
-npm add -D solid-devtools vite-plugin-solid
+npm add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
 nx add @nx/web
 ```
 
@@ -37,7 +37,7 @@ nx add @nx/web
 
 ```shell
 yarn add solid-js
-yarn add -D solid-devtools vite-plugin-solid
+yarn add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
 nx add @nx/web
 ```
 
@@ -46,7 +46,17 @@ nx add @nx/web
 
 ```shell
 pnpm add solid-js
-pnpm add -D solid-devtools vite-plugin-solid
+pnpm add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
+nx add @nx/web
+```
+
+{% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add solid-js
+bun add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
 nx add @nx/web
 ```
 
@@ -63,7 +73,7 @@ We'll start with a web application and then tweak the settings to match what we 
 workspace with the following command:
 
 ```shell
-nx g @nx/web:app my-solid-app --directory=apps/my-solid-app --bundler=vite
+nx g @nx/web:app apps/my-solid-app --bundler=vite
 ```
 
 The `@nx/web:app` generator will create some files that are unnecessary for our Solid application.
@@ -242,7 +252,7 @@ Let's create a library that our Solid application is going to consume. To create
 package and run:
 
 ```shell
-nx g @nx/js:lib my-lib --directory=libs/my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.

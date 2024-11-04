@@ -15,9 +15,8 @@ describe('SCAM Pipe Generator', () => {
     // ACT
     await scamPipeGenerator(tree, {
       name: 'example',
-      project: 'app1',
+      path: 'apps/app1/src/app/example/example',
       inlineScam: true,
-      flat: false,
       skipFormat: true,
     });
 
@@ -61,9 +60,8 @@ describe('SCAM Pipe Generator', () => {
     // ACT
     await scamPipeGenerator(tree, {
       name: 'example',
-      project: 'app1',
+      path: 'apps/app1/src/app/example/example',
       inlineScam: false,
-      flat: false,
       skipFormat: true,
     });
 
@@ -103,8 +101,7 @@ describe('SCAM Pipe Generator', () => {
     // ACT
     await scamPipeGenerator(tree, {
       name: 'example',
-      project: 'lib1',
-      path: 'libs/lib1/feature/src/lib',
+      path: 'libs/lib1/feature/src/lib/example/example',
       inlineScam: false,
       export: true,
       skipFormat: true,
@@ -151,10 +148,8 @@ describe('SCAM Pipe Generator', () => {
       // ACT
       await scamPipeGenerator(tree, {
         name: 'example',
-        project: 'app1',
-        path: 'apps/app1/src/app/random',
+        path: 'apps/app1/src/app/random/example/example',
         inlineScam: true,
-        flat: false,
         skipFormat: true,
       });
 
@@ -198,10 +193,8 @@ describe('SCAM Pipe Generator', () => {
       // ACT
       await scamPipeGenerator(tree, {
         name: 'example',
-        project: 'app1',
-        path: '/apps/app1/src/app/random',
+        path: '/apps/app1/src/app/random/example/example',
         inlineScam: true,
-        flat: false,
         skipFormat: true,
       });
 
@@ -246,13 +239,12 @@ describe('SCAM Pipe Generator', () => {
       expect(
         scamPipeGenerator(tree, {
           name: 'example',
-          project: 'app1',
-          path: 'libs/proj/src/lib/random',
+          path: 'libs/proj/src/lib/random/example/example',
           inlineScam: true,
           skipFormat: true,
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`
+        `"The provided directory resolved relative to the current working directory "libs/proj/src/lib/random/example" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
       );
     });
   });

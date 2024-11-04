@@ -58,6 +58,20 @@ const server = createServer((socket) => {
             };
           }
         },
+        shutdown: async () => {
+          // Stops accepting new connections, but existing connections are
+          // not closed immediately.
+          server.close(() => {
+            try {
+              unlinkSync(socketPath);
+            } catch (e) {}
+            process.exit(0);
+          });
+          // Closes existing connection.
+          socket.end();
+          // Destroys the socket once it's fully closed.
+          socket.destroySoon();
+        },
         createNodes: async ({ configFiles, context, tx }) => {
           try {
             const result = await plugin.createNodes[1](configFiles, context);
@@ -86,24 +100,6 @@ const server = createServer((socket) => {
           } catch (e) {
             return {
               type: 'createDependenciesResult',
-              payload: {
-                success: false,
-                error: createSerializableError(e),
-                tx,
-              },
-            };
-          }
-        },
-        processProjectGraph: async ({ graph, ctx, tx }) => {
-          try {
-            const result = await plugin.processProjectGraph(graph, ctx);
-            return {
-              type: 'processProjectGraphResult',
-              payload: { graph: result, success: true, tx },
-            };
-          } catch (e) {
-            return {
-              type: 'processProjectGraphResult',
               payload: {
                 success: false,
                 error: createSerializableError(e),

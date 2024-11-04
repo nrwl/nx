@@ -5,18 +5,20 @@ import { interfaceGenerator } from './interface';
 
 describe('interface generator', () => {
   let tree: Tree;
-  const project = 'api';
+  const path = 'api';
   const options: InterfaceGeneratorOptions = {
     name: 'test',
-    project,
+    path,
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(interfaceGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      interfaceGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

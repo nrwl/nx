@@ -1,7 +1,6 @@
 // This file represents the public API for plugins which live in nx.json's plugins array.
 // For methods to interact with plugins from within Nx, see `./internal-api.ts`.
 
-import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
 import {
   FileMap,
   ProjectGraph,
@@ -66,13 +65,13 @@ export interface CreateNodesResult {
  * A pair of file patterns and {@link CreateNodesFunction}
  *
  * Nx 19.2+: Both original `CreateNodes` and `CreateNodesV2` are supported. Nx will only invoke `CreateNodesV2` if it is present.
- * Nx 20.X : The `CreateNodesV2` will be the only supported API. This typing will still exist, but be identical to `CreateNodesV2`.
+ * Nx 21.X : The `CreateNodesV2` will be the only supported API. This typing will still exist, but be identical to `CreateNodesV2`.
              Nx **will not** invoke the original `plugin.createNodes` callback. This should give plugin authors a window to transition.
              Plugin authors should update their plugin's `createNodes` function to align with `CreateNodesV2` / the updated `CreateNodes`.
              The plugin should contain something like: `export createNodes = createNodesV2;` during this period. This will allow the plugin
              to maintain compatibility with Nx 19.2 and up.
- * Nx 21.X : The `CreateNodesV2` typing will be removed, as it has replaced `CreateNodes`.
- * 
+ * Nx 22.X : The `CreateNodesV2` typing will be removed, as it has replaced `CreateNodes`.
+ *
  * @deprecated Use {@link CreateNodesV2} instead. CreateNodesV2 will replace this API. Read more about the transition above.
  */
 export type CreateNodes<T = unknown> = readonly [
@@ -82,7 +81,7 @@ export type CreateNodes<T = unknown> = readonly [
 
 /**
  * A pair of file patterns and {@link CreateNodesFunctionV2}
- * In Nx 20 {@link CreateNodes} will be replaced with this type. In Nx 21, this type will be removed.
+ * In Nx 21 {@link CreateNodes} will be replaced with this type. In Nx 22, this type will be removed.
  */
 export type CreateNodesV2<T = unknown> = readonly [
   projectFilePattern: string,
@@ -156,7 +155,7 @@ export type NxPluginV2<TOptions = unknown> = {
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
    *
-   * @deprecated Use {@link createNodesV2} instead. In Nx 20 support for calling createNodes with a single file for the first argument will be removed.
+   * @deprecated Use {@link createNodesV2} instead. In Nx 21 support for calling createNodes with a single file for the first argument will be removed.
    */
   createNodes?: CreateNodes<TOptions>;
 
@@ -164,7 +163,7 @@ export type NxPluginV2<TOptions = unknown> = {
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFiles }
    *
-   * In Nx 20 {@link createNodes} will be replaced with this property. In Nx 21, this property will be removed.
+   * In Nx 21 {@link createNodes} will be replaced with this property. In Nx 22, this property will be removed.
    */
   createNodesV2?: CreateNodesV2<TOptions>;
 
@@ -182,4 +181,4 @@ export type NxPluginV2<TOptions = unknown> = {
 /**
  * A plugin for Nx
  */
-export type NxPlugin = NxPluginV1 | NxPluginV2;
+export type NxPlugin = NxPluginV2;

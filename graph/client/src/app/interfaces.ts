@@ -31,3 +31,10 @@ export interface GraphPerfReport {
   numNodes: number;
   numEdges: number;
 }
+
+export interface CompositeNode {
+  id: string;
+  label: string;
+  state: 'expanded' | 'collapsed' | 'hidden';
+  parent?: string;
+}

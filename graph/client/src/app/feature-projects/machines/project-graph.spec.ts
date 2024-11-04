@@ -106,6 +106,8 @@ const mockAppConfig: AppConfig = {
       label: 'local',
       projectGraphUrl: 'assets/project-graphs/e2e.json',
       taskGraphUrl: 'assets/task-graphs/e2e.json',
+      taskInputsUrl: '',
+      sourceMapsUrl: '',
     },
   ],
   defaultWorkspaceId: 'local',

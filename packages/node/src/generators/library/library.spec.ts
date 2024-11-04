@@ -12,9 +12,8 @@ import { Schema } from './schema.d';
 import { libraryGenerator } from './library';
 
 const baseLibraryConfig = {
-  name: 'my-lib',
+  directory: 'my-lib',
   compiler: 'tsc' as const,
-  projectNameAndRootFormat: 'as-provided' as const,
   addPlugin: true,
 };
 
@@ -378,7 +377,7 @@ describe('lib', () => {
     it('should update package.json', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
-        name: 'mylib',
+        directory: 'mylib',
         publishable: true,
         importPath: '@proj/mylib',
       });
@@ -409,7 +408,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
-        name: 'my-lib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -417,7 +416,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(tree, {
           ...baseLibraryConfig,
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -434,14 +433,13 @@ describe('lib', () => {
   describe(`--babelJest`, () => {
     it('should use babel for jest', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         babelJest: true,
       } as Schema);
 
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-lib',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
@@ -458,7 +456,7 @@ describe('lib', () => {
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         js: true,
       } as Schema);
 
@@ -485,7 +483,7 @@ describe('lib', () => {
     });
 
     it('should update root tsconfig.json with a js file path', async () => {
-      await libraryGenerator(tree, { name: 'my-lib', js: true } as Schema);
+      await libraryGenerator(tree, { directory: 'my-lib', js: true } as Schema);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'my-lib/src/index.js',
@@ -494,7 +492,7 @@ describe('lib', () => {
 
     it('should update architect builder when --buildable', async () => {
       await libraryGenerator(tree, {
-        name: 'my-lib',
+        directory: 'my-lib',
         buildable: true,
         js: true,
       } as Schema);
@@ -512,39 +510,11 @@ describe('lib', () => {
         name: 'my-lib',
         directory: 'my-dir/my-lib',
         js: true,
-        projectNameAndRootFormat: 'as-provided',
       } as Schema);
       expect(tree.exists(`my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.js')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.js')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
-    });
-  });
-
-  describe('--pascalCaseFiles', () => {
-    it('should generate files with upper case names', async () => {
-      await libraryGenerator(tree, {
-        name: 'my-lib',
-        pascalCaseFiles: true,
-        projectNameAndRootFormat: 'as-provided',
-      } as Schema);
-      expect(tree.exists('my-lib/src/lib/MyLib.ts')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.ts')).toBeFalsy();
-    });
-
-    it('should generate files with upper case names for nested libs as well', async () => {
-      await libraryGenerator(tree, {
-        name: 'my-lib',
-        directory: 'my-dir/my-lib',
-        pascalCaseFiles: true,
-        projectNameAndRootFormat: 'as-provided',
-      } as Schema);
-      expect(tree.exists('my-dir/my-lib/src/lib/MyLib.ts')).toBeTruthy();
-      expect(tree.exists('my-dir/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
-      expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
     });
   });
 });

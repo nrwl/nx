@@ -151,7 +151,16 @@ export function buildProjectConfigurationFromPackageJson(
 
   if (siblingProjectJson) {
     for (const target of Object.keys(siblingProjectJson?.targets ?? {})) {
-      delete packageJson.scripts?.[target];
+      const { executor, command, options } = siblingProjectJson.targets[target];
+      if (
+        // will use run-commands, different target
+        command ||
+        // Either uses a different executor or runs a different script
+        (executor &&
+          (executor !== 'nx:run-script' || options?.script !== target))
+      ) {
+        delete packageJson.scripts?.[target];
+      }
     }
   }
 
@@ -168,7 +177,7 @@ export function buildProjectConfigurationFromPackageJson(
     sourceRoot: projectRoot,
     name,
     ...packageJson.nx,
-    targets: readTargetsFromPackageJson(packageJson),
+    targets: readTargetsFromPackageJson(packageJson, nxJson),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(packageJson),
   };

@@ -126,6 +126,9 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             },
             "preview-site": {
               "command": "vite preview",
+              "dependsOn": [
+                "build-something",
+              ],
               "metadata": {
                 "description": "Locally preview Vite production build",
                 "help": {
@@ -209,6 +212,9 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             },
             "preview": {
               "command": "vite preview",
+              "dependsOn": [
+                "build",
+              ],
               "metadata": {
                 "description": "Locally preview Vite production build",
                 "help": {

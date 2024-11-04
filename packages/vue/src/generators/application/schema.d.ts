@@ -1,17 +1,15 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
-  name: string;
+  directory: string;
+  name?: string;
   style: 'none' | 'css' | 'scss' | 'less';
   skipFormat?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
   unitTestRunner?: 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: Linter;
+  linter: Linter | LinterType;
   routing?: boolean;
   js?: boolean;
   strict?: boolean;
@@ -19,6 +17,7 @@ export interface Schema {
   skipPackageJson?: boolean;
   rootProject?: boolean;
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }
 
 export interface NormalizedSchema extends Schema {

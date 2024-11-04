@@ -18,6 +18,7 @@ const pluginName = 'GeneratePackageJsonPlugin';
 export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
   constructor(
     private readonly options: {
+      skipPackageManager?: boolean;
       tsConfig: string;
       outputFileName: string;
       root: string;
@@ -65,6 +66,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               root: this.options.root,
               isProduction: true,
               helperDependencies: helperDependencies.map((dep) => dep.target),
+              skipPackageManager: this.options.skipPackageManager,
             }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;

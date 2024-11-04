@@ -18,11 +18,9 @@ import { projectHasTarget } from '../../utils/project-graph-utils';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
-import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
-import { NX_PREFIX, logger } from '../../utils/logger';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -32,7 +30,7 @@ export async function affected(
     (TargetDependencyConfig | string)[]
   > = {},
   extraOptions = {
-    excludeTaskDependencies: false,
+    excludeTaskDependencies: args.excludeTaskDependencies,
     loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
   } as {
     excludeTaskDependencies: boolean;
@@ -41,7 +39,6 @@ export async function affected(
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
-  workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
@@ -53,10 +50,6 @@ export async function affected(
     },
     nxJson
   );
-
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 

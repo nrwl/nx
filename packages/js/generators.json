@@ -10,7 +10,7 @@
       "description": "Create a library"
     },
     "init": {
-      "factory": "./src/generators/init/init#initGenerator",
+      "factory": "./src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
@@ -42,11 +42,17 @@
       "alias": ["build"],
       "description": "setup-build generator"
     },
-    "sync": {
-      "factory": "./src/generators/sync/sync#syncGenerator",
-      "schema": "./src/generators/sync/schema.json",
+    "typescript-sync": {
+      "factory": "./src/generators/typescript-sync/typescript-sync",
+      "schema": "./src/generators/typescript-sync/schema.json",
       "description": "Synchronize TypeScript project references based on the project graph",
+      "alias": ["sync"],
       "hidden": true
+    },
+    "setup-prettier": {
+      "factory": "./src/generators/setup-prettier/generator",
+      "schema": "./src/generators/setup-prettier/schema.json",
+      "description": "Setup Prettier as the formatting tool."
     }
   }
 }

@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   withAffectedOptions,
   withTargetAndConfigurationOption,
@@ -39,13 +39,13 @@ export const yargsPrintAffectedCommand: CommandModule = {
       .option('select', {
         type: 'string',
         describe:
-          'Select the subset of the returned json document (e.g., --select=projects)',
+          'Select the subset of the returned json document (e.g., --select=projects).',
       })
       .option('type', {
         type: 'string',
         choices: ['app', 'lib'],
         describe:
-          'Select the type of projects to be returned (e.g., --type=app)',
+          'Select the type of projects to be returned (e.g., --type=app).',
       }),
   handler: async (args) => {
     const exitCode = await handleErrors(false, () => {

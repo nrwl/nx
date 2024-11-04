@@ -16,6 +16,7 @@ export const TargetConfigurationGroupHeader = ({
 }: TargetConfigurationGroupHeaderProps) => {
   return (
     <header
+      id={`target-group-header-${targetGroupName}`}
       className={`flex items-center gap-2 px-4 py-2 text-lg capitalize ${className}`}
     >
       {targetGroupName}{' '}

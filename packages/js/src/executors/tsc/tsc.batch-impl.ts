@@ -96,9 +96,6 @@ export async function* tscBatchExecutor(
             context.root
           ),
           format: [determineModuleFormatFromTsConfig(tsConfig)],
-          // As long as d.ts files match their .js counterparts, we don't need to emit them.
-          // TSC can match them correctly based on file names.
-          skipTypings: true,
         },
         taskInfo.context,
         taskInfo.projectGraphNode,
@@ -144,9 +141,6 @@ export async function* tscBatchExecutor(
                   context.root
                 ),
                 format: [determineModuleFormatFromTsConfig(t.options.tsConfig)],
-                // As long as d.ts files match their .js counterparts, we don't need to emit them.
-                // TSC can match them correctly based on file names.
-                skipTypings: true,
               },
               t.context,
               t.projectGraphNode,

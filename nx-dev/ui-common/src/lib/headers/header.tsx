@@ -1,7 +1,6 @@
 'use client';
 import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
 import {
-  ArrowUpRightIcon,
   Bars4Icon,
   ChevronDownIcon,
   XMarkIcon,
@@ -15,7 +14,7 @@ import {
   eventItems,
   featuresItems,
   learnItems,
-  plans,
+  solutions,
   resourceMenuItems,
   solutionsMenuItems,
 } from './menu-items';
@@ -23,7 +22,7 @@ import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
 import { TwoColumnsMenu } from './two-columns-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { GitHubIcon, NxCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { GitHubIcon, NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 export function Header(): JSX.Element {
   let [isOpen, setIsOpen] = useState(false);
@@ -108,7 +107,7 @@ export function Header(): JSX.Element {
                     leaveTo="opacity-0 translate-y-1"
                   >
                     <Popover.Panel className="absolute z-10 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <TwoColumnsMenu items={featuresItems} />
+                      <SectionsMenu sections={featuresItems} />
                     </Popover.Panel>
                   </Transition>
                 </>
@@ -175,15 +174,14 @@ export function Header(): JSX.Element {
             >
               Blog
             </Link>
-            <a
-              href="https://nx.app/pricing"
+            <Link
+              href="/pricing"
               title="Nx Cloud"
-              target="_blank"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
               CI Pricing
-              <ArrowUpRightIcon className="h-2 w-2 align-super" />
-            </a>
+            </Link>
             {/*RESOURCES*/}
             <Popover className="relative">
               {({ open }) => (
@@ -247,7 +245,7 @@ export function Header(): JSX.Element {
               target="_blank"
               title="Log in to your Nx Cloud Account"
             >
-              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
             <a
@@ -399,12 +397,14 @@ export function Header(): JSX.Element {
                                   as="ul"
                                   className="space-y-1 pb-2"
                                 >
-                                  {featuresItems.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
+                                  {Object.values(featuresItems)
+                                    .flat()
+                                    .map((item) => (
+                                      <MobileMenuItem
+                                        key={item.name}
+                                        item={item}
+                                      />
+                                    ))}
                                 </Disclosure.Panel>
                               </>
                             )}
@@ -433,7 +433,7 @@ export function Header(): JSX.Element {
                                   />
                                 </Disclosure.Button>
                                 <Disclosure.Panel as="ul" className="space-y-1">
-                                  {plans.map((item) => (
+                                  {solutions.map((item) => (
                                     <MobileMenuItem
                                       key={item.name}
                                       item={item}
@@ -459,15 +459,14 @@ export function Header(): JSX.Element {
                           >
                             Blog
                           </Link>
-                          <a
-                            href="https://nx.app/pricing"
+                          <Link
+                            href="/pricing"
                             title="Nx Cloud"
-                            target="_blank"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
                           >
                             CI Pricing
-                            <ArrowUpRightIcon className="h-2 w-2 align-super" />
-                          </a>
+                          </Link>
                           {/*RESOURCES*/}
                           <Disclosure as="div">
                             {({ open }) => (

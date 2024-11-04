@@ -8,7 +8,7 @@ export function DefaultLayout({
   children,
 }: { isHome?: boolean } & PropsWithChildren): JSX.Element {
   return (
-    <div className="dark:bg-slate-950">
+    <div className="w-full overflow-hidden dark:bg-slate-950">
       <Header />
       <div className="relative isolate">
         <div

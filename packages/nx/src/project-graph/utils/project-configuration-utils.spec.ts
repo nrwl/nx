@@ -965,6 +965,47 @@ describe('project-configuration-utils', () => {
           sourceMap['libs/lib-a']['metadata.targetGroups.group1.1']
         ).toEqual(['dummy', 'dummy.ts']);
       });
+
+      it('should not clobber targetGroups', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group2: ['target3'],
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology'],
+              targetGroups: {
+                group1: ['target1', 'target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          technologies: ['technology'],
+          targetGroups: {
+            group1: ['target1', 'target2'],
+            group2: ['target3'],
+          },
+        });
+      });
     });
 
     describe('source map', () => {
@@ -1877,6 +1918,46 @@ describe('project-configuration-utils', () => {
       ]);
       // other source map entries should be left unchanged
       expect(sourceMap['targets']).toEqual(['dummy', 'dummy.ts']);
+    });
+
+    it('should not overwrite dependsOn', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        targets: ['dummy', 'dummy.ts'],
+        'targets.build': ['dummy', 'dummy.ts'],
+        'targets.build.options': ['dummy', 'dummy.ts'],
+        'targets.build.options.command': ['dummy', 'dummy.ts'],
+        'targets.build.options.cwd': ['project.json', 'nx/project-json'],
+        'targets.build.dependsOn': ['project.json', 'nx/project-json'],
+      };
+      const result = mergeTargetDefaultWithTargetDefinition(
+        'build',
+        {
+          name: 'myapp',
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                command: 'echo',
+                cwd: '{workspaceRoot}',
+              },
+              dependsOn: [],
+            },
+          },
+        },
+        {
+          options: {
+            command: 'tsc',
+            cwd: 'apps/myapp',
+          },
+          dependsOn: ['^build'],
+        },
+        sourceMap
+      );
+
+      // Command was defined by a core plugin so it should
+      // not be replaced by target default
+      expect(result.dependsOn).toEqual([]);
     });
   });
 });

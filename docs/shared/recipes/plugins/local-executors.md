@@ -1,4 +1,4 @@
-# Local Executors
+# Write a Simple Executor
 
 Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to provide guidance in the terminal with `--help` and when invoking with [Nx Console](/getting-started/editor-setup)
 
@@ -6,17 +6,17 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 ## Creating an executor
 
-If you don't already have a local plugin, use Nx to generate one:
+If you don't already have a plugin, use Nx to generate one:
 
 ```shell {% skipRescope=true %}
 nx add @nx/plugin
-nx g @nx/plugin:plugin libs/my-plugin
+nx g @nx/plugin:plugin tools/my-plugin
 ```
 
 Use the Nx CLI to generate the initial files needed for your executor.
 
 ```shell
-nx generate @nx/plugin:executor echo --directory=libs/my-plugin/src/executors/echo
+nx generate @nx/plugin:executor tools/my-plugin/src/executors/echo
 ```
 
 After the command is finished, the executor is created in the plugin `executors` folder.
@@ -24,7 +24,7 @@ After the command is finished, the executor is created in the plugin `executors`
 ```text
 happynrwl/
 ├── apps/
-├── libs/
+├── tools/
 │   ├── my-plugin
 │   │   ├── src
 │   │   │   ├── executors
@@ -176,7 +176,7 @@ For other ideas on how to create your own executors, you can always check out Nx
 
 For most executors, the default hashing in Nx makes sense. The output of the executor is dependent on the files in the project that it is being run for, or that project's dependencies, and nothing else. Changing a miscellaneous file at the workspace root will not affect that executor, and changing _*any*_ file inside of the project may affect the executor. When dealing with targets which only depend on a small subset of the files in a project, or may depend on arbitrary data that is not stored within the project, the default hasher may not make sense anymore. In these cases, the target will either experience more frequent cache misses than necessary or not be able to be cached.
 
-Executors can provide a custom hasher that Nx uses when determining if a target run should be a cache hit, or if it must be run. When generating an executor for a plugin, you can use `nx g @nx/plugin:executor my-executor --project my-plugin --includeHasher` to automatically add a custom hasher.
+Executors can provide a custom hasher that Nx uses when determining if a target run should be a cache hit, or if it must be run. When generating an executor for a plugin, you can use `nx g @nx/plugin:executor packages/my-plugin/src/executors/my-executor --includeHasher` to automatically add a custom hasher.
 
 If you want to add a custom hasher manually, create a new file beside your executor's implementation. We will use `hasher.ts` as an example here. You'll also need to update `executors.json`, so that it resembles something like this:
 

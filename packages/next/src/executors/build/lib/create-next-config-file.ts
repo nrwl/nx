@@ -9,12 +9,11 @@ import {
 import * as ts from 'typescript';
 import {
   copyFileSync,
-  ensureDirSync,
   existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
-} from 'fs-extra';
+} from 'node:fs';
 import { dirname, extname, join, relative } from 'path';
 import { findNodes } from '@nx/js';
 
@@ -76,7 +75,12 @@ export function createNextConfigFile(
     projectRoot
   );
   for (const moduleFile of moduleFilesToCopy) {
-    ensureDirSync(dirname(join(context.root, options.outputPath, moduleFile)));
+    const moduleFileDir = dirname(
+      join(context.root, options.outputPath, moduleFile)
+    );
+
+    mkdirSync(moduleFileDir, { recursive: true });
+
     // We already generate a build version of package.json in the dist folder.
     if (moduleFile !== 'package.json') {
       copyFileSync(
@@ -124,7 +128,11 @@ export function getWithNxContent(
         index: getWithNxContextDeclaration.getStart(withNxSource),
         text: stripIndents`function getWithNxContext() {
           return {
-            workspaceRoot: '${workspaceRoot}',
+            workspaceRoot: '${
+              // For Windows, paths like C:\Users\foo\bar need to be written as C:\\Users\\foo\\bar,
+              // or else when the file is read back, the single "\" will be treated as an escape character.
+              workspaceRoot.replaceAll('\\', '\\\\')
+            }',
             libsDir: '${workspaceLayout().libsDir}'
           }
         }`,
@@ -147,7 +155,12 @@ export function findNextConfigPath(
     );
   }
 
-  const candidates = ['next.config.js', 'next.config.cjs', 'next.config.mjs'];
+  const candidates = [
+    'next.config.js',
+    'next.config.cjs',
+    'next.config.mjs',
+    'next.config.ts',
+  ];
   for (const candidate of candidates) {
     if (existsSync(join(dirname, candidate))) return candidate;
   }

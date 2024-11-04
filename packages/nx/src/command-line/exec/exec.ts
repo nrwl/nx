@@ -38,9 +38,6 @@ export async function nxExecCommand(
     { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
   const scriptArgV: string[] = readScriptArgV(overrides);
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
@@ -57,6 +54,7 @@ export async function nxExecCommand(
         NX_PROJECT_ROOT_PATH:
           projectGraph.nodes?.[process.env.NX_TASK_TARGET_PROJECT]?.data?.root,
       },
+      windowsHide: false,
     });
   } else {
     // nx exec is being ran inside of Nx's context
@@ -107,6 +105,7 @@ async function runScriptAsNxTarget(
             projectGraph.nodes?.[projectName]?.data?.root
           )
         : workspaceRoot,
+      windowsHide: false,
     });
   });
 }
@@ -130,7 +129,11 @@ function runTargetOnProject(
   const command = `${
     pm.exec
   } nx run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`;
-  execSync(command, { stdio: 'inherit' });
+  execSync(command, {
+    stdio: 'inherit',
+
+    windowsHide: false,
+  });
 }
 
 function readScriptArgV(

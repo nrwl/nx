@@ -23,7 +23,7 @@ export async function* viteDevServerExecutor(
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, createServer, loadConfigFromFile } =
+  const { mergeConfig, createServer, resolveConfig } =
     await loadViteDynamicImport();
 
   const projectRoot =
@@ -56,12 +56,16 @@ export async function* viteDevServerExecutor(
     buildOptions,
     otherOptionsFromBuild
   );
-  const resolved = await loadConfigFromFile(
+  const defaultMode =
+    otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development';
+  const resolved = await resolveConfig(
     {
-      mode: otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development',
-      command: 'serve',
+      configFile: viteConfigPath,
+      mode: defaultMode,
     },
-    viteConfigPath
+    'serve',
+    defaultMode,
+    process.env.NODE_ENV ?? defaultMode
   );
 
   // vite InlineConfig
@@ -69,7 +73,7 @@ export async function* viteDevServerExecutor(
     {
       // This should not be needed as it's going to be set in vite.config.ts
       // but leaving it here in case someone did not migrate correctly
-      root: resolved.config.root ?? root,
+      root: resolved.root ?? root,
       configFile: viteConfigPath,
     },
     {
@@ -107,6 +111,7 @@ export async function* viteDevServerExecutor(
     process.once('exit', () => resolve());
   });
 }
+
 // vite ViteDevServer
 async function runViteDevServer(server: Record<string, any>): Promise<void> {
   await server.listen();

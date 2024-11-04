@@ -1,5 +1,74 @@
 # Enterprise Release Notes
 
+### 2024.10
+
+This is a big release so let's go through the highlights first. There is also an important "Breaking changes" section at the end.
+
+##### New Version Structure
+
+We have changed our version structure to a more simplified tag: `YEAR.MM.PATCH_NUMBER`
+The goal is to make it easier to spot how old/recent your existing NxCloud version is and compare it against newer deployments.
+
+##### DTE Summary Table on Main Agent
+
+When distributing with DTE, up until now, we have been replaying all your tasks logs "as they come in" from the DTE agents back onto your main job.
+
+This is not that useful on big workspaces, with large task affected task graphs as it can be hard to follow all the outputs from all the agents streaming back concurrently.
+
+This release contains the new "CI Table Log View" summary, and you can read all about it [here](/blog/improved-ci-log-with-nx-cloud).
+
+If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
+
+##### Personal Access Tokens
+
+Up until now, for developers to get access to read (and maybe write) to the cache you always needed an access token to be made available locally: either
+committed to the repo via `nx.json` or made available as an env variable via a `.local.env` file.
+
+This flow was secure enough as is, even if you never rotated your access tokens, as someone would still need continuous hourly access to your source code if they wanted to retrieve any of the latest cached artifacts.
+
+But given you already manage developer access to your NxCloud workspace via the web app, we wanted to tie local cache access to that mechanism as well.
+
+This release contains the new ["Personal Access Tokens"](/blog/personal-access-tokens) feature that now asks developers to login locally before they can use the cache.
+If they are a member of the workspace, they get a local token stored on their machine that will be used to access the cache.
+The moment they get removed as a member from your workspace, they won't be able to read from the cache anymore.
+
+Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](/blog/personal-access-tokens).
+
+##### GitHub App Integration
+
+If you are using GitHub, setting up a custom GitHub app for your org is the best way to take advantage of all the latest "GitHub-specific" features we offer.
+Please see instructions [here](/ci/recipes/enterprise/single-tenant/custom-github-app) on setting up an app.
+You will then need to make sure you set up your VCS integration again through your workspace's settings screen, and use the above app you created.
+
+As part of this, you will also get the "GitHub membership management" feature, where everybody who is a collaborator of your GitHub repo will also get "read" access to your NxCloud workspace,
+without you having to explicitly invite them.
+
+##### Misc Items
+
+- Improved docker agents support
+  - We fixed a few issues related to running docker builds in Nx Agents
+- Big DTE performance improvements
+- Azure file storage for Nx Agents
+- Auth session length has been extended to 7 days by default
+  - Use NX_CLOUD_SESSION_MAX_AGE to configure this to a different value
+- Various SAML fixes and improvements
+  - One highlight is that users can now login from Okta directly (while before they had to initiate login through NxCloud web app)
+
+##### Breaking Changes
+
+Most workspaces will not be affected by this, but if you have these values configured in your `helm-config.yaml`:
+
+- `github.pr.[...]`
+- or `gitlab.mr.[...]`
+
+they will stop working with this release (see [this](https://github.com/nrwl/nx-cloud-helm/pull/141/files) for details on what was removed).
+Please go to your workspace settings and you should be able to configure all the above values when you setup a VCS integration.
+
+### 2406.29.1.patch1
+
+- Fix an issue with specifying custom AWS credentials in Minio instances
+- Fix an issue with removing pending invites
+
 ### 2406.29.1
 
 ##### Full terminal outputs in the web app
@@ -22,7 +91,7 @@ We now have full support for BitBucket Data Center (self-hosted):
 - VCS integration for posting comments with live updates about your CI runs
 - full agents integration
 - more info about each one of your commits on the NxCloud web app
-- you can even [set-up auth with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center#bitbucket-data-center-auth)
+- you can even [set-up auth with BitBucket Data Center](/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center#bitbucket-data-center-auth)
 
 ##### Misc
 
@@ -30,13 +99,17 @@ We now have full support for BitBucket Data Center (self-hosted):
 - the CIPE visualisation has been updated (elapsed task time)
 - general web app performance improvements
 
+##### Breaking changes
+
+If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx-cloud start-ci-run` commands.
+
 ### 2405.02.15
 
 ##### Easy membership management via GitHub
 
 A few months ago, we introduced a new feature to our managed SASS NxCloud product: easy membership management via GitHub. If you create a new workspace on [https://cloud.nx.app/](https://cloud.nx.app/) right now you will be guided through how to connect it to your GitHub repository. Now everyone that has access to your GitHub repository will also get access to your NxCloud workspace. If anyone loses access to GitHub (maybe they leave the company), they will also lose access to NxCloud. This makes membership management easy and straightforward, as you don't have to manually invite users anymore. Of course, setting up this connection also gives you NxCloud run status updates directly on your PRs - a feature we've had for a long time.
 
-This feature has now been release for on-prem set-ups as well. To benefit from it, you'll need to create your own Github App with permissions to access your repository. Your on-prem NxCloud instance will then use this app to pull membership info from Github and check user permissions. You can find [the full setup instructions here](/ci/recipes/enterprise/on-premise/custom-github-app).
+This feature has now been release for on-prem set-ups as well. To benefit from it, you'll need to create your own Github App with permissions to access your repository. Your on-prem NxCloud instance will then use this app to pull membership info from Github and check user permissions. You can find [the full setup instructions here](/ci/recipes/enterprise/single-tenant/custom-github-app).
 
 ##### DTE v2 enabled by default
 
@@ -156,11 +229,11 @@ Along with all the UI changes to support agents (following their logs and track 
 
 When upgrading to this version and anything above it, you will need to use Helm version 0.12.0+:
 
-| Chart Version | Compatible Images                  |
-| ------------- | ---------------------------------- |
+| Chart Version |         Compatible Images          |
+| :-----------: | :--------------------------------: |
 | <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
-| >= `0.11.0`   | `2308.22.7` **and later**          |
-| >= `0.12.0`   | `2312.11.7` **and later**          |
+|  >= `0.11.0`  |     `2308.22.7` **and later**      |
+|  >= `0.12.0`  |     `2312.11.7` **and later**      |
 
 ##### New UI features and improvements
 
@@ -259,10 +332,10 @@ product. It's faster, it handles resource caching better, and should allow the f
 
 When upgrading to this version and anything above it, you will need to use Helm version 0.11.1:
 
-| Chart Version | Compatible Images                  |
-| ------------- | ---------------------------------- |
+| Chart Version |         Compatible Images          |
+| :-----------: | :--------------------------------: |
 | <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
-| >= `0.11.0`   | `2308.22.7` **and later**          |
+|  >= `0.11.0`  |     `2308.22.7` **and later**      |
 
 ##### VCS proxy support
 

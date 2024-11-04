@@ -6,6 +6,7 @@ import type { InputDefinition } from 'nx/src/config/workspace-json-project-json'
 
 import {
   CreateNodesContext,
+  CreateNodesContextV2,
   ProjectConfiguration,
   readJsonFile,
 } from 'nx/src/devkit-exports';
@@ -15,7 +16,7 @@ import {
  */
 export function getNamedInputs(
   directory: string,
-  context: CreateNodesContext
+  context: CreateNodesContext | CreateNodesContextV2
 ): { [inputName: string]: (string | InputDefinition)[] } {
   const projectJsonPath = join(directory, 'project.json');
   const projectJson: ProjectConfiguration = existsSync(projectJsonPath)

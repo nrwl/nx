@@ -1,15 +1,23 @@
-import { logger } from '../../devkit-exports';
+import { logger } from '../../utils/logger';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getCloudUrl } from './get-cloud-options';
 
-export async function shortenedCloudUrl(
-  installationSource: string,
+/**
+ * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
+ */
+export async function createNxCloudOnboardingURL(
+  onboardingSource: string,
   accessToken?: string,
-  usesGithub?: boolean
+  usesGithub?: boolean,
+  meta?: string
 ) {
   const githubSlug = getGithubSlugOrNull();
 
   const apiUrl = getCloudUrl();
+
+  if (usesGithub === undefined || usesGithub === null) {
+    usesGithub = await repoUsesGithub(undefined, githubSlug, apiUrl);
+  }
 
   try {
     const version = await getNxCloudVersion(apiUrl);
@@ -25,7 +33,7 @@ export async function shortenedCloudUrl(
     return apiUrl;
   }
 
-  const source = getSource(installationSource);
+  const source = getSource(onboardingSource);
 
   try {
     const response = await require('axios').post(
@@ -34,7 +42,8 @@ export async function shortenedCloudUrl(
         type: usesGithub ? 'GITHUB' : 'MANUAL',
         source,
         accessToken: usesGithub ? null : accessToken,
-        selectedRepositoryName: githubSlug,
+        selectedRepositoryName: githubSlug === 'github' ? null : githubSlug,
+        meta,
       }
     );
 
@@ -50,7 +59,7 @@ export async function shortenedCloudUrl(
     ${e}`);
     return getURLifShortenFailed(
       usesGithub,
-      githubSlug,
+      githubSlug === 'github' ? null : githubSlug,
       apiUrl,
       source,
       accessToken
@@ -58,17 +67,23 @@ export async function shortenedCloudUrl(
   }
 }
 
-export async function repoUsesGithub(github?: boolean) {
-  const githubSlug = getGithubSlugOrNull();
-
-  const apiUrl = getCloudUrl();
-
+export async function repoUsesGithub(
+  github?: boolean,
+  githubSlug?: string,
+  apiUrl?: string
+): Promise<boolean> {
+  if (!apiUrl) {
+    apiUrl = getCloudUrl();
+  }
+  if (!githubSlug) {
+    githubSlug = getGithubSlugOrNull();
+  }
   const installationSupportsGitHub = await getInstallationSupportsGitHub(
     apiUrl
   );
 
   return (
-    (githubSlug || github) &&
+    (!!githubSlug || !!github) &&
     (apiUrl.includes('cloud.nx.app') ||
       apiUrl.includes('eu.nx.app') ||
       installationSupportsGitHub)
@@ -77,21 +92,19 @@ export async function repoUsesGithub(github?: boolean) {
 
 function getSource(
   installationSource: string
-): 'nx-init' | 'nx-connect' | 'create-nx-workspace' | 'other' {
+): 'nx-init' | 'nx-connect' | string {
   if (installationSource.includes('nx-init')) {
     return 'nx-init';
   } else if (installationSource.includes('nx-connect')) {
     return 'nx-connect';
-  } else if (installationSource.includes('create-nx-workspace')) {
-    return 'create-nx-workspace';
   } else {
-    return 'other';
+    return installationSource;
   }
 }
 
 export function getURLifShortenFailed(
   usesGithub: boolean,
-  githubSlug: string,
+  githubSlug: string | null,
   apiUrl: string,
   source: string,
   accessToken?: string
@@ -120,7 +133,7 @@ async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
     }
     return !!response.data.isGithubIntegrationEnabled;
   } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       logger.warn(`Failed to access system features. GitHub integration assumed to be disabled. 
     ${e}`);
     }

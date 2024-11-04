@@ -17,20 +17,17 @@ describe('updateEslint', () => {
     schema = {
       projectName: 'my-app',
       appProjectRoot: 'my-app',
+      directory: 'my-app',
       linter: Linter.EsLint,
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
-      e2ePort: 3000,
-      e2eWebServerTarget: 'start',
-      e2eWebServerAddress: 'http://localhost:4200',
       outputPath: 'dist/my-app',
       name: 'my-app',
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
       styledModule: null,
-      projectNameAndRootFormat: 'as-provided',
     };
     tree = createTreeWithEmptyWorkspace();
     const project: ProjectConfiguration = {
@@ -93,17 +90,6 @@ describe('updateEslint', () => {
             ],
             "rules": {},
           },
-          {
-            "env": {
-              "jest": true,
-            },
-            "files": [
-              "*.spec.ts",
-              "*.spec.tsx",
-              "*.spec.js",
-              "*.spec.jsx",
-            ],
-          },
         ],
       }
     `);
@@ -118,58 +104,24 @@ describe('updateEslint', () => {
       .toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const js = require("@eslint/js");
+      const nx = require("@nx/eslint-plugin");
       const baseConfig = require("../eslint.config.js");
 
       const compat = new FlatCompat({
-            baseDirectory: __dirname,
-            recommendedConfig: js.configs.recommended,
-          });
-        
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
 
       module.exports = [
-      ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
+          ...compat.extends("next", "next/core-web-vitals"),
+
           ...baseConfig,
+          ...nx.configs["flat/react-typescript"],
           {
-        "files": [
-          "**/*.ts",
-          "**/*.tsx",
-          "**/*.js",
-          "**/*.jsx"
-        ],
-        "rules": {
-          "@next/next/no-html-link-for-pages": [
-            "error",
-            "my-app/pages"
-          ]
-        }
-          },
-          {
-              files: [
-                  "**/*.ts",
-                  "**/*.tsx"
-              ],
-              rules: {}
-          },
-          {
-              files: [
-                  "**/*.js",
-                  "**/*.jsx"
-              ],
-              rules: {}
-          },
-      ...compat.config({ env: { jest: true } }).map(config => ({
-          ...config,
-          files: [
-              "**/*.spec.ts",
-              "**/*.spec.tsx",
-              "**/*.spec.js",
-              "**/*.spec.jsx"
-          ],
-          rules: {
-              ...config.rules
+              ignores: [
+                  ".next/**/*"
+              ]
           }
-      })),
-      { ignores: [".next/**/*"] }
       ];
       "
     `);

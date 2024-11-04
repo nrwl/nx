@@ -5,6 +5,7 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   offsetFromRoot,
   parseTargetString,
   ProjectConfiguration,
@@ -16,19 +17,28 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
+import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
+import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { Linter } from '@nx/eslint';
+import {
+  getProjectPackageManagerWorkspaceState,
+  getProjectPackageManagerWorkspaceStateWarningTask,
+} from '@nx/js/src/utils/package-manager-workspaces';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
-import cypressInitGenerator, { addPlugin } from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import cypressInitGenerator, { addPlugin } from '../init/init';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -40,17 +50,18 @@ export interface CypressE2EConfigSchema {
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   port?: number | 'cypress-auto';
   jsx?: boolean;
   rootProject?: boolean;
 
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
+  ciBaseUrl?: string;
   addPlugin?: boolean;
 }
 
-type NormalizedSchema = ReturnType<typeof normalizeOptions>;
+type NormalizedSchema = Awaited<ReturnType<typeof normalizeOptions>>;
 
 export function configurationGenerator(
   tree: Tree,
@@ -66,8 +77,7 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
-  const opts = normalizeOptions(tree, options);
-  opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const opts = await normalizeOptions(tree, options);
   const tasks: GeneratorCallback[] = [];
 
   const projectGraph = await createProjectGraphAsync();
@@ -92,7 +102,23 @@ export async function configurationGeneratorInternal(
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
-    addTarget(tree, opts);
+    addTarget(tree, opts, projectGraph);
+  }
+
+  const { root: projectRoot } = readProjectConfiguration(tree, options.project);
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  if (isTsSolutionSetup) {
+    createPackageJson(tree, opts);
+    ignoreTestOutput(tree);
+
+    if (!options.rootProject) {
+      // add the project tsconfig to the workspace root tsconfig.json references
+      updateJson(tree, 'tsconfig.json', (json) => {
+        json.references ??= [];
+        json.references.push({ path: './' + projectRoot });
+        return json;
+      });
+    }
   }
 
   const linterTask = await addLinterToCyProject(tree, {
@@ -107,6 +133,20 @@ export async function configurationGeneratorInternal(
 
   if (!opts.skipFormat) {
     await formatFiles(tree);
+  }
+
+  if (isTsSolutionSetup) {
+    const projectPackageManagerWorkspaceState =
+      getProjectPackageManagerWorkspaceState(tree, projectRoot);
+
+    if (projectPackageManagerWorkspaceState !== 'included') {
+      tasks.push(
+        getProjectPackageManagerWorkspaceStateWarningTask(
+          projectPackageManagerWorkspaceState,
+          tree.root
+        )
+      );
+    }
   }
 
   return runTasksInSerial(...tasks);
@@ -124,7 +164,30 @@ function ensureDependencies(tree: Tree, options: NormalizedSchema) {
   return addDependenciesToPackageJson(tree, {}, devDependencies);
 }
 
-function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
+async function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
+  let linter = options.linter;
+  if (!linter) {
+    const choices = isTsSolutionSetup
+      ? [{ name: 'none' }, { name: 'eslint' }]
+      : [{ name: 'eslint' }, { name: 'none' }];
+    const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
+
+    linter = await promptWhenInteractive<{
+      linter: 'none' | 'eslint';
+    }>(
+      {
+        type: 'select',
+        name: 'linter',
+        message: `Which linter would you like to use?`,
+        choices,
+        initial: 0,
+      },
+      { linter: defaultValue }
+    ).then(({ linter }) => linter);
+  }
+
   const projectConfig: ProjectConfiguration | undefined =
     readProjectConfiguration(tree, options.project);
   if (projectConfig?.targets?.e2e) {
@@ -160,7 +223,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
     ...options,
     bundler: options.bundler ?? 'webpack',
     rootProject: options.rootProject ?? projectConfig.root === '.',
-    linter: options.linter ?? Linter.EsLint,
+    linter,
     devServerTarget,
   };
 }
@@ -218,10 +281,12 @@ async function addFiles(
     let webServerCommands: Record<string, string>;
 
     let ciWebServerCommand: string;
+    let ciBaseUrl: string;
 
     if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
       webServerCommands = options.webServerCommands;
       ciWebServerCommand = options.ciWebServerCommand;
+      ciBaseUrl = options.ciBaseUrl;
     } else if (hasPlugin && options.devServerTarget) {
       webServerCommands = {};
 
@@ -253,6 +318,7 @@ async function addFiles(
         bundler: options.bundler === 'vite' ? 'vite' : undefined,
         webServerCommands,
         ciWebServerCommand: ciWebServerCommand,
+        ciBaseUrl,
       },
       options.baseUrl
     );
@@ -283,7 +349,11 @@ async function addFiles(
   }
 }
 
-function addTarget(tree: Tree, opts: NormalizedSchema) {
+function addTarget(
+  tree: Tree,
+  opts: NormalizedSchema,
+  projectGraph: ProjectGraph
+) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
   projectConfig.targets ??= {};
@@ -300,7 +370,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
     },
   };
   if (opts.devServerTarget) {
-    const parsedTarget = parseTargetString(opts.devServerTarget);
+    const parsedTarget = parseTargetString(opts.devServerTarget, projectGraph);
 
     projectConfig.targets.e2e.options = {
       ...projectConfig.targets.e2e.options,
@@ -339,6 +409,42 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
   }
 
   updateProjectConfiguration(tree, opts.project, projectConfig);
+}
+
+function createPackageJson(tree: Tree, options: NormalizedSchema) {
+  const projectConfig = readProjectConfiguration(tree, options.project);
+  const packageJsonPath = joinPathFragments(projectConfig.root, 'package.json');
+
+  if (tree.exists(packageJsonPath)) {
+    return;
+  }
+
+  const importPath = resolveImportPath(
+    tree,
+    projectConfig.name,
+    projectConfig.root
+  );
+
+  const packageJson: PackageJson = {
+    name: importPath,
+    version: '0.0.1',
+    private: true,
+  };
+  writeJson(tree, packageJsonPath, packageJson);
+}
+
+function ignoreTestOutput(tree: Tree): void {
+  if (!tree.exists('.gitignore')) {
+    logger.warn(`Couldn't find a root .gitignore file to update.`);
+  }
+
+  let content = tree.read('.gitignore', 'utf-8');
+  if (/^test-output$/gm.test(content)) {
+    return;
+  }
+
+  content = `${content}\ntest-output\n`;
+  tree.write('.gitignore', content);
 }
 
 export default configurationGenerator;

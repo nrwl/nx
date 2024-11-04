@@ -53,8 +53,7 @@ describe('directive generator', () => {
 
     // ACT
     await generateDirectiveWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-directives',
+      path: 'test/src/app/my-directives/test',
       skipTests: true,
     });
 
@@ -90,12 +89,11 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the directive correctly when flat=false', async () => {
+    it('should import the directive correctly', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
         standalone: false,
       });
 
@@ -111,13 +109,12 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the directive correctly when flat=false and path is nested deeper', async () => {
+    it('should import the directive correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        path: 'test/src/app/my-directives/test/test',
         standalone: false,
       });
 
@@ -136,13 +133,12 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should export the directive correctly when flat=false and path is nested deeper', async () => {
+    it('should export the directive correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        path: 'test/src/app/my-directives/test/test',
         export: true,
         standalone: false,
       });
@@ -158,7 +154,6 @@ describe('directive generator', () => {
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
         path: 'test/src/app/my-directives',
         skipImport: true,
         standalone: false,
@@ -174,9 +169,9 @@ describe('directive generator', () => {
   describe('prefix & selector', () => {
     it('should use the prefix', async () => {
       await directiveGenerator(tree, {
-        name: 'test/src/app/example/example',
+        path: 'test/src/app/example/example',
+        name: 'example',
         prefix: 'foo',
-        nameAndDirectoryFormat: 'as-provided',
       });
 
       const content = tree.read(
@@ -194,8 +189,8 @@ describe('directive generator', () => {
       } as AngularProjectConfiguration);
 
       await directiveGenerator(tree, {
-        name: 'test/src/app/example/example',
-        nameAndDirectoryFormat: 'as-provided',
+        path: 'test/src/app/example/example',
+        name: 'example',
       });
 
       const content = tree.read(
@@ -213,8 +208,8 @@ describe('directive generator', () => {
       } as AngularProjectConfiguration);
 
       await directiveGenerator(tree, {
-        name: 'test/src/app/example/example',
-        nameAndDirectoryFormat: 'as-provided',
+        path: 'test/src/app/example/example',
+        name: 'example',
       });
 
       const content = tree.read(
@@ -226,9 +221,9 @@ describe('directive generator', () => {
 
     it('should use provided selector as is', async () => {
       await directiveGenerator(tree, {
-        name: 'test/src/app/example/example',
+        path: 'test/src/app/example/example',
+        name: 'example',
         selector: 'mySelector',
-        nameAndDirectoryFormat: 'as-provided',
       });
 
       const content = tree.read(
@@ -260,8 +255,7 @@ async function generateDirectiveWithDefaultOptions(
 ) {
   await directiveGenerator(tree, {
     name: 'test',
-    project: 'test',
-    flat: true,
+    path: 'test/src/app/test',
     skipFormat: true,
     ...overrides,
   });

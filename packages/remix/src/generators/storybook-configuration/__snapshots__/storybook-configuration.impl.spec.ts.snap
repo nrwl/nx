@@ -23,7 +23,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
@@ -66,7 +66,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
@@ -90,23 +90,20 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 "import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/storybook-test',
-
-  plugins: [react(), nxViteTsPaths()],
-
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     setupFiles: ['./src/test-setup.ts'],
     watch: false,
     globals: true,
-    cache: { dir: '../../node_modules/.vitest/libs/storybook-test' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
@@ -123,7 +120,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',

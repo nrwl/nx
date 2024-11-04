@@ -12,13 +12,18 @@
  * and easy to consume config object for all the `nx release` command implementations.
  */
 import { join, relative } from 'node:path';
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import { URL } from 'node:url';
+import {
+  NxJsonConfiguration,
+  NxReleaseChangelogConfiguration,
+} from '../../../config/nx-json';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { normalizePath } from '../../../utils/path';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
@@ -40,15 +45,6 @@ type RemoveTrueFromProperties<T, K extends keyof T> = {
 type RemoveTrueFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
   [U in keyof T]: RemoveTrueFromProperties<T[U], K>;
 };
-
-type RemoveFalseFromType<T> = T extends false ? never : T;
-type RemoveFalseFromProperties<T, K extends keyof T> = {
-  [P in keyof T]: P extends K ? RemoveFalseFromType<T[P]> : T[P];
-};
-type RemoveFalseFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
-  [U in keyof T]: RemoveFalseFromProperties<T[U], K>;
-};
-
 type RemoveBooleanFromType<T> = T extends boolean ? never : T;
 type RemoveBooleanFromProperties<T, K extends keyof T> = {
   [P in keyof T]: P extends K ? RemoveBooleanFromType<T[P]> : T[P];
@@ -110,7 +106,11 @@ export interface CreateNxReleaseConfigError {
     | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
     | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS'
-    | 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG';
+    | 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG'
+    | 'CANNOT_RESOLVE_CHANGELOG_RENDERER'
+    | 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER'
+    | 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME'
+    | 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL';
   data: Record<string, string | string[]>;
 }
 
@@ -173,6 +173,10 @@ export async function createNxReleaseConfig(
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
+  /**
+   * TODO: in v20, make it so that this pattern is used by default when any custom groups are used
+   */
+  const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
 
   const workspaceProjectsRelationship =
@@ -256,7 +260,8 @@ export async function createNxReleaseConfig(
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
-    versionPlans: false,
+    versionPlans: (userConfig.versionPlans ||
+      false) as NxReleaseConfig['versionPlans'],
   };
 
   const groupProjectsRelationship =
@@ -268,6 +273,7 @@ export async function createNxReleaseConfig(
       conventionalCommits: false,
       generator: '@nx/js:release-version',
       generatorOptions: {},
+      groupPreVersionCommand: '',
     },
     changelog: {
       createRelease: false,
@@ -336,7 +342,8 @@ export async function createNxReleaseConfig(
   );
 
   const rootVersionPlansConfig: NxReleaseConfig['versionPlans'] =
-    userConfig.versionPlans ?? WORKSPACE_DEFAULTS.versionPlans;
+    (userConfig.versionPlans ??
+      WORKSPACE_DEFAULTS.versionPlans) as NxReleaseConfig['versionPlans'];
 
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
     deepMergeDefaults(
@@ -349,7 +356,9 @@ export async function createNxReleaseConfig(
     );
 
   // these options are not supported at the group level, only the root/command level
-  const rootVersionWithoutGlobalOptions = { ...rootVersionConfig };
+  const rootVersionWithoutGlobalOptions = {
+    ...rootVersionConfig,
+  };
   delete rootVersionWithoutGlobalOptions.git;
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
@@ -490,7 +499,10 @@ export async function createNxReleaseConfig(
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
-        [GROUP_DEFAULTS.version, rootVersionWithoutGlobalOptions],
+        [
+          GROUP_DEFAULTS.version,
+          { ...rootVersionWithoutGlobalOptions, groupPreVersionCommand: '' },
+        ],
         releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
@@ -553,7 +565,16 @@ export async function createNxReleaseConfig(
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
-  ensureChangelogRenderersAreResolvable(releaseGroups, rootChangelogConfig);
+  const configError = validateChangelogConfig(
+    releaseGroups,
+    rootChangelogConfig
+  );
+  if (configError) {
+    return {
+      error: configError,
+      nxReleaseConfig: null,
+    };
+  }
 
   return {
     error: null,
@@ -753,6 +774,52 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
+    case 'CANNOT_RESOLVE_CHANGELOG_RENDERER': {
+      const nxJsonMessage = await resolveNxJsonConfigErrorMessage(['release']);
+      output.error({
+        title: `There was an error when resolving the configured changelog renderer at path: ${error.data.workspaceRelativePath}`,
+        bodyLines: [nxJsonMessage],
+      });
+    }
+    case 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+        ]);
+        output.error({
+          title: `Your "changelog.createRelease" config specifies an unsupported provider "${
+            error.data.provider
+          }". The supported providers are ${(
+            error.data.supportedProviders as string[]
+          )
+            .map((p) => `"${p}"`)
+            .join(', ')}`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
+    case 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+        ]);
+        output.error({
+          title: `Your "changelog.createRelease" config specifies an invalid hostname "${error.data.hostname}". Please ensure you provide a valid hostname value, such as "example.com"`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
+    case 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+        ]);
+        output.error({
+          title: `Your "changelog.createRelease" config specifies an invalid apiBaseUrl "${error.data.apiBaseUrl}". Please ensure you provide a valid URL value, such as "https://example.com"`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
     default:
       throw new Error(`Unhandled error code: ${error.code}`);
   }
@@ -918,7 +985,11 @@ function isProjectPublic(
   const projectNode = projectGraph.nodes[project];
   const packageJsonPath = join(projectNode.data.root, 'package.json');
 
-  if (!projectFileMap[project]?.find((f) => f.file === packageJsonPath)) {
+  if (
+    !projectFileMap[project]?.find(
+      (f) => f.file === normalizePath(packageJsonPath)
+    )
+  ) {
     return false;
   }
 
@@ -933,10 +1004,16 @@ function isProjectPublic(
   }
 }
 
-function ensureChangelogRenderersAreResolvable(
+/**
+ * We need to ensure that changelog renderers are resolvable up front so that we do not end up erroring after performing
+ * actions later, and we also make sure that any configured createRelease options are valid.
+ *
+ * For the createRelease config, we also set a default apiBaseUrl if applicable.
+ */
+function validateChangelogConfig(
   releaseGroups: NxReleaseConfig['groups'],
   rootChangelogConfig: NxReleaseConfig['changelog']
-) {
+): CreateNxReleaseConfigError | null {
   /**
    * If any form of changelog config is enabled, ensure that any provided changelog renderers are resolvable
    * up front so that we do not end up erroring only after the versioning step has been completed.
@@ -945,42 +1022,148 @@ function ensureChangelogRenderersAreResolvable(
 
   if (
     rootChangelogConfig.workspaceChangelog &&
-    typeof rootChangelogConfig.workspaceChangelog !== 'boolean' &&
-    rootChangelogConfig.workspaceChangelog.renderer?.length
+    typeof rootChangelogConfig.workspaceChangelog !== 'boolean'
   ) {
-    uniqueRendererPaths.add(rootChangelogConfig.workspaceChangelog.renderer);
+    if (rootChangelogConfig.workspaceChangelog.renderer?.length) {
+      uniqueRendererPaths.add(rootChangelogConfig.workspaceChangelog.renderer);
+    }
+    const createReleaseError = validateCreateReleaseConfig(
+      rootChangelogConfig.workspaceChangelog
+    );
+    if (createReleaseError) {
+      return createReleaseError;
+    }
   }
   if (
     rootChangelogConfig.projectChangelogs &&
-    typeof rootChangelogConfig.projectChangelogs !== 'boolean' &&
-    rootChangelogConfig.projectChangelogs.renderer?.length
+    typeof rootChangelogConfig.projectChangelogs !== 'boolean'
   ) {
-    uniqueRendererPaths.add(rootChangelogConfig.projectChangelogs.renderer);
+    if (rootChangelogConfig.projectChangelogs.renderer?.length) {
+      uniqueRendererPaths.add(rootChangelogConfig.projectChangelogs.renderer);
+    }
+    const createReleaseError = validateCreateReleaseConfig(
+      rootChangelogConfig.projectChangelogs
+    );
+    if (createReleaseError) {
+      return createReleaseError;
+    }
   }
 
   for (const group of Object.values(releaseGroups)) {
-    if (
-      group.changelog &&
-      typeof group.changelog !== 'boolean' &&
-      group.changelog.renderer?.length
-    ) {
-      uniqueRendererPaths.add(group.changelog.renderer);
+    if (group.changelog && typeof group.changelog !== 'boolean') {
+      if (group.changelog.renderer?.length) {
+        uniqueRendererPaths.add(group.changelog.renderer);
+      }
+      const createReleaseError = validateCreateReleaseConfig(group.changelog);
+      if (createReleaseError) {
+        return createReleaseError;
+      }
     }
   }
 
   if (!uniqueRendererPaths.size) {
-    return;
+    return null;
   }
 
   for (const rendererPath of uniqueRendererPaths) {
     try {
       resolveChangelogRenderer(rendererPath);
-    } catch (e) {
-      const workspaceRelativePath = relative(workspaceRoot, rendererPath);
-      output.error({
-        title: `There was an error when resolving the configured changelog renderer at path: ${workspaceRelativePath}`,
-      });
-      throw e;
+    } catch {
+      return {
+        code: 'CANNOT_RESOLVE_CHANGELOG_RENDERER',
+        data: {
+          workspaceRelativePath: relative(workspaceRoot, rendererPath),
+        },
+      };
     }
+  }
+
+  return null;
+}
+
+const supportedCreateReleaseProviders = [
+  {
+    name: 'github-enterprise-server',
+    defaultApiBaseUrl: 'https://__hostname__/api/v3',
+  },
+];
+
+// User opts into the default by specifying the string value 'github'
+export const defaultCreateReleaseProvider = {
+  provider: 'github',
+  hostname: 'github.com',
+  apiBaseUrl: 'https://api.github.com',
+} as any;
+
+function validateCreateReleaseConfig(
+  changelogConfig: NxReleaseChangelogConfiguration
+): CreateNxReleaseConfigError | null {
+  const createRelease = changelogConfig.createRelease;
+  // Disabled: valid
+  if (!createRelease) {
+    return null;
+  }
+  // GitHub shorthand, expand to full object form, mark as valid
+  if (createRelease === 'github') {
+    changelogConfig.createRelease = defaultCreateReleaseProvider;
+    return null;
+  }
+  // Object config, ensure that properties are valid
+  const supportedProvider = supportedCreateReleaseProviders.find(
+    (p) => p.name === createRelease.provider
+  );
+  if (!supportedProvider) {
+    return {
+      code: 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER',
+      data: {
+        provider: createRelease.provider,
+        supportedProviders: supportedCreateReleaseProviders.map((p) => p.name),
+      },
+    };
+  }
+  if (!isValidHostname(createRelease.hostname)) {
+    return {
+      code: 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME',
+      data: {
+        hostname: createRelease.hostname,
+      },
+    };
+  }
+  // user provided a custom apiBaseUrl, ensure it is valid (accounting for empty string case)
+  if (
+    createRelease.apiBaseUrl ||
+    typeof createRelease.apiBaseUrl === 'string'
+  ) {
+    if (!isValidUrl(createRelease.apiBaseUrl)) {
+      return {
+        code: 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL',
+        data: {
+          apiBaseUrl: createRelease.apiBaseUrl,
+        },
+      };
+    }
+  } else {
+    // Set default apiBaseUrl when not provided by the user
+    createRelease.apiBaseUrl = supportedProvider.defaultApiBaseUrl.replace(
+      '__hostname__',
+      createRelease.hostname
+    );
+  }
+  return null;
+}
+
+function isValidHostname(hostname) {
+  // Regular expression to match a valid hostname
+  const hostnameRegex =
+    /^(?!:\/\/)(?=.{1,255}$)(?!.*\.$)(?!.*?\.\.)(?!.*?-$)(?!^-)([a-zA-Z0-9-]{1,63}\.?)+[a-zA-Z]{2,}$/;
+  return hostnameRegex.test(hostname);
+}
+
+function isValidUrl(str: string): boolean {
+  try {
+    new URL(str);
+    return true;
+  } catch {
+    return false;
   }
 }

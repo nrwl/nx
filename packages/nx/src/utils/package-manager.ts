@@ -1,6 +1,6 @@
 import { exec, execSync } from 'child_process';
 import { copyFileSync, existsSync, writeFileSync } from 'fs';
-import { remove } from 'fs-extra';
+import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt } from 'semver';
 import { dirSync } from 'tmp';
@@ -61,7 +61,7 @@ export function isWorkspacesEnabled(
     return existsSync(join(root, 'pnpm-workspace.yaml'));
   }
 
-  // yarn and pnpm both use the same 'workspaces' property in package.json
+  // yarn and npm both use the same 'workspaces' property in package.json
   const packageJson: PackageJson = readPackageJson();
   return !!packageJson?.workspaces;
 }
@@ -203,6 +203,7 @@ export function getPackageManagerVersion(
     version = execSync(`${packageManager} --version`, {
       cwd,
       encoding: 'utf-8',
+      windowsHide: true,
     }).trim();
   } catch {
     if (existsSync(join(cwd, 'package.json'))) {
@@ -350,7 +351,7 @@ export function createTempNpmDirectory() {
 
   const cleanup = async () => {
     try {
-      await remove(dir);
+      await rm(dir, { recursive: true, force: true });
     } catch {
       // It's okay if this fails, the OS will clean it up eventually
     }
@@ -411,7 +412,10 @@ export async function resolvePackageVersionUsingInstallation(
 
   try {
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${version}`, { cwd: dir });
+    await execAsync(`${pmc.add} ${packageName}@${version}`, {
+      cwd: dir,
+      windowsHide: true,
+    });
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 
@@ -441,7 +445,9 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`);
+  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`, {
+    windowsHide: true,
+  });
   return stdout.toString().trim();
 }
 
@@ -464,7 +470,10 @@ export async function packageRegistryPack(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, { cwd });
+  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
+    cwd,
+    windowsHide: true,
+  });
 
   const tarballPath = stdout.trim();
   return { tarballPath };

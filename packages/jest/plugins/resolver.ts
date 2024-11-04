@@ -1,16 +1,6 @@
 import { dirname, extname, join, resolve } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
-import type defaultResolver from 'jest-resolve/build/defaultResolver';
-
-interface ResolveOptions {
-  rootDir: string;
-  basedir: string;
-  paths: string[];
-  moduleDirectory: string[];
-  browser: boolean;
-  extensions: string[];
-  defaultResolver: typeof defaultResolver;
-}
+import type { ResolverOptions } from 'jest-resolve';
 
 let compilerSetup;
 let ts;
@@ -38,7 +28,7 @@ function getCompilerSetup(rootDir: string) {
   return { compilerOptions, host };
 }
 
-module.exports = function (path: string, options: ResolveOptions) {
+module.exports = function (path: string, options: ResolverOptions) {
   const ext = extname(path);
   if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') {
     return require.resolve('identity-obj-proxy');

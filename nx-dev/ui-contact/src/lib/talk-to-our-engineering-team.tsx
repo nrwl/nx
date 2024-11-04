@@ -13,8 +13,8 @@ export function TalkToOurEngineeringTeam(): JSX.Element {
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
           <section className="mt-4">
             <p className="text-lg leading-relaxed">
-              Contact our Developer Productivity Engineers for demos, onboarding
-              assistance, and technical support. Share your requirements and
+              Contact our Developer Productivity Engineers for demos,
+              onboarding, and product questions. Share your requirements and
               challenges with us, and{' '}
               <span className="font-medium">
                 we will help you utilize Nx Enterprise to enhance your

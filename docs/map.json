@@ -236,15 +236,14 @@
               "file": "shared/concepts/executors-and-configurations"
             },
             {
-              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-              "tags": ["intro", "repository-types"],
-              "id": "integrated-vs-package-based",
-              "file": "shared/concepts/integrated-vs-package-based"
-            },
-            {
               "name": "Nx Daemon",
               "id": "nx-daemon",
               "file": "shared/concepts/daemon"
+            },
+            {
+              "name": "Sync Generators",
+              "id": "sync-generators",
+              "file": "shared/concepts/sync-generators"
             },
             {
               "name": "Nx and Turborepo",
@@ -267,6 +266,12 @@
                   "id": "module-federation-and-nx",
                   "tags": ["module-federation", "angular", "react"],
                   "file": "shared/concepts/module-federation/module-federation-and-nx"
+                },
+                {
+                  "name": "Nx Module Federation Technical Overview",
+                  "id": "nx-module-federation-technical-overview",
+                  "tags": ["module-federation", "angular", "react"],
+                  "file": "shared/concepts/module-federation/nx-module-federation-technical-overview"
                 },
                 {
                   "name": "Faster Builds with Module Federation",
@@ -381,11 +386,6 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
-                  "name": "Change Cache Location",
-                  "id": "change-cache-location",
-                  "file": "shared/recipes/running-tasks/change-cache-location"
-                },
-                {
                   "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
@@ -420,6 +420,22 @@
                   "id": "reduce-repetitive-configuration",
                   "tags": [],
                   "file": "shared/recipes/running-tasks/reduce-repetitive-configuration"
+                },
+                {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
+                  "name": "Skip Task Caching",
+                  "id": "skipping-cache",
+                  "file": "shared/recipes/running-tasks/skipping-cache"
+                },
+                {
+                  "name": "Migrate to Inferred Tasks (Project Crystal)",
+                  "id": "convert-to-inferred",
+                  "tags": ["inferred-tasks", "automate-updating-dependencies"],
+                  "file": "shared/recipes/running-tasks/convert-to-inferred"
                 }
               ]
             },
@@ -442,6 +458,11 @@
                   "name": "Add to any Project",
                   "id": "adding-to-existing-project",
                   "file": "shared/migration/adding-to-existing-project"
+                },
+                {
+                  "name": "Import an Existing Project into an Nx Workspace",
+                  "id": "import-project",
+                  "file": "shared/migration/import-project"
                 },
                 {
                   "name": "Preserving Git Histories",
@@ -835,22 +856,9 @@
               "description": "Various tips and tricks for using Nx.",
               "itemList": [
                 {
-                  "name": "Add a Package-based Project in an Integrated Repo",
-                  "id": "package-based-in-integrated",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/package-based-in-integrated"
-                },
-                {
-                  "name": "Add an Integrated Project in a Package-based Repo",
-                  "id": "integrated-in-package-based",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/integrated-in-package-based"
-                },
-                {
-                  "name": "Convert from a Standalone Repository to an Integrated Repository",
-                  "id": "standalone-to-integrated",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/standalone-to-integrated"
+                  "name": "Convert from a Standalone Repository to a Monorepo",
+                  "id": "standalone-to-monorepo",
+                  "file": "shared/recipes/tips-n-tricks/standalone-to-monorepo"
                 },
                 {
                   "name": "Configuring ESLint with Typescript",
@@ -999,6 +1007,18 @@
                   "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
                 },
                 {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
+                },
+                {
+                  "name": "File Based Versioning (Version Plans)",
+                  "id": "file-based-versioning-version-plans",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
+                },
+                {
                   "name": "Configure Custom Registries",
                   "id": "configure-custom-registries",
                   "tags": ["nx-release"],
@@ -1029,12 +1049,6 @@
                   "file": "shared/recipes/nx-release/update-local-registry-setup"
                 },
                 {
-                  "name": "Customize Conventional Commit Types",
-                  "id": "customize-conventional-commit-types",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
-                },
-                {
                   "name": "Configure Changelog Format",
                   "id": "configure-changelog-format",
                   "tags": ["nx-release"],
@@ -1045,19 +1059,54 @@
                   "id": "publish-custom-dist-directory",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/publish-custom-dist-directory"
+                },
+                {
+                  "name": "Build Before Versioning",
+                  "id": "build-before-versioning",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/build-before-versioning"
                 }
               ]
+            }
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "id": "nx-enterprise",
+          "description": "Enterprise solutions for the Nx CLI",
+          "itemList": [
+            {
+              "name": "Activate Powerpack",
+              "id": "activate-powerpack",
+              "tags": ["installation"],
+              "file": "shared/recipes/installation/activate-powerpack"
             },
             {
-              "name": "Other",
-              "id": "other",
-              "description": "Other recipes you will find useful.",
+              "name": "Powerpack Features",
+              "id": "powerpack",
+              "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+              "file": "shared/features/powerpack/index",
               "itemList": [
                 {
-                  "name": "Rescope Packages from @nrwl to @nx",
-                  "id": "rescope",
-                  "tags": [],
-                  "file": "shared/recipes/rescope"
+                  "name": "Run Language-Agnostic Conformance Rules",
+                  "description": "Write and apply rules for your Nx workspace",
+                  "id": "conformance",
+                  "tags": ["conformance"],
+                  "file": "shared/features/powerpack/conformance"
+                },
+                {
+                  "name": "Define Code Ownership at the Project Level",
+                  "description": "Configure and maintain code owners for projects in an Nx workspace",
+                  "id": "owners",
+                  "tags": ["owners"],
+                  "file": "shared/features/powerpack/owners"
+                },
+                {
+                  "name": "Self-Host the Remote Cache",
+                  "description": "Host the remote cache without using Nx Cloud",
+                  "id": "custom-caching",
+                  "tags": ["custom-caching"],
+                  "file": "shared/features/powerpack/custom-caching"
                 }
               ]
             }
@@ -1201,10 +1250,8 @@
           "itemList": [
             {
               "name": "Commands",
-              "id": "commands",
-              "file": "",
-              "path": "/nx-api/nx",
-              "isExternal": true
+              "id": "nx-commands",
+              "file": "shared/reference/commands"
             },
             {
               "name": "Nx Configuration",
@@ -1328,6 +1375,11 @@
               "file": "shared/deprecated/workspace-generators"
             },
             {
+              "name": "Custom Task Runners",
+              "id": "custom-task-runners",
+              "file": "shared/deprecated/custom-task-runners"
+            },
+            {
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
@@ -1361,6 +1413,16 @@
               "name": "v1 Nx Plugin API",
               "id": "v1-nx-plugin-api",
               "file": "shared/deprecated/v1-nx-plugin-api"
+            },
+            {
+              "name": "Rescope Packages from @nrwl to @nx",
+              "id": "rescope",
+              "file": "shared/deprecated/rescope"
+            },
+            {
+              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+              "id": "integrated-vs-package-based",
+              "file": "shared/deprecated/integrated-vs-package-based"
             }
           ]
         },
@@ -1446,7 +1508,7 @@
           "description": "Learn about plugins.",
           "itemList": [
             {
-              "name": "Getting Started with Plugins",
+              "name": "Extending Nx with Plugins",
               "id": "getting-started",
               "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
               "file": "shared/plugins/intro"
@@ -1454,19 +1516,19 @@
           ]
         },
         {
-          "name": "5 Min Tutorials",
+          "name": "Tutorials",
           "id": "tutorials",
           "description": "Get started with plugins",
           "itemList": [
             {
-              "name": "Create a Local Plugin",
-              "id": "create-plugin",
-              "file": "shared/plugins/create-plugin"
+              "name": "Enforce Organizational Best Practices",
+              "id": "organization-specific-plugin",
+              "file": "shared/plugins/organization-specific-plugin"
             },
             {
-              "name": "Maintain a Published Plugin",
-              "id": "publish-plugin",
-              "file": "shared/plugins/maintain-published-plugin"
+              "name": "Create a Tooling Plugin",
+              "id": "tooling-plugin",
+              "file": "shared/plugins/tooling-plugin"
             }
           ]
         },
@@ -1475,18 +1537,6 @@
           "id": "recipes",
           "description": "Focused instructions to complete a specific task",
           "itemList": [
-            {
-              "name": "Write a Simple Executor",
-              "id": "local-executors",
-              "tags": [],
-              "file": "shared/recipes/plugins/local-executors"
-            },
-            {
-              "name": "Compose Executors",
-              "id": "compose-executors",
-              "tags": [],
-              "file": "shared/recipes/plugins/compose-executors"
-            },
             {
               "name": "Write a Simple Generator",
               "id": "local-generators",
@@ -1518,10 +1568,28 @@
               "file": "shared/recipes/generators/modifying-files"
             },
             {
+              "name": "Create a Sync Generator",
+              "id": "create-sync-generator",
+              "tags": ["generate-code"],
+              "file": "shared/recipes/generators/create-sync-generator"
+            },
+            {
               "name": "Write a Migration",
               "id": "migration-generators",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/migration-generators"
+            },
+            {
+              "name": "Write a Simple Executor",
+              "id": "local-executors",
+              "tags": [],
+              "file": "shared/recipes/plugins/local-executors"
+            },
+            {
+              "name": "Compose Executors",
+              "id": "compose-executors",
+              "tags": [],
+              "file": "shared/recipes/plugins/compose-executors"
             },
             {
               "name": "Create a Preset",
@@ -1536,7 +1604,7 @@
               "file": "shared/recipes/plugins/create-install-package"
             },
             {
-              "name": "Modify the Project Graph",
+              "name": "Infer Tasks or Projects",
               "id": "project-graph-plugins",
               "tags": [
                 "create-your-own-plugin",
@@ -1544,6 +1612,12 @@
                 "inferred-tasks"
               ],
               "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Publish a Plugin",
+              "id": "publish-plugin",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/publish-plugin"
             }
           ]
         }
@@ -1619,18 +1693,6 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
-              "name": "Nx Cloud AI",
-              "id": "nx-cloud-ai",
-              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-              "file": "nx-cloud/features/ai-features"
-            },
-            {
-              "name": "Dynamically Allocate Agents",
-              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-              "id": "dynamic-agents",
-              "file": "nx-cloud/features/dynamic-agents"
-            },
-            {
               "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -1641,6 +1703,22 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
+            },
+            {
+              "name": "Dynamically Allocate Agents",
+              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+              "id": "dynamic-agents",
+              "file": "nx-cloud/features/dynamic-agents"
+            },
+            {
+              "name": "Explain With AI",
+              "id": "explain-with-ai",
+              "file": "nx-cloud/features/explain-with-ai"
+            },
+            {
+              "name": "GitHub Integration",
+              "id": "github-integration",
+              "file": "nx-cloud/features/github-integration"
             }
           ]
         },
@@ -1671,6 +1749,12 @@
               "name": "Cache Security",
               "id": "cache-security",
               "file": "nx-cloud/concepts/cache-security"
+            },
+            {
+              "name": "Nx Cloud AI",
+              "id": "nx-cloud-ai",
+              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+              "file": "nx-cloud/concepts/ai-features"
             }
           ]
         },
@@ -1728,9 +1812,14 @@
                   "file": "nx-cloud/recipes/google-auth"
                 },
                 {
-                  "name": "Access Tokens",
+                  "name": "CI Access Tokens",
                   "id": "access-tokens",
                   "file": "nx-cloud/recipes/access-tokens"
+                },
+                {
+                  "name": "Personal Access Tokens",
+                  "id": "personal-access-tokens",
+                  "file": "nx-cloud/recipes/personal-access-tokens"
                 },
                 {
                   "name": "Enable End to End Encryption",
@@ -1772,61 +1861,45 @@
               "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
-                  "name": "On-Premise",
-                  "id": "on-premise",
+                  "name": "Single Tenant",
+                  "id": "single-tenant",
                   "description": "Manage an on-premise installation of Nx Cloud",
                   "itemList": [
                     {
-                      "name": "Set up Nx Cloud On-Premise",
-                      "description": "Set up Nx Cloud on machines that you control",
-                      "id": "on-premise",
-                      "tags": ["on-premise"],
-                      "file": "nx-cloud/features/nx-enterprise-on-prem"
-                    },
-                    {
-                      "name": "Authenticate with a Single Admin",
-                      "id": "auth-single-admin",
-                      "file": "nx-cloud/enterprise/on-premise/auth-single-admin"
+                      "name": "Single Tenant Nx Cloud Hosting",
+                      "id": "overview",
+                      "tags": ["single-tenant"],
+                      "file": "nx-cloud/enterprise/single-tenant/overview"
                     },
                     {
                       "name": "Authenticate with GitHub",
                       "id": "auth-github",
-                      "file": "nx-cloud/enterprise/on-premise/auth-github"
-                    },
-                    {
-                      "name": "On-Prem VM Setup",
-                      "id": "ami-setup",
-                      "file": "nx-cloud/enterprise/on-premise/ami-setup"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-github"
                     },
                     {
                       "name": "Authenticate with GitLab",
                       "id": "auth-gitlab",
-                      "file": "nx-cloud/enterprise/on-premise/auth-gitlab"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-gitlab"
                     },
                     {
                       "name": "Authenticate with BitBucket",
                       "id": "auth-bitbucket",
-                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket"
                     },
                     {
                       "name": "Authenticate with BitBucket Data Center",
                       "id": "auth-bitbucket-data-center",
-                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center"
                     },
                     {
                       "name": "Authenticate via SAML",
                       "id": "auth-saml",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml"
-                    },
-                    {
-                      "name": "Advanced Configuration",
-                      "id": "advanced-config",
-                      "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-saml"
                     },
                     {
                       "name": "Custom GitHub App",
                       "id": "custom-github-app",
-                      "file": "nx-cloud/enterprise/on-premise/custom-github-app"
+                      "file": "nx-cloud/enterprise/single-tenant/custom-github-app"
                     }
                   ]
                 },
@@ -1935,11 +2008,6 @@
               "name": "CI Execution Failed",
               "id": "ci-execution-failed",
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
-            },
-            {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
           ]
         }
@@ -2053,6 +2121,21 @@
               "file": "generated/cli/repair"
             },
             {
+              "name": "sync",
+              "id": "sync",
+              "file": "generated/cli/sync"
+            },
+            {
+              "name": "sync:check",
+              "id": "sync-check",
+              "file": "generated/cli/sync-check"
+            },
+            {
+              "name": "import",
+              "id": "import",
+              "file": "generated/cli/import"
+            },
+            {
               "name": "exec",
               "id": "exec",
               "file": "generated/cli/exec"
@@ -2083,6 +2166,16 @@
               "name": "add",
               "id": "add",
               "file": "generated/cli/add"
+            },
+            {
+              "name": "login",
+              "id": "login",
+              "file": "generated/cli/login"
+            },
+            {
+              "name": "logout",
+              "id": "logout",
+              "file": "generated/cli/logout"
             }
           ]
         },
@@ -2144,6 +2237,12 @@
               "id": "overview",
               "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
+            },
+            {
+              "name": "Configure TypeScript Project References in an Nx Workspace",
+              "id": "typescript-project-references",
+              "path": "/nx-api/js/typescript-project-references",
+              "file": "shared/packages/js/typescript-project-references"
             }
           ]
         },
@@ -2441,6 +2540,19 @@
           ]
         },
         {
+          "name": "rspack",
+          "id": "rspack",
+          "description": "Rspack package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/rspack",
+              "file": "shared/packages/rspack/rspack-plugin"
+            }
+          ]
+        },
+        {
           "name": "detox",
           "id": "detox",
           "description": "Detox package.",
@@ -2476,6 +2588,58 @@
               "name": "Overview",
               "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-owners",
+          "id": "powerpack-owners",
+          "description": "powerpack-owners package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-owners",
+              "file": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-conformance",
+          "id": "powerpack-conformance",
+          "description": "powerpack-conformance package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-conformance",
+              "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-s3-cache",
+          "id": "powerpack-s3-cache",
+          "description": "powerpack-s3-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-s3-cache",
+              "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-shared-fs-cache",
+          "id": "powerpack-shared-fs-cache",
+          "description": "powerpack-shared-fs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-shared-fs-cache",
+              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
             }
           ]
         },

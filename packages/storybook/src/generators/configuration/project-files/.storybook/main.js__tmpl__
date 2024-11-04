@@ -1,13 +1,13 @@
 <% if (usesVite && !viteConfigFilePath) { %>
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
-<% } %>
+<% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %>
 
 const config = {
   stories: [
-    <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
-    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
-    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+    <% if((uiFramework === '@storybook/angular' && projectType === 'library') || uiFramework === '@storybook/nextjs') { %>
+    '../**/*.@(mdx|stories.@(js|jsx|ts|tsx))' <% } else { %>
+    '../<%= projectDirectory %>/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
   <% } %>],
   addons: ['@storybook/addon-essentials' <% if(interactionTests) { %>, '@storybook/addon-interactions' <% } %><% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %>],
   framework: {
@@ -43,7 +43,7 @@ const config = {
   },<% } %><% if (usesVite && !viteConfigFilePath) { %>
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %>nxViteTsPaths()],
     }),
   <% } %>
 };

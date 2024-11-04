@@ -3,7 +3,11 @@
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectGraphSelector } from '../hooks/use-project-graph-selector';
-import { GraphPerfReport, WorkspaceLayout } from '../../interfaces';
+import {
+  CompositeNode,
+  GraphPerfReport,
+  WorkspaceLayout,
+} from '../../interfaces';
 import { TracingAlgorithmType } from './interfaces';
 
 export const allProjectsSelector: ProjectGraphSelector<
@@ -46,6 +50,15 @@ export const groupByFolderSelector: ProjectGraphSelector<boolean> = (state) =>
 
 export const collapseEdgesSelector: ProjectGraphSelector<boolean> = (state) =>
   state.context.collapseEdges;
+export const compositeGraphEnabledSelector: ProjectGraphSelector<boolean> = (
+  state
+) => state.context.compositeGraph.enabled;
+export const compositeContextSelector: ProjectGraphSelector<string | null> = (
+  state
+) => state.context.compositeGraph.context;
+export const compositeNodesSelector: ProjectGraphSelector<CompositeNode[]> = (
+  state
+) => state.context.compositeGraph.nodes;
 
 export const textFilterSelector: ProjectGraphSelector<string> = (state) =>
   state.context.textFilter;

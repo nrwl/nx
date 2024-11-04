@@ -27,6 +27,8 @@ import { logger } from '../src/utils/logger';
       if (isNxCloudUsed(readNxJson())) {
         tasks.push(verifyOrUpdateNxCloudClient(getCloudOptions()));
       }
+
+      process.env.NX_DAEMON = 'false';
       await Promise.all(
         tasks.map((promise) => {
           return promise.catch((e) => {
@@ -56,3 +58,13 @@ function isMainNxPackage() {
   const thisNxPath = require.resolve('nx');
   return mainNxPath === thisNxPath;
 }
+
+process.on('uncaughtException', (e) => {
+  logger.verbose(e);
+  process.exit(0);
+});
+
+process.on('unhandledRejection', (e) => {
+  logger.verbose(e);
+  process.exit(0);
+});

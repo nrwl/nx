@@ -5,11 +5,12 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
+export type PluginType = 'nxOpenSource' | 'nxPowerpack' | 'community';
 export interface PluginCardProps {
   name: string;
   description: string;
   url: string;
-  isOfficial: boolean;
+  pluginType: PluginType;
   lastPublishedDate?: string;
   npmDownloads?: string;
   githubStars?: string;
@@ -20,7 +21,7 @@ export function PluginCard({
   name,
   description,
   url,
-  isOfficial,
+  pluginType,
   lastPublishedDate,
   npmDownloads,
   githubStars,
@@ -44,8 +45,8 @@ export function PluginCard({
         </h3>
         <Link
           href={url}
-          target={isOfficial ? undefined : '_blank'}
-          rel={isOfficial ? undefined : 'noreferrer'}
+          target={pluginType ? undefined : '_blank'}
+          rel={pluginType ? undefined : 'noreferrer'}
           className="flex grow flex-col focus:outline-none"
           prefetch={false}
         >
@@ -67,19 +68,27 @@ export function PluginCard({
               <GithubStarsWidget githubStars={githubStars}></GithubStarsWidget>
             </div>
             <div className="flex flex-grow justify-end">
-              {isOfficial ? (
+              {pluginType === 'community' ? (
+                <div className="my-1 ml-1">
+                  <NxVersionWidget nxVersion={nxVersion}></NxVersionWidget>
+                </div>
+              ) : pluginType === 'nxOpenSource' ? (
                 <div
                   data-tooltip="Maintained by the Nx Team"
                   data-tooltip-align-right
                   className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium capitalize text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
                 >
-                  Nx Team
+                  Nx Open Source
                 </div>
-              ) : (
-                <div className="my-1 ml-1">
-                  <NxVersionWidget nxVersion={nxVersion}></NxVersionWidget>
+              ) : pluginType === 'nxPowerpack' ? (
+                <div
+                  data-tooltip="Maintained by the Nx Team"
+                  data-tooltip-align-right
+                  className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium capitalize text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
+                >
+                  Nx Powerpack
                 </div>
-              )}
+              ) : undefined}
             </div>
           </div>
         </Link>

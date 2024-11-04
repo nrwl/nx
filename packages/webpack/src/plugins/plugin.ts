@@ -235,6 +235,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,

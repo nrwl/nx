@@ -206,7 +206,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   exposes: {
     './Module': 'test/src/app/remote-entry/entry.module.ts',
@@ -218,7 +221,13 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
 exports[`MF Remote App Generator --ssr should generate the correct files 7`] = `
 "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -435,6 +444,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -443,7 +455,12 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { withModuleFederationForSSR } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -525,14 +542,26 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 exports[`MF Remote App Generator should generate a remote mf app with a host 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 2`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -540,7 +569,12 @@ exports[`MF Remote App Generator should generate a remote mf app with a host whe
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -548,14 +582,25 @@ exports[`MF Remote App Generator should generate a remote mf app with a host whe
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -563,7 +608,12 @@ exports[`MF Remote App Generator should generate a remote mf app with no host wh
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -579,7 +629,10 @@ bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 2`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   exposes: {
     './Routes': 'test/src/app/remote-entry/entry.routes.ts',
@@ -647,6 +700,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;

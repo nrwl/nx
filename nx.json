@@ -23,6 +23,9 @@
       "{projectRoot}/**/Cargo.*",
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
+      },
+      {
+        "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
       }
     ],
     "e2eInputs": [
@@ -49,11 +52,7 @@
     ]
   },
   "release": {
-    "projects": [
-      "packages/*",
-      "packages/nx/native-packages/*",
-      "packages-legacy/*"
-    ],
+    "projects": ["packages/*", "packages/nx/native-packages/*"],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
@@ -120,7 +119,14 @@
       }
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"]
+      "dependsOn": [
+        "build-native",
+        "^build-native",
+        "@nx/nx-source:lint-pnpm-lock"
+      ]
+    },
+    "lint-pnpm-lock": {
+      "cache": true
     },
     "e2e": {
       "cache": true,
@@ -133,24 +139,23 @@
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
+    "e2e-macos-local": {
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"],
+      "parallelism": false
+    },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--**/*": {
+    "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
       "parallelism": false,
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ]
+      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
       "parallelism": false,
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ]
+      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -222,15 +227,30 @@
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
       "options": {
-        "targetName": "e2e-local",
+        "targetName": "e2e-macos-local",
         "ciTargetName": "e2e-macos-ci"
       }
-    }
+    },
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "startTargetName": "next:start",
+        "buildTargetName": "next:build",
+        "devTargetName": "dev",
+        "serveStaticTargetName": "serve-static"
+      }
+    },
+    "@nx/powerpack-enterprise-cloud"
   ],
-  "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
+  "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
   "bust": 8,
-  "defaultBase": "master"
+  "defaultBase": "master",
+  "generators": {
+    "@nx/react": {
+      "library": {}
+    }
+  }
 }

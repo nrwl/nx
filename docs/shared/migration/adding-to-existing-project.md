@@ -1,6 +1,6 @@
 # Adding Nx to your Existing Project
 
-Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package
+Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
 scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
@@ -14,11 +14,13 @@ scripts. Each project usually has a set of scripts in the `package.json`:
 }
 ```
 
-You can make these scripts faster by leveraging Nx's caching capabilities. For example:
+You can make these scripts faster by leveraging Nx's [caching capabilities](/features/cache-task-results). For example:
 
 - You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
 - You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on
   your CI. All you might want to do is trigger the Docusaurus build.
+
+Additionally, Nx also [speeds up your CI ⚡](#fast-ci) with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
 
 ## Install Nx on a Non-Monorepo Project
 
@@ -109,7 +111,7 @@ details in a browser window.
 nx show project my-workspace --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {
@@ -284,7 +286,7 @@ Now if you run `npm run test` or `nx test` twice, the results will be retrieved 
 this example are as cautious as possible, so you can significantly improve the value of the cache
 by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
 
-## Set Up CI for Your Workspace
+## Fast CI ⚡ {% highlightColor="green" %}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -293,7 +295,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
@@ -323,9 +325,9 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
-### Create a CI Workflow
+### Create a CI Workflow {% highlightColor="green" %}
 
 Use the following command to generate a CI workflow file.
 
@@ -362,7 +364,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request
+### Open a Pull Request {% highlightColor="green" %}
 
 Commit the changes and open a new PR on GitHub.
 

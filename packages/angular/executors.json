@@ -25,6 +25,11 @@
       "schema": "./src/executors/module-federation-dev-server/schema.json",
       "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) allowing to specify which remote applications should be served with the host."
     },
+    "module-federation-dev-ssr": {
+      "implementation": "./src/executors/module-federation-ssr-dev-server/module-federation-ssr-dev-server.impl",
+      "schema": "./src/executors/module-federation-ssr-dev-server/schema.json",
+      "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host."
+    },
     "application": {
       "implementation": "./src/executors/application/application.impl",
       "schema": "./src/executors/application/schema.json",
@@ -51,11 +56,6 @@
       "implementation": "./src/builders/webpack-server/webpack-server.impl",
       "schema": "./src/builders/webpack-server/schema.json",
       "description": "Builds a server Angular application using [webpack](https://webpack.js.org/). This executor is a drop-in replacement for the `@angular-devkit/build-angular:server` builder provided by the Angular CLI. It is usually used in tandem with the `@nx/angular:webpack-browser` executor when your Angular application uses a custom webpack configuration."
-    },
-    "module-federation-dev-ssr": {
-      "implementation": "./src/builders/module-federation-dev-ssr/module-federation-dev-ssr.impl",
-      "schema": "./src/builders/module-federation-dev-ssr/schema.json",
-      "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host."
     }
   }
 }

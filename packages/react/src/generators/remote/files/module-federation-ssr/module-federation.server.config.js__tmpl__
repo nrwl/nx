@@ -1,6 +1,0 @@
-module.exports = {
-    name: '<%= projectName %>',
-   exposes: {
-     './Module': '<%= appProjectRoot %>/src/remote-entry.<%= js ? 'js' : 'ts' %>',
-   },
-};

@@ -59,6 +59,7 @@
               "prettier",
               "typescript",
               // These are installed by generators
+              "@schematics/angular",
               "@angular-devkit/core",
               "@angular-devkit/architect",
               "@angular-devkit/build-angular",

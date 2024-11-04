@@ -2,6 +2,7 @@
  * @public Programmatic API for nx release
  */
 export {
+  ReleaseClient,
   release,
   releaseChangelog,
   releasePublish,

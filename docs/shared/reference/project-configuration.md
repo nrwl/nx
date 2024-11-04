@@ -12,7 +12,7 @@ Each source will [overwrite the previous source](/recipes/running-tasks/pass-arg
 nx show project myproject --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {
@@ -440,6 +440,27 @@ You can also express task dependencies with an object syntax:
 {% /tab %}
 {% /tabs %}
 
+Starting from v19.5.0, wildcards can be used to define dependencies in the `dependsOn` field.
+
+```json
+{
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        },
+        "build-*", // support for using wildcards in dependsOn, matches: "build-css", "build-js" targets of current project
+        "^build-*", // matches tasks: "build-css", "build-js" targets of dependencies
+        "*build-*", // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of current project
+        "^*build-*" // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of dependencies
+      ]
+    }
+  }
+}
+```
+
 #### Examples
 
 You can write the shorthand configuration above in the object syntax like this:
@@ -595,6 +616,20 @@ Additionally, when using the expanded object syntax, you can specify individual 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
 
+### Sync Generators
+
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
+
+```json
+{
+  "targets": {
+    "build": {
+      "syncGenerators": ["some-plugin:my-sync-generator"]
+    }
+  }
+}
+```
+
 ### Executor/command options
 
 To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
@@ -623,6 +658,23 @@ In the case of an explicit target using an executor, you can specify the executo
       "executor": "@nx/js:tsc",
       "options": {
         "generateExportsField": true
+      }
+    }
+  }
+}
+```
+
+### Target Metadata
+
+You can add additional metadata to be attached to a target. For example, you can provide a description stating what the
+target does:
+
+```jsonc {% fileName="project.json" %}
+{
+  "targets": {
+    "build": {
+      "metadata": {
+        "description": "Build the application for production"
       }
     }
   }
@@ -748,7 +800,21 @@ An implicit dependency could also be a glob pattern:
 {% /tab %}
 {% /tabs %}
 
-### Including package.json files as projects in the graph
+### Metadata
+
+You can add additional metadata to be attached to the project. For example, you can provide a description for your
+project:
+
+```jsonc {% fileName="project.json" %}
+{
+  "name": "admin",
+  "metadata": {
+    "description": "This is the admin application"
+  }
+}
+```
+
+## Including package.json files as projects in the graph
 
 Any `package.json` file that is referenced by the `workspaces` property in the root `package.json` file will be included as a project in the graph. If you are using Lerna, projects defined in `lerna.json` will be included. If you are using pnpm, projects defined in `pnpm-workspace.yml` will be included.
 

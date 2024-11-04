@@ -1,4 +1,5 @@
 'use client';
+import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -48,6 +49,7 @@ export function AgentNumberOverTime(): JSX.Element {
   // Calculate the width of each item
   const itemWidthPercent = remainingPercent / agents.length;
 
+  const shouldReduceMotion = usePrefersReducedMotion();
   const variants = {
     hidden: {
       opacity: 0,
@@ -58,7 +60,7 @@ export function AgentNumberOverTime(): JSX.Element {
     visible: (i: number) => ({
       opacity: 1,
       transition: {
-        delay: i || 0,
+        delay: shouldReduceMotion ? 0 : i || 0,
       },
     }),
   };
@@ -67,8 +69,8 @@ export function AgentNumberOverTime(): JSX.Element {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.035,
-        duration: 0.65,
+        delay: shouldReduceMotion ? 0 : i * 0.035,
+        duration: shouldReduceMotion ? 0 : 0.65,
         ease: 'easeOut',
         when: 'beforeChildren',
         staggerChildren: 0.3,

@@ -47,17 +47,19 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci --legacy-peer-deps
+      - script: npx cypress install
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e
 "
 `;
 
@@ -78,14 +80,17 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # Uncomment this line to enable task distribution
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
+            - npx cypress install
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-            - npx nx affected --base=origin/main -t lint test build
-            - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
+            # When you enable task distribution, run the e2e-ci task instead of e2e
+            - npx nx affected --base=origin/main -t lint test build e2e
 
   branches:
     main:
@@ -123,17 +128,19 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 
 workflows:
   version: 2
@@ -168,7 +175,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -177,13 +185,14 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
-      - run: npx nx affected --parallel 1 -t e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -211,7 +220,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -220,13 +230,14 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
-      - run: npx nx affected --parallel 1 -t e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -280,7 +291,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -312,11 +324,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
-            - bun nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # bun nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
 
@@ -362,7 +376,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -371,7 +386,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: bun nx affected -t lint test build
 
 workflows:
   version: 2
@@ -410,7 +425,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -450,7 +466,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -479,7 +496,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
     - NX_HEAD=$CI_COMMIT_SHA
@@ -488,7 +506,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - bun nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - bun nx affected -t lint test build
 "
 `;
 
@@ -539,7 +557,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
@@ -569,11 +588,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
 
@@ -613,7 +634,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
       - nx/set-shas:
@@ -622,7 +644,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: npx nx affected -t lint test build
 
 workflows:
   version: 2
@@ -657,7 +679,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -699,7 +722,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -732,7 +756,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
@@ -741,7 +766,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - npx nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - npx nx affected -t lint test build
 "
 `;
 
@@ -795,7 +820,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -827,11 +853,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
-            - pnpm exec nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # pnpm exec nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
 
@@ -877,7 +905,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -886,7 +915,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: pnpm exec nx affected -t lint test build
 
 workflows:
   version: 2
@@ -918,14 +947,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -964,14 +994,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1006,7 +1037,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1015,7 +1047,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - pnpm exec nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -1066,7 +1098,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1096,11 +1129,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # Uncomment this line to enable task distribution
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
-            - yarn nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # yarn nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
 
@@ -1140,7 +1175,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -1149,7 +1185,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: yarn nx affected -t lint test build
 
 workflows:
   version: 2
@@ -1184,7 +1220,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1226,7 +1263,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1259,7 +1297,8 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # Uncomment this line to enable task distribution
+    # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1268,7 +1307,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - yarn nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - yarn nx affected -t lint test build
 "
 `;
 
@@ -1319,18 +1358,19 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci --legacy-peer-deps
+      - script: npx cypress install
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e
 "
 `;
 
@@ -1351,15 +1391,17 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
+            - npx cypress install
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-            - npx nx affected --base=origin/main -t lint test build
-            - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
+            # When you enable task distribution, run the e2e-ci task instead of e2e
+            - npx nx affected --base=origin/main -t lint test build e2e
 
   branches:
     main:
@@ -1398,18 +1440,19 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - nx/set-shas:
           main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 
 workflows:
   version: 2
@@ -1444,7 +1487,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
@@ -1454,13 +1497,14 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
-      - run: npx nx affected --parallel 1 -t e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -1488,7 +1532,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
@@ -1498,13 +1542,14 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+      - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
-      - run: npx nx affected --parallel 1 -t e2e-ci
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 "
 `;
 
@@ -1558,7 +1603,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
@@ -1591,12 +1636,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
-            - bun nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # bun nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
 
@@ -1643,7 +1689,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
@@ -1653,7 +1699,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: bun nx affected -t lint test build
 
 workflows:
   version: 2
@@ -1692,7 +1738,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
@@ -1733,7 +1779,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
@@ -1763,7 +1809,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
@@ -1773,7 +1819,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - bun nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - bun nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - bun nx affected -t lint test build
 "
 `;
 
@@ -1824,7 +1870,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
@@ -1855,12 +1901,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
 
@@ -1901,7 +1948,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
@@ -1911,7 +1958,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: npx nx affected -t lint test build
 
 workflows:
   version: 2
@@ -1946,7 +1993,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -1989,7 +2036,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2023,7 +2070,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci --legacy-peer-deps
@@ -2033,7 +2080,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - npx nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - npx nx affected -t lint test build
 "
 `;
 
@@ -2087,7 +2134,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
@@ -2120,12 +2167,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
-            - pnpm exec nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # pnpm exec nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
 
@@ -2172,7 +2220,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
@@ -2182,7 +2230,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: pnpm exec nx affected -t lint test build
 
 workflows:
   version: 2
@@ -2214,14 +2262,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2261,14 +2309,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2304,7 +2352,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
@@ -2314,7 +2362,7 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - pnpm exec nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -2365,7 +2413,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
@@ -2396,12 +2444,13 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            # Connect your workspace by running "nx connect" and uncomment this
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
-            - yarn nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # yarn nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
 
@@ -2442,7 +2491,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
@@ -2452,7 +2501,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: yarn nx affected -t lint test build
 
 workflows:
   version: 2
@@ -2487,7 +2536,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2530,7 +2579,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -2564,7 +2613,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    # Connect your workspace by running "nx connect" and uncomment this
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
     # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
@@ -2574,6 +2623,6 @@ CI:
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - yarn nx-cloud record -- echo Hello World
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+    - yarn nx affected -t lint test build
 "
 `;

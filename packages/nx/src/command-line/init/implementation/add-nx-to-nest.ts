@@ -1,5 +1,5 @@
 import * as enquirer from 'enquirer';
-import { unlinkSync, writeFileSync } from 'fs-extra';
+import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { InitArgs } from '../init-v1';
 import { NxJsonConfiguration } from '../../../config/nx-json';
@@ -140,7 +140,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initCloud(repoRoot, 'nx-init-nest');
+    await initCloud('nx-init-nest');
   }
 }
 

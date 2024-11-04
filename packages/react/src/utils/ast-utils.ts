@@ -665,44 +665,70 @@ export function getComponentNode(sourceFile: ts.SourceFile): ts.Node | null {
   return defaultExport;
 }
 
-export function getComponentPropsInterface(
+export function parseComponentPropsInfo(
   sourceFile: ts.SourceFile,
   cmpDeclaration: ts.Node
-): ts.InterfaceDeclaration | null {
+): {
+  props: Array<ts.PropertySignature | ts.BindingElement>;
+  propsTypeName: string | null;
+  inlineTypeString: string | null;
+} | null {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   let propsTypeName: string = null;
+  let inlineTypeString: string = null;
+  const props: Array<ts.PropertySignature | ts.BindingElement> = [];
+
+  const processParameters = (
+    parameters: ts.NodeArray<ts.ParameterDeclaration>
+  ): boolean => {
+    if (!parameters.length) {
+      return null;
+    }
+
+    const propsParam = parameters[0];
+    if (propsParam.type) {
+      if (tsModule.isTypeReferenceNode(propsParam.type)) {
+        // function Cmp(props: Props) {}
+        propsTypeName = propsParam.type.typeName.getText();
+      } else if (tsModule.isTypeLiteralNode(propsParam.type)) {
+        // function Cmp(props: {a: string, b: number}) {}
+        props.push(
+          ...(propsParam.type.members as ts.NodeArray<ts.PropertySignature>)
+        );
+        inlineTypeString = propsParam.type.getText();
+      } else {
+        // we don't support other types (e.g. union types)
+        return false;
+      }
+    } else if (tsModule.isObjectBindingPattern(propsParam.name)) {
+      // function Cmp({a, b}) {}
+      props.push(...propsParam.name.elements);
+      inlineTypeString = `{\n${propsParam.name.elements
+        .map((x) => `${x.name.getText()}: unknown;\n`)
+        .join('')}}`;
+    } else {
+      // function Cmp(props) {}
+      return false;
+    }
+
+    return true;
+  };
 
   if (tsModule.isFunctionDeclaration(cmpDeclaration)) {
-    const propsParam: ts.ParameterDeclaration = cmpDeclaration.parameters.find(
-      (x) =>
-        tsModule.isParameter(x) && (x.name as ts.Identifier).text === 'props'
-    );
-
-    if (propsParam?.type?.['typeName']) {
-      propsTypeName = (
-        (propsParam.type as ts.TypeReferenceNode).typeName as ts.Identifier
-      ).text;
+    const result = processParameters(cmpDeclaration.parameters);
+    if (!result) {
+      return null;
     }
   } else if (
-    (cmpDeclaration as ts.VariableDeclaration).initializer &&
-    tsModule.isArrowFunction(
-      (cmpDeclaration as ts.VariableDeclaration).initializer
-    )
+    tsModule.isVariableDeclaration(cmpDeclaration) &&
+    cmpDeclaration.initializer &&
+    tsModule.isArrowFunction(cmpDeclaration.initializer)
   ) {
-    const arrowFn = (cmpDeclaration as ts.VariableDeclaration)
-      .initializer as ts.ArrowFunction;
-
-    const propsParam: ts.ParameterDeclaration = arrowFn.parameters.find(
-      (x) =>
-        tsModule.isParameter(x) && (x.name as ts.Identifier).text === 'props'
-    );
-
-    if (propsParam?.type?.['typeName']) {
-      propsTypeName = (
-        (propsParam.type as ts.TypeReferenceNode).typeName as ts.Identifier
-      ).text;
+    const result = processParameters(cmpDeclaration.initializer.parameters);
+    if (!result) {
+      return null;
     }
   } else if (
     // do we have a class component extending from React.Component
@@ -731,12 +757,68 @@ export function getComponentPropsInterface(
   }
 
   if (propsTypeName) {
-    return findNodes(sourceFile, tsModule.SyntaxKind.InterfaceDeclaration).find(
-      (x: ts.InterfaceDeclaration) => {
-        return (x.name as ts.Identifier).getText() === propsTypeName;
-      }
-    ) as ts.InterfaceDeclaration;
-  } else {
+    const foundProps = getPropsFromTypeName(sourceFile, propsTypeName);
+    if (!foundProps) {
+      return null;
+    }
+
+    for (const prop of foundProps) {
+      props.push(prop);
+    }
+  }
+
+  return {
+    propsTypeName,
+    props,
+    inlineTypeString,
+  };
+}
+
+function getPropsFromTypeName(
+  sourceFile: ts.SourceFile,
+  propsTypeName: string
+): Array<ts.PropertySignature | ts.BindingElement> {
+  const matchingNode = findNodes(sourceFile, [
+    tsModule.SyntaxKind.InterfaceDeclaration,
+    tsModule.SyntaxKind.TypeAliasDeclaration,
+  ]).find((x): x is ts.InterfaceDeclaration | ts.TypeAliasDeclaration => {
+    if (
+      tsModule.isTypeAliasDeclaration(x) ||
+      tsModule.isInterfaceDeclaration(x)
+    ) {
+      return x.name.getText() === propsTypeName;
+    }
+
+    return false;
+  });
+
+  if (!matchingNode) {
     return null;
   }
+
+  const props: Array<ts.PropertySignature | ts.BindingElement> = [];
+  if (tsModule.isTypeAliasDeclaration(matchingNode)) {
+    if (tsModule.isTypeLiteralNode(matchingNode.type)) {
+      for (const prop of matchingNode.type.members) {
+        props.push(prop as ts.PropertySignature);
+      }
+    } else if (tsModule.isTypeReferenceNode(matchingNode.type)) {
+      const result = getPropsFromTypeName(
+        sourceFile,
+        matchingNode.type.typeName.getText()
+      );
+      if (result) {
+        props.push(...result);
+      }
+    } else {
+      // we don't support other types of type aliases (e.g. union types)
+      return null;
+    }
+  } else {
+    for (const prop of matchingNode.members) {
+      props.push(prop as ts.PropertySignature);
+    }
+  }
+
+  return props;
 }

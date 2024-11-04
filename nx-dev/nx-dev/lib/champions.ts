@@ -2,22 +2,6 @@ import { Champion } from '@nx/nx-dev/ui-common';
 
 export const champions1: Champion[] = [
   {
-    name: 'William Ghelfi',
-    expertise: 'React, Repository Structure, Patting New Devs On Their Backs',
-    imageUrl: '/images/champions/william-ghelfi.webp',
-    contact: [
-      {
-        label: '@trumbitta',
-        link: 'https://twitter.com/trumbitta',
-      },
-      {
-        label: '@williamghelfi.com',
-        link: 'https://bsky.app/profile/williamghelfi.com',
-      },
-    ],
-    location: 'Italy',
-  },
-  {
     name: 'Santosh Yadav',
     expertise:
       'Onboarding new devs, Repository Structure, Dev Advocacy, Dev Rel, knowledge sharing',
@@ -111,6 +95,19 @@ export const champions1: Champion[] = [
       },
     ],
     location: 'France',
+  },
+  {
+    name: 'Jonathan Gelin',
+    expertise:
+      'Empowering organizations with Nx for streamlined development, robust monorepos, efficient CI/CD, micro-frontend architecture, and strong testing strategies',
+    imageUrl: '/images/champions/jonathan-gelin.webp',
+    contact: [
+      {
+        label: 'gelin.jonathan@gmail.com',
+        link: 'mailto:gelin.jonathan@gmail.com',
+      },
+    ],
+    location: 'Belgium',
   },
 ];
 export const champions2: Champion[] = [
@@ -229,6 +226,18 @@ export const champions2: Champion[] = [
       },
     ],
     location: 'USA',
+  },
+  {
+    name: 'Martin Hochel',
+    expertise: 'Architecture, Scalability, Plugins, Releases, OpenSource',
+    imageUrl: '/images/champions/martin-hochel.webp',
+    contact: [
+      {
+        label: 'LinkedIn: hochelmartin',
+        link: 'https://linkedin.com/in/hochelmartin',
+      },
+    ],
+    location: 'Czechia',
   },
 ];
 export const champions3: Champion[] = [
@@ -356,16 +365,15 @@ export const champions3: Champion[] = [
     location: 'USA',
   },
   {
-    name: 'Jonathan Gelin',
-    expertise:
-      'Empowering organizations with Nx for streamlined development, robust monorepos, efficient CI/CD, micro-frontend architecture, and strong testing strategies',
-    imageUrl: '/images/champions/jonathan-gelin.webp',
+    name: 'Ahmed Elsakaan',
+    expertise: 'Passionate about Monorepos, Web tooling, React and Typescript.',
+    imageUrl: '/images/champions/ahmed-elsakaan.webp',
     contact: [
       {
-        label: 'gelin.jonathan@gmail.com',
-        link: 'mailto:gelin.jonathan@gmail.com',
+        label: '@ixahmedxii',
+        link: 'https://twitter.com/ixahmedxii',
       },
     ],
-    location: 'Belgium',
+    location: 'London, United Kingdom',
   },
 ];

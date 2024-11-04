@@ -105,14 +105,6 @@ export const Simple: Story = {
             options: { command: 'node ./scripts/copy-readme.js jest' },
             configurations: {},
           },
-          'add-extra-dependencies': {
-            executor: 'nx:run-commands',
-            options: {
-              command:
-                'node ./scripts/add-dependency-to-build.js jest @nrwl/jest',
-            },
-            configurations: {},
-          },
           lint: {
             dependsOn: ['build-native', '^build-native'],
             inputs: [

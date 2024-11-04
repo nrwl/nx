@@ -27,16 +27,6 @@ function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
   }
 }
 
-function loadEnvVars(path?: string, env: Record<string, string> = {}) {
-  if (path) {
-    loadEnvVarsFile(path, env);
-  } else {
-    try {
-      loadEnvVarsFile('.env', env);
-    } catch {}
-  }
-}
-
 export type Json = {
   [k: string]: any;
 };
@@ -402,6 +392,7 @@ function nodeProcess(
       maxBuffer: LARGE_BUFFER,
       env,
       cwd,
+      windowsHide: false,
     });
 
     childProcesses.add(childProcess);
@@ -477,21 +468,31 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
+/**
+ * Env variables are processed in the following order:
+ * - env option from executor options
+ * - env file from envFile option if provided
+ * - local env variables
+ */
 function processEnv(
   color: boolean,
   cwd: string,
-  env: Record<string, string>,
+  envOptionFromExecutor: Record<string, string>,
   envFile?: string
 ) {
-  const localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
-  const res = {
+  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
+  localEnv = {
     ...process.env,
     ...localEnv,
-    ...env,
   };
-  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
-    loadEnvVars(envFile, res);
+
+  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
+    loadEnvVarsFile(envFile, localEnv);
   }
+  let res: Record<string, string> = {
+    ...localEnv,
+    ...envOptionFromExecutor,
+  };
   // need to override PATH to make sure we are using the local node_modules
   if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like
   if (localEnv.Path) res.Path = localEnv.Path; // Windows

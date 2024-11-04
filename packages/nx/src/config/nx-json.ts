@@ -79,7 +79,17 @@ export interface NxReleaseChangelogConfiguration {
    * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
    * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
-  createRelease?: 'github' | false;
+  createRelease?:
+    | false
+    | 'github'
+    | {
+        provider: 'github-enterprise-server';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      };
   /**
    * This can either be set to a string value that will be written to the changelog file(s)
    * at the workspace root and/or within project directories, or set to `false` to specify
@@ -123,9 +133,9 @@ export interface NxReleaseGitConfiguration {
    */
   commitMessage?: string;
   /**
-   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes. May be a string or array of strings.
    */
-  commitArgs?: string;
+  commitArgs?: string | string[];
   /**
    * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
    */
@@ -139,9 +149,9 @@ export interface NxReleaseGitConfiguration {
    */
   tagMessage?: string;
   /**
-   * Additional arguments to pass to the `git tag` command invoked behind the scenes
+   * Additional arguments to pass to the `git tag` command invoked behind the scenes. . May be a string or array of strings.
    */
-  tagArgs?: string;
+  tagArgs?: string | string[];
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
@@ -174,7 +184,15 @@ export interface NxReleaseConventionalCommitsConfiguration {
   >;
 }
 
-interface NxReleaseConfiguration {
+export interface NxReleaseVersionPlansConfiguration {
+  /**
+   * Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check`
+   * command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files.
+   */
+  ignorePatternsForPlanCheck?: string[];
+}
+
+export interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
    * @note Only one of `projects` or `groups` can be specified, the cannot be used together.
@@ -202,7 +220,15 @@ interface NxReleaseConfiguration {
        *
        * NOTE: git configuration is not supported at the group level, only the root/command level
        */
-      version?: NxReleaseVersionConfiguration;
+      version?: NxReleaseVersionConfiguration & {
+        /**
+         * A command to run after validation of nx release configuration, but before versioning begins.
+         * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
+         * with the NX_DRY_RUN environment variable set to 'true'.
+         * It will run in addition to the global `preVersionCommand`
+         */
+        groupPreVersionCommand?: string;
+      };
       /**
        * Project changelogs are disabled by default.
        *
@@ -223,7 +249,7 @@ interface NxReleaseConfiguration {
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
        */
-      versionPlans?: boolean;
+      versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
     }
   >;
   /**
@@ -295,7 +321,34 @@ interface NxReleaseConfiguration {
    * Enables using version plans as a specifier source for versioning and
    * to determine changes for changelog generation.
    */
-  versionPlans?: boolean;
+  versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
+}
+
+export interface NxSyncConfiguration {
+  /**
+   * List of workspace-wide sync generators to be run (not attached to targets).
+   */
+  globalGenerators?: string[];
+
+  /**
+   * Options for the sync generators.
+   */
+  generatorOptions?: {
+    [generatorName: string]: Record<string, unknown>;
+  };
+
+  /**
+   * Whether to automatically apply sync generator changes when running tasks.
+   * If not set, the user will be prompted in interactive mode.
+   * If set to `true`, the user will not be prompted and the changes will be applied.
+   * If set to `false`, the user will not be prompted and the changes will not be applied.
+   */
+  applyChanges?: boolean;
+
+  /**
+   * List of registered task sync generators to disable.
+   */
+  disabledTaskSyncGenerators?: string[];
 }
 
 /**
@@ -340,7 +393,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * Available Task Runners
+   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
@@ -416,6 +470,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudAccessToken?: string;
 
   /**
+   * If specified Nx will use nx-cloud by default with the given cloud id.
+   * To use a different runner that accepts a cloud id, define it in {@link tasksRunnerOptions}
+   */
+  nxCloudId?: string;
+
+  /**
    * Specifies the url pointing to an instance of nx cloud. Used for remote
    * caching and displaying run links.
    */
@@ -445,6 +505,21 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable adding inference plugins when generating new projects
    */
   useInferencePlugins?: boolean;
+
+  /**
+   * Set this to true to disable connection to Nx Cloud
+   */
+  neverConnectToCloud?: boolean;
+
+  /**
+   * Configuration for the `nx sync` command.
+   */
+  sync?: NxSyncConfiguration;
+
+  /**
+   * Use the legacy file system cache instead of the db cache
+   */
+  useLegacyCache?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

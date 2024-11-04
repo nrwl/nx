@@ -5,18 +5,16 @@ exports[`vitest generator insourceTests should add the insourceSource option in 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
-  plugins: [react(), nxViteTsPaths()],
-
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   define: {
     'import.meta.vitest': undefined,
   },
@@ -37,7 +35,7 @@ export default defineConfig({
 `;
 
 exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`] = `
-"export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];
+"export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];
 "
 `;
 
@@ -46,24 +44,21 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
-  plugins: [react(), nxViteTsPaths()],
-
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',
@@ -79,24 +74,21 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
-  plugins: [react(), nxViteTsPaths()],
-
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',

@@ -8,6 +8,9 @@ describe('js init generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    // Remove files that should be part of the init generator
+    tree.delete('tsconfig.base.json');
+    tree.delete('.prettierrc');
   });
 
   it('should install prettier package', async () => {
@@ -117,4 +120,50 @@ describe('js init generator', () => {
       typescriptVersion
     );
   });
+
+  it('should support skipping base tsconfig file', async () => {
+    await init(tree, {
+      addTsConfigBase: false,
+    });
+
+    expect(tree.exists('tsconfig.base.json')).toBeFalsy();
+  });
+
+  it('should support skipping prettier setup', async () => {
+    await init(tree, {
+      formatter: 'none',
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['prettier']).toBeUndefined();
+    expect(tree.exists('.prettierignore')).toBeFalsy();
+    expect(tree.exists('.prettierrc')).toBeFalsy();
+  });
+
+  it.each`
+    fileName                | importHelpers | shouldAdd
+    ${'tsconfig.json'}      | ${true}       | ${true}
+    ${'tsconfig.base.json'} | ${true}       | ${true}
+    ${'tsconfig.json'}      | ${false}      | ${false}
+    ${'tsconfig.base.json'} | ${false}      | ${false}
+    ${null}                 | ${false}      | ${false}
+  `(
+    'should add tslib if importHelpers is true in base tsconfig',
+    async ({ fileName, importHelpers, shouldAdd }) => {
+      if (fileName) {
+        writeJson(tree, fileName, {
+          compilerOptions: {
+            importHelpers,
+          },
+        });
+      }
+
+      await init(tree, {
+        addTsConfigBase: false,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(!!packageJson.devDependencies?.['tslib']).toBe(shouldAdd);
+    }
+  );
 });

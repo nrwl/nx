@@ -39,7 +39,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const scApp = uniq('app');
@@ -52,7 +51,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const scAppWithAppRouter = uniq('app');
@@ -65,7 +63,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: false, // No unit tests for app router
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const emotionApp = uniq('app');
@@ -78,7 +75,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
   }, 600_000);
 
@@ -94,15 +90,14 @@ describe('Next.js Styles', () => {
         checkUnitTest: true,
         checkLint: false,
         checkE2E: false,
-        checkExport: false,
       });
 
-      checkFilesExist(`apps/${tailwindApp}/tailwind.config.js`);
-      checkFilesExist(`apps/${tailwindApp}/postcss.config.js`);
+      checkFilesExist(`${tailwindApp}/tailwind.config.js`);
+      checkFilesExist(`${tailwindApp}/postcss.config.js`);
 
-      checkFilesDoNotExist(`apps/${tailwindApp}/pages/index.module.css`);
-      const appPage = readFile(`apps/${tailwindApp}/pages/index.tsx`);
-      const globalCss = readFile(`apps/${tailwindApp}/pages/styles.css`);
+      checkFilesDoNotExist(`${tailwindApp}/pages/index.module.css`);
+      const appPage = readFile(`${tailwindApp}/pages/index.tsx`);
+      const globalCss = readFile(`${tailwindApp}/pages/styles.css`);
 
       expect(appPage).not.toContain(`import styles from './index.module.css';`);
       expect(globalCss).toContain(`@tailwind base;`);
@@ -119,15 +114,14 @@ describe('Next.js Styles', () => {
         checkUnitTest: true,
         checkLint: false,
         checkE2E: false,
-        checkExport: false,
       });
 
-      checkFilesExist(`apps/${tailwindApp}/tailwind.config.js`);
-      checkFilesExist(`apps/${tailwindApp}/postcss.config.js`);
+      checkFilesExist(`${tailwindApp}/tailwind.config.js`);
+      checkFilesExist(`${tailwindApp}/postcss.config.js`);
 
-      checkFilesDoNotExist(`apps/${tailwindApp}/app/page.module.css`);
-      const appPage = readFile(`apps/${tailwindApp}/app/page.tsx`);
-      const globalCss = readFile(`apps/${tailwindApp}/app/global.css`);
+      checkFilesDoNotExist(`${tailwindApp}/app/page.module.css`);
+      const appPage = readFile(`${tailwindApp}/app/page.tsx`);
+      const globalCss = readFile(`${tailwindApp}/app/global.css`);
 
       expect(appPage).not.toContain(`import styles from './page.module.css';`);
       expect(globalCss).toContain(`@tailwind base;`);

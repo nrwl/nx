@@ -2,14 +2,10 @@ import { formatFiles, Tree } from '@nx/devkit';
 import { getDefaultExportName } from '../../../utils/get-default-export-name';
 import { insertImport } from '../../../utils/insert-import';
 import { insertStatementAfterImports } from '../../../utils/insert-statement-after-imports';
-import { resolveRemixRouteFile } from '../../../utils/remix-route-utils';
 import { MetaSchema } from '../schema';
 
 export async function v2MetaGenerator(tree: Tree, schema: MetaSchema) {
-  const routeFilePath =
-    schema.nameAndDirectoryFormat === 'as-provided'
-      ? schema.path
-      : await resolveRemixRouteFile(tree, schema.path, schema.project);
+  const routeFilePath = schema.path;
 
   if (!tree.exists(routeFilePath)) {
     throw new Error(

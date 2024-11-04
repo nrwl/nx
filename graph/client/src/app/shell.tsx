@@ -10,6 +10,7 @@ import {
   ArrowDownTrayIcon,
   ArrowLeftCircleIcon,
   InformationCircleIcon,
+  ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   ErrorToast,
@@ -19,10 +20,10 @@ import {
   usePoll,
 } from '@nx/graph/shared';
 import { Dropdown, Spinner } from '@nx/graph/ui-components';
-import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
+import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal/ui-theme';
 import { Tooltip } from '@nx/graph/ui-tooltips';
 import classNames from 'classnames';
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -42,13 +43,17 @@ import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
   const projectGraphDataService = getProjectGraphDataService();
-
   const graphService = getGraphService();
 
-  const lastPerfReport = useSyncExternalStore(
-    (callback) => graphService.listen(callback),
-    () => graphService.lastPerformanceReport
+  const [lastPerfReport, setLastPerfReport] = useState(
+    graphService.lastPerformanceReport
   );
+
+  useEffect(() => {
+    graphService.listen(() => {
+      setLastPerfReport(graphService.lastPerformanceReport);
+    });
+  }, []);
 
   const nodesVisible = lastPerfReport.numNodes !== 0;
 
@@ -116,6 +121,11 @@ export function Shell(): JSX.Element {
         view: window,
       })
     );
+  }
+
+  function resetLayout() {
+    const graph = getGraphService();
+    graph.resetLayout();
   }
 
   return (
@@ -246,7 +256,7 @@ export function Shell(): JSX.Element {
               type="button"
               className={classNames(
                 !nodesVisible ? 'invisible opacity-0' : '',
-                'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
+                'fixed bottom-4 right-4 z-50 block h-12 w-12 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
               )}
               data-cy="downloadImageButton"
               onClick={downloadImage}
@@ -254,6 +264,18 @@ export function Shell(): JSX.Element {
               <ArrowDownTrayIcon className="absolute left-1/2 top-1/2 -ml-3 -mt-3 h-6 w-6" />
             </button>
           </Tooltip>
+
+          <button
+            type="button"
+            className={classNames(
+              !nodesVisible ? 'invisible opacity-0' : '',
+              'fixed bottom-20 right-4 z-50 block h-12 w-12 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
+            )}
+            data-cy="resetLayoutButton"
+            onClick={resetLayout}
+          >
+            <ViewfinderCircleIcon className="absolute left-1/2 top-1/2 -ml-3 -mt-3 h-6 w-6" />
+          </button>
         </div>
       </div>
       <ErrorToast errors={errors} />

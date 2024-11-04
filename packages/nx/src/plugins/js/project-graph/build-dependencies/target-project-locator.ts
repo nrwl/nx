@@ -1,5 +1,5 @@
-import { builtinModules } from 'node:module';
-import { dirname, join, parse, posix, relative } from 'node:path';
+import { isBuiltin } from 'node:module';
+import { dirname, join, posix, relative } from 'node:path';
 import { clean } from 'semver';
 import {
   ProjectGraphExternalNode,
@@ -18,6 +18,7 @@ import {
   resolveModuleByImport,
 } from '../../utils/typescript';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
+
 /**
  * The key is a combination of the package name and the workspace relative directory
  * containing the file importing it e.g. `lodash__packages/my-lib`, the value is the
@@ -30,14 +31,11 @@ type NpmResolutionCache = Map<string, string | null>;
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
 
-const builtInModuleSet = new Set<string>([
-  ...builtinModules,
-  ...builtinModules.map((x) => `node:${x}`),
-]);
+const experimentalNodeModules = new Set(['node:sqlite']);
 
 export function isBuiltinModuleImport(importExpr: string): boolean {
   const packageName = getPackageNameFromImportPath(importExpr);
-  return builtInModuleSet.has(packageName);
+  return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
 }
 
 export class TargetProjectLocator {
@@ -187,8 +185,22 @@ export class TargetProjectLocator {
       }
 
       const version = clean(externalPackageJson.version);
-      const npmProjectKey = `npm:${externalPackageJson.name}@${version}`;
-      const matchingExternalNode = this.npmProjects[npmProjectKey];
+      let matchingExternalNode =
+        this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
+
+      if (!matchingExternalNode) {
+        // check if it's a package alias, where the resolved package key is used as the version
+        const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
+        matchingExternalNode = this.npmProjects[aliasNpmProjectKey];
+      }
+
+      if (!matchingExternalNode) {
+        // Fallback to package name as key. This can happen if the version in project graph is not the same as in the resolved package.json.
+        // e.g. Version in project graph is a git remote, but the resolved version is semver.
+        matchingExternalNode =
+          this.npmProjects[`npm:${externalPackageJson.name}`];
+      }
+
       if (!matchingExternalNode) {
         return null;
       }
@@ -349,7 +361,7 @@ export class TargetProjectLocator {
         packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
       let dir = dirname(pathOfFileInPackage);
 
-      while (dir !== parse(dir).root) {
+      while (dir !== dirname(dir)) {
         const packageJsonPath = join(dir, 'package.json');
         try {
           const parsedPackageJson = readJsonFile(packageJsonPath);

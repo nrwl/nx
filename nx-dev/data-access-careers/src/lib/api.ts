@@ -3,7 +3,7 @@ import { Job, LeverJob } from './models';
 export async function fetchJobsList(): Promise<Job[]> {
   const apiUrl = 'https://api.lever.co/v0/postings/nrwl?mode=json';
 
-  const res = await fetch(apiUrl);
+  const res = await fetch(apiUrl, { cache: 'no-store' });
 
   if (res.ok) {
     const data = (await res.json()) as LeverJob[];

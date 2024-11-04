@@ -11,16 +11,6 @@ import {
 import type { Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
-  await componentGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function componentGeneratorInternal(
-  tree: Tree,
-  rawOptions: Schema
-) {
   const options = await normalizeOptions(tree, rawOptions);
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);

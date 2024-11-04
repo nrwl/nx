@@ -1,6 +1,6 @@
 # Migrate from Turborepo to Nx
 
-If you have an existing monorepo that uses Turborepo, switching to use Nx is a straight-forward process. After switching, you'll have cleaner CLI output, a better graph view and IDE support with the option to incorporate Nx plugins and take advantage of the features of an integrated repository. All this without increasing the complexity of your configuration files.
+If you have an existing monorepo that uses Turborepo, switching to use Nx is a straight-forward process. After switching, you'll have cleaner CLI output, a better graph view and IDE support with the option to incorporate [Nx plugins](/concepts/nx-plugins). All this without increasing the complexity of your configuration files.
 
 For more details, read our [comparison of Nx and Turborepo](/concepts/turbo-and-nx)
 
@@ -78,7 +78,7 @@ Creating the equivalent configuration with Nx yields the following files:
       "cache": true
     }
   },
-  "nxCloudAccessToken": "..."
+  "nxCloudId": "..."
 }
 ```
 
@@ -145,7 +145,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--parallel`                | N/A                                                                                                                                                                                   |
 | `--remote-only`             | N/A. Can [ignore the remote cache](/ci/features/remote-cache#skipping-cloud-cache) with `--no-cloud`.                                                                                 |
 | `--summarize`               | N/A                                                                                                                                                                                   |
-| `--token`                   | Set the [Nx Cloud token in `nx.json`](/ci/recipes/security/access-tokens#setting-access-tokens) or as an environment variable (`NX_CLOUD_ACCESS_TOKEN`)                               |
+| `--token`                   | Set the [Nx Cloud CI Access Token](/ci/recipes/security/access-tokens#setting-ci-access-tokens) or as an environment variable (`NX_CLOUD_ACCESS_TOKEN`)                               |
 | `--team`                    | See `--token` for choosing a different Nx Cloud workspace. You can [use `--runner`](/nx-api/nx/documents/run-many#runner) to choose a different runner defined in the `nx.json` file. |
 | `--preflight`               | N/A                                                                                                                                                                                   |
 | `--trace`                   | N/A. [`--verbose`](/nx-api/nx/documents/run-many#verbose) for more logging.                                                                                                           |

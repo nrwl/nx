@@ -3,22 +3,18 @@ import { join, relative } from 'node:path';
 
 import {
   AggregateCreateNodesError,
-  logger,
   normalizePath,
   workspaceRoot,
 } from '@nx/devkit';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
 
-import { execGradleAsync } from './exec-gradle';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-
-export const fileSeparator = process.platform.startsWith('win')
-  ? 'file:///'
-  : 'file://';
-
-export const newLineSeparator = process.platform.startsWith('win')
-  ? '\r\n'
-  : '\n';
+import { dirname } from 'path';
+import { gradleConfigAndTestGlob } from './split-config-files';
+import {
+  getProjectReportLines,
+  fileSeparator,
+  newLineSeparator,
+} from './get-project-report-lines';
 
 export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;
@@ -26,42 +22,46 @@ export interface GradleReport {
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
   gradleProjectToProjectName: Map<string, string>;
+  gradleProjectNameToProjectRootMap: Map<string, string>;
+  gradleProjectToChildProjects: Map<string, string[]>;
 }
 
 let gradleReportCache: GradleReport;
 let gradleCurrentConfigHash: string;
 
-export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);
-export const GRADLE_TEST_FILES = [
-  '**/src/test/java/**/*Test.java',
-  '**/src/test/kotlin/**/*Test.kt',
-  '**/src/test/java/**/*Tests.java',
-  '**/src/test/kotlin/**/*Tests.kt',
-];
-
-export const gradleConfigGlob = combineGlobPatterns(
-  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`)
-);
-
-export const gradleConfigAndTestGlob = combineGlobPatterns(
-  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
-  ...GRADLE_TEST_FILES
-);
-
 export function getCurrentGradleReport() {
   if (!gradleReportCache) {
-    throw new Error(
-      'Expected cached gradle report. Please open an issue at https://github.com/nrwl/nx/issues/new/choose'
+    throw new AggregateCreateNodesError(
+      [
+        [
+          null,
+          new Error(
+            `Expected cached gradle report. Please open an issue at https://github.com/nrwl/nx/issues/new/choose`
+          ),
+        ],
+      ],
+      []
     );
   }
   return gradleReportCache;
 }
 
+/**
+ * This function populates the gradle report cache.
+ * For each gradlew file, it runs the `projectReportAll` task and processes the output.
+ * If `projectReportAll` fails, it runs the `projectReport` task instead.
+ * It will throw an error if both tasks fail.
+ * It will accumulate the output of all gradlew files.
+ * @param workspaceRoot
+ * @param gradlewFiles absolute paths to all gradlew files in the workspace
+ * @returns Promise<void>
+ */
 export async function populateGradleReport(
-  workspaceRoot: string
+  workspaceRoot: string,
+  gradlewFiles: string[]
 ): Promise<void> {
   const gradleConfigHash = await hashWithWorkspaceContext(workspaceRoot, [
-    gradleConfigGlob,
+    gradleConfigAndTestGlob,
   ]);
   if (gradleReportCache && gradleConfigHash === gradleCurrentConfigHash) {
     return;
@@ -70,37 +70,18 @@ export async function populateGradleReport(
   const gradleProjectReportStart = performance.mark(
     'gradleProjectReport:start'
   );
-  let projectReportLines;
-  try {
-    projectReportLines = await execGradleAsync(['projectReportAll'], {
-      cwd: workspaceRoot,
-    });
-  } catch (e) {
-    try {
-      projectReportLines = await execGradleAsync(['projectReport'], {
-        cwd: workspaceRoot,
-      });
-      logger.warn(
-        'Could not run `projectReportAll` task. Ran `projectReport` instead. Please run `nx generate @nx/gradle:init` to generate the necessary tasks.'
-      );
-    } catch (e) {
-      throw new AggregateCreateNodesError(
-        [
-          [
-            null,
-            new Error(
-              'Could not run `projectReportAll` or `projectReport` task. Please run `nx generate @nx/gradle:init` to generate the necessary tasks.'
-            ),
-          ],
-        ],
-        []
-      );
-    }
-  }
-  projectReportLines = projectReportLines
-    .toString()
-    .split(newLineSeparator)
-    .filter((line) => line.trim() !== '');
+
+  const projectReportLines = await gradlewFiles.reduce(
+    async (
+      projectReportLines: Promise<string[]>,
+      gradlewFile: string
+    ): Promise<string[]> => {
+      const allLines = await projectReportLines;
+      const currentLines = await getProjectReportLines(gradlewFile);
+      return [...allLines, ...currentLines];
+    },
+    Promise.resolve([])
+  );
 
   const gradleProjectReportEnd = performance.mark('gradleProjectReport:end');
   performance.measure(
@@ -108,6 +89,7 @@ export async function populateGradleReport(
     gradleProjectReportStart.name,
     gradleProjectReportEnd.name
   );
+  gradleCurrentConfigHash = gradleConfigHash;
   gradleReportCache = processProjectReports(projectReportLines);
 }
 
@@ -124,6 +106,7 @@ export function processProjectReports(
    */
   const gradleProjectToTasksTypeMap = new Map<string, Map<string, string>>();
   const gradleProjectToProjectName = new Map<string, string>();
+  const gradleProjectNameToProjectRootMap = new Map<string, string>();
   /**
    * Map of buildFile to dependencies report path
    */
@@ -133,6 +116,10 @@ export function processProjectReports(
    * e.g. {build.gradle.kts: { projectReportDir: '' testReportDir: '' }}
    */
   const gradleFileToOutputDirsMap = new Map<string, Map<string, string>>();
+  /**
+   * Map of Gradle Project to its child projects
+   */
+  const gradleProjectToChildProjects = new Map<string, string[]>();
 
   let index = 0;
   while (index < projectReportLines.length) {
@@ -182,6 +169,19 @@ export function processProjectReports(
           if (line.startsWith('buildDir: ')) {
             absBuildDirPath = line.substring('buildDir: '.length);
           }
+          if (line.startsWith('childProjects: ')) {
+            const childProjects = line.substring(
+              'childProjects: {'.length,
+              line.length - 1
+            ); // remove curly braces {} around childProjects
+            gradleProjectToChildProjects.set(
+              gradleProject,
+              childProjects
+                .split(',')
+                .map((c) => c.trim().split('=')[0])
+                .filter(Boolean) // e.g. get project name from text like "app=project ':app', mylibrary=project ':mylibrary'"
+            );
+          }
           if (line.includes('Dir: ')) {
             const [dirName, dirPath] = line.split(': ');
             const taskName = dirName.replace('Dir', '');
@@ -213,6 +213,10 @@ export function processProjectReports(
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
         gradleProjectToProjectName.set(gradleProject, projectName);
+        gradleProjectNameToProjectRootMap.set(
+          gradleProject,
+          dirname(buildFile)
+        );
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
@@ -240,7 +244,11 @@ export function processProjectReports(
             if (tasksFileLines[i + 1] === dashes) {
               const type = line.substring(0, line.length - ' tasks'.length);
               i++;
-              while (tasksFileLines[++i] !== '') {
+              while (
+                tasksFileLines[++i] !== '' &&
+                i < tasksFileLines.length &&
+                tasksFileLines[i]?.includes(' - ')
+              ) {
                 const [taskName] = tasksFileLines[i].split(' - ');
                 taskTypeMap.set(taskName, type);
               }
@@ -260,5 +268,7 @@ export function processProjectReports(
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
     gradleProjectToProjectName,
+    gradleProjectNameToProjectRootMap,
+    gradleProjectToChildProjects,
   };
 }

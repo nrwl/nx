@@ -21,7 +21,7 @@ For this recipe we'll use a project with the following `project.json` file:
 
 And the following [final configuration](/reference/project-configuration):
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {

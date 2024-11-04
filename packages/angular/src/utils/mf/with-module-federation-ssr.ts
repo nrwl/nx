@@ -20,7 +20,7 @@ export async function withModuleFederationForSSR(
   return (config) => {
     const updatedConfig = {
       ...(config ?? {}),
-      target: false,
+      target: 'async-node',
       output: {
         ...(config.output ?? {}),
         uniqueName: options.name,
@@ -38,19 +38,15 @@ export async function withModuleFederationForSSR(
       },
       plugins: [
         ...(config.plugins ?? []),
-        new (require('@module-federation/node').UniversalFederationPlugin)(
+        new (require('@module-federation/enhanced').ModuleFederationPlugin)(
           {
-            name: options.name,
+            name: options.name.replace(/-/g, '_'),
             filename: 'remoteEntry.js',
             exposes: options.exposes,
             remotes: mappedRemotes,
             shared: {
               ...sharedDependencies,
             },
-            library: {
-              type: 'commonjs-module',
-            },
-            isServer: true,
             /**
              * Apply user-defined config override
              */
@@ -60,11 +56,16 @@ export async function withModuleFederationForSSR(
               !options.disableNxRuntimeLibraryControlPlugin
                 ? [
                     ...(configOverride?.runtimePlugins ?? []),
+                    require.resolve('@module-federation/node/runtimePlugin'),
                     require.resolve(
                       '@nx/webpack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
                     ),
                   ]
-                : configOverride?.runtimePlugins,
+                : [
+                    ...(configOverride?.runtimePlugins ?? []),
+                    require.resolve('@module-federation/node/runtimePlugin'),
+                  ],
+            virtualRuntimeEntry: true,
           },
           {}
         ),

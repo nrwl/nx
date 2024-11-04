@@ -252,7 +252,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
             }
           }
         } else {
-          result[metadataKey] = value;
+          result[metadataKey][key] = value[key];
           if (sourceMap) {
             sourceMap[`${baseSourceMapPath}.${metadataKey}`] =
               sourceInformation;
@@ -505,12 +505,12 @@ function mergeCreateNodesResults(
   return { projectRootMap, externalNodes, rootMap, configurationSourceMaps };
 }
 
-function findMatchingConfigFiles(
+export function findMatchingConfigFiles(
   projectFiles: string[],
   pattern: string,
   include: string[],
   exclude: string[]
-) {
+): string[] {
   const matchingConfigFiles: string[] = [];
 
   for (const file of projectFiles) {
@@ -644,10 +644,12 @@ function normalizeTargets(
     const projectSourceMaps = sourceMaps[project.root];
 
     const targetConfig = project.targets[targetName];
-    const targetDefaults = readTargetDefaultsForTarget(
-      targetName,
-      nxJsonConfiguration.targetDefaults,
-      targetConfig.executor
+    const targetDefaults = deepClone(
+      readTargetDefaultsForTarget(
+        targetName,
+        nxJsonConfiguration.targetDefaults,
+        targetConfig.executor
+      )
     );
 
     // We only apply defaults if they exist
@@ -718,6 +720,10 @@ function targetDefaultShouldBeApplied(
   return !plugin?.startsWith('nx/');
 }
 
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 export function mergeTargetDefaultWithTargetDefinition(
   targetName: string,
   project: ProjectConfiguration,
@@ -725,7 +731,7 @@ export function mergeTargetDefaultWithTargetDefinition(
   sourceMap: Record<string, SourceInformation>
 ): TargetConfiguration {
   const targetDefinition = project.targets[targetName] ?? {};
-  const result = JSON.parse(JSON.stringify(targetDefinition));
+  const result = deepClone(targetDefinition);
 
   for (const key in targetDefault) {
     switch (key) {

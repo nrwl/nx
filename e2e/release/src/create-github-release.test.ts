@@ -46,7 +46,6 @@ describe('nx release create github release', () => {
 
   beforeAll(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -125,7 +124,7 @@ describe('nx release create github release', () => {
     expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
     expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(2);
     expect(
-      result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length
+      result.match(new RegExp(`### ⚠️  Breaking Changes`, 'g')).length
     ).toEqual(2);
   });
 
@@ -159,7 +158,7 @@ describe('nx release create github release', () => {
     expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
     expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(1);
     expect(
-      result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length
+      result.match(new RegExp(`### ⚠️  Breaking Changes`, 'g')).length
     ).toEqual(1);
   });
 });

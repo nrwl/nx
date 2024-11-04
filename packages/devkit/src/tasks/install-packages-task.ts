@@ -20,7 +20,7 @@ export function installPackagesTask(
   tree: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
-  packageManager: PackageManager = detectPackageManager(cwd)
+  packageManager: PackageManager = detectPackageManager(join(tree.root, cwd))
 ): void {
   if (
     !tree
@@ -43,6 +43,7 @@ export function installPackagesTask(
     const execSyncOptions: ExecSyncOptions = {
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+      windowsHide: false,
     };
     // ensure local registry from process is not interfering with the install
     // when we start the process from temp folder the local registry would override the custom registry

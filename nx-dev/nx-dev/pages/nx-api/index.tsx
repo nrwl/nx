@@ -20,6 +20,7 @@ import { useMemo } from 'react';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../lib/packages.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 export default function Packages({
   packages,
@@ -97,11 +98,7 @@ export default function Packages({
             navIsOpen={navIsOpen}
             toggleNav={toggleNav}
           />
-          <div
-            id="wrapper"
-            data-testid="wrapper"
-            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-          >
+          <ScrollableContent>
             <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
               <div id="content-wrapper" className="w-full flex-auto flex-col">
                 <div className="mb-6 pt-8">
@@ -112,18 +109,17 @@ export default function Packages({
 
                   <section id="packages-section" className="py-1">
                     <p>
-                      In version 16, we have rescoped our packages to{' '}
-                      <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
+                      Read more about what Nx plugins are on our{' '}
                       <Link
-                        href="/recipes/other/rescope"
-                        className="underline"
+                        href="/concepts/nx-plugins"
+                        className="text-blue-600 transition-colors ease-out hover:text-blue-700 dark:text-sky-500 dark:hover:text-sky-400"
                         prefetch={false}
                       >
-                        Read more about the rescope ≫
+                        docs page.
                       </Link>
                     </p>
                   </section>
-                  <section id="packages-section" className="py-12">
+                  <section id="packages-section" className="py-6">
                     <nav
                       aria-labelledby="package-index-navigation"
                       className="relative mb-24 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5"
@@ -153,7 +149,7 @@ export default function Packages({
               </div>
             </div>
             <Footer />
-          </div>
+          </ScrollableContent>
         </main>
       </div>
     </>

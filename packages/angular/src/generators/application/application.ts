@@ -7,7 +7,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
@@ -16,6 +18,7 @@ import {
   addE2e,
   addLinting,
   addProxyConfig,
+  addServeStaticTarget,
   addUnitTestRunner,
   createFiles,
   createProject,
@@ -26,22 +29,13 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
-  return await applicationGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
 
-export async function applicationGeneratorInternal(
-  tree: Tree,
-  schema: Partial<Schema>
-): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
@@ -74,7 +68,12 @@ export async function applicationGeneratorInternal(
 
   await addLinting(tree, options);
   await addUnitTestRunner(tree, options);
-  await addE2e(tree, options);
+  const e2ePort = await addE2e(tree, options);
+  addServeStaticTarget(
+    tree,
+    options,
+    options.e2eTestRunner !== 'none' ? e2ePort : options.port
+  );
   updateEditorTsConfig(tree, options);
   setGeneratorDefaults(tree, options);
 

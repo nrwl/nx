@@ -1,9 +1,12 @@
-import { rmSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 import { daemonClient } from '../../daemon/client/client';
 import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
 import { ResetCommandOptions } from './command-object';
+
+import { getCloudClient } from '../../nx-cloud/utilities/client';
+import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
@@ -39,15 +42,15 @@ export async function resetHandler(args: ResetCommandOptions) {
   if (all || args.onlyDaemon) {
     try {
       await killDaemon();
-    } catch {
-      errors.push('Failed to stop the Nx Daemon.');
+    } catch (e) {
+      errors.push('Failed to stop the Nx Daemon.', e.toString());
     }
   }
   if (all || args.onlyCache) {
     try {
       await cleanupCacheEntries();
-    } catch {
-      errors.push('Failed to clean up the cache directory.');
+    } catch (e) {
+      errors.push('Failed to clean up the cache directory.', e.toString());
     }
   }
   if (all || args.onlyWorkspaceData) {
@@ -58,8 +61,18 @@ export async function resetHandler(args: ResetCommandOptions) {
     }
     try {
       await cleanupWorkspaceData();
-    } catch {
-      errors.push('Failed to clean up the workspace data directory.');
+    } catch (e) {
+      errors.push(
+        'Failed to clean up the workspace data directory.',
+        e.toString()
+      );
+    }
+  }
+  if (all || args.onlyCloud) {
+    try {
+      await resetCloudClient();
+    } catch (e) {
+      errors.push('Failed to reset the Nx Cloud client.', e.toString());
     }
   }
   if (errors.length > 0) {
@@ -75,8 +88,18 @@ export async function resetHandler(args: ResetCommandOptions) {
   }
 }
 
-function killDaemon() {
-  return daemonClient.stop();
+async function killDaemon(): Promise<void> {
+  if (daemonClient.enabled()) {
+    return daemonClient.stop();
+  }
+}
+
+async function resetCloudClient() {
+  // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
+  // similar commands on their local machine.
+  try {
+    (await getCloudClient(getCloudOptions())).invoke('cleanup');
+  } catch {}
 }
 
 function cleanupCacheEntries() {

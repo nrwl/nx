@@ -37,6 +37,7 @@ export function normalizeOptions(
     }
   }
 
+  options.assets ??= [];
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
     contextRoot,

@@ -79,10 +79,13 @@ export function CiForMonorepos(): JSX.Element {
         </div>
         <div className="mt-24 grid grid-cols-1 gap-4 lg:grid-cols-12">
           <ApplicationCard />
-          <div className="col-span-1 grid grid-cols-2 gap-4 lg:col-span-8 lg:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4 lg:col-span-8 lg:grid-cols-2">
             <ProjectsCreatedEveryMonth />
             <HalveYouBill />
             <IntegratesToYouCurrentCiProvider />
+          </div>
+          <div className="lg:col-span-12">
+            <AiSection />
           </div>
         </div>
       </article>
@@ -90,13 +93,13 @@ export function CiForMonorepos(): JSX.Element {
   );
 }
 
-export const Card = ({
+export function Card({
   className,
   children,
 }: {
   className?: string;
   children?: ReactNode;
-}) => {
+}): JSX.Element {
   return (
     <div
       className={cx(
@@ -107,19 +110,39 @@ export const Card = ({
       {children}
     </div>
   );
-};
+}
 
-export const PulseLine = () => {
+export function PulseLine({
+  className = '',
+}: {
+  className?: string;
+}): JSX.Element {
   return (
-    <span className="absolute left-0 top-1/2 h-48 w-[1px] -translate-y-1/2 animate-pulse bg-gradient-to-b from-blue-500/0 via-blue-400 to-blue-500/0" />
+    <span
+      className={cx(
+        'absolute left-0 top-1/2 h-48 w-[1px] -translate-y-1/2 animate-pulse bg-gradient-to-b from-blue-500/0 via-blue-400 to-blue-500/0',
+        className
+      )}
+    />
   );
-};
+}
 
-export const CornerBlur = () => (
-  <div className="absolute bottom-0 left-0 z-0 size-72 -translate-x-1/2 translate-y-1/2 rounded-full bg-slate-50 blur-2xl dark:bg-slate-900" />
-);
+export function CornerBlur({
+  className = '',
+}: {
+  className?: string;
+}): JSX.Element {
+  return (
+    <div
+      className={cx(
+        'absolute bottom-0 left-0 z-0 size-72 -translate-x-1/2 translate-y-1/2 rounded-full bg-slate-50 blur-2xl dark:bg-slate-900',
+        className
+      )}
+    />
+  );
+}
 
-export const ApplicationCard = () => {
+export function ApplicationCard(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="col-span-1 h-[600px] lg:col-span-4 lg:h-[600px]">
@@ -215,7 +238,7 @@ export const ApplicationCard = () => {
       </Transition>
     </div>
   );
-};
+}
 
 //
 function PlayButton({
@@ -285,7 +308,7 @@ function PlayButton({
 }
 
 //
-export const ProjectsCreatedEveryMonth = () => {
+export function ProjectsCreatedEveryMonth(): JSX.Element {
   return (
     <div className="relative col-span-2 h-[360px] md:col-span-1">
       <Card className="relative">
@@ -305,8 +328,8 @@ export const ProjectsCreatedEveryMonth = () => {
         </div>
         <div className="mt-8 text-center">
           <ButtonLink
-            href="https://cloud.nx.app?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_connect_now"
-            title="Get started"
+            href="https://cloud.nx.app/create-nx-workspace?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_connect_now"
+            title="Get started with Nx Cloud"
             variant="primary"
             size="large"
             target="_blank"
@@ -318,11 +341,11 @@ export const ProjectsCreatedEveryMonth = () => {
       </Card>
     </div>
   );
-};
+}
 //
 
 //
-export const HalveYouBill = () => {
+export function HalveYouBill(): JSX.Element {
   return (
     <div className="col-span-2 h-[415px] sm:h-[360px] md:col-span-1">
       <Card>
@@ -366,11 +389,11 @@ export const HalveYouBill = () => {
       </Card>
     </div>
   );
-};
+}
 //
 
 //
-export const IntegratesToYouCurrentCiProvider = () => {
+export function IntegratesToYouCurrentCiProvider(): JSX.Element {
   return (
     <div className="col-span-2 h-fit sm:h-[225px]">
       <Card>
@@ -385,12 +408,12 @@ export const IntegratesToYouCurrentCiProvider = () => {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/intro/connect-to-cloud?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/ci/intro/connect-to-nx-cloud?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add Nx Cloud to your CI workflow"
               prefetch={false}
               className="group font-semibold leading-6 text-slate-950 dark:text-white"
             >
-              Enable faster CI with a single line{' '}
+              Enable faster CI with a single line of code{' '}
               <span
                 aria-hidden="true"
                 className="inline-block transition group-hover:translate-x-1"
@@ -406,9 +429,9 @@ export const IntegratesToYouCurrentCiProvider = () => {
       </Card>
     </div>
   );
-};
+}
 
-export function CiProviderVerticalMarquees() {
+export function CiProviderVerticalMarquees(): JSX.Element {
   const ICON_DATA = [
     {
       Icon: GitHubIcon,
@@ -459,6 +482,58 @@ export function CiProviderVerticalMarquees() {
           ))}
         </Marquee>
       </div>
+    </div>
+  );
+}
+
+export function AiSection(): JSX.Element {
+  return (
+    <div className="h-fit sm:h-[225px]">
+      <Card className="flex items-center gap-8">
+        <PulseLine className="left-full -translate-x-[1px]" />
+        <div className="relative hidden h-full w-64 shrink-0 overflow-hidden lg:block">
+          <img
+            src="/images/home/ci-with-ai-light.avif"
+            alt="ci with ai illustration"
+            className="absolute inset-0 block -translate-y-[85px] scale-150 transform dark:hidden"
+          />
+          <img
+            src="/images/home/ci-with-ai-dark.avif"
+            alt="ci with ai illustration"
+            className="absolute inset-0 hidden -translate-y-[85px] scale-150 transform dark:block"
+          />
+        </div>
+        <div className="grow">
+          <p className="text-2xl text-slate-900 dark:text-slate-100">
+            AI for your CI
+          </p>
+          <p className="mt-2text-slate-600 dark:text-slate-400">
+            Identify and <Strong> resolve task failures</Strong> instantly with
+            intelligent explanations and actionable solutions. Set your desired
+            CI run time, and Nx Cloud will match it. Our{' '}
+            <Strong>custom AI model</Strong> analyzes your previous runs, then{' '}
+            <Strong>dynamically predicts and allocates</Strong> the optimal
+            number of agents. The more you use it, the smarter it gets. Take the
+            guesswork out of your work.
+          </p>
+          <div className="mt-4 flex items-center">
+            <Link
+              href="/ci/concepts/nx-cloud-ai?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              title="Add AI to your CI with Nx Cloud"
+              prefetch={false}
+              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+            >
+              Learn more{' '}
+              <span
+                aria-hidden="true"
+                className="inline-block transition group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

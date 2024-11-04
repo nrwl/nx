@@ -29,7 +29,7 @@ export async function storybookConfigurationGenerator(
     joinPathFragments(
       root,
       '.storybook',
-      'preview.' + options.tsConfiguration ? 'ts' : 'js'
+      'preview.' + (options.tsConfiguration ? 'ts' : 'js')
     ),
     `import '../src/assets/css/styles.css';`
   );

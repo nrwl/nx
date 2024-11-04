@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { copyFileSync, existsSync } from 'node:fs';
-import { relative, join, resolve } from 'node:path';
+import { join, parse, relative, resolve } from 'node:path';
 import {
   loadConfig,
   createMatchPath,
@@ -57,8 +57,13 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     '.js',
     '.jsx',
     '.json',
+    '.mts',
     '.mjs',
+    '.cts',
     '.cjs',
+    '.css',
+    '.scss',
+    '.less',
   ];
   options.mainFields ??= [['exports', '.', 'import'], 'module', 'main'];
   options.buildLibsFromSource ??= true;
@@ -66,6 +71,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
 
   return {
     name: 'nx-vite-ts-paths',
+    // Ensure the resolveId aspect of the plugin is called before vite's internal resolver
+    // Otherwise, issues can arise with Yarn Workspaces and Pnpm Workspaces
+    enforce: 'pre',
     async configResolved(config: any) {
       projectRoot = config.root;
       const projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
@@ -243,7 +251,9 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
   function findFile(path: string): string {
     for (const ext of options.extensions) {
-      const resolvedPath = resolve(path + ext);
+      // Support file extensions such as .css and .js in the import path.
+      const { dir, name } = parse(path);
+      const resolvedPath = resolve(dir, name + ext);
       if (existsSync(resolvedPath)) {
         return resolvedPath;
       }

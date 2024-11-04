@@ -24,6 +24,10 @@
         "description": "Hide formatting logs",
         "x-priority": "internal"
       },
+      "generateToken": {
+        "type": "boolean",
+        "description": "Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud"
+      },
       "github": {
         "type": "boolean",
         "description": "If the user will be using GitHub as their git hosting provider",

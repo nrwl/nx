@@ -29,7 +29,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return angularApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       standalone: options.standaloneApi,
@@ -38,6 +37,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler,
       ssr: options.ssr,
       prefix: options.prefix,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -47,7 +47,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return angularApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       routing: options.routing,
@@ -57,6 +56,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler,
       ssr: options.ssr,
       prefix: options.prefix,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -65,12 +65,12 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       bundler: options.bundler ?? 'webpack',
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactStandalone) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -79,7 +79,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
@@ -87,6 +86,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.RemixMonorepo) {
     const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
@@ -95,11 +95,11 @@ async function createPreset(tree: Tree, options: Schema) {
     return remixApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.RemixStandalone) {
     const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
@@ -108,12 +108,12 @@ async function createPreset(tree: Tree, options: Schema) {
     return remixApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       rootProject: true,
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.VueMonorepo) {
     const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
@@ -122,11 +122,11 @@ async function createPreset(tree: Tree, options: Schema) {
     return vueApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.VueStandalone) {
     const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
@@ -135,13 +135,13 @@ async function createPreset(tree: Tree, options: Schema) {
     return vueApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.Nuxt) {
     const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
@@ -150,11 +150,11 @@ async function createPreset(tree: Tree, options: Schema) {
     return nuxtApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.NuxtStandalone) {
     const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
@@ -163,13 +163,13 @@ async function createPreset(tree: Tree, options: Schema) {
     return nuxtApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
@@ -178,7 +178,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nextApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
@@ -192,7 +191,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nextApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
@@ -208,12 +206,12 @@ async function createPreset(tree: Tree, options: Schema) {
     return webApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       bundler: 'vite',
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nx' +
@@ -222,7 +220,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return nestApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
@@ -234,7 +231,6 @@ async function createPreset(tree: Tree, options: Schema) {
     return expressApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
@@ -245,30 +241,34 @@ async function createPreset(tree: Tree, options: Schema) {
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.Expo) {
     const { expoApplicationGenerator } = require('@nx' + '/expo');
     return expoApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.TS) {
     const { initGenerator } = require('@nx' + '/js');
-    return initGenerator(tree, {});
+    return initGenerator(tree, {
+      formatter: options.formatter,
+      addTsPlugin:
+        process.env.NX_ADD_PLUGINS !== 'false' &&
+        process.env.NX_ADD_TS_PLUGIN !== 'false',
+    });
   } else if (options.preset === Preset.TsStandalone) {
     const { libraryGenerator } = require('@nx' + '/js');
     return libraryGenerator(tree, {
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       bundler: 'tsc',
       unitTestRunner: 'vitest',
       testEnvironment: 'node',
@@ -284,7 +284,6 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler,
       name: options.name,
       directory: '.',
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
       framework: options.framework,
@@ -301,7 +300,6 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler,
       name: options.name,
       directory: join('apps', options.name),
-      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       framework: options.framework,
       docker: options.docker,

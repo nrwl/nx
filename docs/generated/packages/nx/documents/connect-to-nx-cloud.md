@@ -1,11 +1,11 @@
 ---
 title: 'connect - CLI command'
-description: 'Connect workspace to Nx Cloud'
+description: 'Connect workspace to Nx Cloud.'
 ---
 
 # connect
 
-Connect workspace to Nx Cloud
+Connect workspace to Nx Cloud.
 
 ## Usage
 
@@ -17,14 +17,9 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-### help
-
-Type: `boolean`
-
-Show help
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option            | Type    | Description                                                                               |
+| ----------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `--generateToken` | boolean | Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud. |
+| `--help`          | boolean | Show help.                                                                                |
+| `--verbose`       | boolean | Prints additional information about the commands (e.g., stack traces).                    |
+| `--version`       | boolean | Show version number.                                                                      |

@@ -1,10 +1,9 @@
-import { SectionHeading } from './temp/typography';
 import {
   BoltIcon,
   ChevronDoubleRightIcon,
   UsersIcon,
-  WrenchIcon,
 } from '@heroicons/react/24/outline';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function EnterpriseAddons(): JSX.Element {
   return (

@@ -167,8 +167,8 @@ export async function createBuilderContext(
     logger: getLogger(),
     id: 1,
     currentDirectory: process.cwd(),
-    scheduleTarget: architect.scheduleTarget,
-    scheduleBuilder: architect.scheduleBuilder,
+    scheduleTarget: (...args) => architect.scheduleTarget(...args),
+    scheduleBuilder: (...args) => architect.scheduleBuilder(...args),
     addTeardown(teardown: () => Promise<void> | void) {
       // No-op as Nx doesn't require an implementation of this function
       return;

@@ -291,7 +291,7 @@ export async function createProjectGraphAndSourceMapsAsync(
       );
       return projectGraphAndSourceMaps;
     } catch (e) {
-      if (e.message.indexOf('inotify_add_watch') > -1) {
+      if (e.message && e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
         output.note({
           title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon.`,
