@@ -1,7 +1,7 @@
 import type { Mode } from '@rspack/core';
 
 export interface RspackExecutorSchema {
-  target: 'web' | 'node';
+  target?: 'web' | 'node';
   main: string;
   index?: string;
   tsConfig: string;
