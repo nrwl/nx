@@ -4,6 +4,7 @@ slug: improve-architecture-and-ci-times-with-projects
 authors: [Philip Fulcher]
 tags: [nx, enterprise]
 cover_image: '/blog/images/2024-10-25/header.avif'
+pinned: true
 ---
 
 When adopting monorepos and Nx, it can feel like there's a lot that needs to be understood first before you get all the benefits. Oftentimes it's tempting to skip some fundamentals and just add all your code into one monorepo and call it a day. Following this mentality is the best way to actually _increase_ your CI run times and cost. Monorepos should simplify your architecture and reduce costs, not cause you to spend more money and time to build, test, and deploy. To make this possible, following a simple restructure of multiple applications and investing time and effort into setting up your monorepo can pay off in the long run. But what does this ideal structure look like, and what are the benefits?
