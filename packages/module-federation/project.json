@@ -29,19 +29,13 @@
           {
             "input": "packages/module-federation",
             "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "project.json",
-              ".eslintrc.json"
-            ],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
             "input": "packages/module-federation",
             "glob": "**/*.js",
-            "ignore": [
-              "**/jest.config.js"
-            ],
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -56,15 +50,11 @@
           }
         ]
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "build": {
       "command": "node ./scripts/copy-readme.js module-federation",
-      "outputs": [
-        "{workspaceRoot}/build/packages/module-federation"
-      ]
+      "outputs": ["{workspaceRoot}/build/packages/module-federation"]
     }
   }
 }

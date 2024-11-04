@@ -26,8 +26,7 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
-  "peerDependencies": {
-  },
+  "peerDependencies": {},
   "nx-migrations": {
     "migrations": "./migrations.json"
   }
