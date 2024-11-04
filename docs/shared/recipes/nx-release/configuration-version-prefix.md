@@ -4,13 +4,43 @@ This guide explains how to configure a custom version prefix in Nx Release using
 
 ## The `versionPrefix` Option
 
-The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) based on your project’s settings or dependencies.
+The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) respect what is already in the `package.json` file.
+
+For example, having the following `package.json` file:
+
+```json
+{
+  "name": "my-package",
+  "version": "0.1.1",
+  "dependencies": {
+    "dependency-one": "~1.2.3",
+    "dependency-two": "^2.3.4",
+    "dependency-three": "3.0.0"
+  }
+}
+```
+
+Then next patch bump will be:
+
+```json
+{
+  "name": "my-package",
+  "version": "0.1.2",
+  "dependencies": {
+    "dependency-one": "~1.2.4",
+    "dependency-two": "^2.3.4",
+    "dependency-three": "3.0.0"
+  }
+}
+```
+
+Preserving the prefix for `dependency-one` and `dependency-two` and not changing the prefix for `dependency-three`.
 
 ### Available Prefix Options
 
 You can set `versionPrefix` to one of the following values:
 
-- `"auto"`: Automatically chooses a prefix based on project settings.
+- `"auto"`: Automatically chooses a prefix based on the existing declaration in the `package.json` file. This is the default value.
 - `""`: Uses the exact version without a prefix.
 - `"~"`: Specifies compatibility with patch-level updates.
 - `"^"`: Specifies compatibility with minor-level updates.
@@ -23,7 +53,7 @@ Example configuration:
   "release": {
     "version": {
       "generatorOptions": {
-        "versionPrefix": "auto"
+        "versionPrefix": "~"
       }
     }
   }
