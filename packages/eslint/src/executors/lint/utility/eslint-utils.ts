@@ -1,4 +1,5 @@
 import type { ESLint } from 'eslint';
+import { gte } from 'semver';
 import { isFlatConfig } from '../../../utils/config-file';
 import { resolveESLintClass } from '../../../utils/resolve-eslint-class';
 import type { Schema } from '../schema';
@@ -18,7 +19,8 @@ export async function resolveAndInstantiateESLint(
     useFlatConfigOverrideVal: useFlatConfig,
   });
 
-  const eslintOptions: ESLint.Options = {
+  // ruleFilter exist only in eslint 9+, remove this type when eslint 8 support dropped
+  const eslintOptions: ESLint.Options & { ruleFilter?: Function } = {
     overrideConfigFile: eslintConfigPath,
     fix: !!options.fix,
     cache: !!options.cache,
@@ -70,6 +72,11 @@ export async function resolveAndInstantiateESLint(
     eslintOptions.useEslintrc = !options.noEslintrc;
     eslintOptions.reportUnusedDisableDirectives =
       options.reportUnusedDisableDirectives || undefined;
+  }
+
+  // pass --quiet to eslint 9+ directly: filter only errors
+  if (options.quiet && gte(ESLint.version, '9.0.0')) {
+    eslintOptions.ruleFilter = (rule) => rule.severity === 2;
   }
 
   const eslint = new ESLint(eslintOptions);
