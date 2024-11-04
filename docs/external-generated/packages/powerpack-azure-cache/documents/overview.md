@@ -76,7 +76,7 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 }
 ```
 
-| **Property** | **Description**               |
-| ------------ | ----------------------------- |
+| **Property**    | **Description**                  |
+| --------------- | -------------------------------- |
 | **container**   | The name of the container to use |
 | **accountName** | The name of blob storage account |
