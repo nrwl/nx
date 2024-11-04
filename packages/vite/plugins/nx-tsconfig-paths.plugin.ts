@@ -251,9 +251,15 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
   function findFile(path: string): string {
     for (const ext of options.extensions) {
+      // Support file with "." in the name.
+      let resolvedPath = resolve(path + ext);
+      if (existsSync(resolvedPath)) {
+        return resolvedPath;
+      }
+
       // Support file extensions such as .css and .js in the import path.
       const { dir, name } = parse(path);
-      const resolvedPath = resolve(dir, name + ext);
+      resolvedPath = resolve(dir, name + ext);
       if (existsSync(resolvedPath)) {
         return resolvedPath;
       }
