@@ -77,6 +77,7 @@ export interface NxAppRspackPluginOptions {
    * The compiler to use. Default is `babel` and requires a `.babelrc` file.
    */
   compiler?: 'babel' | 'swc' | 'tsc';
+  // TODO: Check if this is supportable in rspack. It was only being used in the WriteIndexHtmlPlugin for Webpack. The same isn't supported in HtmlRspackPlugin.
   /**
    * Set `crossorigin` attribute on the `script` and `link` tags.
    */

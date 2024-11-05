@@ -96,10 +96,7 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
     sourceRoot: projectNode.data.sourceRoot ?? projectNode.data.root,
     // These aren't actually needed since NxRspackPlugin and withNx both support them being undefined.
     assets: undefined,
-    outputPath: undefined,
-    tsConfig: undefined,
     outputFileName: undefined,
-    main: undefined,
     rspackConfig: undefined,
   };
   ctx.context ??= {
