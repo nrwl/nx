@@ -10494,6 +10494,32 @@
         "disableCollapsible": false
       },
       {
+        "id": "powerpack-azure-cache",
+        "path": "/nx-api/powerpack-azure-cache",
+        "name": "powerpack-azure-cache",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/powerpack-azure-cache/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-azure-cache/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "powerpack-conformance",
         "path": "/nx-api/powerpack-conformance",
         "name": "powerpack-conformance",
@@ -10526,6 +10552,58 @@
                 "name": "bundle-rule",
                 "children": [],
                 "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-enterprise-cloud",
+        "path": "/nx-api/powerpack-enterprise-cloud",
+        "name": "powerpack-enterprise-cloud",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-enterprise-cloud/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "powerpack-gcs-cache",
+        "path": "/nx-api/powerpack-gcs-cache",
+        "name": "powerpack-gcs-cache",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/powerpack-gcs-cache/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/powerpack-gcs-cache/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
                 "disableCollapsible": false
               }
             ],

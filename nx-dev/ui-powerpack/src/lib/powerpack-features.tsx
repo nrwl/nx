@@ -17,7 +17,12 @@ import {
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
-import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  AmazonS3Icon,
+  AzureDevOpsIcon,
+  GoogleCloudIcon,
+  NxIcon,
+} from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -398,9 +403,9 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
-              AWS
+              Amazon S3
             </div>
-            <div className="mt-1 text-center text-xl font-semibold">S3</div>
+            <AmazonS3Icon aria-hidden="true" className="mt-1 size-6" />
 
             <Link
               href="/nx-api/powerpack-s3-cache"
@@ -427,7 +432,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
-              Network drive
+              Network Drive
             </div>
             <ServerIcon aria-hidden="true" className="mt-1 size-6" />
 
@@ -460,12 +465,14 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             </div>
             <GoogleCloudIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-gcs-cache"
               title="Learn how to configure Google Storage caching"
               className="mt-4 text-xs"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Get started
+            </Link>
           </Card>
           <Card
             ref={azureRef}
@@ -487,12 +494,14 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             </div>
             <AzureDevOpsIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-azure-cache"
               title="Learn how to configure Azure Blob Storage caching"
               className="mt-4 text-xs"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Get started
+            </Link>
           </Card>
         </div>
       </div>

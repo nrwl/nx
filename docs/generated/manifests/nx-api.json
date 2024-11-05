@@ -3597,6 +3597,30 @@
     },
     "path": "/nx-api/workspace"
   },
+  "powerpack-azure-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-azure-cache",
+    "packageName": "@nx/powerpack-azure-cache",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+    "documents": {
+      "/nx-api/powerpack-azure-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+        "file": "external-generated/packages/powerpack-azure-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-azure-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-azure-cache",
+    "source": "/libs/nx-packages/powerpack-azure-cache/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-azure-cache"
+  },
   "powerpack-conformance": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
@@ -3630,6 +3654,52 @@
     },
     "generators": {},
     "path": "/nx-api/powerpack-conformance"
+  },
+  "powerpack-enterprise-cloud": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-enterprise-cloud",
+    "packageName": "@nx/powerpack-enterprise-cloud",
+    "description": "A Nx Powerpack plugin which is specific to Nx Enterprise Cloud workspaces.",
+    "documents": {},
+    "root": "/libs/nx-packages/powerpack-enterprise-cloud",
+    "source": "/libs/nx-packages/powerpack-enterprise-cloud/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/powerpack-enterprise-cloud/generators/init": {
+        "description": "Initialize Nx Powerpack Enterprise Cloud config",
+        "file": "external-generated/packages/powerpack-enterprise-cloud/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-enterprise-cloud/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/powerpack-enterprise-cloud"
+  },
+  "powerpack-gcs-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-gcs-cache",
+    "packageName": "@nx/powerpack-gcs-cache",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+    "documents": {
+      "/nx-api/powerpack-gcs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+        "file": "external-generated/packages/powerpack-gcs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-gcs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-gcs-cache",
+    "source": "/libs/nx-packages/powerpack-gcs-cache/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-gcs-cache"
   },
   "powerpack-license": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
