@@ -6,8 +6,10 @@ export interface RspackExecutorSchema {
   index?: string;
   tsConfig?: string;
   typeCheck?: boolean;
+  skipTypeChecking?: boolean;
   outputPath?: string;
   outputFileName?: string;
+  index?: string;
   indexHtml?: string;
   mode?: Mode;
   watch?: boolean;
@@ -16,11 +18,18 @@ export interface RspackExecutorSchema {
 
   rspackConfig: string;
   optimization?: boolean | OptimizationOptions;
-  sourceMap?: boolean | string;
+  sourceMap?: boolean | 'hidden';
   assets?: any[];
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
   generatePackageJson?: boolean;
+}
+
+export interface AssetGlobPattern {
+  glob: string;
+  input: string;
+  output: string;
+  ignore?: string[];
 }
 
 export interface FileReplacement {
@@ -31,4 +40,12 @@ export interface FileReplacement {
 export interface OptimizationOptions {
   scripts: boolean;
   styles: boolean;
+}
+
+export interface NormalizedRspackExecutorSchema extends RspackExecutorSchema {
+  outputFileName: string;
+  assets: AssetGlobPattern[];
+  root: string;
+  projectRoot: string;
+  sourceRoot: string;
 }

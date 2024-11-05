@@ -1,132 +1,52 @@
-import { Configuration, RuleSetRule, rspack } from '@rspack/core';
-import * as path from 'path';
-import { SharedConfigContext } from './model';
+import { Configuration } from '@rspack/core';
+import { ExtraEntryPointClass } from './model';
+import { applyWebConfig } from '../plugins/utils/apply-web-config';
+import { NxRspackExecutionContext } from './config';
 
 export interface WithWebOptions {
+  baseHref?: string;
+  crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
+  deployUrl?: string;
+  extractCss?: boolean;
+  generateIndexHtml?: boolean;
+  index?: string;
+  postcssConfig?: string;
+  scripts?: Array<ExtraEntryPointClass | string>;
+  styles?: Array<ExtraEntryPointClass | string>;
+  subresourceIntegrity?: boolean;
   stylePreprocessorOptions?: {
     includePaths?: string[];
   };
   cssModules?: boolean;
+  ssr?: boolean;
 }
 
-export function withWeb(opts: WithWebOptions = {}) {
+const processed = new Set();
+
+export function withWeb(pluginOptions: WithWebOptions = {}) {
   return function makeConfig(
     config: Configuration,
-    { options, context }: SharedConfigContext
+    { options, context }: NxRspackExecutionContext
   ): Configuration {
-    const isProd =
-      process.env.NODE_ENV === 'production' || options.mode === 'production';
+    if (processed.has(config)) {
+      return config;
+    }
 
-    const projectRoot = path.join(
-      context.root,
-      context.projectGraph.nodes[context.projectName].data.root
+    applyWebConfig(
+      {
+        ...options,
+        ...pluginOptions,
+        root: context.root,
+        projectName: context.projectName,
+        targetName: context.targetName,
+        configurationName: context.configurationName,
+        projectGraph: context.projectGraph,
+      },
+      config
     );
 
-    const includePaths: string[] = [];
-    if (opts?.stylePreprocessorOptions?.includePaths?.length > 0) {
-      opts.stylePreprocessorOptions.includePaths.forEach(
-        (includePath: string) =>
-          includePaths.push(path.resolve(context.root, includePath))
-      );
-    }
-
-    let lessPathOptions: { paths?: string[] } = {};
-
-    if (includePaths.length > 0) {
-      lessPathOptions = {
-        paths: includePaths,
-      };
-    }
-
-    return {
-      ...config,
-      target: config.target ?? 'web',
-      experiments: {
-        css: true,
-      },
-      module: {
-        ...config.module,
-        rules: [
-          ...(config.module.rules || []),
-          {
-            test: /\.css$/,
-            type: opts?.cssModules ? 'css/module' : undefined,
-          },
-          {
-            test: /\.css$/,
-            type: 'css',
-            use: [
-              {
-                loader: require.resolve('postcss-loader'),
-              },
-            ],
-          },
-          {
-            test: /\.scss$|\.sass$/,
-            type: opts?.cssModules ? 'css/module' : undefined,
-            use: [
-              {
-                loader: require.resolve('sass-loader'),
-                options: {
-                  sourceMap: !!options.sourceMap,
-                  sassOptions: {
-                    fiber: false,
-                    // bootstrap-sass requires a minimum precision of 8
-                    precision: 8,
-                    includePaths,
-                  },
-                },
-              },
-            ],
-          },
-          {
-            test: /.less$/,
-            type: opts?.cssModules ? 'css/module' : undefined,
-            use: [
-              {
-                loader: require.resolve('less-loader'),
-                options: {
-                  sourceMap: !!options.sourceMap,
-                  lessOptions: {
-                    javascriptEnabled: true,
-                    ...lessPathOptions,
-                  },
-                },
-              },
-            ],
-          },
-          {
-            test: /\.styl$/,
-            use: [
-              {
-                loader: require.resolve('stylus-loader'),
-                options: {
-                  sourceMap: !!options.sourceMap,
-                  stylusOptions: {
-                    include: includePaths,
-                  },
-                },
-              },
-            ],
-          },
-        ].filter((a): a is RuleSetRule => !!a),
-      },
-      plugins: [
-        ...config.plugins,
-        new rspack.HtmlRspackPlugin({
-          template: options.indexHtml
-            ? path.join(context.root, options.indexHtml)
-            : path.join(projectRoot, 'src/index.html'),
-          ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
-        }),
-        new rspack.EnvironmentPlugin({
-          NODE_ENV: isProd ? 'production' : 'development',
-        }),
-        new rspack.DefinePlugin(
-          getClientEnvironment(isProd ? 'production' : undefined).stringified
-        ),
-      ],
-    };
+    processed.add(config);
+    return config;
   };
 }
 
