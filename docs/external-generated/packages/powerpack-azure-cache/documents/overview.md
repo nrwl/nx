@@ -37,9 +37,6 @@ permissions:
   id-token: write
   ...
 
-env:
-  NX_DB_CACHE: true
-
 jobs:
   main:
     env:

@@ -57,11 +57,10 @@ permissions:
   id-token: write
   ...
 
-env:
-  NX_DB_CACHE: true
-
 jobs:
   main:
+    env:
+      NX_POWERPACK_LICENSE: ${{ secrets.NX_POWERPACK_LICENSE }}
     runs-on: ubuntu-latest
     steps:
         ...
