@@ -18,7 +18,7 @@ export interface RspackExecutorSchema {
 
   rspackConfig: string;
   optimization?: boolean | OptimizationOptions;
-  sourceMap?: boolean | string;
+  sourceMap?: boolean | 'hidden';
   assets?: any[];
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
