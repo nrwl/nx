@@ -2,7 +2,7 @@ import type { Mode } from '@rspack/core';
 
 export interface RspackExecutorSchema {
   target?: 'web' | 'node';
-  main: string;
+  main?: string;
   index?: string;
   tsConfig: string;
   typeCheck?: boolean;
