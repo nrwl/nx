@@ -7,7 +7,9 @@ import {
   readJson,
   readNxJson,
   Tree,
+  updateJson,
   updateNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -276,7 +278,6 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
-        'jest.config.ts',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
         'src/**/*.spec.tsx',
@@ -285,6 +286,7 @@ describe('app', () => {
         'src/**/*.test.js',
         'src/**/*.spec.jsx',
         'src/**/*.test.jsx',
+        'jest.config.ts',
       ]);
 
       const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
@@ -414,7 +416,6 @@ describe('app', () => {
           path: 'my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
           expectedValue: [
-            'jest.config.ts',
             'src/**/*.spec.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.tsx',
@@ -423,6 +424,7 @@ describe('app', () => {
             'src/**/*.test.js',
             'src/**/*.spec.jsx',
             'src/**/*.test.jsx',
+            'jest.config.ts',
           ],
         },
         {
@@ -1240,5 +1242,68 @@ describe('app', () => {
         },
       }
     `);
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace();
+      updateJson(appTree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(appTree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(appTree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.None,
+        style: 'none',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(readJson(appTree, 'tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
+      expect(readJson(appTree, 'myapp/tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./tsconfig.app.json",
+          },
+          {
+            "path": "./tsconfig.spec.json",
+          },
+        ]
+      `);
+      expect(readJson(appTree, 'myapp-e2e/tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "../myapp",
+          },
+        ]
+      `);
+    });
   });
 });

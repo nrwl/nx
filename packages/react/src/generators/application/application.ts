@@ -19,9 +19,9 @@ import {
   runTasksInSerial,
   stripIndents,
   Tree,
+  updateJson,
   updateNxJson,
 } from '@nx/devkit';
-
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
@@ -29,7 +29,6 @@ import {
   nxRspackVersion,
   nxVersion,
 } from '../../utils/versions';
-import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -46,7 +45,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -114,19 +113,20 @@ export async function applicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react', 'application');
-
   const tasks = [];
-
-  const options = await normalizeOptions(host, schema);
-  showPossibleWarnings(host, options);
 
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
+    addTsPlugin:
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      process.env.NX_ADD_TS_PLUGIN !== 'false',
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
+  showPossibleWarnings(host, options);
 
   const initTask = await reactInitGenerator(host, {
     ...options,
@@ -213,6 +213,7 @@ export async function applicationGeneratorInternal(
       compiler: options.compiler,
       skipFormat: true,
       addPlugin: options.addPlugin,
+      projectType: 'application',
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -355,6 +356,17 @@ export async function applicationGeneratorInternal(
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
   });
+
+  if (isUsingTsSolutionSetup(host)) {
+    if (!options.rootProject) {
+      updateJson(host, 'tsconfig.json', (json) => {
+        // add the project tsconfig to the workspace root tsconfig.json references
+        json.references ??= [];
+        json.references.push({ path: './' + options.appProjectRoot });
+        return json;
+      });
+    }
+  }
 
   return runTasksInSerial(...tasks);
 }

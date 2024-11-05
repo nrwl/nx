@@ -1,5 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`@nx/vite:configuration TS solution setup should create package.json with exports field for libraries 1`] = `
+{
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts",
+    },
+    "./package.json": "./package.json",
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "name": "@proj/my-lib",
+  "types": "./dist/index.d.ts",
+  "version": "0.0.1",
+}
+`;
+
 exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

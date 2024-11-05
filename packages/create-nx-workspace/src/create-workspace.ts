@@ -8,6 +8,7 @@ import { setupCI } from './utils/ci/setup-ci';
 import { initializeGitRepo } from './utils/git/git';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
+import { Preset } from './utils/preset/preset';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
@@ -30,12 +31,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const tmpDir = await createSandbox(packageManager);
 
+  const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
+
   // nx new requires a preset currently. We should probably make it optional.
   const directory = await createEmptyWorkspace<T>(
     tmpDir,
     name,
     packageManager,
-    { ...options, preset }
+    { ...options, preset, workspaceGlobs }
   );
 
   // If the preset is a third-party preset, we need to call createPreset to install it
@@ -95,4 +98,25 @@ export function extractConnectUrl(text: string): string | null {
   const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
   const match = text.match(urlPattern);
   return match ? match[0] : null;
+}
+
+function getWorkspaceGlobsFromPreset(preset: string): string[] {
+  // Should match how apps are created in `packages/workspace/src/generators/preset/preset.ts`.
+  switch (preset) {
+    case Preset.AngularMonorepo:
+    case Preset.Expo:
+    case Preset.Express:
+    case Preset.Nest:
+    case Preset.NextJs:
+    case Preset.NodeMonorepo:
+    case Preset.Nuxt:
+    case Preset.ReactNative:
+    case Preset.ReactMonorepo:
+    case Preset.RemixMonorepo:
+    case Preset.VueMonorepo:
+    case Preset.WebComponents:
+      return ['apps/*', 'packages/*'];
+    default:
+      return ['packages/*'];
+  }
 }

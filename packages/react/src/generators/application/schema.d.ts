@@ -40,4 +40,5 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   addPlugin?: boolean;
+  isUsingTsSolutionConfig?: boolean;
 }

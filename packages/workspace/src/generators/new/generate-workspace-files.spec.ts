@@ -1,4 +1,12 @@
-import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+import type { NxJsonConfiguration, Tree } from '@nx/devkit';
+import { formatFiles, readJson } from '@nx/devkit';
+import Ajv from 'ajv';
+import { generateWorkspaceFiles } from './generate-workspace-files';
+import { createTree } from '@nx/devkit/testing';
+import { Preset } from '../utils/presets';
+import * as nxSchema from 'nx/schemas/nx-schema.json';
+import { mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
@@ -17,16 +25,6 @@ jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
 }));
-
-import type { NxJsonConfiguration, Tree } from '@nx/devkit';
-import { formatFiles, readJson } from '@nx/devkit';
-import Ajv from 'ajv';
-import { generateWorkspaceFiles } from './generate-workspace-files';
-import { createTree } from '@nx/devkit/testing';
-import { Preset } from '../utils/presets';
-import * as nxSchema from 'nx/schemas/nx-schema.json';
-import { mkdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
 
 describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
@@ -285,5 +283,58 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     });
 
     expect(readJson(tree, 'proj/package.json').scripts).toMatchSnapshot();
+  });
+
+  it('should create workspaces from workspaceGlobs (npm)', async () => {
+    tree.write('/proj/package.json', JSON.stringify({}));
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'npm',
+      isCustomPreset: false,
+      workspaceGlobs: ['apps/*', 'packages/*'],
+    });
+
+    const packageJson = readJson(tree, '/proj/package.json');
+    expect(packageJson).toMatchInlineSnapshot(`
+      {
+        "dependencies": {},
+        "devDependencies": {
+          "nx": "0.0.1",
+        },
+        "license": "MIT",
+        "name": "@proj/source",
+        "private": true,
+        "scripts": {},
+        "version": "0.0.0",
+        "workspaces": [
+          "apps/*",
+          "packages/*",
+        ],
+      }
+    `);
+  });
+
+  it('should create workspaces from workspaceGlobs (pnpm)', async () => {
+    tree.write('/proj/package.json', JSON.stringify({}));
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaceGlobs: ['apps/*', 'packages/*'],
+    });
+
+    const packageJson = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(packageJson).toMatchInlineSnapshot(`
+      "packages: 
+        - apps/*
+        - packages/*
+      "
+    `);
   });
 });

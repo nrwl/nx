@@ -52,6 +52,7 @@ interface ReactArguments extends BaseArguments {
   nextAppDir: boolean;
   nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  formatter?: 'none' | 'prettier';
 }
 
 interface AngularArguments extends BaseArguments {
@@ -440,6 +441,27 @@ async function determinePresetOptions(
   }
 }
 
+async function determineFormatterOptions(args: { interactive?: boolean }) {
+  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
+    {
+      name: 'prettier',
+      message: `Would you like to use Prettier for code formatting?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+}
+
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
@@ -448,26 +470,9 @@ async function determineNoneOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     process.env.NX_ADD_TS_PLUGIN !== 'false'
   ) {
-    const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
-      {
-        name: 'prettier',
-        message: `Would you like to use Prettier for code formatting?`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 1,
-        skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
     return {
       preset: Preset.TS,
-      formatter: reply.prettier === 'Yes' ? 'prettier' : 'none',
+      formatter: await determineFormatterOptions(parsedArgs),
     };
   } else {
     let preset: Preset;
@@ -550,41 +555,18 @@ async function determineReactOptions(
   } else {
     const framework = await determineReactFramework(parsedArgs);
 
-    // React Native and Expo only support integrated monorepos for now.
-    // TODO(jack): Add standalone support for React Native and Expo.
-    const workspaceType =
-      framework === 'react-native' || framework === 'expo'
-        ? 'integrated'
-        : await determineStandaloneOrMonorepo();
-
-    if (workspaceType === 'standalone') {
-      appName = parsedArgs.name;
-    } else {
-      appName = await determineAppName(parsedArgs);
-    }
+    appName = await determineAppName(parsedArgs);
 
     if (framework === 'nextjs') {
-      if (workspaceType === 'standalone') {
-        preset = Preset.NextJsStandalone;
-      } else {
-        preset = Preset.NextJs;
-      }
+      preset = Preset.NextJs;
     } else if (framework === 'remix') {
-      if (workspaceType === 'standalone') {
-        preset = Preset.RemixStandalone;
-      } else {
-        preset = Preset.RemixMonorepo;
-      }
+      preset = Preset.RemixMonorepo;
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
-      if (workspaceType === 'standalone') {
-        preset = Preset.ReactStandalone;
-      } else {
-        preset = Preset.ReactMonorepo;
-      }
+      preset = Preset.ReactMonorepo;
     }
   }
 
@@ -657,6 +639,8 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  const formatter = await determineFormatterOptions(parsedArgs);
+
   return {
     preset,
     style,
@@ -665,6 +649,7 @@ async function determineReactOptions(
     nextAppDir,
     nextSrcDir,
     e2eTestRunner,
+    formatter,
   };
 }
 

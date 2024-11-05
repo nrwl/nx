@@ -99,10 +99,15 @@ export async function configurationGeneratorInternal(
       tsconfig.compilerOptions.tsBuildInfoFile = 'dist/tsconfig.tsbuildinfo';
 
       if (!options.rootProject) {
-        // add the project tsconfog to the workspace root tsconfig.json references
         updateJson(tree, 'tsconfig.json', (json) => {
+          // add the project tsconfig to the workspace root tsconfig.json references
           json.references ??= [];
           json.references.push({ path: './' + projectConfig.root });
+          // skip eslint from typechecking since it may extend from root file that is outside of rootDir
+          if (options.linter === 'eslint') {
+            json.exclude ??= [];
+            json.exclude.push('dist', 'eslint.config.js');
+          }
           return json;
         });
       }

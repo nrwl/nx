@@ -414,20 +414,24 @@ function normalizeOptions(options: NormalizedSchema) {
 function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.NPM ||
-    (options.preset === Preset.TS &&
+    ((options.preset === Preset.TS ||
+      options.preset === Preset.ReactMonorepo ||
+      options.preset === Preset.NextJs ||
+      options.preset === Preset.RemixMonorepo) &&
       process.env.NX_ADD_PLUGINS !== 'false' &&
       process.env.NX_ADD_TS_PLUGIN !== 'false')
   ) {
+    const workspaces = options.workspaceGlobs ?? ['packages/*'];
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
-        `packages:
-  - 'packages/*'
+        `packages: 
+  - ${workspaces.join('\n  - ')}
 `
       );
     } else {
       updateJson(tree, join(options.directory, 'package.json'), (json) => {
-        json.workspaces = ['packages/*'];
+        json.workspaces = workspaces;
         return json;
       });
     }
