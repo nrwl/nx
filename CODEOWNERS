@@ -107,7 +107,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /e2e/vite/** @nrwl/nx-js-reviewers
 
 ## Module Federation
-/packages/module-federation/** @jaysoo @Coly010 @ndcunningham
+/packages/module-federation/** @nrwl/nx-js-reviewers
 
 ## Tools
 /docs/generated/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
