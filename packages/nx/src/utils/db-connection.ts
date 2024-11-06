@@ -18,24 +18,11 @@ export function getDbConnection(
   return connection;
 }
 
-export function removeDbConnection(
-  opts: {
-    directory?: string;
-    dbName?: string;
-  } = {}
-): boolean {
-  opts.directory ??= workspaceDataDirectory;
-  const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
-
-  let connection = dbConnectionMap.get(key);
-  if (!connection) {
-    return false;
+export function removeDbConnection() {
+  for (const connection of dbConnectionMap.values()) {
+    closeDbConnection(connection);
   }
-
-  dbConnectionMap.delete(key);
-  closeDbConnection(connection);
-
-  return true;
+  dbConnectionMap.clear();
 }
 
 function getEntryOrSet<TKey, TVal>(
