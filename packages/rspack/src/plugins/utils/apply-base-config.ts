@@ -1,24 +1,24 @@
 import * as path from 'path';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { type ExecutorContext } from '@nx/devkit';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import {
   Configuration,
   ProgressPlugin,
-  WebpackOptionsNormalized,
-  WebpackPluginInstance,
-} from 'webpack';
+  RspackPluginInstance,
+  SwcJsMinimizerRspackPlugin,
+  CopyRspackPlugin,
+  RspackOptionsNormalized,
+  ExternalItem,
+} from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
-import { StatsJsonPlugin } from '../../stats-json-plugin';
-import { GeneratePackageJsonPlugin } from '../../generate-package-json-plugin';
-import { getOutputHashFormat } from '../../../utils/hash-format';
-import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
+import { StatsJsonPlugin } from './plugins/stats-json-plugin';
+import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugin';
+import { getOutputHashFormat } from './hash-format';
+import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
-import { createLoaderFromCompiler } from './compiler-loaders';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
-import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
+import { NormalizedNxAppRspackPluginOptions } from './models';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -29,19 +29,18 @@ const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration> = {},
+  options: NormalizedNxAppRspackPluginOptions,
+  config: Partial<RspackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
   }: {
-    // webpack.Configuration allows arrays to be set on a single entry
-    // webpack then normalizes them to { import: "..." } objects
+    // rspack.Configuration allows arrays to be set on a single entry
+    // rspack then normalizes them to { import: "..." } objects
     // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
     useNormalizedEntry?: boolean;
   } = {}
 ): void {
   // Defaults that was applied from executor schema previously.
-  options.compiler ??= 'babel';
   options.deleteOutputPath ??= true;
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
@@ -50,40 +49,40 @@ export function applyBaseConfig(
 
   applyNxIndependentConfig(options, config);
 
-  // Some of the options only work during actual tasks, not when reading the webpack config during CreateNodes.
+  // Some of the options only work during actual tasks, not when reading the rspack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
 
   applyNxDependentConfig(options, config, { useNormalizedEntry });
 }
 
 function applyNxIndependentConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration>
+  options: NormalizedNxAppRspackPluginOptions,
+  config: Partial<RspackOptionsNormalized | Configuration>
 ): void {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
-  config.target ??= options.target;
+  config.target ??= options.target as 'node' | 'web';
   config.node = false;
   config.mode =
     // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
     config.target === 'node'
       ? 'none'
       : // Otherwise, make sure it matches `process.env.NODE_ENV`.
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
-      process.env.NODE_ENV === 'development' ||
+        // When mode is development or production, rspack will automatically
+        // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+        // build-time value. Thus, we need to make sure it's the same value to
+        // avoid conflicts.
+        //
+        // When the NODE_ENV is something else (e.g. test), then set it to none
+        // to prevent extra behavior from rspack.
+        options.mode ??
+        (process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'production'
-      ? (process.env.NODE_ENV as 'development' | 'production')
-      : 'none';
+          ? (process.env.NODE_ENV as 'development' | 'production')
+          : 'none');
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
-  config.cache =
-    options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
+  config.cache = options.target === 'node' && options.watch ? true : undefined;
 
   config.devtool =
     options.sourceMap === 'hidden'
@@ -93,7 +92,7 @@ function applyNxIndependentConfig(
       : false;
 
   config.output = {
-    ...config.output,
+    ...(config.output ?? {}),
     libraryTarget:
       (config as Configuration).output?.libraryTarget ??
       (options.target === 'node' ? 'commonjs' : undefined),
@@ -134,8 +133,6 @@ function applyNxIndependentConfig(
     hints: false,
   };
 
-  config.experiments = { ...config.experiments, cacheUnaffected: true };
-
   config.ignoreWarnings = [
     (x) =>
       IGNORED_WEBPACK_WARNINGS.some((r) =>
@@ -144,38 +141,31 @@ function applyNxIndependentConfig(
   ];
 
   config.optimization = {
-    ...config.optimization,
+    ...(config.optimization ?? {}),
     sideEffects: true,
     minimize:
       typeof options.optimization === 'object'
         ? !!options.optimization.scripts
         : !!options.optimization,
     minimizer: [
-      options.compiler !== 'swc'
-        ? new TerserPlugin({
-            parallel: true,
-            terserOptions: {
-              keep_classnames: true,
-              ecma: getTerserEcmaVersion(
-                path.join(options.root, options.projectRoot)
-              ),
-              safari10: true,
-              format: {
-                ascii_only: true,
-                comments: false,
-                webkit: true,
-              },
-            },
-            extractComments: false,
-          })
-        : new TerserPlugin({
-            minify: TerserPlugin.swcMinify,
-            // `terserOptions` options will be passed to `swc`
-            terserOptions: {
-              module: true,
-              mangle: false,
-            },
-          }),
+      new SwcJsMinimizerRspackPlugin({
+        extractComments: false,
+        minimizerOptions: {
+          module: true,
+          mangle: {
+            keep_classnames: true,
+          },
+          format: {
+            ecma: getTerserEcmaVersion(
+              path.join(options.root, options.projectRoot)
+            ),
+            ascii_only: true,
+            comments: false,
+            webkit: true,
+            safari10: true,
+          },
+        },
+      }),
     ],
     runtimeChunk: false,
     concatenateModules: true,
@@ -203,12 +193,12 @@ function applyNxIndependentConfig(
   };
 
   /**
-   * Initialize properties that get set when webpack is used during task execution.
+   * Initialize properties that get set when rspack is used during task execution.
    * These properties may be used by consumers who expect them to not be undefined.
    *
-   * When @nx/webpack/plugin resolves the config, it is not during a task, and therefore
+   * When @nx/rspack/plugin resolves the config, it is not during a task, and therefore
    * these values are not set, which can lead to errors being thrown when reading
-   * the webpack options from the resolved file.
+   * the rspack options from the resolved file.
    */
   config.entry ??= {};
   config.resolve ??= {};
@@ -218,12 +208,12 @@ function applyNxIndependentConfig(
 }
 
 function applyNxDependentConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration>,
+  options: NormalizedNxAppRspackPluginOptions,
+  config: Partial<RspackOptionsNormalized | Configuration>,
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
-  const plugins: WebpackPluginInstance[] = [];
+  const plugins: RspackPluginInstance[] = [];
 
   const executorContext: Partial<ExecutorContext> = {
     projectName: options.projectName,
@@ -233,7 +223,7 @@ function applyNxDependentConfig(
     root: options.root,
   };
 
-  plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
+  plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
 
   if (!options?.skipTypeChecking) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -298,13 +288,13 @@ function applyNxDependentConfig(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown as WebpackPluginInstance
+      }) as unknown as RspackPluginInstance
     );
   }
 
   if (Array.isArray(options.assets) && options.assets.length > 0) {
     plugins.push(
-      new CopyWebpackPlugin({
+      new CopyRspackPlugin({
         patterns: options.assets.map((asset) => {
           return {
             context: asset.input,
@@ -366,10 +356,10 @@ function applyNxDependentConfig(
 
   config.externals = externals;
 
+  // Enabled for performance
+  config.cache = true;
   config.module = {
     ...config.module,
-    // Enabled for performance
-    unsafeCache: true,
     rules: [
       ...(config?.module?.rules ?? []),
       options.sourceMap && {
@@ -394,7 +384,34 @@ function applyNxDependentConfig(
         test: /\.js$/,
         type: 'javascript/auto',
       },
-      createLoaderFromCompiler(options),
+      // Rspack's docs only suggest swc for TS compilation
+      //https://rspack.dev/guide/tech/typescript
+      {
+        test: /\.([jt])sx?$/,
+        loader: 'builtin:swc-loader',
+        exclude: /node_modules/,
+        options: {
+          jsc: {
+            parser: {
+              syntax: 'typescript',
+              decorators: true,
+              tsx: true,
+            },
+            transform: {
+              react: {
+                pragma: 'React.createElement',
+                pragmaFrag: 'React.Fragment',
+                throwIfNamespace: true,
+                // Config.mode is already set based on options.mode and `process.env.NODE_ENV`
+                development: config.mode === 'development',
+                useBuiltins: false,
+              },
+            },
+            type: 'javascript/auto',
+            loose: true,
+          },
+        },
+      },
     ].filter((r) => !!r),
   };
 
