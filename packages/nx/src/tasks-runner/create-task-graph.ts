@@ -8,7 +8,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { findCycle } from './task-graph-utils';
+import { findCycles } from './task-graph-utils';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -84,7 +84,7 @@ export class ProcessTasks {
       }
     }
 
-    this.filterDummyTasks();
+    filterDummyTasks(this.dependencies);
 
     for (const taskId of Object.keys(this.dependencies)) {
       if (this.dependencies[taskId].length > 0) {
@@ -377,62 +377,6 @@ export class ProcessTasks {
     }
     return id;
   }
-
-  /**
-   * this function is used to get the non dummy dependencies of a task recursively
-   * For example, when we have the following dependencies:
-   * {
-   *   'app1:compile': [ 'app2:__nx_dummy_task__' ],
-   *   'app2:__nx_dummy_task__': [ 'app3:__nx_dummy_task__' ],
-   *   'app3:__nx_dummy_task__': [ 'app4:precompile' ],
-   *   'app4:precompile': []
-   * }
-   * getNonDummyDeps('app1:compile') will return ['app1:compile']
-   * getNonDummyDeps('app2:__nx_dummy_task__') will return ['app4:precompile']
-   * getNonDummyDeps('app3:__nx_dummy_task__') will return ['app4:precompile']
-   * getNonDummyDeps('app4:precompile') will return ['app4:precompile']
-   */
-  private getNonDummyDeps(
-    currentTask: string,
-    originalTask: string,
-    cycle?: string[]
-  ): string[] {
-    if (currentTask === originalTask) {
-      return [];
-    } else if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
-      if (cycle?.length && cycle?.includes(currentTask)) {
-        return [];
-      }
-      // if not a cycle, recursively get the non dummy dependencies
-      return (
-        this.dependencies[currentTask]?.flatMap((dep) =>
-          this.getNonDummyDeps(dep, originalTask, cycle)
-        ) ?? []
-      );
-    } else {
-      return [currentTask];
-    }
-  }
-
-  private filterDummyTasks() {
-    const cycle = findCycle({ dependencies: this.dependencies });
-    for (const [key, deps] of Object.entries(this.dependencies)) {
-      if (!key.endsWith(DUMMY_TASK_TARGET)) {
-        const normalizedDeps = [];
-        for (const dep of deps) {
-          normalizedDeps.push(...this.getNonDummyDeps(dep, key, cycle));
-        }
-
-        this.dependencies[key] = normalizedDeps;
-      }
-    }
-
-    for (const key of Object.keys(this.dependencies)) {
-      if (key.endsWith(DUMMY_TASK_TARGET)) {
-        delete this.dependencies[key];
-      }
-    }
-  }
 }
 
 export function createTaskGraph(
@@ -489,4 +433,58 @@ function interpolateOverrides<T = any>(
         : value;
   });
   return interpolatedArgs;
+}
+
+/**
+ * This function is used to filter out the dummy tasks from the dependencies
+ * It will manipulate the dependencies object in place
+ */
+export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
+  const cycles = findCycles({ dependencies });
+  for (const [key, deps] of Object.entries(dependencies)) {
+    if (!key.endsWith(DUMMY_TASK_TARGET)) {
+      const normalizedDeps = [];
+      for (const dep of deps) {
+        normalizedDeps.push(
+          ...getNonDummyDeps(dep, dependencies, cycles, new Set([key]))
+        );
+      }
+
+      dependencies[key] = normalizedDeps;
+    }
+  }
+
+  for (const key of Object.keys(dependencies)) {
+    if (key.endsWith(DUMMY_TASK_TARGET)) {
+      delete dependencies[key];
+    }
+  }
+}
+
+/**
+ * this function is used to get the non dummy dependencies of a task recursively
+ */
+export function getNonDummyDeps(
+  currentTask: string,
+  dependencies: { [k: string]: string[] },
+  cycles?: Set<string>,
+  seen: Set<string> = new Set()
+): string[] {
+  if (seen.has(currentTask)) {
+    return [];
+  }
+  seen.add(currentTask);
+  if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+    if (cycles?.has(currentTask)) {
+      return [];
+    }
+    // if not a cycle, recursively get the non dummy dependencies
+    return (
+      dependencies[currentTask]?.flatMap((dep) =>
+        getNonDummyDeps(dep, dependencies, cycles, seen)
+      ) ?? []
+    );
+  } else {
+    return [currentTask];
+  }
 }
