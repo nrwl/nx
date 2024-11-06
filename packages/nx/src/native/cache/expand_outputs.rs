@@ -97,6 +97,7 @@ pub fn get_files_for_outputs(
     directory: String,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
+
     enable_logger();
 
     let directory: PathBuf = directory.into();
