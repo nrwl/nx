@@ -17,7 +17,12 @@ import {
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
-import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  AmazonS3Icon,
+  AzureDevOpsIcon,
+  GoogleCloudIcon,
+  NxIcon,
+} from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -26,7 +31,7 @@ export function PowerpackFeatures(): ReactElement {
     <section className="relative isolate">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mt-32 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="col-span-full flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="xl:max-w-xl">
               <SectionHeading
                 as="h2"
@@ -141,7 +146,7 @@ export function PowerpackFeatures(): ReactElement {
               </ButtonLink>
             </div>
           </div>
-          <div className="col-span-2 flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:col-span-2 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
             <div className="relative hidden h-full w-64 shrink-0 overflow-hidden lg:block">
               <img
                 src="/images/powerpack/trust-secure-light.avif"
@@ -200,7 +205,14 @@ export function PowerpackFeatures(): ReactElement {
                   procurement processes
                 </Strong>
                 . Your teams can get started quickly without lengthy
-                negotiations, ensuring a faster go-to-market.
+                negotiations, ensuring a faster go-to-market.{' '}
+                <TextLink
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  title="Get a Powerpack license"
+                >
+                  Free trial available for Enterprises
+                </TextLink>
+                .
               </p>
             </div>
           </div>
@@ -391,9 +403,9 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
-              AWS
+              Amazon S3
             </div>
-            <div className="mt-1 text-center text-xl font-semibold">S3</div>
+            <AmazonS3Icon aria-hidden="true" className="mt-1 size-6" />
 
             <Link
               href="/nx-api/powerpack-s3-cache"
@@ -420,7 +432,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
-              Network drive
+              Network Drive
             </div>
             <ServerIcon aria-hidden="true" className="mt-1 size-6" />
 
@@ -453,12 +465,14 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             </div>
             <GoogleCloudIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-gcs-cache"
               title="Learn how to configure Google Storage caching"
               className="mt-4 text-xs"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Get started
+            </Link>
           </Card>
           <Card
             ref={azureRef}
@@ -480,12 +494,14 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             </div>
             <AzureDevOpsIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-azure-cache"
               title="Learn how to configure Azure Blob Storage caching"
               className="mt-4 text-xs"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Get started
+            </Link>
           </Card>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { <%= componentName %>  } from './<%= componentImportFileName %>';
-<% if ( interactionTests ) { %>
+<%_ if ( interactionTests ) { _%>
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-<% } %>
+<%_ } _%>
 
 const meta: Meta<typeof <%= componentName %>> = {
   component: <%= componentName %>,
@@ -16,14 +16,13 @@ const meta: Meta<typeof <%= componentName %>> = {
 export default meta;
 type Story = StoryObj<typeof <%= componentName %>>;
 
-
 export const Primary = {
   args: {<% for (let prop of props) { %>
     <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
   },
 };
 
-<% if ( interactionTests ) { %>
+<%_ if ( interactionTests ) { _%>
 export const Heading: Story = {
   args: {<% for (let prop of props) { %>
     <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>

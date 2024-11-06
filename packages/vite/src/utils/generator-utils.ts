@@ -362,6 +362,8 @@ export interface ViteConfigFileOptions {
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
+  setupFile?: string;
+  useEsmExtension?: boolean;
 }
 
 export function createOrEditViteConfig(
@@ -371,11 +373,15 @@ export function createOrEditViteConfig(
   projectAlreadyHasViteTargets?: TargetFlags,
   vitestFileName?: boolean
 ) {
-  const { root: projectRoot } = readProjectConfiguration(tree, options.project);
+  const { root: projectRoot, projectType } = readProjectConfiguration(
+    tree,
+    options.project
+  );
 
+  const extension = options.useEsmExtension ? 'mts' : 'ts';
   const viteConfigPath = vitestFileName
-    ? `${projectRoot}/vitest.config.ts`
-    : `${projectRoot}/vite.config.ts`;
+    ? `${projectRoot}/vitest.config.${extension}`
+    : `${projectRoot}/vite.config.${extension}`;
 
   const isUsingTsPlugin = isUsingTsSolutionSetup(tree);
   const buildOutDir = isUsingTsPlugin
@@ -453,12 +459,13 @@ export function createOrEditViteConfig(
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],${
-      options.inSourceTests
-        ? `
-    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
-        : ''
-    }
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
+${
+  options.inSourceTests
+    ? `    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],\n`
+    : ''
+}\
     reporters: ['default'],
     coverage: {
       reportsDirectory: '${reportsDirectory}',

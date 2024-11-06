@@ -38,7 +38,7 @@ export function GitHubStarWidget({
   };
 
   return (
-    <div className="relative flex items-center justify-center gap-2 rounded-md border border-slate-100 p-2 text-xs transition hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 print:hidden">
+    <div className="relative flex items-center justify-center gap-2 rounded-md bg-slate-950 p-2 text-xs text-white transition hover:bg-slate-900 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white print:hidden">
       <div className="flex items-center gap-2">
         <GithubIcon aria-hidden="true" className="h-4 w-4" />
         <span className="font-semibold">{formatStars(starsCount)}</span>

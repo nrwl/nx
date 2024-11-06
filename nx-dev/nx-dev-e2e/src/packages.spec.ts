@@ -231,7 +231,7 @@ const pages: Array<{ title: string; path: string }> = [
   { title: '@nx/next:library', path: '/packages/next/generators/library' },
   { title: '@nx/next:build', path: '/packages/next/executors/build' },
   { title: '@nx/next:server', path: '/packages/next/executors/server' },
-  { title: '@nx/next:export', path: '/packages/next/executors/export' },
+
   { title: '@nx/node', path: '/packages/node' },
   { title: '@nx/node:init', path: '/packages/node/generators/init' },
   {

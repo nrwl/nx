@@ -1904,65 +1904,6 @@
                   ]
                 },
                 {
-                  "name": "On-Premise",
-                  "id": "on-premise",
-                  "description": "Manage an on-premise installation of Nx Cloud",
-                  "itemList": [
-                    {
-                      "name": "Set up Nx Cloud On-Premise",
-                      "description": "Set up Nx Cloud on machines that you control",
-                      "id": "on-premise",
-                      "tags": ["on-premise"],
-                      "file": "nx-cloud/features/nx-enterprise-on-prem"
-                    },
-                    {
-                      "name": "Authenticate with a Single Admin",
-                      "id": "auth-single-admin",
-                      "file": "nx-cloud/enterprise/on-premise/auth-single-admin"
-                    },
-                    {
-                      "name": "Authenticate with GitHub",
-                      "id": "auth-github",
-                      "file": "nx-cloud/enterprise/on-premise/auth-github"
-                    },
-                    {
-                      "name": "On-Prem VM Setup",
-                      "id": "ami-setup",
-                      "file": "nx-cloud/enterprise/on-premise/ami-setup"
-                    },
-                    {
-                      "name": "Authenticate with GitLab",
-                      "id": "auth-gitlab",
-                      "file": "nx-cloud/enterprise/on-premise/auth-gitlab"
-                    },
-                    {
-                      "name": "Authenticate with BitBucket",
-                      "id": "auth-bitbucket",
-                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
-                    },
-                    {
-                      "name": "Authenticate with BitBucket Data Center",
-                      "id": "auth-bitbucket-data-center",
-                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center"
-                    },
-                    {
-                      "name": "Authenticate via SAML",
-                      "id": "auth-saml",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml"
-                    },
-                    {
-                      "name": "Advanced Configuration",
-                      "id": "advanced-config",
-                      "file": "nx-cloud/enterprise/on-premise/advanced-config"
-                    },
-                    {
-                      "name": "Custom GitHub App",
-                      "id": "custom-github-app",
-                      "file": "nx-cloud/enterprise/on-premise/custom-github-app"
-                    }
-                  ]
-                },
-                {
                   "name": "Custom Distributed Task Execution",
                   "id": "dte",
                   "description": "Custom DTE on your own CI provider",
@@ -2673,6 +2614,32 @@
               "id": "overview",
               "path": "/nx-api/powerpack-conformance",
               "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-azure-cache",
+          "id": "powerpack-azure-cache",
+          "description": "powerpack-azure-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-azure-cache",
+              "file": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-gcs-cache",
+          "id": "powerpack-gcs-cache",
+          "description": "powerpack-gcs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-gcs-cache",
+              "file": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
             }
           ]
         },

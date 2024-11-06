@@ -245,6 +245,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      bundler: options.bundler ?? 'webpack',
     });
   } else if (options.preset === Preset.Expo) {
     const { expoApplicationGenerator } = require('@nx' + '/expo');

@@ -13,6 +13,7 @@ export default async function* runExecutor(
   context: ExecutorContext
 ) {
   process.env.NODE_ENV ??= options.mode ?? 'production';
+  options.target ??= 'web';
 
   if (isMode(process.env.NODE_ENV)) {
     options.mode = process.env.NODE_ENV;

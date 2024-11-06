@@ -11,8 +11,8 @@ import {
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 import { CommandModule } from 'yargs';
+import { stripVTControlCharacters } from 'node:util';
 
-const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
 
 export function sortAlphabeticallyFunction(a: string, b: string): number {
@@ -45,7 +45,10 @@ export async function generateMarkdownFile(
   const filePath = join(outputDirectory, `${templateObject.name}.md`);
   outputFileSync(
     filePath,
-    await formatWithPrettier(filePath, stripAnsi(templateObject.template))
+    await formatWithPrettier(
+      filePath,
+      stripVTControlCharacters(templateObject.template)
+    )
   );
 }
 

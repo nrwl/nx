@@ -60,3 +60,5 @@ out
 target
 *.wasm
 /wasi-sdk*
+
+vite.config.*.timestamp*

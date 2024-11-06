@@ -26,7 +26,7 @@ export function OssProjects(): JSX.Element {
           Popular OSS projects using Nx
         </SectionHeading>
 
-        <div className="mt-20">
+        <div className="mt-16">
           <dl className="grid grid-cols-2 justify-between sm:grid-cols-4">
             <a
               rel="noreferrer"

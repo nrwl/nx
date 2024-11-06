@@ -109,7 +109,6 @@ describe('new', () => {
       const { devDependencies } = readJson(tree, 'my-workspace/package.json');
       expect(devDependencies).toStrictEqual({
         '@nx/react': nxVersion,
-        '@nx/cypress': nxVersion,
         '@nx/vite': nxVersion,
         '@nx/workspace': nxVersion,
         nx: nxVersion,

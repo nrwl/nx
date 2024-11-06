@@ -1,12 +1,12 @@
 import type { Mode } from '@rspack/core';
 
 export interface RspackExecutorSchema {
-  target: 'web' | 'node';
-  main: string;
+  target?: 'web' | 'node';
+  main?: string;
   index?: string;
-  tsConfig: string;
+  tsConfig?: string;
   typeCheck?: boolean;
-  outputPath: string;
+  outputPath?: string;
   outputFileName?: string;
   indexHtml?: string;
   mode?: Mode;

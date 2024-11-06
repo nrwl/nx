@@ -8,6 +8,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { findCycle } from './task-graph-utils';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -105,7 +106,7 @@ export class ProcessTasks {
     projectUsedToDeriveDependencies: string,
     configuration: string,
     overrides: Object
-  ) {
+  ): void {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
       return;
@@ -233,7 +234,7 @@ export class ProcessTasks {
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
-  ) {
+  ): void {
     if (
       !this.projectGraph.dependencies.hasOwnProperty(
         projectUsedToDeriveDependencies
@@ -292,7 +293,7 @@ export class ProcessTasks {
           undefined
         );
         this.dependencies[task.id].push(dummyId);
-        this.dependencies[dummyId] = [];
+        this.dependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
@@ -377,22 +378,53 @@ export class ProcessTasks {
     return id;
   }
 
-  private filterDummyTasks() {
-    for (const [key, deps] of Object.entries(this.dependencies)) {
-      const normalizedDeps = [];
-      for (const dep of deps) {
-        if (dep.endsWith(DUMMY_TASK_TARGET)) {
-          normalizedDeps.push(
-            ...this.dependencies[dep].filter(
-              (d) => !d.endsWith(DUMMY_TASK_TARGET)
-            )
-          );
-        } else {
-          normalizedDeps.push(dep);
-        }
+  /**
+   * this function is used to get the non dummy dependencies of a task recursively
+   * For example, when we have the following dependencies:
+   * {
+   *   'app1:compile': [ 'app2:__nx_dummy_task__' ],
+   *   'app2:__nx_dummy_task__': [ 'app3:__nx_dummy_task__' ],
+   *   'app3:__nx_dummy_task__': [ 'app4:precompile' ],
+   *   'app4:precompile': []
+   * }
+   * getNonDummyDeps('app1:compile') will return ['app1:compile']
+   * getNonDummyDeps('app2:__nx_dummy_task__') will return ['app4:precompile']
+   * getNonDummyDeps('app3:__nx_dummy_task__') will return ['app4:precompile']
+   * getNonDummyDeps('app4:precompile') will return ['app4:precompile']
+   */
+  private getNonDummyDeps(
+    currentTask: string,
+    originalTask: string,
+    cycle?: string[]
+  ): string[] {
+    if (currentTask === originalTask) {
+      return [];
+    } else if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+      if (cycle?.length && cycle?.includes(currentTask)) {
+        return [];
       }
+      // if not a cycle, recursively get the non dummy dependencies
+      return (
+        this.dependencies[currentTask]?.flatMap((dep) =>
+          this.getNonDummyDeps(dep, originalTask, cycle)
+        ) ?? []
+      );
+    } else {
+      return [currentTask];
+    }
+  }
 
-      this.dependencies[key] = normalizedDeps;
+  private filterDummyTasks() {
+    const cycle = findCycle({ dependencies: this.dependencies });
+    for (const [key, deps] of Object.entries(this.dependencies)) {
+      if (!key.endsWith(DUMMY_TASK_TARGET)) {
+        const normalizedDeps = [];
+        for (const dep of deps) {
+          normalizedDeps.push(...this.getNonDummyDeps(dep, key, cycle));
+        }
+
+        this.dependencies[key] = normalizedDeps;
+      }
     }
 
     for (const key of Object.keys(this.dependencies)) {

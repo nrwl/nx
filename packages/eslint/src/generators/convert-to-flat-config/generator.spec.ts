@@ -176,20 +176,28 @@ describe('convert-to-flat-config generator', () => {
             ],
           },
         },
-        ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-          ...config,
-          files: ['**/*.ts', '**/*.tsx'],
-          rules: {
-            ...config.rules,
-          },
-        })),
-        ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-          ...config,
-          files: ['**/*.js', '**/*.jsx'],
-          rules: {
-            ...config.rules,
-          },
-        })),
+        ...compat
+          .config({
+            extends: ['plugin:@nx/typescript'],
+          })
+          .map((config) => ({
+            ...config,
+            files: ['**/*.ts', '**/*.tsx'],
+            rules: {
+              ...config.rules,
+            },
+          })),
+        ...compat
+          .config({
+            extends: ['plugin:@nx/javascript'],
+          })
+          .map((config) => ({
+            ...config,
+            files: ['**/*.js', '**/*.jsx'],
+            rules: {
+              ...config.rules,
+            },
+          })),
       ];
       "
     `);
@@ -428,20 +436,28 @@ describe('convert-to-flat-config generator', () => {
             ],
           },
         },
-        ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-          ...config,
-          files: ['**/*.ts', '**/*.tsx'],
-          rules: {
-            ...config.rules,
-          },
-        })),
-        ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-          ...config,
-          files: ['**/*.js', '**/*.jsx'],
-          rules: {
-            ...config.rules,
-          },
-        })),
+        ...compat
+          .config({
+            extends: ['plugin:@nx/typescript'],
+          })
+          .map((config) => ({
+            ...config,
+            files: ['**/*.ts', '**/*.tsx'],
+            rules: {
+              ...config.rules,
+            },
+          })),
+        ...compat
+          .config({
+            extends: ['plugin:@nx/javascript'],
+          })
+          .map((config) => ({
+            ...config,
+            files: ['**/*.js', '**/*.jsx'],
+            rules: {
+              ...config.rules,
+            },
+          })),
       ];
       "
     `);
@@ -560,7 +576,9 @@ describe('convert-to-flat-config generator', () => {
           // Override or add rules here
           rules: {},
           languageOptions: {
-            parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
+            parserOptions: {
+              project: ['apps/dx-assets-ui/tsconfig.*?.json'],
+            },
           },
         },
         {
@@ -573,7 +591,9 @@ describe('convert-to-flat-config generator', () => {
           // Override or add rules here
           rules: {},
         },
-        { ignores: ['__fixtures__/**/*'] },
+        {
+          ignores: ['__fixtures__/**/*'],
+        },
       ];
       "
     `);

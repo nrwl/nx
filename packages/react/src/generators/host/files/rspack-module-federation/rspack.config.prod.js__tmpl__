@@ -23,7 +23,9 @@ const prodConfig = {
      * ]
      */
     remotes: [
-      <% remotes.forEach(function(r) {%>['<%= r.fileName %>', 'http://localhost:<%= r.port %>/'],<% }); %>
+    <%_ remotes.forEach(function(r) { _%>
+    ['<%= r.fileName %>', 'http://localhost:<%= r.port %>/'],
+    <%_ }); _%>
     ],
 };
 

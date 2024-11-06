@@ -91,7 +91,6 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: false,
-      checkExport: false,
     });
 
     // Consume a JS lib
@@ -128,7 +127,6 @@ describe('Next.js Applications', () => {
       checkUnitTest: true,
       checkLint: true,
       checkE2E: false,
-      checkExport: false,
     });
   }, 300_000);
 
@@ -144,7 +142,6 @@ describe('Next.js Applications', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
   }, 300_000);
 

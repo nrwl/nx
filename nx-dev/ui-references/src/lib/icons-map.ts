@@ -25,6 +25,8 @@ export const iconsMap: Record<string, string> = {
   'powerpack-license': '/images/icons/powerpack-license.svg',
   'powerpack-owners': '/images/icons/powerpack-owners.svg',
   'powerpack-s3-cache': '/images/icons/powerpack-s3-cache.svg',
+  'powerpack-gcs-cache': '/images/icons/powerpack-gcs-cache.svg',
+  'powerpack-azure-cache': '/images/icons/powerpack-azure-cache.svg',
   'powerpack-shared-fs-cache': '/images/icons/powerpack-shared-fs-cache.svg',
   react: '/images/icons/react.svg',
   'react-native': '/images/icons/react.svg',

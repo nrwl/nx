@@ -18,13 +18,13 @@ describe('Remix Init Generator', () => {
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
       {
-        "@remix-run/serve": "^2.8.1",
+        "@remix-run/serve": "^2.13.1",
       }
     `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
       {
         "@nx/web": "0.0.1",
-        "@remix-run/dev": "^2.8.1",
+        "@remix-run/dev": "^2.13.1",
       }
     `);
 
@@ -70,13 +70,13 @@ describe('Remix Init Generator', () => {
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies).toMatchInlineSnapshot(`
         {
-          "@remix-run/serve": "^2.8.1",
+          "@remix-run/serve": "^2.13.1",
         }
       `);
       expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
         {
           "@nx/web": "0.0.1",
-          "@remix-run/dev": "^2.8.1",
+          "@remix-run/dev": "^2.13.1",
         }
       `);
     });
