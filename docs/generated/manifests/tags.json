@@ -568,6 +568,13 @@
       "path": "/recipes/nx-release/build-before-versioning"
     },
     {
+      "description": "",
+      "file": "shared/recipes/nx-release/configuration-version-prefix",
+      "id": "configuration-version-prefix",
+      "name": "Configuring Version Prefix for Dependency Versions",
+      "path": "/recipes/nx-release/configuration-version-prefix"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/release",
       "id": "release",
