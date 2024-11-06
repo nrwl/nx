@@ -86,12 +86,20 @@ export class TempFs {
   }
 
   cleanup() {
-    rmSync(this.tempDir, { recursive: true, force: true });
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true });
+    } catch (e) {
+      // swallow the error if failed to remove the directory
+    }
     setWorkspaceRoot(this.previousWorkspaceRoot);
   }
 
   reset() {
-    rmSync(this.tempDir, { recursive: true, force: true });
-    mkdirSync(this.tempDir, { recursive: true });
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true });
+      mkdirSync(this.tempDir, { recursive: true });
+    } catch (e) {
+      // swallow the error if failed to remove the directory
+    }
   }
 }
