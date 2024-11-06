@@ -4,7 +4,7 @@ This guide explains how to configure a custom version prefix in Nx Release using
 
 ## The `versionPrefix` Option
 
-The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) respect what is already in the `package.json` file.
+The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) by respecting what is already in the `package.json` file.
 
 For example, having the following `package.json` file:
 
@@ -34,7 +34,7 @@ Then next patch bump will be:
 }
 ```
 
-Preserving the prefix for `dependency-one` and `dependency-two` and not changing the prefix for `dependency-three`.
+Preserving the prefix for `dependency-one` and `dependency-two` and continuing to use no prefix for `dependency-three`.
 
 ### Available Prefix Options
 
@@ -44,7 +44,7 @@ You can set `versionPrefix` to one of the following values:
 - `""`: Uses the exact version without a prefix.
 - `"~"`: Specifies compatibility with patch-level updates.
 - `"^"`: Specifies compatibility with minor-level updates.
-- `"="`: Locks the version to an exact match.
+- `"="`: Locks the version to an exact match (the `=` is not commonly used in the JavaScript ecosystem, but is in others such as Cargo for Rust).
 
 Example configuration:
 
@@ -64,7 +64,7 @@ Example configuration:
 
 To set the versionPrefix option globally or for a specific project, add it to either your `nx.json` or `project.json` configuration files:
 
-```json
+```jsonc
 {
   "release": {
     "version": {
