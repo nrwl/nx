@@ -18,7 +18,7 @@ export function getDbConnection(
   return connection;
 }
 
-export function removeDbConnection() {
+export function removeDbConnections() {
   for (const connection of dbConnectionMap.values()) {
     closeDbConnection(connection);
   }
