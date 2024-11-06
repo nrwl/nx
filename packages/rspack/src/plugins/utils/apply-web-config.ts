@@ -9,7 +9,7 @@ import {
   EnvironmentPlugin,
 } from '@rspack/core';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
-import path, { join } from 'path';
+import { join, resolve } from 'path';
 import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import { getOutputHashFormat } from './hash-format';
 import { normalizeExtraEntryPoints } from './normalize-entry';
@@ -103,7 +103,7 @@ export function applyWebConfig(
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
       (includePath: string) =>
-        includePaths.push(path.resolve(options.root, includePath))
+        includePaths.push(resolve(options.root, includePath))
     );
   }
 
@@ -120,7 +120,7 @@ export function applyWebConfig(
     normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
       const resolvedPath = style.input.startsWith('.')
         ? style.input
-        : path.resolve(options.root, style.input);
+        : resolve(options.root, style.input);
       // Add style entry points.
       if (entries[style.bundleName]) {
         entries[style.bundleName].import.push(resolvedPath);
@@ -178,7 +178,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: path.join(
+          loader: join(
             __dirname,
             '../../../utils/webpack/deprecated-stylus-loader.js'
           ),
@@ -241,7 +241,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: path.join(
+          loader: join(
             __dirname,
             '../../../utils/webpack/deprecated-stylus-loader.js'
           ),
@@ -305,7 +305,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: path.join(
+          loader: join(
             __dirname,
             '../../../utils/webpack/deprecated-stylus-loader.js'
           ),

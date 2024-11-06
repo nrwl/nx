@@ -56,14 +56,6 @@ export interface NxAppRspackPluginOptions {
    */
   assets?: Array<AssetGlob | string>;
   /**
-   * Babel configuration file if compiler is babel.
-   */
-  babelConfig?: string;
-  /**
-   * If true, Babel will look for a babel.config.json up the directory tree.
-   */
-  babelUpwardRootMode?: boolean;
-  /**
    * Set <base href> for the resulting index.html.
    */
   baseHref?: string;
@@ -73,10 +65,7 @@ export interface NxAppRspackPluginOptions {
   buildLibsFromSource?: boolean;
 
   commonChunk?: boolean;
-  /**
-   * The compiler to use. Default is `babel` and requires a `.babelrc` file.
-   */
-  compiler?: 'babel' | 'swc' | 'tsc';
+
   /**
    * Delete the output path before building.
    */
