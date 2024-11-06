@@ -73,41 +73,16 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> 
 pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes) {
     let now = std::time::Instant::now();
     let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
-    let archive_path_temp =
-        cache_dir
-            .as_ref()
-            .join(format!("{}.{}", NX_FILES_ARCHIVE, std::process::id()));
-
-    std::fs::create_dir_all(&cache_dir)
-        .inspect_err(|e| {
-            trace!("Error creating cache directory: {:?}", e);
-        })
-        .ok();
-
     let result = rkyv::to_bytes::<_, 2048>(&files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
-            std::fs::write(&archive_path_temp, encoded).map_err(|e| {
-                anyhow::anyhow!(
-                    "Unable to write to {}: {:?}",
-                    &archive_path_temp.display(),
-                    e
-                )
-            })
-        })
-        .and_then(|_| {
-            std::fs::rename(&archive_path_temp, &archive_path).map_err(|e| {
-                anyhow::anyhow!(
-                    "unable to move temp archive file to {}: {:?}",
-                    &archive_path.display(),
-                    e
-                )
-            })
+            std::fs::write(archive_path, encoded)?;
+            Ok(())
         });
 
     match result {
         Ok(_) => {
-            trace!("wrote archive in {:?}", now.elapsed());
+            trace!("write archive in {:?}", now.elapsed());
         }
         Err(e) => {
             trace!("could not write files archive: {:?}", e);
