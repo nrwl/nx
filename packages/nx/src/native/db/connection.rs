@@ -5,8 +5,9 @@ use std::thread;
 use std::time::Duration;
 use tracing::trace;
 
+#[derive(Default)]
 pub struct NxDbConnection {
-    pub conn: Connection,
+    pub conn: Option<Connection>,
 }
 
 const MAX_RETRIES: u32 = 20;
@@ -53,39 +54,57 @@ macro_rules! retry_db_operation_when_busy {
 
 impl NxDbConnection {
     pub fn new(connection: Connection) -> Self {
-        Self { conn: connection }
+        Self {
+            conn: Some(connection),
+        }
     }
 
     pub fn execute<P: Params + Clone>(&self, sql: &str, params: P) -> Result<usize> {
-        retry_db_operation_when_busy!(self.conn.execute(sql, params.clone()))
-            .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!(conn.execute(sql, params.clone()))
+                .map_err(|e| anyhow::anyhow!("DB execute error: \"{}\", {:?}", sql, e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
-        retry_db_operation_when_busy!(self.conn.execute_batch(sql))
-            .map_err(|e| anyhow::anyhow!("DB execute batch error: \"{}\", {:?}", sql, e))
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!(conn.execute_batch(sql))
+                .map_err(|e| anyhow::anyhow!("DB execute batch error: \"{}\", {:?}", sql, e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
     pub fn prepare(&self, sql: &str) -> Result<Statement> {
-        retry_db_operation_when_busy!(self.conn.prepare(sql))
-            .map_err(|e| anyhow::anyhow!("DB prepare error: \"{}\", {:?}", sql, e))
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!(conn.prepare(sql))
+                .map_err(|e| anyhow::anyhow!("DB prepare error: \"{}\", {:?}", sql, e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
     pub fn transaction<T>(
         &mut self,
         transaction_operation: impl Fn(&Connection) -> rusqlite::Result<T>,
     ) -> Result<T> {
-        let transaction = retry_db_operation_when_busy!(self.conn.transaction())
-            .map_err(|e| anyhow::anyhow!("DB transaction error: {:?}", e))?;
+        if let Some(conn) = self.conn.as_mut() {
+            let transaction = retry_db_operation_when_busy!(conn.transaction())
+                .map_err(|e| anyhow::anyhow!("DB transaction error: {:?}", e))?;
 
-        let result = transaction_operation(&transaction)
-            .map_err(|e| anyhow::anyhow!("DB transaction operation error: {:?}", e))?;
+            let result = transaction_operation(&transaction)
+                .map_err(|e| anyhow::anyhow!("DB transaction operation error: {:?}", e))?;
 
-        transaction
-            .commit()
-            .map_err(|e| anyhow::anyhow!("DB transaction commit error: {:?}", e))?;
+            transaction
+                .commit()
+                .map_err(|e| anyhow::anyhow!("DB transaction commit error: {:?}", e))?;
 
-        Ok(result)
+            Ok(result)
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
     pub fn query_row<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<Option<T>>
@@ -93,17 +112,22 @@ impl NxDbConnection {
         P: Params + Clone,
         F: FnOnce(&Row<'_>) -> rusqlite::Result<T> + Clone,
     {
-        retry_db_operation_when_busy!(self
-            .conn
-            .query_row(sql, params.clone(), f.clone())
-            .optional())
-        .map_err(|e| anyhow::anyhow!("DB query error: \"{}\", {:?}", sql, e))
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!(conn.query_row(sql, params.clone(), f.clone()).optional())
+                .map_err(|e| anyhow::anyhow!("DB query error: \"{}\", {:?}", sql, e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
-    pub fn close(self) -> rusqlite::Result<(), (Connection, Error)> {
-        self.conn
-            .close()
-            .inspect_err(|e| trace!("Error in close: {:?}", e))
+    pub fn close(self) -> Result<()> {
+        trace!("Closing database connection");
+        if let Some(conn) = self.conn {
+            conn.close()
+                .map_err(|(_, err)| anyhow::anyhow!("Unable to close connection: {:?}", err))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
     pub fn pragma_update<V>(
@@ -111,19 +135,28 @@ impl NxDbConnection {
         schema_name: Option<DatabaseName<'_>>,
         pragma_name: &str,
         pragma_value: V,
-    ) -> rusqlite::Result<()>
+    ) -> Result<()>
     where
         V: ToSql + Clone,
     {
-        retry_db_operation_when_busy!(self.conn.pragma_update(
-            schema_name,
-            pragma_name,
-            pragma_value.clone()
-        ))
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!(conn.pragma_update(
+                schema_name,
+                pragma_name,
+                pragma_value.clone()
+            ))
+            .map_err(|e| anyhow::anyhow!("DB pragma update error: {:?}", e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 
     pub fn busy_handler(&self, callback: Option<fn(i32) -> bool>) -> Result<()> {
-        retry_db_operation_when_busy!(self.conn.busy_handler(callback))
-            .map_err(|e| anyhow::anyhow!("DB busy handler error: {:?}", e))
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!(conn.busy_handler(callback))
+                .map_err(|e| anyhow::anyhow!("DB busy handler error: {:?}", e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
     }
 }

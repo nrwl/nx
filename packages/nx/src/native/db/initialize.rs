@@ -62,10 +62,10 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
             create_metadata_table(&mut c, &nx_version)?;
             c
         }
-        check @ _ => {
-            trace!("Incompatible database because: {:?}", check);
+        reason => {
+            trace!("Incompatible database because: {:?}", reason);
             trace!("Disconnecting from existing incompatible database");
-            c.close().map_err(|(_, error)| anyhow::Error::from(error))?;
+            c.close()?;
             trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 
