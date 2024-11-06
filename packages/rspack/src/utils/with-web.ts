@@ -5,8 +5,6 @@ import { NxRspackExecutionContext } from './config';
 
 export interface WithWebOptions {
   baseHref?: string;
-  // TODO: Check if this is supportable in rspack. It was only being used in the WriteIndexHtmlPlugin for Webpack. The same isn't supported in HtmlRspackPlugin.
-  crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   deployUrl?: string;
   extractCss?: boolean;
   generateIndexHtml?: boolean;
