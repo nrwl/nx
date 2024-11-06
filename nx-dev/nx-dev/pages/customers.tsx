@@ -14,12 +14,12 @@ export function Customers(): JSX.Element {
     <>
       <NextSeo
         title="Our customers"
-        description="Our customers are spread across the USA, Canada, UK, and Europe."
+        description="See how companies and open-source projects worldwide use Nx to accelerate development and boost productivity."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Customers',
           description:
-            'Our customers are spread across the USA, Canada, UK, and Europe.',
+            'See how companies and open-source projects worldwide use Nx to accelerate development and boost productivity.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
@@ -29,7 +29,7 @@ export function Customers(): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
