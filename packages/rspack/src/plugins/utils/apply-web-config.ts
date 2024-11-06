@@ -32,7 +32,7 @@ export function applyWebConfig(
     useNormalizedEntry?: boolean;
   } = {}
 ): void {
-  if (!process.env['NX_GRAPH_CREATION']) return;
+  if (global.NX_GRAPH_CREATION) return;
 
   // Defaults that was applied from executor schema previously.
   options.runtimeChunk ??= true; // need this for HMR and other things to work
