@@ -20,6 +20,7 @@ import { assertSupportedPlatform } from '../src/native/assert-supported-platform
 import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
+import { removeDbConnection } from '../src/utils/db-connection';
 
 function main() {
   if (
@@ -273,5 +274,13 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   let cache: string = null;
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
+
+function nxCleanup() {
+  removeDbConnection();
+}
+process.on('exit', nxCleanup);
+process.on('SIGINT', nxCleanup);
+process.on('SIGTERM', nxCleanup);
+process.on('SIGHUP', nxCleanup);
 
 main();
