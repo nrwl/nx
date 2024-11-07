@@ -101,22 +101,9 @@ fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Re
 fn open_database_connection(db_path: &Path) -> anyhow::Result<NxDbConnection> {
     let conn = if cfg!(target_family = "unix") && ci_info::is_ci() {
         trace!("Opening connection with unix-dotfile");
-        Connection::open_with_flags_and_vfs(
-            db_path,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_URI
-                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-            "unix-dotfile",
-        )
+        Connection::open_with_flags_and_vfs(db_path, OpenFlags::default(), "unix-dotfile")
     } else {
-        Connection::open_with_flags(
-            db_path,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_URI
-                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-        )
+        Connection::open(db_path)
     };
 
     conn.map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
