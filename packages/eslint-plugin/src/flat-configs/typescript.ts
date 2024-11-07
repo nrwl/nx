@@ -14,8 +14,10 @@ const isPrettierAvailable =
  * to one ecosystem, such as React, Angular, Node etc.
  */
 export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+  },
   ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
   {
     plugins: { '@typescript-eslint': tseslint.plugin },

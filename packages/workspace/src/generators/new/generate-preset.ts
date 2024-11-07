@@ -36,7 +36,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     shell: true,
     cwd: join(host.root, opts.directory),
-    windowsHide: true,
+    windowsHide: false,
   };
   const pmc = getPackageManagerCommand();
   const executable = `${pmc.exec} nx`;
@@ -161,7 +161,9 @@ function getPresetDependencies({
         dependencies: {},
         dev: {
           '@nx/react': nxVersion,
-          '@nx/cypress': e2eTestRunner !== 'none' ? nxVersion : undefined,
+          '@nx/cypress': e2eTestRunner === 'cypress' ? nxVersion : undefined,
+          '@nx/playwright':
+            e2eTestRunner === 'playwright' ? nxVersion : undefined,
           '@nx/jest': bundler !== 'vite' ? nxVersion : undefined,
           '@nx/vite': bundler === 'vite' ? nxVersion : undefined,
           '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,

@@ -19,7 +19,7 @@ In order to use `@nx/powerpack-s3-cache`, you need to have an active Powerpack l
 
 ### 1. Install the Package
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
 ```shell
@@ -47,6 +47,34 @@ There are four different ways to authenticate with AWS. They will be attempted i
 | `AWS_CREDENTIAL_EXPIRATION` | The expiration time of the credentials contained in the environment variables described above. This value must be in a format compatible with the [ISO-8601 standard](https://en.wikipedia.org/wiki/ISO_8601) and is only needed when you are using temporary credentials. |
 
 Both the `AWS_ACCESS_KEY_ID` and the `AWS_SECRET_ACCESS_KEY` environment variables are required to use the environment variable authentication method.
+
+Here's an example of using OICD in GitHub Actions to set the environment variables in CI:
+
+```yaml {% fileName=".github/workflows/ci.yml" %}
+name: CI
+...
+permissions:
+  id-token: write
+  ...
+
+jobs:
+  main:
+    env:
+      NX_POWERPACK_LICENSE: ${{ secrets.NX_POWERPACK_LICENSE }}
+    runs-on: ubuntu-latest
+    steps:
+        ...
+
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789123:role/GhAIBucketUserRole
+          aws-region: us-east-1
+
+        ...
+
+      - run: pnpm exec nx affected -t lint test build
+```
 
 #### INI Config Files
 

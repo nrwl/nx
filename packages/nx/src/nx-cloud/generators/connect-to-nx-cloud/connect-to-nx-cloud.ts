@@ -37,7 +37,7 @@ function getNxInitDate(): string | null {
   try {
     const nxInitIso = execSync(
       'git log --diff-filter=A --follow --format=%aI -- nx.json | tail -1',
-      { stdio: 'pipe', windowsHide: true }
+      { stdio: 'pipe', windowsHide: false }
     )
       .toString()
       .trim();

@@ -133,7 +133,7 @@ function execLockFileUpdate(
         ...process.env,
         ...env,
       },
-      windowsHide: true,
+      windowsHide: false,
     });
   } catch (e) {
     output.error({

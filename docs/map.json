@@ -132,35 +132,6 @@
               "file": "shared/features/manage-releases"
             },
             {
-              "name": "Powerpack Features",
-              "id": "powerpack",
-              "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
-              "file": "shared/features/powerpack/index",
-              "itemList": [
-                {
-                  "name": "Run Language-Agnostic Conformance Rules",
-                  "description": "Write and apply rules for your Nx workspace",
-                  "id": "conformance",
-                  "tags": ["conformance"],
-                  "file": "shared/features/powerpack/conformance"
-                },
-                {
-                  "name": "Define Code Ownership at the Project Level",
-                  "description": "Configure and maintain code owners for projects in an Nx workspace",
-                  "id": "owners",
-                  "tags": ["owners"],
-                  "file": "shared/features/powerpack/owners"
-                },
-                {
-                  "name": "Self-Host the Remote Cache",
-                  "description": "Host the remote cache without using Nx Cloud",
-                  "id": "custom-caching",
-                  "tags": ["custom-caching"],
-                  "file": "shared/features/powerpack/custom-caching"
-                }
-              ]
-            },
-            {
               "name": "CI Features",
               "id": "ci-features",
               "description": "Features of Nx and Nx Cloud that improve CI",
@@ -377,12 +348,6 @@
               "id": "installation",
               "description": "Installing Nx",
               "itemList": [
-                {
-                  "name": "Activate Powerpack",
-                  "id": "activate-powerpack",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/activate-powerpack"
-                },
                 {
                   "name": "Install Nx in a Non-Javascript Repo",
                   "id": "install-non-javascript",
@@ -1100,6 +1065,54 @@
                   "id": "build-before-versioning",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/build-before-versioning"
+                },
+                {
+                  "name": "Configuring Version Prefix for Dependency Versions",
+                  "id": "configuration-version-prefix",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configuration-version-prefix"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "id": "nx-enterprise",
+          "description": "Enterprise solutions for the Nx CLI",
+          "itemList": [
+            {
+              "name": "Activate Powerpack",
+              "id": "activate-powerpack",
+              "tags": ["installation"],
+              "file": "shared/recipes/installation/activate-powerpack"
+            },
+            {
+              "name": "Powerpack Features",
+              "id": "powerpack",
+              "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
+              "file": "shared/features/powerpack/index",
+              "itemList": [
+                {
+                  "name": "Run Language-Agnostic Conformance Rules",
+                  "description": "Write and apply rules for your Nx workspace",
+                  "id": "conformance",
+                  "tags": ["conformance"],
+                  "file": "shared/features/powerpack/conformance"
+                },
+                {
+                  "name": "Define Code Ownership at the Project Level",
+                  "description": "Configure and maintain code owners for projects in an Nx workspace",
+                  "id": "owners",
+                  "tags": ["owners"],
+                  "file": "shared/features/powerpack/owners"
+                },
+                {
+                  "name": "Self-Host the Remote Cache",
+                  "description": "Host the remote cache without using Nx Cloud",
+                  "id": "custom-caching",
+                  "tags": ["custom-caching"],
+                  "file": "shared/features/powerpack/custom-caching"
                 }
               ]
             }
@@ -1854,61 +1867,45 @@
               "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
-                  "name": "On-Premise",
-                  "id": "on-premise",
+                  "name": "Single Tenant",
+                  "id": "single-tenant",
                   "description": "Manage an on-premise installation of Nx Cloud",
                   "itemList": [
                     {
-                      "name": "Set up Nx Cloud On-Premise",
-                      "description": "Set up Nx Cloud on machines that you control",
-                      "id": "on-premise",
-                      "tags": ["on-premise"],
-                      "file": "nx-cloud/features/nx-enterprise-on-prem"
-                    },
-                    {
-                      "name": "Authenticate with a Single Admin",
-                      "id": "auth-single-admin",
-                      "file": "nx-cloud/enterprise/on-premise/auth-single-admin"
+                      "name": "Single Tenant Nx Cloud Hosting",
+                      "id": "overview",
+                      "tags": ["single-tenant"],
+                      "file": "nx-cloud/enterprise/single-tenant/overview"
                     },
                     {
                       "name": "Authenticate with GitHub",
                       "id": "auth-github",
-                      "file": "nx-cloud/enterprise/on-premise/auth-github"
-                    },
-                    {
-                      "name": "On-Prem VM Setup",
-                      "id": "ami-setup",
-                      "file": "nx-cloud/enterprise/on-premise/ami-setup"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-github"
                     },
                     {
                       "name": "Authenticate with GitLab",
                       "id": "auth-gitlab",
-                      "file": "nx-cloud/enterprise/on-premise/auth-gitlab"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-gitlab"
                     },
                     {
                       "name": "Authenticate with BitBucket",
                       "id": "auth-bitbucket",
-                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket"
                     },
                     {
                       "name": "Authenticate with BitBucket Data Center",
                       "id": "auth-bitbucket-data-center",
-                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-bitbucket-data-center"
                     },
                     {
                       "name": "Authenticate via SAML",
                       "id": "auth-saml",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml"
-                    },
-                    {
-                      "name": "Advanced Configuration",
-                      "id": "advanced-config",
-                      "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                      "file": "nx-cloud/enterprise/single-tenant/auth-saml"
                     },
                     {
                       "name": "Custom GitHub App",
                       "id": "custom-github-app",
-                      "file": "nx-cloud/enterprise/on-premise/custom-github-app"
+                      "file": "nx-cloud/enterprise/single-tenant/custom-github-app"
                     }
                   ]
                 },
@@ -2623,6 +2620,32 @@
               "id": "overview",
               "path": "/nx-api/powerpack-conformance",
               "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-azure-cache",
+          "id": "powerpack-azure-cache",
+          "description": "powerpack-azure-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-azure-cache",
+              "file": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-gcs-cache",
+          "id": "powerpack-gcs-cache",
+          "description": "powerpack-gcs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-gcs-cache",
+              "file": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
             }
           ]
         },

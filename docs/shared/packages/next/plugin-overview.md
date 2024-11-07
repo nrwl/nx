@@ -60,6 +60,7 @@ The `@nx/next` plugin will create tasks for any project that has a Next.js confi
 - `next.config.js`
 - `next.config.cjs`
 - `next.config.mjs`
+- `next.config.ts`
 
 ### View Inferred Tasks
 

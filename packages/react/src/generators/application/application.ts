@@ -47,6 +47,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addProjectRootToRspackPluginExcludesIfExists } from './lib/add-project-root-to-rspack-plugin-excludes';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -248,6 +249,7 @@ export async function applicationGeneratorInternal(
       framework: 'react',
     });
     tasks.push(rspackTask);
+    addProjectRootToRspackPluginExcludesIfExists(host, options.appProjectRoot);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {

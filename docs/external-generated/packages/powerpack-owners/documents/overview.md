@@ -13,7 +13,7 @@ In order to use `@nx/powerpack-owners`, you need to have an active Powerpack lic
 
 ## Set Up @nx/powerpack-owners
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
    ```shell

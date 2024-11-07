@@ -26,15 +26,13 @@
       "type": "string",
       "description": "The tsconfig file to build the project."
     },
-    "typeCheck": {
+    "skipTypeChecking": {
+      "alias": "typeCheck",
       "type": "boolean",
-      "description": "Skip the type checking."
-    },
-    "indexHtml": {
-      "type": "string",
-      "description": "The path to the index.html file."
+      "description": "Skip the type checking. Default is `false`."
     },
     "index": {
+      "alias": "indexHtml",
       "type": "string",
       "description": "HTML File which will be contain the application.",
       "x-completion-type": "file",
@@ -133,7 +131,7 @@
       "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
     }
   },
-  "required": ["target", "main", "outputPath", "tsConfig", "rspackConfig"],
+  "required": ["rspackConfig"],
   "definitions": {
     "assetPattern": {
       "oneOf": [

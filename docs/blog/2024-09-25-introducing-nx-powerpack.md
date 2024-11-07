@@ -119,7 +119,7 @@ A dedicated `nx sync` command automatically synchronizes these definitions to a 
 ...
 ```
 
-Read all about how to [configure Codeowners for your project in our docs](/features/powerpack/owners).
+Read all about how to [configure Codeowners for your project in our docs](/nx-enterprise/powerpack/owners).
 
 ## Self-hosted Cache Storage
 
@@ -156,9 +156,6 @@ permissions:
   id-token: write
   ...
 
-env:
-  NX_DB_CACHE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -178,7 +175,7 @@ jobs:
 
 Similarly you can **set up network file based caching** using the `nx add @nx/powerpack-shared-fs-cache` package and by setting the `cacheDirectory` path in your `nx.json`.
 
-Read all about how to [set up S3 or network drive based caching for your Nx workspace in our docs](/features/powerpack/custom-caching).
+Read all about how to [set up S3 or network drive based caching for your Nx workspace in our docs](/nx-enterprise/powerpack/custom-caching).
 
 ## Workspace Conformance (Beta)
 
@@ -245,7 +242,7 @@ You can then run `nx conformance` to execute the conformance checks:
 
 In this first preview release, you'll only be able to run workspace conformance rules on a single workspace. In future iterations, you **will be able to connect it to your existing Nx Cloud organization**, allowing you to upload conformance rules and run them across connected workspaces.
 
-Read all the details on how to [get started with workspace conformance rules in our docs](/features/powerpack/conformance).
+Read all the details on how to [get started with workspace conformance rules in our docs](/nx-enterprise/powerpack/conformance).
 
 ## Learn More
 

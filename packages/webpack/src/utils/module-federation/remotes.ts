@@ -17,18 +17,19 @@ export function mapRemotes(
 ): Record<string, string> {
   const mappedRemotes = {};
 
-  for (const remote of remotes) {
-    if (Array.isArray(remote)) {
-      const remoteName = normalizeRemoteName(remote[0]);
-      mappedRemotes[remoteName] = handleArrayRemote(
-        remote,
+  for (const nxRemoteProjectName of remotes) {
+    if (Array.isArray(nxRemoteProjectName)) {
+      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName[0]);
+      mappedRemotes[mfRemoteName] = handleArrayRemote(
+        nxRemoteProjectName,
         remoteEntryExt,
         isRemoteGlobal
       );
-    } else if (typeof remote === 'string') {
-      const remoteName = normalizeRemoteName(remote);
-      mappedRemotes[remoteName] = handleStringRemote(
-        remoteName,
+    } else if (typeof nxRemoteProjectName === 'string') {
+      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
+      mappedRemotes[mfRemoteName] = handleStringRemote(
+        nxRemoteProjectName,
+
         determineRemoteUrl,
         isRemoteGlobal
       );
@@ -44,12 +45,12 @@ function handleArrayRemote(
   remoteEntryExt: 'js' | 'mjs',
   isRemoteGlobal: boolean
 ): string {
-  let [remoteName, remoteLocation] = remote;
-  remoteName = normalizeRemoteName(remoteName);
+  let [nxRemoteProjectName, remoteLocation] = remote;
+  const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
   const remoteLocationExt = extname(remoteLocation);
 
   // If remote location already has .js or .mjs extension
-  if (['.js', '.mjs'].includes(remoteLocationExt)) {
+  if (['.js', '.mjs', '.json'].includes(remoteLocationExt)) {
     return remoteLocation;
   }
 
@@ -58,7 +59,7 @@ function handleArrayRemote(
     : remoteLocation;
 
   const globalPrefix = isRemoteGlobal
-    ? `${remoteName.replace(/-/g, '_')}@`
+    ? `${normalizeRemoteName(nxRemoteProjectName)}@`
     : '';
 
   // if the remote is defined with anything other than http then we assume it's a promise based remote
@@ -72,13 +73,15 @@ function handleArrayRemote(
 
 // Helper function to deal with remotes that are strings
 function handleStringRemote(
-  remote: string,
-  determineRemoteUrl: (remote: string) => string,
+  nxRemoteProjectName: string,
+  determineRemoteUrl: (nxRemoteProjectName: string) => string,
   isRemoteGlobal: boolean
 ): string {
-  const globalPrefix = isRemoteGlobal ? `${remote.replace(/-/g, '_')}@` : '';
+  const globalPrefix = isRemoteGlobal
+    ? `${normalizeRemoteName(nxRemoteProjectName)}@`
+    : '';
 
-  return `${globalPrefix}${determineRemoteUrl(remote)}`;
+  return `${globalPrefix}${determineRemoteUrl(nxRemoteProjectName)}`;
 }
 
 /**
@@ -98,11 +101,11 @@ export function mapRemotesForSSR(
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      let [remoteName, remoteLocation] = remote;
-      remoteName = normalizeRemoteName(remoteName);
+      let [nxRemoteProjectName, remoteLocation] = remote;
+      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
       const remoteLocationExt = extname(remoteLocation);
-      mappedRemotes[remoteName] = `${remoteName}@${
-        ['.js', '.mjs'].includes(remoteLocationExt)
+      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${
+        ['.js', '.mjs', '.json'].includes(remoteLocationExt)
           ? remoteLocation
           : `${
               remoteLocation.endsWith('/')
@@ -111,8 +114,10 @@ export function mapRemotesForSSR(
             }/remoteEntry.${remoteEntryExt}`
       }`;
     } else if (typeof remote === 'string') {
-      const remoteName = normalizeRemoteName(remote);
-      mappedRemotes[remoteName] = `${remoteName}@${determineRemoteUrl(remote)}`;
+      const mfRemoteName = normalizeRemoteName(remote);
+      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${determineRemoteUrl(
+        remote
+      )}`;
     }
   }
 

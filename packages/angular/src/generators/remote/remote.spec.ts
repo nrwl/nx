@@ -443,4 +443,19 @@ describe('MF Remote App Generator', () => {
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual(initialPackageJson);
   });
+
+  it('should error when an invalid remote name is passed to the remote generator', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await expect(
+      generateTestRemoteApplication(tree, {
+        directory: 'test/my-remote',
+      })
+    ).rejects.toMatchInlineSnapshot(`
+      [Error: Invalid remote name: my-remote. Remote project names must:
+      - Start with a letter, dollar sign ($) or underscore (_)
+      - Followed by any valid character (letters, digits, underscores, or dollar signs)
+      The regular expression used is ^[a-zA-Z_$][a-zA-Z_$0-9]*$.]
+    `);
+  });
 });

@@ -128,7 +128,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         env: processEnv(true),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
+        windowsHide: false,
       });
 
       const resultJson = JSON.parse(result.toString());
@@ -154,7 +154,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
               env: processEnv(true),
               cwd: context.root,
               stdio: 'ignore',
-              windowsHide: true,
+              windowsHide: false,
             });
             console.log(
               `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
@@ -269,7 +269,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
+      windowsHide: false,
     });
 
     /**

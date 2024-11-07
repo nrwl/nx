@@ -8,11 +8,21 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import {
+  ButtonLink,
+  SectionHeading,
+  Strong,
+  TextLink,
+} from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
-import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  AmazonS3Icon,
+  AzureDevOpsIcon,
+  GoogleCloudIcon,
+  NxIcon,
+} from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -20,8 +30,8 @@ export function PowerpackFeatures(): ReactElement {
   return (
     <section className="relative isolate">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="col-span-full flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+        <div className="mt-32 grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="xl:max-w-xl">
               <SectionHeading
                 as="h2"
@@ -32,14 +42,21 @@ export function PowerpackFeatures(): ReactElement {
                 Self-hosted cache storage
               </SectionHeading>
               <p className="mt-6 text-pretty text-lg">
-                Nx Powerpack enables you to use <Strong>Amazon S3</Strong> or a{' '}
+                Use <Strong>Amazon S3</Strong> or a{' '}
                 <Strong>shared network drive</Strong> as your remote cache
                 storage, offering a flexible, self-managed solution for faster
-                builds.
+                builds. Nx Powerpack self-hosted cache storage is{' '}
+                <TextLink
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  title="Get a Powerpack license"
+                >
+                  free for small teams
+                </TextLink>
+                .
               </p>
               <div className="mt-16">
                 <ButtonLink
-                  href="/features/powerpack/custom-caching"
+                  href="/nx-enterprise/powerpack/custom-caching"
                   title="Learn more about self-hosted cache storage"
                   variant="secondary"
                   size="default"
@@ -66,10 +83,10 @@ export function PowerpackFeatures(): ReactElement {
               <p className="mt-6 text-pretty text-lg">
                 Common VCS providers require folder-based ownership definitions.
                 Now, define and manage ownership where it matters—
-                <Strong>at the project level</Strong>
+                <Strong>at the project level</Strong>.
               </p>
               <p className="mt-6 text-pretty text-lg">
-                Nx Powerpack codeowners bridges this gap by{' '}
+                Bridge the gap by{' '}
                 <Strong>
                   automatically tracking changes and syncing ownership data
                 </Strong>{' '}
@@ -80,7 +97,7 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href="/features/powerpack/owners"
+                href="/nx-enterprise/powerpack/owners"
                 title="Learn more about codeowners"
                 variant="secondary"
                 size="default"
@@ -100,10 +117,8 @@ export function PowerpackFeatures(): ReactElement {
                 Workspace conformance
               </SectionHeading>
               <p className="mt-6 text-pretty text-lg">
-                Ensuring consistent code quality and long-term maintainability
-                across large teams is critical. Nx Powerpack allows you to{' '}
                 <Strong>
-                  define and run conformance rules throughout your workspace
+                  Define and run conformance rules throughout your workspace
                 </Strong>
                 , leverage built-in rules or{' '}
                 <Strong>
@@ -112,7 +127,7 @@ export function PowerpackFeatures(): ReactElement {
                 </Strong>
               </p>
               <p className="mt-6 text-pretty text-lg">
-                With Nx Cloud Enterprise Edition, you can{' '}
+                With Nx Enterprise, you can{' '}
                 <Strong>
                   upload your custom rules to your Nx Cloud organization
                 </Strong>{' '}
@@ -122,13 +137,103 @@ export function PowerpackFeatures(): ReactElement {
             </div>
             <div className="flex">
               <ButtonLink
-                href="/features/powerpack/conformance"
+                href="/nx-enterprise/powerpack/conformance"
                 title="Learn how to set up conformance rules"
                 variant="secondary"
                 size="default"
               >
                 Learn how to use conformance rules
               </ButtonLink>
+            </div>
+          </div>
+          <div className="flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:col-span-2 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+            <div className="relative hidden h-full w-64 shrink-0 overflow-hidden lg:block">
+              <img
+                src="/images/powerpack/trust-secure-light.avif"
+                alt="trust & secure illustration"
+                className="absolute inset-0 block -translate-y-[85px] scale-150 transform dark:hidden"
+              />
+              <img
+                src="/images/powerpack/trust-secure-dark.avif"
+                alt="trust & secure illustration"
+                className="absolute inset-0 hidden -translate-y-[85px] scale-150 transform dark:block"
+              />
+            </div>
+            <div>
+              <SectionHeading
+                as="h2"
+                variant="title"
+                id="trustworthy-and-secure"
+                className="scroll-mt-48"
+              >
+                Trustworthy and secure
+              </SectionHeading>
+              <p className="mt-6 text-pretty text-lg">
+                Nx Powerpack is reliably maintained by the Nx team. Nx (the
+                company) adheres to strict security and data-handling standards,
+                including compliance with <Strong>SOC 2</Strong> (Type 1 and
+                Type 2) and <Strong>GDPR</Strong>.
+              </p>
+
+              <div className="mt-6">
+                <ButtonLink
+                  href="https://security.nx.app"
+                  target="_blank"
+                  title="Learn how to set up conformance rules"
+                  variant="secondary"
+                  size="default"
+                >
+                  See our Trust Report
+                </ButtonLink>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+            <div className="max-w-2xl">
+              <SectionHeading
+                as="h2"
+                variant="title"
+                id="faster-procurement"
+                className="scroll-mt-48"
+              >
+                Faster procurement, simpler licensing
+              </SectionHeading>
+              <p className="mt-6 text-pretty text-lg">
+                A simple{' '}
+                <Strong>
+                  licensing model that reduces red tape and speeds up
+                  procurement processes
+                </Strong>
+                . Your teams can get started quickly without lengthy
+                negotiations, ensuring a faster go-to-market.{' '}
+                <TextLink
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  title="Get a Powerpack license"
+                >
+                  Free trial available for Enterprises
+                </TextLink>
+                .
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+            <div className="max-w-2xl">
+              <SectionHeading
+                as="h2"
+                variant="title"
+                id="included-by-default"
+                className="scroll-mt-48"
+              >
+                Ready to go for Nx Enterprise
+              </SectionHeading>
+              <p className="mt-6 text-pretty text-lg">
+                <Strong>
+                  Nx Powerpack is included at no extra cost for Nx Enterprise
+                  customers
+                </Strong>
+                , unlocking additional capabilities without needing to manage
+                more tools or onboard a new vendor.
+              </p>
             </div>
           </div>
         </div>
@@ -298,9 +403,9 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
-              AWS
+              Amazon S3
             </div>
-            <div className="mt-1 text-center text-xl font-semibold">S3</div>
+            <AmazonS3Icon aria-hidden="true" className="mt-1 size-6" />
 
             <Link
               href="/nx-api/powerpack-s3-cache"
@@ -327,7 +432,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             )}
           >
             <div className="text-center text-xs text-slate-900 dark:text-white">
-              Network drive
+              Network Drive
             </div>
             <ServerIcon aria-hidden="true" className="mt-1 size-6" />
 
@@ -360,12 +465,14 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             </div>
             <GoogleCloudIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-gcs-cache"
               title="Learn how to configure Google Storage caching"
               className="mt-4 text-xs"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Get started
+            </Link>
           </Card>
           <Card
             ref={azureRef}
@@ -387,12 +494,14 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             </div>
             <AzureDevOpsIcon aria-hidden="true" className="mt-1 size-6" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-azure-cache"
               title="Learn how to configure Azure Blob Storage caching"
               className="mt-4 text-xs"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Get started
+            </Link>
           </Card>
         </div>
       </div>

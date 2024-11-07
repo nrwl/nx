@@ -36,7 +36,7 @@ export async function validateTypes(opts: {
       {
         cwd: opts.workspaceRoot,
         stdio: 'inherit',
-        windowsHide: true,
+        windowsHide: false,
       }
     );
   }

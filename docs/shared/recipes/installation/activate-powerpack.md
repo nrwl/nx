@@ -2,15 +2,15 @@
 
 Nx Powerpack unlocks features of Nx that are particularly useful for larger organizations. Powerpack is available for Nx version 19.8 and higher. The features include the ability to:
 
-- [Run language-agnostic conformance rules](/features/powerpack/conformance)
-- [Define code ownership at the project level](/features/powerpack/owners)
-- [Change the remote cache storage location](/features/powerpack/custom-caching)
+- [Run language-agnostic conformance rules](/nx-enterprise/powerpack/conformance)
+- [Define code ownership at the project level](/nx-enterprise/powerpack/owners)
+- [Change the remote cache storage location](/nx-enterprise/powerpack/custom-caching)
 
 Activating Powerpack is a two step process.
 
 ## 1. Purchase a License
 
-You'll need to [purchase a license](https://cloud.nx.app/powerpack/purchase) online. The license is a seat-based license. If you have an open-source repository, reach out to [powerpack-support@nrwl.io](mailto:powerpack-support@nrwl.io) for a free license.
+You'll need to [purchase a license](https://cloud.nx.app/powerpack/purchase) online. The license is a seat-based license. If you are a small team, the purchase form has an option to apply for a free license. If you have an open-source repository, you can [register for a free OSS license](https://forms.gle/mWjQo6Vrv5Kt6WYh9) as well.
 
 {% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://cloud.nx.app/powerpack/purchase" /%}
 

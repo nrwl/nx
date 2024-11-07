@@ -1,5 +1,7 @@
 # Nx CLI and CI Access Tokens
 
+{% youtube src="https://youtu.be/vBokLJ_F8qs" title="Configure CI access tokens" /%}
+
 The permissions and membership define what developers can access on nx.app but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
 
 ![Access Control Settings Page](/nx-cloud/recipes/access-control-settings.avif)

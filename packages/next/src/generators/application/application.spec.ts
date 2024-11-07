@@ -444,6 +444,9 @@ describe('app', () => {
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
+    expect(
+      readJson(tree, 'package.json').devDependencies['@testing-library/react']
+    ).toBeDefined();
   });
 
   it('should setup jest with SVGR support', async () => {
@@ -604,7 +607,9 @@ describe('app', () => {
 
             ...baseConfig,
             ...nx.configs['flat/react-typescript'],
-            { ignores: ['.next/**/*'] },
+            {
+              ignores: ['.next/**/*'],
+            },
           ];
           "
         `);
@@ -821,7 +826,7 @@ describe('app (legacy)', () => {
     }
   });
 
-  it('should generate build serve and export targets', async () => {
+  it('should generate build and serve targets', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -832,7 +837,6 @@ describe('app (legacy)', () => {
     const projectConfiguration = readProjectConfiguration(tree, name);
     expect(projectConfiguration.targets.build).toBeDefined();
     expect(projectConfiguration.targets.serve).toBeDefined();
-    expect(projectConfiguration.targets.export).toBeDefined();
   });
 });
 

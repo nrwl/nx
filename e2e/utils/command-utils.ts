@@ -273,7 +273,7 @@ export function runCommandUntil(
       ...opts.env,
       FORCE_COLOR: 'false',
     },
-    windowsHide: true,
+    windowsHide: false,
   });
   return new Promise((res, rej) => {
     let output = '';

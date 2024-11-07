@@ -52,6 +52,7 @@ describe('app', () => {
     it('should add vite types to tsconfigs', async () => {
       await applicationGenerator(appTree, {
         ...schema,
+        skipFormat: false,
         bundler: 'vite',
         unitTestRunner: 'vitest',
       });
@@ -198,6 +199,7 @@ describe('app', () => {
     it('should use preview vite types to tsconfigs', async () => {
       await applicationGenerator(appTree, {
         ...schema,
+        skipFormat: false,
         bundler: 'vite',
         unitTestRunner: 'vitest',
       });
@@ -1236,6 +1238,87 @@ describe('app', () => {
             "^build-base",
           ],
         },
+      }
+    `);
+  });
+
+  it('should add project to excludes when @nx/rspack/plugin is setup as object and --bundler=rspack', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    let nxJson = readNxJson(tree);
+    delete nxJson.targetDefaults;
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/rspack/plugin',
+      options: {
+        buildTargetName: 'build-base',
+      },
+    });
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      addPlugin: true,
+      linter: Linter.None,
+      style: 'none',
+      bundler: 'rspack',
+      e2eTestRunner: 'none',
+    });
+
+    // ASSERT
+    nxJson = readNxJson(tree);
+    expect(
+      nxJson.plugins.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/rspack/plugin'
+          : p.plugin === '@nx/rspack/plugin'
+      )
+    ).toMatchInlineSnapshot(`
+      {
+        "exclude": [
+          "myapp/**",
+        ],
+        "options": {
+          "buildTargetName": "build-base",
+        },
+        "plugin": "@nx/rspack/plugin",
+      }
+    `);
+  });
+  it('should add project to excludes when @nx/rspack/plugin is setup as string and --bundler=rspack', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    let nxJson = readNxJson(tree);
+    delete nxJson.targetDefaults;
+    nxJson.plugins ??= [];
+    nxJson.plugins.push('@nx/rspack/plugin');
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      addPlugin: true,
+      linter: Linter.None,
+      style: 'none',
+      bundler: 'rspack',
+      e2eTestRunner: 'none',
+    });
+
+    // ASSERT
+    nxJson = readNxJson(tree);
+    expect(
+      nxJson.plugins.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/rspack/plugin'
+          : p.plugin === '@nx/rspack/plugin'
+      )
+    ).toMatchInlineSnapshot(`
+      {
+        "exclude": [
+          "myapp/**",
+        ],
+        "plugin": "@nx/rspack/plugin",
       }
     `);
   });

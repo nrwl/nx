@@ -568,38 +568,18 @@
       "path": "/recipes/nx-release/build-before-versioning"
     },
     {
+      "description": "",
+      "file": "shared/recipes/nx-release/configuration-version-prefix",
+      "id": "configuration-version-prefix",
+      "name": "Configuring Version Prefix for Dependency Versions",
+      "path": "/recipes/nx-release/configuration-version-prefix"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/release",
       "id": "release",
       "name": "release",
       "path": "/nx-api/nx/documents/release"
-    }
-  ],
-  "conformance": [
-    {
-      "description": "Write and apply rules for your Nx workspace",
-      "file": "shared/features/powerpack/conformance",
-      "id": "conformance",
-      "name": "Run Language-Agnostic Conformance Rules",
-      "path": "/features/powerpack/conformance"
-    }
-  ],
-  "owners": [
-    {
-      "description": "Configure and maintain code owners for projects in an Nx workspace",
-      "file": "shared/features/powerpack/owners",
-      "id": "owners",
-      "name": "Define Code Ownership at the Project Level",
-      "path": "/features/powerpack/owners"
-    }
-  ],
-  "custom-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/features/powerpack/custom-caching",
-      "id": "custom-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/features/powerpack/custom-caching"
     }
   ],
   "intro": [
@@ -813,13 +793,6 @@
   "installation": [
     {
       "description": "",
-      "file": "shared/recipes/installation/activate-powerpack",
-      "id": "activate-powerpack",
-      "name": "Activate Powerpack",
-      "path": "/recipes/installation/activate-powerpack"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/installation/install-non-javascript",
       "id": "install-non-javascript",
       "name": "Install Nx in a Non-Javascript Repo",
@@ -831,6 +804,13 @@
       "id": "update-global-installation",
       "name": "Update Your Global Nx Installation",
       "path": "/recipes/installation/update-global-installation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
     }
   ],
   "workspace-watching": [
@@ -1103,6 +1083,33 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "conformance": [
+    {
+      "description": "Write and apply rules for your Nx workspace",
+      "file": "shared/features/powerpack/conformance",
+      "id": "conformance",
+      "name": "Run Language-Agnostic Conformance Rules",
+      "path": "/nx-enterprise/powerpack/conformance"
+    }
+  ],
+  "owners": [
+    {
+      "description": "Configure and maintain code owners for projects in an Nx workspace",
+      "file": "shared/features/powerpack/owners",
+      "id": "owners",
+      "name": "Define Code Ownership at the Project Level",
+      "path": "/nx-enterprise/powerpack/owners"
+    }
+  ],
+  "custom-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/features/powerpack/custom-caching",
+      "id": "custom-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/nx-enterprise/powerpack/custom-caching"
+    }
+  ],
   "database": [
     {
       "description": "",
@@ -1188,13 +1195,13 @@
       "path": "/ci/features/remote-cache"
     }
   ],
-  "on-premise": [
+  "single-tenant": [
     {
-      "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/features/nx-enterprise-on-prem",
-      "id": "on-premise",
-      "name": "Set up Nx Cloud On-Premise",
-      "path": "/ci/recipes/enterprise/on-premise/on-premise"
+      "description": "",
+      "file": "nx-cloud/enterprise/single-tenant/overview",
+      "id": "overview",
+      "name": "Single Tenant Nx Cloud Hosting",
+      "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
   "docker": [

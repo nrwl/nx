@@ -41,6 +41,7 @@ export interface NxArgs {
   batch?: boolean;
   excludeTaskDependencies?: boolean;
   skipSync?: boolean;
+  sortRootTsconfigPaths?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -299,7 +300,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
       maxBuffer: TEN_MEGABYTES,
       cwd: workspaceRoot,
       stdio: 'pipe',
-      windowsHide: true,
+      windowsHide: false,
     })
       .toString()
       .trim();
@@ -309,7 +310,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
         maxBuffer: TEN_MEGABYTES,
         cwd: workspaceRoot,
         stdio: 'pipe',
-        windowsHide: true,
+        windowsHide: false,
       })
         .toString()
         .trim();
@@ -329,7 +330,7 @@ function parseGitOutput(command: string): string[] {
   return execSync(command, {
     maxBuffer: TEN_MEGABYTES,
     cwd: workspaceRoot,
-    windowsHide: true,
+    windowsHide: false,
   })
     .toString('utf-8')
     .split('\n')

@@ -429,45 +429,60 @@ const nxCloudUrls = {
   '/core-features/distribute-task-execution':
     '/ci/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
-  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/on-premise',
+  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/single-tenant',
   '/nx-cloud/private-cloud/get-started':
-    '/ci/recipes/enterprise/on-premise/on-premise',
-  '/ci/features/on-premise': '/ci/recipes/enterprise/on-premise/on-premise',
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/on-premise':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/features/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
-  '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
-  '/ci/recipes/on-premise/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/ci/recipes/on-premise/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
-  '/ci/recipes/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-single-admin':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/ami-setup':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/advanced-config':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-github': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-github':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-gitlab': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-gitlab':
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/ci/recipes/on-premise/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-saml':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/custom-github-app':
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
@@ -488,6 +503,7 @@ const nxCloudUrls = {
   '/ci/recipes/set-up/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
   '/ci/intro/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
   '/pricing/special-offer': 'https://forms.gle/FBzvsspz1o63fDAz6',
+  '/powerpack/special-offer': 'https://forms.gle/mWjQo6Vrv5Kt6WYh9',
 };
 
 /**
@@ -1143,6 +1159,16 @@ const featurePagesUpdate = {
   '/ci/features/ai-features': '/ci/concepts/ai-features',
 };
 
+const enterpriseNxSection = {
+  '/features/powerpack': '/nx-enterprise/powerpack',
+  '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
+  '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
+  '/features/powerpack/custom-caching':
+    '/nx-enterprise/powerpack/custom-caching',
+  '/recipes/installation/activate-powerpack':
+    '/nx-enterprise/activate-powerpack',
+};
+
 /**
  * Public export API
  */
@@ -1176,4 +1202,5 @@ module.exports = {
   decisionsSection,
   featurePagesUpdate,
   marketing,
+  enterpriseNxSection,
 };

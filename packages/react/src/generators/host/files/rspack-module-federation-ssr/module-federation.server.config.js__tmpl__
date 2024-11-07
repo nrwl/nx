@@ -6,11 +6,16 @@
 const moduleFederationConfig = {
     name: '<%= projectName %>',
     remotes: [
-       <% if (static) { 
-         remotes.forEach(function(r) { %> "<%= r.fileName %>", <% }); 
-       }
-    %>
+      <%_ if (static) { 
+        remotes.forEach(function(r) { _%> 
+      "<%= r.fileName %>",
+        <%_ }); 
+      }
+    _%>
   ],
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 module.exports = moduleFederationConfig;

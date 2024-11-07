@@ -6,6 +6,6 @@ export function setupIntegratedWorkspace(): void {
   execSync(`${pmc.exec} nx g @nx/angular:ng-add`, {
     stdio: [0, 1, 2],
 
-    windowsHide: true,
+    windowsHide: false,
   });
 }

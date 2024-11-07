@@ -11,13 +11,13 @@ import * as path from 'path';
 import { join } from 'path';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getCopyPatterns } from './get-copy-patterns';
-import { SharedConfigContext } from './model';
 import { normalizeAssets } from './normalize-assets';
+import { NxRspackExecutionContext } from './config';
 
 export function withNx(_opts = {}) {
   return function makeConfig(
     config: Configuration,
-    { options, context }: SharedConfigContext
+    { options, context }: NxRspackExecutionContext
   ): Configuration {
     const isProd =
       process.env.NODE_ENV === 'production' || options.mode === 'production';
@@ -158,6 +158,10 @@ export function withNx(_opts = {}) {
         ...(config.devServer ?? {}),
         port: config.devServer?.port ?? 4200,
         hot: config.devServer?.hot ?? true,
+        devMiddleware: {
+          ...(config.devServer?.devMiddleware ?? {}),
+          stats: true,
+        },
       } as any,
       module: {
         rules: [

@@ -109,14 +109,12 @@ exports[`application generator should set up project correctly for cypress 3`] =
 
 exports[`application generator should set up project correctly for cypress 4`] = `
 "import { describe, it, expect } from 'vitest';
-
 import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, {});
-
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
@@ -255,14 +253,12 @@ exports[`application generator should set up project correctly with given option
 
 exports[`application generator should set up project correctly with given options 4`] = `
 "import { describe, it, expect } from 'vitest';
-
 import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, {});
-
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
@@ -346,6 +342,7 @@ exports[`application generator should set up project correctly with given option
 [
   ".eslintignore",
   ".eslintrc.json",
+  ".gitignore",
   ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",

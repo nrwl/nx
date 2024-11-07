@@ -1,11 +1,11 @@
 import { Configuration } from '@rspack/core';
-import { SharedConfigContext } from './model';
 import { withWeb } from './with-web';
+import { NxRspackExecutionContext } from './config';
 
 export function withReact(opts = {}) {
   return function makeConfig(
     config: Configuration,
-    { options, context }: SharedConfigContext
+    { options, context }: NxRspackExecutionContext
   ): Configuration {
     const isDev =
       process.env.NODE_ENV === 'development' || options.mode === 'development';

@@ -392,7 +392,7 @@ function nodeProcess(
       maxBuffer: LARGE_BUFFER,
       env,
       cwd,
-      windowsHide: true,
+      windowsHide: false,
     });
 
     childProcesses.add(childProcess);

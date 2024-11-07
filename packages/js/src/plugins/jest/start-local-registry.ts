@@ -48,7 +48,7 @@ export function startLocalRegistry({
         execSync(
           `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`,
           {
-            windowsHide: true,
+            windowsHide: false,
           }
         );
 
@@ -63,7 +63,7 @@ export function startLocalRegistry({
         resolve(() => {
           childProcess.kill();
           execSync(`npm config delete //localhost:${port}/:_authToken`, {
-            windowsHide: true,
+            windowsHide: false,
           });
         });
         childProcess?.stdout?.off('data', listener);

@@ -56,7 +56,6 @@ import { pill } from './lib/tags/pill.schema';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
-import { td } from './lib/nodes/td.schema';
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
 
@@ -70,7 +69,6 @@ export const getMarkdocCustomConfig = (
       heading: getHeadingSchema(headingClass),
       image: getImageSchema(documentFilePath),
       link,
-      td,
     },
     tags: {
       callout,

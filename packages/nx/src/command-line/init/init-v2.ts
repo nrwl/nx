@@ -59,7 +59,7 @@ export function installPlugins(
       {
         stdio: [0, 1, 2],
         cwd: repoRoot,
-        windowsHide: true,
+        windowsHide: false,
       }
     );
   }

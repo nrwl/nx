@@ -23,8 +23,10 @@ const isPrettierAvailable =
  * related plugins and rules below.
  */
 export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+  },
   ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
   {
     languageOptions: {

@@ -507,7 +507,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to false to disable connection to Nx Cloud
+   * Set this to true to disable connection to Nx Cloud
    */
   neverConnectToCloud?: boolean;
 

@@ -9,7 +9,7 @@ export function showNxWarning(workspaceName: string) {
     execSync('nx --version', {
       cwd: pathToRunNxCommand,
       stdio: ['ignore', 'ignore', 'ignore'],
-      windowsHide: true,
+      windowsHide: false,
     });
   } catch (e) {
     // no nx found

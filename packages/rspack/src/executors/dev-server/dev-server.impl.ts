@@ -49,10 +49,9 @@ export default async function* runExecutor(
   devServerConfig = {
     ...devServerConfig,
     ...firstCompiler.options.devServer,
-    port: devServerConfig.port,
   };
 
-  const baseUrl = `http://localhost:${options.port ?? 4200}`;
+  const baseUrl = `http://localhost:${devServerConfig.port ?? 4200}`;
 
   return yield* createAsyncIterable(({ next }) => {
     const server = new RspackDevServer(

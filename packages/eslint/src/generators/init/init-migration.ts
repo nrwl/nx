@@ -123,8 +123,7 @@ export function findLintTarget(
   return Object.values(project.targets ?? {}).find(
     (target) =>
       target.executor === '@nx/eslint:lint' ||
-      target.executor === '@nx/linter:eslint' ||
-      target.executor === '@nrwl/linter:eslint'
+      target.executor === '@nx/linter:eslint'
   );
 }
 
@@ -150,8 +149,6 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       config = removeCompatExtends(config, [
         'plugin:@nx/typescript',
         'plugin:@nx/javascript',
-        'plugin:@nrwl/typescript',
-        'plugin:@nrwl/javascript',
       ]);
       config = removePredefinedConfigs(config, '@nx/eslint-plugin', 'nx', [
         'flat/base',
@@ -165,9 +162,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         delete json.root;
         // remove nrwl/nx plugins
         if (json.plugins) {
-          json.plugins = json.plugins.filter(
-            (p) => p !== '@nx' && p !== '@nrwl/nx'
-          );
+          json.plugins = json.plugins.filter((p) => p !== '@nx');
           if (json.plugins.length === 0) {
             delete json.plugins;
           }
@@ -193,9 +188,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
               override.extends = override.extends.filter(
                 (ext) =>
                   ext !== 'plugin:@nx/typescript' &&
-                  ext !== 'plugin:@nrwl/nx/typescript' &&
-                  ext !== 'plugin:@nx/javascript' &&
-                  ext !== 'plugin:@nrwl/nx/javascript'
+                  ext !== 'plugin:@nx/javascript'
               );
               if (override.extends.length === 0) {
                 delete override.extends;

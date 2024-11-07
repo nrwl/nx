@@ -1511,15 +1511,6 @@
         "originalFilePath": "/packages/next/src/executors/server/schema.json",
         "path": "next/executors/server",
         "type": "executor"
-      },
-      {
-        "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
-        "file": "generated/packages/next/executors/export.json",
-        "hidden": false,
-        "name": "export",
-        "originalFilePath": "/packages/next/src/executors/export/schema.json",
-        "path": "next/executors/export",
-        "type": "executor"
       }
     ],
     "generators": [
@@ -2969,6 +2960,15 @@
         "name": "application",
         "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
         "path": "rspack/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Convert a webpack application to use rspack.",
+        "file": "generated/packages/rspack/generators/convert-webpack.json",
+        "hidden": false,
+        "name": "convert-webpack",
+        "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
+        "path": "rspack/generators/convert-webpack",
         "type": "generator"
       }
     ],

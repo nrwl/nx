@@ -190,7 +190,7 @@ function buildTarget(
             isStorybookTestRunnerInstalled()
               ? '@storybook/test-runner'
               : undefined,
-          ],
+          ].filter(Boolean),
         },
       ],
     };
@@ -210,7 +210,7 @@ function buildTarget(
             isStorybookTestRunnerInstalled()
               ? '@storybook/test-runner'
               : undefined,
-          ],
+          ].filter(Boolean),
         },
       ],
     };
@@ -248,12 +248,7 @@ function testTarget(projectRoot: string) {
     options: { cwd: projectRoot },
     inputs: [
       {
-        externalDependencies: [
-          'storybook',
-          isStorybookTestRunnerInstalled()
-            ? '@storybook/test-runner'
-            : undefined,
-        ],
+        externalDependencies: ['storybook', '@storybook/test-runner'],
       },
     ],
   };

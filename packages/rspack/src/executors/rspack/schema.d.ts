@@ -1,13 +1,15 @@
 import type { Mode } from '@rspack/core';
 
 export interface RspackExecutorSchema {
-  target: 'web' | 'node';
-  main: string;
+  target?: 'web' | 'node';
+  main?: string;
   index?: string;
-  tsConfig: string;
+  tsConfig?: string;
   typeCheck?: boolean;
-  outputPath: string;
+  skipTypeChecking?: boolean;
+  outputPath?: string;
   outputFileName?: string;
+  index?: string;
   indexHtml?: string;
   mode?: Mode;
   watch?: boolean;
@@ -23,6 +25,13 @@ export interface RspackExecutorSchema {
   generatePackageJson?: boolean;
 }
 
+export interface AssetGlobPattern {
+  glob: string;
+  input: string;
+  output: string;
+  ignore?: string[];
+}
+
 export interface FileReplacement {
   replace: string;
   with: string;
@@ -31,4 +40,12 @@ export interface FileReplacement {
 export interface OptimizationOptions {
   scripts: boolean;
   styles: boolean;
+}
+
+export interface NormalizedRspackExecutorSchema extends RspackExecutorSchema {
+  outputFileName: string;
+  assets: AssetGlobPattern[];
+  root: string;
+  projectRoot: string;
+  sourceRoot: string;
 }
