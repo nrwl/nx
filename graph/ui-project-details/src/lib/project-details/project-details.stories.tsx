@@ -252,8 +252,7 @@ export const Gradle = {
           assemble: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew assemble',
+              command: '/tmp/gradle-plugin-test3/gradlew assemble',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -262,8 +261,7 @@ export const Gradle = {
           build: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew build',
+              command: '/tmp/gradle-plugin-test3/gradlew build',
             },
             cache: true,
             inputs: ['default', '^default'],
@@ -275,8 +273,7 @@ export const Gradle = {
           buildDependents: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew buildDependents',
+              command: '/tmp/gradle-plugin-test3/gradlew buildDependents',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -286,7 +283,7 @@ export const Gradle = {
             options: {
               cwd: 'utilities',
               command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew buildKotlinToolingMetadata',
+                '/tmp/gradle-plugin-test3/gradlew buildKotlinToolingMetadata',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -295,8 +292,7 @@ export const Gradle = {
           buildNeeded: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew buildNeeded',
+              command: '/tmp/gradle-plugin-test3/gradlew buildNeeded',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -305,8 +301,7 @@ export const Gradle = {
           classes: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew classes',
+              command: '/tmp/gradle-plugin-test3/gradlew classes',
             },
             cache: true,
             inputs: ['default', '^default'],
@@ -318,8 +313,7 @@ export const Gradle = {
           clean: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew clean',
+              command: '/tmp/gradle-plugin-test3/gradlew clean',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -328,7 +322,7 @@ export const Gradle = {
           jar: {
             options: {
               cwd: 'utilities',
-              command: '/Users/emily/code/tmp/gradle-plugin-test3/gradlew jar',
+              command: '/tmp/gradle-plugin-test3/gradlew jar',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -337,8 +331,7 @@ export const Gradle = {
           kotlinSourcesJar: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew kotlinSourcesJar',
+              command: '/tmp/gradle-plugin-test3/gradlew kotlinSourcesJar',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -347,8 +340,7 @@ export const Gradle = {
           testClasses: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew testClasses',
+              command: '/tmp/gradle-plugin-test3/gradlew testClasses',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -357,8 +349,7 @@ export const Gradle = {
           javadoc: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew javadoc',
+              command: '/tmp/gradle-plugin-test3/gradlew javadoc',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -367,8 +358,7 @@ export const Gradle = {
           buildEnvironment: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew buildEnvironment',
+              command: '/tmp/gradle-plugin-test3/gradlew buildEnvironment',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -377,8 +367,7 @@ export const Gradle = {
           dependencies: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew dependencies',
+              command: '/tmp/gradle-plugin-test3/gradlew dependencies',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -387,8 +376,7 @@ export const Gradle = {
           dependencyInsight: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew dependencyInsight',
+              command: '/tmp/gradle-plugin-test3/gradlew dependencyInsight',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -397,7 +385,7 @@ export const Gradle = {
           help: {
             options: {
               cwd: 'utilities',
-              command: '/Users/emily/code/tmp/gradle-plugin-test3/gradlew help',
+              command: '/tmp/gradle-plugin-test3/gradlew help',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -406,8 +394,7 @@ export const Gradle = {
           javaToolchains: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew javaToolchains',
+              command: '/tmp/gradle-plugin-test3/gradlew javaToolchains',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -417,7 +404,7 @@ export const Gradle = {
             options: {
               cwd: 'utilities',
               command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew kotlinDslAccessorsReport',
+                '/tmp/gradle-plugin-test3/gradlew kotlinDslAccessorsReport',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -426,8 +413,7 @@ export const Gradle = {
           outgoingVariants: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew outgoingVariants',
+              command: '/tmp/gradle-plugin-test3/gradlew outgoingVariants',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -436,8 +422,7 @@ export const Gradle = {
           projects: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew projects',
+              command: '/tmp/gradle-plugin-test3/gradlew projects',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -446,8 +431,7 @@ export const Gradle = {
           properties: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew properties',
+              command: '/tmp/gradle-plugin-test3/gradlew properties',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -457,7 +441,7 @@ export const Gradle = {
             options: {
               cwd: 'utilities',
               command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew resolvableConfigurations',
+                '/tmp/gradle-plugin-test3/gradlew resolvableConfigurations',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -466,8 +450,7 @@ export const Gradle = {
           tasks: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew tasks',
+              command: '/tmp/gradle-plugin-test3/gradlew tasks',
             },
             cache: false,
             executor: 'nx:run-commands',
@@ -476,8 +459,7 @@ export const Gradle = {
           projectReport: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew projectReport',
+              command: '/tmp/gradle-plugin-test3/gradlew projectReport',
             },
             cache: false,
             outputs: ['{workspaceRoot}/utilities/build/reports/project'],
@@ -487,8 +469,7 @@ export const Gradle = {
           check: {
             options: {
               cwd: 'utilities',
-              command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew check',
+              command: '/tmp/gradle-plugin-test3/gradlew check',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -498,7 +479,7 @@ export const Gradle = {
             options: {
               cwd: 'utilities',
               command:
-                '/Users/emily/code/tmp/gradle-plugin-test3/gradlew checkKotlinGradlePluginConfigurationErrors',
+                '/tmp/gradle-plugin-test3/gradlew checkKotlinGradlePluginConfigurationErrors',
             },
             cache: true,
             executor: 'nx:run-commands',
@@ -507,7 +488,7 @@ export const Gradle = {
           test: {
             options: {
               cwd: 'utilities',
-              command: '/Users/emily/code/tmp/gradle-plugin-test3/gradlew test',
+              command: '/tmp/gradle-plugin-test3/gradlew test',
             },
             cache: true,
             inputs: ['default', '^default'],

@@ -7,6 +7,7 @@ const cypressJsonConfig = {
   video: true,
   videosFolder: '../../dist/cypress/graph/client-e2e/videos',
   screenshotsFolder: '../../dist/cypress/graph/client-e2e/screenshots',
+  downloadsFolder: '../../dist/cypress/graph/client-e2e/downloads',
   chromeWebSecurity: false,
   specPattern: './src/e2e/**/watch-mode-*.cy.{js,jsx,ts,tsx}',
   supportFile: 'src/support/e2e.ts',
