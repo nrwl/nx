@@ -65,7 +65,7 @@ export default function Packages({
               type: 'image/png',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
