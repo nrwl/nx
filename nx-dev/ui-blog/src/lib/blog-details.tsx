@@ -23,7 +23,7 @@ export async function generateMetadata({ post }: BlogDetailsProps) {
             : 'https://nx.dev/socials/nx-media.png',
           width: 800,
           height: 421,
-          alt: 'Nx: Smart, Fast and Extensible Build System',
+          alt: 'Nx: Smart Monorepos · Fast CI',
           type: 'image/jpeg',
         },
       ],
