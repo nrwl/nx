@@ -1,36 +1,33 @@
-import * as path from 'path';
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import {
-  Configuration,
+  type RspackPluginInstance,
+  type Configuration,
+  type RuleSetRule,
+  LightningCssMinimizerRspackPlugin,
   DefinePlugin,
-  ids,
-  RuleSetRule,
-  WebpackOptionsNormalized,
-  WebpackPluginInstance,
-} from 'webpack';
-
-import { WriteIndexHtmlPlugin } from '../../write-index-html-plugin';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
-import { getOutputHashFormat } from '../../../utils/hash-format';
-import { getClientEnvironment } from '../../../utils/get-client-environment';
-import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
+  HtmlRspackPlugin,
+  CssExtractRspackPlugin,
+  EnvironmentPlugin,
+} from '@rspack/core';
+import { instantiateScriptPlugins } from './instantiate-script-plugins';
+import { join, resolve } from 'path';
+import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
+import { getOutputHashFormat } from './hash-format';
+import { normalizeExtraEntryPoints } from './normalize-entry';
 import {
   getCommonLoadersForCssModules,
   getCommonLoadersForGlobalCss,
   getCommonLoadersForGlobalStyle,
-} from './stylesheet-loaders';
-import { instantiateScriptPlugins } from './instantiate-script-plugins';
-import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-import MiniCssExtractPlugin = require('mini-css-extract-plugin');
+} from './loaders/stylesheet-loaders';
+import { NormalizedNxAppRspackPluginOptions } from './models';
 
 export function applyWebConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration> = {},
+  options: NormalizedNxAppRspackPluginOptions,
+  config: Configuration = {},
   {
     useNormalizedEntry,
   }: {
-    // webpack.Configuration allows arrays to be set on a single entry
-    // webpack then normalizes them to { import: "..." } objects
+    // rspack.Configuration allows arrays to be set on a single entry
+    // rspack then normalizes them to { import: "..." } objects
     // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
     useNormalizedEntry?: boolean;
   } = {}
@@ -41,10 +38,24 @@ export function applyWebConfig(
   options.runtimeChunk ??= true; // need this for HMR and other things to work
   options.extractCss ??= true;
   options.generateIndexHtml ??= true;
+  options.index = options.index
+    ? join(options.root, options.index)
+    : join(
+        options.root,
+        options.projectGraph.nodes[options.projectName].data.sourceRoot,
+        'index.html'
+      );
   options.styles ??= [];
   options.scripts ??= [];
 
-  const plugins: WebpackPluginInstance[] = [];
+  const isProd =
+    process.env.NODE_ENV === 'production' || options.mode === 'production';
+
+  const plugins: RspackPluginInstance[] = [
+    new EnvironmentPlugin({
+      NODE_ENV: isProd ? 'production' : 'development',
+    }),
+  ];
 
   const stylesOptimization =
     typeof options.optimization === 'object'
@@ -56,27 +67,22 @@ export function applyWebConfig(
   }
   if (options.index && options.generateIndexHtml) {
     plugins.push(
-      new WriteIndexHtmlPlugin({
-        crossOrigin: options.crossOrigin,
-        sri: options.subresourceIntegrity,
-        outputPath: path.basename(options.index),
-        indexPath: path.join(options.root, options.index),
-        baseHref: options.baseHref,
-        deployUrl: options.deployUrl,
-        scripts: options.scripts,
-        styles: options.styles,
+      new HtmlRspackPlugin({
+        template: options.index,
+        sri: options.subresourceIntegrity ? 'sha256' : undefined,
+        ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
       })
     );
   }
 
   if (options.subresourceIntegrity) {
-    plugins.push(new SubresourceIntegrityPlugin());
+    plugins.push(new SubresourceIntegrityPlugin() as any);
   }
 
-  const minimizer: WebpackPluginInstance[] = [new ids.HashedModuleIdsPlugin()];
+  const minimizer: RspackPluginInstance[] = [];
   if (stylesOptimization) {
     minimizer.push(
-      new CssMinimizerPlugin({
+      new LightningCssMinimizerRspackPlugin({
         test: /\.(?:css|scss|sass|less|styl)$/,
       })
     );
@@ -97,7 +103,7 @@ export function applyWebConfig(
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
       (includePath: string) =>
-        includePaths.push(path.resolve(options.root, includePath))
+        includePaths.push(resolve(options.root, includePath))
     );
   }
 
@@ -114,7 +120,7 @@ export function applyWebConfig(
     normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
       const resolvedPath = style.input.startsWith('.')
         ? style.input
-        : path.resolve(options.root, style.input);
+        : resolve(options.root, style.input);
       // Add style entry points.
       if (entries[style.bundleName]) {
         entries[style.bundleName].import.push(resolvedPath);
@@ -172,7 +178,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: path.join(
+          loader: join(
             __dirname,
             '../../../utils/webpack/deprecated-stylus-loader.js'
           ),
@@ -235,7 +241,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: path.join(
+          loader: join(
             __dirname,
             '../../../utils/webpack/deprecated-stylus-loader.js'
           ),
@@ -299,7 +305,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: path.join(
+          loader: join(
             __dirname,
             '../../../utils/webpack/deprecated-stylus-loader.js'
           ),
@@ -324,14 +330,14 @@ export function applyWebConfig(
   if (options.extractCss) {
     plugins.push(
       // extract global css from js files into own css file
-      new MiniCssExtractPlugin({
+      new CssExtractRspackPlugin({
         filename: `[name]${hashFormat.extract}.css`,
       })
     );
   }
 
   config.output = {
-    ...config.output,
+    ...(config.output ?? {}),
     assetModuleFilename: '[name].[contenthash:20][ext]',
     crossOriginLoading: options.subresourceIntegrity
       ? ('anonymous' as const)
@@ -355,15 +361,15 @@ export function applyWebConfig(
   });
 
   config.optimization = {
-    ...config.optimization,
-    minimizer: [...config.optimization.minimizer, ...minimizer],
+    ...(config.optimization ?? {}),
+    minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
     emitOnErrors: false,
     moduleIds: 'deterministic' as const,
     runtimeChunk: options.runtimeChunk ? { name: 'runtime' } : false,
     splitChunks: {
       defaultSizeTypes:
-        config.optimization.splitChunks !== false
-          ? config.optimization.splitChunks?.defaultSizeTypes
+        config.optimization?.splitChunks !== false
+          ? config.optimization?.splitChunks?.defaultSizeTypes
           : ['...'],
       maxAsyncRequests: Infinity,
       cacheGroups: {
@@ -393,7 +399,7 @@ export function applyWebConfig(
   config.resolve.mainFields = ['browser', 'module', 'main'];
 
   config.module = {
-    ...config.module,
+    ...(config.module ?? {}),
     rules: [
       ...(config.module.rules ?? []),
       // Images: Inline small images, and emit a separate file otherwise.
@@ -427,4 +433,27 @@ export function applyWebConfig(
 
   config.plugins ??= [];
   config.plugins.push(...plugins);
+}
+
+function getClientEnvironment(mode?: string) {
+  // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
+  // injected into the application via DefinePlugin in webpack configuration.
+  const nxPublicKeyRegex = /^NX_PUBLIC_/i;
+
+  const raw = Object.keys(process.env)
+    .filter((key) => nxPublicKeyRegex.test(key))
+    .reduce((env, key) => {
+      env[key] = process.env[key];
+      return env;
+    }, {});
+
+  // Stringify all values so we can feed into webpack DefinePlugin
+  const stringified = {
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {}),
+  };
+
+  return { stringified };
 }

@@ -172,6 +172,7 @@ export function addOrChangeBuildTarget(
       // If standalone project then use the project's name in dist.
       project.root === '.' ? project.name : project.root
     ),
+    index: joinPathFragments(project.root, 'src/index.html'),
     main: determineMain(tree, options),
     tsConfig: determineTsConfig(tree, options),
     rspackConfig: joinPathFragments(project.root, 'rspack.config.js'),
