@@ -2,6 +2,7 @@ import { HeartIcon } from '@heroicons/react/24/solid';
 import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
+import { VersionPicker } from './version-picker';
 
 export function Footer(): JSX.Element {
   const navigation = {
@@ -179,6 +180,9 @@ export function Footer(): JSX.Element {
                   </Link>
                 )
               )}
+            </div>
+            <div className="flex items-center text-sm">
+              Nx Version <VersionPicker />
             </div>
             <div className="flex items-center text-sm">
               Theme <ThemeSwitcher />
