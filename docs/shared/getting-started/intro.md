@@ -53,7 +53,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
-{% link-card title="PNPM Monorepos with Nx" type="video" url="https://youtu.be/ngdoUQBvAjo" icon="pnpm" /%}
+{% link-card title="PNPM Workspaces to Distributed CI" type="course" url="/courses/pnpm-nx-next" icon="pnpm" /%}
 
 {% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
 
