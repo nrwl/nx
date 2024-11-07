@@ -177,6 +177,11 @@ where
     walker.require_git(false);
     walker.hidden(false);
     walker.git_ignore(use_ignores);
+    // This configures the walker to not respect ignore files in parents of the directory that it is told to walk
+    walker.parents(false);
+    if let Some(parent) = directory.parent() {
+        walker.add_ignore(parent.join(".gitignore"));
+    }
     if use_ignores {
         walker.add_custom_ignore_filename(".nxignore");
     }
@@ -192,7 +197,6 @@ where
 #[cfg(test)]
 mod test {
     use std::{assert_eq, vec};
-
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
 
@@ -240,6 +244,40 @@ mod test {
                 (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
             ]
         );
+    }
+
+    #[test]
+    fn handles_parent_git_ignores() {
+        let temp_dir = setup_fs();
+
+        let parent_gitignore_path = temp_dir.parent().unwrap().join(".gitignore");
+        std::fs::write(&parent_gitignore_path, "!nested/child.txt").unwrap();
+        temp_dir.child("nested").child(".gitignore").write_str("*\n!/.gitignore").unwrap();
+        temp_dir.child("nested").child("child.txt").write_str("data").unwrap();
+        temp_dir.child("nested").child("nested").child("child.txt").write_str("data").unwrap();
+
+        let mut file_names = nx_walker(temp_dir, true)
+            .map(
+                |NxFile {
+                     normalized_path: relative_path,
+                     ..
+                 }| relative_path,
+            )
+            .collect::<Vec<_>>();
+        file_names.sort();
+
+        assert_eq!(
+            file_names,
+            vec!(
+                "bar.txt",
+                "baz/qux.txt",
+                "foo.txt",
+                "nested/.gitignore",
+                "test.txt"
+            )
+        );
+
+        std::fs::remove_file(parent_gitignore_path).unwrap();
     }
 
     #[test]
