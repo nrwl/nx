@@ -38,7 +38,9 @@
     "@nx/vite": "file:../vite",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@nuxt/schema": "^3.10.0"
+  },
   "publishConfig": {
     "access": "public"
   }

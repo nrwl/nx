@@ -96,6 +96,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -173,6 +176,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -306,6 +312,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -413,6 +422,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -480,6 +492,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -593,6 +608,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",
@@ -660,6 +678,9 @@ describe('@nx/jest/plugin', () => {
                     },
                     "options": {
                       "cwd": "proj",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                      },
                     },
                     "outputs": [
                       "{workspaceRoot}/coverage",

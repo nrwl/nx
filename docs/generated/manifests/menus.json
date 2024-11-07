@@ -2033,6 +2033,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Configuring Version Prefix for Dependency Versions",
+                "path": "/recipes/nx-release/configuration-version-prefix",
+                "id": "configuration-version-prefix",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3751,6 +3759,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Configuring Version Prefix for Dependency Versions",
+            "path": "/recipes/nx-release/configuration-version-prefix",
+            "id": "configuration-version-prefix",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3855,6 +3871,14 @@
         "name": "Build Before Versioning",
         "path": "/recipes/nx-release/build-before-versioning",
         "id": "build-before-versioning",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configuring Version Prefix for Dependency Versions",
+        "path": "/recipes/nx-release/configuration-version-prefix",
+        "id": "configuration-version-prefix",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -41,6 +41,8 @@ export async function createCompiler(
     config.devServer ??= options.devServer;
   }
 
+  validateConfig(config);
+
   return rspack(config);
 }
 
@@ -48,4 +50,17 @@ export function isMultiCompiler(
   compiler: Compiler | MultiCompiler
 ): compiler is MultiCompiler {
   return 'compilers' in compiler;
+}
+
+function validateConfig(config: Configuration) {
+  if (!config.entry) {
+    throw new Error(
+      'Entry is required. Please set the `main` option in the executor or the `entry` property in the rspack config.'
+    );
+  }
+  if (!config.output) {
+    throw new Error(
+      'Output is required. Please set the `outputPath` option in the executor or the `output` property in the rspack config.'
+    );
+  }
 }

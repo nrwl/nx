@@ -1,3 +1,4 @@
+import type { NuxtOptions } from '@nuxt/schema';
 import {
   CreateDependencies,
   CreateNodes,
@@ -8,13 +9,14 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative } from 'path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { getLockFileName } from '@nx/js';
+import { dirname, isAbsolute, join, relative } from 'path';
+import { existsSync, readdirSync } from 'fs';
+import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
 const targetsCache = readTargetsCache();
@@ -208,10 +210,16 @@ async function getInfoFromNuxtConfig(
 ): Promise<{
   buildDir: string;
 }> {
-  // TODO(Colum): Once plugins are isolated we can go back to @nuxt/kit since each plugin will be run in its own worker.
-  const config = await loadConfigFile(
-    join(context.workspaceRoot, configFilePath)
-  );
+  let config: NuxtOptions;
+  if (process.env.NX_ISOLATE_PLUGINS !== 'false') {
+    config = await (
+      await loadNuxtKitDynamicImport()
+    ).loadNuxtConfig({
+      configFile: configFilePath,
+    });
+  } else {
+    config = await loadConfigFile(join(context.workspaceRoot, configFilePath));
+  }
   return {
     buildDir:
       config?.buildDir ??

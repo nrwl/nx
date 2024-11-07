@@ -4,7 +4,11 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { createTaskGraph } from './create-task-graph';
+import {
+  createTaskGraph,
+  filterDummyTasks,
+  getNonDummyDeps,
+} from './create-task-graph';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -2657,6 +2661,150 @@ describe('createTaskGraph', () => {
       },
     });
   });
+
+  it('should handle dependencies with 2 cycles (app1->app2<->app3->app4, app5->app6<->app7->app8)', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app3: {
+          name: 'app3',
+          type: 'app',
+          data: {
+            root: 'app3-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app4: {
+          name: 'app4',
+          type: 'app',
+          data: {
+            root: 'app4-root',
+            targets: {
+              precompile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        app5: {
+          name: 'app5',
+          type: 'app',
+          data: {
+            root: 'app5-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app6: {
+          name: 'app6',
+          type: 'app',
+          data: {
+            root: 'app6-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app7: {
+          name: 'app7',
+          type: 'app',
+          data: {
+            root: 'app7-root',
+            targets: {
+              compile: {
+                executor: 'nx:run-commands',
+                dependsOn: ['precompiple', '^precompile'],
+              },
+            },
+          },
+        },
+        app8: {
+          name: 'app8',
+          type: 'app',
+          data: {
+            root: 'app8-root',
+            targets: {
+              precompile: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'app2', type: 'implicit' }],
+        app2: [{ source: 'app2', target: 'app3', type: 'implicit' }],
+        app3: [
+          { source: 'app3', target: 'app4', type: 'implicit' },
+          { source: 'app3', target: 'app2', type: 'implicit' },
+        ],
+        app5: [{ source: 'app5', target: 'app6', type: 'implicit' }],
+        app6: [{ source: 'app6', target: 'app7', type: 'implicit' }],
+        app7: [
+          { source: 'app7', target: 'app8', type: 'implicit' },
+          { source: 'app7', target: 'app6', type: 'implicit' },
+        ],
+      },
+    };
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1', 'app2', 'app3', 'app5', 'app6', 'app7'],
+      ['compile'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph.dependencies).toEqual({
+      'app1:compile': [],
+      'app2:compile': [],
+      'app3:compile': ['app4:precompile'],
+      'app4:precompile': [],
+      'app5:compile': [],
+      'app6:compile': [],
+      'app7:compile': ['app8:precompile'],
+      'app8:precompile': [],
+    });
+  });
 });
 
 class GraphBuilder {
@@ -2699,3 +2847,182 @@ class GraphBuilder {
     };
   }
 }
+
+describe('filterDummyTasks', () => {
+  it('should filter out dummy tasks', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:__nx_dummy_task__'],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': ['app5:build'],
+      'app5:build': [],
+    });
+  });
+
+  it('should filter out dummy tasks with 1 cycle', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': [
+        'app4:__nx_dummy_task__',
+        'app2:__nx_dummy_task__',
+      ],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': [],
+      'app5:build': [],
+    });
+  });
+
+  it('should filter out dummy tasks with 2 cycles', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': [
+        'app4:__nx_dummy_task__',
+        'app2:__nx_dummy_task__',
+      ],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+      'app5:compile': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
+      'app7:__nx_dummy_task__': ['app8:precompile', 'app6:__nx_dummy_task__'],
+      'app8:precompile': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': [],
+      'app5:build': [],
+      'app5:compile': [],
+      'app8:precompile': [],
+    });
+  });
+
+  it('should filter out dummy tasks with a large list of dependencies without cycles', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
+      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app8:precompile': ['app9:__nx_dummy_task__', 'app10:build'],
+      'app9:__nx_dummy_task__': ['app10:__nx_dummy_task__'],
+      'app10:__nx_dummy_task__': ['app11:__nx_dummy_task__'],
+      'app10:build': ['app11:__nx_dummy_task__'],
+      'app11:__nx_dummy_task__': ['app12:__nx_dummy_task__'],
+      'app12:__nx_dummy_task__': ['app13:__nx_dummy_task__'],
+      'app13:__nx_dummy_task__': ['app14:__nx_dummy_task__'],
+      'app14:__nx_dummy_task__': ['app15:__nx_dummy_task__'],
+      'app15:__nx_dummy_task__': ['app16:__nx_dummy_task__'],
+      'app16:__nx_dummy_task__': ['app17:__nx_dummy_task__'],
+      'app17:__nx_dummy_task__': ['app18:__nx_dummy_task__'],
+      'app18:__nx_dummy_task__': ['app19:__nx_dummy_task__'],
+      'app19:__nx_dummy_task__': ['app20:__nx_dummy_task__'],
+      'app20:__nx_dummy_task__': ['app21:build'],
+      'app21:build': [],
+    };
+    filterDummyTasks(dependencies);
+    expect(dependencies).toEqual({
+      'app1:compile': ['app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app8:precompile'],
+      'app8:precompile': ['app21:build', 'app10:build'],
+      'app10:build': ['app21:build'],
+      'app21:build': [],
+    });
+  });
+});
+
+describe('getNonDummyDeps', () => {
+  it('should return the non dummy dependencies', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:__nx_dummy_task__'],
+      'app4:__nx_dummy_task__': ['app5:build'],
+      'app5:build': [],
+    };
+    expect(
+      getNonDummyDeps(
+        'app2:__nx_dummy_task__',
+        dependencies,
+        null,
+        new Set(['app1:compile'])
+      )
+    ).toEqual(['app5:build']);
+  });
+
+  it('should return the non dummy dependencies with a cycle even no cycle arg got passed in', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': [
+        'app3:__nx_dummy_task__',
+        'app8:precompile',
+        'app5:build',
+      ],
+      'app3:__nx_dummy_task__': ['app2:__nx_dummy_task__', 'app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__', 'app1:compile'],
+      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app8:precompile': [],
+    };
+    expect(getNonDummyDeps('app2:__nx_dummy_task__', dependencies)).toEqual([
+      'app4:precompile',
+      'app8:precompile',
+      'app5:build',
+    ]);
+    expect(getNonDummyDeps('app3:__nx_dummy_task__', dependencies)).toEqual([
+      'app8:precompile',
+      'app5:build',
+      'app4:precompile',
+    ]);
+    expect(getNonDummyDeps('app6:__nx_dummy_task__', dependencies)).toEqual([
+      'app8:precompile',
+      'app1:compile',
+    ]);
+  });
+
+  it('should handle a long list of dependencies without cycle', () => {
+    const dependencies = {
+      'app1:compile': ['app2:__nx_dummy_task__'],
+      'app2:__nx_dummy_task__': ['app3:__nx_dummy_task__'],
+      'app3:__nx_dummy_task__': ['app4:precompile'],
+      'app4:precompile': ['app5:build'],
+      'app5:build': ['app6:__nx_dummy_task__'],
+      'app6:__nx_dummy_task__': ['app7:__nx_dummy_task__'],
+      'app7:__nx_dummy_task__': ['app8:precompile'],
+      'app8:precompile': ['app9:__nx_dummy_task__', 'app10:build'],
+      'app9:__nx_dummy_task__': ['app10:__nx_dummy_task__'],
+      'app10:__nx_dummy_task__': ['app11:__nx_dummy_task__'],
+      'app10:build': ['app11:__nx_dummy_task__'],
+      'app11:__nx_dummy_task__': ['app12:__nx_dummy_task__'],
+      'app12:__nx_dummy_task__': ['app13:__nx_dummy_task__'],
+      'app13:__nx_dummy_task__': ['app14:__nx_dummy_task__'],
+      'app14:__nx_dummy_task__': ['app15:__nx_dummy_task__'],
+      'app15:__nx_dummy_task__': ['app16:__nx_dummy_task__'],
+      'app16:__nx_dummy_task__': ['app17:__nx_dummy_task__'],
+      'app17:__nx_dummy_task__': ['app18:__nx_dummy_task__'],
+      'app18:__nx_dummy_task__': ['app19:__nx_dummy_task__'],
+      'app19:__nx_dummy_task__': ['app20:__nx_dummy_task__'],
+      'app20:__nx_dummy_task__': ['app21:build'],
+      'app21:build': [],
+    };
+    expect(getNonDummyDeps('app2:__nx_dummy_task__', dependencies)).toEqual([
+      'app4:precompile',
+    ]);
+    expect(getNonDummyDeps('app9:__nx_dummy_task__', dependencies)).toEqual([
+      'app21:build',
+    ]);
+  });
+});
