@@ -3,124 +3,127 @@ import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import Link from 'next/link';
 import { DiscordIcon } from './discord-icon';
 
-export function Footer(): JSX.Element {
-  const navigation = {
-    nx: [
-      { name: 'Status', href: 'https://status.nx.app' },
-      { name: 'Security', href: 'https://security.nx.app' },
-    ],
-    nxCloud: [
-      { name: 'App', href: 'https://cloud.nx.app' },
-      { name: 'Docs', href: '/ci/intro/ci-with-nx' },
-      { name: 'Pricing', href: '/pricing' },
-    ],
-    solutions: [
-      { name: 'Nx', href: 'https://nx.dev' },
-      { name: 'Nx Cloud', href: '/nx-cloud' },
-      { name: 'Nx Enterprise', href: '/enterprise' },
-    ],
-    resources: [
-      { name: 'Blog', href: '/blog' },
-      {
-        name: 'Youtube',
-        href: 'https://youtube.com/@nxdevtools',
-      },
-      {
-        name: 'Community',
-        href: '/community',
-      },
-      {
-        name: 'Customers',
-        href: '/customers',
-      },
-    ],
-    company: [
-      { name: 'About us', href: '/company' },
-      { name: 'Careers', href: '/careers' },
-      {
-        name: 'Brands & Guidelines',
-        href: '/brands',
-      },
-      { name: 'Contact us', href: '/contact' },
-    ],
-    social: [
-      {
-        name: 'Discord',
-        label: 'Community channel',
-        href: 'https://go.nx.dev/community',
-        icon: (props: any) => <DiscordIcon {...props} />,
-      },
-      {
-        name: 'GitHub',
-        label: 'Nx is open source, check the code on GitHub',
-        href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
-        icon: (props: any) => (
-          <svg fill="currentColor" viewBox="0 0 16 16" {...props}>
-            {/*<title>GitHub</title>*/}
-            <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8a8 8 0 0 0-8-8z" />
-          </svg>
-        ),
-      },
-      {
-        name: 'X',
-        label: 'Latest news',
-        href: 'https://x.com/NxDevTools?utm_source=nx.dev',
-        icon: (props: any) => (
-          <svg
-            fill="currentColor"
-            role="img"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            {...props}
-          >
-            {/*<title>X</title>*/}
-            <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
-          </svg>
-        ),
-      },
-      {
-        name: 'Youtube',
-        label: 'Youtube channel',
-        href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
-        icon: (props: any) => (
-          <svg
-            fill="currentColor"
-            role="img"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            {...props}
-          >
-            {/*<title>YouTube</title>*/}
-            <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14c-1.88-.5-9.38-.5-9.38-.5s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.87.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.54 15.57V8.43L15.82 12l-6.28 3.57z" />
-          </svg>
-        ),
-      },
-      {
-        name: 'Newsletter',
-        label: 'The Newsletter',
-        href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
-        icon: (props: any) => (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            {...props}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-            />
-          </svg>
-        ),
-      },
-    ],
-  };
+const navigation = {
+  nx: [
+    { name: 'Status', href: 'https://status.nx.app' },
+    { name: 'Security', href: 'https://security.nx.app' },
+  ],
+  nxCloud: [
+    { name: 'App', href: 'https://cloud.nx.app' },
+    { name: 'Docs', href: '/ci/intro/ci-with-nx' },
+    { name: 'Pricing', href: '/pricing' },
+  ],
+  solutions: [
+    { name: 'Nx', href: 'https://nx.dev' },
+    { name: 'Nx Cloud', href: '/nx-cloud' },
+    { name: 'Nx Enterprise', href: '/enterprise' },
+  ],
+  resources: [
+    { name: 'Blog', href: '/blog' },
+    {
+      name: 'Youtube',
+      href: 'https://youtube.com/@nxdevtools',
+    },
+    {
+      name: 'Community',
+      href: '/community',
+    },
+    {
+      name: 'Customers',
+      href: '/customers',
+    },
+  ],
+  company: [
+    { name: 'About us', href: '/company' },
+    { name: 'Careers', href: '/careers' },
+    {
+      name: 'Brands & Guidelines',
+      href: '/brands',
+    },
+    { name: 'Contact us', href: '/contact' },
+  ],
+  social: [
+    {
+      name: 'Discord',
+      label: 'Community channel',
+      href: 'https://go.nx.dev/community',
+      icon: (props: any) => <DiscordIcon {...props} />,
+    },
+    {
+      name: 'GitHub',
+      label: 'Nx is open source, check the code on GitHub',
+      href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
+      icon: (props: any) => (
+        <svg fill="currentColor" viewBox="0 0 16 16" {...props}>
+          {/*<title>GitHub</title>*/}
+          <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8a8 8 0 0 0-8-8z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'X',
+      label: 'Latest news',
+      href: 'https://x.com/NxDevTools?utm_source=nx.dev',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>X</title>*/}
+          <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Youtube',
+      label: 'Youtube channel',
+      href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>YouTube</title>*/}
+          <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14c-1.88-.5-9.38-.5-9.38-.5s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.87.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.54 15.57V8.43L15.82 12l-6.28 3.57z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Newsletter',
+      label: 'The Newsletter',
+      href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
+      icon: (props: any) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          {...props}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+          />
+        </svg>
+      ),
+    },
+  ],
+};
+
+export function Footer({
+  className = '',
+}: { className?: string } = {}): JSX.Element {
   return (
     <footer
-      className="bg-white dark:bg-slate-950"
+      className={`bg-white dark:bg-slate-950 ${className}`}
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
