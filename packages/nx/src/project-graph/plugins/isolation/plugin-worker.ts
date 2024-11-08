@@ -58,20 +58,6 @@ const server = createServer((socket) => {
             };
           }
         },
-        shutdown: async () => {
-          // Stops accepting new connections, but existing connections are
-          // not closed immediately.
-          server.close(() => {
-            try {
-              unlinkSync(socketPath);
-            } catch (e) {}
-            process.exit(0);
-          });
-          // Closes existing connection.
-          socket.end();
-          // Destroys the socket once it's fully closed.
-          socket.destroySoon();
-        },
         createNodes: async ({ configFiles, context, tx }) => {
           try {
             const result = await plugin.createNodes[1](configFiles, context);
@@ -147,6 +133,22 @@ const server = createServer((socket) => {
       });
     })
   );
+
+  // There should only ever be one host -> worker connection
+  // since the worker is spawned per host process. As such,
+  // we can safely close the worker when the host disconnects.
+  socket.on('end', () => {
+    // Stops accepting new connections, but existing connections are
+    // not closed immediately.
+    server.close(() => {
+      try {
+        unlinkSync(socketPath);
+      } catch (e) {}
+      process.exit(0);
+    });
+    // Destroys the socket once it's fully closed.
+    socket.destroySoon();
+  });
 });
 
 server.listen(socketPath);

@@ -6,7 +6,6 @@ import { PluginConfiguration } from '../../../config/nx-json';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContext,
   CreateNodesContextV2,
 } from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
@@ -135,14 +134,8 @@ export interface PluginWorkerProcessProjectGraphResult {
       };
 }
 
-export interface PluginWorkerShutdownMessage {
-  type: 'shutdown';
-  payload: {};
-}
-
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
-  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginWorkerProcessProjectGraphMessage

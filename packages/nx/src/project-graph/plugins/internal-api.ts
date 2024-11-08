@@ -29,7 +29,6 @@ import {
   isAggregateCreateNodesError,
 } from '../error-types';
 import { IS_WASM } from '../../native';
-import { platform } from 'os';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -136,15 +135,6 @@ export type CreateNodesResultWithContext = CreateNodesResult & {
 
 export type NormalizedPlugin = NxPluginV2 &
   Pick<NxPluginV1, 'processProjectGraph'>;
-
-// Short lived cache (cleared between cmd runs)
-// holding resolved nx plugin objects.
-// Allows loaded plugins to not be reloaded when
-// referenced multiple times.
-export const nxPluginCache: Map<
-  unknown,
-  [Promise<LoadedNxPlugin>, () => void]
-> = new Map();
 
 function isIsolationEnabled() {
   // Explicitly enabled, regardless of further conditions

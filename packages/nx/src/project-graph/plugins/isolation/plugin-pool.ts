@@ -7,10 +7,9 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
+import { LoadedNxPlugin } from '../internal-api';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
-import { signalToCode } from '../../../utils/exit-codes';
 
 import {
   consumeMessage,
@@ -61,7 +60,6 @@ export async function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
-    shutdownPluginWorker(socket);
     socket.destroy();
     nxPluginWorkerCache.delete(cacheKey);
   };
@@ -106,10 +104,6 @@ export async function loadRemoteNxPlugin(
   nxPluginWorkerCache.set(cacheKey, pluginPromise);
 
   return [pluginPromise, cleanupFunction];
-}
-
-function shutdownPluginWorker(socket: Socket) {
-  sendMessageOverSocket(socket, { type: 'shutdown', payload: {} });
 }
 
 /**
@@ -287,22 +281,6 @@ function createWorkerExitHandler(
     }
   };
 }
-
-let cleanedUp = false;
-const exitHandler = () => {
-  nxPluginCache.clear();
-  for (const fn of cleanupFunctions) {
-    fn();
-  }
-  cleanedUp = true;
-};
-
-process.on('exit', exitHandler);
-process.on('SIGINT', () => {
-  exitHandler();
-  process.exit(signalToCode('SIGINT'));
-});
-process.on('SIGTERM', exitHandler);
 
 function registerPendingPromise(
   tx: string,
