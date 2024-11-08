@@ -1,3 +1,4 @@
+'use client';
 import { Selector } from './selector';
 import { useRouter } from 'next/navigation';
 
