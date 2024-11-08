@@ -3,14 +3,7 @@ import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-
 import type { ApplicationExecutorOptions } from '../schema';
 
 export function validateOptions(options: ApplicationExecutorOptions): void {
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo();
-
-  if (angularMajorVersion < 17) {
-    throw new Error(
-      `The "application" executor requires Angular version 17 or greater. You are currently using version ${angularVersion}.`
-    );
-  }
+  const { version: angularVersion } = getInstalledAngularVersionInfo();
 
   if (lt(angularVersion, '17.1.0')) {
     if (options.loader) {

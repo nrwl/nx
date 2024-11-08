@@ -400,26 +400,6 @@ describe('MF Remote App Generator', () => {
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
     });
-
-    describe('compat', () => {
-      it('should generate the correct main.server.ts', async () => {
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: {
-            '@angular/core': '15.2.0',
-          },
-        }));
-
-        await generateTestRemoteApplication(tree, {
-          directory: 'test',
-          ssr: true,
-          skipFormat: true,
-        });
-
-        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      });
-    });
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
