@@ -107,14 +107,8 @@ export interface PluginCreateMetadataResult {
       };
 }
 
-export interface PluginWorkerShutdownMessage {
-  type: 'shutdown';
-  payload: {};
-}
-
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
-  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginCreateMetadataMessage;
