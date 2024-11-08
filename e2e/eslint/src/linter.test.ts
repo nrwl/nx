@@ -167,8 +167,17 @@ describe('Linter', () => {
         const newRuleName = 'e2e-test-rule-name';
         runCLI(`generate @nx/eslint:workspace-rule ${newRuleName}`);
 
+        // TODO(@AgentEnder): This reset gets rid of a lockfile changed error... we should fix this in another way
+        runCLI(`reset`, {
+          env: { CI: 'false' },
+        });
+
         // Ensure that the unit tests for the new rule are runnable
-        expect(() => runCLI(`test eslint-rules`)).not.toThrow();
+        expect(() =>
+          runCLI(`test eslint-rules`, {
+            env: { CI: 'false' },
+          })
+        ).not.toThrow();
 
         // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
         const knownLintErrorMessage = 'e2e test known error message';
@@ -607,8 +616,16 @@ describe('Linter', () => {
         );
 
         // validate that the new projects are linted successfully
-        expect(() => runCLI(`lint ${reactLib}`)).not.toThrow();
-        expect(() => runCLI(`lint ${jsLib}`)).not.toThrow();
+        expect(() =>
+          runCLI(`lint ${reactLib}`, {
+            env: { CI: 'false' },
+          })
+        ).not.toThrow();
+        expect(() =>
+          runCLI(`lint ${jsLib}`, {
+            env: { CI: 'false' },
+          })
+        ).not.toThrow();
       });
     });
   });
