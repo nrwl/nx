@@ -579,153 +579,42 @@ describe('setupSSR', () => {
     it('should install the correct versions when using older versions of Angular', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          '@angular/core': '17.2.0',
+        },
+      }));
       await generateTestApplication(tree, {
         directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
 
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          '@angular/core': '16.2.0',
-        },
-      }));
-
       // ACT
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
-      expect(pkgJson.dependencies['@angular/ssr']).toBeUndefined();
+      expect(pkgJson.dependencies['@angular/ssr']).toBe(
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
+      );
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV16.angularVersion
+        backwardCompatibleVersions.angularV17.angularVersion
       );
-      expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-        backwardCompatibleVersions.angularV16.ngUniversalVersion
+      expect(pkgJson.dependencies['@angular/ssr']).toEqual(
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
-      expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
-        backwardCompatibleVersions.angularV16.ngUniversalVersion
+      expect(pkgJson.dependencies['express']).toEqual(
+        backwardCompatibleVersions.angularV17.expressVersion
       );
-    });
-
-    it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
-      }));
-
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      // ASSERT
-      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { BrowserModule } from '@angular/platform-browser';
-        import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
-        import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
-        @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
-          imports: [
-            BrowserModule,
-            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-          ],
-          providers: [],
-          bootstrap: [AppComponent],
-        })
-        export class AppModule {}
-        "
-      `);
-    });
-
-    it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
-      }));
-
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        skipFormat: true,
-      });
-
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      // ASSERT
-      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/core';
-        import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-        import { appRoutes } from './app.routes';
-
-        export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
-        };
-        "
-      `);
-    });
-
-    it('should generate a correct server.ts', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          '@angular/core': '16.2.0',
-        },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should not set up hydration by default', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          '@angular/core': '16.2.0',
-        },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/core';
-        import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-        import { appRoutes } from './app.routes';
-
-        export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
-        };
-        "
-      `);
+      expect(
+        pkgJson.dependencies['@nguniversal/express-engine']
+      ).toBeUndefined();
+      expect(pkgJson.devDependencies['@types/express']).toBe(
+        backwardCompatibleVersions.angularV17.typesExpressVersion
+      );
+      expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
     });
   });
 });

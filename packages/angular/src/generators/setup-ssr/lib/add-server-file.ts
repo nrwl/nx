@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import { DEFAULT_BROWSER_DIR } from './constants';
 
@@ -23,18 +22,13 @@ export function addServerFile(
     : outputPath;
 
   const pathToFiles = joinPathFragments(__dirname, '..', 'files');
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   generateFiles(
     tree,
     joinPathFragments(
       pathToFiles,
       'server',
-      ...(isUsingApplicationBuilder
-        ? ['application-builder']
-        : angularMajorVersion >= 17
-        ? ['server-builder', 'v17+']
-        : ['server-builder', 'pre-v17'])
+      isUsingApplicationBuilder ? 'application-builder' : 'server-builder'
     ),
     projectRoot,
     { ...schema, browserBundleOutputPath, tpl: '' }

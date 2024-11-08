@@ -4,7 +4,6 @@ import {
   installPackagesTask,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addDependencies,
   addHydration,
@@ -38,8 +37,7 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     addHydration(tree, options);
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion < 17 || !options.hydration) {
+  if (!options.hydration) {
     setRouterInitialNavigation(tree, options);
   }
 
