@@ -1,5 +1,5 @@
 import { Configuration, RspackOptionsNormalized } from '@rspack/core';
-import { SvgrOptions } from '../with-react';
+import { SvgrOptions } from '../model';
 
 export function applyReactConfig(
   options: { svgr?: boolean | SvgrOptions },
@@ -7,10 +7,7 @@ export function applyReactConfig(
 ): void {
   if (global.NX_GRAPH_CREATION) return;
 
-  const isDev =
-    process.env.NODE_ENV === 'development' || config.mode === 'development';
-  addReactBaseConfig(config, isDev);
-  addHotReload(config, isDev);
+  addHotReload(config);
 
   if (options.svgr !== false || typeof options.svgr === 'object') {
     removeSvgLoaderIfPresent(config);
@@ -57,83 +54,12 @@ function removeSvgLoaderIfPresent(
 }
 
 function addHotReload(
-  config: Partial<RspackOptionsNormalized | Configuration>,
-  isDev: boolean
+  config: Partial<RspackOptionsNormalized | Configuration>
 ) {
   const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
-
-  if (isDev && config['devServer']?.hot) {
-    // check if we are using babel and add the plugin
-    const babelLoader = config.module.rules.find(
-      (rule) =>
-        rule &&
-        typeof rule !== 'string' &&
-        rule.loader?.toString().includes('babel-loader')
-    );
-
-    if (babelLoader && typeof babelLoader !== 'string') {
-      babelLoader.options['plugins'] = [
-        ...(babelLoader.options['plugins'] || []),
-        isDev && [
-          require.resolve('react-refresh/babel'),
-          { skipEnvCheck: true },
-        ],
-      ].filter(Boolean);
-    }
+  const isDev =
+    process.env.NODE_ENV === 'development' || config.mode === 'development';
+  if (isDev) {
+    config.plugins.push(new ReactRefreshPlugin({ overlay: false }));
   }
-
-  config.plugins = [
-    ...(config.plugins || []),
-    isDev && new ReactRefreshPlugin({ overlay: false }),
-  ].filter(Boolean);
-}
-
-function addReactBaseConfig(
-  config: Partial<RspackOptionsNormalized | Configuration>,
-  isDev: boolean
-) {
-  const react = {
-    runtime: 'automatic',
-    development: isDev,
-    refresh: isDev,
-  };
-
-  config.module.rules.push(
-    {
-      test: /\.jsx$/,
-      loader: 'builtin:swc-loader',
-      exclude: /node_modules/,
-      options: {
-        jsc: {
-          parser: {
-            syntax: 'ecmascript',
-            jsx: true,
-          },
-          transform: {
-            react,
-          },
-          externalHelpers: true,
-        },
-      },
-      type: 'javascript/auto',
-    },
-    {
-      test: /\.tsx$/,
-      loader: 'builtin:swc-loader',
-      exclude: /node_modules/,
-      options: {
-        jsc: {
-          parser: {
-            syntax: 'typescript',
-            tsx: true,
-          },
-          transform: {
-            react,
-          },
-          externalHelpers: true,
-        },
-      },
-      type: 'javascript/auto',
-    }
-  );
 }

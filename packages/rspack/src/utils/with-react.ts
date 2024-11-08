@@ -2,12 +2,7 @@ import { Configuration } from '@rspack/core';
 import { NxRspackExecutionContext } from './config';
 import { withWeb, WithWebOptions } from './with-web';
 import { applyReactConfig } from './lib/apply-react-config';
-
-export interface SvgrOptions {
-  svgo?: boolean;
-  titleProp?: boolean;
-  ref?: boolean;
-}
+import { SvgrOptions } from './model';
 
 export interface WithReactOptions extends WithWebOptions {
   svgr?: boolean | SvgrOptions;
