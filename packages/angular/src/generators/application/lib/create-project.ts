@@ -10,39 +10,31 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
   const buildExecutor =
     options.bundler === 'webpack'
       ? '@angular-devkit/build-angular:browser'
-      : angularMajorVersion >= 17
-      ? '@angular-devkit/build-angular:application'
-      : '@angular-devkit/build-angular:browser-esbuild';
-  const buildTargetOptionName =
-    angularMajorVersion >= 17 ? 'buildTarget' : 'browserTarget';
+      : '@angular-devkit/build-angular:application';
   const buildMainOptionName =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild'
-      ? 'browser'
-      : 'main';
+    options.bundler === 'esbuild' ? 'browser' : 'main';
 
   addBuildTargetDefaults(tree, buildExecutor);
 
   let budgets = undefined;
-  if (options.bundler === 'webpack' || angularMajorVersion >= 17) {
-    if (options.strict) {
-      budgets = [
-        { type: 'initial', maximumWarning: '500kb', maximumError: '1mb' },
-        {
-          type: 'anyComponentStyle',
-          maximumWarning: '4kb',
-          maximumError: '8kb',
-        },
-      ];
-    } else {
-      budgets = [
-        { type: 'initial', maximumWarning: '2mb', maximumError: '5mb' },
-        {
-          type: 'anyComponentStyle',
-          maximumWarning: '6kb',
-          maximumError: '10kb',
-        },
-      ];
-    }
+  if (options.strict) {
+    budgets = [
+      { type: 'initial', maximumWarning: '500kb', maximumError: '1mb' },
+      {
+        type: 'anyComponentStyle',
+        maximumWarning: '4kb',
+        maximumError: '8kb',
+      },
+    ];
+  } else {
+    budgets = [
+      { type: 'initial', maximumWarning: '2mb', maximumError: '5mb' },
+      {
+        type: 'anyComponentStyle',
+        maximumWarning: '6kb',
+        maximumError: '10kb',
+      },
+    ];
   }
 
   const inlineStyleLanguage =
@@ -109,10 +101,10 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
           : undefined,
         configurations: {
           production: {
-            [buildTargetOptionName]: `${options.name}:build:production`,
+            buildTarget: `${options.name}:build:production`,
           },
           development: {
-            [buildTargetOptionName]: `${options.name}:build:development`,
+            buildTarget: `${options.name}:build:development`,
           },
         },
         defaultConfiguration: 'development',
@@ -120,7 +112,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
       'extract-i18n': {
         executor: '@angular-devkit/build-angular:extract-i18n',
         options: {
-          [buildTargetOptionName]: `${options.name}:build`,
+          buildTarget: `${options.name}:build`,
         },
       },
     },

@@ -12,7 +12,6 @@ import {
   moduleFederationNodeVersion,
   typesCorsVersion,
 } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
 export async function updateSsrSetup(
@@ -32,22 +31,12 @@ export async function updateSsrSetup(
     "import('./src/main.server');"
   );
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  generateFiles(
-    tree,
-    join(
-      __dirname,
-      '../files/common',
-      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
-    ),
-    project.root,
-    {
-      appName,
-      browserBundleOutput: project.targets.build.options.outputPath,
-      standalone: options.standalone,
-      tmpl: '',
-    }
-  );
+  generateFiles(tree, join(__dirname, '../files/common'), project.root, {
+    appName,
+    browserBundleOutput: project.targets.build.options.outputPath,
+    standalone: options.standalone,
+    tmpl: '',
+  });
 
   const pathToTemplateFiles = typescriptConfiguration ? 'ts' : 'js';
 
