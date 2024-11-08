@@ -289,7 +289,7 @@ export class ProcessTasks {
       } else {
         const dummyId = this.getId(
           depProject.name,
-          DUMMY_TASK_TARGET,
+          task.target.target + DUMMY_TASK_TARGET,
           undefined
         );
         this.dependencies[task.id].push(dummyId);

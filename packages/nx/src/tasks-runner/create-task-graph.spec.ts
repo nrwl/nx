@@ -1966,6 +1966,132 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should not conflate dependencies of dummy tasks', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^dep2'],
+              },
+              lint: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^dep'],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'app',
+          data: {
+            root: 'lib1-root',
+            targets: {},
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'app',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              dep: {
+                executor: 'nx:run-commands',
+              },
+              dep2: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['lint', 'test'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['lib2:dep', 'lib2:dep2'],
+      tasks: {
+        'app1:lint': {
+          id: 'app1:lint',
+          target: {
+            project: 'app1',
+            target: 'lint',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+        },
+        'app1:test': {
+          id: 'app1:test',
+          target: {
+            project: 'app1',
+            target: 'test',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+        },
+        'lib2:dep': {
+          id: 'lib2:dep',
+          target: {
+            project: 'lib2',
+            target: 'dep',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+        },
+        'lib2:dep2': {
+          id: 'lib2:dep2',
+          target: {
+            project: 'lib2',
+            target: 'dep2',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+          parallelism: true,
+        },
+      },
+      dependencies: {
+        'app1:lint': ['lib2:dep'],
+        'app1:test': ['lib2:dep2'],
+        'lib2:dep': [],
+        'lib2:dep2': [],
+      },
+    });
+  });
+
   it('should exclude task dependencies', () => {
     projectGraph = {
       nodes: {
