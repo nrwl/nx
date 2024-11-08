@@ -1259,6 +1259,10 @@
         "ng-packagr": {
           "version": "~19.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.15.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }
