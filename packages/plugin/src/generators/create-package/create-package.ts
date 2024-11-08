@@ -144,6 +144,7 @@ async function createCliPackage(
       };
       if (isTsSolutionSetup) {
         packageJson.bin[options.name] = './dist/bin/index.js';
+        // this package only exposes a binary entry point and no JS programmatic API
         delete packageJson.main;
         delete packageJson.types;
         delete packageJson.typings;

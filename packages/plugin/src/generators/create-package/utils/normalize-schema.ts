@@ -1,7 +1,10 @@
 import { readNxJson, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import type { LinterType } from '@nx/eslint';
+import {
+  normalizeLinterOption,
+  normalizeUnitTestRunnerOption,
+} from '@nx/js/src/utils/generator-prompts';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { CreatePackageSchema } from '../schema';
 
@@ -20,49 +23,12 @@ export async function normalizeSchema(
   host: Tree,
   schema: CreatePackageSchema
 ): Promise<NormalizedSchema> {
-  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
-
-  let linter = schema.linter;
-  if (!linter) {
-    const choices = isTsSolutionSetup
-      ? [{ name: 'none' }, { name: 'eslint' }]
-      : [{ name: 'eslint' }, { name: 'none' }];
-    const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
-
-    linter = await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices,
-        initial: 0,
-      },
-      { linter: defaultValue }
-    ).then(({ linter }) => linter);
-  }
-
-  let unitTestRunner = schema.unitTestRunner;
-  if (!unitTestRunner) {
-    const choices = isTsSolutionSetup
-      ? [{ name: 'none' }, { name: 'jest' }]
-      : [{ name: 'jest' }, { name: 'none' }];
-    const defaultValue = isTsSolutionSetup ? 'none' : 'jest';
-
-    unitTestRunner = await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest';
-    }>(
-      {
-        type: 'select',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices,
-        initial: 0,
-      },
-      { unitTestRunner: defaultValue }
-    ).then(({ unitTestRunner }) => unitTestRunner);
-  }
+  const linter = await normalizeLinterOption(host, schema.linter);
+  const unitTestRunner = await normalizeUnitTestRunnerOption(
+    host,
+    schema.unitTestRunner,
+    ['jest']
+  );
 
   if (!schema.directory) {
     throw new Error(
@@ -79,6 +45,7 @@ export async function normalizeSchema(
     directory: schema.directory,
   });
 
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
   const nxJson = readNxJson(host);
   const addPlugin =
     schema.addPlugin ??

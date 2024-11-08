@@ -3,8 +3,11 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import type { LinterType } from '@nx/eslint';
+import {
+  normalizeLinterOption,
+  normalizeUnitTestRunnerOption,
+} from '@nx/js/src/utils/generator-prompts';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Schema } from '../schema';
 
@@ -28,50 +31,14 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  const linter = await normalizeLinterOption(host, options.linter);
+  const unitTestRunner = await normalizeUnitTestRunnerOption(
+    host,
+    options.unitTestRunner,
+    ['jest']
+  );
+
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
-
-  let linter = options.linter;
-  if (!linter) {
-    const choices = isTsSolutionSetup
-      ? [{ name: 'none' }, { name: 'eslint' }]
-      : [{ name: 'eslint' }, { name: 'none' }];
-    const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
-
-    linter = await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices,
-        initial: 0,
-      },
-      { linter: defaultValue }
-    ).then(({ linter }) => linter);
-  }
-
-  let unitTestRunner = options.unitTestRunner;
-  if (!unitTestRunner) {
-    const choices = isTsSolutionSetup
-      ? [{ name: 'none' }, { name: 'jest' }]
-      : [{ name: 'jest' }, { name: 'none' }];
-    const defaultValue = isTsSolutionSetup ? 'none' : 'jest';
-
-    unitTestRunner = await promptWhenInteractive<{
-      unitTestRunner: 'none' | 'jest';
-    }>(
-      {
-        type: 'select',
-        name: 'unitTestRunner',
-        message: `Which unit test runner would you like to use?`,
-        choices,
-        initial: 0,
-      },
-      { unitTestRunner: defaultValue }
-    ).then(({ unitTestRunner }) => unitTestRunner);
-  }
-
   const nxJson = readNxJson(host);
   const addPlugin =
     options.addPlugin ??

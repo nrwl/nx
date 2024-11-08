@@ -33,6 +33,7 @@ import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { normalizeLinterOption } from '../../utils/generator-prompts';
 import {
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
@@ -41,6 +42,10 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import {
+  ensureProjectIsExcludedFromPluginRegistrations,
+  ensureProjectIsIncludedInPluginRegistrations,
+} from '../../utils/typescript/plugin';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
@@ -64,10 +69,6 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import {
-  ensureProjectIsExcludedFromPluginRegistrations,
-  ensureProjectIsIncludedInPluginRegistrations,
-} from '../../utils/typescript/plugin';
 
 const defaultOutputDirectory = 'dist';
 
@@ -682,23 +683,12 @@ async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  options.linter = await normalizeLinterOption(tree, options.linter);
+
   const hasPlugin = isUsingTypeScriptPlugin(tree);
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'eslint' }],
-        initial: 0,
-      },
-      { linter: 'none' }
-    ).then(({ linter }) => linter);
-
     options.unitTestRunner ??= await promptWhenInteractive<{
       unitTestRunner: 'none' | 'jest' | 'vitest';
     }>(
@@ -712,19 +702,6 @@ async function normalizeOptions(
       { unitTestRunner: 'none' }
     ).then(({ unitTestRunner }) => unitTestRunner);
   } else {
-    options.linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'eslint' }, { name: 'none' }],
-        initial: 0,
-      },
-      { linter: 'eslint' }
-    ).then(({ linter }) => linter);
-
     options.unitTestRunner ??= await promptWhenInteractive<{
       unitTestRunner: 'none' | 'jest' | 'vitest';
     }>(

@@ -21,12 +21,12 @@ import {
   determineProjectNameAndRootOptions,
   resolveImportPath,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
+import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
@@ -50,28 +50,7 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
-
-  let linter = options.linter;
-  if (!linter) {
-    const choices = isTsSolutionSetup
-      ? [{ name: 'none' }, { name: 'eslint' }]
-      : [{ name: 'eslint' }, { name: 'none' }];
-    const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
-
-    linter = await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices,
-        initial: 0,
-      },
-      { linter: defaultValue }
-    ).then(({ linter }) => linter);
-  }
+  const linter = await normalizeLinterOption(host, options.linter);
 
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
@@ -96,6 +75,7 @@ async function normalizeOptions(
   projectRoot = projectNameAndRootOptions.projectRoot;
 
   const pluginPropertyName = names(options.pluginName).propertyName;
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
 
   return {
     ...options,
