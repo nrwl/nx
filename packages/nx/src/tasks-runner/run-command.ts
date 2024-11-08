@@ -492,7 +492,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
     const promptConfig = {
       name: 'applyChanges',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to sync the identified changes to get your workspace up to date?',
       choices: [
@@ -523,7 +523,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   try {
     const promptConfig = {
       name: 'runTasks',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to ignore the sync failures and continue running the tasks?',
       choices: [
