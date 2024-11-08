@@ -250,7 +250,6 @@ NX   Capabilities in @nx/react:
    storybook-configuration : Set up storybook for a React app or library.
    component-story : Generate storybook story for a React component
    stories : Create stories/specs for all components declared in an app or library.
-   component-cypress-spec : Create a Cypress spec for a UI component that has a story.
    hook : Create a hook.
    cypress-component-configuration : Setup Cypress component testing for a React project
    component-test : Generate a Cypress component test for a React component
