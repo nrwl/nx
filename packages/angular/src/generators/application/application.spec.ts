@@ -1,5 +1,5 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { Tree, writeJson } from '@nx/devkit';
+import { Tree, updateProjectConfiguration, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -251,6 +251,19 @@ describe('app', () => {
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
           .esModuleInterop
       ).toBe(true);
+    });
+
+    it('should not set esModuleInterop when using the browser-esbuild builder', async () => {
+      await generateApp(appTree, 'my-app', { bundler: 'webpack' });
+      const project = readProjectConfiguration(appTree, 'my-app');
+      project.targets.build.executor =
+        '@angular-devkit/build-angular:browser-esbuild';
+      updateProjectConfiguration(appTree, 'my-app', project);
+
+      expect(
+        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
+          .esModuleInterop
+      ).toBeUndefined();
     });
 
     it('should not set esModuleInterop when using the browser builder', async () => {
@@ -1247,7 +1260,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~16.2.0',
+          '@angular/core': '~17.2.0',
         },
       }));
     });
@@ -1257,13 +1270,13 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV16.angularDevkitVersion
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV16.angularDevkitVersion
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV16.angularDevkitVersion
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
     });
 
@@ -1309,46 +1322,6 @@ describe('app', () => {
         });
         "
       `);
-    });
-
-    it('should use "@angular-devkit/build-angular:browser-esbuild" for --bundler=esbuild', async () => {
-      await generateApp(appTree, 'my-app', {
-        standalone: true,
-        bundler: 'esbuild',
-      });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:browser-esbuild'
-      );
-    });
-
-    it('should generate target options "main" and "browserTarget"', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.main).toBeDefined();
-      expect(
-        project.targets.serve.configurations.development.browserTarget
-      ).toBeDefined();
-    });
-
-    it('should not set esModuleInterop when using the browser-esbuild builder', async () => {
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
-    });
-
-    it('should not set esModuleInterop when using the browser builder', async () => {
-      await generateApp(appTree, 'my-app', { bundler: 'webpack' });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
     });
 
     it('should disable modern class fields behavior', async () => {

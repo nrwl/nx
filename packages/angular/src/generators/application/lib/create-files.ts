@@ -19,8 +19,7 @@ export async function createFiles(
 ) {
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild';
+  const isUsingApplicationBuilder = options.bundler === 'esbuild';
   const disableModernClassFieldsBehavior = lt(angularVersion, '18.1.0-rc.0');
 
   const rootSelector = `${options.prefix}-root`;

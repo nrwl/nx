@@ -15,6 +15,6 @@ export const typescriptVersion = '~5.5.2';
 /**
  * The minimum version is currently determined from the lowest version
  * that's supported by the lowest Angular supported version, e.g.
- * `npm view @angular/compiler-cli@14.0.0 peerDependencies.typescript`
+ * `npm view @angular/compiler-cli@17.0.0 peerDependencies.typescript`
  */
-export const supportedTypescriptVersions = '>=4.9.3';
+export const supportedTypescriptVersions = '>=5.2.0';

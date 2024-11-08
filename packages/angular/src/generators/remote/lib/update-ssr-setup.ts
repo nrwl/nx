@@ -12,7 +12,6 @@ import {
   moduleFederationNodeVersion,
   typesCorsVersion,
 } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function updateSsrSetup(
   tree: Tree,
@@ -48,23 +47,13 @@ export async function updateSsrSetup(
     '/server'
   );
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  generateFiles(
-    tree,
-    join(
-      __dirname,
-      '../files/common',
-      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
-    ),
-    project.root,
-    {
-      appName,
-      browserBundleOutput,
-      serverBundleOutput,
-      standalone,
-      tmpl: '',
-    }
-  );
+  generateFiles(tree, join(__dirname, '../files/common'), project.root, {
+    appName,
+    browserBundleOutput,
+    serverBundleOutput,
+    standalone,
+    tmpl: '',
+  });
 
   const pathToTemplateFiles = typescriptConfiguration ? 'base-ts' : 'base';
 
