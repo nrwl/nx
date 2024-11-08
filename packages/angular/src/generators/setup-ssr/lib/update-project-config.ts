@@ -100,10 +100,7 @@ export function updateProjectConfigForBrowserBuilder(
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   projectConfig.targets['serve-ssr'] = {
-    executor:
-      angularMajorVersion >= 17
-        ? '@angular-devkit/build-angular:ssr-dev-server'
-        : '@nguniversal/builders:ssr-dev-server',
+    executor: '@angular-devkit/build-angular:ssr-dev-server',
     configurations: {
       development: {
         browserTarget: `${schema.project}:build:development`,
@@ -118,10 +115,7 @@ export function updateProjectConfigForBrowserBuilder(
   };
 
   projectConfig.targets.prerender = {
-    executor:
-      angularMajorVersion >= 17
-        ? '@angular-devkit/build-angular:prerender'
-        : '@nguniversal/builders:prerender',
+    executor: '@angular-devkit/build-angular:prerender',
     options: {
       routes: ['/'],
     },
