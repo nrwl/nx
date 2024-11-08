@@ -114,7 +114,10 @@ function detectAndSetInvalidProjectGlobValues(
     const projectName = implicit.startsWith('!')
       ? implicit.substring(1)
       : implicit;
-
+    // Do not error on cross-workspace implicit dependency references
+    if (projectName.startsWith('nx-cloud:')) {
+      return false;
+    }
     return !(
       projectConfigurations[projectName] ||
       findMatchingProjects([implicit], projects).length
