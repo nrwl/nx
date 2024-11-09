@@ -169,6 +169,7 @@
       - [Configure Changelog Format](/recipes/nx-release/configure-changelog-format)
       - [Publish a Custom Dist Directory](/recipes/nx-release/publish-custom-dist-directory)
       - [Build Before Versioning](/recipes/nx-release/build-before-versioning)
+      - [Configuring Version Prefix for Dependency Versions](/recipes/nx-release/configuration-version-prefix)
       - [Troubleshoot Nx Console Issues](/recipes/nx-console/console-troubleshooting)
   - [Enterprise](/nx-enterprise)
     - [Activate Powerpack](/nx-enterprise/activate-powerpack)

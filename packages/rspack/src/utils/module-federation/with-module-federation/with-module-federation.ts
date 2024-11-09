@@ -1,12 +1,12 @@
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import type { Configuration } from '@rspack/core';
 import { DefinePlugin } from '@rspack/core';
-import { SharedConfigContext } from '../../model';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
 } from '../models';
 import { getModuleFederationConfig } from './utils';
+import { NxRspackExecutionContext } from '../../config';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -31,7 +31,7 @@ export async function withModuleFederation(
 
   return function makeConfig(
     config: Configuration,
-    { context }: SharedConfigContext
+    { context }: NxRspackExecutionContext
   ): Configuration {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';

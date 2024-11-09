@@ -492,6 +492,56 @@ describe('task planner', () => {
     expect(plans).toMatchSnapshot();
   });
 
+  it('should build plans where a project specifies no external dependencies', async () => {
+    let projectFileMap = {
+      proj: [{ file: '/file.ts', hash: 'file.hash' }],
+    };
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'proj',
+      type: 'lib',
+      data: {
+        root: 'libs/proj',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [
+              {
+                externalDependencies: [],
+              },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: { build: { executor: 'nx:run-commands' } },
+      },
+    });
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['proj'],
+      ['build'],
+      undefined,
+      {}
+    );
+    let nxJson = {} as any;
+    const planner = new HashPlanner(
+      nxJson,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+    const taskIds = Object.keys(taskGraph.tasks);
+
+    const plans = planner.getPlans(taskIds, taskGraph);
+    expect(plans['proj:build']).not.toContain('AllExternalDependencies');
+  });
+
   it('should include npm projects', async () => {
     let projectFileMap = {
       app: [{ file: '/filea.ts', hash: 'a.hash' }],

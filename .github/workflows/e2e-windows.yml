@@ -408,7 +408,7 @@ jobs:
 
       - name: Make slack outputs
         id: process-json
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:

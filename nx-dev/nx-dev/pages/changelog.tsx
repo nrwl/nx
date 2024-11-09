@@ -214,7 +214,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />

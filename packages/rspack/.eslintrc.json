@@ -39,7 +39,8 @@
               "@nx/workspace",
               // Imported types only
               "@module-federation/sdk",
-              "@module-federation/enhanced"
+              "@module-federation/enhanced",
+              "css-loader"
             ]
           }
         ]

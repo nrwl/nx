@@ -1065,6 +1065,12 @@
                   "id": "build-before-versioning",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/build-before-versioning"
+                },
+                {
+                  "name": "Configuring Version Prefix for Dependency Versions",
+                  "id": "configuration-version-prefix",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configuration-version-prefix"
                 }
               ]
             }

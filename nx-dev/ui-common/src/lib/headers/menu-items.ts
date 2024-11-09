@@ -189,9 +189,9 @@ export const learnItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Video tutorials',
+    name: 'Nx Video Courses',
     description: null,
-    href: 'https://www.youtube.com/@nxdevtools',
+    href: '/courses',
     icon: PlayCircleIcon,
     isNew: false,
     isHighlight: false,
