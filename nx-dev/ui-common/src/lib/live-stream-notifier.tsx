@@ -11,12 +11,12 @@ import {
 } from '@heroicons/react/24/outline';
 
 export function LiveStreamNotifier(): ReactElement | null {
+  const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
 
   useEffect(() => {
-    const isClosedSession = sessionStorage.getItem(
-      'live-stream-notifier-closed'
-    );
+    setIsMounted(true);
+    const isClosedSession = localStorage.getItem('live-stream-notifier-closed');
     if (isClosedSession === 'true') {
       setIsVisible(false);
     }
@@ -25,10 +25,10 @@ export function LiveStreamNotifier(): ReactElement | null {
   const closeNotifier = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsVisible(false);
-    sessionStorage.setItem('live-stream-notifier-closed', 'true');
+    localStorage.setItem('live-stream-notifier-closed', 'true');
   };
 
-  if (!isVisible) return null;
+  if (!isMounted || !isVisible) return null;
 
   return (
     <motion.div
