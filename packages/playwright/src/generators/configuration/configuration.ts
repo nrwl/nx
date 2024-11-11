@@ -224,7 +224,7 @@ async function normalizeOptions(
       linter: 'none' | 'eslint';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'linter',
         message: `Which linter would you like to use?`,
         choices: [{ name: 'none' }, { name: 'eslint' }],
@@ -237,7 +237,7 @@ async function normalizeOptions(
       linter: 'none' | 'eslint';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'linter',
         message: `Which linter would you like to use?`,
         choices: [{ name: 'eslint' }, { name: 'none' }],

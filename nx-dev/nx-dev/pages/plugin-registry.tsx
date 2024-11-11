@@ -96,7 +96,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />

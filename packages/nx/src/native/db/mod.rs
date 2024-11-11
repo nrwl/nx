@@ -7,7 +7,7 @@ use crate::native::{db::connection::NxDbConnection, hasher::hash};
 use napi::bindgen_prelude::External;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
-use std::process;
+use std::{mem, process};
 use tracing::{trace, trace_span};
 
 #[napi]
@@ -39,4 +39,10 @@ pub fn connect_to_nx_db(
 
         Ok(External::new(c))
     })
+}
+
+#[napi]
+pub fn close_db_connection(mut connection: External<NxDbConnection>) -> anyhow::Result<()> {
+    let conn = mem::take(connection.as_mut());
+    conn.close()
 }

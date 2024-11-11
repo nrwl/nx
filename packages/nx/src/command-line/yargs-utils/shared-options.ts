@@ -320,3 +320,24 @@ export function parseCSV(args: string[] | string): string[] {
     i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i
   );
 }
+
+export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
+  if (args['parallel'] === 'false' || args['parallel'] === false) {
+    return 1;
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === '' ||
+    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    (process.env.NX_PARALLEL && args['parallel'] === undefined)
+  ) {
+    return Number(
+      args['maxParallel'] ||
+        args['max-parallel'] ||
+        process.env.NX_PARALLEL ||
+        3
+    );
+  } else if (args['parallel'] !== undefined) {
+    return Number(args['parallel']);
+  }
+}
