@@ -4,9 +4,6 @@ import type {
   ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
-import { output } from './output';
-import type { ProjectGraphError } from '../project-graph/error-types';
-import { daemonClient } from '../daemon/client/client';
 
 type PropertyDescription = {
   type?: string | string[];
