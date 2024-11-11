@@ -37,7 +37,6 @@ describe('scam-to-standalone', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        standalone: true,
         imports: [CommonModule],
         selector: 'app-bar',
         standalone: false,

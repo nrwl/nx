@@ -500,9 +500,14 @@ describe('app', () => {
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
       await generateApp(appTree, 'my-dir/my-app');
-      expect(
-        appTree.read('my-dir/my-app/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('Hello there');
+
+      const nxWelcomeComponentText = appTree.read(
+        'my-dir/my-app/src/app/nx-welcome.component.ts',
+        'utf-8'
+      );
+      expect(nxWelcomeComponentText).not.toContain('standalone: true');
+      expect(nxWelcomeComponentText).toContain('standalone: false');
+      expect(nxWelcomeComponentText).toContain('Hello there');
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {
@@ -976,9 +981,12 @@ describe('app', () => {
         appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
-      expect(
-        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('standalone: true');
+      const nxWelcomeComponentText = appTree.read(
+        'standalone/src/app/nx-welcome.component.ts',
+        'utf-8'
+      );
+      expect(nxWelcomeComponentText).not.toContain('standalone: true');
+      expect(nxWelcomeComponentText).not.toContain('standalone: false');
     });
 
     it('should generate a standalone app correctly without routing', async () => {
@@ -1000,9 +1008,12 @@ describe('app', () => {
         appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
-      expect(
-        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('standalone: true');
+      const nxWelcomeComponentText = appTree.read(
+        'standalone/src/app/nx-welcome.component.ts',
+        'utf-8'
+      );
+      expect(nxWelcomeComponentText).not.toContain('standalone: true');
+      expect(nxWelcomeComponentText).not.toContain('standalone: false');
     });
 
     it('should should not use event coalescing in versions lower than v18', async () => {

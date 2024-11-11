@@ -54,7 +54,9 @@ export async function createFiles(
     disableModernClassFieldsBehavior,
     useEventCoalescing: angularMajorVersion >= 18,
     useRouterTestingModule: angularMajorVersion < 18,
-    setStandaloneFalse: angularMajorVersion >= 18,
+    // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+    setStandaloneFalse: angularMajorVersion >= 19,
+    setStandaloneTrue: angularMajorVersion < 19,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'

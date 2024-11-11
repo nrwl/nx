@@ -1,7 +1,7 @@
 import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[<%= selector %>]'<% if(standalone || setStandaloneFalse) { %>,
+  selector: '[<%= selector %>]'<% if (setStandalone) { %>,
   standalone: <%= standalone %><% } %>
 })
 export class <%= symbolName %> {
