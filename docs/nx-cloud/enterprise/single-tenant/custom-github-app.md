@@ -34,6 +34,10 @@ Configure a webhook and give it a secret:
 
 ![Step 5](/nx-cloud/enterprise/single-tenant/images/webhook.png)
 
+Make sure you subscribe to the "Organization" events:
+
+![Step 5.1](/nx-cloud/enterprise/single-tenant/images/webhook_events.png)
+
 Once you create the app, keep a note of the Client ID and App ID:
 
 ![Step 6](/nx-cloud/enterprise/single-tenant/images/github_custom_app_step_6.avif)
