@@ -52,7 +52,7 @@ Nx Cloud calculates the relationship between the number of [affected projects](/
 
 ## Setting up Dynamic Agents in your CI Pipeline
 
-In the example below, each changeset would be assigned an equal percentage range out of 100%. If Nx Cloud determines that 30% of your PRs have been affected, then it will use the medium changeset to distribute the workload on. If Nx Cloud determines that 55% of your PRs have been affected, it will use the large changeset.
+In the example below, each changeset would be assigned an equal percentage range out of 100%. If Nx Cloud determines that 30% of your projects have been affected, then it will use the medium changeset to distribute the workload on. If Nx Cloud determines that 55% of your projects have been affected, it will use the large changeset.
 
 ```yaml {% fileName=".nx/workflows/distribution-config.yaml" %}
 distribute-on:
