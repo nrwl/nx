@@ -2,7 +2,7 @@ import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%
 import { CommonModule } from '@angular/common';<% } %>
 
 @Component({<% if(!skipSelector) {%>
-  selector: '<%= selector %>',<%}%><% if(standalone || setStandaloneFalse) { %>
+  selector: '<%= selector %>',<%}%><% if (setStandalone) { %>
   standalone: <%= standalone %>,<% } %><% if(standalone) { %>
   imports: [CommonModule],<%}%><% if(inlineTemplate) { %>
   template: `<p><%= name %> works!</p>`<% } else { %>

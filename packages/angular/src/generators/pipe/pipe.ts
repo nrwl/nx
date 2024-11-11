@@ -25,7 +25,10 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
       fileName: options.fileName,
       selector: pipeNames.propertyName,
       standalone: options.standalone,
-      setStandaloneFalse: angularMajorVersion >= 18,
+      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      setStandalone:
+        (angularMajorVersion >= 19 && !options.standalone) ||
+        (angularMajorVersion < 19 && options.standalone),
       tpl: '',
     }
   );

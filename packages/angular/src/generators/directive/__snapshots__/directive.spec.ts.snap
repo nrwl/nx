@@ -107,7 +107,6 @@ exports[`directive generator should generate correctly 1`] = `
 
 @Directive({
   selector: '[test]',
-  standalone: true,
 })
 export class TestDirective {
   constructor() {}
