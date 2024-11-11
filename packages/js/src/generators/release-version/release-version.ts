@@ -609,24 +609,16 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
-        // Precompute a Set of all direct dependency relationships for O(1) lookups
-        const directDependentSet = new Set(
-          allDependentProjects.map((dep) => `${dep.source}:${dep.target}`)
-        );
-        // Precompute a Set of all dependent targets for O(1) lookup
-        const dependentTargetsSet = new Set(
-          allDependentProjects.map((dep) => dep.source)
-        );
-        Object.values(localPackageDependencies)
-          .flat()
-          .forEach((dependent) => {
-            if (
-              dependentTargetsSet.has(dependent.target) &&
-              !directDependentSet.has(`${dependent.source}:${dependent.target}`)
-            ) {
-              transitiveLocalPackageDependents.push(dependent);
+        for (const directDependent of allDependentProjects) {
+          // Look through localPackageDependencies to find any which have a target on the current dependent
+          for (const localPackageDependency of Object.values(
+            localPackageDependencies
+          ).flat()) {
+            if (localPackageDependency.target === directDependent.source) {
+              transitiveLocalPackageDependents.push(localPackageDependency);
             }
-          });
+          }
+        }
       }
 
       const dependentProjectsInCurrentBatch = [];
@@ -743,7 +735,13 @@ To fix this you will either need to add a package.json file at that location, or
           updateDependents === 'auto' &&
           options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects.length +
-              transitiveLocalPackageDependents.length -
+              // Only count transitive dependents that aren't already direct dependents
+              transitiveLocalPackageDependents.filter(
+                (transitive) =>
+                  !allDependentProjects.some(
+                    (direct) => direct.source === transitive.source
+                  )
+              ).length -
               // There are two entries per circular dep
               circularDependencies.size / 2
             : dependentProjectsInCurrentBatch.length;
@@ -903,6 +901,39 @@ To fix this you will either need to add a package.json file at that location, or
         }
       }
       for (const transitiveDependentProject of transitiveLocalPackageDependents) {
+        const isAlreadyDirectDependent = allDependentProjects.some(
+          (dep) => dep.source === transitiveDependentProject.source
+        );
+        if (isAlreadyDirectDependent) {
+          // Don't continue directly in this scenario - we still need to update the dependency version
+          // but we don't want to bump the project's own version as it will end up being double patched
+          const dependencyProjectName = transitiveDependentProject.target;
+          const dependencyPackageRoot = projectNameToPackageRootMap.get(
+            dependencyProjectName
+          );
+          if (!dependencyPackageRoot) {
+            throw new Error(
+              `The project "${dependencyProjectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+            );
+          }
+          const dependencyPackageJsonPath = joinPathFragments(
+            dependencyPackageRoot,
+            'package.json'
+          );
+          const dependencyPackageJson = readJson(
+            tree,
+            dependencyPackageJsonPath
+          );
+
+          updateDependentProjectAndAddToVersionData({
+            dependentProject: transitiveDependentProject,
+            dependencyPackageName: dependencyPackageJson.name,
+            newDependencyVersion: dependencyPackageJson.version,
+            forceVersionBump: false, // Never bump version for direct dependents
+          });
+          continue;
+        }
+
         // Check if the transitive dependent originates from a circular dependency
         const isFromCircularDependency = circularDependencies.has(
           `${transitiveDependentProject.source}:${transitiveDependentProject.target}`
