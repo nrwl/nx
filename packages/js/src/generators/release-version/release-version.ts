@@ -609,16 +609,26 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
-        for (const directDependent of allDependentProjects) {
-          // Look through localPackageDependencies to find any which have a target on the current dependent
-          for (const localPackageDependency of Object.values(
-            localPackageDependencies
-          ).flat()) {
-            if (localPackageDependency.target === directDependent.source) {
-              transitiveLocalPackageDependents.push(localPackageDependency);
-            }
-          }
-        }
+        // Create a Set of all direct dependency relationships for O(1) lookups
+        const directDependentSet = new Set(
+          allDependentProjects.map((dep) => `${dep.source}:${dep.target}`)
+        );
+        // Get all potential transitive dependencies in a single pass
+        const potentialTransitiveDependents = Object.values(
+          localPackageDependencies
+        )
+          .flat()
+          .filter((dependent) => {
+            return (
+              allDependentProjects.some(
+                (direct) => direct.source === dependent.target
+              ) &&
+              // Only include if this exact dependency relationship isn't already covered by a direct dependent
+              !directDependentSet.has(`${dependent.source}:${dependent.target}`)
+            );
+          });
+
+        transitiveLocalPackageDependents.push(...potentialTransitiveDependents);
       }
 
       const dependentProjectsInCurrentBatch = [];
