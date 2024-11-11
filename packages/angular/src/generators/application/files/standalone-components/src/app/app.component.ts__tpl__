@@ -2,8 +2,8 @@ import { Component<% if(viewEncapsulation) { %>, ViewEncapsulation<% } %> } from
 import { RouterModule } from '@angular/router';<% } %><% if(!minimal) { %>
 import { NxWelcomeComponent } from './nx-welcome.component';<% } %>
 
-@Component({
-  standalone: true,
+@Component({<% if (setStandaloneTrue) { %>
+  standalone: true,<% } %>
   imports: [<% if(!minimal) { %>NxWelcomeComponent, <% } %><% if(routing) { %>RouterModule<% } %>],
   selector: '<%= rootSelector %>',<% if(!inlineTemplate) { %>
   templateUrl: './app.component.html',<% } else { %>
