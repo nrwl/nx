@@ -44,6 +44,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     dot: '.',
     tmpl: '',
     offsetFromRoot,
+    appDirType: options.appDir ? 'app' : 'pages',
     layoutTypeSrcPath,
     rootPath,
     layoutTypeDistPath,
