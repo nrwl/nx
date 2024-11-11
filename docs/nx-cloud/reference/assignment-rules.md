@@ -6,7 +6,7 @@ Assignment rules are defined in your workspaces `distribution-config.yaml` file.
 
 ## How to Define an Assignment Rule
 
-Each assignment rule has one of the following properties that it matches against tasks: `project`, `target`, and/or `configuration`. It also has a list of possible [agent types](reference/launch-templates) that tasks with the matching properties can run on. Rules are defined in yaml like the following:
+Each assignment rule has one of the following properties that it matches against tasks: `project`, `target`, and/or `configuration`. It also has a list of possible [agent types](/ci/reference/launch-templates) that tasks with the matching properties can run on. Rules are defined in yaml like the following:
 
 ```yaml {% fileName=".nx/workflows/distribution-config.yaml" %}
 distribute-on:
@@ -26,7 +26,7 @@ The above rule will match any task that has a project named `app1`, a target nam
 You can mix and match any of the criteria in an assignment rule provided that you follow the constraints:
 
 - At least one of the following properties is defined: `project`, `target`, `configuration`.
-- There is at least one [agent type](reference/launch-templates) specified in the `run-on` field.
+- There is at least one [agent type](/ci/reference/launch-templates) specified in the `run-on` field.
 - Every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the run-on field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
 
 ### Invalid Assignment Rules Example
