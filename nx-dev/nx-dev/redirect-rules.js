@@ -66,8 +66,6 @@ const schemaUrls = {
     '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
-  '/react/component-cypress-spec':
-    '/packages/react/generators/component-cypress-spec',
   '/react/component-story': '/packages/react/generators/component-story',
   '/react/library': '/packages/react/generators/library',
   '/react/redux': '/packages/react/generators/redux',
