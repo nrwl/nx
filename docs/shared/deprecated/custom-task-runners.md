@@ -8,5 +8,5 @@ As of Nx 20, the `tasksRunnerOptions` property in `nx.json` is deprecated. This 
 For most organizations, this feature is a net positive. If you are currently using a custom task runner, you are most likely using it to define your own custom [remote cache](/ci/features/remote-cache) storage location. You have several options moving forward:
 
 1. Use [Nx Cloud](/nx-cloud) for your remote cache
-2. Use an [Nx Powerpack](/powerpack) plugin to store your remote cache on an [Amazon S3 bucket](/nx-api/powerpack-s3-cache) or a [network drive](/nx-api/powerpack-shared-fs-cache)
+2. Use an [Nx Powerpack](/powerpack) plugin to store your remote cache on [Amazon S3](/nx-api/powerpack-s3-cache), [Google Cloud](/nx-api/powerpack-gcs-cache), [Google Cloud](/nx-api/powerpack-gcs-cache) or a [network drive](/nx-api/powerpack-shared-fs-cache)
 3. Use the deprecated custom task runner feature until Nx 21

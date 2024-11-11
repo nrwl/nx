@@ -80,6 +80,8 @@ Nx Replay is not the only remote cache you can use. You can also use one of the 
 If you can't use Nx Replay, Nx provides plugins that enable you to [self-host the remote cache](/nx-enterprise/powerpack/custom-caching). These plugins are available as part of the [Nx Powerpack](/powerpack), which you can unlock by [activating your license](/nx-enterprise/activate-powerpack). There are plugins to self-host your remote cache in the following locations:
 
 - [Amazon S3 Bucket](/nx-api/powerpack-s3-cache)
+- [Google Cloud Storage](/nx-api/powerpack-gcs-cache)
+- [Azure](/nx-api/powerpack-azure-cache)
 - [Shared File System](/nx-api/powerpack-shared-fs-cache)
 
 These plugins will ensure that the task metadata and project graph information are correctly associated with the file artifacts in your cache.

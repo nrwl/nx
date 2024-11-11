@@ -57,6 +57,9 @@
       "@nx/nx-dev/data-access-careers/node-only": [
         "nx-dev/data-access-careers/src/node.index.ts"
       ],
+      "@nx/nx-dev/data-access-courses": [
+        "nx-dev/data-access-courses/src/index.ts"
+      ],
       "@nx/nx-dev/data-access-documents": [
         "nx-dev/data-access-documents/src/index.ts"
       ],
@@ -98,6 +101,7 @@
       "@nx/nx-dev/ui-company": ["nx-dev/ui-company/src/index.ts"],
       "@nx/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
       "@nx/nx-dev/ui-contact": ["nx-dev/ui-contact/src/index.ts"],
+      "@nx/nx-dev/ui-courses": ["nx-dev/ui-courses/src/index.ts"],
       "@nx/nx-dev/ui-customers": ["nx-dev/ui-customers/src/index.ts"],
       "@nx/nx-dev/ui-enterprise": ["nx-dev/ui-enterprise/src/index.ts"],
       "@nx/nx-dev/ui-fence": ["nx-dev/ui-fence/src/index.ts"],
@@ -112,6 +116,7 @@
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
+      "@nx/nx-dev/ui-video-courses": ["nx-dev/ui-video-courses/src/index.ts"],
       "@nx/nx-dev/util-ai": ["nx-dev/util-ai/src/index.ts"],
       "@nx/playwright": ["packages/playwright/index.ts"],
       "@nx/playwright/*": ["packages/playwright/*"],

@@ -2779,6 +2779,17 @@
             "isExternal": false,
             "path": "/recipes/nx-release/build-before-versioning",
             "tags": ["nx-release"]
+          },
+          {
+            "id": "configuration-version-prefix",
+            "name": "Configuring Version Prefix for Dependency Versions",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configuration-version-prefix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configuration-version-prefix",
+            "tags": ["nx-release"]
           }
         ],
         "isExternal": false,
@@ -5135,6 +5146,17 @@
         "isExternal": false,
         "path": "/recipes/nx-release/build-before-versioning",
         "tags": ["nx-release"]
+      },
+      {
+        "id": "configuration-version-prefix",
+        "name": "Configuring Version Prefix for Dependency Versions",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configuration-version-prefix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configuration-version-prefix",
+        "tags": ["nx-release"]
       }
     ],
     "isExternal": false,
@@ -5282,6 +5304,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/build-before-versioning",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configuration-version-prefix": {
+    "id": "configuration-version-prefix",
+    "name": "Configuring Version Prefix for Dependency Versions",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configuration-version-prefix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configuration-version-prefix",
     "tags": ["nx-release"]
   },
   "/nx-enterprise": {

@@ -4,6 +4,7 @@ use rusqlite::{Connection, OpenFlags};
 use std::fs::{remove_file, File};
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
+use crate::native::utils::ci::is_ci;
 
 pub(super) struct LockFile {
     file: File,
@@ -62,10 +63,10 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
             create_metadata_table(&mut c, &nx_version)?;
             c
         }
-        check @ _ => {
-            trace!("Incompatible database because: {:?}", check);
+        reason => {
+            trace!("Incompatible database because: {:?}", reason);
             trace!("Disconnecting from existing incompatible database");
-            c.close().map_err(|(_, error)| anyhow::Error::from(error))?;
+            c.close()?;
             trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 
@@ -99,7 +100,7 @@ fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Re
 }
 
 fn open_database_connection(db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let conn = if cfg!(target_family = "unix") && ci_info::is_ci() {
+    let conn = if cfg!(target_family = "unix") && is_ci() {
         trace!("Opening connection with unix-dotfile");
         Connection::open_with_flags_and_vfs(
             db_path,

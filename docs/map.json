@@ -1065,6 +1065,12 @@
                   "id": "build-before-versioning",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/build-before-versioning"
+                },
+                {
+                  "name": "Configuring Version Prefix for Dependency Versions",
+                  "id": "configuration-version-prefix",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configuration-version-prefix"
                 }
               ]
             }
@@ -2614,6 +2620,32 @@
               "id": "overview",
               "path": "/nx-api/powerpack-conformance",
               "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-azure-cache",
+          "id": "powerpack-azure-cache",
+          "description": "powerpack-azure-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-azure-cache",
+              "file": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+            }
+          ]
+        },
+        {
+          "name": "powerpack-gcs-cache",
+          "id": "powerpack-gcs-cache",
+          "description": "powerpack-gcs-cache package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/nx-api/powerpack-gcs-cache",
+              "file": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
             }
           ]
         },
