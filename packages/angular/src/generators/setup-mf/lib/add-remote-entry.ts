@@ -25,7 +25,9 @@ export function addRemoteEntry(
       appName,
       routing,
       prefix,
-      setStandaloneFalse: angularMajorVersion >= 18,
+      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      setStandaloneFalse: angularMajorVersion >= 19,
+      setStandaloneTrue: angularMajorVersion < 19,
     }
   );
 
