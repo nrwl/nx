@@ -1,4 +1,3 @@
-import { daemonClient } from '../daemon/client/client';
 import { ProjectGraphError } from '../project-graph/error-types';
 import { logger } from './logger';
 import { output } from './output';
@@ -52,6 +51,7 @@ export async function handleErrors(
         bodyLines,
       });
     }
+    const { daemonClient } = await import('../daemon/client/client');
     if (daemonClient.enabled()) {
       daemonClient.reset();
     }
