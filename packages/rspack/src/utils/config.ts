@@ -90,6 +90,7 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
   const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
   const projectGraph = readCachedProjectGraph();
   const projectNode = projectGraph.nodes[projectName];
+  console.log('>>>DBG>>>', projectNode, projectName, projectNode.data.root);
   ctx.options ??= {
     root: workspaceRoot,
     projectRoot: projectNode.data.root,
@@ -97,6 +98,7 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
     // These aren't actually needed since NxRspackPlugin and withNx both support them being undefined.
     assets: undefined,
     outputFileName: undefined,
+    outputPath: undefined,
     rspackConfig: undefined,
   };
   ctx.context ??= {
