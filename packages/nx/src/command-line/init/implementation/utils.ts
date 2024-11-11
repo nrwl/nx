@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
 import { connectWorkspaceToCloud } from '../../connect/connect-to-nx-cloud';
+import { deduceDefaultBase as gitInitDefaultBase } from '../../../utils/default-base';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -93,7 +94,15 @@ function deduceDefaultBase() {
           });
           return 'next';
         } catch {
-          return 'master';
+          try {
+            execSync(`git rev-parse --verify master`, {
+              stdio: ['ignore', 'ignore', 'ignore'],
+              windowsHide: false,
+            });
+            return 'master';
+          } catch {
+            return gitInitDefaultBase();
+          }
         }
       }
     }
