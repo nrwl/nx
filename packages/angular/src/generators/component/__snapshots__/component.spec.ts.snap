@@ -118,7 +118,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
@@ -146,7 +145,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'

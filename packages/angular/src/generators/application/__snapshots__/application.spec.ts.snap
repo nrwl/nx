@@ -128,7 +128,6 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 import { RouterModule } from '@angular/router';
 
 @Component({
-  standalone: true,
   imports: [RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -172,7 +171,6 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 "import { Component } from '@angular/core';
 
 @Component({
-  standalone: true,
   imports: [],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -245,7 +243,6 @@ import { RouterModule } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -313,7 +310,6 @@ exports[`app --standalone should generate a standalone app correctly without rou
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, ],
   selector: 'app-root',
   templateUrl: './app.component.html',
