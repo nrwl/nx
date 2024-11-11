@@ -1736,7 +1736,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/create-nx-workspace",
-        "tags": [],
+        "tags": ["installation"],
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       "/nx-api/nx/documents/init": {
@@ -1747,7 +1747,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/init",
-        "tags": [],
+        "tags": ["init"],
         "originalFilePath": "generated/cli/init"
       },
       "/nx-api/nx/documents/generate": {
@@ -1780,7 +1780,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/daemon",
-        "tags": [],
+        "tags": ["daemon"],
         "originalFilePath": "generated/cli/daemon"
       },
       "/nx-api/nx/documents/dep-graph": {
@@ -1912,7 +1912,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/sync",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync"
       },
       "/nx-api/nx/documents/sync-check": {
@@ -1923,7 +1923,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/sync-check",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync-check"
       },
       "/nx-api/nx/documents/import": {
@@ -1934,7 +1934,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/import",
-        "tags": [],
+        "tags": ["import"],
         "originalFilePath": "generated/cli/import"
       },
       "/nx-api/nx/documents/exec": {
@@ -1945,7 +1945,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/exec",
-        "tags": [],
+        "tags": ["exec"],
         "originalFilePath": "generated/cli/exec"
       },
       "/nx-api/nx/documents/watch": {
@@ -1967,7 +1967,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/show",
-        "tags": [],
+        "tags": ["explore-graph"],
         "originalFilePath": "generated/cli/show"
       },
       "/nx-api/nx/documents/view-logs": {
@@ -2000,7 +2000,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/add",
-        "tags": [],
+        "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
       "/nx-api/nx/documents/login": {
@@ -2011,7 +2011,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/login",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/login"
       },
       "/nx-api/nx/documents/logout": {
@@ -2022,7 +2022,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/logout",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
       }
     },
