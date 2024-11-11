@@ -1,7 +1,6 @@
 import { CommandModule, Argv } from 'yargs';
 import { getCwd } from '../../utils/path';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
-import { withVerbose } from '../yargs-utils/shared-options';
+import { defaultYargsParserConfiguration, withVerbose } from '../yargs-utils/shared-options';
 
 export const yargsGenerateCommand: CommandModule = {
   command: 'generate <generator> [_..]',
@@ -17,10 +16,11 @@ export const yargsGenerateCommand: CommandModule = {
   },
 };
 
-function withGenerateOptions(yargs: Argv) {
+export function withGenerateOptions(yargs: Argv) {
   const generatorWillShowHelp =
     process.argv[3] && !process.argv[3].startsWith('-');
   const res = withVerbose(yargs)
+    .parserConfiguration(defaultYargsParserConfiguration)
     .positional('generator', {
       describe: 'Name of the generator (e.g., @nx/js:library, library).',
       type: 'string',
