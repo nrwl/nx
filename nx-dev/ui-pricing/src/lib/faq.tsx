@@ -29,7 +29,7 @@ export function Faq(): ReactElement {
         'A new billing cycle starts on the first day of every month. If you go over the Hobby plan limit during a cycle your organization will be disabled. You will have to upgrade to our Pro plan or wait for the next billing cycle.',
     },
     {
-      question: 'What is an active contributors?',
+      question: 'What is an active contributor?',
       answer:
         'Active contributors are calculated based on any person or actor that has triggered a CI Pipeline Execution within the current billing cycle.',
     },

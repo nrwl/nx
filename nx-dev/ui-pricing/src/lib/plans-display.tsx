@@ -32,7 +32,7 @@ export function PlansDisplay(): ReactElement {
                   </span>
                 </div>
                 <p className="mt-2 text-sm">
-                  Perfect for small teams or proof of concepts to evaluate the
+                  Perfect for small teams or proofs of concept to evaluate the
                   product. No credit card required.
                 </p>
                 <p className="mt-4 pb-5 leading-5">
