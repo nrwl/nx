@@ -2,6 +2,7 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
+import { relative } from 'node:path';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
@@ -124,15 +125,21 @@ export async function getGitDiff(
 
   // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
   const separator = '§§§';
-
   // https://git-scm.com/docs/pretty-formats
-  const r = await execCommand('git', [
+  const args = [
     '--no-pager',
     'log',
     range,
     `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
     '--name-status',
-  ]);
+  ];
+  // Support cases where the nx workspace root is located at a nested path within the git repo
+  const relativePath = await getGitRootRelativePath();
+  if (relativePath) {
+    args.push(`--relative=${relativePath}`);
+  }
+
+  const r = await execCommand('git', args);
 
   return r
     .split('----\n')
@@ -557,4 +564,21 @@ export async function getFirstGitCommit() {
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);
   }
+}
+
+async function getGitRoot() {
+  try {
+    return (await execCommand('git', ['rev-parse', '--show-toplevel'])).trim();
+  } catch (e) {
+    throw new Error('Unable to find git root');
+  }
+}
+
+let gitRootRelativePath: string;
+async function getGitRootRelativePath() {
+  if (!gitRootRelativePath) {
+    const gitRoot = await getGitRoot();
+    gitRootRelativePath = relative(gitRoot, workspaceRoot);
+  }
+  return gitRootRelativePath;
 }
