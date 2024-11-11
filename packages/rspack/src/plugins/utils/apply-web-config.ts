@@ -71,6 +71,9 @@ export function applyWebConfig(
         template: options.index,
         sri: options.subresourceIntegrity ? 'sha256' : undefined,
         ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
+        ...(config.output?.scriptType === 'module'
+          ? { scriptLoading: 'module' }
+          : {}),
       })
     );
   }

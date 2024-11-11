@@ -11,8 +11,11 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { NormalizedNxAppRspackPluginOptions } from '../models';
 import { RspackNxBuildCoordinationPlugin } from './rspack-nx-build-coordination-plugin';
+import { unlinkSync } from 'fs';
 
 export class NxTsconfigPathsRspackPlugin {
+  private tmpTsConfigPath: string;
+
   constructor(private options: NormalizedNxAppRspackPluginOptions) {
     if (!this.options.tsConfig)
       throw new Error(
@@ -21,8 +24,9 @@ export class NxTsconfigPathsRspackPlugin {
   }
 
   apply(compiler: Compiler): void {
-    // If we are not building libs from source, we need to remap paths so tsconfig may be updated.
-    this.handleBuildLibsFromSource(compiler.options, this.options);
+    // TODO(Colum): Investigate the best way to handle this, currently it is not working and affecting HMR
+    // // If we are not building libs from source, we need to remap paths so tsconfig may be updated.
+    // this.handleBuildLibsFromSource(compiler.options, this.options);
 
     const pathToTsconfig = !path.isAbsolute(this.options.tsConfig)
       ? path.join(workspaceRoot, this.options.tsConfig)
@@ -36,8 +40,18 @@ export class NxTsconfigPathsRspackPlugin {
     compiler.options.resolve = {
       ...compiler.options.resolve,
       extensions: [...extensions],
-      tsConfig: pathToTsconfig,
+      tsConfig: { configFile: pathToTsconfig },
     };
+  }
+
+  cleanupTmpTsConfigFile() {
+    if (this.tmpTsConfigPath) {
+      try {
+        if (this.tmpTsConfigPath) {
+          unlinkSync(this.tmpTsConfigPath);
+        }
+      } catch (e) {}
+    }
   }
 
   handleBuildLibsFromSource(
@@ -56,12 +70,16 @@ export class NxTsconfigPathsRspackPlugin {
         remappedTarget,
         options.configurationName
       );
+
       options.tsConfig = createTmpTsConfig(
         options.tsConfig,
         options.root,
         target.data.root,
-        dependencies
+        dependencies,
+        false,
+        true
       );
+      this.tmpTsConfigPath = options.tsConfig;
 
       if (options.targetName === 'serve') {
         const buildableDependencies = dependencies
@@ -71,7 +89,11 @@ export class NxTsconfigPathsRspackPlugin {
 
         const buildCommand = `nx run-many --target=build --projects=${buildableDependencies}`;
 
-        config.plugins.push(new RspackNxBuildCoordinationPlugin(buildCommand));
+        if (buildableDependencies && buildableDependencies.length > 0) {
+          config.plugins.push(
+            new RspackNxBuildCoordinationPlugin(buildCommand)
+          );
+        }
       }
     }
   }

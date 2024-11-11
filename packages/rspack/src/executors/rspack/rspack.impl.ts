@@ -7,6 +7,7 @@ import * as path from 'path';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
+import { normalizeOptions } from './lib/normalize-options';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
@@ -28,8 +29,16 @@ export default async function* runExecutor(
     force: true,
     recursive: true,
   });
+  const metadata = context.projectsConfigurations.projects[context.projectName];
+  const sourceRoot = metadata.sourceRoot;
+  const normalizedOptions = normalizeOptions(
+    options,
+    context.root,
+    metadata.root,
+    sourceRoot
+  );
 
-  const compiler = await createCompiler(options, context);
+  const compiler = await createCompiler(normalizedOptions, context);
 
   const iterable = createAsyncIterable<{
     success: boolean;
@@ -58,7 +67,11 @@ export default async function* runExecutor(
           }
           next({
             success: !stats.hasErrors(),
-            outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+            outfile: path.resolve(
+              context.root,
+              normalizedOptions.outputPath,
+              'main.js'
+            ),
           });
         }
       );
@@ -90,7 +103,11 @@ export default async function* runExecutor(
           }
           next({
             success: !stats.hasErrors(),
-            outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+            outfile: path.resolve(
+              context.root,
+              normalizedOptions.outputPath,
+              'main.js'
+            ),
           });
           done();
         });

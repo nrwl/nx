@@ -390,6 +390,8 @@ function applyNxDependentConfig(
         test: /\.([jt])sx?$/,
         loader: 'builtin:swc-loader',
         exclude: /node_modules/,
+
+        type: 'javascript/auto',
         options: {
           jsc: {
             parser: {
@@ -407,8 +409,6 @@ function applyNxDependentConfig(
                 useBuiltins: false,
               },
             },
-            type: 'javascript/auto',
-            loose: true,
           },
         },
       },
