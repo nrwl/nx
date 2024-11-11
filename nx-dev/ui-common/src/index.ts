@@ -9,7 +9,6 @@ export * from './lib/default-layout';
 export * from './lib/headers/header';
 export * from './lib/flip-card';
 export * from './lib/footer';
-export * from './lib/selector';
 export * from './lib/sidebar-container';
 export * from './lib/sidebar';
 export * from './lib/plugin-card';
