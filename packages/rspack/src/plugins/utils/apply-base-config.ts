@@ -117,10 +117,6 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    // Use CJS for Node since it has the widest support.
-    scriptType:
-      config.output?.scriptType ??
-      (options.target === 'node' ? undefined : 'module'),
   };
 
   config.watch = options.watch;
