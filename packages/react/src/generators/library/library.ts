@@ -27,7 +27,7 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
-import { updateTsconfigFiles } from '../../utils/ts-solution';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -238,7 +238,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     ]);
   }
 
-  updateTsconfigFiles(host, options.projectRoot, 'tsconfig.lib.json');
+  updateTsconfigFiles(host, options.projectRoot, 'tsconfig.lib.json', {
+    jsx: 'react-jsx',
+    module: 'esnext',
+    moduleResolution: 'bundler',
+  });
 
   if (!options.skipFormat) {
     await formatFiles(host);

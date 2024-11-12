@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { setupTailwindGenerator } from '@nx/react';
 import {
   testingLibraryReactVersion,
@@ -31,6 +30,7 @@ import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { tsLibVersion } from '../../utils/versions';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -40,8 +40,6 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'next', 'application');
-
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(host, schema);
 
@@ -126,6 +124,12 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
+  });
+
+  updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.json', {
+    jsx: 'react-jsx',
+    module: 'esnext',
+    moduleResolution: 'bundler',
   });
 
   return runTasksInSerial(...tasks);

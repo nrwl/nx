@@ -1,18 +1,25 @@
 {
   "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
+    "outDir": "dist",
     "jsx": "preserve",
     <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "plugins": [{ "name": "next" }]
+    "plugins": [{ "name": "next" }]<% if (isUsingTsSolutionSetup) { %>,
+    "paths": {
+      "@/*": ["./src/*"]
+    }<% } %>
   },
   "include": [
     "<%= rootPath %>**/*.ts",

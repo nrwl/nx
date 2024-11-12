@@ -16,6 +16,7 @@ import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const offsetFromRoot = _offsetFromRoot(options.appProjectRoot);
@@ -55,8 +56,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     appContent: createAppJsx(options.projectName),
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,
-
     stylesExt: options.style === 'less' ? options.style : 'css',
+    isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
 
   const generatedAppFilePath = options.src
