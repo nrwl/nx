@@ -130,11 +130,11 @@ export interface NxAppRspackPluginOptions {
    */
   outputHashing?: any;
   /**
-   * Override `output.path` in webpack configuration. This setting is not recommended and exists for backwards compatibility.
+   * Override `output.path` in rspack configuration. This setting is not recommended and exists for backwards compatibility.
    */
   outputPath?: string;
   /**
-   * Override `watchOptions.poll` in webpack configuration. This setting is not recommended and exists for backwards compatibility.
+   * Override `watchOptions.poll` in rspack configuration. This setting is not recommended and exists for backwards compatibility.
    */
   poll?: number;
   /**
@@ -150,7 +150,7 @@ export interface NxAppRspackPluginOptions {
    */
   progress?: boolean;
   /**
-   * Add an additional chunk for the Webpack runtime. Defaults to `true` when `target === 'web'`.
+   * Add an additional chunk for the rspack runtime. Defaults to `true` when `target === 'web'`.
    */
   runtimeChunk?: boolean;
   /**
@@ -194,11 +194,7 @@ export interface NxAppRspackPluginOptions {
    */
   styles?: Array<ExtraEntryPointClass | string>;
   /**
-   * Enables the use of subresource integrity validation.
-   */
-  subresourceIntegrity?: boolean;
-  /**
-   * Override the `target` option in webpack configuration. This setting is not recommended and exists for backwards compatibility.
+   * Override the `target` option in rspack configuration. This setting is not recommended and exists for backwards compatibility.
    */
   target?: string | string[];
   /**

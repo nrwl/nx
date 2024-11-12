@@ -47,10 +47,10 @@ export function composePlugins(
     ): Promise<Configuration> {
       // Rspack may be calling us as a standard config function.
       // Build up Nx context from environment variables.
-      // This is to enable `@nx/webpack/plugin` to work with existing projects.
+      // This is to enable `@nx/rspack/plugin` to work with existing projects.
       if (ctx['env']) {
         ensureNxRspackExecutionContext(ctx);
-        // Build this from scratch since what webpack passes us is the env, not config,
+        // Build this from scratch since what rspack passes us is the env, not config,
         // and `withNX()` creates a new config object anyway.
         config = {};
       }
@@ -97,6 +97,7 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
     // These aren't actually needed since NxRspackPlugin and withNx both support them being undefined.
     assets: undefined,
     outputFileName: undefined,
+    outputPath: undefined,
     rspackConfig: undefined,
   };
   ctx.context ??= {

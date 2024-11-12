@@ -12,6 +12,7 @@ import {
   TrustedBy,
   SolveYourCi,
 } from '@nx/nx-dev/ui-enterprise';
+import { TrialCallout } from '@nx/nx-dev/ui-pricing';
 
 export function Enterprise(): JSX.Element {
   const router = useRouter();
@@ -45,6 +46,9 @@ export function Enterprise(): JSX.Element {
         </div>
         <div className="mt-32 lg:mt-40">
           <MetricsAndCustomers />
+        </div>
+        <div className="mt-32 lg:mt-40">
+          <TrialCallout pageId="enterprise" />
         </div>
         <div className="mt-32 lg:mt-56">
           <ScaleYourPeople />

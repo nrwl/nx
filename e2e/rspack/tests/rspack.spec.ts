@@ -139,11 +139,11 @@ describe('rspack e2e', () => {
     result = runCLI(`build ${app3}`);
     expect(result).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${app3}`)).toHaveLength(2);
+    expect(listFiles(`dist/${app3}`)).toHaveLength(3);
 
     result = runCLI(`build ${app3} --generatePackageJson=true`);
     expect(result).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${app3}`)).toHaveLength(4);
+    expect(listFiles(`dist/${app3}`)).toHaveLength(5);
   }, 200_000);
 });

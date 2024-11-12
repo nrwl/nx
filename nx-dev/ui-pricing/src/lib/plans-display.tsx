@@ -1,13 +1,14 @@
+'use client';
 import { ReactElement } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { TrialCallout } from './trial-callout';
 import Link from 'next/link';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function PlansDisplay(): ReactElement {
   return (
-    <section>
+    <section id="plans" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="mx-auto max-w-4xl text-center">
           <SectionHeading as="h2" variant="display">
@@ -19,7 +20,7 @@ export function PlansDisplay(): ReactElement {
           </SectionHeading>
         </header>
         <div className="mt-20 flow-root">
-          <div className="isolate -mt-16 grid max-w-full grid-cols-1 gap-6 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4 xl:gap-12">
+          <div className="isolate -mt-16 grid max-w-full grid-cols-1 gap-6 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4 xl:gap-8">
             {/*HOBBY*/}
             <div>
               <div className="rounded-lg border-2 border-blue-500 bg-white p-6 dark:border-sky-500 dark:bg-slate-950">
@@ -47,6 +48,13 @@ export function PlansDisplay(): ReactElement {
                     title="Start now"
                     size="default"
                     variant="primary"
+                    onClick={() =>
+                      sendCustomEvent(
+                        'start-hobby-plan-click',
+                        'plans-table',
+                        'pricing-plans'
+                      )
+                    }
                     className="w-full"
                   >
                     Get started
@@ -74,6 +82,13 @@ export function PlansDisplay(): ReactElement {
                         href="/ci/features/remote-cache"
                         target="_blank"
                         title="Learn how Nx Replay easily reduces CI execution time"
+                        onClick={() =>
+                          sendCustomEvent(
+                            'learn-nx-replay-click',
+                            'plans-table',
+                            'pricing-plans'
+                          )
+                        }
                         className="font-medium underline decoration-dotted"
                       >
                         Nx Replay
@@ -91,6 +106,13 @@ export function PlansDisplay(): ReactElement {
                         href="/ci/features/distribute-task-execution"
                         target="_blank"
                         title="Learn how Nx Agents easily scale your CI pipelines"
+                        onClick={() =>
+                          sendCustomEvent(
+                            'learn-nx-agents-click',
+                            'plans-table',
+                            'pricing-plans'
+                          )
+                        }
                         className="font-medium underline decoration-dotted"
                       >
                         Nx Agents
@@ -109,14 +131,16 @@ export function PlansDisplay(): ReactElement {
                 </h4>
               </div>
               <p className="mt-2 text-sm">
-                Scales with your team's needs. Billed on the first of each
-                month.
+                Start free, pay as you grow. Billed on the first of each month.
               </p>
               <p className="mt-4 leading-5">
                 <span className="text-3xl font-semibold text-slate-950 dark:text-white">
                   $19
                 </span>
-                <span className="text-lg"> per Active Contributor¹</span>
+                <span className="text-lg"> per Active Contributor¹</span>{' '}
+                <span className="text-sm font-semibold italic">
+                  (first 5 free)
+                </span>
                 <br />
                 <span className="text-sm">+ usage overages</span>
               </p>
@@ -128,6 +152,13 @@ export function PlansDisplay(): ReactElement {
                   title="Get started"
                   size="default"
                   variant="secondary"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'start-team-plan-click',
+                      'plans-table',
+                      'pricing-plans'
+                    )
+                  }
                   className="w-full"
                 >
                   Get started
@@ -167,6 +198,13 @@ export function PlansDisplay(): ReactElement {
                     href="/nx-cloud#ai-for-your-ci"
                     target="_blank"
                     title="Check our AI integrations and how to use them"
+                    onClick={() =>
+                      sendCustomEvent(
+                        'learn-ai-integrations-click',
+                        'plans-table',
+                        'pricing-plans'
+                      )
+                    }
                     className="font-medium underline decoration-dotted"
                   >
                     AI integrations
@@ -218,8 +256,8 @@ export function PlansDisplay(): ReactElement {
                 </h4>
               </div>
               <p className="mt-2 text-sm">
-                The ultimate Nx toolchain, tailored to your needs of speed.
-                Flexible billing & payment options available.
+                The ultimate Nx toolchain, tailored for speed. Flexible billing
+                & payment options available.
               </p>
               <p className="mt-4 pb-5 leading-5">
                 <span className="text-3xl font-semibold text-slate-950 dark:text-white">
@@ -233,6 +271,13 @@ export function PlansDisplay(): ReactElement {
                   title="Enterprise"
                   size="default"
                   variant="secondary"
+                  onClick={() =>
+                    sendCustomEvent(
+                      'learn-enterprise-click',
+                      'plans-table',
+                      'pricing-plans'
+                    )
+                  }
                   className="w-full"
                 >
                   Learn more
@@ -266,6 +311,13 @@ export function PlansDisplay(): ReactElement {
                       href="/powerpack"
                       target="_blank"
                       title="Check our AI integrations and how to use them"
+                      onClick={() =>
+                        sendCustomEvent(
+                          'learn-nx-powerpack-click',
+                          'plans-table',
+                          'pricing-plans'
+                        )
+                      }
                       className="font-medium underline decoration-dotted"
                     >
                       Nx Powerpack
@@ -316,10 +368,6 @@ export function PlansDisplay(): ReactElement {
               pricing. Prices do not include applicable taxes.
             </p>
           </div>
-        </div>
-
-        <div className="mt-20">
-          <TrialCallout />
         </div>
       </div>
     </section>

@@ -82,7 +82,7 @@ export function shareWorkspaceLibraries(
       pathMappings.reduce(
         (aliases, library) => ({
           ...aliases,
-          // If the library path ends in a wildcard, remove it as webpack can't handle this in resolve.alias
+          // If the library path ends in a wildcard, remove it as rspack can't handle this in resolve.alias
           // e.g. path/to/my/lib/* -> path/to/my/lib
           [library.name]: library.path.replace(/\/\*$/, ''),
         }),
@@ -155,7 +155,7 @@ export function shareWorkspaceLibraries(
                  * library.path is usually in the form of "/Users/username/path/to/Workspace/path/to/library"
                  *
                  * When a wildcard is used in the TS path mappings, we want to get everything after the import to
-                 * re-route the request correctly inline with the webpack resolve.alias
+                 * re-route the request correctly inline with the rspack resolve.alias
                  */
                 join(
                   library.name,

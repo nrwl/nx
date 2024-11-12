@@ -1,3 +1,5 @@
+import { logger } from '@nx/devkit';
+
 export interface HashFormat {
   chunk: string;
   extract: string;
@@ -5,7 +7,18 @@ export interface HashFormat {
   script: string;
 }
 
-export function getOutputHashFormat(option: string, length = 20): HashFormat {
+const MAX_HASH_LENGTH = 16;
+
+export function getOutputHashFormat(
+  option: string,
+  length = MAX_HASH_LENGTH
+): HashFormat {
+  if (length > MAX_HASH_LENGTH) {
+    logger.warn(
+      `Hash format length cannot be longer than ${MAX_HASH_LENGTH}. Using default of ${MAX_HASH_LENGTH}.`
+    );
+    length = MAX_HASH_LENGTH;
+  }
   const hashFormats: { [option: string]: HashFormat } = {
     none: { chunk: '', extract: '', file: '', script: '' },
     media: { chunk: '', extract: '', file: `.[hash:${length}]`, script: '' },

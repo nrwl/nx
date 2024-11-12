@@ -15,7 +15,7 @@ export async function createCompiler(
   },
   context: ExecutorContext
 ): Promise<Compiler | MultiCompiler> {
-  const pathToConfig = path.join(context.root, options.rspackConfig);
+  const pathToConfig = options.rspackConfig;
   let userDefinedConfig: any = {};
   if (options.tsConfig) {
     userDefinedConfig = resolveUserDefinedRspackConfig(

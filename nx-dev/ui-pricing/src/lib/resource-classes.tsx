@@ -17,7 +17,7 @@ const linuxAmd64 = [
   },
   {
     icon: <LinuxIcon aria-hidden="true" className="size-6" />,
-    name: 'Medium plus',
+    name: 'Medium +',
     description: '3 vCPU, 6GB RAM',
     creditCost: 15,
   },

@@ -4,6 +4,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
+import Link from 'next/link';
 import { ReactElement } from 'react';
 
 export function Faq(): ReactElement {
@@ -89,11 +90,11 @@ export function Faq(): ReactElement {
     {
       question: 'What if I need help picking the right plan?',
       answer:
-        'We have a helpful comparison above. If you have additional questions, or these plans don’t fit your needs please reach out to cloud-support@nrwl.io and we will do our best to help.',
+        'We have a helpful comparison above. If you have additional questions, or these plans don’t fit your needs please reach out to https://nx.dev/contact/sales and we will do our best to help.',
     },
     {
       question: 'What if I need more than 70 active contributors?',
-      answer: 'Please reach out to cloud-support@nrwl.io.',
+      answer: 'Please reach out to https://nx.dev/contact/sales',
     },
     {
       question: 'What payment methods do you accept?',
@@ -108,22 +109,20 @@ export function Faq(): ReactElement {
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <header>
             <SectionHeading as="h2" variant="title">
-              Not sure yet? <br /> Have questions?
+              Have questions?
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              Here are the most asked question we condensed for your to get you
-              setup quickly.
+              Check out our most commonly asked questions.
             </SectionHeading>
 
             <p className="text-md mt-4 text-slate-400 dark:text-slate-600">
-              Can’t find the answer you’re looking for? Reach out to our{' '}
-              <a
-                href="mailto:cloud-support@nrwl.io"
-                className="font-medium underline"
+              <Link
+                href="/contact"
+                title="Reach out to the team"
+                className="font-semibold"
               >
-                customer support
-              </a>{' '}
-              team.
+                Can’t find the answer you’re looking for?
+              </Link>
             </p>
           </header>
           <FAQPageJsonLd
