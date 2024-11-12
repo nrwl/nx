@@ -43,7 +43,7 @@ function createTestProject(extraArgs = '') {
   });
 
   execSync(
-    `<%= packageManagerCommands.exec %> --yes <%= cliName %>@e2e ${projectName} ${extraArgs}`,
+    `<%= packageManagerCommands.exec %>${packageManager !== 'pnpm' ? ' --yes' : ''} <%= cliName %>@e2e ${projectName} ${extraArgs}`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',

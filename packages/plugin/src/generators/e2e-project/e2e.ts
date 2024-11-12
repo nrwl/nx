@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
+  detectPackageManager,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -89,11 +90,13 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     join(projectConfiguration.root, 'package.json')
   );
 
+  const packageManager = detectPackageManager();
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
-    packageManagerCommands: getPackageManagerCommand('npm'),
+    packageManagerCommands: getPackageManagerCommand(packageManager),
+    packageManager,
     pluginPackageName,
   });
 }

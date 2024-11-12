@@ -2,6 +2,9 @@ import { execSync } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
+import { env } from 'node:process';
+import { sep } from 'node:path';
+
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
  * we duplicate the helper functions from @nx/workspace in this file.
@@ -139,20 +142,20 @@ export function getPackageManagerVersion(
  * Default to 'npm'
  */
 export function detectInvokedPackageManager(): PackageManager {
-  let detectedPackageManager: PackageManager = 'npm';
-  // mainModule is deprecated since Node 14, fallback for older versions
-  const invoker = require.main || process['mainModule'];
-
-  // default to `npm`
-  if (!invoker) {
-    return detectedPackageManager;
-  }
-  for (const pkgManager of packageManagerList) {
-    if (invoker.path.includes(pkgManager)) {
-      detectedPackageManager = pkgManager;
-      break;
+  if (env.npm_config_user_agent) {
+    for (const pm of packageManagerList) {
+      if (env.npm_config_user_agent.startsWith(`${pm}/`)) {
+        return pm;
+      }
     }
   }
 
-  return detectedPackageManager;
+  if (env.npm_execpath) {
+    for (const pm of packageManagerList) {
+      if (env.npm_execpath.split(sep).includes(pm)) {
+        return pm;
+      }
+    }
+  }
+  return 'npm';
 }
