@@ -36,7 +36,7 @@
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.13.1"
+    "@remix-run/dev": "^2.14.0"
   },
   "publishConfig": {
     "access": "public"

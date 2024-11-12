@@ -477,6 +477,159 @@
               ]
             },
             {
+              "name": "Nx Release",
+              "id": "nx-release",
+              "description": "Recipes for releasing with Nx release.",
+              "itemList": [
+                {
+                  "name": "Get Started with Nx Release",
+                  "id": "get-started-with-nx-release",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
+                },
+                {
+                  "name": "Release Projects Independently",
+                  "id": "release-projects-independently",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-projects-independently"
+                },
+                {
+                  "name": "Automatically Version with Conventional Commits",
+                  "id": "automatically-version-with-conventional-commits",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                },
+                {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
+                },
+                {
+                  "name": "File Based Versioning (Version Plans)",
+                  "id": "file-based-versioning-version-plans",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
+                },
+                {
+                  "name": "Configure Custom Registries",
+                  "id": "configure-custom-registries",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-custom-registries"
+                },
+                {
+                  "name": "Publish in CI/CD",
+                  "id": "publish-in-ci-cd",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
+                },
+                {
+                  "name": "Automate GitHub Releases",
+                  "id": "automate-github-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-github-releases"
+                },
+                {
+                  "name": "Publish Rust Crates",
+                  "id": "publish-rust-crates",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-rust-crates"
+                },
+                {
+                  "name": "Update Your Local Registry Setup to use Nx Release",
+                  "id": "update-local-registry-setup",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/update-local-registry-setup"
+                },
+                {
+                  "name": "Configure Changelog Format",
+                  "id": "configure-changelog-format",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-changelog-format"
+                },
+                {
+                  "name": "Publish a Custom Dist Directory",
+                  "id": "publish-custom-dist-directory",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
+                },
+                {
+                  "name": "Build Before Versioning",
+                  "id": "build-before-versioning",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/build-before-versioning"
+                },
+                {
+                  "name": "Configuring Version Prefix for Dependency Versions",
+                  "id": "configuration-version-prefix",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configuration-version-prefix"
+                }
+              ]
+            },
+            {
+              "name": "Module Federation",
+              "id": "module-federation",
+              "description": "Advanced guides to utilize Module Federation with Nx.",
+              "itemList": [
+                {
+                  "id": "create-a-host",
+                  "name": "How to create a Module Federation Host Application",
+                  "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+                  "file": "shared/recipes/module-federation/creating-a-host"
+                },
+                {
+                  "id": "create-a-remote",
+                  "name": "How to create a Module Federation Remote Application",
+                  "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+                  "file": "shared/recipes/module-federation/creating-a-remote"
+                },
+                {
+                  "id": "federate-a-module",
+                  "name": "How to Federate a Module",
+                  "description": "A guide on how to federate a module in your Nx workspace",
+                  "file": "shared/recipes/module-federation/federate-a-module"
+                }
+              ]
+            },
+            {
+              "name": "Nx Console",
+              "id": "nx-console",
+              "description": "Checkout all the recipes related to Nx Console.",
+              "itemList": [
+                {
+                  "name": "Telemetry",
+                  "id": "console-telemetry",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-telemetry"
+                },
+                {
+                  "name": "Project Details View",
+                  "id": "console-project-details",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-project-details"
+                },
+                {
+                  "name": "Generate Command",
+                  "id": "console-generate-command",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-generate-command"
+                },
+                {
+                  "name": "Run Command",
+                  "id": "console-run-command",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-run-command"
+                },
+                {
+                  "name": "Troubleshooting",
+                  "id": "console-troubleshooting",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-troubleshooting"
+                }
+              ]
+            },
+            {
               "name": "React",
               "id": "react",
               "description": "Advanced guides to adopt Nx in React.",
@@ -795,31 +948,6 @@
               ]
             },
             {
-              "name": "Module Federation",
-              "id": "module-federation",
-              "description": "Advanced guides to utilize Module Federation with Nx.",
-              "itemList": [
-                {
-                  "id": "create-a-host",
-                  "name": "How to create a Module Federation Host Application",
-                  "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
-                  "file": "shared/recipes/module-federation/creating-a-host"
-                },
-                {
-                  "id": "create-a-remote",
-                  "name": "How to create a Module Federation Remote Application",
-                  "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
-                  "file": "shared/recipes/module-federation/creating-a-remote"
-                },
-                {
-                  "id": "federate-a-module",
-                  "name": "How to Federate a Module",
-                  "description": "A guide on how to federate a module in your Nx workspace",
-                  "file": "shared/recipes/module-federation/federate-a-module"
-                }
-              ]
-            },
-            {
               "name": "Enforce Module Boundaries",
               "id": "enforce-module-boundaries",
               "description": "Configuring the enforce module boundaries rule",
@@ -943,134 +1071,6 @@
                   "id": "flat-config",
                   "tags": ["eslint", "flat config"],
                   "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint"
-                }
-              ]
-            },
-            {
-              "name": "Nx Console",
-              "id": "nx-console",
-              "description": "Checkout all the recipes related to Nx Console.",
-              "itemList": [
-                {
-                  "name": "Telemetry",
-                  "id": "console-telemetry",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-telemetry"
-                },
-                {
-                  "name": "Project Details View",
-                  "id": "console-project-details",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-project-details"
-                },
-                {
-                  "name": "Generate Command",
-                  "id": "console-generate-command",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-generate-command"
-                },
-                {
-                  "name": "Run Command",
-                  "id": "console-run-command",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-run-command"
-                },
-                {
-                  "name": "Troubleshooting",
-                  "id": "console-troubleshooting",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-troubleshooting"
-                }
-              ]
-            },
-            {
-              "name": "Nx Release",
-              "id": "nx-release",
-              "description": "Recipes for releasing with Nx release.",
-              "itemList": [
-                {
-                  "name": "Get Started with Nx Release",
-                  "id": "get-started-with-nx-release",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
-                },
-                {
-                  "name": "Release Projects Independently",
-                  "id": "release-projects-independently",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/release-projects-independently"
-                },
-                {
-                  "name": "Automatically Version with Conventional Commits",
-                  "id": "automatically-version-with-conventional-commits",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
-                },
-                {
-                  "name": "Customize Conventional Commit Types",
-                  "id": "customize-conventional-commit-types",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
-                },
-                {
-                  "name": "File Based Versioning (Version Plans)",
-                  "id": "file-based-versioning-version-plans",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
-                },
-                {
-                  "name": "Configure Custom Registries",
-                  "id": "configure-custom-registries",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/configure-custom-registries"
-                },
-                {
-                  "name": "Publish in CI/CD",
-                  "id": "publish-in-ci-cd",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
-                },
-                {
-                  "name": "Automate GitHub Releases",
-                  "id": "automate-github-releases",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/automate-github-releases"
-                },
-                {
-                  "name": "Publish Rust Crates",
-                  "id": "publish-rust-crates",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-rust-crates"
-                },
-                {
-                  "name": "Update Your Local Registry Setup to use Nx Release",
-                  "id": "update-local-registry-setup",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/update-local-registry-setup"
-                },
-                {
-                  "name": "Configure Changelog Format",
-                  "id": "configure-changelog-format",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/configure-changelog-format"
-                },
-                {
-                  "name": "Publish a Custom Dist Directory",
-                  "id": "publish-custom-dist-directory",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
-                },
-                {
-                  "name": "Build Before Versioning",
-                  "id": "build-before-versioning",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/build-before-versioning"
-                },
-                {
-                  "name": "Configuring Version Prefix for Dependency Versions",
-                  "id": "configuration-version-prefix",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/configuration-version-prefix"
                 }
               ]
             }

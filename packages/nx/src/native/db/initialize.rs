@@ -4,7 +4,6 @@ use rusqlite::{Connection, OpenFlags};
 use std::fs::{remove_file, File};
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
-use crate::native::utils::ci::is_ci;
 
 pub(super) struct LockFile {
     file: File,
@@ -100,25 +99,13 @@ fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Re
 }
 
 fn open_database_connection(db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let conn = if cfg!(target_family = "unix") && is_ci() {
-        trace!("Opening connection with unix-dotfile");
-        Connection::open_with_flags_and_vfs(
-            db_path,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_URI
-                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-            "unix-dotfile",
-        )
-    } else {
-        Connection::open_with_flags(
-            db_path,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_URI
-                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-        )
-    };
+    let conn = Connection::open_with_flags(
+        db_path,
+        OpenFlags::SQLITE_OPEN_READ_WRITE
+            | OpenFlags::SQLITE_OPEN_CREATE
+            | OpenFlags::SQLITE_OPEN_URI
+            | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
+    );
 
     conn.map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
         .map(NxDbConnection::new)
@@ -139,7 +126,6 @@ fn configure_database(connection: &NxDbConnection) -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-
     use crate::native::logger::enable_logger;
 
     use super::*;

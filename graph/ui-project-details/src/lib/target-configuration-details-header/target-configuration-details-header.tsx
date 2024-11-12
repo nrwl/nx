@@ -166,9 +166,6 @@ export const TargetConfigurationDetailsHeader = ({
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
               onClick={(e) => {
-                if (isCollasped) {
-                  return;
-                }
                 e.stopPropagation();
                 onViewInTaskGraph({ projectName, targetName });
               }}
