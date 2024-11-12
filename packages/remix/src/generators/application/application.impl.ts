@@ -74,7 +74,12 @@ export async function remixApplicationGeneratorInternal(
       skipFormat: true,
       addPlugin: true,
     }),
-    await jsInitGenerator(tree, { skipFormat: true }),
+    await jsInitGenerator(tree, {
+      skipFormat: true,
+      addTsPlugin:
+        process.env.NX_ADD_PLUGINS !== 'false' &&
+        process.env.NX_ADD_TS_PLUGIN !== 'false',
+    }),
   ];
 
   addProjectConfiguration(tree, options.projectName, {

@@ -49,6 +49,9 @@ export async function reactNativeApplicationGeneratorInternal(
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
+    addTsPlugin:
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      process.env.NX_ADD_TS_PLUGIN !== 'false',
   });
   tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
