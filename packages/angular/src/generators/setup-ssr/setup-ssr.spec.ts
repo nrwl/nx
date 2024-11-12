@@ -81,6 +81,7 @@ describe('setupSSR', () => {
         import {
           BrowserModule,
           provideClientHydration,
+          withEventReplay,
         } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
@@ -90,7 +91,7 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [provideClientHydration()],
+          providers: [provideClientHydration(withEventReplay())],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -269,7 +270,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
-        import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
@@ -281,7 +282,7 @@ describe('setupSSR', () => {
             BrowserModule,
             RouterModule.forRoot(appRoutes),
           ],
-          providers: [provideClientHydration()],
+          providers: [provideClientHydration(withEventReplay())],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -444,7 +445,7 @@ describe('setupSSR', () => {
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
-      import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
+      import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
       import { appRoutes } from './app.routes';
@@ -456,7 +457,7 @@ describe('setupSSR', () => {
           BrowserModule,
           RouterModule.forRoot(appRoutes),
         ],
-        providers: [provideClientHydration()],
+        providers: [provideClientHydration(withEventReplay())],
         bootstrap: [AppComponent],
       })
       export class AppModule {}
@@ -486,10 +487,10 @@ describe('setupSSR', () => {
       "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
-      import { provideClientHydration } from '@angular/platform-browser';
+      import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
       };
       "
     `);
@@ -615,6 +616,94 @@ describe('setupSSR', () => {
         backwardCompatibleVersions.angularV17.typesExpressVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
+    });
+
+    it('should add hydration correctly for NgModule apps', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '17.2.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, {
+        project: 'app1',
+        hydration: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes),
+          ],
+          providers: [provideClientHydration()],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
+    });
+
+    it('should add hydration correctly to standalone', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '17.2.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, {
+        project: 'app1',
+        hydration: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { ApplicationConfig } from '@angular/core';
+        import { provideRouter } from '@angular/router';
+        import { appRoutes } from './app.routes';
+        import { provideClientHydration } from '@angular/platform-browser';
+
+        export const appConfig: ApplicationConfig = {
+          providers: [provideClientHydration(),provideRouter(appRoutes) ]
+        };
+        "
+      `);
+
+      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+        import { provideServerRendering } from '@angular/platform-server';
+        import { appConfig } from './app.config';
+
+        const serverConfig: ApplicationConfig = {
+          providers: [
+            provideServerRendering()
+          ]
+        };
+
+        export const config = mergeApplicationConfig(appConfig, serverConfig);
+        "
+      `);
     });
   });
 });

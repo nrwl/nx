@@ -35,10 +35,10 @@ export const appConfig: ApplicationConfig = {
       "import { ApplicationConfig } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
-      import { provideClientHydration } from '@angular/platform-browser';
+      import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(),provideRouter(appRoutes)],
+        providers: [provideClientHydration(withEventReplay()),provideRouter(appRoutes)],
       };
       "
     `);
@@ -98,7 +98,7 @@ export class AppModule {}
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
-      import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
+      import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
       import { appRoutes } from './app.routes';
@@ -108,7 +108,7 @@ export class AppModule {}
         declarations: [AppComponent, NxWelcomeComponent],
         imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
         bootstrap: [AppComponent],
-        providers: [provideClientHydration()],
+        providers: [provideClientHydration(withEventReplay())],
       })
       export class AppModule {}
       "
