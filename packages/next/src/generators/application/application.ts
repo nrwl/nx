@@ -127,7 +127,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   });
 
   updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.json', {
-    jsx: 'react-jsx',
+    jsx: 'preserve',
     module: 'esnext',
     moduleResolution: 'bundler',
   });
