@@ -72,6 +72,9 @@ describe('component Generator', () => {
     expect(
       tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
     ).toContain('export default class ExampleComponent {}');
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.spec.ts', 'utf-8')
+    ).toContain(`import ExampleComponent from './example.component';`);
   });
 
   it('should not generate test file when --skip-tests=true', async () => {
