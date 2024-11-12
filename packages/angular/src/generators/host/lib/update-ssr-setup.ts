@@ -12,6 +12,7 @@ import {
   moduleFederationNodeVersion,
   typesCorsVersion,
 } from '../../../utils/versions';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
 export async function updateSsrSetup(
@@ -31,10 +32,14 @@ export async function updateSsrSetup(
     "import('./src/main.server');"
   );
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
   generateFiles(tree, join(__dirname, '../files/common'), project.root, {
     appName,
     browserBundleOutput: project.targets.build.options.outputPath,
     standalone: options.standalone,
+    commonEngineEntryPoint:
+      angularMajorVersion >= 19 ? '@angular/ssr/node' : '@angular/ssr',
     tmpl: '',
   });
 
