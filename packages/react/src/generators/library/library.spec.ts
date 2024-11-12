@@ -931,6 +931,9 @@ module.exports = withNx(
       expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
             "outDir": "../dist/out-tsc",
             "types": [
               "node",
@@ -1002,7 +1005,9 @@ module.exports = withNx(
             "src/**/*.d.ts",
           ],
           "references": [
-            "./tsconfig.lib.json",
+            {
+              "path": "./tsconfig.lib.json",
+            },
           ],
         }
       `);
