@@ -95,6 +95,11 @@ export async function configurationGeneratorInternal(
     };
 
     if (isTsSolutionSetup) {
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude = ['dist', 'eslint.config.js'];
+      }
+
       tsconfig.compilerOptions.outDir = 'dist';
       tsconfig.compilerOptions.tsBuildInfoFile = 'dist/tsconfig.tsbuildinfo';
 
@@ -103,11 +108,6 @@ export async function configurationGeneratorInternal(
           // add the project tsconfig to the workspace root tsconfig.json references
           json.references ??= [];
           json.references.push({ path: './' + projectConfig.root });
-          // skip eslint from typechecking since it may extend from root file that is outside of rootDir
-          if (options.linter === 'eslint') {
-            json.exclude ??= [];
-            json.exclude.push('dist', 'eslint.config.js');
-          }
           return json;
         });
       }
