@@ -168,6 +168,16 @@ async function createNodesInternal(
     return {};
   }
 
+  // Do not create project for Next.js projects since they are not compatible with
+  // project references and typecheck will fail.
+  if (
+    !siblingFiles.includes('next.config.js') ||
+    !siblingFiles.includes('next.config.cjs') ||
+    !siblingFiles.includes('next.config.mjs')
+  ) {
+    return {};
+  }
+
   /**
    * The cache key is composed by:
    * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
