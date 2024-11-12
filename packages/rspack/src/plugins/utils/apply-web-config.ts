@@ -83,7 +83,7 @@ export function applyWebConfig(
   }
 
   const minimizer: RspackPluginInstance[] = [];
-  if (stylesOptimization) {
+  if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
         test: /\.(?:css|scss|sass|less|styl)$/,
@@ -363,41 +363,43 @@ export function applyWebConfig(
     }
   });
 
-  config.optimization = {
-    ...(config.optimization ?? {}),
-    minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
-    emitOnErrors: false,
-    moduleIds: 'deterministic' as const,
-    runtimeChunk: options.runtimeChunk ? { name: 'runtime' } : false,
-    splitChunks: {
-      defaultSizeTypes:
-        config.optimization?.splitChunks !== false
-          ? config.optimization?.splitChunks?.defaultSizeTypes
-          : ['...'],
-      maxAsyncRequests: Infinity,
-      cacheGroups: {
-        default: !!options.commonChunk && {
-          chunks: 'async' as const,
-          minChunks: 2,
-          priority: 10,
+  config.optimization = !isProd
+    ? undefined
+    : {
+        ...(config.optimization ?? {}),
+        minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
+        emitOnErrors: false,
+        moduleIds: 'deterministic' as const,
+        runtimeChunk: options.runtimeChunk ? { name: 'runtime' } : false,
+        splitChunks: {
+          defaultSizeTypes:
+            config.optimization?.splitChunks !== false
+              ? config.optimization?.splitChunks?.defaultSizeTypes
+              : ['...'],
+          maxAsyncRequests: Infinity,
+          cacheGroups: {
+            default: !!options.commonChunk && {
+              chunks: 'async' as const,
+              minChunks: 2,
+              priority: 10,
+            },
+            common: !!options.commonChunk && {
+              name: 'common',
+              chunks: 'async' as const,
+              minChunks: 2,
+              enforce: true,
+              priority: 5,
+            },
+            vendors: false as const,
+            vendor: !!options.vendorChunk && {
+              name: 'vendor',
+              chunks: (chunk) => chunk.name === 'main',
+              enforce: true,
+              test: /[\\/]node_modules[\\/]/,
+            },
+          },
         },
-        common: !!options.commonChunk && {
-          name: 'common',
-          chunks: 'async' as const,
-          minChunks: 2,
-          enforce: true,
-          priority: 5,
-        },
-        vendors: false as const,
-        vendor: !!options.vendorChunk && {
-          name: 'vendor',
-          chunks: (chunk) => chunk.name === 'main',
-          enforce: true,
-          test: /[\\/]node_modules[\\/]/,
-        },
-      },
-    },
-  };
+      };
 
   config.resolve.mainFields = ['browser', 'module', 'main'];
 

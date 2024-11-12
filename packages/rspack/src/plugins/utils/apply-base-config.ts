@@ -20,12 +20,12 @@ import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 
-const IGNORED_WEBPACK_WARNINGS = [
+const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
   /could not find any license/i,
 ];
 
-const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
+const extensions = ['...', '.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
@@ -46,6 +46,7 @@ export function applyBaseConfig(
   options.fileReplacements ??= [];
   options.memoryLimit ??= 2048;
   options.transformers ??= [];
+  options.progress ??= true;
 
   applyNxIndependentConfig(options, config);
 
@@ -59,6 +60,8 @@ function applyNxIndependentConfig(
   options: NormalizedNxAppRspackPluginOptions,
   config: Partial<RspackOptionsNormalized | Configuration>
 ): void {
+  const isProd =
+    process.env.NODE_ENV === 'production' || options.mode === 'production';
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target as 'node' | 'web';
@@ -135,41 +138,43 @@ function applyNxIndependentConfig(
 
   config.ignoreWarnings = [
     (x) =>
-      IGNORED_WEBPACK_WARNINGS.some((r) =>
+      IGNORED_RSPACK_WARNINGS.some((r) =>
         typeof x === 'string' ? r.test(x) : r.test(x.message)
       ),
   ];
 
-  config.optimization = {
-    ...(config.optimization ?? {}),
-    sideEffects: true,
-    minimize:
-      typeof options.optimization === 'object'
-        ? !!options.optimization.scripts
-        : !!options.optimization,
-    minimizer: [
-      new SwcJsMinimizerRspackPlugin({
-        extractComments: false,
-        minimizerOptions: {
-          module: true,
-          mangle: {
-            keep_classnames: true,
-          },
-          format: {
-            ecma: getTerserEcmaVersion(
-              path.join(options.root, options.projectRoot)
-            ),
-            ascii_only: true,
-            comments: false,
-            webkit: true,
-            safari10: true,
-          },
-        },
-      }),
-    ],
-    runtimeChunk: false,
-    concatenateModules: true,
-  };
+  config.optimization = !isProd
+    ? undefined
+    : {
+        ...(config.optimization ?? {}),
+        sideEffects: true,
+        minimize:
+          typeof options.optimization === 'object'
+            ? !!options.optimization.scripts
+            : !!options.optimization,
+        minimizer: [
+          new SwcJsMinimizerRspackPlugin({
+            extractComments: false,
+            minimizerOptions: {
+              module: true,
+              mangle: {
+                keep_classnames: true,
+              },
+              format: {
+                ecma: getTerserEcmaVersion(
+                  path.join(options.root, options.projectRoot)
+                ),
+                ascii_only: true,
+                comments: false,
+                webkit: true,
+                safari10: true,
+              },
+            },
+          }),
+        ],
+        runtimeChunk: false,
+        concatenateModules: true,
+      };
 
   config.stats = {
     hash: true,
