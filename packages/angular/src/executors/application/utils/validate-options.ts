@@ -71,4 +71,12 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
       );
     }
   }
+
+  if (lt(angularVersion, '19.0.0')) {
+    if (options.outputMode) {
+      throw new Error(
+        `The "outputMode" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
 }
