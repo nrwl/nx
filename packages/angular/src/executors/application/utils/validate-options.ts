@@ -84,5 +84,23 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
         `The "stylePreprocessorOptions.sass" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
+
+    if (typeof options.ssr === 'object' && options.ssr?.experimentalPlatform) {
+      throw new Error(
+        `The "ssr.experimentalPlatform" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+
+    if (options.security !== undefined) {
+      throw new Error(
+        `The "security" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+
+    if (typeof options.server === 'boolean' && options.server === false) {
+      throw new Error(
+        `The "false" value for the "server" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
   }
 }
