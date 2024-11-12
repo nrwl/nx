@@ -90,7 +90,6 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
   const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
   const projectGraph = readCachedProjectGraph();
   const projectNode = projectGraph.nodes[projectName];
-  console.log('>>>DBG>>>', projectNode, projectName, projectNode.data.root);
   ctx.options ??= {
     root: workspaceRoot,
     projectRoot: projectNode.data.root,

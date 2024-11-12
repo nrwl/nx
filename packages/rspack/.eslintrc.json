@@ -40,9 +40,7 @@
               // Imported types only
               "@module-federation/sdk",
               "@module-federation/enhanced",
-              "css-loader",
-              // required by webpack-subresource-integrity
-              "webpack"
+              "css-loader"
             ]
           }
         ]

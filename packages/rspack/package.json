@@ -31,7 +31,6 @@
     "@rspack/core": "^1.0.4",
     "@rspack/dev-server": "^1.0.4",
     "@rspack/plugin-react-refresh": "^1.0.0",
-    "webpack": "^5.80.0",
     "autoprefixer": "^10.4.9",
     "browserslist": "^4.21.4",
     "chalk": "~4.1.0",
@@ -51,8 +50,7 @@
     "postcss-loader": "^8.1.1",
     "postcss": "^8.4.38",
     "tslib": "^2.3.0",
-    "webpack-node-externals": "^3.0.0",
-    "webpack-subresource-integrity": "^5.1.0"
+    "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "~0.6.0",

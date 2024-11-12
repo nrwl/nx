@@ -194,10 +194,6 @@ export interface NxAppRspackPluginOptions {
    */
   styles?: Array<ExtraEntryPointClass | string>;
   /**
-   * Enables the use of subresource integrity validation.
-   */
-  subresourceIntegrity?: boolean;
-  /**
    * Override the `target` option in rspack configuration. This setting is not recommended and exists for backwards compatibility.
    */
   target?: string | string[];

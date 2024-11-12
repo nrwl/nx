@@ -10,7 +10,6 @@ import {
 } from '@rspack/core';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import { getOutputHashFormat } from './hash-format';
 import { normalizeExtraEntryPoints } from './normalize-entry';
 import {
@@ -69,17 +68,13 @@ export function applyWebConfig(
     plugins.push(
       new HtmlRspackPlugin({
         template: options.index,
-        sri: options.subresourceIntegrity ? 'sha256' : undefined,
+        sri: 'sha256',
         ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
         ...(config.output?.scriptType === 'module'
           ? { scriptLoading: 'module' }
           : {}),
       })
     );
-  }
-
-  if (options.subresourceIntegrity) {
-    plugins.push(new SubresourceIntegrityPlugin() as any);
   }
 
   const minimizer: RspackPluginInstance[] = [];
@@ -341,10 +336,8 @@ export function applyWebConfig(
 
   config.output = {
     ...(config.output ?? {}),
-    assetModuleFilename: '[name].[contenthash:20][ext]',
-    crossOriginLoading: options.subresourceIntegrity
-      ? ('anonymous' as const)
-      : (false as const),
+    assetModuleFilename: '[name].[contenthash:16][ext]',
+    crossOriginLoading: 'anonymous',
   };
 
   // In case users customize their rspack config with unsupported entry.

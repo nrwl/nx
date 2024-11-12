@@ -12,7 +12,6 @@ export interface WithWebOptions {
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
   styles?: Array<ExtraEntryPointClass | string>;
-  subresourceIntegrity?: boolean;
   stylePreprocessorOptions?: {
     includePaths?: string[];
   };
