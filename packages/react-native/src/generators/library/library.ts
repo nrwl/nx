@@ -32,7 +32,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -48,7 +48,13 @@ export async function reactNativeLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'library');
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -57,13 +63,6 @@ export async function reactNativeLibraryGeneratorInternal(
     );
   }
 
-  const tasks: GeneratorCallback[] = [];
-
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
@@ -111,6 +110,19 @@ export async function reactNativeLibraryGeneratorInternal(
       ),
     ]);
   }
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   if (!options.skipFormat) {
     await formatFiles(host);

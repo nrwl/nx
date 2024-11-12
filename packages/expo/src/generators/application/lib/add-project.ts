@@ -1,14 +1,18 @@
 import {
   addProjectConfiguration,
+  joinPathFragments,
   ProjectConfiguration,
   readNxJson,
   TargetConfiguration,
   Tree,
+  writeJson,
 } from '@nx/devkit';
 
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -26,12 +30,23 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  addProjectConfiguration(
-    host,
-    options.projectName,
-    projectConfiguration,
-    options.standaloneConfig
-  );
+  if (isUsingTsSolutionSetup(host)) {
+    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
+      name: getImportPath(host, options.name),
+      version: '0.0.1',
+      private: true,
+      nx: {
+        name: options.name,
+      },
+    });
+  } else {
+    addProjectConfiguration(
+      host,
+      options.projectName,
+      projectConfiguration,
+      options.standaloneConfig
+    );
+  }
 }
 
 function getTargets(options: NormalizedSchema) {

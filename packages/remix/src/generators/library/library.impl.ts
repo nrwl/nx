@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, GeneratorCallback, runTasksInSerial } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { libraryGenerator } from '@nx/react';
 import {
   addTsconfigEntryPoints,
@@ -10,6 +10,7 @@ import {
   updateBuildableConfig,
 } from './lib';
 import type { NxRemixGeneratorSchema } from './schema';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -22,10 +23,14 @@ export async function remixLibraryGeneratorInternal(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'remix', 'library');
-
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);
+
+  const jsInitTask = await jsInitGenerator(tree, {
+    js: options.js,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const libGenTask = await libraryGenerator(tree, {
     name: options.projectName,
@@ -53,6 +58,18 @@ export async function remixLibraryGeneratorInternal(
   if (options.buildable) {
     updateBuildableConfig(tree, options.projectName);
   }
+
+  updateTsconfigFiles(
+    tree,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

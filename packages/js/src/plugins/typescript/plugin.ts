@@ -171,9 +171,9 @@ async function createNodesInternal(
   // Do not create project for Next.js projects since they are not compatible with
   // project references and typecheck will fail.
   if (
-    !siblingFiles.includes('next.config.js') ||
-    !siblingFiles.includes('next.config.cjs') ||
-    !siblingFiles.includes('next.config.mjs')
+    siblingFiles.includes('next.config.js') ||
+    siblingFiles.includes('next.config.cjs') ||
+    siblingFiles.includes('next.config.mjs')
   ) {
     return {};
   }

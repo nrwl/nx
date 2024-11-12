@@ -238,11 +238,19 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     ]);
   }
 
-  updateTsconfigFiles(host, options.projectRoot, 'tsconfig.lib.json', {
-    jsx: 'react-jsx',
-    module: 'esnext',
-    moduleResolution: 'bundler',
-  });
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   if (!options.skipFormat) {
     await formatFiles(host);

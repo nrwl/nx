@@ -1,6 +1,13 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { joinPathFragments, readJson, readNxJson, type Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readJson,
+  readNxJson,
+  type Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 
 import * as devkitExports from 'nx/src/devkit-exports';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -305,6 +312,173 @@ describe('Remix Application', () => {
           tree.read(`${appDir}-e2e/playwright.config.ts`, 'utf-8')
         ).toMatchSnapshot();
       });
+    });
+  });
+
+  describe('TS solution setup', () => {
+    it('should add project references when using TS solution', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'playwright',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "esModuleInterop": true,
+            "forceConsistentCasingInFileNames": true,
+            "isolatedModules": true,
+            "jsx": "react-jsx",
+            "lib": [
+              "DOM",
+              "DOM.Iterable",
+              "ES2019",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "dist",
+            "resolveJsonModule": true,
+            "skipLibCheck": true,
+            "strict": true,
+            "target": "ES2022",
+            "types": [
+              "@remix-run/node",
+              "vite/client",
+            ],
+          },
+          "exclude": [
+            "tests/**/*.spec.ts",
+            "tests/**/*.test.ts",
+            "tests/**/*.spec.tsx",
+            "tests/**/*.test.tsx",
+            "tests/**/*.spec.js",
+            "tests/**/*.test.js",
+            "tests/**/*.spec.jsx",
+            "tests/**/*.test.jsx",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "app/**/*.ts",
+            "app/**/*.tsx",
+            "app/**/*.js",
+            "app/**/*.jsx",
+            "**/.server/**/*.ts",
+            "**/.server/**/*.tsx",
+            "**/.client/**/*.ts",
+            "**/.client/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "../dist/out-tsc",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "vite.config.ts",
+            "vitest.config.ts",
+            "app/**/*.ts",
+            "app/**/*.tsx",
+            "app/**/*.js",
+            "app/**/*.jsx",
+            "tests/**/*.spec.ts",
+            "tests/**/*.test.ts",
+            "tests/**/*.spec.tsx",
+            "tests/**/*.test.tsx",
+            "tests/**/*.spec.js",
+            "tests/**/*.test.js",
+            "tests/**/*.spec.jsx",
+            "tests/**/*.test.jsx",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "dist",
+            "sourceMap": false,
+            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+          },
+          "exclude": [
+            "dist",
+            "eslint.config.js",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "**/*.ts",
+            "**/*.js",
+            "playwright.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.spec.js",
+            "src/**/*.test.ts",
+            "src/**/*.test.js",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "../myapp",
+            },
+          ],
+        }
+      `);
     });
   });
 });

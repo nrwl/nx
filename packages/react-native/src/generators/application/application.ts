@@ -25,6 +25,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -126,6 +127,22 @@ export async function reactNativeApplicationGeneratorInternal(
       ],
     });
   }
+
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      noUnusedLocals: false,
+      lib: ['dom'],
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   if (!options.skipFormat) {
     await formatFiles(host);

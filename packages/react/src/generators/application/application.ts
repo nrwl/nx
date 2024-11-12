@@ -348,18 +348,18 @@ export async function applicationGeneratorInternal(
     );
   }
 
+  updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.app.json', {
+    jsx: 'react-jsx',
+    module: 'esnext',
+    moduleResolution: 'bundler',
+  });
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
-  });
-
-  updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.app.json', {
-    jsx: 'react-jsx',
-    module: 'esnext',
-    moduleResolution: 'bundler',
   });
 
   return runTasksInSerial(...tasks);

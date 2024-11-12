@@ -105,7 +105,8 @@ export function updateTsconfigFiles(
   tree: Tree,
   projectRoot: string,
   runtimeTsconfigFileName: string,
-  compilerOptions: Record<string, string>
+  compilerOptions: Record<string, string | boolean | string[]>,
+  exclude: string[] = []
 ) {
   if (!isUsingTsSolutionSetup(tree)) return;
 
@@ -118,10 +119,20 @@ export function updateTsconfigFiles(
   if (tree.exists(tsconfig)) {
     updateJson(tree, tsconfig, (json) => {
       json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+
       json.compilerOptions = {
+        outDir: 'dist',
         ...json.compilerOptions,
         ...compilerOptions,
       };
+
+      const excludeSet: Set<string> = json.exclude
+        ? new Set(['dist', ...json.exclude, ...exclude])
+        : new Set(exclude);
+      json.exclude = Array.from(excludeSet);
+
+      // This is not compatible with TS solution setup.
+      delete json.compilerOptions.noEmit;
 
       return json;
     });

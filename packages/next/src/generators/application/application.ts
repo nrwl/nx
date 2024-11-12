@@ -118,18 +118,26 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     );
   }
 
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.json',
+    {
+      jsx: 'preserve',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
-  });
-
-  updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.json', {
-    jsx: 'preserve',
-    module: 'esnext',
-    moduleResolution: 'bundler',
   });
 
   return runTasksInSerial(...tasks);

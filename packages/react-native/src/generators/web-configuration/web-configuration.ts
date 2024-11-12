@@ -12,7 +12,11 @@ import {
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
 
-import { nxVersion, reactNativeWebVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  reactNativeWebVersion,
+  typesReactVersion,
+} from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
   createBuildTarget,
@@ -76,6 +80,16 @@ export async function webConfigurationGenerator(
       }
     );
   }
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@types/react-dom': typesReactVersion,
+      }
+    )
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

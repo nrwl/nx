@@ -415,8 +415,10 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.NPM ||
     ((options.preset === Preset.TS ||
-      options.preset === Preset.ReactMonorepo ||
+      options.preset === Preset.Expo ||
       options.preset === Preset.NextJs ||
+      options.preset === Preset.ReactMonorepo ||
+      options.preset === Preset.ReactNative ||
       options.preset === Preset.RemixMonorepo) &&
       process.env.NX_ADD_PLUGINS !== 'false' &&
       process.env.NX_ADD_TS_PLUGIN !== 'false')

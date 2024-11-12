@@ -44,7 +44,10 @@ import {
   addViteTempFilesToGitIgnore,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -127,6 +130,15 @@ export async function remixApplicationGeneratorInternal(
     vars
   );
 
+  if (isUsingTsSolution) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, 'files/ts-solution'),
+      options.projectRoot,
+      vars
+    );
+  }
+
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
@@ -195,7 +207,7 @@ export async function remixApplicationGeneratorInternal(
         addPlugin: true,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
-      if (projectConfig.targets['test']?.options) {
+      if (projectConfig.targets?.['test']?.options) {
         projectConfig.targets['test'].options.passWithNoTests = true;
         updateProjectConfiguration(tree, options.projectName, projectConfig);
       }
@@ -347,6 +359,20 @@ export default {...nxPreset};
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  updateTsconfigFiles(
+    tree,
+    options.projectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
