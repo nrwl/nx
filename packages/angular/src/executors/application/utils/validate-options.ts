@@ -78,5 +78,11 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
         `The "outputMode" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
+
+    if (options.stylePreprocessorOptions?.sass) {
+      throw new Error(
+        `The "stylePreprocessorOptions.sass" option requires Angular version 19.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
   }
 }
