@@ -106,6 +106,9 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/vite/** @nrwl/nx-js-reviewers
 /e2e/vite/** @nrwl/nx-js-reviewers
 
+## Module Federation
+/packages/module-federation/** @nrwl/nx-js-reviewers
+
 ## Tools
 /docs/generated/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
