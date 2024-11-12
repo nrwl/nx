@@ -514,6 +514,22 @@ describe('component Generator', () => {
     expect(indexSource).toBe('');
   });
 
+  it('should error when the class name is invalid', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+
+    await expect(
+      componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        name: '404',
+      })
+    ).rejects.toThrow('Class name "404Component" is invalid.');
+  });
+
   describe('--module', () => {
     it.each([
       './lib.module.ts',
@@ -754,10 +770,10 @@ export class LibModule {}
     it('should error when name starts with a digit', async () => {
       await expect(
         componentGenerator(tree, {
-          path: 'lib1/src/lib/1-one/1-one',
-          prefix: 'foo',
+          path: 'lib1/src/lib/one/one',
+          prefix: '1',
         })
-      ).rejects.toThrow('The selector "foo-1-one" is invalid.');
+      ).rejects.toThrow('The selector "1-one" is invalid.');
     });
 
     it('should allow dash in selector before a number', async () => {
