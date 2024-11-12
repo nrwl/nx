@@ -1,5 +1,11 @@
 import type { Metadata } from 'next';
-import { Faq, Oss, ResourceClasses, PlansDisplay } from '@nx/nx-dev/ui-pricing';
+import {
+  Faq,
+  Oss,
+  ResourceClasses,
+  PlansDisplay,
+  TrialCallout,
+} from '@nx/nx-dev/ui-pricing';
 import {
   CallToAction,
   DefaultLayout,
@@ -30,12 +36,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PricingPageV2() {
+export default function PricingPage() {
   return (
     <DefaultLayout>
       <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <TrialCallout pageId="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
         <ResourceClasses />
