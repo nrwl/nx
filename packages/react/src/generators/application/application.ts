@@ -23,11 +23,8 @@ import {
 } from '@nx/devkit';
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import {
-  babelLoaderVersion,
-  nxRspackVersion,
-  nxVersion,
-} from '../../utils/versions';
+import { babelLoaderVersion, nxVersion } from '../../utils/versions';
+import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -164,10 +161,7 @@ export async function applicationGeneratorInternal(
       tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
     }
   } else if (options.bundler === 'rspack') {
-    const { rspackInitGenerator } = ensurePackage(
-      '@nx/rspack',
-      nxRspackVersion
-    );
+    const { rspackInitGenerator } = ensurePackage('@nx/rspack', nxVersion);
     const rspackInitTask = await rspackInitGenerator(host, {
       ...options,
       addPlugin: false,
@@ -236,6 +230,26 @@ export async function applicationGeneratorInternal(
       },
       false
     );
+  } else if (options.bundler === 'rspack') {
+    const { configurationGenerator } = ensurePackage('@nx/rspack', nxVersion);
+    const rspackTask = await configurationGenerator(host, {
+      project: options.projectName,
+      main: joinPathFragments(
+        options.appProjectRoot,
+        maybeJs(
+          {
+            js: options.js,
+            useJsx: true,
+          },
+          `src/main.tsx`
+        )
+      ),
+      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      target: 'web',
+      newProject: true,
+      framework: 'react',
+    });
+    tasks.push(rspackTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
