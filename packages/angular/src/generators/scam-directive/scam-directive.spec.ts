@@ -134,6 +134,22 @@ describe('SCAM Directive Generator', () => {
     `);
   });
 
+  it('should error when the class name is invalid', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await expect(
+      scamDirectiveGenerator(tree, {
+        name: '404',
+        path: 'apps/app1/src/app/example',
+      })
+    ).rejects.toThrow('Class name "404Directive" is invalid.');
+  });
+
   describe('--path', () => {
     it('should not throw when the path does not exist under project', async () => {
       // ARRANGE
