@@ -59,13 +59,6 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
-  const options = await normalizeOptions(tree, _options);
-  if (!options.addPlugin) {
-    throw new Error(
-      `To generate a new Remix Vite application, you must use Inference Plugins. Check you do not have NX_ADD_PLUGINS=false or useInferencePlugins: false in your nx.json.`
-    );
-  }
-
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
       skipFormat: true,
@@ -78,6 +71,13 @@ export async function remixApplicationGeneratorInternal(
         process.env.NX_ADD_TS_PLUGIN !== 'false',
     }),
   ];
+
+  const options = await normalizeOptions(tree, _options);
+  if (!options.addPlugin) {
+    throw new Error(
+      `To generate a new Remix Vite application, you must use Inference Plugins. Check you do not have NX_ADD_PLUGINS=false or useInferencePlugins: false in your nx.json.`
+    );
+  }
 
   addProjectConfiguration(tree, options.projectName, {
     root: options.projectRoot,

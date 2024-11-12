@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -41,10 +40,6 @@ export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'application');
-
-  const options = await normalizeOptions(host, schema);
-
   const tasks: GeneratorCallback[] = [];
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
@@ -54,6 +49,8 @@ export async function reactNativeApplicationGeneratorInternal(
       process.env.NX_ADD_TS_PLUGIN !== 'false',
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
