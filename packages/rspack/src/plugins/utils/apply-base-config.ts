@@ -156,7 +156,9 @@ function applyNxIndependentConfig(
           new SwcJsMinimizerRspackPlugin({
             extractComments: false,
             minimizerOptions: {
-              module: true,
+              // this needs to be false to allow toplevel variables to be used in the global scope
+              // important especially for module-federation which operates as such
+              module: false,
               mangle: {
                 keep_classnames: true,
               },
