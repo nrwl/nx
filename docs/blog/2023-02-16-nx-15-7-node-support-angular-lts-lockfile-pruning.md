@@ -128,7 +128,7 @@ const lockFile = createLockFile(packageJson);
 // save files using e.g. `fs.writeFileSync`
 ```
 
-Stay tuned for a more in-depth blog post coming soon to [our blog](blog).
+Stay tuned for a more in-depth blog post coming soon to [our blog](/blog).
 
 ## Storybook 7.0 beta support
 

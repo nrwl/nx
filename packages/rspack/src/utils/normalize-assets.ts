@@ -42,7 +42,7 @@ export function normalizeAssets(
       return {
         ...asset,
         input: resolvedAssetPath,
-        // Now we remove starting slash to make Webpack place it from the output root.
+        // Now we remove starting slash to make rspack place it from the output root.
         output: asset.output.replace(/^\//, ''),
       };
     }

@@ -698,7 +698,7 @@ async function normalizeOptions(
       linter: 'none' | 'eslint';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'linter',
         message: `Which linter would you like to use?`,
         choices: [{ name: 'none' }, { name: 'eslint' }],
@@ -711,7 +711,7 @@ async function normalizeOptions(
       unitTestRunner: 'none' | 'jest' | 'vitest';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'unitTestRunner',
         message: `Which unit test runner would you like to use?`,
         choices: [{ name: 'none' }, { name: 'vitest' }, { name: 'jest' }],
@@ -724,7 +724,7 @@ async function normalizeOptions(
       linter: 'none' | 'eslint';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'linter',
         message: `Which linter would you like to use?`,
         choices: [{ name: 'eslint' }, { name: 'none' }],
@@ -737,7 +737,7 @@ async function normalizeOptions(
       unitTestRunner: 'none' | 'jest' | 'vitest';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'unitTestRunner',
         message: `Which unit test runner would you like to use?`,
         choices: [{ name: 'jest' }, { name: 'vitest' }, { name: 'none' }],

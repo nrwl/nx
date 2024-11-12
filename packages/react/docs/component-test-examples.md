@@ -5,9 +5,7 @@ You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cy
 
 This generator is for Cypress based component testing.
 
-If you're wanting to create Cypress tests for a Storybook story, then check out the [component-cypress-spec generator docs](/nx-api/react/generators/component-cypress-spec)
-
-If you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/nx-api/react/generators/stories) or [component-story generator docs](/nx-api/react/generators/component-cypress-spec)
+If you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/nx-api/react/generators/stories)
 
 {% /callout %}
 

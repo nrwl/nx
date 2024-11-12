@@ -78,6 +78,8 @@ export * from './lib/editors/visual-studio-code';
 // OTHERS
 export * from './lib/monorepo-world';
 export * from './lib/others/amazon-s3';
+export * from './lib/others/linux';
+export * from './lib/others/windows';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';

@@ -1293,6 +1293,17 @@
     "source": "/packages/js/src"
   },
   {
+    "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "module-federation",
+    "packageName": "@nx/module-federation",
+    "root": "/packages/module-federation",
+    "source": "/packages/module-federation/src"
+  },
+  {
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "documents": [
       {

@@ -351,7 +351,6 @@ redux : Create a Redux slice for a project.
 storybook-configuration : Set up storybook for a React app or library.
 component-story : Generate storybook story for a React component
 stories : Create stories/specs for all components declared in an app or library.
-component-cypress-spec : Create a Cypress spec for a UI component that has a story.
 hook : Create a hook.
 host : Generate a host react application
 remote : Generate a remote react application

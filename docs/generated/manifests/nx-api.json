@@ -1306,6 +1306,18 @@
     },
     "path": "/nx-api/js"
   },
+  "module-federation": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "module-federation",
+    "packageName": "@nx/module-federation",
+    "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+    "documents": {},
+    "root": "/packages/module-federation",
+    "source": "/packages/module-federation/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/module-federation"
+  },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",

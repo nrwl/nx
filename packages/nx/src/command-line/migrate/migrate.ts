@@ -42,6 +42,7 @@ import {
   readNxMigrateConfig,
 } from '../../utils/package-json';
 import {
+  copyPackageManagerConfigurationFiles,
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
@@ -55,7 +56,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -68,6 +69,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { dirSync } from 'tmp';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1655,6 +1657,37 @@ export async function migrate(
   });
 }
 
+export function runMigration() {
+  const runLocalMigrate = () => {
+    runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+      stdio: ['inherit', 'inherit', 'inherit'],
+    });
+  };
+  if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+    const p = nxCliPath();
+    if (p === null) {
+      runLocalMigrate();
+    } else {
+      // ensure local registry from process is not interfering with the install
+      // when we start the process from temp folder the local registry would override the custom registry
+      if (
+        process.env.npm_config_registry &&
+        process.env.npm_config_registry.match(
+          /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/
+        )
+      ) {
+        delete process.env.npm_config_registry;
+      }
+      execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
+        stdio: ['inherit', 'inherit', 'inherit'],
+        windowsHide: false,
+      });
+    }
+  } else {
+    runLocalMigrate();
+  }
+}
+
 function readMigrationCollection(packageName: string, root: string) {
   const collectionPath = readPackageMigrationConfig(
     packageName,
@@ -1697,6 +1730,76 @@ function getImplementationPath(
   }
 
   return { path: implPath, fnSymbol };
+}
+
+function nxCliPath() {
+  const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
+  try {
+    const packageManager = detectPackageManager();
+    const pmc = getPackageManagerCommand(packageManager);
+
+    const { dirSync } = require('tmp');
+    const tmpDir = dirSync().name;
+    writeJsonFile(join(tmpDir, 'package.json'), {
+      dependencies: {
+        nx: version,
+      },
+      license: 'MIT',
+    });
+    copyPackageManagerConfigurationFiles(workspaceRoot, tmpDir);
+    if (pmc.preInstall) {
+      // ensure package.json and repo in tmp folder is set to a proper package manager state
+      execSync(pmc.preInstall, {
+        cwd: tmpDir,
+        stdio: ['ignore', 'ignore', 'ignore'],
+        windowsHide: false,
+      });
+      // if it's berry ensure we set the node_linker to node-modules
+      if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
+        execSync('yarn config set nodeLinker node-modules', {
+          cwd: tmpDir,
+          stdio: ['ignore', 'ignore', 'ignore'],
+          windowsHide: false,
+        });
+      }
+    }
+
+    execSync(pmc.install, {
+      cwd: tmpDir,
+      stdio: ['ignore', 'ignore', 'ignore'],
+      windowsHide: false,
+    });
+
+    // Set NODE_PATH so that these modules can be used for module resolution
+    addToNodePath(join(tmpDir, 'node_modules'));
+    addToNodePath(join(workspaceRoot, 'node_modules'));
+
+    return join(tmpDir, `node_modules`, '.bin', 'nx');
+  } catch (e) {
+    console.error(
+      `Failed to install the ${version} version of the migration script. Using the current version.`
+    );
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
+    return null;
+  }
+}
+
+function addToNodePath(dir: string) {
+  // NODE_PATH is a delimited list of paths.
+  // The delimiter is different for windows.
+  const delimiter = require('os').platform() === 'win32' ? ';' : ':';
+
+  const paths = process.env.NODE_PATH
+    ? process.env.NODE_PATH.split(delimiter)
+    : [];
+
+  // Add the tmp path
+  paths.push(dir);
+
+  // Update the env variable.
+  process.env.NODE_PATH = paths.join(delimiter);
 }
 
 // TODO (v21): Remove CLI determination of Angular Migration

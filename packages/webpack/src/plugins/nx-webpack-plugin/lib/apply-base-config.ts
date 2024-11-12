@@ -51,7 +51,7 @@ export function applyBaseConfig(
   applyNxIndependentConfig(options, config);
 
   // Some of the options only work during actual tasks, not when reading the webpack config during CreateNodes.
-  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+  if (global.NX_GRAPH_CREATION) return;
 
   applyNxDependentConfig(options, config, { useNormalizedEntry });
 }
