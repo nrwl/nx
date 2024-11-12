@@ -964,7 +964,7 @@ module.exports = withNx(
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
           ],
-          "extends": "./tsconfig.json",
+          "extends": "../tsconfig.base.json",
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",
@@ -988,7 +988,7 @@ module.exports = withNx(
               "vitest",
             ],
           },
-          "extends": "./tsconfig.json",
+          "extends": "../tsconfig.base.json",
           "include": [
             "vite.config.ts",
             "vite.config.mts",

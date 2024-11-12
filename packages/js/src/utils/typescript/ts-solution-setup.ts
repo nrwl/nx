@@ -5,9 +5,12 @@ import {
   workspaceRoot,
   type Tree,
   updateJson,
+  offsetFromRoot,
+  joinPathFragments,
 } from '@nx/devkit';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import { relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -106,27 +109,31 @@ export function updateTsconfigFiles(
 ) {
   if (!isUsingTsSolutionSetup(tree)) return;
 
+  const offset = offsetFromRoot(projectRoot);
+  const tsconfig = `${projectRoot}/${runtimeTsconfigFileName}`;
   const tsconfigSpec = `${projectRoot}/tsconfig.spec.json`;
-  const tsconfigE2E = `${projectRoot}-e2e/tsconfig.json`;
-  const tsconfigFiles = [
-    `${projectRoot}/${runtimeTsconfigFileName}`,
-    tsconfigSpec,
-  ];
+  const e2eRoot = `${projectRoot}-e2e`;
+  const tsconfigE2E = `${e2eRoot}/tsconfig.json`;
 
-  for (const tsconfig of tsconfigFiles) {
-    if (tree.exists(tsconfig)) {
-      updateJson(tree, tsconfig, (json) => {
-        json.compilerOptions = {
-          ...json.compilerOptions,
-          ...compilerOptions,
-        };
-        return json;
-      });
-    }
+  if (tree.exists(tsconfig)) {
+    updateJson(tree, tsconfig, (json) => {
+      json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        ...compilerOptions,
+      };
+
+      return json;
+    });
   }
 
   if (tree.exists(tsconfigSpec)) {
     updateJson(tree, tsconfigSpec, (json) => {
+      json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        ...compilerOptions,
+      };
       const runtimePath = `./${runtimeTsconfigFileName}`;
       json.references ??= [];
       if (!json.references.some((x) => x.path === runtimePath))
@@ -138,7 +145,7 @@ export function updateTsconfigFiles(
   if (tree.exists(tsconfigE2E)) {
     updateJson(tree, tsconfigE2E, (json) => {
       json.references ??= [];
-      const projectPath = '../' + projectRoot;
+      const projectPath = relative(e2eRoot, projectRoot);
       if (!json.references.some((x) => x.path === projectPath))
         json.references.push({ path: projectPath });
       return json;
