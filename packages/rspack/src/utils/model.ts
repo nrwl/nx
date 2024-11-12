@@ -17,3 +17,9 @@ export interface EmittedFile {
   initial: boolean;
   asset?: boolean;
 }
+
+export interface SvgrOptions {
+  svgo?: boolean;
+  titleProp?: boolean;
+  ref?: boolean;
+}
