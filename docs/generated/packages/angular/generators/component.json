@@ -105,6 +105,11 @@
         "default": false,
         "x-priority": "important"
       },
+      "exportDefault": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use default export for the component instead of a named export."
+      },
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",

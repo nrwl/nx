@@ -55,6 +55,25 @@ describe('component Generator', () => {
     );
   });
 
+  it('should export the component as default when exportDefault is true', async () => {
+    const tree = createTreeWithEmptyWorkspace({});
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write('libs/lib1/src/index.ts', '');
+
+    await componentGenerator(tree, {
+      path: 'libs/lib1/src/lib/example/example',
+      exportDefault: true,
+    });
+
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+    ).toContain('export default class ExampleComponent {}');
+  });
+
   it('should not generate test file when --skip-tests=true', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

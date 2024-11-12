@@ -16,4 +16,4 @@ import { CommonModule } from '@angular/common';<% } %>
   encapsulation: ViewEncapsulation.<%= viewEncapsulation %><% } if (changeDetection !== 'Default') { %>,
   changeDetection: ChangeDetectionStrategy.<%= changeDetection %><% } %>
 })
-export class <%= symbolName %> {}
+export <% if (exportDefault) {%>default <%}%>class <%= symbolName %> {}

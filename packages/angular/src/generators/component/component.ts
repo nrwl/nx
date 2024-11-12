@@ -22,6 +22,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       name: options.name,
       fileName: options.fileName,
       symbolName: options.symbolName,
+      exportDefault: options.exportDefault,
       style: options.style,
       inlineStyle: options.inlineStyle,
       inlineTemplate: options.inlineTemplate,
