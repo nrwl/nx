@@ -1,3 +1,4 @@
+import type { buildApplication as buildApplicationFn } from '@angular-devkit/build-angular';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
@@ -9,14 +10,15 @@ import {
   loadPlugins,
 } from '../utilities/esbuild-extensions';
 import type { ApplicationExecutorOptions } from './schema';
+import { normalizeOptions } from './utils/normalize-options';
 import { validateOptions } from './utils/validate-options';
-import type { buildApplication as buildApplicationFn } from '@angular-devkit/build-angular';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
   context: ExecutorContext
 ): ReturnType<typeof buildApplicationFn> {
   validateOptions(options);
+  options = normalizeOptions(options);
 
   const {
     buildLibsFromSource = true,
