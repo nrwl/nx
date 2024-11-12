@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
@@ -17,8 +16,6 @@ export function webpackInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(tree, 'webpack', 'init');
-
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

@@ -28,14 +28,11 @@ import {
   nxVersion,
 } from '../../utils/versions';
 import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react', 'host');
-
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, schema)),
