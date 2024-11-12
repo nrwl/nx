@@ -1271,6 +1271,7 @@ describe('app', () => {
         linter: Linter.None,
         style: 'none',
         bundler: 'vite',
+        unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
       });
 
@@ -1285,24 +1286,130 @@ describe('app', () => {
           },
         ]
       `);
-      expect(readJson(appTree, 'myapp/tsconfig.json').references)
-        .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./tsconfig.app.json",
-          },
-          {
-            "path": "./tsconfig.spec.json",
-          },
-        ]
+      expect(readJson(appTree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
       `);
-      expect(readJson(appTree, 'myapp-e2e/tsconfig.json').references)
+      expect(readJson(appTree, 'myapp/tsconfig.app.json'))
         .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "../myapp",
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "lib": [
+              "dom",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "dist",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+              "vite/client",
+            ],
           },
-        ]
+          "exclude": [
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.js",
+            "src/**/*.test.js",
+            "src/**/*.spec.jsx",
+            "src/**/*.test.jsx",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'myapp/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "../dist/out-tsc",
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+            ],
+          },
+          "extends": "./tsconfig.json",
+          "include": [
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'myapp-e2e/tsconfig.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "dist",
+            "sourceMap": false,
+            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "**/*.ts",
+            "**/*.js",
+            "playwright.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.spec.js",
+            "src/**/*.test.ts",
+            "src/**/*.test.js",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "../myapp",
+            },
+          ],
+        }
       `);
     });
   });

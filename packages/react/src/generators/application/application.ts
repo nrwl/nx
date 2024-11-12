@@ -19,7 +19,6 @@ import {
   runTasksInSerial,
   stripIndents,
   Tree,
-  updateJson,
   updateNxJson,
 } from '@nx/devkit';
 import reactInitGenerator from '../init/init';
@@ -45,7 +44,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { updateTsconfigFiles } from '../../utils/ts-solution';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -357,16 +356,7 @@ export async function applicationGeneratorInternal(
     logShowProjectCommand(options.projectName);
   });
 
-  if (isUsingTsSolutionSetup(host)) {
-    if (!options.rootProject) {
-      updateJson(host, 'tsconfig.json', (json) => {
-        // add the project tsconfig to the workspace root tsconfig.json references
-        json.references ??= [];
-        json.references.push({ path: './' + options.appProjectRoot });
-        return json;
-      });
-    }
-  }
+  updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.app.json');
 
   return runTasksInSerial(...tasks);
 }

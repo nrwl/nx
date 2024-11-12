@@ -12,6 +12,7 @@ import {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   host: Tree,
@@ -103,6 +104,8 @@ export async function normalizeOptions(
   }
 
   assertValidStyle(normalized.style);
+
+  normalized.isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   return normalized;
 }

@@ -12,7 +12,6 @@ import {
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { nxVersion } from '../../utils/versions';
 import { maybeJs } from '../../utils/maybe-js';
@@ -28,6 +27,7 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
+import { updateTsconfigFiles } from '../../utils/ts-solution';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -37,9 +37,16 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'react', 'library');
-
   const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+    addTsPlugin:
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      process.env.NX_ADD_TS_PLUGIN !== 'false',
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -50,15 +57,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   if (!options.component) {
     options.style = 'none';
   }
-
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-    addTsPlugin:
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false',
-  });
-  tasks.push(jsInitTask);
 
   const initTask = await initGenerator(host, {
     ...options,
@@ -231,7 +229,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   extractTsConfigBase(host);
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       maybeJs(
         options,
@@ -239,6 +237,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       ),
     ]);
   }
+
+  updateTsconfigFiles(host, options.projectRoot, 'tsconfig.lib.json');
 
   if (!options.skipFormat) {
     await formatFiles(host);
