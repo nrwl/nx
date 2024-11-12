@@ -13,6 +13,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import {
@@ -34,7 +35,11 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -149,7 +154,18 @@ async function addProject(
     tags: options.parsedTags,
     targets: {},
   };
-  addProjectConfiguration(host, options.name, project);
+
+  if (isUsingTsSolutionSetup(host)) {
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: getImportPath(host, options.name),
+      version: '0.0.1',
+      nx: {
+        name: options.name,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.name, project);
+  }
 
   if (!options.publishable && !options.buildable) {
     return () => {};

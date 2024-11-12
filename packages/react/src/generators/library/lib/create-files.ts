@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit';
+import { Tree, updateJson } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
@@ -68,8 +68,22 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     });
   }
 
-  if (!options.publishable && !options.buildable) {
+  if (
+    !options.publishable &&
+    !options.buildable &&
+    !options.isUsingTsSolutionConfig
+  ) {
     host.delete(`${options.projectRoot}/package.json`);
+  }
+
+  if (options.isUsingTsSolutionConfig) {
+    updateJson(host, `${options.projectRoot}/package.json`, (json) => {
+      json.name = options.importPath;
+      json.nx = {
+        name: options.name,
+      };
+      return json;
+    });
   }
 
   if (options.js) {
