@@ -40,7 +40,7 @@ export function getFunctionDeterminateRemoteUrl(isServer = false) {
     if (!serveTarget) {
       throw new Error(
         `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "${serveTarget}" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
+      You can also use the tuple syntax in your rspack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
       );
     }
 

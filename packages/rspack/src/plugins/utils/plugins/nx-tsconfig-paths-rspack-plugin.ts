@@ -19,7 +19,7 @@ export class NxTsconfigPathsRspackPlugin {
   constructor(private options: NormalizedNxAppRspackPluginOptions) {
     if (!this.options.tsConfig)
       throw new Error(
-        `Missing "tsConfig" option. Set this option in your Nx webpack plugin.`
+        `Missing "tsConfig" option. Set this option in your Nx rspack plugin.`
       );
   }
 
