@@ -296,6 +296,15 @@
       },
       "description": "Add the '@angular/localize/init' polyfill to the 'polyfills' option of targets using esbuild-based executors.",
       "factory": "./src/migrations/update-20-2-0/add-localize-polyfill-to-targets"
+    },
+    "update-angular-ssr-imports-to-use-node-entry-point": {
+      "cli": "nx",
+      "version": "20.2.0-beta.3",
+      "requires": {
+        "@angular/core": ">=19.0.0-rc.1"
+      },
+      "description": "Update '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.",
+      "factory": "./src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point"
     }
   },
   "packageJsonUpdates": {
