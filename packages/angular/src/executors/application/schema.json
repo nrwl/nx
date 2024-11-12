@@ -127,6 +127,34 @@
             "type": "string"
           },
           "default": []
+        },
+        "sass": {
+          "description": "Options to pass to the sass preprocessor. _Note: this is only supported in Angular versions >= 19.0.0_.",
+          "type": "object",
+          "properties": {
+            "fatalDeprecations": {
+              "description": "A set of deprecations to treat as fatal. If a deprecation warning of any provided type is encountered during compilation, the compiler will error instead. If a Version is provided, then all deprecations that were active in that compiler version will be treated as fatal.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "silenceDeprecations": {
+              "description": " A set of active deprecations to ignore. If a deprecation warning of any provided type is encountered during compilation, the compiler will ignore it instead.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "futureDeprecations": {
+              "description": "A set of future deprecations to opt into early. Future deprecations passed here will be treated as active by the compiler, emitting warnings as necessary.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
