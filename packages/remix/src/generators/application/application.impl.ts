@@ -44,6 +44,7 @@ import {
   addViteTempFilesToGitIgnore,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -79,13 +80,17 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.projectRoot,
-    sourceRoot: `${options.projectRoot}`,
-    projectType: 'application',
-    tags: options.parsedTags,
-    targets: {},
-  });
+  const isUsingTsSolution = isUsingTsSolutionSetup(tree);
+
+  if (!isUsingTsSolution) {
+    addProjectConfiguration(tree, options.projectName, {
+      root: options.projectRoot,
+      sourceRoot: `${options.projectRoot}`,
+      projectType: 'application',
+      tags: options.parsedTags,
+      targets: {},
+    });
+  }
 
   const installTask = updateDependencies(tree);
   tasks.push(installTask);
@@ -112,6 +117,7 @@ export async function remixApplicationGeneratorInternal(
     eslintVersion,
     typescriptVersion,
     viteVersion,
+    isUsingTsSolution,
   };
 
   generateFiles(
