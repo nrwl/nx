@@ -75,9 +75,7 @@ export class NxTsconfigPathsRspackPlugin {
         options.tsConfig,
         options.root,
         target.data.root,
-        dependencies,
-        false,
-        true
+        dependencies
       );
       this.tmpTsConfigPath = options.tsConfig;
 
