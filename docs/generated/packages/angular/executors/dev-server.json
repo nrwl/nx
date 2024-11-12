@@ -93,8 +93,7 @@
       },
       "hmr": {
         "type": "boolean",
-        "description": "Enable hot module replacement.",
-        "default": false
+        "description": "Enable hot module replacement. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
       },
       "watch": {
         "type": "boolean",
