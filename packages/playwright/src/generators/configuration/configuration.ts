@@ -20,8 +20,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
@@ -216,36 +216,7 @@ async function normalizeOptions(
     (process.env.NX_ADD_PLUGINS !== 'false' &&
       nxJson.useInferencePlugins !== false);
 
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-
-  let linter = options.linter;
-  if (isTsSolutionSetup) {
-    linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'eslint' }],
-        initial: 0,
-      },
-      { linter: 'none' }
-    ).then(({ linter }) => linter);
-  } else {
-    linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'autocomplete',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'eslint' }, { name: 'none' }],
-        initial: 0,
-      },
-      { linter: 'eslint' }
-    ).then(({ linter }) => linter);
-  }
+  const linter = await normalizeLinterOption(tree, options.linter);
 
   return {
     ...options,

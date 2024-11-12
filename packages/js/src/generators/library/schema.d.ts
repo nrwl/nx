@@ -37,6 +37,8 @@ export interface LibraryGeneratorSchema {
   simpleName?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  skipWorkspacesWarning?: boolean;
+  useTscExecutor?: boolean;
 }
 
 export interface NormalizedLibraryGeneratorOptions
