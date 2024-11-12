@@ -1,7 +1,5 @@
 distribute-on:
-  small-changeset: 8 linux-medium, 1 linux-large
-  medium-changeset: 12 linux-medium, 1 linux-large
-  large-changeset: 20 linux-medium, 1 linux-large
+  default: auto linux-medium, 1 linux-large
 assignment-rules:
   - project: nx-dev
     target: build-base
