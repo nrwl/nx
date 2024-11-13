@@ -17,7 +17,7 @@
     "incremental": true,
     "plugins": [{ "name": "next" }]<% if (isUsingTsSolutionSetup) { %>,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [<% if (src) { %>"./src/*"<% } else { %>"./*"<% } %>]
     }<% } %>
   },
   "include": [
