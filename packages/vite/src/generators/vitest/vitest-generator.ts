@@ -283,7 +283,9 @@ function createFiles(
     extendedConfig: isTsSolutionSetup
       ? `${rootOffset}tsconfig.base.json`
       : './tsconfig.json',
-    outDir: isTsSolutionSetup ? `./out-tsc/jest` : `${rootOffset}dist/out-tsc`,
+    outDir: isTsSolutionSetup
+      ? `./out-tsc/vitest`
+      : `${rootOffset}dist/out-tsc`,
   });
 }
 

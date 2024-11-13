@@ -391,6 +391,7 @@ describe('Remix Application', () => {
             ],
           },
           "exclude": [
+            "dist",
             "tests/**/*.spec.ts",
             "tests/**/*.test.ts",
             "tests/**/*.spec.tsx",
@@ -399,6 +400,9 @@ describe('Remix Application', () => {
             "tests/**/*.test.js",
             "tests/**/*.spec.jsx",
             "tests/**/*.test.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -419,7 +423,7 @@ describe('Remix Application', () => {
             "jsx": "react-jsx",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "../dist/out-tsc",
+            "outDir": "./out-tsc/jest",
             "types": [
               "jest",
               "node",

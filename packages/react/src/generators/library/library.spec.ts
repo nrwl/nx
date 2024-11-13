@@ -943,6 +943,7 @@ module.exports = withNx(
             ],
           },
           "exclude": [
+            "dist",
             "**/*.spec.ts",
             "**/*.test.ts",
             "**/*.spec.tsx",
@@ -963,6 +964,9 @@ module.exports = withNx(
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -979,7 +983,7 @@ module.exports = withNx(
             "jsx": "react-jsx",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "../dist/out-tsc",
+            "outDir": "./out-tsc/vitest",
             "types": [
               "vitest/globals",
               "vitest/importMeta",

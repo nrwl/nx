@@ -81,15 +81,17 @@ export async function webConfigurationGenerator(
     );
   }
 
-  tasks.push(
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@types/react-dom': typesReactVersion,
-      }
-    )
-  );
+  if (!options.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@types/react-dom': typesReactVersion,
+        }
+      )
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
