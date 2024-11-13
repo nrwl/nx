@@ -1,8 +1,8 @@
 import { Configuration } from '@rspack/core';
 import { NxRspackExecutionContext } from './config';
 import { withWeb, WithWebOptions } from './with-web';
-import { applyReactConfig } from './lib/apply-react-config';
-import { SvgrOptions } from './model';
+import { applyReactConfig } from '../plugins/utils/apply-react-config';
+import { SvgrOptions } from '../plugins/utils/models';
 
 export interface WithReactOptions extends WithWebOptions {
   svgr?: boolean | SvgrOptions;

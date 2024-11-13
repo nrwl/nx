@@ -1,5 +1,5 @@
 import { Configuration, RspackOptionsNormalized } from '@rspack/core';
-import { SvgrOptions } from '../model';
+import { SvgrOptions } from './models';
 
 export function applyReactConfig(
   options: { svgr?: boolean | SvgrOptions },
