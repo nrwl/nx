@@ -75,10 +75,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
+  createFiles(host, options);
+
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
-
-  createFiles(host, options);
 
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
