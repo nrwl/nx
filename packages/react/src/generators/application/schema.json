@@ -102,7 +102,7 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "none"],
-      "default": "none",
+      "default": "eslint",
       "x-prompt": "Which linter would you like to use?",
       "x-priority": "important"
     },
@@ -110,7 +110,7 @@
       "type": "string",
       "enum": ["vitest", "jest", "none"],
       "description": "Test runner to use for unit tests.",
-      "default": "none",
+      "default": "vitest",
       "x-priority": "important"
     },
     "inSourceTests": {
@@ -123,7 +123,7 @@
       "enum": ["playwright", "cypress", "none"],
       "description": "Test runner to use for end to end (E2E) tests.",
       "x-prompt": "Which E2E test runner would you like to use?",
-      "default": "none"
+      "default": "playwright"
     },
     "tags": {
       "type": "string",

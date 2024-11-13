@@ -32,7 +32,7 @@
         "description": "The tool to use for running lint checks.",
         "type": "string",
         "enum": ["eslint", "none"],
-        "default": "none",
+        "default": "eslint",
         "x-prompt": "Which linter would you like to use?",
         "x-priority": "important"
       },
@@ -40,7 +40,7 @@
         "type": "string",
         "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "none",
+        "default": "jest",
         "x-priority": "important"
       },
       "tags": {
