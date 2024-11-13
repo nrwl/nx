@@ -1,6 +1,6 @@
-export interface BuildAngularLibraryExecutorOptions {
-  project: string;
+import type { NgPackagrBuilderOptions } from '@angular-devkit/build-angular';
+
+export interface BuildAngularLibraryExecutorOptions
+  extends NgPackagrBuilderOptions {
   tailwindConfig?: string;
-  tsConfig?: string;
-  watch?: boolean;
 }
