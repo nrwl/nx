@@ -40,9 +40,7 @@ export async function expoApplicationGeneratorInternal(
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
-    addTsPlugin:
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false',
+    addTsPlugin: schema.useTsSolution,
   });
 
   const options = await normalizeOptions(host, schema);

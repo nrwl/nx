@@ -1,6 +1,5 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, GeneratorCallback, runTasksInSerial } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { libraryGenerator } from '@nx/react';
 import {
@@ -41,7 +40,7 @@ export async function remixLibraryGeneratorInternal(
     directory: options.projectRoot,
     skipFormat: true,
     skipTsConfig: false,
-    linter: Linter.EsLint,
+    linter: options.linter,
     component: true,
     buildable: options.buildable,
     addPlugin: options.addPlugin,
@@ -68,7 +67,9 @@ export async function remixLibraryGeneratorInternal(
       module: 'esnext',
       moduleResolution: 'bundler',
     },
-    ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
   );
 
   if (!options.skipFormat) {

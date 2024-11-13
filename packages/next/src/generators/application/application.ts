@@ -49,9 +49,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: options.js,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addTsPlugin:
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false',
+    addTsPlugin: schema.useTsSolution,
   });
   tasks.push(jsInitTask);
 

@@ -75,14 +75,17 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "none"],
-      "default": "eslint"
+      "default": "none",
+      "x-prompt": "Which linter would you like to use?",
+      "x-priority": "important"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["vitest", "jest", "none"],
-      "default": "vitest",
+      "default": "none",
       "description": "Test runner to use for unit tests.",
-      "x-prompt": "What unit test runner should be used?"
+      "x-prompt": "What unit test runner should be used?",
+      "x-priority": "important"
     },
     "inSourceTests": {
       "type": "boolean",

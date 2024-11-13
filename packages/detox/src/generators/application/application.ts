@@ -23,9 +23,6 @@ export async function detoxApplicationGeneratorInternal(
 ) {
   const jsInitTask = await jsInitGenerator(host, {
     skipFormat: true,
-    addTsPlugin:
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false',
   });
 
   const options = await normalizeOptions(host, schema);

@@ -74,12 +74,6 @@
           ]
         }
       },
-      "linter": {
-        "description": "The tool to use for running lint checks.",
-        "type": "string",
-        "enum": ["eslint", "none"],
-        "default": "eslint"
-      },
       "routing": {
         "type": "boolean",
         "description": "Generate application with routes.",
@@ -98,11 +92,20 @@
         "default": false,
         "x-priority": "internal"
       },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
+      },
       "unitTestRunner": {
         "type": "string",
         "enum": ["vitest", "jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "vitest"
+        "default": "none",
+        "x-priority": "important"
       },
       "inSourceTests": {
         "type": "boolean",

@@ -70,9 +70,7 @@ export async function remixApplicationGeneratorInternal(
     }),
     await jsInitGenerator(tree, {
       skipFormat: true,
-      addTsPlugin:
-        process.env.NX_ADD_PLUGINS !== 'false' &&
-        process.env.NX_ADD_TS_PLUGIN !== 'false',
+      addTsPlugin: _options.useTsSolution,
     }),
   ];
 
