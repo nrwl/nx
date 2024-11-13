@@ -2,7 +2,7 @@ import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '../models';
+} from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
 import { NxRspackExecutionContext } from '../../config';
 
