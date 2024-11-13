@@ -15,7 +15,7 @@ import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
 import {
   nxVersion,
   reactNativeWebVersion,
-  typesReactVersion,
+  typesReactDomVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
@@ -87,7 +87,7 @@ export async function webConfigurationGenerator(
         tree,
         {},
         {
-          '@types/react-dom': typesReactVersion,
+          '@types/react-dom': typesReactDomVersion,
         }
       )
     );
