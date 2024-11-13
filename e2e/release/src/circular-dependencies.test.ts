@@ -51,6 +51,7 @@ describe('nx release circular dependencies', () => {
   beforeAll(async () => {
     newProject({
       packages: ['@nx/js'],
+      extraArgs: '--js',
     });
 
     pkg1 = uniq('my-pkg-1');

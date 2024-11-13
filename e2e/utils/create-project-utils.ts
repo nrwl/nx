@@ -76,10 +76,12 @@ export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
   packages,
+  extraArgs = '',
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
+  extraArgs?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -95,6 +97,7 @@ export function newProject({
       runCreateWorkspace(projScope, {
         preset: 'apps',
         packageManager,
+        extraArgs,
       });
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
       createNxWorkspaceMeasure = performance.measure(

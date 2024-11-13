@@ -62,6 +62,7 @@ describe('nx release multiple release branches', () => {
   beforeEach(() => {
     newProject({
       packages: ['@nx/js'],
+      extraArgs: '--js',
     });
 
     pkg1 = uniq('my-pkg-1');
