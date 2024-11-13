@@ -1561,6 +1561,7 @@ describe('lib', () => {
           "name": "@proj/my-lib",
           "nx": {
             "name": "my-lib",
+            "projectType": "library",
             "sourceRoot": "my-lib/src",
           },
           "private": true,

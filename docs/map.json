@@ -210,6 +210,7 @@
             {
               "name": "What Are Nx Plugins",
               "tags": [
+                "add",
                 "generate-code",
                 "create-your-own-plugin",
                 "inferred-tasks"
@@ -238,11 +239,13 @@
             {
               "name": "Nx Daemon",
               "id": "nx-daemon",
+              "tags": ["daemon"],
               "file": "shared/concepts/daemon"
             },
             {
               "name": "Sync Generators",
               "id": "sync-generators",
+              "tags": ["sync"],
               "file": "shared/concepts/sync-generators"
             },
             {
@@ -406,7 +409,7 @@
                 {
                   "name": "Run Root-Level NPM Scripts with Nx",
                   "id": "root-level-scripts",
-                  "tags": ["run-tasks"],
+                  "tags": ["run-tasks", "exec"],
                   "file": "shared/recipes/running-tasks/root-level-scripts"
                 },
                 {
@@ -447,6 +450,7 @@
                 {
                   "name": "NPM/Yarn/PNPM workspaces",
                   "id": "adding-to-monorepo",
+                  "tags": ["init"],
                   "file": "shared/migration/adding-to-monorepo"
                 },
                 {
@@ -457,11 +461,13 @@
                 {
                   "name": "Add to any Project",
                   "id": "adding-to-existing-project",
+                  "tags": ["init"],
                   "file": "shared/migration/adding-to-existing-project"
                 },
                 {
                   "name": "Import an Existing Project into an Nx Workspace",
                   "id": "import-project",
+                  "tags": ["import"],
                   "file": "shared/migration/import-project"
                 },
                 {
@@ -690,6 +696,7 @@
                     {
                       "name": "Migrating from Angular CLI",
                       "id": "angular",
+                      "tags": ["init"],
                       "file": "shared/migration/migration-angular"
                     },
                     {
@@ -1011,7 +1018,7 @@
                 {
                   "name": "Keep Nx Versions in Sync",
                   "id": "keep-nx-versions-in-sync",
-                  "tags": ["automate-updating-dependencies"],
+                  "tags": ["automate-updating-dependencies", "add"],
                   "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync"
                 },
                 {
@@ -1576,7 +1583,7 @@
             {
               "name": "Create a Sync Generator",
               "id": "create-sync-generator",
-              "tags": ["generate-code"],
+              "tags": ["generate-code", "sync"],
               "file": "shared/recipes/generators/create-sync-generator"
             },
             {
@@ -1825,6 +1832,7 @@
                 {
                   "name": "Personal Access Tokens",
                   "id": "personal-access-tokens",
+                  "tags": ["login"],
                   "file": "nx-cloud/recipes/personal-access-tokens"
                 },
                 {
@@ -2039,11 +2047,13 @@
             {
               "name": "create-nx-workspace",
               "id": "create-nx-workspace",
+              "tags": ["installation"],
               "file": "generated/cli/create-nx-workspace"
             },
             {
               "name": "init",
               "id": "init",
+              "tags": ["init"],
               "file": "generated/cli/init"
             },
             {
@@ -2061,6 +2071,7 @@
             {
               "name": "daemon",
               "id": "daemon",
+              "tags": ["daemon"],
               "file": "generated/cli/daemon"
             },
             {
@@ -2129,21 +2140,25 @@
             {
               "name": "sync",
               "id": "sync",
+              "tags": ["sync"],
               "file": "generated/cli/sync"
             },
             {
               "name": "sync:check",
               "id": "sync-check",
+              "tags": ["sync"],
               "file": "generated/cli/sync-check"
             },
             {
               "name": "import",
               "id": "import",
+              "tags": ["import"],
               "file": "generated/cli/import"
             },
             {
               "name": "exec",
               "id": "exec",
+              "tags": ["exec"],
               "file": "generated/cli/exec"
             },
             {
@@ -2155,6 +2170,7 @@
             {
               "name": "show",
               "id": "show",
+              "tags": ["explore-graph"],
               "file": "generated/cli/show"
             },
             {
@@ -2171,16 +2187,19 @@
             {
               "name": "add",
               "id": "add",
+              "tags": ["add"],
               "file": "generated/cli/add"
             },
             {
               "name": "login",
               "id": "login",
+              "tags": ["login"],
               "file": "generated/cli/login"
             },
             {
               "name": "logout",
               "id": "logout",
+              "tags": ["login"],
               "file": "generated/cli/logout"
             }
           ]

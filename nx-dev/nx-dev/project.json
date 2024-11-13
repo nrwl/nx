@@ -41,6 +41,7 @@
       }
     },
     "build-base": {
+      "parallelism": false,
       "executor": "@nx/next:build",
       "dependsOn": ["copy-docs"],
       "outputs": ["{options.outputPath}"],

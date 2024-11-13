@@ -29,5 +29,8 @@
   "peerDependencies": {},
   "nx-migrations": {
     "migrations": "./migrations.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

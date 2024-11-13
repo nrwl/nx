@@ -1,7 +1,7 @@
 import { ExecutorContext } from '@nx/devkit';
 
 import { <%= className %>ExecutorSchema } from './schema';
-import executor from './executor';
+import executor from './<%= fileName %>';
 
 const options: <%= className %>ExecutorSchema = {};
 const context: ExecutorContext = {

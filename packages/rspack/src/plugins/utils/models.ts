@@ -2,6 +2,12 @@ import type { Mode } from '@rspack/core';
 import type { ProjectGraph } from '@nx/devkit';
 import type { AssetGlob } from '@nx/js/src/utils/assets/assets';
 
+export interface SvgrOptions {
+  svgo?: boolean;
+  titleProp?: boolean;
+  ref?: boolean;
+}
+
 export interface AssetGlobPattern {
   glob: string;
   input: string;

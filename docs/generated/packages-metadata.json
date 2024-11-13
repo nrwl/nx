@@ -1726,7 +1726,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/create-nx-workspace",
-        "tags": [],
+        "tags": ["installation"],
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       {
@@ -1737,7 +1737,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/init",
-        "tags": [],
+        "tags": ["init"],
         "originalFilePath": "generated/cli/init"
       },
       {
@@ -1770,7 +1770,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/daemon",
-        "tags": [],
+        "tags": ["daemon"],
         "originalFilePath": "generated/cli/daemon"
       },
       {
@@ -1902,7 +1902,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/sync",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync"
       },
       {
@@ -1913,7 +1913,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/sync-check",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync-check"
       },
       {
@@ -1924,7 +1924,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/import",
-        "tags": [],
+        "tags": ["import"],
         "originalFilePath": "generated/cli/import"
       },
       {
@@ -1935,7 +1935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/exec",
-        "tags": [],
+        "tags": ["exec"],
         "originalFilePath": "generated/cli/exec"
       },
       {
@@ -1957,7 +1957,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/show",
-        "tags": [],
+        "tags": ["explore-graph"],
         "originalFilePath": "generated/cli/show"
       },
       {
@@ -1990,7 +1990,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/add",
-        "tags": [],
+        "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
       {
@@ -2001,7 +2001,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/login",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/login"
       },
       {
@@ -2012,7 +2012,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/logout",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
       }
     ],

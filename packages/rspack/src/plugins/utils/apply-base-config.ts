@@ -404,11 +404,13 @@ function applyNxDependentConfig(
             },
             transform: {
               react: {
+                runtime: 'automatic',
                 pragma: 'React.createElement',
                 pragmaFrag: 'React.Fragment',
                 throwIfNamespace: true,
                 // Config.mode is already set based on options.mode and `process.env.NODE_ENV`
                 development: config.mode === 'development',
+                refresh: config.mode === 'development',
                 useBuiltins: false,
               },
             },
