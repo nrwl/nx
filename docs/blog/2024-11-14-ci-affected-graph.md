@@ -3,7 +3,7 @@ title: See your affected graph in Nx Cloud
 slug: ci-affected-graph
 authors: ['Philip Fulcher']
 tags: [nx-cloud]
-cover_image: /blog/images/2024-11-11/header.avif
+cover_image: /blog/images/2024-11-18/header.avif
 ---
 
 As monorepos grow in size and complexity, it can be difficult to understand the relationships between different parts of
