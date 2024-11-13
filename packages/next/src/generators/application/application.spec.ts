@@ -938,7 +938,7 @@ describe('app (legacy)', () => {
             "jsx": "preserve",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "../dist/out-tsc",
+            "outDir": "./out-tsc/jest",
             "types": [
               "jest",
               "node",
