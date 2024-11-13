@@ -75,7 +75,7 @@ export function TrialCallout({
               >
                 reach out to us and we'll help you get started with a trial
               </Link>{' '}
-              that suites your team's needs.{' '}
+              that suits your team's needs.{' '}
             </p>
           </div>
           <div className="relative mt-16 h-80 lg:mt-8">

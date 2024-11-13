@@ -244,7 +244,7 @@ export function PlansDisplay(): ReactElement {
               </ul>
               <p className="mt-4 text-xs text-slate-500">
                 ¹Any person or actor that has triggered a CI Pipeline Execution
-                within the current billing cycle. Up to 70 active contributors.
+                within the current billing cycle. Up to 30 active contributors.
               </p>
             </div>
 
