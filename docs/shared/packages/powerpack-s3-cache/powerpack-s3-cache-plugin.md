@@ -107,6 +107,10 @@ Storing your credentials in the `nx.json` file is the least secure of the 4 auth
 
 ### 3. Configure S3 Cache
 
+{% callout title="S3 compatible providers" %}
+To use `@nx/powerpack-s3-cache` with S3 compatible providers, `endpoint` will need to be provided. Some providers also need to have `forcePathStyle` set to true in the configuration. Refer to your provider's documentation to see if this setting is needed for your instance.
+{% /callout %}
+
 Regardless of how you manage your AWS authentication, you need to configure your Nx cache in the `nx.json` file. The `bucket` that you specify needs to already exist - Nx doesn't create it for you.
 
 ```jsonc {% fileName="nx.json" %}
@@ -119,8 +123,10 @@ Regardless of how you manage your AWS authentication, you need to configure your
 }
 ```
 
-| **Property**      | **Description**                                                                   |
-| ----------------- | --------------------------------------------------------------------------------- |
-| **region**        | The id of the AWS region to use                                                   |
-| **bucket**        | The name of the AWS bucket to use                                                 |
-| **encryptionKey** | Nx encryption key used to encrypt and decrypt artifacts from the cache (optional) |
+| **Property**       | **Description**                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| **region**         | The id of the AWS region to use                                                                           |
+| **bucket**         | The name of the AWS bucket to use                                                                         |
+| **forcePathStyle** | Changes the way artifacts are uploaded. Usually used for S3 compatible providers (MinIO, LocalStack, etc) |
+| **endpoint**       | The custom endpoint to upload artifacts to. If endpoint is not defined, the default AWS endpoint is used  |
+| **encryptionKey**  | Nx encryption key used to encrypt and decrypt artifacts from the cache (optional)                         |
