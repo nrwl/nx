@@ -117,7 +117,7 @@
         "enum": ["playwright", "cypress", "none"],
         "description": "Test runner to use for end to end (E2E) tests.",
         "x-prompt": "Which E2E test runner would you like to use?",
-        "default": "playwright"
+        "default": "none"
       },
       "tags": {
         "type": "string",
