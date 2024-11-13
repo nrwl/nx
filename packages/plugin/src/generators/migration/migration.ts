@@ -1,47 +1,45 @@
-import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   generateFiles,
   joinPathFragments,
-  names,
   readJson,
   readProjectConfiguration,
   updateJson,
   updateProjectConfiguration,
   writeJson,
+  type Tree,
 } from '@nx/devkit';
-import type { Schema } from './schema';
-import * as path from 'path';
-import { relative } from 'path';
-import { addMigrationJsonChecks } from '../lint-checks/generator';
-import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
-import { nxVersion } from '../../utils/versions';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'node:path';
+import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
+import { getArtifactMetadataDirectory } from '../../utils/paths';
+import { nxVersion } from '../../utils/versions';
+import { addMigrationJsonChecks } from '../lint-checks/generator';
+import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   directory: string;
+  fileName: string;
   projectRoot: string;
   projectSourceRoot: string;
   project: string;
+  isTsSolutionSetup: boolean;
 }
 
 async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  let name: string;
-  if (options.name) {
-    name = names(options.name).fileName;
-  } else {
-    name = names(`update-${options.packageVersion}`).fileName;
-  }
-
-  const { project, fileName, artifactName, filePath, directory } =
-    await determineArtifactNameAndDirectoryOptions(tree, {
-      name: name,
-      path: options.path,
-      fileName: name,
-    });
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    project,
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
+    path: options.path,
+    name: options.name,
+  });
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
     readProjectConfiguration(tree, project);
@@ -49,24 +47,23 @@ async function normalizeOptions(
   const description: string =
     options.description ?? `Migration for v${options.packageVersion}`;
 
-  // const { root: projectRoot, sourceRoot: projectSourceRoot } =
-  //   readProjectConfiguration(host, options.project);
-
   const normalized: NormalizedSchema = {
     ...options,
     directory,
+    fileName,
     project,
-    name: artifactName,
+    name,
     description,
     projectRoot,
     projectSourceRoot,
+    isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 
   return normalized;
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(host, path.join(__dirname, 'files/migration'), options.path, {
+  generateFiles(host, join(__dirname, 'files/migration'), options.directory, {
     ...options,
     tmpl: '',
   });
@@ -88,13 +85,17 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
     : {};
 
   const generators = migrations.generators ?? {};
+
+  const dir = getArtifactMetadataDirectory(
+    host,
+    options.project,
+    options.directory,
+    options.isTsSolutionSetup
+  );
   generators[options.name] = {
     version: options.packageVersion,
     description: options.description,
-    implementation: `./${joinPathFragments(
-      relative(options.projectRoot, options.path),
-      options.name
-    )}`,
+    implementation: `${dir}/${options.fileName}`,
   };
   migrations.generators = generators;
 
@@ -115,19 +116,29 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
 function updatePackageJson(host: Tree, options: NormalizedSchema) {
   updateJson<PackageJson>(
     host,
-    path.join(options.projectRoot, 'package.json'),
+    join(options.projectRoot, 'package.json'),
     (json) => {
+      const addFile = (file: string) => {
+        if (options.isTsSolutionSetup) {
+          const filesSet = new Set(json.files ?? ['dist', '!**/*.tsbuildinfo']);
+          filesSet.add(file.replace(/^\.\//, ''));
+          json.files = [...filesSet];
+        }
+      };
+
       const migrationKey = json['ng-update'] ? 'ng-update' : 'nx-migrations';
-      const preexistingValue = json[migrationKey];
-      if (typeof preexistingValue === 'string') {
+      if (typeof json[migrationKey] === 'string') {
+        addFile(json[migrationKey]);
         return json;
       } else if (!json[migrationKey]) {
         json[migrationKey] = {
           migrations: './migrations.json',
         };
-      } else if (preexistingValue.migrations) {
-        preexistingValue.migrations = './migrations.json';
+      } else if (json[migrationKey].migrations) {
+        json[migrationKey].migrations = './migrations.json';
       }
+
+      addFile(json[migrationKey].migrations);
 
       // add dependencies
       json.dependencies = {
@@ -141,6 +152,10 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
 }
 
 function updateProjectConfig(host: Tree, options: NormalizedSchema) {
+  if (options.isTsSolutionSetup) {
+    return;
+  }
+
   const project = readProjectConfiguration(host, options.project);
 
   const assets = project.targets.build?.options?.assets;
@@ -164,10 +179,9 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);
+  updatePackageJson(host, options);
   updateMigrationsJson(host, options);
   updateProjectConfig(host, options);
-  updateMigrationsJson(host, options);
-  updatePackageJson(host, options);
 
   if (!host.exists('migrations.json')) {
     const packageJsonPath = joinPathFragments(

@@ -491,6 +491,7 @@
       - [setup-build](/nx-api/js/generators/setup-build)
       - [typescript-sync](/nx-api/js/generators/typescript-sync)
       - [setup-prettier](/nx-api/js/generators/setup-prettier)
+  - [module-federation](/nx-api/module-federation)
   - [nest](/nx-api/nest)
     - [documents](/nx-api/nest/documents)
       - [Overview](/nx-api/nest/documents/overview)

@@ -93,7 +93,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e" --require-explicit-completion
+      - run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
@@ -123,10 +123,6 @@ jobs:
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
-      - run:
-          name: End CI Run
-          command: npx nx-cloud@next complete-ci-run
-          no_output_timeout: 20m
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------

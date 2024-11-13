@@ -12,7 +12,6 @@ export interface WithWebOptions {
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
   styles?: Array<ExtraEntryPointClass | string>;
-  subresourceIntegrity?: boolean;
   stylePreprocessorOptions?: {
     includePaths?: string[];
   };
@@ -51,7 +50,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}) {
 
 function getClientEnvironment(mode?: string) {
   // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
-  // injected into the application via DefinePlugin in webpack configuration.
+  // injected into the application via DefinePlugin in rspack configuration.
   const nxPublicKeyRegex = /^NX_PUBLIC_/i;
 
   const raw = Object.keys(process.env)
@@ -61,7 +60,7 @@ function getClientEnvironment(mode?: string) {
       return env;
     }, {});
 
-  // Stringify all values so we can feed into webpack DefinePlugin
+  // Stringify all values so we can feed into rspack DefinePlugin
   const stringified = {
     'process.env': Object.keys(raw).reduce((env, key) => {
       env[key] = JSON.stringify(raw[key]);

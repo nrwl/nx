@@ -10,7 +10,6 @@ import {
 } from '@rspack/core';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import { getOutputHashFormat } from './hash-format';
 import { normalizeExtraEntryPoints } from './normalize-entry';
 import {
@@ -69,18 +68,17 @@ export function applyWebConfig(
     plugins.push(
       new HtmlRspackPlugin({
         template: options.index,
-        sri: options.subresourceIntegrity ? 'sha256' : undefined,
+        sri: 'sha256',
         ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
+        ...(config.output?.scriptType === 'module'
+          ? { scriptLoading: 'module' }
+          : {}),
       })
     );
   }
 
-  if (options.subresourceIntegrity) {
-    plugins.push(new SubresourceIntegrityPlugin() as any);
-  }
-
   const minimizer: RspackPluginInstance[] = [];
-  if (stylesOptimization) {
+  if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
         test: /\.(?:css|scss|sass|less|styl)$/,
@@ -338,13 +336,11 @@ export function applyWebConfig(
 
   config.output = {
     ...(config.output ?? {}),
-    assetModuleFilename: '[name].[contenthash:20][ext]',
-    crossOriginLoading: options.subresourceIntegrity
-      ? ('anonymous' as const)
-      : (false as const),
+    assetModuleFilename: '[name].[contenthash:16][ext]',
+    crossOriginLoading: 'anonymous',
   };
 
-  // In case users customize their webpack config with unsupported entry.
+  // In case users customize their rspack config with unsupported entry.
   if (typeof config.entry === 'function')
     throw new Error('Entry function is not supported. Use an object.');
   if (typeof config.entry === 'string')
@@ -360,41 +356,43 @@ export function applyWebConfig(
     }
   });
 
-  config.optimization = {
-    ...(config.optimization ?? {}),
-    minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
-    emitOnErrors: false,
-    moduleIds: 'deterministic' as const,
-    runtimeChunk: options.runtimeChunk ? { name: 'runtime' } : false,
-    splitChunks: {
-      defaultSizeTypes:
-        config.optimization?.splitChunks !== false
-          ? config.optimization?.splitChunks?.defaultSizeTypes
-          : ['...'],
-      maxAsyncRequests: Infinity,
-      cacheGroups: {
-        default: !!options.commonChunk && {
-          chunks: 'async' as const,
-          minChunks: 2,
-          priority: 10,
+  config.optimization = !isProd
+    ? undefined
+    : {
+        ...(config.optimization ?? {}),
+        minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
+        emitOnErrors: false,
+        moduleIds: 'deterministic' as const,
+        runtimeChunk: options.runtimeChunk ? { name: 'runtime' } : false,
+        splitChunks: {
+          defaultSizeTypes:
+            config.optimization?.splitChunks !== false
+              ? config.optimization?.splitChunks?.defaultSizeTypes
+              : ['...'],
+          maxAsyncRequests: Infinity,
+          cacheGroups: {
+            default: !!options.commonChunk && {
+              chunks: 'async' as const,
+              minChunks: 2,
+              priority: 10,
+            },
+            common: !!options.commonChunk && {
+              name: 'common',
+              chunks: 'async' as const,
+              minChunks: 2,
+              enforce: true,
+              priority: 5,
+            },
+            vendors: false as const,
+            vendor: !!options.vendorChunk && {
+              name: 'vendor',
+              chunks: (chunk) => chunk.name === 'main',
+              enforce: true,
+              test: /[\\/]node_modules[\\/]/,
+            },
+          },
         },
-        common: !!options.commonChunk && {
-          name: 'common',
-          chunks: 'async' as const,
-          minChunks: 2,
-          enforce: true,
-          priority: 5,
-        },
-        vendors: false as const,
-        vendor: !!options.vendorChunk && {
-          name: 'vendor',
-          chunks: (chunk) => chunk.name === 'main',
-          enforce: true,
-          test: /[\\/]node_modules[\\/]/,
-        },
-      },
-    },
-  };
+      };
 
   config.resolve.mainFields = ['browser', 'module', 'main'];
 
@@ -437,7 +435,7 @@ export function applyWebConfig(
 
 function getClientEnvironment(mode?: string) {
   // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
-  // injected into the application via DefinePlugin in webpack configuration.
+  // injected into the application via DefinePlugin in rspack configuration.
   const nxPublicKeyRegex = /^NX_PUBLIC_/i;
 
   const raw = Object.keys(process.env)
@@ -447,7 +445,7 @@ function getClientEnvironment(mode?: string) {
       return env;
     }, {});
 
-  // Stringify all values so we can feed into webpack DefinePlugin
+  // Stringify all values so we can feed into rspack DefinePlugin
   const stringified = {
     'process.env': Object.keys(raw).reduce((env, key) => {
       env[key] = JSON.stringify(raw[key]);
