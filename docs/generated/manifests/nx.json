@@ -791,7 +791,12 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-plugins",
-        "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
+        "tags": [
+          "add",
+          "generate-code",
+          "create-your-own-plugin",
+          "inferred-tasks"
+        ]
       },
       {
         "id": "inferred-tasks",
@@ -835,7 +840,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-daemon",
-        "tags": []
+        "tags": ["daemon"]
       },
       {
         "id": "sync-generators",
@@ -846,7 +851,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/sync-generators",
-        "tags": []
+        "tags": ["sync"]
       },
       {
         "id": "turbo-and-nx",
@@ -1073,7 +1078,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-plugins",
-    "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
+    "tags": ["add", "generate-code", "create-your-own-plugin", "inferred-tasks"]
   },
   "/concepts/inferred-tasks": {
     "id": "inferred-tasks",
@@ -1117,7 +1122,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-daemon",
-    "tags": []
+    "tags": ["daemon"]
   },
   "/concepts/sync-generators": {
     "id": "sync-generators",
@@ -1128,7 +1133,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/sync-generators",
-    "tags": []
+    "tags": ["sync"]
   },
   "/concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
@@ -1563,7 +1568,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/root-level-scripts",
-            "tags": ["run-tasks"]
+            "tags": ["run-tasks", "exec"]
           },
           {
             "id": "workspace-watching",
@@ -1641,7 +1646,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/adding-to-monorepo",
-            "tags": []
+            "tags": ["init"]
           },
           {
             "id": "from-turborepo",
@@ -1663,7 +1668,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/adding-to-existing-project",
-            "tags": []
+            "tags": ["init"]
           },
           {
             "id": "import-project",
@@ -1674,7 +1679,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/import-project",
-            "tags": []
+            "tags": ["import"]
           },
           {
             "id": "preserving-git-histories",
@@ -2104,7 +2109,7 @@
                 "itemList": [],
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular",
-                "tags": []
+                "tags": ["init"]
               },
               {
                 "id": "angular-multiple",
@@ -2679,7 +2684,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-            "tags": ["automate-updating-dependencies"]
+            "tags": ["automate-updating-dependencies", "add"]
           },
           {
             "id": "define-environment-variables",
@@ -2939,7 +2944,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/root-level-scripts",
-        "tags": ["run-tasks"]
+        "tags": ["run-tasks", "exec"]
       },
       {
         "id": "workspace-watching",
@@ -3076,7 +3081,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/root-level-scripts",
-    "tags": ["run-tasks"]
+    "tags": ["run-tasks", "exec"]
   },
   "/recipes/running-tasks/workspace-watching": {
     "id": "workspace-watching",
@@ -3149,7 +3154,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx/adding-to-monorepo",
-        "tags": []
+        "tags": ["init"]
       },
       {
         "id": "from-turborepo",
@@ -3171,7 +3176,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx/adding-to-existing-project",
-        "tags": []
+        "tags": ["init"]
       },
       {
         "id": "import-project",
@@ -3182,7 +3187,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx/import-project",
-        "tags": []
+        "tags": ["import"]
       },
       {
         "id": "preserving-git-histories",
@@ -3220,7 +3225,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-monorepo",
-    "tags": []
+    "tags": ["init"]
   },
   "/recipes/adopting-nx/from-turborepo": {
     "id": "from-turborepo",
@@ -3242,7 +3247,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-existing-project",
-    "tags": []
+    "tags": ["init"]
   },
   "/recipes/adopting-nx/import-project": {
     "id": "import-project",
@@ -3253,7 +3258,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/import-project",
-    "tags": []
+    "tags": ["import"]
   },
   "/recipes/adopting-nx/preserving-git-histories": {
     "id": "preserving-git-histories",
@@ -4008,7 +4013,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/migration/angular",
-            "tags": []
+            "tags": ["init"]
           },
           {
             "id": "angular-multiple",
@@ -4102,7 +4107,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/migration/angular",
-        "tags": []
+        "tags": ["init"]
       },
       {
         "id": "angular-multiple",
@@ -4129,7 +4134,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular",
-    "tags": []
+    "tags": ["init"]
   },
   "/recipes/angular/migration/angular-multiple": {
     "id": "angular-multiple",
@@ -5024,7 +5029,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-        "tags": ["automate-updating-dependencies"]
+        "tags": ["automate-updating-dependencies", "add"]
       },
       {
         "id": "define-environment-variables",
@@ -5205,7 +5210,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-    "tags": ["automate-updating-dependencies"]
+    "tags": ["automate-updating-dependencies", "add"]
   },
   "/recipes/tips-n-tricks/define-environment-variables": {
     "id": "define-environment-variables",

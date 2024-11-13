@@ -600,7 +600,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/security/personal-access-tokens",
-            "tags": []
+            "tags": ["login"]
           },
           {
             "id": "encryption",
@@ -1074,7 +1074,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/recipes/security/personal-access-tokens",
-        "tags": []
+        "tags": ["login"]
       },
       {
         "id": "encryption",
@@ -1123,7 +1123,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/security/personal-access-tokens",
-    "tags": []
+    "tags": ["login"]
   },
   "/ci/recipes/security/encryption": {
     "id": "encryption",
