@@ -1,4 +1,3 @@
-import type { NormalModuleReplacementPlugin } from 'webpack';
 import type { moduleFederationPlugin } from '@module-federation/sdk';
 
 export type ModuleFederationLibrary = { type: string; name: string };
@@ -9,13 +8,17 @@ export type WorkspaceLibrary = {
   importKey: string | undefined;
 };
 
-export type SharedWorkspaceLibraryConfig = {
+export type SharedWorkspaceLibraryConfig<
+  T =
+    | typeof import('webpack').NormalModuleReplacementPlugin
+    | typeof import('@rspack/core').NormalModuleReplacementPlugin
+> = {
   getAliases: () => Record<string, string>;
   getLibraries: (
     projectRoot: string,
     eager?: boolean
   ) => Record<string, SharedLibraryConfig>;
-  getReplacementPlugin: () => NormalModuleReplacementPlugin;
+  getReplacementPlugin: () => T;
 };
 
 export type Remotes = Array<string | [remoteName: string, remoteUrl: string]>;
@@ -55,13 +58,7 @@ export interface ModuleFederationConfig {
 
 export type NxModuleFederationConfigOverride = Omit<
   moduleFederationPlugin.ModuleFederationPluginOptions,
-  | 'exposes'
-  | 'remotes'
-  | 'name'
-  | 'library'
-  | 'shared'
-  | 'filename'
-  | 'remoteType'
+  'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
 >;
 
 export type WorkspaceLibrarySecondaryEntryPoint = {

@@ -4,7 +4,7 @@ import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import * as pc from 'picocolors';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { ModuleFederationConfig } from './models/index';
+import { ModuleFederationConfig } from './models';
 
 interface ModuleFederationExecutorContext {
   projectName: string;

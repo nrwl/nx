@@ -3,7 +3,7 @@ import { type Schema } from '../schema';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { join } from 'path';
 import { cpSync, rmSync } from 'fs';
-import type { StaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
+import type { StaticRemotesConfig } from '@nx/module-federation/src/utils';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 
 export function startStaticRemotes(
