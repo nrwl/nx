@@ -225,6 +225,7 @@ export function runCreateWorkspace(
     docker,
     nextAppDir,
     nextSrcDir,
+    linter = 'eslint',
     e2eTestRunner,
     ssr,
     framework,
@@ -244,6 +245,7 @@ export function runCreateWorkspace(
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
+    linter?: 'none' | 'eslint';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
     framework?: string;
@@ -292,6 +294,10 @@ export function runCreateWorkspace(
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (linter) {
+    command += ` --linter=${linter}`;
   }
 
   if (e2eTestRunner) {
