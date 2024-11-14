@@ -3,6 +3,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
+import { NormalModuleReplacementPlugin } from 'webpack';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -56,7 +57,7 @@ export async function withModuleFederationForSSR(
         },
         {}
       ),
-      sharedLibraries.getReplacementPlugin()
+      sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
     );
 
     // The env var is only set from the module-federation-dev-server

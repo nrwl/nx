@@ -5,6 +5,7 @@ import {
 import { getModuleFederationConfig } from './utils';
 import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
+import { NormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * @param {ModuleFederationConfig} options
@@ -71,7 +72,7 @@ export async function withModuleFederation(
             : configOverride?.runtimePlugins,
         virtualRuntimeEntry: true,
       }),
-      sharedLibraries.getReplacementPlugin()
+      sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
     );
 
     // The env var is only set from the module-federation-dev-server

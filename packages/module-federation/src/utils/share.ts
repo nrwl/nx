@@ -20,6 +20,8 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+import { NormalModuleReplacementPlugin as WebpackNormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to
@@ -78,8 +80,10 @@ export function shareWorkspaceLibraries(
     });
   }
 
-  const bundlerImpl =
-    bundler === 'rspack' ? require('@rspack/core') : require('webpack');
+  const normalModuleReplacementPluginImpl =
+    bundler === 'rspack'
+      ? RspackNormalModuleReplacementPlugin
+      : WebpackNormalModuleReplacementPlugin;
 
   return {
     getAliases: () =>
@@ -142,7 +146,7 @@ export function shareWorkspaceLibraries(
       }, {} as Record<string, SharedLibraryConfig>);
     },
     getReplacementPlugin: () =>
-      new bundlerImpl.NormalModuleReplacementPlugin(/./, (req) => {
+      new normalModuleReplacementPluginImpl(/./, (req) => {
         if (!req.request.startsWith('.')) {
           return;
         }
@@ -323,12 +327,14 @@ function addStringDependencyToSharedConfig(
 function getEmptySharedLibrariesConfig(
   bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
-  const bundlerImpl =
-    bundler === 'rspack' ? require('@rspack/core') : require('webpack');
+  const normalModuleReplacementPluginImpl =
+    bundler === 'rspack'
+      ? RspackNormalModuleReplacementPlugin
+      : WebpackNormalModuleReplacementPlugin;
   return {
     getAliases: () => ({}),
     getLibraries: () => ({}),
     getReplacementPlugin: () =>
-      new bundlerImpl.NormalModuleReplacementPlugin(/./, () => {}),
+      new normalModuleReplacementPluginImpl(/./, () => {}),
   };
 }

@@ -1,4 +1,6 @@
 import type { moduleFederationPlugin } from '@module-federation/sdk';
+import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+import { NormalModuleReplacementPlugin as WebpackNormalModuleReplacementPlugin } from 'webpack';
 
 export type ModuleFederationLibrary = { type: string; name: string };
 
@@ -8,17 +10,15 @@ export type WorkspaceLibrary = {
   importKey: string | undefined;
 };
 
-export type SharedWorkspaceLibraryConfig<
-  T =
-    | typeof import('webpack').NormalModuleReplacementPlugin
-    | typeof import('@rspack/core').NormalModuleReplacementPlugin
-> = {
+export type SharedWorkspaceLibraryConfig = {
   getAliases: () => Record<string, string>;
   getLibraries: (
     projectRoot: string,
     eager?: boolean
   ) => Record<string, SharedLibraryConfig>;
-  getReplacementPlugin: () => T;
+  getReplacementPlugin: () =>
+    | RspackNormalModuleReplacementPlugin
+    | WebpackNormalModuleReplacementPlugin;
 };
 
 export type Remotes = Array<string | [remoteName: string, remoteUrl: string]>;
