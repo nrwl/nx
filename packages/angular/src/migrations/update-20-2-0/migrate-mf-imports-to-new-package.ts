@@ -3,7 +3,7 @@ import { formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 const MF_IMPORT_TO_UPDATE = 'ModuleFederationConfig';
-const MF_CONFIG_IMPORT_SELECTOR = `ImportDeclaration:has(Identifier[name=ModuleFederationConfig])`;
+const MF_CONFIG_IMPORT_SELECTOR = `ImportDeclaration:has(StringLiteral[value=@nx/webpack]):has(Identifier[name=ModuleFederationConfig])`;
 const IMPORT_TOKENS_SELECTOR = `ImportClause ImportSpecifier`;
 const MF_CONFIG_IMPORT_SPECIFIER_SELECTOR = `ImportClause ImportSpecifier > Identifier[name=ModuleFederationConfig]`;
 const WEBPACK_IMPORT_SELECTOR = `ImportDeclaration > StringLiteral[value=@nx/webpack]`;

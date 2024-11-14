@@ -259,4 +259,29 @@ describe('migrate-mf-imports-to-new-package', () => {
       "
     `);
   });
+
+  it('should not incorrectly update import when it is run twice', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      `apps/shell/webpack.config.ts`,
+      `import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
+import { withReact } from '@nx/react';
+import { withModuleFederation } from '@nx/react/module-federation';`
+    );
+
+    // ACT
+    await migrateMfImportsToNewPackage(tree);
+    await migrateMfImportsToNewPackage(tree);
+
+    // ASSERT
+    expect(tree.read('apps/shell/webpack.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { ModuleFederationConfig } from '@nx/module-federation';
+      import { composePlugins, withNx } from '@nx/webpack';
+      import { withReact } from '@nx/react';
+      import { withModuleFederation } from '@nx/react/module-federation';
+      "
+    `);
+  });
 });

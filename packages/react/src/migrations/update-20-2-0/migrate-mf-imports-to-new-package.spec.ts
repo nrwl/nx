@@ -262,4 +262,27 @@ describe.each([
       "
     `);
   });
+
+  it('should update the correct import when there are multiple from the bundler', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      `apps/shell/${bundler}.config.js`,
+      `import {something} from '${importPath}';
+      import { 
+        ModuleFederationConfig 
+      } from '${importPath}';`
+    );
+
+    // ACT
+    await migrateMfImportsToNewPackage(tree);
+
+    // ASSERT
+    expect(tree.read(`apps/shell/${bundler}.config.js`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { something } from '${importPath}';
+      import { ModuleFederationConfig } from '@nx/module-federation';
+      "
+    `);
+  });
 });
