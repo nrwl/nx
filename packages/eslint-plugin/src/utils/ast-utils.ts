@@ -108,7 +108,7 @@ function hasMemberExport(exportedMember, filePath) {
   );
 }
 
-export function getRelativeImportPath(exportedMember, filePath, basePath) {
+export function getRelativeImportPath(exportedMember, filePath) {
   const status = lstatSync(filePath, {
     throwIfNoEntry: false,
   });
@@ -273,8 +273,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       if (hasMemberExport(exportedMember, moduleFilePath)) {
         const foundFilePath = getRelativeImportPath(
           exportedMember,
-          moduleFilePath,
-          basePath
+          moduleFilePath
         );
         if (foundFilePath) {
           return foundFilePath;
