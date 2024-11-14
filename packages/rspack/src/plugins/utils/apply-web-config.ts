@@ -121,12 +121,6 @@ export function applyWebConfig(
       const resolvedPath = style.input.startsWith('.')
         ? style.input
         : resolve(options.root, style.input);
-      // Add style entry points.
-      if (entries[style.bundleName]) {
-        entries[style.bundleName].import.push(resolvedPath);
-      } else {
-        entries[style.bundleName] = { import: [resolvedPath] };
-      }
 
       // Add global css paths.
       globalStylePaths.push(resolvedPath);
