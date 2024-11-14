@@ -19,6 +19,7 @@ pub struct CachedResult {
     pub code: i16,
     pub terminal_output: String,
     pub outputs_path: String,
+    pub size: Option<i64>,
 }
 
 #[napi]
@@ -62,6 +63,7 @@ impl NxCache {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
+                    size   INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (hash) REFERENCES task_details (hash)
@@ -71,6 +73,7 @@ impl NxCache {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
+                    size   INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -95,10 +98,11 @@ impl NxCache {
                 "UPDATE cache_outputs
                     SET accessed_at = CURRENT_TIMESTAMP
                     WHERE hash = ?1
-                    RETURNING code",
+                    RETURNING code, size",
                 params![hash],
                 |row| {
                     let code: i16 = row.get(0)?;
+                    let size: i64 = row.get(1)?;
 
                     let start = Instant::now();
                     let terminal_output =
@@ -109,6 +113,7 @@ impl NxCache {
                         code,
                         terminal_output,
                         outputs_path: task_dir.to_normalized_string(),
+                        size: Some(size)
                     })
                 },
             )
@@ -145,16 +150,17 @@ impl NxCache {
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
 
         // Copy the outputs to the cache
+        let mut total_size: i64 = 0;
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                _copy(p, cached_outputs_dir)?;
+                total_size += _copy(p, cached_outputs_dir)?;
             }
         }
 
-        self.record_to_cache(hash, code)?;
+        self.record_to_cache(hash, code, Some(total_size))?;
         Ok(())
     }
 
@@ -173,7 +179,7 @@ impl NxCache {
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
-        self.record_to_cache(hash, code)?;
+        self.record_to_cache(hash, code, result.size)?;
         Ok(())
     }
 
@@ -187,11 +193,12 @@ impl NxCache {
             .to_normalized_string()
     }
 
-    fn record_to_cache(&self, hash: String, code: i16) -> anyhow::Result<()> {
-        trace!("Recording to cache: {}, {}", &hash, code);
+    fn record_to_cache(&self, hash: String, code: i16, size: Option<i64>) -> anyhow::Result<()> {
+        let size = size.unwrap_or(0);
+        trace!("Recording to cache: {}, {}, {}", &hash, code, size);
         self.db.execute(
-            "INSERT OR REPLACE INTO cache_outputs (hash, code) VALUES (?1, ?2)",
-            params![hash, code],
+            "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
+            params![hash, code, size],
         )?;
         Ok(())
     }
