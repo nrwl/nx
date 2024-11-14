@@ -50,7 +50,6 @@ describe('nx release version plans only touched', () => {
   beforeEach(async () => {
     newProject({
       packages: ['@nx/js'],
-      extraArgs: '--js',
     });
 
     pkg1 = uniq('my-pkg-1');

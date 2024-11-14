@@ -53,7 +53,6 @@ describe('nx release version plans check command', () => {
   beforeEach(async () => {
     newProject({
       packages: ['@nx/js'],
-      extraArgs: '--js',
     });
 
     pkg1 = uniq('my-pkg-1');
