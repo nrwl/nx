@@ -21,4 +21,5 @@ export interface Schema {
   rootProject?: boolean;
   addPlugin?: boolean;
   useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
 }

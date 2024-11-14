@@ -19,4 +19,5 @@ export interface Schema {
   addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
 }

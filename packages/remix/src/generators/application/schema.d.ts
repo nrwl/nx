@@ -13,4 +13,5 @@ export interface NxRemixGeneratorSchema {
   addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
 }

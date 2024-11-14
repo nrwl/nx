@@ -50,6 +50,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
 

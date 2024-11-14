@@ -71,6 +71,7 @@ export async function remixApplicationGeneratorInternal(
     await jsInitGenerator(tree, {
       skipFormat: true,
       addTsPlugin: _options.useTsSolution,
+      formatter: _options.formatter,
     }),
   ];
 

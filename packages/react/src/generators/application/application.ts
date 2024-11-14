@@ -116,6 +116,7 @@ export async function applicationGeneratorInternal(
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
 

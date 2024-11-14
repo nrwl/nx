@@ -46,6 +46,7 @@ export async function reactNativeApplicationGeneratorInternal(
     ...schema,
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
 
