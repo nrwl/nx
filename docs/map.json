@@ -243,12 +243,6 @@
               "file": "shared/concepts/daemon"
             },
             {
-              "name": "Database Cache",
-              "id": "db-cache",
-              "tags": [],
-              "file": "shared/concepts/db-cache"
-            },
-            {
               "name": "Sync Generators",
               "id": "sync-generators",
               "tags": ["sync"],

@@ -31,7 +31,6 @@
     - [Types of Configuration](/concepts/types-of-configuration)
     - [Executors and Configurations](/concepts/executors-and-configurations)
     - [Nx Daemon](/concepts/nx-daemon)
-    - [Database Cache](/concepts/db-cache)
     - [Sync Generators](/concepts/sync-generators)
     - [Nx and Turborepo](/concepts/turbo-and-nx)
     - [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
