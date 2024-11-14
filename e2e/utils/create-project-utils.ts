@@ -226,6 +226,7 @@ export function runCreateWorkspace(
     nextAppDir,
     nextSrcDir,
     linter = 'eslint',
+    formatter = 'prettier',
     e2eTestRunner,
     ssr,
     framework,
@@ -247,6 +248,7 @@ export function runCreateWorkspace(
     nextSrcDir?: boolean;
     linter?: 'none' | 'eslint';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+    formatter?: 'prettier' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
@@ -298,6 +300,10 @@ export function runCreateWorkspace(
 
   if (linter) {
     command += ` --linter=${linter}`;
+  }
+
+  if (formatter) {
+    command += ` --formatter=${formatter}`;
   }
 
   if (e2eTestRunner) {
