@@ -44,14 +44,8 @@ error.
 
 ## You Share Cache with Another Machine Using a Network Drive
 
-You can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the errors (
-e.g., `NX_REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
-setting `NODE_TLS_REJECT_UNAUTHORIZED=0` to ignore any errors stemming form self-signed certificates. Even though it
-will make it work, this approach is discouraged.
-
-Storing Nx's local cache on a network drive can present security risks. When a network drive is shared, every CI run has
-access to all the previously created Nx cache artifacts. Hence, it is plausible for every single artifact - for every
-single task hash - to be accessed without leaving any trace. This is feasible due to the network drive's capability to
+Storing Nx's local cache on a network drive presents security risks, so we prevent you from doing so. When a network drive is shared, every CI run has access to all the previously created Nx cache artifacts. Hence, it is plausible for every single artifact - for every
+single task hash - to be accessed without leaving any trace. This is possible due to the network drive's capability to
 allow overwrites.
 
 ## How Nx Replay Makes Sure Sharing Cache is Safe

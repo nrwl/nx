@@ -25,7 +25,7 @@ It is easier for bad actors to change data on your file system than it is for th
 
 ## 4. Unlocked Potential Features
 
-Using a database to store the task metadata opens up a lot of possibilities for aggregation and analytics. We could use the task timings to help you identify which tasks to prioritize for performance tweaks because of how frequently they are executed and how long the task takes to run. We could identify tasks that should have their inputs fine-tuned because they have a low cache hit rate.
+Using a database to store the task metadata opens up a lot of possibilities for aggregation and analytics. We could use the task timings to help you identify which tasks to prioritize for performance tweaks because of how frequently they are executed and how long the tasks take to run. We could identify tasks that should have their inputs fine-tuned because they have a low cache hit rate.
 
 ## Opting Out
 

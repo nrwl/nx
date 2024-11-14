@@ -6594,14 +6594,14 @@
         "tags": []
       },
       {
-        "id": "custom-task-runners",
-        "name": "Custom Task Runners",
+        "id": "legacy-cache",
+        "name": "Legacy Cache",
         "description": "",
         "mediaImage": "",
-        "file": "shared/deprecated/custom-task-runners",
+        "file": "shared/deprecated/legacy-cache",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/custom-task-runners",
+        "path": "/deprecated/legacy-cache",
         "tags": []
       },
       {
@@ -6763,15 +6763,15 @@
     "path": "/deprecated/workspace-generators",
     "tags": []
   },
-  "/deprecated/custom-task-runners": {
-    "id": "custom-task-runners",
-    "name": "Custom Task Runners",
+  "/deprecated/legacy-cache": {
+    "id": "legacy-cache",
+    "name": "Legacy Cache",
     "description": "",
     "mediaImage": "",
-    "file": "shared/deprecated/custom-task-runners",
+    "file": "shared/deprecated/legacy-cache",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/custom-task-runners",
+    "path": "/deprecated/legacy-cache",
     "tags": []
   },
   "/deprecated/workspace-executors": {

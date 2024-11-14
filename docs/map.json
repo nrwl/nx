@@ -1394,9 +1394,9 @@
               "file": "shared/deprecated/workspace-generators"
             },
             {
-              "name": "Custom Task Runners",
-              "id": "custom-task-runners",
-              "file": "shared/deprecated/custom-task-runners"
+              "name": "Legacy Cache",
+              "id": "legacy-cache",
+              "file": "shared/deprecated/legacy-cache"
             },
             {
               "name": "Workspace Executors",
