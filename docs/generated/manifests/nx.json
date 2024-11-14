@@ -843,6 +843,17 @@
         "tags": ["daemon"]
       },
       {
+        "id": "db-cache",
+        "name": "Database Cache",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/db-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/db-cache",
+        "tags": []
+      },
+      {
         "id": "sync-generators",
         "name": "Sync Generators",
         "description": "",
@@ -1123,6 +1134,17 @@
     "isExternal": false,
     "path": "/concepts/nx-daemon",
     "tags": ["daemon"]
+  },
+  "/concepts/db-cache": {
+    "id": "db-cache",
+    "name": "Database Cache",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/db-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/db-cache",
+    "tags": []
   },
   "/concepts/sync-generators": {
     "id": "sync-generators",

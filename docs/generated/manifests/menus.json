@@ -615,6 +615,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Database Cache",
+            "path": "/concepts/db-cache",
+            "id": "db-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Sync Generators",
             "path": "/concepts/sync-generators",
             "id": "sync-generators",
@@ -815,6 +823,14 @@
         "name": "Nx Daemon",
         "path": "/concepts/nx-daemon",
         "id": "nx-daemon",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Database Cache",
+        "path": "/concepts/db-cache",
+        "id": "db-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
