@@ -19,7 +19,6 @@ import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
 import { output } from 'create-nx-workspace/src/utils/output';
 import { NxCloud } from 'create-nx-workspace/src/utils/nx/nx-cloud';
 import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
-import { showNxWarning } from 'create-nx-workspace/src/utils/nx/show-nx-warning';
 import {
   messages,
   recordStat,
@@ -149,8 +148,6 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
     `@nx/plugin@${nxVersion}`,
     populatedArguments
   );
-
-  showNxWarning(parsedArgs.pluginName);
 
   await recordStat({
     nxVersion,

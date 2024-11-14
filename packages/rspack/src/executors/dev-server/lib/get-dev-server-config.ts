@@ -26,7 +26,7 @@ export function getDevServerOptions(
 
   const config: RspackDevServerConfiguration = {
     host: serveOptions.host,
-    port: serveOptions.port,
+    port: serveOptions.port ?? 4200,
     headers: { 'Access-Control-Allow-Origin': '*' },
     historyApiFallback: {
       index:

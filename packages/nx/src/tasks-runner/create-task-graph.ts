@@ -287,9 +287,13 @@ export class ProcessTasks {
           );
         }
       } else {
+        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
         const dummyId = this.getId(
           depProject.name,
-          DUMMY_TASK_TARGET,
+          task.target.project +
+            '__' +
+            dependencyConfig.target +
+            DUMMY_TASK_TARGET,
           undefined
         );
         this.dependencies[task.id].push(dummyId);

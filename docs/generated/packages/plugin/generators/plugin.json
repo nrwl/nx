@@ -1,6 +1,6 @@
 {
   "name": "plugin",
-  "factory": "./src/generators/plugin/plugin",
+  "factory": "./src/generators/plugin/plugin#pluginGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -34,14 +34,14 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
-        "default": "eslint"
+        "enum": ["none", "eslint"],
+        "x-priority": "important"
       },
       "unitTestRunner": {
-        "type": "string",
-        "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "jest"
+        "type": "string",
+        "enum": ["none", "jest"],
+        "x-priority": "important"
       },
       "tags": {
         "type": "string",
@@ -92,13 +92,17 @@
         "type": "boolean",
         "description": "Generates a boilerplate for publishing the plugin to npm.",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["directory"],
     "presets": []
   },
   "description": "Create a Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/plugin/plugin.ts",
+  "implementation": "/packages/plugin/src/generators/plugin/plugin#pluginGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/plugin/schema.json",
