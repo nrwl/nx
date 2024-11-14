@@ -122,12 +122,12 @@ Regardless of how you manage your AWS authentication, you need to configure your
 | **Property**      | **Description**                                                                   |
 | ----------------- | --------------------------------------------------------------------------------- |
 | **region**        | The id of the AWS region to use                                                   |
-| **bucket**        | The name of the AWS bucket to use                                                 |
+| **bucket**        | The name of the S3 bucket to use                                                  |
 | **encryptionKey** | Nx encryption key used to encrypt and decrypt artifacts from the cache (optional) |
 
 #### S3 Compatible Providers
 
-To use `@nx/powerpack-s3-cache` with S3 compatible providers (MinIO, LocalStack, DigitalOcean Spaces, Cloudflare, etc..), `endpoint` will need to be provided. Some providers also need to have `forcePathStyle` set to true in the configuration.
+To use `@nx/powerpack-s3-cache` with S3 compatible providers ([MinIO](https://min.io/product/s3-compatibility), [LocalStack](https://www.localstack.cloud), [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces), [Cloudflare](https://www.cloudflare.com/developer-platform/solutions/s3-compatible-object-storage), etc..), `endpoint` will need to be provided. Some providers also need to have `forcePathStyle` set to true in the configuration.
 
 Below is an example on how to connect to MinIO:
 
@@ -146,8 +146,8 @@ Below is an example on how to connect to MinIO:
 
 | **Property**        | **Description**                                                                                           |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| **region**          | The id of the AWS region to use                                                                           |
-| **bucket**          | The name of the AWS bucket to use                                                                         |
+| **region**          | The id of the S3 compatible storage region to use                                                         |
+| **bucket**          | The name of the S3 compatible storage bucket to use                                                       |
 | **forcePathStyle**  | Changes the way artifacts are uploaded. Usually used for S3 compatible providers (MinIO, LocalStack, etc) |
 | **endpoint**        | The custom endpoint to upload artifacts to. If endpoint is not defined, the default AWS endpoint is used  |
 | **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
