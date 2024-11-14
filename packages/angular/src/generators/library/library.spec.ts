@@ -1456,10 +1456,6 @@ describe('lib', () => {
         };
         "
       `);
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build.options.tailwindConfig).toBe(
-        'my-lib/tailwind.config.js'
-      );
       const { devDependencies } = readJson(tree, 'package.json');
       expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
       expect(devDependencies['postcss']).toBe(postcssVersion);

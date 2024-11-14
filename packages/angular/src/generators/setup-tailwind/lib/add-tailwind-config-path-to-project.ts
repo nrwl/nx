@@ -1,14 +1,7 @@
-import {
-  joinPathFragments,
-  ProjectConfiguration,
-  stripIndents,
-  Tree,
-  updateProjectConfiguration,
-} from '@nx/devkit';
-import { NormalizedGeneratorOptions } from '../schema';
+import { stripIndents, type ProjectConfiguration } from '@nx/devkit';
+import type { NormalizedGeneratorOptions } from '../schema';
 
-export function addTailwindConfigPathToProject(
-  tree: Tree,
+export function validateBuildTarget(
   options: NormalizedGeneratorOptions,
   project: ProjectConfiguration
 ): void {
@@ -23,12 +16,15 @@ export function addTailwindConfigPathToProject(
   }
 
   const supportedLibraryExecutors = [
+    '@angular-devkit/build-angular:ng-packagr',
     '@nx/angular:ng-packagr-lite',
     '@nx/angular:package',
-    '@nrwl/angular:ng-packagr-lite',
-    '@nrwl/angular:package',
   ];
-  if (!supportedLibraryExecutors.includes(buildTarget.executor)) {
+  if (
+    !supportedLibraryExecutors.includes(
+      project.targets[options.buildTarget].executor
+    )
+  ) {
     throw new Error(
       stripIndents`The build target for project "${
         options.project
@@ -38,21 +34,4 @@ export function addTailwindConfigPathToProject(
         .join(', ')}.`
     );
   }
-
-  if (
-    buildTarget.options?.tailwindConfig &&
-    tree.exists(buildTarget.options.tailwindConfig)
-  ) {
-    throw new Error(
-      stripIndents`The "${buildTarget.options.tailwindConfig}" file is already configured for the project "${options.project}". Are you sure this is the right project to set up Tailwind?
-      If you are sure, you can remove the configuration and re-run the generator.`
-    );
-  }
-
-  buildTarget.options = {
-    ...buildTarget.options,
-    tailwindConfig: joinPathFragments(project.root, 'tailwind.config.js'),
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
 }
