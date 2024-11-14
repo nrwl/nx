@@ -1,5 +1,5 @@
 import * as devkit from '@nx/devkit';
-import type { Tree } from '@nx/devkit';
+import { Tree, updateJson, writeJson } from '@nx/devkit';
 import { ProjectGraph, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host';
@@ -423,6 +423,128 @@ describe('hostGenerator', () => {
 
         export default App;
         "
+      `);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await hostGenerator(tree, {
+        directory: 'myapp',
+        addPlugin: true,
+        remotes: ['remote1', 'remote2', 'remote3'],
+        e2eTestRunner: 'none',
+        linter: Linter.None,
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+        bundler: 'rspack',
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp",
+          },
+          {
+            "path": "./remote1",
+          },
+          {
+            "path": "./remote2",
+          },
+          {
+            "path": "./remote3",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "../remote1",
+            },
+            {
+              "path": "../remote2",
+            },
+            {
+              "path": "../remote3",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "composite": false,
+            "jsx": "react-jsx",
+            "lib": [
+              "dom",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/myapp",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+            ],
+          },
+          "exclude": [
+            "dist",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.js",
+            "src/**/*.test.js",
+            "src/**/*.spec.jsx",
+            "src/**/*.test.jsx",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+          "references": [
+            {
+              "path": "../remote1/tsconfig.app.json",
+            },
+            {
+              "path": "../remote2/tsconfig.app.json",
+            },
+            {
+              "path": "../remote3/tsconfig.app.json",
+            },
+          ],
+        }
       `);
     });
   });

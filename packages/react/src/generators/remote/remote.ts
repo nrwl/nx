@@ -134,6 +134,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     name: options.projectName,
     skipFormat: true,
+    alwaysGenerateProjectJson: true,
   });
   tasks.push(initAppTask);
 
