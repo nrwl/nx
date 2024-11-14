@@ -158,6 +158,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Bundler to be used to build the app.`,
             type: 'string',
           })
+          .option('formatter', {
+            describe: chalk.dim`Code formatter to use.`,
+            type: 'string',
+          })
           .option('framework', {
             describe: chalk.dim`Framework option to be used with certain stacks.`,
             type: 'string',
@@ -441,7 +445,11 @@ async function determinePresetOptions(
   }
 }
 
-async function determineFormatterOptions(args: { interactive?: boolean }) {
+async function determineFormatterOptions(args: {
+  formatter?: 'none' | 'prettier';
+  interactive?: boolean;
+}) {
+  if (args.formatter) return args.formatter;
   const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
     {
       name: 'prettier',
