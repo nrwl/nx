@@ -20,16 +20,7 @@ async function createPreset(tree: Tree, options: Schema) {
     nxJson.useInferencePlugins !== false;
 
   if (options.preset === Preset.Apps) {
-    if (options.js) {
-      return;
-    } else {
-      const { initGenerator } = require('@nx' + '/js');
-      return initGenerator(tree, {
-        formatter: options.formatter,
-        addTsPlugin: false,
-        addTsConfigBase: true,
-      });
-    }
+    return;
   } else if (options.preset === Preset.AngularMonorepo) {
     const {
       applicationGenerator: angularApplicationGenerator,
