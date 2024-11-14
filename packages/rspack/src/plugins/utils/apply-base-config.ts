@@ -8,7 +8,6 @@ import {
   SwcJsMinimizerRspackPlugin,
   CopyRspackPlugin,
   RspackOptionsNormalized,
-  ExternalItem,
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
