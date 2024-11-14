@@ -14,9 +14,7 @@
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    // Vite takes care of building everything.
-    "noEmit": true
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "app/**/*.ts",

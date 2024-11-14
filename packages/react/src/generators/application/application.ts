@@ -365,6 +365,7 @@ export async function applicationGeneratorInternal(
     jsx: 'react-jsx',
     module: 'esnext',
     moduleResolution: 'bundler',
+    // outDir: 'dist/app',
   });
 
   if (!options.skipFormat) {

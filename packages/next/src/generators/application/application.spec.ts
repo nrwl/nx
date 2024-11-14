@@ -892,7 +892,8 @@ describe('app (legacy)', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "dist",
+            "noEmit": true,
+            "outDir": "out-tsc/myapp",
             "paths": {
               "@/*": [
                 "./src/*",

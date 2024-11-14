@@ -380,7 +380,7 @@ describe('Remix Application', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "dist",
+            "outDir": "out-tsc/myapp",
             "resolveJsonModule": true,
             "skipLibCheck": true,
             "strict": true,

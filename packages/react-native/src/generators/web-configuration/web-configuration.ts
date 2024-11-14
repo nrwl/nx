@@ -119,6 +119,7 @@ async function addBundlerConfiguration(
       project: normalizedSchema.project,
       newProject: true,
       includeVitest: false,
+      projectType: 'application',
       compiler: 'babel',
       skipFormat: true,
     });

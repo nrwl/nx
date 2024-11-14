@@ -1,12 +1,12 @@
 import {
+  joinPathFragments,
+  offsetFromRoot,
   output,
   readJson,
   readNxJson,
-  workspaceRoot,
   type Tree,
   updateJson,
-  offsetFromRoot,
-  joinPathFragments,
+  workspaceRoot,
 } from '@nx/devkit';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
@@ -118,12 +118,13 @@ export function updateTsconfigFiles(
 
   if (tree.exists(tsconfig)) {
     updateJson(tree, tsconfig, (json) => {
-      // Add rootDir?
       json.extends = joinPathFragments(offset, 'tsconfig.base.json');
 
       json.compilerOptions = {
-        outDir: 'dist', // make sure this doesn't conflict with bundlers out-tsc
         ...json.compilerOptions,
+        // Make sure d.ts files from typecheck does not conflict with bundlers.
+        // Other tooling like jest write to "out-tsc/jest" to we just default to "out-tsc/<project-name>".
+        outDir: joinPathFragments('out-tsc', projectRoot.split('/').at(-1)),
         ...compilerOptions,
       };
 
@@ -132,16 +133,12 @@ export function updateTsconfigFiles(
         : new Set(exclude);
       json.exclude = Array.from(excludeSet);
 
-      // This is not compatible with TS solution setup.
-      delete json.compilerOptions.noEmit; // I think we delete because Next.js doesn't have tyepcheck target
-
       return json;
     });
   }
 
   if (tree.exists(tsconfigSpec)) {
     updateJson(tree, tsconfigSpec, (json) => {
-      // TODO: Check that outDir to points to out-tsc
       json.extends = joinPathFragments(offset, 'tsconfig.base.json');
       json.compilerOptions = {
         ...json.compilerOptions,
