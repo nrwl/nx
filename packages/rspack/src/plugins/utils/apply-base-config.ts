@@ -8,6 +8,7 @@ import {
   SwcJsMinimizerRspackPlugin,
   CopyRspackPlugin,
   RspackOptionsNormalized,
+  type DevTool,
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
@@ -87,11 +88,7 @@ function applyNxIndependentConfig(
   config.cache = options.target === 'node' && options.watch ? true : undefined;
 
   config.devtool =
-    options.sourceMap === 'hidden'
-      ? 'hidden-source-map'
-      : options.sourceMap
-      ? 'source-map'
-      : false;
+    options.sourceMap === true ? 'source-map' : options.sourceMap;
 
   config.output = {
     ...(config.output ?? {}),
