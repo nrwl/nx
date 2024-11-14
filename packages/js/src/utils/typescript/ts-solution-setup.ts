@@ -106,7 +106,8 @@ export function updateTsconfigFiles(
   projectRoot: string,
   runtimeTsconfigFileName: string,
   compilerOptions: Record<string, string | boolean | string[]>,
-  exclude: string[] = []
+  exclude: string[] = [],
+  rootDir = 'src'
 ) {
   if (!isUsingTsSolutionSetup(tree)) return;
 
@@ -125,6 +126,7 @@ export function updateTsconfigFiles(
         // Make sure d.ts files from typecheck does not conflict with bundlers.
         // Other tooling like jest write to "out-tsc/jest" to we just default to "out-tsc/<project-name>".
         outDir: joinPathFragments('out-tsc', projectRoot.split('/').at(-1)),
+        rootDir,
         ...compilerOptions,
       };
 

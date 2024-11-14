@@ -329,6 +329,7 @@ describe('app', () => {
             "moduleResolution": "bundler",
             "noUnusedLocals": false,
             "outDir": "out-tsc/my-app",
+            "rootDir": "src",
             "types": [
               "node",
             ],

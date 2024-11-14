@@ -500,7 +500,6 @@ describe('hostGenerator', () => {
       expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": false,
             "jsx": "react-jsx",
             "lib": [
               "dom",
@@ -508,6 +507,7 @@ describe('hostGenerator', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "outDir": "out-tsc/myapp",
+            "rootDir": "src",
             "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",

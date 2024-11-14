@@ -935,6 +935,7 @@ module.exports = withNx(
             "module": "esnext",
             "moduleResolution": "bundler",
             "outDir": "out-tsc/mylib",
+            "rootDir": "src",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",

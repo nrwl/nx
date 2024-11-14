@@ -1,9 +1,4 @@
-import {
-  joinPathFragments,
-  offsetFromRoot,
-  type Tree,
-  updateJson,
-} from '@nx/devkit';
+import { joinPathFragments, type Tree, updateJson } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -21,18 +16,10 @@ export function updateModuleFederationTsconfig(
   );
   if (!host.exists(tsconfigPath) || !host.exists(tsconfigRuntimePath)) return;
 
-  // Using `composite: true` and not setting `baseUrl` currently does not work with MF.
+  // Not setting `baseUrl` does not work with MF.
   if (isUsingTsSolutionSetup(host)) {
     updateJson(host, 'tsconfig.base.json', (json) => {
       json.compilerOptions.baseUrl = '.';
-      return json;
-    });
-
-    updateJson(host, tsconfigRuntimePath, (json) => {
-      json.compilerOptions = {
-        ...json.compilerOptions,
-        composite: false,
-      };
       return json;
     });
 

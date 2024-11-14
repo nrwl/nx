@@ -905,6 +905,7 @@ describe('app (legacy)', () => {
               },
             ],
             "resolveJsonModule": true,
+            "rootDir": "src",
             "strict": true,
             "types": [
               "jest",

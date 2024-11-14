@@ -370,7 +370,8 @@ export default {...nxPreset};
     },
     options.linter === 'eslint'
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-      : undefined
+      : undefined,
+    '.'
   );
 
   tasks.push(() => {

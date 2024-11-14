@@ -1312,6 +1312,7 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "outDir": "out-tsc/myapp",
+            "rootDir": "src",
             "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",

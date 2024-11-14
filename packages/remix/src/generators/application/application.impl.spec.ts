@@ -382,6 +382,7 @@ describe('Remix Application', () => {
             "moduleResolution": "bundler",
             "outDir": "out-tsc/myapp",
             "resolveJsonModule": true,
+            "rootDir": ".",
             "skipLibCheck": true,
             "strict": true,
             "target": "ES2022",
