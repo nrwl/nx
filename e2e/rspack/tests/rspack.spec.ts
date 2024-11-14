@@ -67,9 +67,9 @@ describe('rspack e2e', () => {
     // Make sure expected files are present.
     /**
      * The files that are generated are:
-     * ["3rdpartylicenses.txt", "assets", "favicon.ico", "index.html", "main.bf7851e6.js", "runtime.e4294127.js"]
+     * ["assets", "favicon.ico", "index.html", "main.bf7851e6.js", "runtime.e4294127.js"]
      */
-    expect(listFiles(`dist/${project}`)).toHaveLength(6);
+    expect(listFiles(`dist/${project}`)).toHaveLength(5);
 
     result = runCLI(`test ${project}`);
     expect(result).toContain('Successfully ran target test');
