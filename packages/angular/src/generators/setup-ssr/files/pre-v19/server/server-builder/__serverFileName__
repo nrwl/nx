@@ -1,7 +1,7 @@
 import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '<%= commonEngineEntryPoint %>';
+import { CommonEngine } from '@angular/ssr';
 import * as express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,7 +10,7 @@ import <% if (standalone) { %>bootstrap<% } else { %><%= rootModuleClassName %><
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const distFolder = join(process.cwd(), '<%= browserBundleOutputPath %>');
+  const distFolder = join(process.cwd(), '<%= browserDistDirectory %>');
   const indexHtml = existsSync(join(distFolder, 'index.original.html'))
     ? join(distFolder, 'index.original.html')
     : join(distFolder, 'index.html');

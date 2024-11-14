@@ -37,7 +37,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.build
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "export { AppServerModule as default } from './app/app.server.module';
@@ -58,15 +58,14 @@ describe('setupSSR', () => {
       expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
         'src/main.ts',
         'src/main.server.ts',
-        'server.ts',
+        'src/server.ts',
       ]);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
         import { ServerModule } from '@angular/platform-server';
-
-        import { AppModule } from './app.module';
         import { AppComponent } from './app.component';
+        import { AppModule } from './app.module';
 
         @NgModule({
           imports: [AppModule, ServerModule],
@@ -116,7 +115,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.build
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
@@ -132,7 +131,7 @@ describe('setupSSR', () => {
       expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
         'src/main.ts',
         'src/main.server.ts',
-        'server.ts',
+        'src/server.ts',
       ]);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -167,7 +166,7 @@ describe('setupSSR', () => {
 
       await setupSsr(tree, { project: 'app1' });
 
-      const serverFileContent = tree.read('app1/server.ts', 'utf-8');
+      const serverFileContent = tree.read('app1/src/server.ts', 'utf-8');
       expect(serverFileContent).toContain(
         `resolve(serverDistFolder, '../public')`
       );
@@ -215,7 +214,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.server
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "export { AppServerModule as default } from './app/app.server.module';
@@ -234,21 +233,22 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about this file see: https://angular.io/config/tsconfig. */
+        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
         {
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
-            "outDir": "../../out-tsc/server",
-            "target": "es2019",
+            "outDir": "../out-tsc/server",
             "types": [
               "node"
             ]
           },
           "files": [
             "src/main.server.ts",
-            "server.ts",
+            "src/server.ts"
           ]
-        }"
+        }
+        "
       `);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -265,7 +265,8 @@ describe('setupSSR', () => {
           ],
           bootstrap: [AppComponent],
         })
-        export class AppServerModule {}"
+        export class AppServerModule {}
+        "
       `);
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -308,7 +309,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.server
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
@@ -322,21 +323,22 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about this file see: https://angular.io/config/tsconfig. */
+        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
         {
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
-            "outDir": "../../out-tsc/server",
-            "target": "es2019",
+            "outDir": "../out-tsc/server",
             "types": [
               "node"
             ]
           },
           "files": [
             "src/main.server.ts",
-            "server.ts",
+            "src/server.ts"
           ]
-        }"
+        }
+        "
       `);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
