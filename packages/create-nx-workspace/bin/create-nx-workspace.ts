@@ -52,6 +52,7 @@ interface ReactArguments extends BaseArguments {
   nextAppDir: boolean;
   nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
 }
 
@@ -470,6 +471,27 @@ async function determineFormatterOptions(args: {
   return reply.prettier === 'Yes' ? 'prettier' : 'none';
 }
 
+async function determineLinterOptions(args: { interactive?: boolean }) {
+  const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
+    {
+      name: 'eslint',
+      message: `Would you like to use ESLint?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.eslint === 'Yes' ? 'eslint' : 'none';
+}
+
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
@@ -647,6 +669,7 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  const linter = await determineLinterOptions(parsedArgs);
   const formatter = await determineFormatterOptions(parsedArgs);
 
   return {
@@ -657,6 +680,7 @@ async function determineReactOptions(
     nextAppDir,
     nextSrcDir,
     e2eTestRunner,
+    linter,
     formatter,
   };
 }

@@ -477,6 +477,7 @@ describe('Remix Application', () => {
             "src/**/*.test.js",
             "src/**/*.d.ts",
           ],
+          "references": [],
         }
       `);
     });

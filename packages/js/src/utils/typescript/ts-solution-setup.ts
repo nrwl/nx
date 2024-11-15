@@ -10,6 +10,7 @@ import {
 } from '@nx/devkit';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import { relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -113,6 +114,8 @@ export function updateTsconfigFiles(
   const offset = offsetFromRoot(projectRoot);
   const tsconfig = `${projectRoot}/${runtimeTsconfigFileName}`;
   const tsconfigSpec = `${projectRoot}/tsconfig.spec.json`;
+  const e2eRoot = `${projectRoot}-e2e`;
+  const tsconfigE2E = `${e2eRoot}/tsconfig.json`;
 
   if (tree.exists(tsconfig)) {
     updateJson(tree, tsconfig, (json) => {
@@ -147,6 +150,14 @@ export function updateTsconfigFiles(
       json.references ??= [];
       if (!json.references.some((x) => x.path === runtimePath))
         json.references.push({ path: runtimePath });
+      return json;
+    });
+  }
+
+  if (tree.exists(tsconfigE2E)) {
+    // tsconfig.json for e2e projects need to have references array
+    updateJson(tree, tsconfigE2E, (json) => {
+      json.references ??= [];
       return json;
     });
   }

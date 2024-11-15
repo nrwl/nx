@@ -174,13 +174,29 @@ export async function addE2e(
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/playwright')
       >('@nx/playwright', nxVersion);
-      addProjectConfiguration(tree, options.e2eProjectName, {
-        projectType: 'application',
-        root: options.e2eProjectRoot,
-        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-        targets: {},
-        implicitDependencies: [options.projectName],
-      });
+      if (options.isUsingTsSolutionConfig) {
+        writeJson(
+          tree,
+          joinPathFragments(options.e2eProjectRoot, 'package.json'),
+          {
+            name: options.e2eProjectName,
+            version: '0.0.1',
+            private: true,
+            nx: {
+              name: options.e2eProjectName,
+            },
+          }
+        );
+      } else {
+        addProjectConfiguration(tree, options.e2eProjectName, {
+          projectType: 'application',
+          root: options.e2eProjectRoot,
+          sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+          targets: {},
+          implicitDependencies: [options.projectName],
+        });
+      }
+
       const e2eTask = await configurationGenerator(tree, {
         project: options.e2eProjectName,
         skipFormat: true,
