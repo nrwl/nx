@@ -3,7 +3,8 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ensurePackage,
-  readNxJson, writeJson
+  readNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
 import { getPackageVersion } from '../../../utils/versions';

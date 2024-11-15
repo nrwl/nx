@@ -5,7 +5,8 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
-  Tree, writeJson
+  Tree,
+  writeJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 
