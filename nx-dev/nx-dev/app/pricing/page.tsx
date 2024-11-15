@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import {
   Faq,
   Oss,
-  ResourceClasses,
+  CreditPricing,
   PlansDisplay,
   TrialCallout,
 } from '@nx/nx-dev/ui-pricing';
@@ -47,7 +47,7 @@ export default function PricingPage() {
         <TrialCallout pageId="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <ResourceClasses />
+        <CreditPricing />
       </div>
       <div className="mt-32 lg:mt-56">
         <Faq />
