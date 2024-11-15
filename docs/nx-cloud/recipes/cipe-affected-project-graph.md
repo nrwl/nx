@@ -60,7 +60,7 @@ At this point, we can ask ourselves that "Should a change to the `tooltip` compo
 
 To achieve our goal, we can break up the `ui` library into 2 separate libraries: `button` and `tooltip`.
 
-> Check out our [blog post](https://nx.dev/blog/improve-architecture-and-ci-times-with-projects) on this topic.
+> Check out our [blog post](/blog/improve-architecture-and-ci-times-with-projects) on this topic.
 
 Once we have done this, we will end up with the following project graph:
 
