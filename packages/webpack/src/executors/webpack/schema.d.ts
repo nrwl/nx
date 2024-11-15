@@ -62,7 +62,7 @@ export interface WebpackExecutorOptions {
   polyfills?: string;
   progress?: boolean;
   runtimeChunk?: boolean;
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   statsJson?: boolean;
   target?: string;
   transformers?: TransformerEntry[];
