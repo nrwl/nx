@@ -1,8 +1,8 @@
-# Nx Cloud CI Pipeline Execution Affected Project Graph
+# Reduce the Number of Affected Projects in a CI Pipeline Execution
 
 When it comes to troubleshooting long-running CI pipeline executions, there are different tools available to help you identify the potential issues. One such tool is the **Affected Project Graph** feature on the CI Pipeline Execution page.
 
-## Getting to the CI pipeline execution affected project graph
+## Getting to the CI Pipeline Execution Affected Project Graph
 
 To access the affected project graph for the CI pipeline execution, navigate to the CI pipeline execution details page and click on the **Affected Project Graph** navigation item.
 
@@ -10,7 +10,7 @@ To access the affected project graph for the CI pipeline execution, navigate to 
 
 The affected project graph visualizes the projects that are part of the **current** CI pipeline execution.
 
-## Identifying a potential over-run of a CI pipeline execution
+## Identifying a Potential Over-run of a CI Pipeline Execution
 
 In this recipe, we will walk through a scenario where the affected project graph can be used to identify a potential over-run of a CI pipeline execution.
 
@@ -40,7 +40,7 @@ Likewise, the affected project graph for the Ci pipeline execution also visualiz
 
 ![CIPE Affected Project Graph -- affect everything](/nx-cloud/recipes/cipe-affected-project-graph-every-projects.png)
 
-## Create a new CI pipeline execution with a code change
+## Create a New CI Pipeline Execution with a Code Change
 
 Our `ui` library has 2 components: `button` and `tooltip`. From the graph, we can see that both our apps `client` and `web` depend on the `ui` library: `client` uses the `tooltip` component and `web` uses the `button` component.
 
@@ -56,11 +56,11 @@ The affected project graph also shows that the change to `tooltip` component , w
 
 At this point, we can ask ourselves that "Should a change to the `tooltip` component affect both the `client` and `web` apps or should it only affect the `web` app?" Our goal should be to always have the most efficient CI pipeline executions possible. Decreasing the number of affected projects will allow the number of tasks to be reduced, which will reduce the overall CI pipeline execution time.
 
-## Break up the source of the affected projects
+## Break Up the Source of the Affected Projects
 
 To achieve our goal, we can break up the `ui` library into 2 separate libraries: `button` and `tooltip`.
 
-> Check out our [blog post](/blog/improve-architecture-and-ci-times-with-projects) on this topic.
+> Check out our [blog post](/blog/improve-architecture-and-ci-times-with-projects) about splitting large projects into smaller ones.
 
 Once we have done this, we will end up with the following project graph:
 
