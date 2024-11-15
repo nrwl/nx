@@ -1,6 +1,8 @@
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import * as ora from 'ora';
+import type { Ora } from 'ora';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { FileData } from './file-utils';
 import {
@@ -44,6 +46,7 @@ import {
   ConfigurationSourceMaps,
   mergeMetadata,
 } from './utils/project-configuration-utils';
+import { isOnDaemon } from '../daemon/is-on-daemon';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -313,14 +316,43 @@ async function updateProjectGraphWithPlugins(
     (plugin) => plugin.createDependencies
   );
   performance.mark('createDependencies:start');
+
+  let spinner: Ora,
+    timeout: NodeJS.Timeout,
+    spinnerUpdateInterval: NodeJS.Timeout;
+  const inProgressPlugins = new Set<string>();
+
+  if (!isOnDaemon() && process.stdout.isTTY) {
+    timeout = setTimeout(() => {
+      spinner = ora(
+        'Waiting on dependency information from ' +
+          (inProgressPlugins.size > 1
+            ? `${inProgressPlugins.size} plugins`
+            : inProgressPlugins.keys()[0])
+      ).start();
+
+      spinnerUpdateInterval = setInterval(() => {
+        spinner.text =
+          'Waiting on dependency information from ' +
+          (inProgressPlugins.size > 1
+            ? `${inProgressPlugins.size} plugins`
+            : inProgressPlugins.keys()[0]);
+      }, 50);
+    }, 300);
+  }
+
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
-
+      inProgressPlugins.add(plugin.name);
       try {
-        const dependencies = await plugin.createDependencies({
-          ...context,
-        });
+        const dependencies = await plugin
+          .createDependencies({
+            ...context,
+          })
+          .finally(() => {
+            inProgressPlugins.delete(plugin.name);
+          });
 
         for (const dep of dependencies) {
           builder.addDependency(
@@ -352,6 +384,16 @@ async function updateProjectGraphWithPlugins(
     `createDependencies:start`,
     `createDependencies:end`
   );
+
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  if (spinnerUpdateInterval) {
+    clearInterval(spinnerUpdateInterval);
+  }
+  if (spinner) {
+    spinner.stop();
+  }
 
   const graphWithDeps = builder.getUpdatedProjectGraph();
 
@@ -396,15 +438,41 @@ export async function applyProjectMetadata(
   const errors: CreateMetadataError[] = [];
 
   performance.mark('createMetadata:start');
+  let timeout: NodeJS.Timeout,
+    spinner: Ora,
+    spinnerUpdateInterval: NodeJS.Timeout;
+  const inProgressPlugins = new Set<string>();
+
+  if (!isOnDaemon() && process.stdout.isTTY) {
+    timeout = setTimeout(() => {
+      spinner = ora(
+        'Waiting on project metadata from ' +
+          (inProgressPlugins.size > 1
+            ? `${inProgressPlugins.size} plugins`
+            : inProgressPlugins.keys()[0])
+      ).start();
+
+      spinnerUpdateInterval = setInterval(() => {
+        spinner.text =
+          'Waiting on project metadata from ' +
+          (inProgressPlugins.size > 1
+            ? `${inProgressPlugins.size} plugins`
+            : inProgressPlugins.keys()[0]);
+      }, 50);
+    }, 300);
+  }
+
   const promises = plugins.map(async (plugin) => {
     if (plugin.createMetadata) {
       performance.mark(`${plugin.name}:createMetadata - start`);
+      inProgressPlugins.add(plugin.name);
       try {
         const metadata = await plugin.createMetadata(graph, context);
         results.push({ metadata, pluginName: plugin.name });
       } catch (e) {
         errors.push(new CreateMetadataError(e, plugin.name));
       } finally {
+        inProgressPlugins.delete(plugin.name);
         performance.mark(`${plugin.name}:createMetadata - end`);
         performance.measure(
           `${plugin.name}:createMetadata`,
@@ -416,6 +484,16 @@ export async function applyProjectMetadata(
   });
 
   await Promise.all(promises);
+
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  if (spinnerUpdateInterval) {
+    clearInterval(spinnerUpdateInterval);
+  }
+  if (spinner) {
+    spinner.stop();
+  }
 
   for (const { metadata: projectsMetadata, pluginName } of results) {
     for (const project in projectsMetadata) {

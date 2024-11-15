@@ -13,6 +13,9 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import * as ora from 'ora';
+import type { Ora } from 'ora';
+
 import { LoadedNxPlugin } from '../plugins/internal-api';
 import {
   MergeNodesError,
@@ -30,6 +33,7 @@ import {
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
+import { isOnDaemon } from '../../daemon/is-on-daemon';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -324,6 +328,29 @@ export async function createProjectConfigurations(
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
 
+  let spinner: Ora,
+    timeout: NodeJS.Timeout,
+    spinnerUpdateInterval: NodeJS.Timeout;
+  const inProgressPlugins = new Set<string>();
+  if (!isOnDaemon() && process.stdout.isTTY) {
+    timeout = setTimeout(() => {
+      spinner = ora(
+        'Waiting on project information from ' +
+          (inProgressPlugins.size > 1
+            ? `${inProgressPlugins.size} plugins`
+            : inProgressPlugins.keys()[0])
+      ).start();
+
+      spinnerUpdateInterval = setInterval(() => {
+        spinner.text =
+          'Waiting on project information from ' +
+          (inProgressPlugins.size > 1
+            ? `${inProgressPlugins.size} plugins`
+            : inProgressPlugins.keys()[0]);
+      }, 50);
+    }, 300);
+  }
+
   const results: Array<ReturnType<LoadedNxPlugin['createNodes'][1]>> = [];
   const errors: Array<
     | AggregateCreateNodesError
@@ -352,44 +379,62 @@ export async function createProjectConfigurations(
       exclude
     );
 
+    inProgressPlugins.add(pluginName);
     let r = createNodes(matchingConfigFiles, {
       nxJsonConfiguration: nxJson,
       workspaceRoot: root,
-    }).catch((e: Error) => {
-      const errorBodyLines = [
-        `An error occurred while processing files for the ${pluginName} plugin.`,
-      ];
-      const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
-        ? // This is an expected error if something goes wrong while processing files.
-          e
-        : // This represents a single plugin erroring out with a hard error.
-          new AggregateCreateNodesError([[null, e]], []);
+    })
+      .catch((e: Error) => {
+        const errorBodyLines = [
+          `An error occurred while processing files for the ${pluginName} plugin.`,
+        ];
+        const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
+          ? // This is an expected error if something goes wrong while processing files.
+            e
+          : // This represents a single plugin erroring out with a hard error.
+            new AggregateCreateNodesError([[null, e]], []);
 
-      const innerErrors = error.errors;
-      for (const [file, e] of innerErrors) {
-        if (file) {
-          errorBodyLines.push(`  - ${file}: ${e.message}`);
-        } else {
-          errorBodyLines.push(`  - ${e.message}`);
+        const innerErrors = error.errors;
+        for (const [file, e] of innerErrors) {
+          if (file) {
+            errorBodyLines.push(`  - ${file}: ${e.message}`);
+          } else {
+            errorBodyLines.push(`  - ${e.message}`);
+          }
+          if (e.stack) {
+            const innerStackTrace =
+              '    ' + e.stack.split('\n')?.join('\n    ');
+            errorBodyLines.push(innerStackTrace);
+          }
         }
-        if (e.stack) {
-          const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
-          errorBodyLines.push(innerStackTrace);
-        }
-      }
 
-      error.stack = errorBodyLines.join('\n');
+        error.stack = errorBodyLines.join('\n');
 
-      // This represents a single plugin erroring out with a hard error.
-      errors.push(error);
-      // The plugin didn't return partial results, so we return an empty array.
-      return error.partialResults.map((r) => [pluginName, r[0], r[1]] as const);
-    });
+        // This represents a single plugin erroring out with a hard error.
+        errors.push(error);
+        // The plugin didn't return partial results, so we return an empty array.
+        return error.partialResults.map(
+          (r) => [pluginName, r[0], r[1]] as const
+        );
+      })
+      .finally(() => {
+        inProgressPlugins.delete(pluginName);
+      });
 
     results.push(r);
   }
 
   return Promise.all(results).then((results) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    if (spinner) {
+      spinner.stop();
+    }
+    if (spinnerUpdateInterval) {
+      clearInterval(spinnerUpdateInterval);
+    }
+
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =
       mergeCreateNodesResults(results, nxJson, errors);
 

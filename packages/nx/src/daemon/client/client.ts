@@ -33,6 +33,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
+import * as ora from 'ora';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
@@ -194,6 +195,13 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
+    let spinner: ReturnType<typeof ora>, timeout: NodeJS.Timeout;
+    if (process.stdout.isTTY) {
+      // If the graph takes a while to load, we want to show a spinner.
+      timeout = setTimeout(() => {
+        spinner = ora('Getting project graph from the Nx Daemon').start();
+      }, 300);
+    }
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -207,6 +215,13 @@ export class DaemonClient {
         throw ProjectGraphError.fromDaemonProjectGraphError(e);
       } else {
         throw e;
+      }
+    } finally {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      if (spinner) {
+        spinner.stop();
       }
     }
   }
