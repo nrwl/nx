@@ -21,7 +21,6 @@ import {
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
-import { NormalModuleReplacementPlugin as WebpackNormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to
@@ -83,7 +82,7 @@ export function shareWorkspaceLibraries(
   const normalModuleReplacementPluginImpl =
     bundler === 'rspack'
       ? RspackNormalModuleReplacementPlugin
-      : WebpackNormalModuleReplacementPlugin;
+      : require('webpack').NormalModuleReplacementPlugin;
 
   return {
     getAliases: () =>
@@ -330,7 +329,7 @@ function getEmptySharedLibrariesConfig(
   const normalModuleReplacementPluginImpl =
     bundler === 'rspack'
       ? RspackNormalModuleReplacementPlugin
-      : WebpackNormalModuleReplacementPlugin;
+      : require('webpack').NormalModuleReplacementPlugin;
   return {
     getAliases: () => ({}),
     getLibraries: () => ({}),
