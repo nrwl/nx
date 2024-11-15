@@ -80,7 +80,7 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
-      <LiveStreamNotifier />
+      {/* <LiveStreamNotifier /> */}
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script

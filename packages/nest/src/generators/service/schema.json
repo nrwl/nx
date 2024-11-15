@@ -6,13 +6,18 @@
   "cli": "nx",
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the service.",
+    "path": {
+      "description": "Path where the service will be generated.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
+      "x-prompt": "Where should the service be generated?"
+    },
+    "name": {
+      "description": "The name of the service.",
+      "type": "string",
       "x-prompt": "What name would you like to use?"
     },
     "skipFormat": {
@@ -34,5 +39,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["path"]
 }

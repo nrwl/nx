@@ -86,11 +86,7 @@ function applyNxIndependentConfig(
     options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
 
   config.devtool =
-    options.sourceMap === 'hidden'
-      ? 'hidden-source-map'
-      : options.sourceMap
-      ? 'source-map'
-      : false;
+    options.sourceMap === true ? 'source-map' : options.sourceMap;
 
   config.output = {
     ...config.output,

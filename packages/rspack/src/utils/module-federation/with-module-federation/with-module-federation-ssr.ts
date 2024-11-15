@@ -22,6 +22,9 @@ export async function withModuleFederationForSSR(
   return (config, { context }: NxRspackExecutionContext) => {
     config.target = 'async-node';
     config.output.uniqueName = options.name;
+    config.output.library = {
+      type: 'commonjs-module',
+    };
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: false,
@@ -39,6 +42,10 @@ export async function withModuleFederationForSSR(
             ...sharedDependencies,
           },
           isServer: true,
+          library: {
+            type: 'commonjs-module',
+          },
+          remoteType: 'script',
           /**
            * Apply user-defined config overrides
            */

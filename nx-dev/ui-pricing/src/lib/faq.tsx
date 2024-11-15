@@ -59,7 +59,7 @@ export function Faq(): ReactElement {
     {
       question: 'What is a CI Pipeline Execution?',
       answer:
-        'By default, a CI pipeline execution is a 1:1 match to your CI provider of choice\'s concept of a "workflow".',
+        'A CI Pipeline Execution is a CI run or a Workflow run (depending on your CI provider). For instance, running a PR or running CI on the main branch are CI Pipeline Executions.',
     },
     {
       question: 'What is the Team Plan?',
