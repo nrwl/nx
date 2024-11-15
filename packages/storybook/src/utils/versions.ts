@@ -1,5 +1,5 @@
 export const nxVersion = require('../../package.json').version;
-export const storybookTestRunnerVersion = '^0.13.0';
+export const storybookTestRunnerVersion = '^0.19.0';
 export const storybookTestingLibraryVersion = '^0.2.2';
 export const storybookJestVersion = '^0.2.3';
 export const litVersion = '^2.6.1';
