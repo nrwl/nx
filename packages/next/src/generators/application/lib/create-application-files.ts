@@ -31,14 +31,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     '.next/types/**/*.ts'
   );
 
-  // scope tsconfig to the project directory so that it doesn't include other projects/libs
-  const rootPath = options.rootProject
-    ? options.src
-      ? 'src/'
-      : options.appDir
-      ? 'app/'
-      : 'pages/'
-    : '';
+  const rootPath =
+    options.rootProject || isUsingTsSolutionSetup(host)
+      ? options.src
+        ? 'src/'
+        : options.appDir
+        ? 'app/'
+        : 'pages/'
+      : '';
+
   const templateVariables = {
     ...names(options.name),
     ...options,

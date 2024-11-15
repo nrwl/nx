@@ -127,8 +127,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       moduleResolution: 'bundler',
     },
     options.linter === 'eslint'
-      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-      : undefined,
+      ? ['.next', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : ['.next'],
     options.src ? 'src' : '.'
   );
 
