@@ -76,7 +76,7 @@
       "description": "Skip the type checking. Default is `false`."
     },
     "sourceMap": {
-      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment. All valid values for devTool option are also accepted.",
       "oneOf": [
         {
           "type": "boolean"
