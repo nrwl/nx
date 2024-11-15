@@ -1,12 +1,12 @@
 {
   "name": "<%= name %>",
   "version": "0.0.1",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./<%= isUsingTsSolutionConfig ? 'dist/' : '' %>index.js",
+  "types": "./<%= isUsingTsSolutionConfig ? 'dist/' : '' %>index.d.ts",
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
+      "import": "./<%= isUsingTsSolutionConfig ? 'dist/' : '' %>index.mjs",
+      "require": "./<%= isUsingTsSolutionConfig ? 'dist/' : '' %>index.js"
     }
   }
 }

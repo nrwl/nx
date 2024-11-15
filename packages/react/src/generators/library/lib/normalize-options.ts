@@ -13,11 +13,41 @@ import {
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  if (isUsingTsSolutionConfig) {
+    options.bundler ??= await promptWhenInteractive<{
+      bundler: 'none' | 'vite' | 'rollup';
+    }>(
+      {
+        type: 'autocomplete',
+        name: 'bundler',
+        message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
+        choices: [{ name: 'vite' }, { name: 'rollup' }, { name: 'none' }],
+        initial: 0,
+      },
+      { bundler: 'none' }
+    ).then(({ bundler }) => bundler);
+  } else {
+    options.bundler ??= await promptWhenInteractive<{
+      bundler: 'none' | 'vite' | 'rollup';
+    }>(
+      {
+        type: 'autocomplete',
+        name: 'bundler',
+        message: `Which bundler would you like to use to build the library? Choose 'none' to skip build setup.`,
+        choices: [{ name: 'none' }, { name: 'vite' }, { name: 'rollup' }],
+        initial: 0,
+      },
+      { bundler: undefined }
+    ).then(({ bundler }) => bundler);
+  }
+
   await ensureProjectName(host, options, 'library');
   const {
     projectName,
@@ -105,7 +135,7 @@ export async function normalizeOptions(
 
   assertValidStyle(normalized.style);
 
-  normalized.isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  normalized.isUsingTsSolutionConfig = isUsingTsSolutionConfig;
 
   return normalized;
 }
