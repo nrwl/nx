@@ -103,6 +103,17 @@
     "prefix": {
       "description": "The prefix to use for Angular component and directive selectors.",
       "type": "string"
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "default": "none"
+    },
+    "workspaces": {
+      "description": "Whether to use package manager workspaces.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["preset", "name"]

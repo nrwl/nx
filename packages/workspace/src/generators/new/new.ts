@@ -38,6 +38,7 @@ interface Schema {
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
   formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
   workspaceGlobs?: string | string[];
 }
 

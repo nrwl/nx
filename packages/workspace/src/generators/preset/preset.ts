@@ -71,7 +71,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
-      useTsSolution: true,
+      useTsSolution: options.workspaces,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.ReactStandalone) {
@@ -103,7 +103,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
-      useTsSolution: true,
+      useTsSolution: options.workspaces,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.RemixStandalone) {
@@ -190,7 +190,7 @@ async function createPreset(tree: Tree, options: Schema) {
       src: options.nextSrcDir,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
-      useTsSolution: true,
+      useTsSolution: options.workspaces,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.NextJsStandalone) {
@@ -255,7 +255,7 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
       nxCloudToken: options.nxCloudToken,
       bundler: options.bundler ?? 'webpack',
-      useTsSolution: true,
+      useTsSolution: options.workspaces,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.Expo) {
@@ -267,7 +267,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
-      useTsSolution: true,
+      useTsSolution: options.workspaces,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.TS) {

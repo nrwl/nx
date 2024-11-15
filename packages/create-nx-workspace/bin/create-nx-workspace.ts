@@ -54,6 +54,7 @@ interface ReactArguments extends BaseArguments {
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
 }
 
 interface AngularArguments extends BaseArguments {
@@ -158,6 +159,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app.`,
             type: 'string',
+          })
+          .option('workspaces', {
+            describe: chalk.dim`Use package manager workspaces.`,
+            type: 'boolean',
+            default: false,
           })
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
@@ -570,6 +576,10 @@ async function determineReactOptions(
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
   let nextSrcDir = false;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -585,18 +595,39 @@ async function determineReactOptions(
   } else {
     const framework = await determineReactFramework(parsedArgs);
 
-    appName = await determineAppName(parsedArgs);
+    const isStandalone =
+      workspaces || framework === 'react-native' || framework === 'expo'
+        ? false
+        : (await determineStandaloneOrMonorepo()) === 'standalone';
+
+    if (isStandalone) {
+      appName = parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
 
     if (framework === 'nextjs') {
-      preset = Preset.NextJs;
+      if (isStandalone) {
+        preset = Preset.NextJsStandalone;
+      } else {
+        preset = Preset.NextJs;
+      }
     } else if (framework === 'remix') {
-      preset = Preset.RemixMonorepo;
+      if (isStandalone) {
+        preset = Preset.RemixStandalone;
+      } else {
+        preset = Preset.RemixMonorepo;
+      }
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
-      preset = Preset.ReactMonorepo;
+      if (isStandalone) {
+        preset = Preset.ReactStandalone;
+      } else {
+        preset = Preset.ReactMonorepo;
+      }
     }
   }
 
@@ -669,8 +700,13 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  const linter = await determineLinterOptions(parsedArgs);
-  const formatter = await determineFormatterOptions(parsedArgs);
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
 
   return {
     preset,
@@ -682,6 +718,7 @@ async function determineReactOptions(
     e2eTestRunner,
     linter,
     formatter,
+    workspaces,
   };
 }
 
