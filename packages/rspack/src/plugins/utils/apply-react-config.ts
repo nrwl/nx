@@ -25,12 +25,12 @@ export function applyReactConfig(
       {
         test: /\.svg$/i,
         type: 'asset',
-        resourceQuery: /react/, // *.svg?react
+        resourceQuery: /url/, // *.svg?url
       },
       {
         test: /\.svg$/i,
         issuer: /\.[jt]sx?$/,
-        resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
+        resourceQuery: { not: [/url/] }, // exclude react component if not *.svg?url
         use: [{ loader: '@svgr/webpack', options: svgrOptions }],
       }
     );
