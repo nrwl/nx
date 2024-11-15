@@ -40,10 +40,6 @@ Note that you'll need to be an organization admin for your Nx Cloud workspace to
 Log in to Nx Cloud
 {% /call-to-action %}
 
-### I want to try this, but I'm on the Hobby plan 🤔
-
-If you're currently on the Hobby plan, you can start a free Pro plan trial for 14 days to try it out on your own workspace. No, we don't ask for credit cards to start a trial, so feel free to experiment!
-
 ## More to come!
 
 This is just the first of a series of AI-powered features that we're going to be rolling out to your workspaces. We've got some cool features in the works already, which we're going to **announce publicly during the [Monorepo World](https://monorepo.world) conference in October**! So stay tuned!
