@@ -768,6 +768,26 @@ describe('app', () => {
         expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
         expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
       });
+
+      it('should not override build configuration when using vitest as a test runner', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+        const { targets } = readProjectConfiguration(appTree, 'my-app');
+        expect(targets.build.executor).toBe(
+          '@angular-devkit/build-angular:application'
+        );
+      });
+
+      it('should not override serve configuration when using vitest as a test runner', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+        const { targets } = readProjectConfiguration(appTree, 'my-app');
+        expect(targets.serve.executor).toBe(
+          '@angular-devkit/build-angular:dev-server'
+        );
+      });
     });
 
     describe('none', () => {
