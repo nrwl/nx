@@ -1,6 +1,53 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migrateMfImportsToNewPackage from './migrate-mf-imports-to-new-package';
 
+jest.mock('@nx/devkit', () => {
+  const original = jest.requireActual('@nx/devkit');
+  return {
+    ...original,
+    createProjectGraphAsync: jest.fn().mockResolvedValue(
+      Promise.resolve({
+        dependencies: {
+          shell: [
+            {
+              source: 'shell',
+              target: 'npm:@nx/webpack',
+              type: 'static',
+            },
+          ],
+          remote: [
+            {
+              source: 'remote',
+              target: 'npm:@nx/webpack',
+              type: 'static',
+            },
+          ],
+        },
+        nodes: {
+          shell: {
+            name: 'shell',
+            type: 'app',
+            data: {
+              root: 'apps/shell',
+              sourceRoot: 'shell/src',
+              targets: {},
+            },
+          },
+          remote: {
+            name: 'remote',
+            type: 'app',
+            data: {
+              root: 'apps/remote',
+              sourceRoot: 'remote/src',
+              targets: {},
+            },
+          },
+        },
+      })
+    ),
+  };
+});
+
 describe('migrate-mf-imports-to-new-package', () => {
   it('should update the ModuleFederationConfig import to change the import when its a single line', async () => {
     // ARRANGE
