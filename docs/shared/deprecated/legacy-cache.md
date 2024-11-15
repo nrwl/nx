@@ -1,6 +1,6 @@
 # Legacy Cache
 
-In Nx 20, the local cache metadata and project graph are stored in a database, rather than using the file system. (Cache artifacts are still stored on the file system.) In Nx 21 the legacy file system cache will be removed and the database cache will be the only option. The database cache has two benefits:
+In Nx 20, the local cache metadata are stored in a database, rather than using the file system. (Cache artifacts are still stored on the file system.) In Nx 21 the legacy file system cache will be removed and the database cache will be the only option. The database cache has two benefits:
 
 1. Cache reads and writes are faster.
 2. The local cache is more secure since other processes with access to the file system can no longer read or modify the cache.
