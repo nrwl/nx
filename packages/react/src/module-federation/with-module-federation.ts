@@ -5,7 +5,7 @@ import {
 import { getModuleFederationConfig } from './utils';
 import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
-import { NormalModuleReplacementPlugin } from 'webpack';
+import type { NormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * @param {ModuleFederationConfig} options

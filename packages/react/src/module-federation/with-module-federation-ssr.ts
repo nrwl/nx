@@ -3,7 +3,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
-import { NormalModuleReplacementPlugin } from 'webpack';
+import type { NormalModuleReplacementPlugin } from 'webpack';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
