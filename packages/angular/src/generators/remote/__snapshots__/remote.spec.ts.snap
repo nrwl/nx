@@ -212,7 +212,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
     "customWebpackConfig": {
       "path": "test/webpack.server.config.js",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -438,7 +438,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
     "customWebpackConfig": {
       "path": "test/webpack.server.config.ts",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },

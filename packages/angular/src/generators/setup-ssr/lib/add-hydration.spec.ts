@@ -28,7 +28,11 @@ export const appConfig: ApplicationConfig = {
 `
     );
 
-    addHydration(tree, { project: 'app1', standalone: true });
+    addHydration(tree, {
+      project: 'app1',
+      standalone: true,
+      isUsingApplicationBuilder: true,
+    });
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -58,7 +62,11 @@ export const appConfig: ApplicationConfig = {
 `
     );
 
-    addHydration(tree, { project: 'app1', standalone: true });
+    addHydration(tree, {
+      project: 'app1',
+      standalone: true,
+      isUsingApplicationBuilder: true,
+    });
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -93,7 +101,11 @@ export class AppModule {}
 `
     );
 
-    addHydration(tree, { project: 'app1', standalone: false });
+    addHydration(tree, {
+      project: 'app1',
+      standalone: false,
+      isUsingApplicationBuilder: true,
+    });
 
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -135,7 +147,11 @@ export class AppModule {}
 `
     );
 
-    addHydration(tree, { project: 'app1', standalone: false });
+    addHydration(tree, {
+      project: 'app1',
+      standalone: false,
+      isUsingApplicationBuilder: true,
+    });
 
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`

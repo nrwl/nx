@@ -52,6 +52,11 @@
       "description": "Set up Hydration for the SSR application.",
       "default": true
     },
+    "serverRouting": {
+      "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+      "type": "boolean",
+      "default": false
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes.",

@@ -181,6 +181,11 @@
       "type": "boolean",
       "x-prompt": "Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?",
       "default": false
+    },
+    "serverRouting": {
+      "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

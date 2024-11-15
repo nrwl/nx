@@ -232,7 +232,7 @@ exports[`Host App Generator --ssr should generate the correct files 9`] = `
     "customWebpackConfig": {
       "path": "test/webpack.server.config.js",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -456,7 +456,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
     "customWebpackConfig": {
       "path": "test/webpack.server.config.js",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -681,7 +681,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
     "customWebpackConfig": {
       "path": "test/webpack.server.config.ts",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -891,7 +891,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
     "customWebpackConfig": {
       "path": "test/webpack.server.config.ts",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
