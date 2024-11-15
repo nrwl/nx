@@ -1,4 +1,4 @@
-import type { Mode } from '@rspack/core';
+import type { DevTool, Mode } from '@rspack/core';
 import type { ProjectGraph } from '@nx/devkit';
 import type { AssetGlob } from '@nx/js/src/utils/assets/assets';
 
@@ -182,7 +182,7 @@ export interface NxAppRspackPluginOptions {
   /**
    * Generate source maps.
    */
-  sourceMap?: boolean | string;
+  sourceMap?: boolean | DevTool;
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */

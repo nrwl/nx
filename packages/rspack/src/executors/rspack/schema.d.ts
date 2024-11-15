@@ -1,4 +1,4 @@
-import type { Mode } from '@rspack/core';
+import type { DevTool, Mode } from '@rspack/core';
 
 export interface RspackExecutorSchema {
   additionalEntryPoints?: AdditionalEntryPoint[];
@@ -32,7 +32,7 @@ export interface RspackExecutorSchema {
   runtimeChunk?: boolean;
   scripts?: Array<ExtraEntryPointClass | string>;
   skipTypeChecking?: boolean;
-  sourceMap?: boolean | string;
+  sourceMap?: boolean | DevTool;
   standardRspackConfigFunction?: boolean;
   statsJson?: boolean;
   stylePreprocessorOptions?: any;
