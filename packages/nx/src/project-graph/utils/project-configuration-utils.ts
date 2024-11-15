@@ -338,7 +338,7 @@ export async function createProjectConfigurations(
         'Waiting on project information from ' +
           (inProgressPlugins.size > 1
             ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.keys()[0])
+            : inProgressPlugins.values().next().value)
       ).start();
 
       spinnerUpdateInterval = setInterval(() => {
@@ -346,7 +346,7 @@ export async function createProjectConfigurations(
           'Waiting on project information from ' +
           (inProgressPlugins.size > 1
             ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.keys()[0]);
+            : inProgressPlugins.values().next().value);
       }, 50);
     }, 300);
   }
