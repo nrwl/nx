@@ -429,6 +429,9 @@ function createPackageJson(tree: Tree, options: NormalizedSchema) {
     name: importPath,
     version: '0.0.1',
     private: true,
+    nx: {
+      name: options.project,
+    },
   };
   writeJson(tree, packageJsonPath, packageJson);
 }

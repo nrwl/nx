@@ -135,6 +135,9 @@ export async function configurationGeneratorInternal(
         name: importPath,
         version: '0.0.1',
         private: true,
+        nx: {
+          name: options.project,
+        },
       };
       writeJson(tree, packageJsonPath, packageJson);
     }

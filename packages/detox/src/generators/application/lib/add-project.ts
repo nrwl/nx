@@ -1,8 +1,10 @@
 import {
   addProjectConfiguration,
+  joinPathFragments,
   readNxJson,
   TargetConfiguration,
   Tree,
+  writeJson,
 } from '@nx/devkit';
 import {
   expoBuildTarget,
@@ -11,6 +13,7 @@ import {
   reactNativeTestTarget,
 } from './get-targets';
 import { NormalizedSchema } from './normalize-options';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -20,14 +23,25 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       : p.plugin === '@nx/detox/plugin'
   );
 
-  addProjectConfiguration(host, options.e2eProjectName, {
-    root: options.e2eProjectRoot,
-    sourceRoot: `${options.e2eProjectRoot}/src`,
-    projectType: 'application',
-    targets: hasPlugin ? {} : getTargets(options),
-    tags: [],
-    implicitDependencies: [options.appProject],
-  });
+  if (isUsingTsSolutionSetup(host)) {
+    writeJson(host, joinPathFragments(options.e2eProjectRoot, 'package.json'), {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+      nx: {
+        name: options.e2eProjectName,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.e2eProjectName, {
+      root: options.e2eProjectRoot,
+      sourceRoot: `${options.e2eProjectRoot}/src`,
+      projectType: 'application',
+      targets: hasPlugin ? {} : getTargets(options),
+      tags: [],
+      implicitDependencies: [options.appProject],
+    });
+  }
 }
 
 function getTargets(options: NormalizedSchema) {
