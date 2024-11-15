@@ -54,7 +54,7 @@ export function Faq(): ReactElement {
       question:
         'What happens if I consume all my credits while on the Hobby plan?',
       answer:
-        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Pro or wait for the next billing cycle.',
+        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Team or wait for the next billing cycle.',
     },
     {
       question: 'What is a CI Pipeline Execution?',
