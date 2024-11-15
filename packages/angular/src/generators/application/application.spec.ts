@@ -1260,7 +1260,7 @@ describe('app', () => {
       await generateApp(appTree, 'app1', { ssr: true });
 
       expect(appTree.exists('app1/src/main.server.ts')).toBe(true);
-      expect(appTree.exists('app1/server.ts')).toBe(true);
+      expect(appTree.exists('app1/src/server.ts')).toBe(true);
     });
   });
 

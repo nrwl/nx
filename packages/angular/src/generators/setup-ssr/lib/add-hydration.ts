@@ -11,12 +11,12 @@ import {
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
-import { type Schema } from '../schema';
+import type { NormalizedGeneratorOptions } from '../schema';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
-export function addHydration(tree: Tree, options: Schema) {
+export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   if (!tsModule) {
