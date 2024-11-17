@@ -44,10 +44,10 @@ export async function installAndUpdatePackageJson(
 
   await installAsync(
     packages,
-    createInstallOptions({
+    {
       fix: options.fix,
       check: options.check,
-    }),
+    },
     createInstallOptions({ force: options.force })
   );
 
