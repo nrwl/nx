@@ -103,7 +103,7 @@ exports[`remote generator bundler=webpack should create the remote with the corr
 `;
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -179,7 +179,7 @@ export default composePlugins(
 `;
 
 exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',

@@ -13,11 +13,9 @@ import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
-import {
   parseStaticRemotesConfig,
   StaticRemotesConfig,
-} from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
+} from '@nx/module-federation/src/utils';
 import { buildStaticRemotes } from '../../utils/build-static.remotes';
 import { fork } from 'child_process';
 import type { WebpackExecutorOptions } from '@nx/webpack';

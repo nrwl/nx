@@ -43,6 +43,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/web": "file:../web",
+    "@nx/module-federation": "file:../module-federation",
     "express": "^4.19.2",
     "http-proxy-middleware": "^3.0.3"
   },

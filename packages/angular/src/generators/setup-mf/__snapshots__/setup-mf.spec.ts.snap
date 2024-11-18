@@ -98,7 +98,7 @@ module.exports = {
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already when --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'app1',
@@ -148,7 +148,7 @@ module.exports = {
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it when --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'app1',
@@ -284,7 +284,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'app1',
@@ -324,7 +324,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 4`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'remote1',

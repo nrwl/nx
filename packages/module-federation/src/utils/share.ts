@@ -20,6 +20,7 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to
@@ -27,10 +28,12 @@ import type { PackageJson } from 'nx/src/utils/package-json';
  *
  * @param workspaceLibs - The Nx Workspace Libraries to share
  * @param tsConfigPath - The path to TS Config File that contains the Path Mappings for the Libraries
+ * @param bundler - The bundler to use for the replacement plugin
  */
 export function shareWorkspaceLibraries(
   workspaceLibs: WorkspaceLibrary[],
-  tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
+  tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath(),
+  bundler: 'rspack' | 'webpack' = 'rspack'
 ): SharedWorkspaceLibraryConfig {
   if (!workspaceLibs) {
     return getEmptySharedLibrariesConfig();
@@ -76,14 +79,17 @@ export function shareWorkspaceLibraries(
     });
   }
 
-  const webpack = require('webpack');
+  const normalModuleReplacementPluginImpl =
+    bundler === 'rspack'
+      ? RspackNormalModuleReplacementPlugin
+      : require('webpack').NormalModuleReplacementPlugin;
 
   return {
     getAliases: () =>
       pathMappings.reduce(
         (aliases, library) => ({
           ...aliases,
-          // If the library path ends in a wildcard, remove it as webpack can't handle this in resolve.alias
+          // If the library path ends in a wildcard, remove it as webpack/rspack can't handle this in resolve.alias
           // e.g. path/to/my/lib/* -> path/to/my/lib
           [library.name]: library.path.replace(/\/\*$/, ''),
         }),
@@ -139,7 +145,7 @@ export function shareWorkspaceLibraries(
       }, {} as Record<string, SharedLibraryConfig>);
     },
     getReplacementPlugin: () =>
-      new webpack.NormalModuleReplacementPlugin(/./, (req) => {
+      new normalModuleReplacementPluginImpl(/./, (req) => {
         if (!req.request.startsWith('.')) {
           return;
         }
@@ -156,7 +162,7 @@ export function shareWorkspaceLibraries(
                  * library.path is usually in the form of "/Users/username/path/to/Workspace/path/to/library"
                  *
                  * When a wildcard is used in the TS path mappings, we want to get everything after the import to
-                 * re-route the request correctly inline with the webpack resolve.alias
+                 * re-route the request correctly inline with the webpack/rspack resolve.alias
                  */
                 join(
                   library.name,
@@ -317,12 +323,17 @@ function addStringDependencyToSharedConfig(
   }
 }
 
-function getEmptySharedLibrariesConfig() {
-  const webpack = require('webpack');
+function getEmptySharedLibrariesConfig(
+  bundler: 'rspack' | 'webpack' = 'rspack'
+) {
+  const normalModuleReplacementPluginImpl =
+    bundler === 'rspack'
+      ? RspackNormalModuleReplacementPlugin
+      : require('webpack').NormalModuleReplacementPlugin;
   return {
     getAliases: () => ({}),
     getLibraries: () => ({}),
     getReplacementPlugin: () =>
-      new webpack.NormalModuleReplacementPlugin(/./, () => {}),
+      new normalModuleReplacementPluginImpl(/./, () => {}),
   };
 }

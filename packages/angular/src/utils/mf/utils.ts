@@ -8,7 +8,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nx/webpack/src/utils/module-federation';
+} from '@nx/module-federation';
 
 import {
   createProjectGraphAsync,

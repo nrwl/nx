@@ -4,7 +4,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';
 import { createWriteStream } from 'node:fs';
-import type { StaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
+import type { StaticRemotesConfig } from '@nx/module-federation/src/utils';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,

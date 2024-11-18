@@ -141,10 +141,11 @@ describe('Convert webpack', () => {
     expect(tree.exists('demo/rspack.config.ts')).toBeTruthy();
     expect(tree.read('demo/rspack.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { withModuleFederation } from '@nx/rspack/module-federation';
-      import { ModuleFederationConfig } from '@nx/rspack/module-federation';
       import { withReact } from '@nx/rspack';
       import { withNx } from '@nx/rspack';
       import { composePlugins } from '@nx/rspack';
+
+      import { ModuleFederationConfig } from '@nx/module-federation';
 
       import baseConfig from './module-federation.config';
 

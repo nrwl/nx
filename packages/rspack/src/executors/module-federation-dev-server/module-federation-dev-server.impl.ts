@@ -17,13 +17,11 @@ import { extname, join } from 'path';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '../../utils/module-federation';
-import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
-import {
   parseStaticRemotesConfig,
   type StaticRemotesConfig,
-} from '../../utils/module-federation/parse-static-remotes-config';
-import { startRemoteProxies } from '../../utils/module-federation/start-remote-proxies';
+  startRemoteProxies,
+} from '@nx/module-federation/src/utils';
+import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
 import devServerExecutor from '../dev-server/dev-server.impl';
 import { ModuleFederationDevServerOptions } from './schema';
 
