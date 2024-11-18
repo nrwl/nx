@@ -6066,6 +6066,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+                "path": "/ci/recipes/other/cipe-affected-project-graph",
+                "id": "cipe-affected-project-graph",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6702,6 +6710,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+            "path": "/ci/recipes/other/cipe-affected-project-graph",
+            "id": "cipe-affected-project-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6718,6 +6734,14 @@
         "name": "Prepare applications for deployment via CI",
         "path": "/ci/recipes/other/ci-deployment",
         "id": "ci-deployment",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+        "path": "/ci/recipes/other/cipe-affected-project-graph",
+        "id": "cipe-affected-project-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

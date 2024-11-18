@@ -1971,6 +1971,11 @@
                   "id": "ci-deployment",
                   "tags": ["docker", "deploy"],
                   "file": "shared/recipes/ci-deployment"
+                },
+                {
+                  "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+                  "id": "cipe-affected-project-graph",
+                  "file": "nx-cloud/recipes/cipe-affected-project-graph"
                 }
               ]
             }
