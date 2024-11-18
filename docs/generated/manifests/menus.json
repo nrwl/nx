@@ -4796,9 +4796,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Custom Task Runners",
-            "path": "/deprecated/custom-task-runners",
-            "id": "custom-task-runners",
+            "name": "Legacy Cache",
+            "path": "/deprecated/legacy-cache",
+            "id": "legacy-cache",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4919,9 +4919,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Custom Task Runners",
-        "path": "/deprecated/custom-task-runners",
-        "id": "custom-task-runners",
+        "name": "Legacy Cache",
+        "path": "/deprecated/legacy-cache",
+        "id": "legacy-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
