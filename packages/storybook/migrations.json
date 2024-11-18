@@ -283,6 +283,19 @@
         "storybook": {
           "version": "^8.2.8",
           "alwaysAddToPackageJson": true
+        },
+        "@storybook/test-runner": {
+          "version": "^0.19.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.0": {
+      "version": "20.2.0-beta.3",
+      "packages": {
+        "@storybook/test-runner": {
+          "version": "^0.19.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

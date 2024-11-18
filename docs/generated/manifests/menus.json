@@ -4796,9 +4796,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Custom Task Runners",
-            "path": "/deprecated/custom-task-runners",
-            "id": "custom-task-runners",
+            "name": "Legacy Cache",
+            "path": "/deprecated/legacy-cache",
+            "id": "legacy-cache",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4919,9 +4919,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Custom Task Runners",
-        "path": "/deprecated/custom-task-runners",
-        "id": "custom-task-runners",
+        "name": "Legacy Cache",
+        "path": "/deprecated/legacy-cache",
+        "id": "legacy-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6066,6 +6066,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+                "path": "/ci/recipes/other/cipe-affected-project-graph",
+                "id": "cipe-affected-project-graph",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6702,6 +6710,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+            "path": "/ci/recipes/other/cipe-affected-project-graph",
+            "id": "cipe-affected-project-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6718,6 +6734,14 @@
         "name": "Prepare applications for deployment via CI",
         "path": "/ci/recipes/other/ci-deployment",
         "id": "ci-deployment",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+        "path": "/ci/recipes/other/cipe-affected-project-graph",
+        "id": "cipe-affected-project-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

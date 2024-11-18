@@ -1099,6 +1099,7 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
   '/deprecated/storybook/upgrade-storybook-v6-react':
     '/recipes/storybook/overview-react', // 80 views
+  '/deprecated/custom-task-runners': '/deprecated/legacy-cache',
 };
 
 const decisionsSection = {
