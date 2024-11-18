@@ -77,11 +77,37 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { PendingPromise, registerPendingPromise } from '../../utils/messaging';
+import {
+  HandleRecordOutputsHashMessage,
+  RECORD_OUTPUTS_HASH,
+} from '../message-types/record-outputs-hash';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
 };
+
+const DAEMON_TIMEOUT_HINT_TEXT =
+  'As a last resort, you can set NX_DAEMON_NO_TIMEOUTS=true to bypass this timeout.';
+
+const MINUTES = 15;
+
+const MAX_MESSAGE_WAIT =
+  process.env.NX_DAEMON_NO_TIMEOUTS === 'true'
+    ? // Registering a timeout prevents the process from exiting
+      // if the call to a plugin happens to be the only thing
+      // keeping the process alive. As such, even if timeouts are disabled
+      // we need to register one. 2147483647 is the max timeout
+      // that Node.js allows, and is equivalent to 24.8 days....
+      // This does mean that the NX_PLUGIN_NO_TIMEOUTS env var
+      // would still timeout after 24.8 days, but that seems
+      // like a reasonable compromise.
+      2147483647
+    : 1000 * 60 * MINUTES; // 10 minutes
+
+const getTimeoutErrorMessage = (messageType: string) => () =>
+  `The daemon process has not responded to the ${messageType} message within ${MINUTES} minutes. ${DAEMON_TIMEOUT_HINT_TEXT}`;
 
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
@@ -110,6 +136,9 @@ export class DaemonClient {
   private queue: PromisedBasedQueue;
   private socketMessenger: DaemonSocketMessenger;
 
+  private pendingPromises: Map<string, PendingPromise> = new Map();
+  private pendingMessages: Map<string, Message> = new Map();
+
   private currentMessage;
   private currentResolve;
   private currentReject;
@@ -120,6 +149,11 @@ export class DaemonClient {
   private _daemonReady: () => void | null = null;
   private _out: FileHandle = null;
   private _err: FileHandle = null;
+  private txId: number = 0;
+
+  getNextTxId(type: string) {
+    return `${process.pid}:${type}:${this.txId++}`;
+  }
 
   enabled() {
     if (this._enabled === undefined) {
@@ -173,6 +207,7 @@ export class DaemonClient {
     this.currentMessage = null;
     this.currentResolve = null;
     this.currentReject = null;
+    this.pendingPromises.clear();
     this._enabled = undefined;
 
     this._out?.close();
@@ -186,33 +221,72 @@ export class DaemonClient {
     );
   }
 
+  private sendMessageToDaemonViaTx<
+    T extends { type: string } = { type: string }
+  >(message: T, socket: DaemonSocketMessenger) {
+    const tx = this.getNextTxId(message.type);
+    this.pendingMessages.set(tx, message);
+    return registerPendingPromise(
+      tx,
+      this.pendingPromises,
+      () => {
+        this.sendMessageToDaemon({ ...message, tx }, socket);
+      },
+      getTimeoutErrorMessage(message.type),
+      MAX_MESSAGE_WAIT
+    );
+  }
+
+  private async sendToDaemonViaQueue(
+    messageToDaemon: Message,
+    socket: DaemonSocketMessenger
+  ): Promise<any> {
+    return this.queue.sendToQueue(() =>
+      this.sendMessageToDaemon(messageToDaemon, socket)
+    );
+  }
+
+  private async sendMessageToDaemonViaQueueOrTx<T extends Message>(
+    message: T,
+    socket = this.socketMessenger
+  ) {
+    if (process.env.NX_DAEMON_USE_QUEUE === 'true') {
+      return this.sendToDaemonViaQueue(message, socket);
+    } else {
+      return this.sendMessageToDaemonViaTx(message, socket);
+    }
+  }
+
   async requestShutdown(): Promise<void> {
-    return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
+    return this.sendMessageToDaemonViaQueueOrTx({ type: 'REQUEST_SHUTDOWN' });
   }
 
   async getProjectGraphAndSourceMaps(): Promise<{
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
-    try {
-      const response = await this.sendToDaemonViaQueue({
-        type: 'REQUEST_PROJECT_GRAPH',
+    return this.sendMessageToDaemonViaQueueOrTx({
+      type: 'REQUEST_PROJECT_GRAPH',
+    })
+      .then((response) => {
+        return {
+          projectGraph: response.projectGraph,
+          sourceMaps: response.sourceMaps,
+        };
+      })
+      .catch((e) => {
+        if (e.name === DaemonProjectGraphError.name) {
+          throw ProjectGraphError.fromDaemonProjectGraphError(e);
+        } else {
+          throw e;
+        }
       });
-      return {
-        projectGraph: response.projectGraph,
-        sourceMaps: response.sourceMaps,
-      };
-    } catch (e) {
-      if (e.name === DaemonProjectGraphError.name) {
-        throw ProjectGraphError.fromDaemonProjectGraphError(e);
-      } else {
-        throw e;
-      }
-    }
   }
 
   async getAllFileData(): Promise<FileData[]> {
-    return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
+    return this.sendMessageToDaemonViaQueueOrTx({
+      type: 'REQUEST_ALL_FILE_DATA',
+    });
   }
 
   hashTasks(
@@ -221,7 +295,7 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
-    return this.sendToDaemonViaQueue({
+    return this.sendMessageToDaemonViaQueueOrTx({
       type: 'HASH_TASKS',
       runnerOptions,
       env,
@@ -254,12 +328,9 @@ export class DaemonClient {
         throw e;
       }
     }
-    let messenger: DaemonSocketMessenger | undefined;
 
-    await this.queue.sendToQueue(() => {
-      messenger = new DaemonSocketMessenger(
-        connect(getFullOsSocketPath())
-      ).listen(
+    let messenger: DaemonSocketMessenger | undefined =
+      new DaemonSocketMessenger(connect(getFullOsSocketPath())).listen(
         (message) => {
           try {
             const parsedMessage = JSON.parse(message);
@@ -273,8 +344,14 @@ export class DaemonClient {
         },
         (err) => callback(err, null)
       );
-      return messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config });
-    });
+
+    await this.sendMessageToDaemonViaQueueOrTx(
+      {
+        type: 'REGISTER_FILE_WATCHER',
+        config,
+      },
+      messenger
+    );
 
     return () => {
       messenger?.close();
@@ -282,7 +359,7 @@ export class DaemonClient {
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {
-    return this.sendToDaemonViaQueue({
+    return this.sendMessageToDaemonViaQueueOrTx({
       type: 'PROCESS_IN_BACKGROUND',
       requirePath,
       data,
@@ -290,17 +367,19 @@ export class DaemonClient {
   }
 
   recordOutputsHash(outputs: string[], hash: string): Promise<any> {
-    return this.sendToDaemonViaQueue({
-      type: 'RECORD_OUTPUTS_HASH',
-      data: {
-        outputs,
-        hash,
-      },
-    });
+    return this.sendMessageToDaemonViaQueueOrTx<HandleRecordOutputsHashMessage>(
+      {
+        type: RECORD_OUTPUTS_HASH,
+        data: {
+          outputs,
+          hash,
+        },
+      }
+    );
   }
 
   outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
-    return this.sendToDaemonViaQueue({
+    return this.sendMessageToDaemonViaQueueOrTx({
       type: 'OUTPUTS_HASHES_MATCH',
       data: {
         outputs,
@@ -310,104 +389,99 @@ export class DaemonClient {
   }
 
   glob(globs: string[], exclude?: string[]): Promise<string[]> {
-    const message: HandleGlobMessage = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleGlobMessage>({
       type: 'GLOB',
       globs,
       exclude,
-    };
-    return this.sendToDaemonViaQueue(message);
+    });
   }
 
   getWorkspaceContextFileData(): Promise<FileData[]> {
-    const message: HandleContextFileDataMessage = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleContextFileDataMessage>({
       type: GET_CONTEXT_FILE_DATA,
-    };
-    return this.sendToDaemonViaQueue(message);
+    });
   }
 
   getWorkspaceFiles(
     projectRootMap: Record<string, string>
   ): Promise<NxWorkspaceFiles> {
-    const message: HandleNxWorkspaceFilesMessage = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleNxWorkspaceFilesMessage>({
       type: GET_NX_WORKSPACE_FILES,
       projectRootMap,
-    };
-    return this.sendToDaemonViaQueue(message);
+    });
   }
 
   getFilesInDirectory(dir: string): Promise<string[]> {
-    const message: HandleGetFilesInDirectoryMessage = {
-      type: GET_FILES_IN_DIRECTORY,
-      dir,
-    };
-    return this.sendToDaemonViaQueue(message);
+    return this.sendMessageToDaemonViaQueueOrTx<HandleGetFilesInDirectoryMessage>(
+      {
+        type: GET_FILES_IN_DIRECTORY,
+        dir,
+      }
+    );
   }
 
   hashGlob(globs: string[], exclude?: string[]): Promise<string> {
-    const message: HandleHashGlobMessage = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleHashGlobMessage>({
       type: HASH_GLOB,
       globs,
       exclude,
-    };
-    return this.sendToDaemonViaQueue(message);
+    });
   }
 
   getFlakyTasks(hashes: string[]): Promise<string[]> {
-    const message: HandleGetFlakyTasks = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleGetFlakyTasks>({
       type: GET_FLAKY_TASKS,
       hashes,
-    };
-
-    return this.sendToDaemonViaQueue(message);
+    });
   }
 
   async getEstimatedTaskTimings(
     targets: TaskTarget[]
   ): Promise<Record<string, number>> {
-    const message: HandleGetEstimatedTaskTimings = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleGetEstimatedTaskTimings>({
       type: GET_ESTIMATED_TASK_TIMINGS,
       targets,
-    };
-
-    return this.sendToDaemonViaQueue(message);
+    });
   }
 
   recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
-    const message: HandleRecordTaskRunsMessage = {
+    return this.sendMessageToDaemonViaQueueOrTx<HandleRecordTaskRunsMessage>({
       type: RECORD_TASK_RUNS,
       taskRuns,
-    };
-    return this.sendMessageToDaemon(message);
+    });
   }
 
   getSyncGeneratorChanges(
     generators: string[]
   ): Promise<SyncGeneratorRunResult[]> {
-    const message: HandleGetSyncGeneratorChangesMessage = {
-      type: GET_SYNC_GENERATOR_CHANGES,
-      generators,
-    };
-    return this.sendToDaemonViaQueue(message);
+    return this.sendMessageToDaemonViaQueueOrTx<HandleGetSyncGeneratorChangesMessage>(
+      {
+        type: GET_SYNC_GENERATOR_CHANGES,
+        generators,
+      }
+    );
   }
 
   flushSyncGeneratorChangesToDisk(
     generators: string[]
   ): Promise<FlushSyncGeneratorChangesResult> {
-    const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
-      type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
-      generators,
-    };
-    return this.sendToDaemonViaQueue(message);
+    return this.sendMessageToDaemonViaQueueOrTx<HandleFlushSyncGeneratorChangesToDiskMessage>(
+      {
+        type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+        generators,
+      }
+    );
   }
 
   getRegisteredSyncGenerators(): Promise<{
     globalGenerators: string[];
     taskGenerators: string[];
   }> {
-    const message: HandleGetRegisteredSyncGeneratorsMessage = {
-      type: GET_REGISTERED_SYNC_GENERATORS,
-    };
-    return this.sendToDaemonViaQueue(message);
+    return this.sendMessageToDaemonViaQueueOrTx<HandleGetRegisteredSyncGeneratorsMessage>(
+      {
+        type: GET_REGISTERED_SYNC_GENERATORS,
+      }
+    );
   }
 
   updateWorkspaceContext(
@@ -415,13 +489,14 @@ export class DaemonClient {
     updatedFiles: string[],
     deletedFiles: string[]
   ): Promise<void> {
-    const message: HandleUpdateWorkspaceContextMessage = {
-      type: UPDATE_WORKSPACE_CONTEXT,
-      createdFiles,
-      updatedFiles,
-      deletedFiles,
-    };
-    return this.sendToDaemonViaQueue(message);
+    return this.sendMessageToDaemonViaQueueOrTx<HandleUpdateWorkspaceContextMessage>(
+      {
+        type: UPDATE_WORKSPACE_CONTEXT,
+        createdFiles,
+        updatedFiles,
+        deletedFiles,
+      }
+    );
   }
 
   async isServerAvailable(): Promise<boolean> {
@@ -440,10 +515,11 @@ export class DaemonClient {
     });
   }
 
-  private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
-    return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon)
-    );
+  private rejectAllPendingPromises(err) {
+    this.pendingPromises.forEach((pending) => {
+      pending.rejector(err);
+    });
+    this.pendingPromises.clear();
   }
 
   private setUpConnection() {
@@ -454,7 +530,7 @@ export class DaemonClient {
       () => {
         // it's ok for the daemon to terminate if the client doesn't wait on
         // any messages from the daemon
-        if (this.queue.isEmpty()) {
+        if (this.pendingPromises.size === 0) {
           this.reset();
         } else {
           output.error({
@@ -465,9 +541,11 @@ export class DaemonClient {
             ],
           });
           this._daemonStatus = DaemonStatus.DISCONNECTED;
-          this.currentReject?.(
-            daemonProcessException(
-              'Daemon process terminated and closed the connection'
+          this.pendingPromises.forEach((pending) =>
+            pending.rejector?.(
+              daemonProcessException(
+                'Daemon process terminated and closed the connection'
+              )
             )
           );
           process.exit(1);
@@ -475,18 +553,22 @@ export class DaemonClient {
       },
       (err) => {
         if (!err.message) {
-          return this.currentReject(daemonProcessException(err.toString()));
-        }
-
-        if (err.message.startsWith('LOCK-FILES-CHANGED')) {
-          // retry the current message
-          // we cannot send it via the queue because we are in the middle of processing
-          // a message from the queue
-          return this.sendMessageToDaemon(this.currentMessage).then(
-            this.currentResolve,
-            this.currentReject
+          return this.rejectAllPendingPromises(
+            daemonProcessException(err.toString())
           );
         }
+
+        // TODO: @AgentEnder - figure out how to handle this... Not sure this is
+        // actually even being used.
+        // if (err.message.startsWith('LOCK-FILES-CHANGED')) {
+        //   // retry the current message
+        //   // we cannot send it via the queue because we are in the middle of processing
+        //   // a message from the queue
+        //   return this.sendMessageToDaemon(this.currentMessage).then(
+        //     this.currentResolve,
+        //     this.currentReject
+        //   );
+        // }
 
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
@@ -503,12 +585,15 @@ export class DaemonClient {
         } else {
           error = daemonProcessException(err.toString());
         }
-        return this.currentReject(error);
+        return this.rejectAllPendingPromises(error);
       }
     );
   }
 
-  private async sendMessageToDaemon(message: Message): Promise<any> {
+  private async sendMessageToDaemon(
+    message: Message,
+    socket: DaemonSocketMessenger = this.socketMessenger
+  ): Promise<any> {
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
@@ -521,60 +606,71 @@ export class DaemonClient {
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
     }
-    // An open promise isn't enough to keep the event loop
-    // alive, so we set a timeout here and clear it when we hear
-    // back
-    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
-    return new Promise((resolve, reject) => {
-      performance.mark('sendMessageToDaemon-start');
-
-      this.currentMessage = message;
-      this.currentResolve = resolve;
-      this.currentReject = reject;
-
-      this.socketMessenger.sendMessage(message);
-    }).finally(() => {
-      clearTimeout(keepAlive);
-    });
+    socket.sendMessage(message);
   }
 
   private handleMessage(serializedResult: string) {
     try {
       performance.mark('json-parse-start');
-      const parsedResult = JSON.parse(serializedResult);
+      const { response: parsedResult, tx } = JSON.parse(serializedResult);
       performance.mark('json-parse-end');
       performance.measure(
         'deserialize daemon response',
         'json-parse-start',
         'json-parse-end'
       );
-      if (parsedResult.error) {
-        this.currentReject(parsedResult.error);
+      if (tx) {
+        const pending = this.pendingPromises.get(tx);
+        if (pending) {
+          if (parsedResult.error) {
+            pending.rejector(parsedResult.error);
+          } else {
+            pending.resolver(parsedResult);
+          }
+          this.pendingPromises.delete(tx);
+        } else {
+        }
+      } else if (process.env.NX_DAEMON_USE_QUEUE === 'true') {
+        if (parsedResult.error) {
+          this.currentReject(parsedResult.error);
+        } else {
+          performance.measure(
+            'total for sendMessageToDaemon()',
+            'sendMessageToDaemon-start',
+            'json-parse-end'
+          );
+          return this.currentResolve(parsedResult);
+        }
       } else {
-        performance.measure(
-          'total for sendMessageToDaemon()',
-          'sendMessageToDaemon-start',
-          'json-parse-end'
-        );
-        return this.currentResolve(parsedResult);
+        output.error({
+          title: `Received a response without a transaction ID: ${JSON.stringify(
+            parsedResult
+          )}`,
+          bodyLines: [
+            'This is likely a bug in Nx. Please report it.',
+            'The response will be ignored.',
+          ],
+        });
       }
     } catch (e) {
       const endOfResponse =
         serializedResult.length > 300
           ? serializedResult.substring(serializedResult.length - 300)
           : serializedResult;
-      this.currentReject(
-        daemonProcessException(
-          [
-            'Could not deserialize response from Nx daemon.',
-            `Message: ${e.message}`,
-            '\n',
-            `Received:`,
-            endOfResponse,
-            '\n',
-          ].join('\n')
-        )
-      );
+      this.pendingPromises.forEach((pending) => {
+        pending.rejector(
+          daemonProcessException(
+            [
+              'Could not deserialize response from Nx daemon.',
+              `Message: ${e.message}`,
+              '\n',
+              `Received:`,
+              endOfResponse,
+              '\n',
+            ].join('\n')
+          )
+        );
+      });
     }
   }
 
@@ -635,18 +731,17 @@ export class DaemonClient {
   }
 
   async stop(): Promise<void> {
-    try {
-      await this.sendMessageToDaemon({ type: FORCE_SHUTDOWN });
-      await waitForDaemonToExitAndCleanupProcessJson();
-    } catch (err) {
-      output.error({
-        title:
-          err?.message ||
-          'Something unexpected went wrong when stopping the daemon server',
+    return this.sendMessageToDaemonViaQueueOrTx({ type: 'FORCE_SHUTDOWN' })
+      .catch((e) => {
+        output.error({
+          title:
+            e?.message ||
+            'Something unexpected went wrong when stopping the daemon server',
+        });
+      })
+      .then(() => {
+        removeSocketDir();
       });
-    }
-
-    removeSocketDir();
   }
 }
 

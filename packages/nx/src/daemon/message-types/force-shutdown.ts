@@ -1,6 +1,8 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const FORCE_SHUTDOWN = 'FORCE_SHUTDOWN' as const;
 
-export type HandleForceShutdownMessage = {
+export type HandleForceShutdownMessage = Message & {
   type: typeof FORCE_SHUTDOWN;
 };
 
