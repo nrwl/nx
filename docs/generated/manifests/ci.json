@@ -881,6 +881,17 @@
             "isExternal": false,
             "path": "/ci/recipes/other/ci-deployment",
             "tags": ["docker", "deploy"]
+          },
+          {
+            "id": "cipe-affected-project-graph",
+            "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/cipe-affected-project-graph",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/other/cipe-affected-project-graph",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -1753,6 +1764,17 @@
         "isExternal": false,
         "path": "/ci/recipes/other/ci-deployment",
         "tags": ["docker", "deploy"]
+      },
+      {
+        "id": "cipe-affected-project-graph",
+        "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/cipe-affected-project-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/other/cipe-affected-project-graph",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1780,6 +1802,17 @@
     "isExternal": false,
     "path": "/ci/recipes/other/ci-deployment",
     "tags": ["docker", "deploy"]
+  },
+  "/ci/recipes/other/cipe-affected-project-graph": {
+    "id": "cipe-affected-project-graph",
+    "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/cipe-affected-project-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/other/cipe-affected-project-graph",
+    "tags": []
   },
   "/ci/reference": {
     "id": "reference",
