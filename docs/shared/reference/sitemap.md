@@ -221,7 +221,7 @@
     - [workspace.json](/deprecated/workspace-json)
     - [As Provided vs. Derived](/deprecated/as-provided-vs-derived)
     - [Workspace Generators](/deprecated/workspace-generators)
-    - [Custom Task Runners](/deprecated/custom-task-runners)
+    - [Legacy Cache](/deprecated/legacy-cache)
     - [Workspace Executors](/deprecated/workspace-executors)
     - [runtimeCacheInputs](/deprecated/runtime-cache-inputs)
     - [cacheableOperations](/deprecated/cacheable-operations)
