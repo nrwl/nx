@@ -3,7 +3,8 @@ title: See your affected graph in Nx Cloud
 slug: ci-affected-graph
 authors: ['Philip Fulcher']
 tags: [nx-cloud]
-cover_image: /blog/images/2024-11-18/header.avif
+cover_image: /blog/images/2024-11-19/header.avif
+youtubeUrl: https://youtu.be/TS-Fp2iSlVM
 ---
 
 As monorepos grow in size and complexity, it can be difficult to understand the relationships between different parts of
@@ -22,7 +23,7 @@ What do we mean by "marked as affected?" In a monorepo, running all your tasks, 
 
 The CI affected graph is available on all CI Pipeline Executions (CIPEs) in Nx Cloud. Click the new "Affected Graph" link at the top of your CIPE view.
 
-![Screenshot of CI affected graph on Nx Cloud](/blog/images/2024-11-11/screenshot.avif)
+![Screenshot of CI affected graph on Nx Cloud](/blog/images/2024-11-19/screenshot.avif)
 
 The CI affected graph uses the new [Composite Graph](/features/explore-graph#focusing-on-valuable-projects) introduced in Nx 20.
 Groups of projects are collapsed into a single node on the graph based on directories. You can expand those nodes to see
@@ -30,6 +31,8 @@ inside by double-clicking them, or by clicking on the node and then clicking "Ex
 
 You can explore this example on your own on the
 public [Nx OSS workspace](https://staging.nx.app/cipes/673137bc4c6704317ca09c7d/graph?runGroup=0ca224ea-1849-4f83-9ab9-68bec96bcb98-linux).
+
+We've put together an exampe of one problem you can solve using this new view: [reducing the number of affected projects on CI](/ci/recipes/other/cipe-affected-project-graph).
 
 ## Get started with Nx Cloud
 
@@ -41,6 +44,7 @@ Get started with Nx Cloud
 
 ## Learn more
 
+- [Recipe: Reduce the Number of Affected Projects in a CI Pipeline Execution](/ci/recipes/other/cipe-affected-project-graph)
 - [Nx Docs](/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
