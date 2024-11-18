@@ -4,7 +4,7 @@ import { join } from 'path';
 import { PerformanceObserver } from 'perf_hooks';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../../utils/messaging';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
@@ -43,6 +43,7 @@ import {
   handleServerProcessTermination,
   resetInactivityTimeout,
   respondToClient,
+  respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
@@ -109,6 +110,20 @@ import {
   isHandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import { Message } from '../client/daemon-socket-messenger';
+import {
+  HASH_TASKS,
+  isHandleHashTasksMessage,
+} from '../message-types/hash-tasks';
+import {
+  isHandleProcessInBackgroundMessageMessage,
+  PROCESS_IN_BACKGROUND,
+} from '../message-types/process-in-background';
+import { isHandleRecordOutputsHashMessage } from '../message-types/record-outputs-hash';
+import {
+  isHandleOutputHashesMatchMessage,
+  OUTPUTS_HASHES_MATCH,
+} from '../message-types/output-hashes-match';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -185,7 +200,7 @@ async function handleMessage(socket, data: string) {
   resetInactivityTimeout(handleInactivityTimeout);
 
   const unparsedPayload = data;
-  let payload;
+  let payload: Message;
   try {
     payload = JSON.parse(unparsedPayload);
   } catch (e) {
@@ -197,91 +212,178 @@ async function handleMessage(socket, data: string) {
   }
 
   if (payload.type === 'PING') {
-    await handleResult(socket, 'PING', () =>
+    handleResult(socket, 'PING', payload.tx, () =>
       Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
     );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-    await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
+    handleResult(socket, 'REQUEST_PROJECT_GRAPH', payload.tx, () =>
       handleRequestProjectGraph()
     );
-  } else if (payload.type === 'HASH_TASKS') {
-    await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
-  } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-    await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
-      handleProcessInBackground(payload)
+  } else if (isHandleHashTasksMessage(payload)) {
+    const promise = handleResult(socket, HASH_TASKS, payload.tx, () =>
+      handleHashTasks(payload)
     );
-  } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
-    await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
-      handleRecordOutputsHash(payload)
+    if (!payload.tx) {
+      await promise;
+    }
+  } else if (isHandleProcessInBackgroundMessageMessage(payload)) {
+    const promise = handleResult(
+      socket,
+      PROCESS_IN_BACKGROUND,
+      payload.tx,
+      () => handleProcessInBackground(payload)
     );
-  } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
-    await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
+    if (!payload.tx) {
+      await promise;
+    }
+  } else if (isHandleRecordOutputsHashMessage(payload)) {
+    const promise = handleResult(
+      socket,
+      'RECORD_OUTPUTS_HASH',
+      payload.tx,
+      () => handleRecordOutputsHash(payload)
+    );
+    if (!payload.tx) {
+      await promise;
+    }
+  } else if (isHandleOutputHashesMatchMessage(payload)) {
+    const promise = handleResult(socket, OUTPUTS_HASHES_MATCH, payload.tx, () =>
       handleOutputsHashesMatch(payload)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
-    await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
+    const promise = handleResult(socket, 'REQUEST_SHUTDOWN', payload.tx, () =>
       handleRequestShutdown(server, numberOfOpenConnections)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
   } else if (isHandleGlobMessage(payload)) {
-    await handleResult(socket, GLOB, () =>
+    const promise = handleResult(socket, GLOB, payload.tx, () =>
       handleGlob(payload.globs, payload.exclude)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
-    await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
-      handleNxWorkspaceFiles(payload.projectRootMap)
+    const promise = handleResult(
+      socket,
+      GET_NX_WORKSPACE_FILES,
+      payload.tx,
+      () => handleNxWorkspaceFiles(payload.projectRootMap)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleGetFilesInDirectoryMessage(payload)) {
-    await handleResult(socket, GET_FILES_IN_DIRECTORY, () =>
-      handleGetFilesInDirectory(payload.dir)
+    const promise = handleResult(
+      socket,
+      GET_FILES_IN_DIRECTORY,
+      payload.tx,
+      () => handleGetFilesInDirectory(payload.dir)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleContextFileDataMessage(payload)) {
-    await handleResult(socket, GET_CONTEXT_FILE_DATA, () =>
-      handleContextFileData()
+    const promise = handleResult(
+      socket,
+      GET_CONTEXT_FILE_DATA,
+      payload.tx,
+      () => handleContextFileData()
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleHashGlobMessage(payload)) {
-    await handleResult(socket, HASH_GLOB, () =>
+    const promise = handleResult(socket, HASH_GLOB, payload.tx, () =>
       handleHashGlob(payload.globs, payload.exclude)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleGetFlakyTasksMessage(payload)) {
-    await handleResult(socket, GET_FLAKY_TASKS, () =>
+    const promise = handleResult(socket, GET_FLAKY_TASKS, payload.tx, () =>
       handleGetFlakyTasks(payload.hashes)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleGetEstimatedTaskTimings(payload)) {
-    await handleResult(socket, GET_ESTIMATED_TASK_TIMINGS, () =>
-      handleGetEstimatedTaskTimings(payload.targets)
+    const promise = handleResult(
+      socket,
+      GET_ESTIMATED_TASK_TIMINGS,
+      payload.tx,
+      () => handleGetEstimatedTaskTimings(payload.targets)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
-    await handleResult(socket, RECORD_TASK_RUNS, () =>
+    const promise = handleResult(socket, RECORD_TASK_RUNS, payload.tx, () =>
       handleRecordTaskRuns(payload.taskRuns)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleForceShutdownMessage(payload)) {
-    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
+    const promise = handleResult(socket, 'FORCE_SHUTDOWN', payload.tx, () =>
       handleForceShutdown(server)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
-    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
-      handleGetSyncGeneratorChanges(payload.generators)
+    const promise = handleResult(
+      socket,
+      GET_SYNC_GENERATOR_CHANGES,
+      payload.tx,
+      () => handleGetSyncGeneratorChanges(payload.generators)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
-    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
-      handleFlushSyncGeneratorChangesToDisk(payload.generators)
+    const promise = handleResult(
+      socket,
+      FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+      payload.tx,
+      () => handleFlushSyncGeneratorChangesToDisk(payload.generators)
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
-    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
-      handleGetRegisteredSyncGenerators()
+    const promise = handleResult(
+      socket,
+      GET_REGISTERED_SYNC_GENERATORS,
+      payload.tx,
+      () => handleGetRegisteredSyncGenerators()
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
-    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
-      handleUpdateWorkspaceContext(
-        payload.createdFiles,
-        payload.updatedFiles,
-        payload.deletedFiles
-      )
+    const promise = handleResult(
+      socket,
+      UPDATE_WORKSPACE_CONTEXT,
+      payload.tx,
+      () =>
+        handleUpdateWorkspaceContext(
+          payload.createdFiles,
+          payload.updatedFiles,
+          payload.deletedFiles
+        )
     );
+    if (!payload.tx) {
+      await promise;
+    }
   } else {
-    await respondWithErrorAndExit(
+    respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
@@ -292,15 +394,16 @@ async function handleMessage(socket, data: string) {
 export async function handleResult(
   socket: Socket,
   type: string,
+  tx: string,
   hrFn: () => Promise<HandlerResult>
 ) {
   const startMark = new Date();
   const hr = await hrFn();
   const doneHandlingMark = new Date();
   if (hr.error) {
-    await respondWithErrorAndExit(socket, hr.description, hr.error);
+    await respondWithError(socket, hr.description, hr.error, tx);
   } else {
-    await respondToClient(socket, hr.response, hr.description);
+    await respondToClient(socket, hr.response, hr.description, tx);
   }
   const endMark = new Date();
   serverLogger.log(

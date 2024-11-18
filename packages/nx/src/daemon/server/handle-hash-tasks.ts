@@ -3,6 +3,7 @@ import { getCachedSerializedProjectGraphPromise } from './project-graph-incremen
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
 import { DaemonProjectGraphError } from '../../project-graph/error-types';
+import { HandleHashTasksMessage } from '../message-types/hash-tasks';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -11,12 +12,7 @@ import { DaemonProjectGraphError } from '../../project-graph/error-types';
 let storedProjectGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
 
-export async function handleHashTasks(payload: {
-  runnerOptions: any;
-  env: any;
-  tasks: Task[];
-  taskGraph: TaskGraph;
-}) {
+export async function handleHashTasks(payload: HandleHashTasksMessage) {
   const {
     error,
     projectGraph: _graph,
@@ -45,9 +41,14 @@ export async function handleHashTasks(payload: {
       payload.runnerOptions
     );
   }
-  const response = JSON.stringify(
-    await storedHasher.hashTasks(payload.tasks, payload.taskGraph, payload.env)
-  );
+  const response = JSON.stringify({
+    ...(await storedHasher.hashTasks(
+      payload.tasks,
+      payload.taskGraph,
+      payload.env
+    )),
+    tx: payload.tx,
+  });
   return {
     response,
     description: 'handleHashTasks',

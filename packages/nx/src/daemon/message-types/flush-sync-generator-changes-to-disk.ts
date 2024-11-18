@@ -1,7 +1,9 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK =
   'CLEAR_CACHED_SYNC_GENERATOR_CHANGES' as const;
 
-export type HandleFlushSyncGeneratorChangesToDiskMessage = {
+export type HandleFlushSyncGeneratorChangesToDiskMessage = Message & {
   type: typeof FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK;
   generators: string[];
 };

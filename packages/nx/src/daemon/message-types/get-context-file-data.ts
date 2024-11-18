@@ -1,6 +1,8 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const GET_CONTEXT_FILE_DATA = 'GET_CONTEXT_FILE_DATA' as const;
 
-export type HandleContextFileDataMessage = {
+export type HandleContextFileDataMessage = Message & {
   type: typeof GET_CONTEXT_FILE_DATA;
 };
 

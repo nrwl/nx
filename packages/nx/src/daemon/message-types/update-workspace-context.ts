@@ -1,6 +1,8 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const UPDATE_WORKSPACE_CONTEXT = 'UPDATE_WORKSPACE_CONTEXT' as const;
 
-export type HandleUpdateWorkspaceContextMessage = {
+export type HandleUpdateWorkspaceContextMessage = Message & {
   type: typeof UPDATE_WORKSPACE_CONTEXT;
   createdFiles: string[];
   updatedFiles: string[];
