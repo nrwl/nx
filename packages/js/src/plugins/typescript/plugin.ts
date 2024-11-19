@@ -173,7 +173,8 @@ async function createNodesInternal(
   if (
     siblingFiles.includes('next.config.js') ||
     siblingFiles.includes('next.config.cjs') ||
-    siblingFiles.includes('next.config.mjs')
+    siblingFiles.includes('next.config.mjs') ||
+    siblingFiles.includes('next.config.ts')
   ) {
     return {};
   }
