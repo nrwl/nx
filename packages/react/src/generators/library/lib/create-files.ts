@@ -80,7 +80,10 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     updateJson(host, `${options.projectRoot}/package.json`, (json) => {
       json.name = options.importPath;
       json.nx = {
-        name: options.name,
+        name: json.name === options.name ? undefined : options.name,
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        projectType: 'library',
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
       };
       return json;
     });
