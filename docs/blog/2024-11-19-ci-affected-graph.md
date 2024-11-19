@@ -29,8 +29,8 @@ The CI affected graph uses the new [Composite Graph](/features/explore-graph#foc
 Groups of projects are collapsed into a single node on the graph based on directories. You can expand those nodes to see
 inside by double-clicking them, or by clicking on the node and then clicking "Expand".
 
-You can explore this example on your own on the
-public [Nx OSS workspace](https://staging.nx.app/cipes/673137bc4c6704317ca09c7d/graph?runGroup=0ca224ea-1849-4f83-9ab9-68bec96bcb98-linux).
+You can explore affected project graphs on your own on the
+public [Nx OSS workspace](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview).
 
 We've put together an example of one problem you can solve using this new view: [reducing the number of affected projects on CI](/ci/recipes/other/cipe-affected-project-graph).
 
