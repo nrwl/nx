@@ -415,6 +415,8 @@ describe('app', () => {
             "**/*.spec.ts",
             "**/*.spec.tsx",
             "src/test-setup.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
