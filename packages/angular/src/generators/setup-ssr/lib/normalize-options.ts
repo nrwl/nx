@@ -14,7 +14,7 @@ export async function normalizeOptions(
     targets.build.executor === '@angular/build:application' ||
     targets.build.executor === '@nx/angular:application';
 
-  if (options.serverRouting !== undefined && isUsingApplicationBuilder) {
+  if (options.serverRouting === undefined && isUsingApplicationBuilder) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
     if (angularMajorVersion >= 19) {
