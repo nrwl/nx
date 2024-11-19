@@ -76,19 +76,6 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     host.delete(`${options.projectRoot}/package.json`);
   }
 
-  if (options.isUsingTsSolutionConfig) {
-    updateJson(host, `${options.projectRoot}/package.json`, (json) => {
-      json.name = options.importPath;
-      json.nx = {
-        name: json.name === options.name ? undefined : options.name,
-        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-        projectType: 'library',
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      };
-      return json;
-    });
-  }
-
   if (options.js) {
     toJS(host);
   }

@@ -62,7 +62,18 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  if (!options.isUsingTsSolutionConfig) {
+  if (options.isUsingTsSolutionConfig) {
+    updateJson(host, `${options.projectRoot}/package.json`, (json) => {
+      json.name = options.importPath;
+      json.nx = {
+        name: json.name === options.name ? undefined : options.name,
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        projectType: 'library',
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      };
+      return json;
+    });
+  } else {
     addProjectConfiguration(host, options.name, {
       root: options.projectRoot,
       sourceRoot: joinPathFragments(options.projectRoot, 'src'),
