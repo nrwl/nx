@@ -1,5 +1,5 @@
 ---
-title: See your affected graph in Nx Cloud
+title: See your affected project graph in Nx Cloud
 slug: ci-affected-graph
 authors: ['Philip Fulcher']
 tags: [nx-cloud]
@@ -9,11 +9,11 @@ youtubeUrl: https://youtu.be/TS-Fp2iSlVM
 
 As monorepos grow in size and complexity, it can be difficult to understand the relationships between different parts of
 your codebase. That's why Nx has the [graph visualization](/features/explore-graph) that helps you see the different
-connections between projects and tasks in your workspace. But that runs locally, and sometimes you need to see that same graph from your CI's perspective. Now you can do that with the CI affected graph in Nx Cloud.
+connections between projects and tasks in your workspace. But that runs locally, and sometimes you need to see that same graph from your CI's perspective. Now you can do that with the affected project graph in Nx Cloud.
 
 ## More insight into CI tasks
 
-The CLI graph visualization can give you some information about what projects or tasks are affected by your changes. But
+The CLI project graph visualization can give you some information about what projects or tasks are affected by your changes. But
 CI may run different tasks than you do locally, or compare to different branches for affected calculations. So you often
 feel like you're passing your work off to a black box with no insight into why a project is marked as affected on CI.
 
@@ -21,16 +21,16 @@ What do we mean by "marked as affected?" In a monorepo, running all your tasks, 
 
 ## How do I use it?
 
-The CI affected graph is available on all CI Pipeline Executions (CIPEs) in Nx Cloud. Click the new "Affected Graph" link at the top of your CIPE view.
+The affected project graph is available on all CI Pipeline Executions (CIPEs) in Nx Cloud. Click the new "Affected Project Graph" link at the top of your CIPE view.
 
-![Screenshot of CI affected graph on Nx Cloud](/blog/images/2024-11-19/screenshot.avif)
+![Screenshot of CI affected project graph on Nx Cloud](/blog/images/2024-11-19/screenshot.avif)
 
-The CI affected graph uses the new [Composite Graph](/features/explore-graph#focusing-on-valuable-projects) introduced in Nx 20.
+The affected project graph uses the new [Composite Graph](/features/explore-graph#focusing-on-valuable-projects) introduced in Nx 20.
 Groups of projects are collapsed into a single node on the graph based on directories. You can expand those nodes to see
 inside by double-clicking them, or by clicking on the node and then clicking "Expand".
 
-You can explore this example on your own on the
-public [Nx OSS workspace](https://staging.nx.app/cipes/673137bc4c6704317ca09c7d/graph?runGroup=0ca224ea-1849-4f83-9ab9-68bec96bcb98-linux).
+You can explore affected project graphs on your own on the
+public [Nx OSS workspace](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview).
 
 We've put together an example of one problem you can solve using this new view: [reducing the number of affected projects on CI](/ci/recipes/other/cipe-affected-project-graph).
 
