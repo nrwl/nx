@@ -129,15 +129,6 @@ export async function remixApplicationGeneratorInternal(
     vars
   );
 
-  if (isUsingTsSolution) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, 'files/ts-solution'),
-      options.projectRoot,
-      vars
-    );
-  }
-
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
@@ -154,7 +145,16 @@ export async function remixApplicationGeneratorInternal(
   } else {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, 'files/integrated'),
+      joinPathFragments(__dirname, 'files/non-root'),
+      options.projectRoot,
+      vars
+    );
+  }
+
+  if (isUsingTsSolution) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, 'files/ts-solution'),
       options.projectRoot,
       vars
     );

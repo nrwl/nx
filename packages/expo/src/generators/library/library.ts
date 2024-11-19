@@ -162,7 +162,6 @@ async function addProject(
       version: '0.0.1',
       nx: {
         name: packageName === options.name ? undefined : options.name,
-        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
         projectType: 'library',
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },

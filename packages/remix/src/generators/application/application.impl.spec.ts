@@ -337,8 +337,41 @@ describe('Remix Application', () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
         e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
         addPlugin: true,
       });
+
+      expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "@remix-run/node": "^2.14.0",
+            "@remix-run/react": "^2.14.0",
+            "@remix-run/serve": "^2.14.0",
+            "isbot": "^4.4.0",
+            "react": "^18.2.0",
+            "react-dom": "^18.2.0",
+          },
+          "devDependencies": {
+            "@remix-run/dev": "^2.14.0",
+            "@types/react": "^18.2.0",
+            "@types/react-dom": "^18.2.0",
+            "eslint": "^8.56.0",
+            "typescript": "~5.5.2",
+            "vite": "^5.0.0",
+          },
+          "engines": {
+            "node": ">=20",
+          },
+          "name": "myapp",
+          "nx": {
+            "projectType": "application",
+          },
+          "private": true,
+          "scripts": {},
+          "sideEffects": false,
+          "type": "module",
+        }
+      `);
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
         [
@@ -401,6 +434,9 @@ describe('Remix Application', () => {
             "tests/**/*.test.js",
             "tests/**/*.spec.jsx",
             "tests/**/*.test.jsx",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",

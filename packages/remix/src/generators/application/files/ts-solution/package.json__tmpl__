@@ -14,14 +14,18 @@
   "devDependencies": {
     "@remix-run/dev": "<%= remixVersion %>",
     "@types/react": "<%= typesReactVersion %>",
-    "@types/react-dom": "<%= typesReactDomVersion %>"
+    "@types/react-dom": "<%= typesReactDomVersion %>",
+    "eslint": "<%= eslintVersion %>",
+    "typescript": "<%= typescriptVersion %>",
+    "vite": "<%= viteVersion %>"
   },
   "engines": {
     "node": ">=20"
   },
   "sideEffects": false<% if (isUsingTsSolution) { %>,
-  "nx": {
-    "name": "<%= name %>"
+  "nx": {<%_ if (name !== projectName) { _%>
+    "name": "<%= name %>",
+    <%_ } _%>"projectType": "application"
   }
   <% } %>
 }

@@ -92,7 +92,8 @@ export async function addE2e(
             version: '0.0.1',
             private: true,
             nx: {
-              name: options.e2eProjectName,
+              projectType: 'application',
+              implicitDependencies: [options.projectName],
             },
           }
         );

@@ -63,15 +63,13 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.isUsingTsSolutionConfig) {
-    updateJson(host, `${options.projectRoot}/package.json`, (json) => {
-      json.name = options.importPath;
-      json.nx = {
-        name: json.name === options.name ? undefined : options.name,
-        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    writeJson(host, `${options.projectRoot}/package.json`, {
+      name: options.importPath,
+      nx: {
+        name: options.importPath === options.name ? undefined : options.name,
         projectType: 'library',
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      };
-      return json;
+      },
     });
   } else {
     addProjectConfiguration(host, options.name, {
