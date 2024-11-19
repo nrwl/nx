@@ -67,6 +67,7 @@ export async function normalizeOptions(
     fileName,
     importPath,
     ngCliSchematicLibRoot,
+    skipTests: options.unitTestRunner === 'none' ? true : options.skipTests,
     standaloneComponentName: `${
       names(projectNames.projectSimpleName).className
     }Component`,

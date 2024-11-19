@@ -1,12 +1,12 @@
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import type { Configuration } from '@rspack/core';
 import { DefinePlugin } from '@rspack/core';
-import { SharedConfigContext } from '../../model';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '../models';
+} from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
+import { NxRspackExecutionContext } from '../../config';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -31,7 +31,7 @@ export async function withModuleFederation(
 
   return function makeConfig(
     config: Configuration,
-    { context }: SharedConfigContext
+    { context }: NxRspackExecutionContext
   ): Configuration {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
@@ -79,7 +79,7 @@ export async function withModuleFederation(
             ? [
                 ...(configOverride?.runtimePlugins ?? []),
                 require.resolve(
-                  '@nx/rspack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
+                  '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                 ),
               ]
             : configOverride?.runtimePlugins,

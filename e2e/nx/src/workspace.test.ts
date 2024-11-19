@@ -32,10 +32,10 @@ describe('@nx/workspace:infer-targets', () => {
     // default case, everything is generated with crystal, everything should be skipped
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --projectNameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
-    const output = runCLI(`generate infer-targets --no-interactive`);
+    const output = runCLI(`generate infer-targets --no-interactive --verbose`);
 
     expect(output).toContain('@nx/remix:convert-to-inferred - Skipped');
     expect(output).toContain('@nx/playwright:convert-to-inferred - Skipped');
@@ -60,7 +60,7 @@ describe('@nx/workspace:infer-targets', () => {
       return json;
     });
 
-    const output2 = runCLI(`generate infer-targets --no-interactive`);
+    const output2 = runCLI(`generate infer-targets --no-interactive --verbose`);
 
     expect(output2).toContain('@nx/remix:convert-to-inferred - Success');
     expect(output2).toContain('@nx/eslint:convert-to-inferred - Success');
@@ -70,7 +70,7 @@ describe('@nx/workspace:infer-targets', () => {
     // default case, everything is generated with crystal, relevant plugins should be skipped
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --projectNameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     const output = runCLI(
@@ -116,7 +116,7 @@ describe('@nx/workspace:infer-targets', () => {
     // even if we make sure there are executors for remix & remix-e2e, only remix conversions will run with --project option
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --projectNameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     updateJson('nx.json', (json) => {

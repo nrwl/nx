@@ -94,6 +94,9 @@ module.exports = {
           },
         },
       },
+      screens: {
+        wide: '1800px',
+      },
     },
   },
   plugins: [

@@ -2,7 +2,7 @@ import {
   convertToDocumentMetadata,
   DocumentMetadata,
 } from '@nx/nx-dev/models-document';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { sync } from 'glob';
 import { join, resolve } from 'path';
@@ -125,6 +125,9 @@ export function findPackageMetadataList(
       const folderName = folderPath.substring(packagesDir.length + 1);
 
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
+      if (!existsSync(join(folderPath, 'package.json'))) {
+        return null;
+      }
       const packageJson = readJsonSync(
         join(folderPath, 'package.json'),
         'utf8'

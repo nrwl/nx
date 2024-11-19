@@ -30,6 +30,8 @@ import { addJest } from '../utils/add-jest';
 import { setGeneratorDefaults } from './lib/set-generator-defaults';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { UnitTestRunner } from '../../utils/test-runners';
+import { addVitest } from '../utils/add-vitest';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function libraryGenerator(
@@ -130,13 +132,23 @@ async function addUnitTestRunner(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (options.unitTestRunner === 'jest') {
-    await addJest(host, {
-      name: options.name,
-      projectRoot: options.projectRoot,
-      skipPackageJson: options.skipPackageJson,
-      strict: options.strict,
-    });
+  switch (options.unitTestRunner) {
+    case UnitTestRunner.Jest:
+      await addJest(host, {
+        name: options.name,
+        projectRoot: options.projectRoot,
+        skipPackageJson: options.skipPackageJson,
+        strict: options.strict,
+      });
+      break;
+    case UnitTestRunner.Vitest:
+      await addVitest(host, {
+        name: options.name,
+        projectRoot: options.projectRoot,
+        skipPackageJson: options.skipPackageJson,
+        strict: options.strict,
+      });
+      break;
   }
 }
 

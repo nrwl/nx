@@ -11,6 +11,7 @@ import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import { DevServerExecutorSchema } from './schema';
+import { normalizeOptions } from '../rspack/lib/normalize-options';
 
 type DevServer = Configuration['devServer'];
 export default async function* runExecutor(
@@ -30,14 +31,28 @@ export default async function* runExecutor(
 
   const buildOptions = readTargetOptions(buildTarget, context);
 
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildOptions.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = options.buildTarget;
+
+  const metadata = context.projectsConfigurations.projects[context.projectName];
+  const sourceRoot = metadata.sourceRoot;
+  const normalizedBuildOptions = normalizeOptions(
+    buildOptions,
+    context.root,
+    metadata.root,
+    sourceRoot
+  );
   let devServerConfig: DevServer = getDevServerOptions(
     context.root,
     options,
-    buildOptions
+    normalizedBuildOptions
   );
-
   const compiler = await createCompiler(
-    { ...buildOptions, devServer: devServerConfig, mode: options.mode },
+    {
+      ...normalizedBuildOptions,
+      devServer: devServerConfig,
+      mode: options.mode,
+    },
     context
   );
 

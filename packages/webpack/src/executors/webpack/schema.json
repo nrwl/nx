@@ -70,6 +70,11 @@
       "type": "boolean",
       "description": "Use a separate bundle containing the runtime."
     },
+    "skipTypeChecking": {
+      "alias": "typeCheck",
+      "type": "boolean",
+      "description": "Skip the type checking. Default is `false`."
+    },
     "sourceMap": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
       "oneOf": [
@@ -84,6 +89,10 @@
     "progress": {
       "type": "boolean",
       "description": "Log progress to the console while building."
+    },
+    "poll": {
+      "type": "number",
+      "description": "Enable and define the file watching poll time period."
     },
     "assets": {
       "type": "array",

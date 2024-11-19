@@ -10,15 +10,15 @@ export function Security(): JSX.Element {
               Security
             </SectionHeading>
             <p className="mt-6 text-lg">
-              Nx Cloud is certified to the industry standards, is constantly
-              monitored and{' '}
+              Nx Cloud is certified to industry standards, is constantly
+              monitored, and{' '}
               <a
                 href="https://security.nx.app/"
                 target="_blank"
                 rel="nofollow noreferrer"
                 className="underline"
               >
-                issue security Trust Reports powered by Vanta
+                issues security trust reports powered by Vanta
               </a>
               .
             </p>

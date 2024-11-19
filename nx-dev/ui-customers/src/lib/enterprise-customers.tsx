@@ -44,6 +44,7 @@ import {
   VodafoneIcon,
   ZipariIcon,
 } from '@nx/nx-dev/ui-icons';
+import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
 
 export function EnterpriseCustomers(): JSX.Element {
   return (
@@ -123,11 +124,18 @@ export function EnterpriseCustomers(): JSX.Element {
             >
               <ParamountIcon aria-hidden="true" className="h-14 w-14" />
             </a>
+            <div className="col-span-2 flex items-center justify-center p-6 md:col-span-2">
+              <DownloadCaseStudy
+                title="Banking Case Study"
+                description="$7B European bank cuts CI times by 62% and boosts team productivity."
+                buttonHref="https://go.nx.dev/bank-case-study"
+              />
+            </div>
             <a
               href="https://www.fedex.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-b border-l border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <FedExIcon aria-hidden="true" className="h-28 w-28" />
             </a>
@@ -143,7 +151,7 @@ export function EnterpriseCustomers(): JSX.Element {
               href="https://zipari.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-b border-r border-t border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <ZipariIcon aria-hidden="true" className="h-12 w-12" />
             </a>
@@ -152,7 +160,7 @@ export function EnterpriseCustomers(): JSX.Element {
               href="https://www.bill.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-x border-b border-t border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <BillIcon aria-hidden="true" className="h-16 w-16" />
             </a>
@@ -192,7 +200,7 @@ export function EnterpriseCustomers(): JSX.Element {
               href="https://www.deloitte.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <DeloitteIcon aria-hidden="true" className="h-28 w-28" />
             </a>
@@ -204,11 +212,18 @@ export function EnterpriseCustomers(): JSX.Element {
             >
               <VodafoneIcon aria-hidden="true" className="h-12 w-12" />
             </a>
+            <div className="col-span-2 flex items-center justify-center p-6 md:col-span-2">
+              <DownloadCaseStudy
+                title="Financial Institution Case Study"
+                description="$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud."
+                buttonHref="https://go.nx.dev/financial-casestudy"
+              />
+            </div>
             <a
               href="https://www.t-mobile.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-b border-l border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <TMobileIcon aria-hidden="true" className="h-10 w-10" />
             </a>
@@ -224,7 +239,7 @@ export function EnterpriseCustomers(): JSX.Element {
               href="https://www.modernatx.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-b border-t border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <ModernaIcon aria-hidden="true" className="h-32 w-32" />
             </a>
@@ -232,7 +247,7 @@ export function EnterpriseCustomers(): JSX.Element {
               href="https://clickup.com"
               rel="noreferrer"
               target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+              className="flex items-center justify-center border-x border-b border-t border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <ClickUpIcon aria-hidden="true" className="h-12 w-12" />
             </a>

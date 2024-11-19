@@ -1293,6 +1293,17 @@
     "source": "/packages/js/src"
   },
   {
+    "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "module-federation",
+    "packageName": "@nx/module-federation",
+    "root": "/packages/module-federation",
+    "source": "/packages/module-federation/src"
+  },
+  {
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "documents": [
       {
@@ -1511,15 +1522,6 @@
         "originalFilePath": "/packages/next/src/executors/server/schema.json",
         "path": "next/executors/server",
         "type": "executor"
-      },
-      {
-        "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
-        "file": "generated/packages/next/executors/export.json",
-        "hidden": false,
-        "name": "export",
-        "originalFilePath": "/packages/next/src/executors/export/schema.json",
-        "path": "next/executors/export",
-        "type": "executor"
       }
     ],
     "generators": [
@@ -1724,7 +1726,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/create-nx-workspace",
-        "tags": [],
+        "tags": ["installation"],
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       {
@@ -1735,7 +1737,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/init",
-        "tags": [],
+        "tags": ["init"],
         "originalFilePath": "generated/cli/init"
       },
       {
@@ -1768,7 +1770,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/daemon",
-        "tags": [],
+        "tags": ["daemon"],
         "originalFilePath": "generated/cli/daemon"
       },
       {
@@ -1900,7 +1902,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/sync",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync"
       },
       {
@@ -1911,7 +1913,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/sync-check",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync-check"
       },
       {
@@ -1922,7 +1924,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/import",
-        "tags": [],
+        "tags": ["import"],
         "originalFilePath": "generated/cli/import"
       },
       {
@@ -1933,7 +1935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/exec",
-        "tags": [],
+        "tags": ["exec"],
         "originalFilePath": "generated/cli/exec"
       },
       {
@@ -1955,7 +1957,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/show",
-        "tags": [],
+        "tags": ["explore-graph"],
         "originalFilePath": "generated/cli/show"
       },
       {
@@ -1988,7 +1990,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/add",
-        "tags": [],
+        "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
       {
@@ -1999,7 +2001,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/login",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/login"
       },
       {
@@ -2010,7 +2012,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/logout",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
       }
     ],
@@ -2969,6 +2971,15 @@
         "name": "application",
         "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
         "path": "rspack/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Convert a webpack application to use rspack.",
+        "file": "generated/packages/rspack/generators/convert-webpack.json",
+        "hidden": false,
+        "name": "convert-webpack",
+        "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
+        "path": "rspack/generators/convert-webpack",
         "type": "generator"
       }
     ],

@@ -44,6 +44,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     dot: '.',
     tmpl: '',
     offsetFromRoot,
+    appDirType: options.appDir ? 'app' : 'pages',
     layoutTypeSrcPath,
     rootPath,
     layoutTypeDistPath,
@@ -129,7 +130,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       delete json.compilerOptions.paths;
 
       updatedJson = {
-        ...updateJson,
+        ...updatedJson,
         compilerOptions: {
           ...updatedJson.compilerOptions,
           ...appJSON.compilerOptions,

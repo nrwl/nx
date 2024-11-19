@@ -13,21 +13,20 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
-import { VitestGeneratorSchema } from './schema';
-
-import initGenerator from '../init/init';
 import {
   vitestCoverageIstanbulVersion,
   vitestCoverageV8Version,
 } from '../../utils/versions';
-
-import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
-import { join } from 'path';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import initGenerator from '../init/init';
+import { VitestGeneratorSchema } from './schema';
 
 export function vitestGenerator(
   tree: Tree,
@@ -138,7 +137,7 @@ export async function vitestGeneratorInternal(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
+      `export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];`
     );
   }
 
@@ -155,6 +154,8 @@ function updateTsConfig(
   projectRoot: string,
   projectType: ProjectType
 ) {
+  const setupFile = tryFindSetupFile(tree, projectRoot);
+
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
     updateJson(
       tree,
@@ -168,6 +169,11 @@ function updateTsConfig(
             json.compilerOptions.types = ['vitest'];
           }
         }
+
+        if (setupFile) {
+          json.files = [...(json.files ?? []), setupFile];
+        }
+
         return json;
       }
     );
@@ -221,22 +227,17 @@ function updateTsConfig(
     }
   }
 
-  if (options.inSourceTests) {
-    if (tree.exists(runtimeTsconfigPath)) {
-      updateJson(tree, runtimeTsconfigPath, (json) => {
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      if (options.inSourceTests) {
         (json.compilerOptions.types ??= []).push('vitest/importMeta');
-        return json;
-      });
-    }
-
-    addTsLibDependencies(tree);
-  } else {
-    if (tree.exists(runtimeTsconfigPath)) {
-      updateJson(tree, runtimeTsconfigPath, (json) => {
+      } else {
         const uniqueExclude = new Set([
           ...(json.exclude || []),
           'vite.config.ts',
+          'vite.config.mts',
           'vitest.config.ts',
+          'vitest.config.mts',
           'src/**/*.test.ts',
           'src/**/*.spec.ts',
           'src/**/*.test.tsx',
@@ -247,14 +248,19 @@ function updateTsConfig(
           'src/**/*.spec.jsx',
         ]);
         json.exclude = [...uniqueExclude];
-        return json;
-      });
-    } else {
-      logger.warn(
-        `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
-          `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
-      );
-    }
+      }
+
+      if (setupFile) {
+        json.exclude = [...(json.exclude ?? []), setupFile];
+      }
+
+      return json;
+    });
+  } else {
+    logger.warn(
+      `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
+        `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
+    );
   }
 }
 
@@ -263,11 +269,17 @@ function createFiles(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  const rootOffset = offsetFromRoot(projectRoot);
+
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     ...options,
     projectRoot,
-    offsetFromRoot: offsetFromRoot(projectRoot),
+    extendedConfig: isTsSolutionSetup
+      ? `${rootOffset}tsconfig.base.json`
+      : './tsconfig.json',
+    outDir: isTsSolutionSetup ? `./out-tsc/jest` : `${rootOffset}dist/out-tsc`,
   });
 }
 
@@ -287,6 +299,13 @@ function getCoverageProviderDependency(
       return {
         '@vitest/coverage-v8': vitestCoverageV8Version,
       };
+  }
+}
+
+function tryFindSetupFile(tree: Tree, projectRoot: string) {
+  const setupFile = joinPathFragments('src', 'test-setup.ts');
+  if (tree.exists(joinPathFragments(projectRoot, setupFile))) {
+    return setupFile;
   }
 }
 

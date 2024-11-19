@@ -7,7 +7,7 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
+vite.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
@@ -53,10 +53,14 @@ module.exports = [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parserOptions: { parser: require('@typescript-eslint/parser') },
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
     },
   },
-  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
 ];
 "
 `;
@@ -83,7 +87,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -168,7 +171,9 @@ exports[`app generated files content - as-provided - my-app general application 
   "include": [
     ".nuxt/nuxt.d.ts",
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -259,9 +264,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.css'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -291,9 +294,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.less'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -323,9 +324,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.scss'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -355,7 +354,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -370,7 +368,7 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-**/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*"
+vite.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
@@ -416,10 +414,14 @@ module.exports = [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parserOptions: { parser: require('@typescript-eslint/parser') },
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
     },
   },
-  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
 ];
 "
 `;
@@ -446,7 +448,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -531,7 +532,9 @@ exports[`app generated files content - as-provided - myApp general application s
   "include": [
     ".nuxt/nuxt.d.ts",
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -622,9 +625,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.css'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -654,9 +655,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.less'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -686,9 +685,7 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   css: ['~/assets/css/styles.scss'],
-
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -718,7 +715,6 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-
   vite: {
     plugins: [nxViteTsPaths()],
   },

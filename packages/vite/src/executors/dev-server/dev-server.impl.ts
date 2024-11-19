@@ -56,13 +56,16 @@ export async function* viteDevServerExecutor(
     buildOptions,
     otherOptionsFromBuild
   );
+  const defaultMode =
+    otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development';
   const resolved = await resolveConfig(
     {
       configFile: viteConfigPath,
-      mode: otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development',
+      mode: defaultMode,
     },
     'serve',
-    otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development'
+    defaultMode,
+    process.env.NODE_ENV ?? defaultMode
   );
 
   // vite InlineConfig

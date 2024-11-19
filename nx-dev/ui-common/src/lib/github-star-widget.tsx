@@ -1,4 +1,5 @@
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import type { ReactElement } from 'react';
 
 export const GithubIcon = (props: any) => {
   return (
@@ -15,7 +16,11 @@ export const GithubIcon = (props: any) => {
   );
 };
 
-export function GitHubStarWidget({ starsCount }: { starsCount: number }) {
+export function GitHubStarWidget({
+  starsCount,
+}: {
+  starsCount: number;
+}): ReactElement {
   const formatStars = (count: number) => {
     if (count >= 1000) {
       return (count / 1000).toFixed(1) + 'k';
@@ -33,25 +38,20 @@ export function GitHubStarWidget({ starsCount }: { starsCount: number }) {
   };
 
   return (
-    <div className="flex items-center justify-between space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
-      <a
-        href="https://github.com/nrwl/nx"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-between space-x-2"
-        onClick={() => handleClick('githubstars_iconclick')}
-      >
-        <GithubIcon className="h-6 w-6" />
-        <span className="text-md font-semibold">{formatStars(starsCount)}</span>
-      </a>
+    <div className="relative flex items-center justify-center gap-2 rounded-md bg-slate-950 p-2 text-xs text-white transition hover:bg-slate-900 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white print:hidden">
+      <div className="flex items-center gap-2">
+        <GithubIcon aria-hidden="true" className="h-4 w-4" />
+        <span className="font-semibold">{formatStars(starsCount)}</span>
+      </div>
       <a
         href="https://github.com/nrwl/nx"
         target="_blank"
         rel="noreferrer noopener"
-        className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+        className="flex items-center gap-2 border-transparent font-bold"
         onClick={() => handleClick('githubstars_buttonclick')}
       >
-        Give us a Star!
+        <span className="absolute inset-0" />
+        <span className="whitespace-nowrap">Give us a Star!</span>
       </a>
     </div>
   );

@@ -8,13 +8,18 @@ import { runNxAsync, runNxSync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  getPackageManagerVersion,
+} from '../../utils/package-manager';
 import { handleErrors } from '../../utils/handle-errors';
 import { getPluginCapabilities } from '../../utils/plugins';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
+import { gte } from 'semver';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -41,10 +46,18 @@ async function installPackage(
   spinner.start();
 
   if (existsSync('package.json')) {
-    const pmc = getPackageManagerCommand();
+    const pm = detectPackageManager();
+    const pmv = getPackageManagerVersion(pm);
+    const pmc = getPackageManagerCommand(pm);
+
+    // if we explicitly specify latest in yarn berry, it won't resolve the version
+    const command =
+      pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
+        ? `${pmc.addDev} ${pkgName}`
+        : `${pmc.addDev} ${pkgName}@${version}`;
     await new Promise<void>((resolve) =>
       exec(
-        `${pmc.addDev} ${pkgName}@${version}`,
+        command,
         {
           windowsHide: false,
         },

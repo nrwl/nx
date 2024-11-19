@@ -492,7 +492,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
     const promptConfig = {
       name: 'applyChanges',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to sync the identified changes to get your workspace up to date?',
       choices: [
@@ -523,7 +523,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   try {
     const promptConfig = {
       name: 'runTasks',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to ignore the sync failures and continue running the tasks?',
       choices: [
@@ -804,7 +804,7 @@ export function getRunner(
         title: `Custom task runners will no longer be supported in Nx 21.`,
         bodyLines: [
           `Use Nx Cloud or the Nx Powerpack caches instead.`,
-          `For more information, see https://nx.dev/features/powerpack/custom-caching`,
+          `For more information, see https://nx.dev/nx-enterprise/powerpack/custom-caching`,
         ],
       });
     }

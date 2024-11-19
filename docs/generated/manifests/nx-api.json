@@ -1306,6 +1306,18 @@
     },
     "path": "/nx-api/js"
   },
+  "module-federation": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "module-federation",
+    "packageName": "@nx/module-federation",
+    "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+    "documents": {},
+    "root": "/packages/module-federation",
+    "source": "/packages/module-federation/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/module-federation"
+  },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",
@@ -1531,15 +1543,6 @@
         "originalFilePath": "/packages/next/src/executors/server/schema.json",
         "path": "/nx-api/next/executors/server",
         "type": "executor"
-      },
-      "/nx-api/next/executors/export": {
-        "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
-        "file": "generated/packages/next/executors/export.json",
-        "hidden": false,
-        "name": "export",
-        "originalFilePath": "/packages/next/src/executors/export/schema.json",
-        "path": "/nx-api/next/executors/export",
-        "type": "executor"
       }
     },
     "generators": {
@@ -1745,7 +1748,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/create-nx-workspace",
-        "tags": [],
+        "tags": ["installation"],
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       "/nx-api/nx/documents/init": {
@@ -1756,7 +1759,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/init",
-        "tags": [],
+        "tags": ["init"],
         "originalFilePath": "generated/cli/init"
       },
       "/nx-api/nx/documents/generate": {
@@ -1789,7 +1792,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/daemon",
-        "tags": [],
+        "tags": ["daemon"],
         "originalFilePath": "generated/cli/daemon"
       },
       "/nx-api/nx/documents/dep-graph": {
@@ -1921,7 +1924,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/sync",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync"
       },
       "/nx-api/nx/documents/sync-check": {
@@ -1932,7 +1935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/sync-check",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync-check"
       },
       "/nx-api/nx/documents/import": {
@@ -1943,7 +1946,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/import",
-        "tags": [],
+        "tags": ["import"],
         "originalFilePath": "generated/cli/import"
       },
       "/nx-api/nx/documents/exec": {
@@ -1954,7 +1957,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/exec",
-        "tags": [],
+        "tags": ["exec"],
         "originalFilePath": "generated/cli/exec"
       },
       "/nx-api/nx/documents/watch": {
@@ -1976,7 +1979,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/show",
-        "tags": [],
+        "tags": ["explore-graph"],
         "originalFilePath": "generated/cli/show"
       },
       "/nx-api/nx/documents/view-logs": {
@@ -2009,7 +2012,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/add",
-        "tags": [],
+        "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
       "/nx-api/nx/documents/login": {
@@ -2020,7 +2023,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/login",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/login"
       },
       "/nx-api/nx/documents/logout": {
@@ -2031,7 +2034,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/logout",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
       }
     },
@@ -3000,6 +3003,15 @@
         "originalFilePath": "/packages/rspack/src/generators/application/schema.json",
         "path": "/nx-api/rspack/generators/application",
         "type": "generator"
+      },
+      "/nx-api/rspack/generators/convert-webpack": {
+        "description": "Convert a webpack application to use rspack.",
+        "file": "generated/packages/rspack/generators/convert-webpack.json",
+        "hidden": false,
+        "name": "convert-webpack",
+        "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
+        "path": "/nx-api/rspack/generators/convert-webpack",
+        "type": "generator"
       }
     },
     "path": "/nx-api/rspack"
@@ -3606,6 +3618,30 @@
     },
     "path": "/nx-api/workspace"
   },
+  "powerpack-azure-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-azure-cache",
+    "packageName": "@nx/powerpack-azure-cache",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+    "documents": {
+      "/nx-api/powerpack-azure-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+        "file": "external-generated/packages/powerpack-azure-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-azure-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-azure-cache",
+    "source": "/libs/nx-packages/powerpack-azure-cache/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-azure-cache"
+  },
   "powerpack-conformance": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
@@ -3626,9 +3662,65 @@
     },
     "root": "/libs/nx-packages/powerpack-conformance",
     "source": "/libs/nx-packages/powerpack-conformance/src",
-    "executors": {},
+    "executors": {
+      "/nx-api/powerpack-conformance/executors/bundle-rule": {
+        "description": "Compile and bundle an Nx Conformance Rule",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+        "hidden": false,
+        "name": "bundle-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
+        "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
+        "type": "executor"
+      }
+    },
     "generators": {},
     "path": "/nx-api/powerpack-conformance"
+  },
+  "powerpack-enterprise-cloud": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-enterprise-cloud",
+    "packageName": "@nx/powerpack-enterprise-cloud",
+    "description": "A Nx Powerpack plugin which is specific to Nx Enterprise Cloud workspaces.",
+    "documents": {},
+    "root": "/libs/nx-packages/powerpack-enterprise-cloud",
+    "source": "/libs/nx-packages/powerpack-enterprise-cloud/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/powerpack-enterprise-cloud/generators/init": {
+        "description": "Initialize Nx Powerpack Enterprise Cloud config",
+        "file": "external-generated/packages/powerpack-enterprise-cloud/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-enterprise-cloud/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/powerpack-enterprise-cloud"
+  },
+  "powerpack-gcs-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-gcs-cache",
+    "packageName": "@nx/powerpack-gcs-cache",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+    "documents": {
+      "/nx-api/powerpack-gcs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+        "file": "external-generated/packages/powerpack-gcs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-gcs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-gcs-cache",
+    "source": "/libs/nx-packages/powerpack-gcs-cache/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-gcs-cache"
   },
   "powerpack-license": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

@@ -1,17 +1,13 @@
-import { readNxJson } from '../config/configuration';
 import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { TaskGraph } from '../config/task-graph';
 import { output } from '../utils/output';
-import { serializeTarget } from '../utils/serialize-target';
-import chalk = require('chalk');
 
 function _findCycle(
   graph: { dependencies: Record<string, string[]> },
   id: string,
   visited: { [taskId: string]: boolean },
   path: string[]
-) {
+): string[] | null {
   if (visited[id]) return null;
   visited[id] = true;
 
@@ -23,6 +19,10 @@ function _findCycle(
   return null;
 }
 
+/**
+ * This function finds a cycle in the graph.
+ * @returns the first cycle found, or null if no cycle is found.
+ */
 export function findCycle(graph: {
   dependencies: Record<string, string[]>;
 }): string[] | null {
@@ -37,6 +37,29 @@ export function findCycle(graph: {
   }
 
   return null;
+}
+
+/**
+ * This function finds all cycles in the graph.
+ * @returns a list of unique task ids in all cycles found, or null if no cycle is found.
+ */
+export function findCycles(graph: {
+  dependencies: Record<string, string[]>;
+}): Set<string> | null {
+  const visited = {};
+  const cycles = new Set<string>();
+  for (const t of Object.keys(graph.dependencies)) {
+    visited[t] = false;
+  }
+
+  for (const t of Object.keys(graph.dependencies)) {
+    const cycle = _findCycle(graph, t, visited, [t]);
+    if (cycle) {
+      cycle.forEach((t) => cycles.add(t));
+    }
+  }
+
+  return cycles.size ? cycles : null;
 }
 
 function _makeAcyclic(

@@ -14,7 +14,6 @@ export async function checkApp(
     checkUnitTest: boolean;
     checkLint: boolean;
     checkE2E: boolean;
-    checkExport: boolean;
     appsDir?: string;
   }
 ) {

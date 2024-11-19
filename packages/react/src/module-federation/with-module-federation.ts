@@ -1,10 +1,11 @@
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/webpack/src/utils/module-federation';
+} from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
 import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
+import type { NormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * @param {ModuleFederationConfig} options
@@ -65,13 +66,13 @@ export async function withModuleFederation(
             ? [
                 ...(configOverride?.runtimePlugins ?? []),
                 require.resolve(
-                  '@nx/webpack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
+                  '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                 ),
               ]
             : configOverride?.runtimePlugins,
         virtualRuntimeEntry: true,
       }),
-      sharedLibraries.getReplacementPlugin()
+      sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
     );
 
     // The env var is only set from the module-federation-dev-server
