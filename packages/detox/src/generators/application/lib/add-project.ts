@@ -29,7 +29,10 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       version: '0.0.1',
       private: true,
       nx: {
-        name: options.e2eProjectName,
+        sourceRoot: `${options.e2eProjectRoot}/src`,
+        projectType: 'application',
+        targets: hasPlugin ? undefined : getTargets(options),
+        implicitDependencies: [options.appProject],
       },
     });
   } else {
