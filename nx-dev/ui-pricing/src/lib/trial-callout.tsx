@@ -62,7 +62,7 @@ export function TrialCallout({
             <p className="mt-8 text-pretty text-base/8 leading-normal">
               Need a bit more? For larger teams we offer personalized support,{' '}
               <Link
-                href="/contact-us/sales"
+                href="/contact/sales"
                 title="Reach out to us"
                 onClick={() =>
                   sendCustomEvent(
