@@ -352,7 +352,7 @@ export function applyWebConfig(
   });
 
   config.optimization = !isProd
-    ? undefined
+    ? {}
     : {
         ...(config.optimization ?? {}),
         minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
