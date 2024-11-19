@@ -31,12 +31,17 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   };
 
   if (isUsingTsSolutionSetup(host)) {
+    const packageName = getImportPath(host, options.name);
     writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(host, options.name),
+      name: packageName,
       version: '0.0.1',
       private: true,
       nx: {
-        name: options.name,
+        name: packageName === options.name ? undefined : options.name,
+        sourceRoot: `${options.appProjectRoot}/src`,
+        projectType: 'application',
+        targets: hasPlugin ? undefined : getTargets(options),
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
   } else {
