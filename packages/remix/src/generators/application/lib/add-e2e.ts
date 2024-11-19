@@ -41,7 +41,9 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
           version: '0.0.1',
           private: true,
           nx: {
-            name: options.e2eProjectName,
+            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+            projectType: 'application',
+            implicitDependencies: [options.projectName],
           },
         }
       );
