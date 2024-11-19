@@ -156,11 +156,15 @@ async function addProject(
   };
 
   if (isUsingTsSolutionSetup(host)) {
+    const packageName = getImportPath(host, options.name);
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: getImportPath(host, options.name),
+      name: packageName,
       version: '0.0.1',
       nx: {
-        name: options.name,
+        name: packageName === options.name ? undefined : options.name,
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        projectType: 'library',
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
   } else {
