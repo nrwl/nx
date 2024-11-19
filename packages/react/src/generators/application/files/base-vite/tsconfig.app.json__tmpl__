@@ -1,4 +1,4 @@
-<% if (isUsingTsSolutionSetup) { %>{
+<%_ if (isUsingTsSolutionSetup) { _%>{
   "extends": "<%= offsetFromRoot%>tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
