@@ -56,6 +56,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
           private: true,
           nx: {
             projectType: 'application',
+            implicitDependencies: [options.projectName],
           },
         }
       );
@@ -134,6 +135,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
           private: true,
           nx: {
             name: options.e2eProjectName,
+            implicitDependencies: [options.projectName],
           },
         }
       );

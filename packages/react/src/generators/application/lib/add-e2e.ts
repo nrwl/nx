@@ -185,6 +185,7 @@ export async function addE2e(
             private: true,
             nx: {
               name: options.e2eProjectName,
+              implicitDependencies: [options.projectName],
             },
           }
         );
