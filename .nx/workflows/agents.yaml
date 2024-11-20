@@ -38,7 +38,7 @@ launch-templates:
       - name: Install Browsers
         script: |
           pnpm exec cypress install
-          pnpm exec playwright install
+          pnpm exec playwright install --with-deps
 
       - name: Install Rust
         script: |
@@ -95,7 +95,7 @@ launch-templates:
       - name: Install Browsers
         script: |
           pnpm exec cypress install
-          pnpm exec playwright install
+          pnpm exec playwright install --with-deps
 
       - name: Install Rust
         script: |
