@@ -29,13 +29,16 @@ exports[`hostGenerator bundler=webpack should generate host files and configs fo
 "// @ts-check
 
 /**
- * @type {import('@nx/webpack').ModuleFederationConfig}
+ * @type {import('@nx/module-federation').ModuleFederationConfig}
  **/
 const moduleFederationConfig = {
   name: 'test',
   remotes: [],
 };
 
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
 module.exports = moduleFederationConfig;
 "
 `;
@@ -66,13 +69,16 @@ export default composePlugins(
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs for SSR when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
   remotes: [],
 };
 
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
 export default config;
 "
 `;
@@ -103,7 +109,10 @@ module.exports = composePlugins(
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=false 2`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -123,14 +132,15 @@ exports[`hostGenerator bundler=webpack should generate host files and configs wh
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=true 1`] = `
-"import {composePlugins, withNx, ModuleFederationConfig} from '@nx/webpack';
+"import {composePlugins, withNx} from '@nx/webpack';
 import {withReact} from '@nx/react';
 import {withModuleFederation} from '@nx/react/module-federation';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 import baseConfig from './module-federation.config';
 
 const config: ModuleFederationConfig = {
-    ...baseConfig,
+  ...baseConfig,
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.
@@ -144,27 +154,29 @@ export default composePlugins(withNx(), withReact(), withModuleFederation(config
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
-    name: 'test',
-    /**
-     * To use a remote that does not exist in your current Nx Workspace
-     * You can use the tuple-syntax to define your remote
-     *
-     * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
-     *
-     * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
-     * following content:
-     *
-     * declare module 'my-external-remote';
-     *
-     */
-    remotes: [
-            
+  name: 'test',
+  /**
+    * To use a remote that does not exist in your current Nx Workspace
+    * You can use the tuple-syntax to define your remote
+    *
+    * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+    *
+    * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+    * following content:
+    *
+    * declare module 'my-external-remote';
+    *
+    */
+  remotes: [
   ],
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;

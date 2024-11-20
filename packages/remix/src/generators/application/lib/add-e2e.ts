@@ -83,10 +83,7 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
         tree,
         '@nx/cypress/plugin',
         buildTarget,
-        joinPathFragments(
-          options.e2eProjectRoot,
-          `cypress.config.${options.js ? 'js' : 'ts'}`
-        )
+        joinPathFragments(options.e2eProjectRoot, `cypress.config.ts`)
       );
     }
 

@@ -3,32 +3,44 @@ import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { Compiler, MultiCompiler, MultiStats, Stats } from '@rspack/core';
 import { rmSync } from 'fs';
-import * as path from 'path';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
+import { normalizeOptions } from './lib/normalize-options';
+import { join, resolve } from 'path';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
   process.env.NODE_ENV ??= options.mode ?? 'production';
+  options.target ??= 'web';
+
+  const metadata = context.projectsConfigurations.projects[context.projectName];
+  const sourceRoot = metadata.sourceRoot;
+
+  const normalizedOptions = normalizeOptions(
+    options,
+    context.root,
+    metadata.root,
+    sourceRoot
+  );
 
   if (isMode(process.env.NODE_ENV)) {
-    options.mode = process.env.NODE_ENV;
+    normalizedOptions.mode = process.env.NODE_ENV;
   }
 
-  if (options.typeCheck) {
-    await executeTypeCheck(options, context);
+  if (normalizedOptions.typeCheck) {
+    await executeTypeCheck(normalizedOptions, context);
   }
 
   // Mimic --clean from webpack.
-  rmSync(path.join(context.root, options.outputPath), {
+  rmSync(join(context.root, normalizedOptions.outputPath), {
     force: true,
     recursive: true,
   });
 
-  const compiler = await createCompiler(options, context);
+  const compiler = await createCompiler(normalizedOptions, context);
 
   const iterable = createAsyncIterable<{
     success: boolean;
@@ -57,7 +69,11 @@ export default async function* runExecutor(
           }
           next({
             success: !stats.hasErrors(),
-            outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+            outfile: resolve(
+              context.root,
+              normalizedOptions.outputPath,
+              'main.js'
+            ),
           });
         }
       );
@@ -89,7 +105,11 @@ export default async function* runExecutor(
           }
           next({
             success: !stats.hasErrors(),
-            outfile: path.resolve(context.root, options.outputPath, 'main.js'),
+            outfile: resolve(
+              context.root,
+              normalizedOptions.outputPath,
+              'main.js'
+            ),
           });
           done();
         });
@@ -121,7 +141,7 @@ async function executeTypeCheck(
   const projectConfiguration =
     context.projectGraph.nodes[context.projectName].data;
   const result = await runTypeCheck({
-    workspaceRoot: path.resolve(projectConfiguration.root),
+    workspaceRoot: resolve(projectConfiguration.root),
     tsConfigPath: options.tsConfig,
     mode: 'noEmit',
   });

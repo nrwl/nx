@@ -59,10 +59,7 @@ export async function* nodeExecutor(
   const buildTargetExecutor =
     project.data.targets[buildTarget.target]?.executor;
 
-  if (
-    buildTargetExecutor === 'nx:run-commands' ||
-    buildTargetExecutor === '@nrwl/workspace:run-commands'
-  ) {
+  if (buildTargetExecutor === 'nx:run-commands') {
     // Run commands does not emit build event, so we have to switch to run entire build through Nx CLI.
     options.runBuildTargetDependencies = true;
   }

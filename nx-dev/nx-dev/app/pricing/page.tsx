@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import {
-  StandardPlans,
-  ComparablePlans,
-  Oss,
   Faq,
+  Oss,
+  CreditPricing,
+  PlansDisplay,
+  TrialCallout,
 } from '@nx/nx-dev/ui-pricing';
 import {
+  CallToAction,
+  DefaultLayout,
   Testimonials,
   TrustedBy,
-  DefaultLayout,
-  CallToAction,
 } from '@nx/nx-dev/ui-common';
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };
@@ -38,21 +39,24 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <DefaultLayout>
-      <StandardPlans />
+      <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <ComparablePlans />
+        <TrialCallout pageId="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <Testimonials />
+        <CreditPricing />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <Faq />
       </div>
       <div className="mt-32 lg:mt-56">
         <Oss />
       </div>
       <div className="mt-32 lg:mt-56">
-        <Faq />
+        <Testimonials />
       </div>
       <div className="mt-32 lg:mt-56">
         <CallToAction

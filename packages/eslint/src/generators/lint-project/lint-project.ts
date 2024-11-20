@@ -273,7 +273,8 @@ function createEsLintConfiguration(
     });
     const nodeList = createNodeList(importMap, nodes);
     const content = stringifyNodeList(nodeList);
-    tree.write(join(projectConfig.root, 'eslint.config.js'), content);
+    const ext = extendedRootConfig?.endsWith('.cjs') ? '.cjs' : '.js';
+    tree.write(join(projectConfig.root, `eslint.config${ext}`), content);
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
       extends: extendedRootConfig ? [pathToRootConfig] : undefined,
@@ -329,7 +330,7 @@ function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
 
   for (const targetConfig of Object.values(rootProject.data.targets ?? {})) {
     if (
-      ['@nx/eslint:lint', '@nrwl/linter:eslint', '@nx/linter:eslint'].includes(
+      ['@nx/eslint:lint', '@nx/linter:eslint'].includes(
         targetConfig.executor
       ) ||
       (targetConfig.executor === 'nx:run-commands' &&

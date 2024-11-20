@@ -58,11 +58,12 @@
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
     "webpack": "^5.88.0",
-    "@module-federation/enhanced": "0.6.9",
+    "@module-federation/enhanced": "0.7.6",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/module-federation": "file:../module-federation",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",
     "piscina": "^4.4.0"

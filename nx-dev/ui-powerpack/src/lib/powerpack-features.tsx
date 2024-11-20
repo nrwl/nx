@@ -17,7 +17,13 @@ import {
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
-import { AzureDevOpsIcon, GoogleCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  AmazonS3Icon,
+  AzureDevOpsIcon,
+  GoogleCloudIcon,
+  MinIOIcon,
+  NxIcon,
+} from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -26,7 +32,7 @@ export function PowerpackFeatures(): ReactElement {
     <section className="relative isolate">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mt-32 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="col-span-full flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="xl:max-w-xl">
               <SectionHeading
                 as="h2"
@@ -42,7 +48,7 @@ export function PowerpackFeatures(): ReactElement {
                 storage, offering a flexible, self-managed solution for faster
                 builds. Nx Powerpack self-hosted cache storage is{' '}
                 <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
                   title="Get a Powerpack license"
                 >
                   free for small teams
@@ -60,7 +66,7 @@ export function PowerpackFeatures(): ReactElement {
                 </ButtonLink>
               </div>
             </div>
-            <div className="hidden w-full lg:block">
+            <div className="hidden w-full xl:block">
               <CustomRemoteCacheAnimation />
             </div>
           </div>
@@ -141,7 +147,7 @@ export function PowerpackFeatures(): ReactElement {
               </ButtonLink>
             </div>
           </div>
-          <div className="col-span-2 flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
+          <div className="flex max-w-full flex-col gap-16 bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:col-span-2 lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/15 dark:ring-white/10">
             <div className="relative hidden h-full w-64 shrink-0 overflow-hidden lg:block">
               <img
                 src="/images/powerpack/trust-secure-light.avif"
@@ -199,8 +205,15 @@ export function PowerpackFeatures(): ReactElement {
                   licensing model that reduces red tape and speeds up
                   procurement processes
                 </Strong>
-                .Your teams can get started quickly without lengthy
-                negotiations, ensuring a faster go-to-market.
+                . Your teams can get started quickly without lengthy
+                negotiations, ensuring a faster go-to-market.{' '}
+                <TextLink
+                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  title="Get a Powerpack license"
+                >
+                  Free trial available for Enterprises
+                </TextLink>
+                .
               </p>
             </div>
           </div>
@@ -217,7 +230,7 @@ export function PowerpackFeatures(): ReactElement {
               <p className="mt-6 text-pretty text-lg">
                 <Strong>
                   Nx Powerpack is included at no extra cost for Nx Enterprise
-                  customer
+                  customers
                 </Strong>
                 , unlocking additional capabilities without needing to manage
                 more tools or onboard a new vendor.
@@ -256,7 +269,7 @@ const Card = forwardRef<
     <div
       ref={ref}
       className={cx(
-        'z-10 flex flex-col items-center justify-between rounded-lg border border-slate-200 bg-white p-2 py-3 shadow-sm dark:border-white/10 dark:bg-slate-950',
+        'z-10 flex items-center gap-2 rounded-md border border-slate-200 bg-white p-2 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950',
         className
       )}
       onMouseEnter={onMouseEnter}
@@ -274,6 +287,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
   const azureRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const gcpRef = useRef<HTMLDivElement>(null);
+  const minioRef = useRef<HTMLDivElement>(null);
   const networkDriveRef = useRef<HTMLDivElement>(null);
   const nxRef = useRef<HTMLDivElement>(null);
 
@@ -283,9 +297,9 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         containerRef={containerRef}
         fromRef={awsRef}
         toRef={nxRef}
-        curvature={175}
-        startXOffset={-20}
-        endYOffset={30}
+        curvature={-75}
+        startXOffset={-75}
+        endYOffset={0}
         bidirectional={true}
         duration={5}
       />
@@ -295,9 +309,9 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         containerRef={containerRef}
         fromRef={azureRef}
         toRef={nxRef}
-        curvature={175}
-        startXOffset={20}
-        endYOffset={30}
+        curvature={75}
+        startXOffset={-75}
+        endYOffset={0}
         bidirectional={true}
         reverse={true}
         duration={5}
@@ -309,10 +323,22 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         fromRef={gcpRef}
         toRef={nxRef}
         bidirectional={true}
-        curvature={130}
-        startXOffset={20}
-        endXOffset={-20}
+        curvature={75}
+        startXOffset={-75}
+        endYOffset={0}
         reverse={true}
+        duration={5}
+      />
+    ),
+    minio: (
+      <AnimatedCurvedBeam
+        containerRef={containerRef}
+        fromRef={minioRef}
+        toRef={nxRef}
+        curvature={-75}
+        startXOffset={-75}
+        endYOffset={0}
+        bidirectional={true}
         duration={5}
       />
     ),
@@ -321,9 +347,9 @@ export function CustomRemoteCacheAnimation(): ReactElement {
         containerRef={containerRef}
         fromRef={networkDriveRef}
         toRef={nxRef}
-        curvature={150}
-        startXOffset={-20}
-        endXOffset={20}
+        curvature={10}
+        startXOffset={-75}
+        endXOffset={0}
         bidirectional={true}
         duration={5}
       />
@@ -358,7 +384,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
 
   return (
     <div className="relative flex h-full w-full" ref={containerRef}>
-      <div className="flex w-full flex-col items-center justify-center gap-24">
+      <div className="grid w-full grid-cols-2 items-center justify-center gap-24">
         <div className="flex w-full justify-center">
           <Card
             ref={nxRef}
@@ -374,7 +400,7 @@ export function CustomRemoteCacheAnimation(): ReactElement {
             />
           </Card>
         </div>
-        <div className="grid w-full grid-cols-4 items-stretch gap-4">
+        <div className="flex w-full flex-col items-stretch gap-4">
           <Card
             ref={awsRef}
             onMouseEnter={() => {
@@ -390,18 +416,39 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               { 'bg-slate-50 dark:bg-slate-800': selected === 'aws' }
             )}
           >
-            <div className="text-center text-xs text-slate-900 dark:text-white">
-              AWS
-            </div>
-            <div className="mt-1 text-center text-xl font-semibold">S3</div>
-
+            <AmazonS3Icon aria-hidden="true" className="size-4" />
             <Link
               href="/nx-api/powerpack-s3-cache"
               title="Learn how to configure Amazon S3 caching"
-              className="mt-4 text-xs"
+              className="text-center text-xs text-slate-900 dark:text-white"
             >
               <span className="absolute inset-0" />
-              Get started
+              Amazon S3
+            </Link>
+          </Card>
+          <Card
+            ref={minioRef}
+            onMouseEnter={() => {
+              setAutoplay(false);
+              setSelected('minio');
+            }}
+            onMouseLeave={() => {
+              setAutoplay(true);
+              setSelected(null);
+            }}
+            className={cx(
+              'relative transition hover:bg-slate-50 dark:hover:bg-slate-800',
+              { 'bg-slate-50 dark:bg-slate-800': selected === 'minio' }
+            )}
+          >
+            <MinIOIcon aria-hidden="true" className="size-4" />
+            <Link
+              href="/nx-api/powerpack-s3-cache"
+              title="Learn how to configure Amazon S3 caching"
+              className="text-center text-xs text-slate-900 dark:text-white"
+            >
+              <span className="absolute inset-0" />
+              MinIO
             </Link>
           </Card>
           <Card
@@ -419,18 +466,15 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               { 'bg-slate-50 dark:bg-slate-800': selected === 'networkDrive' }
             )}
           >
-            <div className="text-center text-xs text-slate-900 dark:text-white">
-              Network drive
-            </div>
-            <ServerIcon aria-hidden="true" className="mt-1 size-6" />
+            <ServerIcon aria-hidden="true" className="size-4" />
 
             <Link
               href="/nx-api/powerpack-shared-fs-cache"
               title="Learn how to configure network drive caching"
-              className="mt-4 text-xs"
+              className="text-center text-xs text-slate-900 dark:text-white"
             >
               <span className="absolute inset-0" />
-              Get started
+              Network Drive
             </Link>
           </Card>
           <Card
@@ -448,17 +492,16 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               { 'bg-slate-50 dark:bg-slate-800': selected === 'gcp' }
             )}
           >
-            <div className="text-center text-xs text-slate-900 dark:text-white">
-              GCP
-            </div>
-            <GoogleCloudIcon aria-hidden="true" className="mt-1 size-6" />
+            <GoogleCloudIcon aria-hidden="true" className="size-4" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-gcs-cache"
               title="Learn how to configure Google Storage caching"
-              className="mt-4 text-xs"
+              className="text-center text-xs text-slate-900 dark:text-white"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              GCP
+            </Link>
           </Card>
           <Card
             ref={azureRef}
@@ -475,17 +518,16 @@ export function CustomRemoteCacheAnimation(): ReactElement {
               { 'bg-slate-50 dark:bg-slate-800': selected === 'azure' }
             )}
           >
-            <div className="text-center text-xs text-slate-900 dark:text-white">
-              Azure
-            </div>
-            <AzureDevOpsIcon aria-hidden="true" className="mt-1 size-6" />
+            <AzureDevOpsIcon aria-hidden="true" className="size-4" />
 
-            <span
+            <Link
+              href="/nx-api/powerpack-azure-cache"
               title="Learn how to configure Azure Blob Storage caching"
-              className="mt-4 text-xs"
+              className="text-center text-xs text-slate-900 dark:text-white"
             >
-              Soon!
-            </span>
+              <span className="absolute inset-0" />
+              Azure
+            </Link>
           </Card>
         </div>
       </div>

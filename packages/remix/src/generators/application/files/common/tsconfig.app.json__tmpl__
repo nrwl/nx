@@ -1,11 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "remix.env.d.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
     "app/**/*.js",
-    "app/**/*.jsx"
+    "app/**/*.jsx",
+    "**/.server/**/*.ts",
+    "**/.server/**/*.tsx",
+    "**/.client/**/*.ts",
+    "**/.client/**/*.tsx"
   ],
   "exclude": [
     "tests/**/*.spec.ts",

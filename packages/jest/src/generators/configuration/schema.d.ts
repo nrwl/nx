@@ -29,4 +29,5 @@ export interface JestProjectSchema {
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {
   rootProject: boolean;
+  isTsSolutionSetup: boolean;
 };

@@ -5,6 +5,7 @@ use rusqlite::vtab::array;
 use rusqlite::{params, types::Value};
 use std::collections::HashMap;
 use std::rc::Rc;
+use tracing::trace;
 
 #[napi(object)]
 pub struct TaskRun {
@@ -32,7 +33,12 @@ impl NxTaskHistory {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        array::load_module(&self.db.conn)?;
+        array::load_module(
+            self.db
+                .conn
+                .as_ref()
+                .expect("Database connection should be available"),
+        )?;
         self.db
             .execute_batch(
                 "
@@ -54,24 +60,26 @@ impl NxTaskHistory {
     }
 
     #[napi]
-    pub fn record_task_runs(&self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
-        for task_run in task_runs.iter() {
-            self.db
-                .execute(
-                    "
-            INSERT INTO task_history
-                (hash, status, code, start, end)
-                VALUES (?1, ?2, ?3, ?4, ?5)",
-                    params![
-                        task_run.hash,
-                        task_run.status,
-                        task_run.code,
-                        task_run.start,
-                        task_run.end
-                    ],
-                )
-                .map_err(anyhow::Error::from)?;
-        }
+    pub fn record_task_runs(&mut self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
+        trace!("Recording task runs");
+        self.db.transaction(|conn| {
+            let mut stmt = conn.prepare(
+                "INSERT OR REPLACE INTO task_history
+        (hash, status, code, start, end)
+        VALUES (?1, ?2, ?3, ?4, ?5)",
+            )?;
+            for task_run in task_runs.iter() {
+                stmt.execute(params![
+                    task_run.hash,
+                    task_run.status,
+                    task_run.code,
+                    task_run.start,
+                    task_run.end
+                ])
+                .inspect_err(|e| trace!("Error trying to insert {:?}: {:?}", &task_run.hash, e))?;
+            }
+            Ok(())
+        })?;
         Ok(())
     }
 

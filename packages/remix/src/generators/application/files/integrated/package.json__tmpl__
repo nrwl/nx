@@ -1,8 +1,6 @@
 {
   "private": true,
   "name": "<%= projectName %>",
-  "description": "",
-  "license": "",
   "scripts": {},
   "type": "module",
   "dependencies": {
@@ -16,12 +14,10 @@
   "devDependencies": {
     "@remix-run/dev": "<%= remixVersion %>",
     "@types/react": "<%= typesReactVersion %>",
-    "@types/react-dom": "<%= typesReactDomVersion %>",
-    "eslint": "<%= eslintVersion %>",
-    "typescript": "<%= typescriptVersion %>"
+    "@types/react-dom": "<%= typesReactDomVersion %>"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=20"
   },
   "sideEffects": false
 }

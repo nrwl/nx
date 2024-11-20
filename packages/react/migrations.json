@@ -29,6 +29,12 @@
       "version": "19.6.1-beta.0",
       "description": "Ensure Target Defaults are set correctly for Module Federation.",
       "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf"
+    },
+    "update-20-2-0-update-module-federation-config-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.2",
+      "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package"
     }
   },
   "packageJsonUpdates": {
@@ -149,6 +155,27 @@
         },
         "eslint-plugin-jsx-a11y": {
           "version": "6.10.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.0": {
+      "version": "20.2.0-beta.3",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "0.7.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "0.7.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "0.7.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "2.6.11",
           "alwaysAddToPackageJson": false
         }
       }

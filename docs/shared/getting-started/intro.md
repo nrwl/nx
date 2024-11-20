@@ -2,6 +2,8 @@
 
 Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. [Check out our video](/getting-started/why-nx) to learn more about what Nx is about.
 
+{% github-repository title="Star Nx on GitHub" url="https://github.com/nrwl/nx" /%}
+
 ## Core Features
 
 - **Run Tasks Efficiently**: Nx [runs tasks in parallel](/features/run-tasks) and orders the tasks based on the dependencies between them.
@@ -39,6 +41,8 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
 
+{% link-card title="Import Projects into Your Nx Workspace" appearance="small" url="/recipes/adopting-nx/import-project" icon="ArrowDownOnSquareStackIcon" /%}
+
 {% /cards %}
 
 ## Learn Nx
@@ -49,7 +53,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
-{% link-card title="PNPM Monorepos with Nx" type="video" url="https://youtu.be/ngdoUQBvAjo" icon="pnpm" /%}
+{% link-card title="PNPM Workspaces to Distributed CI" type="course" url="/courses/pnpm-nx-next" icon="pnpm" /%}
 
 {% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
 

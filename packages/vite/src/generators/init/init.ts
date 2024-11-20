@@ -22,7 +22,8 @@ export function updateNxJsonSettings(tree: Tree) {
   if (productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
-      '!{projectRoot}/tsconfig.spec.json'
+      '!{projectRoot}/tsconfig.spec.json',
+      '!{projectRoot}/src/test-setup.[jt]s'
     );
 
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
