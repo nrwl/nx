@@ -34,6 +34,9 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       private: true,
       nx: {
         name: options.name,
+        projectType: 'application',
+        targets: hasPlugin ? {} : getTargets(options),
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
   } else {

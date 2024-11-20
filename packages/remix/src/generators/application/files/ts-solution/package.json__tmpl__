@@ -20,9 +20,12 @@
     "node": ">=20"
   },
   "sideEffects": false<% if (isUsingTsSolution) { %>,
-  "nx": {<%_ if (name !== projectName) { _%>
-    "name": "<%= name %>",
-    <%_ } _%>"projectType": "application"
-  }
-  <% } %>
+  "nx": {
+  <%_ if (name !== projectName) { _%>
+    "name": "<%= name %>",<%_ } _%>
+    "projectType": "application",
+    <%_ if (parsedTags?.length) { _%>
+    "tags": <%- JSON.stringify(parsedTags) %>
+    <%_ } _%>
+  }<% } %>
 }

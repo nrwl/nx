@@ -38,7 +38,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       private: true,
       nx: {
         name: packageName === options.name ? undefined : options.name,
-        sourceRoot: `${options.appProjectRoot}/src`,
         projectType: 'application',
         targets: hasPlugin ? undefined : getTargets(options),
         tags: options.parsedTags?.length ? options.parsedTags : undefined,

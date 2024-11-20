@@ -339,6 +339,7 @@ describe('Remix Application', () => {
         e2eTestRunner: 'playwright',
         unitTestRunner: 'jest',
         addPlugin: true,
+        tags: 'foo',
       });
 
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
@@ -362,6 +363,9 @@ describe('Remix Application', () => {
           "name": "myapp",
           "nx": {
             "projectType": "application",
+            "tags": [
+              "foo",
+            ],
           },
           "private": true,
           "scripts": {},

@@ -10,7 +10,6 @@ import {
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -46,6 +45,8 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       private: true,
       nx: {
         name: options.name,
+        projectType: 'application',
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
   }
