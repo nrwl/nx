@@ -75,6 +75,7 @@
       "enum": ["vitest", "jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "vitest",
+      "x-prompt": "What unit test runner should be used?",
       "x-priority": "important"
     },
     "tags": {

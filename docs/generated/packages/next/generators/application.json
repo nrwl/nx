@@ -79,6 +79,7 @@
         "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "jest",
+        "x-prompt": "What unit test runner should be used?",
         "x-priority": "important"
       },
       "e2eTestRunner": {

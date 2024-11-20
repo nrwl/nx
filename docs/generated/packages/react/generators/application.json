@@ -92,6 +92,14 @@
         "default": false,
         "x-priority": "internal"
       },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["vite", "webpack", "rspack"],
+        "x-prompt": "Which bundler do you want to use to build the application?",
+        "default": "vite",
+        "x-priority": "important"
+      },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
@@ -105,6 +113,7 @@
         "enum": ["vitest", "jest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "vitest",
+        "x-prompt": "What unit test runner should be used?",
         "x-priority": "important"
       },
       "inSourceTests": {
@@ -167,14 +176,6 @@
         "type": "boolean",
         "default": false,
         "hidden": true
-      },
-      "bundler": {
-        "description": "The bundler to use.",
-        "type": "string",
-        "enum": ["vite", "webpack", "rspack"],
-        "x-prompt": "Which bundler do you want to use to build the application?",
-        "default": "vite",
-        "x-priority": "important"
       },
       "minimal": {
         "description": "Generate a React app with a minimal setup, no separate test files.",

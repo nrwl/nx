@@ -14,10 +14,7 @@
   "devDependencies": {
     "@remix-run/dev": "<%= remixVersion %>",
     "@types/react": "<%= typesReactVersion %>",
-    "@types/react-dom": "<%= typesReactDomVersion %>",
-    "eslint": "<%= eslintVersion %>",
-    "typescript": "<%= typescriptVersion %>",
-    "vite": "<%= viteVersion %>"
+    "@types/react-dom": "<%= typesReactDomVersion %>"
   },
   "engines": {
     "node": ">=20"

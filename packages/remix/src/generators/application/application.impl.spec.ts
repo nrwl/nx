@@ -355,9 +355,6 @@ describe('Remix Application', () => {
             "@remix-run/dev": "^2.14.0",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
-            "eslint": "^8.56.0",
-            "typescript": "~5.5.2",
-            "vite": "^5.0.0",
           },
           "engines": {
             "node": ">=20",
