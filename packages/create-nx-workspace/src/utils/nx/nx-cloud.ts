@@ -2,7 +2,14 @@ import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
 import * as ora from 'ora';
 
-export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
+export type NxCloud =
+  | 'yes'
+  | 'github'
+  | 'gitlab'
+  | 'azure'
+  | 'bitbucket-pipelines'
+  | 'circleci'
+  | 'skip';
 
 export function readNxCloudToken(directory: string) {
   const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
