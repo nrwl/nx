@@ -68,6 +68,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.2.0": {
+      "version": "20.2.0-beta.3",
+      "packages": {
+        "@rspack/core": {
+          "version": "^1.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^1.0.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   },
   "version": "0.1"
