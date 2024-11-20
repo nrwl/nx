@@ -717,6 +717,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/js:lib libs/${mylib} --unitTestRunner=jest --linter eslint`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);
@@ -753,6 +754,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/js:lib libs/${mylib} --linter eslint --no-interactive`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);
@@ -789,6 +791,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/js:lib libs/${mylib} --linter eslint --no-interactive`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);
