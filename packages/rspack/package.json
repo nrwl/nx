@@ -54,8 +54,8 @@
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "~0.6.0",
-    "@module-federation/node": "~2.5.10"
+    "@module-federation/enhanced": "~0.7.6",
+    "@module-federation/node": "~2.6.11"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
