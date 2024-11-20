@@ -58,7 +58,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 4`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -116,7 +117,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 4`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 
@@ -160,7 +161,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 3`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -202,7 +204,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 3`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 
@@ -477,68 +479,6 @@ getTestBed().initTestEnvironment(
 `;
 
 exports[`app --unit-test-runner vitest should generate vite.config.mts 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/my-app',
-  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['src/test-setup.ts'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    },
-  },
-});
-"
-`;
-
-exports[`app --unit-test-runner vitest should generate vite.config.mts if package type is module 1`] = `
-"/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../node_modules/.vite/my-app',
-  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['src/test-setup.ts'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    },
-  },
-});
-"
-`;
-
-exports[`app --unit-test-runner vitest should generate vite.config.mts if workspace package type is module 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';

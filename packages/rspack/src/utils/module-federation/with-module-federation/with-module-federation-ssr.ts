@@ -1,10 +1,10 @@
 import { DefinePlugin } from '@rspack/core';
-import { SharedConfigContext } from '../../model';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '../models';
+} from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
+import { NxRspackExecutionContext } from '../../config';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -19,9 +19,12 @@ export async function withModuleFederationForSSR(
       isServer: true,
     });
 
-  return (config, { context }: SharedConfigContext) => {
+  return (config, { context }: NxRspackExecutionContext) => {
     config.target = 'async-node';
     config.output.uniqueName = options.name;
+    config.output.library = {
+      type: 'commonjs-module',
+    };
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: false,
@@ -39,6 +42,10 @@ export async function withModuleFederationForSSR(
             ...sharedDependencies,
           },
           isServer: true,
+          library: {
+            type: 'commonjs-module',
+          },
+          remoteType: 'script',
           /**
            * Apply user-defined config overrides
            */
@@ -50,7 +57,7 @@ export async function withModuleFederationForSSR(
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve('@module-federation/node/runtimePlugin'),
                   require.resolve(
-                    '@nx/rspack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
+                    '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                   ),
                 ]
               : [

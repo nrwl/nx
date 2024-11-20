@@ -375,7 +375,7 @@ describe('@nx/cypress/plugin', () => {
                   },
                   "e2e-ci--src/test.cy.ts": {
                     "cache": true,
-                    "command": "cypress run --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
+                    "command": "cypress run --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts --config="{\\"e2e\\":{\\"videosFolder\\":\\"dist/videos/src-test-cy-ts\\",\\"screenshotsFolder\\":\\"dist/screenshots/src-test-cy-ts\\"}}"",
                     "inputs": [
                       "default",
                       "^production",
@@ -404,8 +404,8 @@ describe('@nx/cypress/plugin', () => {
                       "cwd": ".",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/videos",
-                      "{projectRoot}/dist/screenshots",
+                      "{projectRoot}/dist/videos/src-test-cy-ts",
+                      "{projectRoot}/dist/screenshots/src-test-cy-ts",
                     ],
                     "parallelism": false,
                   },

@@ -7,7 +7,7 @@
     <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformerOptions) { %>['<%= transformer %>', <%- transformerOptions %>]<% } else { %>'<%= transformer %>'<% } %>
   },
   <% if (supportTsx) { %>moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
-  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'<% if(rootProject){ %>,
+  coverageDirectory: '<%= coverageDirectory %>'<% if(rootProject){ %>,
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
     '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',

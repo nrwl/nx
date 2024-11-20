@@ -197,10 +197,10 @@ describe('@nx/playwright/plugin', () => {
                       "cwd": "{projectRoot}",
                     },
                     "outputs": [
+                      "{projectRoot}/test-results",
                       "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
-                      "{projectRoot}/test-results",
                     ],
                     "parallelism": false,
                   },
@@ -233,10 +233,10 @@ describe('@nx/playwright/plugin', () => {
                       ],
                     },
                     "outputs": [
+                      "{projectRoot}/test-results",
                       "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
-                      "{projectRoot}/test-results",
                     ],
                     "parallelism": false,
                   },
@@ -255,6 +255,9 @@ describe('@nx/playwright/plugin', () => {
       `module.exports = {
       testDir: 'tests',
       testIgnore: [/.*skip.*/, '**/ignored/**'],
+      reporter: [
+        ['html', { outputFolder: 'test-results/html' }],
+      ],
     }`
     );
     await tempFs.createFiles({
@@ -326,6 +329,7 @@ describe('@nx/playwright/plugin', () => {
         },
         "outputs": [
           "{projectRoot}/test-results",
+          "{projectRoot}/test-results/html",
         ],
         "parallelism": false,
       }
@@ -333,7 +337,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
-        "command": "playwright test tests/run-me.spec.ts",
+        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
         "inputs": [
           "default",
           "^production",
@@ -359,9 +363,14 @@ describe('@nx/playwright/plugin', () => {
         },
         "options": {
           "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+          },
         },
         "outputs": [
-          "{projectRoot}/test-results",
+          "{projectRoot}/test-results/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-spec-ts",
         ],
         "parallelism": false,
       }
@@ -369,7 +378,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
-        "command": "playwright test tests/run-me-2.spec.ts",
+        "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
         "inputs": [
           "default",
           "^production",
@@ -395,9 +404,14 @@ describe('@nx/playwright/plugin', () => {
         },
         "options": {
           "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-2-spec-ts",
+          },
         },
         "outputs": [
-          "{projectRoot}/test-results",
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-2-spec-ts",
         ],
         "parallelism": false,
       }

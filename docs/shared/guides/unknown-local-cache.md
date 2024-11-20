@@ -44,14 +44,13 @@ error.
 
 ## You Share Cache with Another Machine Using a Network Drive
 
-You can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the errors (
+When using the legacy file system cache ([deprecated in Nx 20](/deprecated/legacy-cache)), you can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the errors (
 e.g., `NX_REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
 setting `NODE_TLS_REJECT_UNAUTHORIZED=0` to ignore any errors stemming form self-signed certificates. Even though it
 will make it work, this approach is discouraged.
 
-Storing Nx's local cache on a network drive can present security risks. When a network drive is shared, every CI run has
-access to all the previously created Nx cache artifacts. Hence, it is plausible for every single artifact - for every
-single task hash - to be accessed without leaving any trace. This is feasible due to the network drive's capability to
+Storing Nx's local cache on a network drive presents security risks, so we prevent you from doing so. When a network drive is shared, every CI run has access to all the previously created Nx cache artifacts. Hence, it is plausible for every single artifact - for every
+single task hash - to be accessed without leaving any trace. This is possible due to the network drive's capability to
 allow overwrites.
 
 ## How Nx Replay Makes Sure Sharing Cache is Safe
@@ -80,6 +79,8 @@ Nx Replay is not the only remote cache you can use. You can also use one of the 
 If you can't use Nx Replay, Nx provides plugins that enable you to [self-host the remote cache](/nx-enterprise/powerpack/custom-caching). These plugins are available as part of the [Nx Powerpack](/powerpack), which you can unlock by [activating your license](/nx-enterprise/activate-powerpack). There are plugins to self-host your remote cache in the following locations:
 
 - [Amazon S3 Bucket](/nx-api/powerpack-s3-cache)
+- [Google Cloud Storage](/nx-api/powerpack-gcs-cache)
+- [Azure](/nx-api/powerpack-azure-cache)
 - [Shared File System](/nx-api/powerpack-shared-fs-cache)
 
 These plugins will ensure that the task metadata and project graph information are correctly associated with the file artifacts in your cache.

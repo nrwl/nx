@@ -10,8 +10,9 @@ import type { Schema } from './schema';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
-import { parseStaticSsrRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
+  parseStaticSsrRemotesConfig,
+  startSsrRemoteProxies,
+} from '@nx/module-federation/src/utils';
 import { buildStaticRemotes } from './lib/build-static-remotes';
 import { startRemotes } from './lib/start-dev-remotes';
 import { startStaticRemotes } from './lib/start-static-remotes';
@@ -24,7 +25,6 @@ import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { normalizeOptions } from './lib/normalize-options';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';
 import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 
 export async function* moduleFederationSsrDevServerExecutor(

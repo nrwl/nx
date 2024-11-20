@@ -7,10 +7,9 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
+import { LoadedNxPlugin } from '../internal-api';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
-import { signalToCode } from '../../../utils/exit-codes';
 
 import {
   consumeMessage,
@@ -29,7 +28,15 @@ const MINUTES = 10;
 
 const MAX_MESSAGE_WAIT =
   process.env.NX_PLUGIN_NO_TIMEOUTS === 'true'
-    ? undefined
+    ? // Registering a timeout prevents the process from exiting
+      // if the call to a plugin happens to be the only thing
+      // keeping the process alive. As such, even if timeouts are disabled
+      // we need to register one. 2147483647 is the max timeout
+      // that Node.js allows, and is equivalent to 24.8 days....
+      // This does mean that the NX_PLUGIN_NO_TIMEOUTS env var
+      // would still timeout after 24.8 days, but that seems
+      // like a reasonable compromise.
+      2147483647
     : 1000 * 60 * MINUTES; // 10 minutes
 
 interface PendingPromise {
@@ -61,7 +68,6 @@ export async function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
-    shutdownPluginWorker(socket);
     socket.destroy();
     nxPluginWorkerCache.delete(cacheKey);
   };
@@ -75,16 +81,15 @@ export async function loadRemoteNxPlugin(
     });
     // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
-    const loadTimeout = MAX_MESSAGE_WAIT
-      ? setTimeout(() => {
-          rej(
-            new Error(
-              `Loading "${plugin}" timed out after ${MINUTES} minutes. ${PLUGIN_TIMEOUT_HINT_TEXT}`
-            )
-          );
-        }, MAX_MESSAGE_WAIT)
-      : undefined;
-
+    const loadTimeout = setTimeout(() => {
+      rej(
+        new Error(
+          `Loading "${
+            typeof plugin === 'string' ? plugin : plugin.plugin
+          }" timed out after ${MINUTES} minutes. ${PLUGIN_TIMEOUT_HINT_TEXT}`
+        )
+      );
+    }, MAX_MESSAGE_WAIT);
     socket.on(
       'data',
       consumeMessagesFromSocket(
@@ -106,10 +111,6 @@ export async function loadRemoteNxPlugin(
   nxPluginWorkerCache.set(cacheKey, pluginPromise);
 
   return [pluginPromise, cleanupFunction];
-}
-
-function shutdownPluginWorker(socket: Socket) {
-  sendMessageOverSocket(socket, { type: 'shutdown', payload: {} });
 }
 
 /**
@@ -260,22 +261,6 @@ function createWorkerExitHandler(
   };
 }
 
-let cleanedUp = false;
-const exitHandler = () => {
-  nxPluginCache.clear();
-  for (const fn of cleanupFunctions) {
-    fn();
-  }
-  cleanedUp = true;
-};
-
-process.on('exit', exitHandler);
-process.on('SIGINT', () => {
-  exitHandler();
-  process.exit(signalToCode('SIGINT'));
-});
-process.on('SIGTERM', exitHandler);
-
 function registerPendingPromise(
   tx: string,
   pending: Map<string, PendingPromise>,
@@ -285,21 +270,21 @@ function registerPendingPromise(
     operation: string;
   }
 ): Promise<any> {
-  let resolver, rejector, timeout;
+  let resolver: (x: unknown) => void,
+    rejector: (e: Error | unknown) => void,
+    timeout: NodeJS.Timeout;
 
   const promise = new Promise((res, rej) => {
     rejector = rej;
     resolver = res;
 
-    timeout = MAX_MESSAGE_WAIT
-      ? setTimeout(() => {
-          rej(
-            new Error(
-              `${context.plugin} timed out after ${MINUTES} minutes during ${context.operation}. ${PLUGIN_TIMEOUT_HINT_TEXT}`
-            )
-          );
-        }, MAX_MESSAGE_WAIT)
-      : undefined;
+    timeout = setTimeout(() => {
+      rej(
+        new Error(
+          `${context.plugin} timed out after ${MINUTES} minutes during ${context.operation}. ${PLUGIN_TIMEOUT_HINT_TEXT}`
+        )
+      );
+    }, MAX_MESSAGE_WAIT);
 
     callback();
   }).finally(() => {

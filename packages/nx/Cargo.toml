@@ -13,7 +13,6 @@ strip = "none"
 
 [dependencies]
 anyhow = "1.0.71"
-ci_info = "0.14.14"
 colored = "2"
 crossbeam-channel = '0.5'
 dashmap = { version = "5.5.3", features = ["rayon"] }
@@ -74,3 +73,4 @@ napi-build = '2.1.3'
 assert_fs = "1.0.10"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"
+tempfile = "3.13.0"

@@ -769,36 +769,24 @@ describe('app', () => {
         expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
       });
 
-      it('should generate vite.config.mts if package type is module', async () => {
-        writeJson(appTree, 'my-app/package.json', {
-          name: 'my-app',
-          type: 'module',
-        });
-
+      it('should not override build configuration when using vitest as a test runner', async () => {
         await generateApp(appTree, 'my-app', {
-          skipFormat: false,
           unitTestRunner: UnitTestRunner.Vitest,
         });
-
-        expect(
-          appTree.read('my-app/vite.config.mts', 'utf-8')
-        ).toMatchSnapshot();
+        const { targets } = readProjectConfiguration(appTree, 'my-app');
+        expect(targets.build.executor).toBe(
+          '@angular-devkit/build-angular:application'
+        );
       });
 
-      it('should generate vite.config.mts if workspace package type is module', async () => {
-        updateJson(appTree, 'package.json', (json) => ({
-          ...json,
-          type: 'module',
-        }));
-
+      it('should not override serve configuration when using vitest as a test runner', async () => {
         await generateApp(appTree, 'my-app', {
-          skipFormat: false,
           unitTestRunner: UnitTestRunner.Vitest,
         });
-
-        expect(
-          appTree.read('my-app/vite.config.mts', 'utf-8')
-        ).toMatchSnapshot();
+        const { targets } = readProjectConfiguration(appTree, 'my-app');
+        expect(targets.serve.executor).toBe(
+          '@angular-devkit/build-angular:dev-server'
+        );
       });
     });
 

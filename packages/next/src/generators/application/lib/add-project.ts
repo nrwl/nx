@@ -56,13 +56,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
         },
       },
     };
-
-    targets.export = {
-      executor: '@nx/next:export',
-      options: {
-        buildTarget: `${options.projectName}:build:production`,
-      },
-    };
   }
 
   const project: ProjectConfiguration = {

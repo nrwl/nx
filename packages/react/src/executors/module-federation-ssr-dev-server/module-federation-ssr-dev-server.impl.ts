@@ -12,7 +12,10 @@ import { extname, join } from 'path';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
+  parseStaticSsrRemotesConfig,
+  type StaticRemotesConfig,
+  startSsrRemoteProxies,
+} from '@nx/module-federation/src/utils';
 
 import {
   combineAsyncIterables,
@@ -21,14 +24,8 @@ import {
 import { fork } from 'child_process';
 import { cpSync, createWriteStream, existsSync } from 'fs';
 
-import {
-  parseStaticSsrRemotesConfig,
-  type StaticRemotesConfig,
-} from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
-
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 type ModuleFederationSsrDevServerOptions = WebSsrDevServerOptions & {

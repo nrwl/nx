@@ -1,21 +1,18 @@
-import { CheckIcon } from '@heroicons/react/24/outline';
-import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ReactElement } from 'react';
 
-export function Oss(): JSX.Element {
+export function Oss(): ReactElement {
   return (
-    <section
-      id="oss"
-      className="bg-blue-500 bg-gradient-to-r from-blue-500 to-cyan-500 shadow-inner"
-    >
-      <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+    <section id="oss" className="isolate">
+      <div className="mx-auto max-w-4xl bg-slate-50/80 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:py-16 xl:px-16 dark:bg-slate-800/60 dark:ring-white/10">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Open Source maintainers and authors?
-          </h2>
-          <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-slate-100">
-            We provide a <span className="font-black">$0 /month</span> plan for
+          <SectionHeading as="h2" variant="title">
+            Open Source maintainers <br /> and authors?
+          </SectionHeading>
+          <SectionHeading as="p" variant="subtitle" className="mt-6">
+            We provide a <span className="font-black">free</span> plan for
             open-source projects.
-          </p>
+          </SectionHeading>
           <div className="mt-8 flex items-center justify-center">
             <ButtonLink
               href="/pricing/special-offer"
@@ -26,24 +23,6 @@ export function Oss(): JSX.Element {
             >
               Apply for free access
             </ButtonLink>
-          </div>
-        </div>
-        <div className="mx-auto mt-8 flex max-w-4xl flex-col gap-8 text-sm text-white md:flex-row md:justify-between">
-          <div className="flex items-center gap-1">
-            <CheckIcon className="h-6 w-5 flex-none" aria-hidden="true" /> Free
-            credits every month
-          </div>
-          <div className="flex items-center gap-1">
-            <CheckIcon className="h-6 w-5 flex-none" aria-hidden="true" />
-            Max 3 admin users
-          </div>
-          <div className="flex items-center gap-1">
-            <CheckIcon className="h-6 w-5 flex-none" aria-hidden="true" />{' '}
-            Powerful analytics
-          </div>
-          <div className="flex items-center gap-1">
-            <CheckIcon className="h-6 w-5 flex-none" aria-hidden="true" /> Basic
-            support
           </div>
         </div>
       </div>

@@ -54,13 +54,7 @@ Once the config is changed you need to run the install again:
  yarn install
 ```
 
-Running install generates a `.pnp.cjs` file that contains a mapping of external packages and strips all the packages from the `node_modules`. The contents of your `node_modules` should now look like this:
-
-```text
-node_modules/
-└── .cache
-    └──  nx
-```
+Running install generates a `.pnp.cjs` file that contains a mapping of external packages and strips all the packages from the `node_modules`.
 
 ## Dealing with Inaccessible Dependencies
 

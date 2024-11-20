@@ -8,6 +8,6 @@ The following features are available after you [activate a Powerpack license](/n
 
     {% link-card title="Conformance" type="Powerpack Feature" url="/nx-enterprise/powerpack/conformance" icon="CheckBadgeIcon" /%}
     {% link-card title="Owners" type="Powerpack Feature"  url="/nx-enterprise/powerpack/owners" icon="UserGroupIcon" /%}
-    {% link-card title="Self-Hosted Remote Cache" type="Powerpack Feature"  url="/nx-enterprise/powerpack/custom-caching" icon="AwsIcon" /%}
+    {% link-card title="Self-Hosted Remote Cache" type="Powerpack Feature"  url="/nx-enterprise/powerpack/custom-caching" icon="ServerIcon" /%}
 
 {% /cards %}

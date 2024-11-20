@@ -492,7 +492,6 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
--
 
 ## Next Steps
 
@@ -501,4 +500,4 @@ Connect with the rest of the Nx community with these resources:
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for zoos and Nx insights
+- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

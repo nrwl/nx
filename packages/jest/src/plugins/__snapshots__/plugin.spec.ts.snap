@@ -39,6 +39,9 @@ exports[`@nx/jest/plugin should add package as externalDependencies to the input
               },
               "options": {
                 "cwd": "proj",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                },
               },
               "outputs": [
                 "{workspaceRoot}/coverage",
@@ -91,6 +94,9 @@ exports[`@nx/jest/plugin should add package as externalDependencies to the input
               },
               "options": {
                 "cwd": "proj",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                },
               },
               "outputs": [
                 "{workspaceRoot}/coverage",
@@ -143,6 +149,9 @@ exports[`@nx/jest/plugin should add package as externalDependencies to the input
               },
               "options": {
                 "cwd": "proj",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10"}",
+                },
               },
               "outputs": [
                 "{workspaceRoot}/coverage",

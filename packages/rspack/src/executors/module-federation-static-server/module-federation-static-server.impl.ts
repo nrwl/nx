@@ -19,12 +19,10 @@ import { basename, extname, join } from 'path';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '../../utils/module-federation';
-import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
-import {
   parseStaticRemotesConfig,
   StaticRemotesConfig,
-} from '../../utils/module-federation/parse-static-remotes-config';
+} from '@nx/module-federation/src/utils';
+import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';
 import { ModuleFederationStaticServerSchema } from './schema';

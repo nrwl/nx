@@ -1,15 +1,15 @@
 // @ts-check
 
 /**
- * @type {import('@nx/webpack').ModuleFederationConfig}
+ * @type {import('@nx/module-federation').ModuleFederationConfig}
  **/
 const moduleFederationConfig = {
-    name: '<%= projectName %>',
-    remotes: [
-       <% if (static) { 
-         remotes.forEach(function(r) { %> "<%= r.fileName %>", <% }); 
-       }
-    %>
+  name: '<%= projectName %>',
+  remotes: [
+    <%_ if (static) { 
+      remotes.forEach(function(r) { _%> 
+    "<%= r.fileName %>", 
+      <%_ }); } _%>
   ],
 };
 
