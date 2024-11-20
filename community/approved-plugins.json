@@ -507,6 +507,6 @@
   {
     "name": "nx-foundry",
     "description": "Foundry generators and inferred tasks for Nx",
-    "url": "https://github.com/juliangsibecas/nx-foundry",
+    "url": "https://github.com/juliangsibecas/nx-foundry"
   }
 ]
