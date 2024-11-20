@@ -1,10 +1,11 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
 import {
   CallToAction,
   GetStarted,
   Hero,
   PowerpackFeatures,
 } from '@nx/nx-dev/ui-powerpack';
+import { contactButton } from '../../lib/components/headerCtaConfigs';
 
 import type { Metadata } from 'next';
 
@@ -32,8 +33,18 @@ export const metadata: Metadata = {
 };
 
 export default function NxPowerPackPage(): JSX.Element {
+  const headerCTAConfig: ButtonLinkProps[] = [
+    {
+      href: 'https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl',
+      variant: 'primary',
+      size: 'small',
+      title: 'Request a free trial',
+      children: 'Request a free trial',
+    },
+  ];
+
   return (
-    <DefaultLayout>
+    <DefaultLayout headerCTAConfig={headerCTAConfig}>
       <Hero />
 
       <div className="mt-32 scroll-mt-32 lg:mt-56" id="features">
