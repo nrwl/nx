@@ -697,6 +697,8 @@
       - [preset](/nx-api/rspack/generators/preset)
       - [application](/nx-api/rspack/generators/application)
       - [convert-webpack](/nx-api/rspack/generators/convert-webpack)
+      - [convert-config-to-rspack-plugin](/nx-api/rspack/generators/convert-config-to-rspack-plugin)
+      - [convert-to-inferred](/nx-api/rspack/generators/convert-to-inferred)
   - [storybook](/nx-api/storybook)
     - [documents](/nx-api/storybook/documents)
       - [Overview](/nx-api/storybook/documents/overview)
