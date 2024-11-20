@@ -642,7 +642,7 @@ export default bootstrap;
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 4`] = `"import('./src/main.server');"`;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 5`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -880,7 +880,7 @@ export default AppServerModule;
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 5`] = `"import('./src/main.server');"`;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 6`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',

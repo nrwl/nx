@@ -4,15 +4,16 @@ import {
   readCachedProjectGraph,
 } from '@nx/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
-import { getDependentPackagesForProject } from '../dependencies';
-import { ModuleFederationConfig } from '../models';
-import { mapRemotes, mapRemotesForSSR } from '../remotes';
 import {
+  ModuleFederationConfig,
   applyAdditionalShared,
   applySharedFunction,
   sharePackages,
   shareWorkspaceLibraries,
-} from '../share';
+  mapRemotes,
+  mapRemotesForSSR,
+  getDependentPackagesForProject,
+} from '@nx/module-federation';
 
 export function getFunctionDeterminateRemoteUrl(isServer = false) {
   const target = 'serve';
@@ -123,7 +124,8 @@ export async function getModuleFederationConfig(
     mappedRemotes = mapRemotesFunction(
       mfConfig.remotes,
       'js',
-      determineRemoteUrlFunction
+      determineRemoteUrlFunction,
+      true
     );
   }
 

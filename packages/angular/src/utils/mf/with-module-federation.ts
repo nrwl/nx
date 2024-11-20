@@ -1,7 +1,7 @@
 import type {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/webpack/src/utils/module-federation';
+} from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 
@@ -62,7 +62,7 @@ export async function withModuleFederation(
               ? [
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve(
-                    '@nx/webpack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
+                    '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                   ),
                 ]
               : configOverride?.runtimePlugins,

@@ -94,10 +94,9 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/web/** @nrwl/nx-js-reviewers
 /e2e/web/** @nrwl/nx-js-reviewers
 /packages/webpack/** @nrwl/nx-js-reviewers
-/packages/webpack/src/utils/module-federation @jaysoo @Coly010
 /e2e/webpack/** @nrwl/nx-js-reviewers
 /packages/rspack/** @nrwl/nx-js-reviewers
-/packages/rspack/src/utils/module-federation @jaysoo @Coly010
+/packages/rspack/src/utils/module-federation @nrwl/nx-js-reviewers
 /e2e/rspack/** @nrwl/nx-js-reviewers
 /packages/esbuild/** @nrwl/nx-js-reviewers
 /e2e/esbuild/** @nrwl/nx-js-reviewers

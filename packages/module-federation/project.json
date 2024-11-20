@@ -10,11 +10,6 @@
         "outputPath": "build/packages/module-federation",
         "tsConfig": "packages/module-federation/tsconfig.lib.json",
         "main": "packages/module-federation/index.ts",
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/plugin.ts"
-        ],
         "assets": [
           {
             "input": "packages/module-federation",

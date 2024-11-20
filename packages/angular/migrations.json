@@ -266,6 +266,12 @@
       "version": "19.6.1-beta.0",
       "description": "Ensure Target Defaults are set correctly for Module Federation.",
       "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf"
+    },
+    "update-20-2-0-update-module-federation-config-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.2",
+      "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package"
     }
   },
   "packageJsonUpdates": {

@@ -12,7 +12,10 @@ import { ModuleFederationDevServerOptions } from './schema';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
+  startRemoteProxies,
+  parseStaticRemotesConfig,
+  type StaticRemotesConfig,
+} from '@nx/module-federation/src/utils';
 import {
   combineAsyncIterables,
   createAsyncIterable,
@@ -20,11 +23,6 @@ import {
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { cpSync, existsSync } from 'fs';
 import { extname, join } from 'path';
-import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
-import {
-  parseStaticRemotesConfig,
-  type StaticRemotesConfig,
-} from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 import { buildStaticRemotes } from '../../utils/build-static.remotes';
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {

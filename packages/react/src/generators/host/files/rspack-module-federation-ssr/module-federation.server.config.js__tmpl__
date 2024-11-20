@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * @type {import('@nx/rspack/module-federation').ModuleFederationConfig}
+ * @type {import('@nx/module-federation').ModuleFederationConfig}
  **/
 const moduleFederationConfig = {
     name: '<%= projectName %>',

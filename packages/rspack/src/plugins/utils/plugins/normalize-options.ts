@@ -124,7 +124,7 @@ export function normalizeOptions(
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
     sourceRoot,
     styles: combinedPluginAndMaybeExecutorOptions.styles ?? [],
-    target: combinedPluginAndMaybeExecutorOptions.target,
+    target: combinedPluginAndMaybeExecutorOptions.target ?? 'web',
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
   };

@@ -2,7 +2,7 @@ import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '../models';
+} from '@nx/module-federation';
 import { getModuleFederationConfig } from './utils';
 import { NxRspackExecutionContext } from '../../config';
 
@@ -57,7 +57,7 @@ export async function withModuleFederationForSSR(
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve('@module-federation/node/runtimePlugin'),
                   require.resolve(
-                    '@nx/rspack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
+                    '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                   ),
                 ]
               : [

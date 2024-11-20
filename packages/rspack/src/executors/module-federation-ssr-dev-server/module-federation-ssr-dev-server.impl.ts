@@ -10,7 +10,10 @@ import { extname, join } from 'path';
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '../../utils/module-federation';
+  parseStaticSsrRemotesConfig,
+  type StaticRemotesConfig,
+  startSsrRemoteProxies,
+} from '@nx/module-federation/src/utils';
 import { RspackSsrDevServerOptions } from '../ssr-dev-server/schema';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';
 
@@ -21,15 +24,9 @@ import {
 import { fork } from 'child_process';
 import { cpSync, createWriteStream, existsSync } from 'fs';
 
-import {
-  parseStaticSsrRemotesConfig,
-  type StaticRemotesConfig,
-} from '../../utils/module-federation/parse-static-remotes-config';
-
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { startSsrRemoteProxies } from '../../utils/module-federation/start-ssr-remote-proxies';
 
 type ModuleFederationSsrDevServerOptions = RspackSsrDevServerOptions & {
   devRemotes?: (

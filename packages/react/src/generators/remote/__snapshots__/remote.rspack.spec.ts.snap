@@ -100,7 +100,7 @@ exports[`remote generator bundler=rspack should create the remote with the corre
 `;
 
 exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
-"import { ModuleFederationConfig } from '@nx/rspack/module-federation';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -174,7 +174,7 @@ export default composePlugins(
 `;
 
 exports[`remote generator bundler=rspack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/rspack/module-federation';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',

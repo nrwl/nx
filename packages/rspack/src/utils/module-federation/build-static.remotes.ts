@@ -5,7 +5,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { logger } from 'nx/src/utils/logger';
 import { join } from 'path';
 import { ModuleFederationDevServerOptions } from '../../executors/module-federation-dev-server/schema';
-import type { StaticRemotesConfig } from './parse-static-remotes-config';
+import type { StaticRemotesConfig } from '@nx/module-federation/src/utils';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,

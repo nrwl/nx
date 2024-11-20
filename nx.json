@@ -247,10 +247,5 @@
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
   "bust": 1,
-  "defaultBase": "master",
-  "generators": {
-    "@nx/react": {
-      "library": {}
-    }
-  }
+  "defaultBase": "master"
 }

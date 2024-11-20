@@ -19,7 +19,9 @@ import {
 import {
   getModuleFederationConfig,
   getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
+  startRemoteProxies,
+  parseStaticRemotesConfig,
+} from '@nx/module-federation/src/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
@@ -30,8 +32,6 @@ import {
 } from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
-import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
-import { parseStaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 export async function* moduleFederationDevServerExecutor(
   schema: Schema,

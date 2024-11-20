@@ -24,7 +24,16 @@
   "main": "index.js",
   "executors": "./executors.json",
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "picocolors": "^1.1.0",
+    "@module-federation/sdk": "0.6.9",
+    "webpack": "5.88.0",
+    "@rspack/core": "1.0.5",
+    "@module-federation/enhanced": "0.6.9",
+    "express": "^4.19.2",
+    "http-proxy-middleware": "^3.0.3"
   },
   "peerDependencies": {},
   "nx-migrations": {

@@ -47,6 +47,32 @@ describe('convert-to-flat-config generator', () => {
     });
   });
 
+  it('should update dependencies', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('package.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "name": "@proj/source",
+        "dependencies": {},
+        "devDependencies": {
+          "@eslint/eslintrc": "^2.1.1",
+          "@nx/eslint": "0.0.1",
+          "@nx/eslint-plugin": "0.0.1",
+          "eslint": "^9.8.0",
+          "eslint-config-prettier": "^9.0.0",
+          "typescript-eslint": "^8.0.0"
+        }
+      }
+      "
+    `);
+  });
+
   it('should convert json successfully', async () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,

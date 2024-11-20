@@ -2,6 +2,7 @@ import {
   AdditionalSharedConfig,
   ModuleFederationConfig,
   ModuleFederationLibrary,
+  NxModuleFederationConfigOverride,
   Remotes,
   SharedFunction,
   SharedLibraryConfig,
@@ -26,6 +27,7 @@ import { readRootPackageJson } from './package-json';
 
 export {
   ModuleFederationConfig,
+  NxModuleFederationConfigOverride,
   SharedLibraryConfig,
   SharedWorkspaceLibraryConfig,
   AdditionalSharedConfig,

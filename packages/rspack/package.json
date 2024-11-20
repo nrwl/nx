@@ -27,6 +27,7 @@
     "@nx/js": "file:../js",
     "@nx/devkit": "file:../devkit",
     "@nx/web": "file:../web",
+    "@nx/module-federation": "file:../module-federation",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@rspack/core": "^1.0.4",
     "@rspack/dev-server": "^1.0.4",

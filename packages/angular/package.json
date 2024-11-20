@@ -63,6 +63,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/module-federation": "file:../module-federation",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",
     "piscina": "^4.4.0"

@@ -47,6 +47,8 @@
       "@nx/jest/*": ["packages/jest/*"],
       "@nx/js": ["packages/js/src/index.ts"],
       "@nx/js/*": ["packages/js/*"],
+      "@nx/module-federation": ["packages/module-federation"],
+      "@nx/module-federation/*": ["packages/module-federation/*"],
       "@nx/nest": ["packages/nest"],
       "@nx/next": ["packages/next"],
       "@nx/next/*": ["packages/next/*"],

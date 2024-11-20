@@ -8,6 +8,7 @@ import {
   ProjectConfiguration,
   readJson,
   readNxJson,
+  removeDependenciesFromPackageJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -240,4 +241,10 @@ function processConvertedConfig(
   }
 
   addDependenciesToPackageJson(tree, {}, devDependencies);
+
+  removeDependenciesFromPackageJson(
+    tree,
+    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser'],
+    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser']
+  );
 }

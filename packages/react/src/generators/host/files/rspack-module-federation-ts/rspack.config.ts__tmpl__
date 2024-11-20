@@ -1,5 +1,6 @@
 import {composePlugins, withNx, withReact} from '@nx/rspack';
-import {withModuleFederation, ModuleFederationConfig} from '@nx/rspack/module-federation';
+import { withModuleFederation } from '@nx/rspack/module-federation';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 import baseConfig from './module-federation.config';
 
