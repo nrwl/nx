@@ -12,6 +12,7 @@ import {
   Testimonials,
   TrustedBy,
 } from '@nx/nx-dev/ui-common';
+import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <DefaultLayout>
+    <DefaultLayout headerCTAConfig={[gotoAppButton]}>
       <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
