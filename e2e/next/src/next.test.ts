@@ -193,7 +193,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`
     );
 
-    if (runE2ETests('cypress')) {
+    if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
         verbose: true,
         env: {
