@@ -701,6 +701,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/react:app --name=${myapp} --unitTestRunner=jest --linter eslint --directory="."`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
@@ -737,6 +738,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/angular:app --name=${myapp} --directory="." --linter eslint --no-interactive`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
@@ -770,6 +772,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/node:app --name=${myapp} --linter eslint --directory="." --no-interactive`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
