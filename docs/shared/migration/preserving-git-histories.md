@@ -28,6 +28,7 @@ git checkout -b monorepo-migration main
 mkdir -p apps/my-standalone-app
 git ls-files | sed 's!/.*!!'| uniq | xargs -i git mv {} apps/my-standalone-app
 ```
+
 Check if you need to move back the `.gitignore` file to the root and/or update any paths so you don't commit previously ignored files/folders.
 If all is well proceed with the commit and push.
 
