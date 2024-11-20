@@ -160,7 +160,7 @@ export function ApplicationCard(): JSX.Element {
           <a
             href="https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview??utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_live_demo"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             title="See Nx Cloud live demo"
             className="group font-semibold leading-6 text-slate-950 dark:text-white"
           >

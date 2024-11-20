@@ -120,6 +120,7 @@ export function ShowOptionsHelp({
             className="text-blue-500 hover:underline"
             target="_blank"
             href="https://nx.dev/recipes/running-tasks/pass-args-to-commands#pass-args-to-commands"
+            rel="noreferrer"
           >
             passing them
           </a>{' '}

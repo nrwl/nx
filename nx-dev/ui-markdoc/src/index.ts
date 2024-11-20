@@ -6,7 +6,6 @@ import {
   Tokenizer,
   transform,
 } from '@markdoc/markdoc';
-import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';
 import { getHeadingSchema } from './lib/nodes/heading.schema';
@@ -144,8 +143,9 @@ export const extractFrontmatter = (
   documentContent: string
 ): Record<string, any> => {
   const ast = parseMarkdown(documentContent);
+  const { parse } = require('yaml');
   const frontmatter = ast.attributes['frontmatter']
-    ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+    ? (parse(ast.attributes['frontmatter']) as Record<string, any>)
     : {};
   return frontmatter;
 };
@@ -165,9 +165,10 @@ export const renderMarkdown: (
   );
   const treeNode = transform(ast, configuration.config);
 
+  const { parse } = require('yaml');
   return {
     metadata: ast.attributes['frontmatter']
-      ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+      ? (parse(ast.attributes['frontmatter']) as Record<string, any>)
       : {},
     node: renderers.react(transform(ast, configuration.config), React, {
       components: configuration.components,

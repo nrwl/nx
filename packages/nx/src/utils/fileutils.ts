@@ -14,6 +14,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';
+import type { ParseOptions } from 'yaml';
 
 export interface JsonReadOptions extends JsonParseOptions {
   /**
@@ -54,13 +55,6 @@ export function readJsonFile<T extends object = any>(
   }
 }
 
-interface YamlReadOptions {
-  /**
-   * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
-   */
-  json?: boolean;
-}
-
 /**
  * Reads a YAML file and returns the object the YAML content represents.
  *
@@ -69,11 +63,11 @@ interface YamlReadOptions {
  */
 export function readYamlFile<T extends object = any>(
   path: string,
-  options?: YamlReadOptions
+  options?: ParseOptions
 ): T {
   const content = readFileSync(path, 'utf-8');
-  const { load } = require('@zkochan/js-yaml');
-  return load(content, { ...options, filename: path }) as T;
+  const { parse } = require('yaml');
+  return parse(content, { ...options, filename: path }) as T;
 }
 
 /**

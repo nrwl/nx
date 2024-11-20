@@ -41,7 +41,6 @@
     "@babel/runtime": "^7.22.6",
     "@nx/devkit": "file:../devkit",
     "@nx/workspace": "file:../workspace",
-    "@zkochan/js-yaml": "0.0.7",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
@@ -61,7 +60,8 @@
     "source-map-support": "0.5.19",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "yaml": "^2.6.1"
   },
   "peerDependencies": {
     "verdaccio": "^5.0.4"

@@ -18,7 +18,7 @@ import {
 import * as isCI from 'is-ci';
 
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
-import { dump } from '@zkochan/js-yaml';
+import { stringify } from 'yaml';
 import { execSync, ExecSyncOptions } from 'child_process';
 
 import { performance, PerformanceMeasure } from 'perf_hooks';
@@ -495,7 +495,7 @@ export function newLernaWorkspace({
     if (packageManager === 'pnpm') {
       updateFile(
         'pnpm-workspace.yaml',
-        dump({
+        stringify({
           packages: ['packages/*'],
         })
       );

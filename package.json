@@ -134,7 +134,6 @@
     "@types/jasmine": "~2.8.6",
     "@types/jasminewd2": "~2.0.3",
     "@types/jest": "29.5.12",
-    "@types/js-yaml": "^4.0.5",
     "@types/marked": "^2.0.0",
     "@types/node": "20.16.10",
     "@types/npm-package-arg": "6.1.1",
@@ -151,7 +150,6 @@
     "@xstate/immer": "0.3.1",
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
-    "@zkochan/js-yaml": "0.0.7",
     "ai": "^2.2.10",
     "ajv": "^8.12.0",
     "angular-eslint": "^18.3.0",
@@ -314,6 +312,7 @@
     "webpack-sources": "^3.2.3",
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
+    "yaml": "^2.6.1",
     "yargs": "17.6.2",
     "yargs-parser": "21.1.1"
   },

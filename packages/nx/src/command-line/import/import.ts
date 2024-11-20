@@ -2,7 +2,6 @@ import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { minimatch } from 'minimatch';
 import { existsSync, promises as fsp } from 'node:fs';
 import * as chalk from 'chalk';
-import { load as yamlLoad } from '@zkochan/js-yaml';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
@@ -438,7 +437,8 @@ async function warnOnMissingWorkspacesEntry(
       const yamlPath = join(workspaceRoot, 'pnpm-workspace.yaml');
       if (existsSync(yamlPath)) {
         const yamlContent = await fsp.readFile(yamlPath, 'utf-8');
-        const yaml = yamlLoad(yamlContent);
+        const { parse } = require('yaml');
+        const yaml = parse(yamlContent);
         workspaces = yaml.packages;
       }
     }

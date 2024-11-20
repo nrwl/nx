@@ -44,8 +44,8 @@ export function loadPnpmHoistedDepsDefinition() {
 
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
-    const { load } = require('@zkochan/js-yaml');
-    return load(content)?.hoistedDependencies ?? {};
+    const { parse } = require('yaml');
+    return parse(content)?.hoistedDependencies ?? {};
   } else {
     throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
@@ -55,35 +55,33 @@ export function loadPnpmHoistedDepsDefinition() {
  * Parsing and mapping logic from pnpm lockfile `read` function
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
-  const { load } = require('@zkochan/js-yaml');
-  return convertToLockfileObject(load(content));
+  const { parse } = require('yaml');
+  return convertToLockfileObject(parse(content));
 }
 
-// https://github.com/pnpm/pnpm/blob/50e37072f42bcca6d393a74bed29f7f0e029805d/lockfile/lockfile-file/src/write.ts#L22
 const LOCKFILE_YAML_FORMAT = {
-  blankLines: true,
-  lineWidth: -1, // This is setting line width to never wrap
-  noCompatMode: true,
+  lineWidth: 0, // This is setting line width to never wrap
   noRefs: true,
-  sortKeys: false,
+  sortMapEntries: false,
 };
 
 const LOCKFILE_YAML_PRE9_FORMAT = {
   ...LOCKFILE_YAML_FORMAT,
   lineWidth: 1000,
+  singleQuote: true,
 };
 
 /**
  * Mapping and writing logic from pnpm lockfile `write` function
  */
 export function stringifyToPnpmYaml(lockfile: Lockfile): string {
-  const { dump } = require('@zkochan/js-yaml');
+  const { stringify } = require('yaml');
   const lockfileVersion = +lockfile.lockfileVersion;
   if (lockfileVersion >= 9) {
     const adaptedLockfile = convertToLockfileFile(lockfile, {
       forceSharedFormat: true,
     });
-    return dump(sortLockfileKeys(adaptedLockfile), LOCKFILE_YAML_FORMAT);
+    return stringify(sortLockfileKeys(adaptedLockfile), LOCKFILE_YAML_FORMAT);
   } else {
     // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L77
     const adaptedLockfile =
@@ -91,7 +89,7 @@ export function stringifyToPnpmYaml(lockfile: Lockfile): string {
         ? convertToInlineSpecifiersFormat(lockfile)
         : lockfile;
 
-    return dump(
+    return stringify(
       sortLockfileKeys(
         normalizeLockfileV6(adaptedLockfile as Lockfile, lockfileVersion >= 6)
       ),

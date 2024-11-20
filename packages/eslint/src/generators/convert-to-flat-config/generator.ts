@@ -192,8 +192,8 @@ function convertConfigToFlatConfig(
   }
   if (source.endsWith('.yaml') || source.endsWith('.yml')) {
     const originalContent = tree.read(`${root}/${source}`, 'utf-8');
-    const { load } = require('@zkochan/js-yaml');
-    const config = load(originalContent, {
+    const { parse } = require('yaml');
+    const config = parse(originalContent, {
       json: true,
       filename: source,
     }) as ESLint.ConfigData;

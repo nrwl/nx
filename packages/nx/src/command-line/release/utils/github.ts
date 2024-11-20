@@ -352,8 +352,8 @@ async function resolveGithubToken(hostname: string): Promise<string | null> {
   );
   if (existsSync(ghCLIPath)) {
     const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
-    const { load } = require('@zkochan/js-yaml');
-    const ghCLIConfig = load(yamlContents);
+    const { parse } = require('yaml');
+    const ghCLIConfig = parse(yamlContents);
     if (ghCLIConfig[hostname]) {
       // Web based session (the token is already embedded in the config)
       if (ghCLIConfig[hostname].oauth_token) {

@@ -15,7 +15,7 @@ import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { Linter } from '../utils/linter';
 import { eslintrcVersion } from '../../utils/versions';
-import { dump } from '@zkochan/js-yaml';
+import { stringify } from 'yaml';
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
@@ -106,7 +106,9 @@ describe('convert-to-flat-config generator', () => {
       project: 'test-lib',
       setParserOptionsProject: false,
     });
-    const yamlContent = dump(readJson(tree, 'libs/test-lib/.eslintrc.json'));
+    const yamlContent = stringify(
+      readJson(tree, 'libs/test-lib/.eslintrc.json')
+    );
     tree.delete('libs/test-lib/.eslintrc.json');
     tree.write('libs/test-lib/.eslintrc.yaml', yamlContent);
 
@@ -136,7 +138,9 @@ describe('convert-to-flat-config generator', () => {
       project: 'test-lib',
       setParserOptionsProject: false,
     });
-    const yamlContent = dump(readJson(tree, 'libs/test-lib/.eslintrc.json'));
+    const yamlContent = stringify(
+      readJson(tree, 'libs/test-lib/.eslintrc.json')
+    );
     tree.delete('libs/test-lib/.eslintrc.json');
     tree.write('libs/test-lib/.eslintrc.yml', yamlContent);
 
