@@ -1,20 +1,18 @@
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 import type { NormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * @param {ModuleFederationConfig} options
- * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
-): Promise<AsyncNxComposableWebpackPlugin> {
+) {
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
