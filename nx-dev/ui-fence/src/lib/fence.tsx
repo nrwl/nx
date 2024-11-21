@@ -7,13 +7,15 @@ import {
 import cx from 'classnames';
 import { JSX, ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import * as reactCopyToClipboard from 'react-copy-to-clipboard';
 // @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { CodeOutput } from './fences/code-output';
 import { TerminalOutput } from './fences/terminal-output';
 
 import { Selector } from './selector';
+
+const { CopyToClipboard } = reactCopyToClipboard;
 
 function resolveLanguage(lang: string) {
   switch (lang) {

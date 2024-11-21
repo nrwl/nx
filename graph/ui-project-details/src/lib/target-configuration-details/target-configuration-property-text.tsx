@@ -1,7 +1,9 @@
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import * as uiTooltips from '@nx/graph/legacy/tooltips';
 import { JSX, ReactNode } from 'react';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+
+const { Tooltip } = uiTooltips;
 
 interface TargetConfigurationPropertyTextProps {
   content: ReactNode;
