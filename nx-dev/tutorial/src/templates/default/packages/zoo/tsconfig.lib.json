@@ -8,10 +8,14 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "declaration": true
   },
-  "include": ["**/*.ts"],
+  "include": [
+    "**/*.ts"
+  ],
   "references": [
     {
       "path": "../animals/tsconfig.lib.json"
