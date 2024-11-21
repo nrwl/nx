@@ -8,7 +8,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nx/module-federation';
+} from '../../utils';
 
 import {
   createProjectGraphAsync,
