@@ -3,7 +3,11 @@ type: lesson
 title: Add the @nx/js Plugin
 focus: /nx.json
 previews:
-  - { port: 4211, title: "Nx Graph", pathname: "project-details/%40tuskdesign%2Fzoo" }
+  - {
+      port: 4211,
+      title: 'Nx Graph',
+      pathname: 'project-details/%40tuskdesign%2Fzoo',
+    }
 ---
 
 ### Use Nx Plugins to Enhance Your Workspace
@@ -23,12 +27,15 @@ For this tutorial, we'll focus on inferring tasks and keeping tooling configurat
 First, let's remove the existing `build` and `typecheck` scripts from each project's `package.json` files to allow the `@nx/js` plugin to infer those tasks for us.
 
 ```file:/packages/animals/package.json del={12-13} title="/packages/animals/package.json" collapse={3-10,15-21}
+
 ```
 
 ```file:/packages/names/package.json del={12-13} title="/packages/names/package.json" collapse={3-10,15-21}
+
 ```
 
 ```solution:/packages/zoo/package.json ins={12} title="/packages/zoo/package.json" collapse={3-10,14-24}
+
 ```
 
 Now let's add the `@nx/js` plugin:

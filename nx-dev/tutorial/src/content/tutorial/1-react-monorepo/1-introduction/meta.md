@@ -3,8 +3,8 @@ type: chapter
 title: Introduction
 template: default
 editor:
-    fileTree: 
-        allowEdits: true
+  fileTree:
+    allowEdits: true
 filesystem:
-    watch: ['/*.json','/packages/*(/!(dist|node_modules))/*']
+  watch: ['/*.json', '/packages/*(/!(dist|node_modules))/*']
 ---

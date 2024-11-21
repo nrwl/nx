@@ -5,14 +5,8 @@
     "baseUrl": "./",
     "jsxImportSource": "react",
     "paths": {
-      "@*": [
-        "src/*"
-      ]
+      "@*": ["src/*"]
     }
   },
-  "exclude": [
-    "dist",
-    "src/templates",
-    "src/content"
-  ]
+  "exclude": ["dist", "src/templates", "src/content"]
 }

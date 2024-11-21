@@ -20,5 +20,9 @@ export function useTheme() {
 }
 
 function getThemeFromRoot() {
-  return (globalThis.document?.documentElement.getAttribute('data-theme') as 'dark' | 'light') ?? 'light';
+  return (
+    (globalThis.document?.documentElement.getAttribute('data-theme') as
+      | 'dark'
+      | 'light') ?? 'light'
+  );
 }

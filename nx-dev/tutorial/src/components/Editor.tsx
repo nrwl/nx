@@ -1,4 +1,8 @@
-import type { EditorDocument, EditorUpdate, ScrollPosition } from '@tutorialkit/react/core';
+import type {
+  EditorDocument,
+  EditorUpdate,
+  ScrollPosition,
+} from '@tutorialkit/react/core';
 import CodeMirrorEditor from '@tutorialkit/react/core/CodeMirrorEditor';
 import FileTree from '@tutorialkit/react/core/FileTree';
 import type { FileSystemTree, DirectoryNode } from '@webcontainer/api';
@@ -13,15 +17,23 @@ export default function ExampleSimpleEditor() {
   const [domLoaded, setDomLoaded] = useState(false);
 
   const theme = useTheme();
-  const { setTerminal, previewSrc, document, files, onChange, onScroll, selectedFile, setSelectedFile } =
-    useSimpleEditor();
+  const {
+    setTerminal,
+    previewSrc,
+    document,
+    files,
+    onChange,
+    onScroll,
+    selectedFile,
+    setSelectedFile,
+  } = useSimpleEditor();
 
   useEffect(() => {
     setDomLoaded(true);
   }, []);
 
   return (
-    <div className="mt-4 h-120 flex flex-col not-content react-example border border-[var(--ec-brdCol)] border-solid rounded overflow-hidden">
+    <div className="h-120 not-content react-example mt-4 flex flex-col overflow-hidden rounded border border-solid border-[var(--ec-brdCol)]">
       <div className="flex h-1/2">
         <FileTree
           className="w-1/4 flex-shrink-0 text-sm"
@@ -30,8 +42,8 @@ export default function ExampleSimpleEditor() {
           selectedFile={selectedFile}
           onFileSelect={setSelectedFile}
         />
-        <div className="w-px flex-shrink-0 h-full bg-[var(--ec-brdCol)]" />
-        <div className="flex-grow h-full max-w-[calc(75%-1px)] relative bg-[var(--cm-backgroundColor)]">
+        <div className="h-full w-px flex-shrink-0 bg-[var(--ec-brdCol)]" />
+        <div className="relative h-full max-w-[calc(75%-1px)] flex-grow bg-[var(--cm-backgroundColor)]">
           <CodeMirrorEditor
             theme={theme}
             doc={document}
@@ -39,21 +51,29 @@ export default function ExampleSimpleEditor() {
             onScroll={onScroll}
             className="h-full text-[13px]"
           />
-          <div className="absolute bottom-0 right-0 w-4 h-4 bg-[var(--cm-backgroundColor)]" />
+          <div className="absolute bottom-0 right-0 h-4 w-4 bg-[var(--cm-backgroundColor)]" />
         </div>
       </div>
       <div className="h-px bg-[var(--ec-brdCol)]" />
-      <div className="flex p-0 m-0 h-1/2">
-        <div className="w-1/2 h-full">
+      <div className="m-0 flex h-1/2 p-0">
+        <div className="h-full w-1/2">
           {domLoaded && (
             <Suspense>
-              <Terminal className="h-full" readonly={false} theme={theme} onTerminalReady={setTerminal} />
+              <Terminal
+                className="h-full"
+                readonly={false}
+                theme={theme}
+                onTerminalReady={setTerminal}
+              />
             </Suspense>
           )}
         </div>
-        <div className="w-px flex-shrink-0 h-full bg-[var(--ec-brdCol)]" />
-        <div className="w-1/2 h-full">
-          <iframe className="bg-white border-none w-full h-full" src={previewSrc} />
+        <div className="h-full w-px flex-shrink-0 bg-[var(--ec-brdCol)]" />
+        <div className="h-full w-1/2">
+          <iframe
+            className="h-full w-full border-none bg-white"
+            src={previewSrc}
+          />
         </div>
       </div>
     </div>
@@ -64,7 +84,8 @@ function useSimpleEditor() {
   const webcontainerPromise = useWebContainer();
   const [terminal, setTerminal] = useState<XTerm | null>(null);
   const [selectedFile, setSelectedFile] = useState('/src/index.js');
-  const [documents, setDocuments] = useState<Record<string, EditorDocument>>(FILES);
+  const [documents, setDocuments] =
+    useState<Record<string, EditorDocument>>(FILES);
   const [previewSrc, setPreviewSrc] = useState<string>('');
 
   const document = documents[selectedFile];
@@ -144,7 +165,7 @@ function useSimpleEditor() {
 
             terminal.write(data);
           },
-        }),
+        })
       );
 
       const shellWriter = process.input.getWriter();
@@ -227,7 +248,9 @@ const FILES: Record<string, EditorDocument> = {
   },
 };
 
-const FILE_PATHS = Object.keys(FILES).map((path) => ({ path, type: 'file' }) as const);
+const FILE_PATHS = Object.keys(FILES).map(
+  (path) => ({ path, type: 'file' } as const)
+);
 
 function stripIndent(string: string) {
   const indent = minIndent(string.slice(1));
@@ -251,7 +274,9 @@ function minIndent(string: string) {
   return match.reduce((acc, curr) => Math.min(acc, curr.length), Infinity);
 }
 
-export function toFileTree(files: Record<string, EditorDocument>): FileSystemTree {
+export function toFileTree(
+  files: Record<string, EditorDocument>
+): FileSystemTree {
   const root: FileSystemTree = {};
 
   for (const filePath in files) {

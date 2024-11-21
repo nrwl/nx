@@ -3,10 +3,10 @@ type: part
 title: NPM Workspaces
 template: default
 editor:
-    fileTree: 
-        allowEdits: true
+  fileTree:
+    allowEdits: true
 filesystem:
-    watch: ['/*.json','/packages/*(/!(dist|node_modules))/*']
+  watch: ['/*.json', '/packages/*(/!(dist|node_modules))/*']
 downloadAsZip: true
 terminal:
   panels: 'terminal'

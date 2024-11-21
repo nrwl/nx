@@ -47,3 +47,5 @@ CODEOWNERS
 .pnpm-store
 
 /.nx/workspace-data
+_files
+_solution

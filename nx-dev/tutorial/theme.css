@@ -1,9 +1,9 @@
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   --tk-background-primary: rgb(15 23 42);
   --tk-background-secondary: #181f2e;
   --tk-border-primary: #2d394a;
 }
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   --tk-background-secondary: rgb(248 250 252);
   --tk-border-primary: #dee5ed;
 }

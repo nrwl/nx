@@ -3,7 +3,7 @@ type: lesson
 title: Explore Your Workspace
 focus: /nx.json
 previews:
-  - { port: 4211, title: "Nx Graph", pathname: "projects/%40tuskdesign%2Fzoo" }
+  - { port: 4211, title: 'Nx Graph', pathname: 'projects/%40tuskdesign%2Fzoo' }
 ---
 
 ### Explore Your Workspace
