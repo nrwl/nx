@@ -158,6 +158,9 @@ async function addProject(
       version: '0.0.1',
       nx: {
         name: options.name,
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        projectType: 'library',
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
   } else {

@@ -46,6 +46,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       nx: {
         name: options.name,
         projectType: 'application',
+        sourceRoot: `${options.appProjectRoot}/src`,
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });

@@ -363,6 +363,7 @@ describe('Remix Application', () => {
           "name": "myapp",
           "nx": {
             "projectType": "application",
+            "sourceRoot": "myapp",
             "tags": [
               "foo",
             ],

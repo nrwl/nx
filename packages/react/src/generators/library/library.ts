@@ -68,6 +68,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       nx: {
         name: options.importPath === options.name ? undefined : options.name,
         projectType: 'library',
+        sourceRoot: `${options.projectRoot}/src`,
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
