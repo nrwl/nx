@@ -2,9 +2,9 @@
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { JsonCodeBlock } from '@nx/graph-internal/ui-code-block';
-import { ExpandedTargetsContext } from '@nx/graph/legacy/shared';
-import { CopyToClipboardButton } from '@nx/graph/legacy/components';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import * as graphShared from '@nx/graph/legacy/shared';
+import * as uiComponents from '@nx/graph/legacy/components';
+import * as uiTooltips from '@nx/graph/legacy/tooltips';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Pill } from '../pill';
 import { ShowOptionsHelp } from '../show-all-options/show-options-help';
@@ -19,6 +19,11 @@ import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
+
+const { ExpandedTargetsContext } = graphShared;
+const { CopyToClipboardButton } = uiComponents;
+const { Tooltip } = uiTooltips;
+
 interface TargetConfigurationDetailsProps {
   projectName: string;
   targetName: string;

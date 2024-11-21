@@ -1,0 +1,27 @@
+{
+  "name": "@tuskdesign/zoo",
+  "version": "1.2.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "serve": "node dist/index.js",
+    "build": "tsc --build tsconfig.lib.json",
+    "typecheck": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tuskdesign/animals": "*",
+    "@tuskdesign/names": "*"
+  },
+  "devDependencies": {
+    "@types/node": "18.16.9",
+    "typescript": "~5.5.2"
+  }
+}

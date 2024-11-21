@@ -1,11 +1,5 @@
-import {
-  Node,
-  parse,
-  RenderableTreeNode,
-  renderers,
-  Tokenizer,
-  transform,
-} from '@markdoc/markdoc';
+import { Node, RenderableTreeNode } from '@markdoc/markdoc';
+import markdoc from '@markdoc/markdoc';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';
@@ -58,6 +52,8 @@ import { Testimonial, testimonial } from './lib/tags/testimonial.component';
 import { metrics } from './lib/tags/metrics.schema';
 import { Metrics } from './lib/tags/metrics.component';
 export { CallToAction };
+
+const { parse, renderers, Tokenizer, transform } = markdoc;
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string,

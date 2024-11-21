@@ -1,0 +1,14 @@
+{
+  "name": "tutorial",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/tutorial/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project tutorial --web",
+  "targets": {
+    "lint": {
+      "command": "echo no linting",
+      "cache": true
+    }
+  }
+}
