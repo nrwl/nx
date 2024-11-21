@@ -492,13 +492,13 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
   let attempts = 0;
   // Generate a random number between 2 and 4 to raise to the power of attempts
   const baseExponent = Math.random() * 2 + 2;
-  const baseTimeout = 20
+  const baseTimeout = 15
   const _try = async () => {
     try {
       attempts++;
       return await fn();
     } catch (e) {
-      // Max time is 20 * 4 ** 5 = 20480ms
+      // Max time is 15 * (4 + 4² + 4³ + 4⁴ + 4⁵) = 20460ms
       if (attempts === 6) {
         // After enough attempts, throw the error
         throw e;
