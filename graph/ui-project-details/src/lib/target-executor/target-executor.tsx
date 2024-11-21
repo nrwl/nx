@@ -1,4 +1,6 @@
-import { ExternalLink } from '@nx/graph/ui-tooltips';
+import * as uiTooltips from '@nx/graph/ui-tooltips';
+
+const { ExternalLink } = uiTooltips;
 
 export interface TargetExecutorProps {
   command?: string;
