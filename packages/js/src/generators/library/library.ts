@@ -260,7 +260,7 @@ async function configureProject(
 
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    // sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
     targets: {},
     tags: options.parsedTags,

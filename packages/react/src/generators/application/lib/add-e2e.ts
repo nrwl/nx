@@ -82,7 +82,7 @@ export async function addE2e(
       addProjectConfiguration(tree, options.e2eProjectName, {
         projectType: 'application',
         root: options.e2eProjectRoot,
-        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+        // sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
         targets: {},
         implicitDependencies: [options.projectName],
         tags: [],
@@ -158,7 +158,7 @@ export async function addE2e(
       addProjectConfiguration(tree, options.e2eProjectName, {
         projectType: 'application',
         root: options.e2eProjectRoot,
-        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+        // sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
         targets: {},
         implicitDependencies: [options.projectName],
       });

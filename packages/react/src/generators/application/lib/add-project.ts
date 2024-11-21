@@ -12,7 +12,7 @@ import { maybeJs } from '../../../utils/maybe-js';
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
-    sourceRoot: `${options.appProjectRoot}/src`,
+    // sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
     targets: {},
     tags: options.parsedTags,

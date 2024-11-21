@@ -65,7 +65,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   addProjectConfiguration(host, options.name, {
     root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    // sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
     tags: options.parsedTags,
     targets: {},

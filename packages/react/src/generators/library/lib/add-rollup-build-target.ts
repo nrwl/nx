@@ -128,7 +128,7 @@ export async function addRollupBuildTarget(
 
     updateProjectConfiguration(host, options.name, {
       root: options.projectRoot,
-      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      // sourceRoot: joinPathFragments(options.projectRoot, 'src'),
       projectType: 'library',
       tags: options.parsedTags,
       targets,
