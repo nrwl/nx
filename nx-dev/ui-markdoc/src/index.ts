@@ -1,11 +1,5 @@
-import {
-  Node,
-  parse,
-  RenderableTreeNode,
-  renderers,
-  Tokenizer,
-  transform,
-} from '@markdoc/markdoc';
+import { Node, RenderableTreeNode } from '@markdoc/markdoc';
+import markdoc from '@markdoc/markdoc';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';
@@ -56,6 +50,9 @@ import { pill } from './lib/tags/pill.schema';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
+
+const { parse, renderers, Tokenizer, transform } = markdoc;
+
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
 
