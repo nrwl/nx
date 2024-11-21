@@ -418,5 +418,11 @@
       ]
     }
   },
-  "packageManager": "pnpm@9.8.0"
+  "packageManager": "pnpm@9.8.0",
+  "pnpm": {
+    "overrides": {
+      "nx": "$nx",
+      "@nx/devkit": "$nx"
+    } 
+  }
 }
