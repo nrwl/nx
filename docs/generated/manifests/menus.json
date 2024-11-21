@@ -9901,6 +9901,22 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-config-to-rspack-plugin",
+                "path": "/nx-api/rspack/generators/convert-config-to-rspack-plugin",
+                "name": "convert-config-to-rspack-plugin",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/rspack/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

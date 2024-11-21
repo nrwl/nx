@@ -17,7 +17,9 @@ export async function createCompiler(
 ): Promise<Compiler | MultiCompiler> {
   const config = await getRspackConfigs(options, context);
 
-  validateConfig(config);
+  if (!options.standardRspackConfigFunction) {
+    validateConfig(config);
+  }
 
   return rspack(config);
 }

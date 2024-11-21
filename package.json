@@ -88,6 +88,7 @@
     "@nx/vite": "20.2.0-beta.2",
     "@nx/web": "20.2.0-beta.2",
     "@nx/webpack": "20.2.0-beta.2",
+    "@nx/rspack": "20.2.0-beta.2",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@playwright/test": "^1.36.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",

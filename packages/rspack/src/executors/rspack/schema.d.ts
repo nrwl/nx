@@ -28,7 +28,7 @@ export interface RspackExecutorSchema {
   progress?: boolean;
   publicPath?: string;
   rebaseRootRelative?: boolean;
-  rspackConfig: string;
+  rspackConfig?: string;
   runtimeChunk?: boolean;
   scripts?: Array<ExtraEntryPointClass | string>;
   skipTypeChecking?: boolean;
