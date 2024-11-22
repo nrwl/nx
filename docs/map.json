@@ -2002,6 +2002,11 @@
               "file": "nx-cloud/reference/launch-templates"
             },
             {
+              "name": "Assignment Rules",
+              "id": "assignment-rules",
+              "file": "nx-cloud/reference/assignment-rules"
+            },
+            {
               "name": "Custom Steps",
               "id": "custom-steps",
               "file": "nx-cloud/reference/custom-steps"
