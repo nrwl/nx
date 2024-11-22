@@ -7,7 +7,8 @@
   "// targets": "to see all targets run: nx show project tutorial --web",
   "targets": {
     "lint": {
-      "command": "echo no linting"
+      "command": "echo no linting",
+      "cache": true
     }
   }
 }
