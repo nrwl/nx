@@ -1,11 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree } from '@nx/devkit';
+import { readJson, Tree } from '@nx/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
 import {
+  mockAngularAppGenerator,
   mockReactAppGenerator,
   mockReactLibNonBuildableJestTestRunnerGenerator,
 } from '../../utils/test-utils';
@@ -132,6 +133,56 @@ describe('vitest generator', () => {
       expect(
         appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+  });
+
+  describe('angular', () => {
+    beforeAll(async () => {
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      mockAngularAppGenerator(appTree);
+      await generator(appTree, {
+        project: 'my-test-angular-app',
+        uiFramework: 'angular',
+        coverageProvider: 'istanbul',
+        addPlugin: true,
+      });
+    });
+
+    it.skip('🚧 should generate vite.config.mts', async () => {
+      expect(
+        appTree.read('apps/my-test-angular-app/vite.config.mts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it.skip('🚧 should generate src/test-setup.ts', async () => {
+      expect(
+        appTree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it.skip('🚧 should exclude src/test-setup.ts in tsconfig.app.json', async () => {
+      const tsConfig = readJson(
+        appTree,
+        'apps/my-test-angular-app/tsconfig.app.json'
+      );
+      expect(tsConfig.exclude).toContain('src/test-setup.ts');
+    });
+
+    it.skip('🚧 should update tsconfig.spec.json', async () => {
+      expect(
+        appTree.read('apps/my-test-angular-app/tsconfig.spec.json', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it.skip('🚧 should add @nx/vite dependency', async () => {
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['@nx/vite']).toBeDefined();
+    });
+
+    it.skip('🚧 should add vitest-angular', async () => {
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
+      expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
     });
   });
 });
