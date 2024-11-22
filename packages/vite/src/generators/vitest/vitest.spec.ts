@@ -182,7 +182,7 @@ describe('vitest generator', () => {
       expect(tsConfig.files).toContain('src/test-setup.ts');
     });
 
-    it.skip('🚧 should add vitest-angular', async () => {
+    it('should add vitest-angular', async () => {
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
       expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
