@@ -52,7 +52,7 @@ And because we do not yet have any options that we want to support for our rule,
 }
 ```
 
-We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The [`@nx/powerpack-conformance` plugin](/nx-api/powerpack-conformance) provides a [dedicated executor called `bundle-rules`](/nx-api/powerpack-conformance) for creating appropriate build artifacts for this purpose, so we will wire that executor up to a new build target in our `cloud-conformance-rules` project's `project.json` file:
+We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The [`@nx/powerpack-conformance` plugin](/nx-api/powerpack-conformance) provides a [dedicated executor called `bundle-rules`](/nx-api/powerpack-conformance/executors/bundle-rules) for creating appropriate build artifacts for this purpose, so we will wire that executor up to a new build target in our `cloud-conformance-rules` project's `project.json` file:
 
 ```jsonc {% fileName="cloud-conformance-rules/project.json" %}
 {
