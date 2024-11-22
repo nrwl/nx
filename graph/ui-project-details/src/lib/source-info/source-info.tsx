@@ -1,6 +1,7 @@
-import { SourcemapInfoToolTip, Tooltip } from '@nx/graph/ui-tooltips';
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import * as uiTooltips from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
+
+const { SourcemapInfoToolTip, Tooltip } = uiTooltips;
 
 export function SourceInfo(props: {
   data: Array<string>;

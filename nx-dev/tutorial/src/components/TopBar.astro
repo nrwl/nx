@@ -1,0 +1,32 @@
+---
+import { Github } from "./Github";
+---
+
+<nav
+  class="bg-tk-elements-panel-header-backgroundColor transition-theme border-b border-tk-elements-app-borderColor flex max-w-full min-h-[56px]"
+>
+  <div class="flex flex-1 p-1 px-4 text-tk-elements-app-textColor">
+    <a
+      href="/"
+      class="flex items-center text-tk-elements-app-textColor hover:text-tk-elements-topBar-logo-colorHover"
+    >
+      <img class="h-full w-auto dark:hidden" src="/logo.svg" />
+      <img class="h-full w-auto hidden dark:inline-block" src="/logo-dark.svg" />
+    </a>
+  </div>
+  <div class="flex items-center p-3 px-4">
+    <div class="flex flex-1"></div>
+    <div class="mr-2">
+      <slot name="open-in-stackblitz-link" />
+    </div>
+
+    <Github />
+
+    <div>
+      <slot name="theme-switch" />
+    </div>
+    <div>
+      <slot name="login-button" />
+    </div>
+  </div>
+</nav>

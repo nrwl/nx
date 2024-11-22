@@ -37,6 +37,9 @@ out
 # Angular Cache
 .angular
 
+# Astro Cache
+.astro
+
 # Local dev files
 .env.local
 .bashrc
