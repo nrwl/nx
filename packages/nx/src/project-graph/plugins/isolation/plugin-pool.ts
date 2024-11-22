@@ -70,6 +70,7 @@ export async function loadRemoteNxPlugin(
     worker.off('exit', exitHandler);
     socket.destroy();
     nxPluginWorkerCache.delete(cacheKey);
+    worker.kill();
   };
 
   cleanupFunctions.add(cleanupFunction);

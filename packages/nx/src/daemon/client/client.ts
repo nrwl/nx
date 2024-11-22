@@ -513,7 +513,13 @@ export class DaemonClient {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       if (!(await this.isServerAvailable())) {
-        await this.startInBackground();
+        if (global.NX_PLUGIN_WORKER) {
+          output.error({
+            title: 'Plugin worker unable to connect to the daemon.',
+          });
+          process.exit(1);
+        } else {
+          await this.startInBackground();
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
