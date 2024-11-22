@@ -43,14 +43,13 @@ out
 # Local dev files
 .env.local
 .bashrc
-.nx
 
 *.node
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx/cache
-.nx/workspace-data
+.nx
+!.nx/workflows
 
 .cargo/.package-cache
 .cargo/bin/
