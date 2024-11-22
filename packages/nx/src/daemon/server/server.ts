@@ -10,7 +10,7 @@ import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { writeDaemonJsonProcessCache } from '../cache';
+import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import {
   getFullOsSocketPath,
   isWindows,
@@ -518,6 +518,17 @@ export async function startServer(): Promise<Server> {
       server.listen(getFullOsSocketPath(), async () => {
         try {
           serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
+
+          setInterval(() => {
+            if (getDaemonProcessIdSync() !== process.pid) {
+              return handleServerProcessTermination({
+                server,
+                reason: 'this process is no longer the current daemon (native)',
+                sockets: openSockets,
+              });
+            }
+          }).unref();
+
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
