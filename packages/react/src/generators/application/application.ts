@@ -165,6 +165,17 @@ export async function applicationGeneratorInternal(
       );
       tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
     }
+  } else if (options.bundler === 'rspack') {
+    const { rspackInitGenerator } = ensurePackage(
+      '@nx/rspack',
+      nxRspackVersion
+    );
+    const rspackInitTask = await rspackInitGenerator(host, {
+      ...options,
+      addPlugin: false,
+      skipFormat: true,
+    });
+    tasks.push(rspackInitTask);
   }
 
   if (!options.rootProject) {
@@ -227,28 +238,6 @@ export async function applicationGeneratorInternal(
       false
     );
   } else if (options.bundler === 'rspack') {
-    const { configurationGenerator } = ensurePackage(
-      '@nx/rspack',
-      nxRspackVersion
-    );
-    const rspackTask = await configurationGenerator(host, {
-      project: options.projectName,
-      main: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(
-          {
-            js: options.js,
-            useJsx: true,
-          },
-          `src/main.tsx`
-        )
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      target: 'web',
-      newProject: true,
-      framework: 'react',
-    });
-    tasks.push(rspackTask);
     addProjectRootToRspackPluginExcludesIfExists(host, options.appProjectRoot);
   }
 
