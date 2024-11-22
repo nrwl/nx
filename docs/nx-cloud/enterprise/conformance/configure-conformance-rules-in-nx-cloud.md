@@ -2,7 +2,7 @@
 
 [Nx Cloud Enterprise](/enterprise) allows you to publish your organization's [Nx Conformance](/nx-enterprise/powerpack/conformance) rules to your Nx Cloud Organization, and consume them in any of your other Nx Workspaces without having to deal with the complexity and friction of dealing with a private NPM registry or similar. Authentication is handled automatically through your Nx Cloud connection and rules are downloaded and applied based on your preferences configured in the Nx Cloud UI.
 
-To learn about how to create and publish custom rules to your Nx Cloud Organization, please refer to the [Publish Conformance Rules to Nx Cloud](/ci/recipes/enterprise/publish-conformance-rules-to-nx-cloud) recipe.
+To learn about how to create and publish custom rules to your Nx Cloud Organization, please refer to the [Publish Conformance Rules to Nx Cloud](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud) recipe.
 
 Once you have one or more rules published to your Nx Cloud Organization, you can configure your Nx Cloud Organization to use them in the Nx Cloud UI by visiting:
 
