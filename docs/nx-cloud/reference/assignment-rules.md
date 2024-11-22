@@ -1,4 +1,4 @@
-# Assignment Rules
+# Assignment Rules (beta)
 
 Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents all with the confidence that your tasks will be run on the agents that are best suited for them. You can ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents. Lighter tasks like `lint` and `test` can run on smaller agents.
 
