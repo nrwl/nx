@@ -172,7 +172,7 @@ function transformModuleFederationConfig(
     endIndex++;
   }
 
-  const newContents = `const { ModuleFederationConfig } = require('@nx/rspack/module-federation');
+  const newContents = `const { ModuleFederationConfig } = require('@nx/module-federation');
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -205,7 +205,7 @@ function transformWithModuleFederation(
     endIndex++;
   }
 
-  const newContents = `const { withModuleFederation } = require('@nx/rspack/module-federation');
+  const newContents = `const { withModuleFederation } = require('@nx/module-federation/rspack');
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -238,7 +238,7 @@ function transformWithModuleFederationSSR(
     endIndex++;
   }
 
-  const newContents = `const { withModuleFederationForSSR } = require('@nx/rspack/module-federation');
+  const newContents = `const { withModuleFederationForSSR } = require('@nx/module-federation/rspack');
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);

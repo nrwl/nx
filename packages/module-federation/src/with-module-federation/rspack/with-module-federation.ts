@@ -4,9 +4,9 @@ import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { NxRspackExecutionContext } from '../../config';
+import { type ExecutorContext } from '@nx/devkit';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -31,7 +31,7 @@ export async function withModuleFederation(
 
   return function makeConfig(
     config: Configuration,
-    { context }: NxRspackExecutionContext
+    { context }
   ): Configuration {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';

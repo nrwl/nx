@@ -8,15 +8,15 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 const NX_RSPACK_MODULE_FEDERATION_IMPORT_SELECTOR =
-  'ImportDeclaration > StringLiteral[value=@nx/react/module-federation], VariableStatement CallExpression:has(Identifier[name=require]) > StringLiteral[value=@nx/react/module-federation]';
-const NEW_IMPORT_PATH = `'@nx/module-federation/webpack'`;
+  'ImportDeclaration > StringLiteral[value=@nx/rspack/module-federation], VariableStatement CallExpression:has(Identifier[name=require]) > StringLiteral[value=@nx/rspack/module-federation]';
+const NEW_IMPORT_PATH = `'@nx/module-federation/rspack'`;
 
 export default async function migrateWithMfImport(tree: Tree) {
   const projects = new Set<string>();
 
   forEachExecutorOptions(
     tree,
-    '@nx/react:module-federation-dev-server',
+    '@nx/rspack:module-federation-dev-server',
     (options, project, target) => {
       const projectConfig = readProjectConfiguration(tree, project);
       projects.add(projectConfig.root);
@@ -29,7 +29,7 @@ export default async function migrateWithMfImport(tree: Tree) {
         return;
       }
       let contents = tree.read(filePath, 'utf-8');
-      if (!contents.includes('@nx/react/module-federation')) {
+      if (!contents.includes('@nx/rspack/module-federation')) {
         return;
       }
 

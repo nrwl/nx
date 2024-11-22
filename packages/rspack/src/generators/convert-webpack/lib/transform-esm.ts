@@ -172,7 +172,7 @@ function transformWithModuleFederation(
     endIndex++;
   }
 
-  const newContents = `import { withModuleFederation } from '@nx/rspack/module-federation';
+  const newContents = `import { withModuleFederation } from '@nx/module-federation/rspack';
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -205,7 +205,7 @@ function transformModuleFederationConfig(
     endIndex++;
   }
 
-  const newContents = `import { ModuleFederationConfig } from '@nx/rspack/module-federation';
+  const newContents = `import { ModuleFederationConfig } from '@nx/module-federation';
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -238,7 +238,7 @@ function transformWithModuleFederationSSR(
     endIndex++;
   }
 
-  const newContents = `import { withModuleFederationForSSR } from '@nx/rspack/module-federation';
+  const newContents = `import { withModuleFederationForSSR } from '@nx/module-federation/rspack';
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);

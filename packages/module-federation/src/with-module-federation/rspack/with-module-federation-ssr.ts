@@ -2,9 +2,8 @@ import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { NxRspackExecutionContext } from '../../config';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -19,7 +18,7 @@ export async function withModuleFederationForSSR(
       isServer: true,
     });
 
-  return (config, { context }: NxRspackExecutionContext) => {
+  return (config, { context }) => {
     config.target = 'async-node';
     config.output.uniqueName = options.name;
     config.output.library = {
