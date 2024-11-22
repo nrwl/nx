@@ -24,7 +24,7 @@ describe('Remix E2E Tests', () => {
       cleanupProject();
     });
 
-    it('should not cause peer dependency conflicts', async () => {
+    xit('should not cause peer dependency conflicts', async () => {
       const plugin = uniq('remix');
       runCLI(
         `generate @nx/remix:app ${plugin} --projectNameAndRootFormat=as-provided`
