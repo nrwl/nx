@@ -3651,13 +3651,13 @@
     "root": "/libs/nx-packages/powerpack-conformance",
     "source": "/libs/nx-packages/powerpack-conformance/src",
     "executors": {
-      "/nx-api/powerpack-conformance/executors/bundle-rule": {
-        "description": "Compile and bundle an Nx Conformance Rule",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+      "/nx-api/powerpack-conformance/executors/bundle-rules": {
+        "description": "Compile and bundle one or more Nx Conformance Rules",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
         "hidden": false,
-        "name": "bundle-rule",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
-        "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
+        "name": "bundle-rules",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
+        "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
         "type": "executor"
       }
     },

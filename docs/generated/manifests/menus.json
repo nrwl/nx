@@ -6041,6 +6041,31 @@
                   }
                 ],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Conformance",
+                "path": "/ci/recipes/enterprise/conformance",
+                "id": "conformance",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Configure Conformance Rules in Nx Cloud",
+                    "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+                    "id": "configure-conformance-rules-in-nx-cloud",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Publish Conformance Rules to Nx Cloud",
+                    "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+                    "id": "publish-conformance-rules-to-nx-cloud",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6459,6 +6484,31 @@
               }
             ],
             "disableCollapsible": false
+          },
+          {
+            "name": "Conformance",
+            "path": "/ci/recipes/enterprise/conformance",
+            "id": "conformance",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Configure Conformance Rules in Nx Cloud",
+                "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+                "id": "configure-conformance-rules-in-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Publish Conformance Rules to Nx Cloud",
+                "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+                "id": "publish-conformance-rules-to-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6685,6 +6735,47 @@
         "name": "Jenkins Custom DTE",
         "path": "/ci/recipes/enterprise/dte/jenkins-dte",
         "id": "jenkins-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Conformance",
+        "path": "/ci/recipes/enterprise/conformance",
+        "id": "conformance",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Configure Conformance Rules in Nx Cloud",
+            "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+            "id": "configure-conformance-rules-in-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Publish Conformance Rules to Nx Cloud",
+            "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+            "id": "publish-conformance-rules-to-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Conformance Rules in Nx Cloud",
+        "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+        "id": "configure-conformance-rules-in-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish Conformance Rules to Nx Cloud",
+        "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+        "id": "publish-conformance-rules-to-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -10619,9 +10710,9 @@
             "name": "executors",
             "children": [
               {
-                "id": "bundle-rule",
-                "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
-                "name": "bundle-rule",
+                "id": "bundle-rules",
+                "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
+                "name": "bundle-rules",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
