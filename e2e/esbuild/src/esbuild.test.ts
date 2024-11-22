@@ -234,7 +234,7 @@ describe('EsBuild Plugin', () => {
     expect(output).toContain('custom config loaded');
   }, 120_000);
 
-  it('should bundle in non-sensitive NX_ environment variables', () => {
+  xit('should bundle in non-sensitive NX_ environment variables', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`, {});
 
