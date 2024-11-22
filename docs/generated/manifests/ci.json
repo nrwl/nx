@@ -847,6 +847,40 @@
             "isExternal": false,
             "path": "/ci/recipes/enterprise/dte",
             "tags": []
+          },
+          {
+            "id": "conformance",
+            "name": "Conformance",
+            "description": "Conformance features that are available to Nx Cloud Enterprise customers",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "configure-conformance-rules-in-nx-cloud",
+                "name": "Configure Conformance Rules in Nx Cloud",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+                "tags": ["conformance"]
+              },
+              {
+                "id": "publish-conformance-rules-to-nx-cloud",
+                "name": "Publish Conformance Rules to Nx Cloud",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+                "tags": ["conformance"]
+              }
+            ],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/conformance",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -1420,6 +1454,40 @@
         "isExternal": false,
         "path": "/ci/recipes/enterprise/dte",
         "tags": []
+      },
+      {
+        "id": "conformance",
+        "name": "Conformance",
+        "description": "Conformance features that are available to Nx Cloud Enterprise customers",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "configure-conformance-rules-in-nx-cloud",
+            "name": "Configure Conformance Rules in Nx Cloud",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+            "tags": ["conformance"]
+          },
+          {
+            "id": "publish-conformance-rules-to-nx-cloud",
+            "name": "Publish Conformance Rules to Nx Cloud",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+            "tags": ["conformance"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/conformance",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1735,6 +1803,62 @@
     "isExternal": false,
     "path": "/ci/recipes/enterprise/dte/jenkins-dte",
     "tags": []
+  },
+  "/ci/recipes/enterprise/conformance": {
+    "id": "conformance",
+    "name": "Conformance",
+    "description": "Conformance features that are available to Nx Cloud Enterprise customers",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "configure-conformance-rules-in-nx-cloud",
+        "name": "Configure Conformance Rules in Nx Cloud",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+        "tags": ["conformance"]
+      },
+      {
+        "id": "publish-conformance-rules-to-nx-cloud",
+        "name": "Publish Conformance Rules to Nx Cloud",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+        "tags": ["conformance"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/conformance",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud": {
+    "id": "configure-conformance-rules-in-nx-cloud",
+    "name": "Configure Conformance Rules in Nx Cloud",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+    "tags": ["conformance"]
+  },
+  "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud": {
+    "id": "publish-conformance-rules-to-nx-cloud",
+    "name": "Publish Conformance Rules to Nx Cloud",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+    "tags": ["conformance"]
   },
   "/ci/recipes/other": {
     "id": "other",
