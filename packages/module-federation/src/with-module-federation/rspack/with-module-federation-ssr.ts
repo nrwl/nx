@@ -1,9 +1,9 @@
+import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import type { NormalModuleReplacementPlugin } from 'webpack';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -18,16 +18,20 @@ export async function withModuleFederationForSSR(
       isServer: true,
     });
 
-  return (config) => {
+  return (config, { context }) => {
     config.target = 'async-node';
     config.output.uniqueName = options.name;
+    config.output.library = {
+      type: 'commonjs-module',
+    };
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: false,
     };
 
     config.plugins.push(
-      new (require('@module-federation/enhanced').ModuleFederationPlugin)(
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)(
         {
           name: options.name.replace(/-/g, '_'),
           filename: 'remoteEntry.js',
@@ -36,6 +40,11 @@ export async function withModuleFederationForSSR(
           shared: {
             ...sharedDependencies,
           },
+          isServer: true,
+          library: {
+            type: 'commonjs-module',
+          },
+          remoteType: 'script',
           /**
            * Apply user-defined config overrides
            */
@@ -45,6 +54,7 @@ export async function withModuleFederationForSSR(
             !options.disableNxRuntimeLibraryControlPlugin
               ? [
                   ...(configOverride?.runtimePlugins ?? []),
+                  require.resolve('@module-federation/node/runtimePlugin'),
                   require.resolve(
                     '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                   ),
@@ -57,13 +67,13 @@ export async function withModuleFederationForSSR(
         },
         {}
       ),
-      sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
+      sharedLibraries.getReplacementPlugin()
     );
 
     // The env var is only set from the module-federation-dev-server
     // Attach the runtime plugin
     config.plugins.push(
-      new (require('webpack').DefinePlugin)({
+      new DefinePlugin({
         'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
       })
     );

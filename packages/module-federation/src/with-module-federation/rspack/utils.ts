@@ -1,22 +1,21 @@
 import {
-  applyAdditionalShared,
-  applySharedFunction,
-  getDependentPackagesForProject,
-  mapRemotes,
-  mapRemotesForSSR,
-  ModuleFederationConfig,
-  sharePackages,
-  shareWorkspaceLibraries,
-} from '@nx/module-federation';
-
-import {
   createProjectGraphAsync,
   ProjectGraph,
   readCachedProjectGraph,
 } from '@nx/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import {
+  ModuleFederationConfig,
+  applyAdditionalShared,
+  applySharedFunction,
+  sharePackages,
+  shareWorkspaceLibraries,
+  mapRemotes,
+  mapRemotesForSSR,
+  getDependentPackagesForProject,
+} from '../../utils';
 
-export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
+export function getFunctionDeterminateRemoteUrl(isServer = false) {
   const target = 'serve';
   const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.js';
 
@@ -42,7 +41,7 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
     if (!serveTarget) {
       throw new Error(
         `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "${serveTarget}" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
+      You can also use the tuple syntax in your rspack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
       );
     }
 
@@ -122,7 +121,6 @@ export async function getModuleFederationConfig(
   let mappedRemotes = {};
 
   if (mfConfig.remotes && mfConfig.remotes.length > 0) {
-    const isLibraryTypeVar = mfConfig.library?.type === 'var';
     mappedRemotes = mapRemotesFunction(
       mfConfig.remotes,
       'js',
