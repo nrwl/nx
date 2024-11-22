@@ -4,7 +4,7 @@ import {
   joinPathFragments,
   type Tree,
 } from '@nx/devkit';
-import { analogVitestAngular, nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 
 export type AddVitestOptions = {
   name: string;
@@ -17,19 +17,6 @@ export async function addVitest(
   tree: Tree,
   options: AddVitestOptions
 ): Promise<void> {
-  if (!options.skipPackageJson) {
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@analogjs/vitest-angular': analogVitestAngular,
-        '@analogjs/vite-plugin-angular': analogVitestAngular,
-      },
-      undefined,
-      true
-    );
-  }
-
   const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
     typeof import('@nx/vite')
   >('@nx/vite', nxVersion);
@@ -60,7 +47,7 @@ getTestBed().initTestEnvironment(
 
     await vitestGenerator(tree, {
       project: options.name,
-      uiFramework: 'none',
+      uiFramework: 'angular',
       skipViteConfig: true,
       testEnvironment: 'jsdom',
       coverageProvider: 'v8',
