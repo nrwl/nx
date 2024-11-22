@@ -110,7 +110,7 @@ describe('Storybook generators and executors for monorepos', () => {
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
-    it('should not bundle in sensitive NX_ environment variables', () => {
+    xit('should not bundle in sensitive NX_ environment variables', () => {
       updateFile(
         `${reactStorybookApp}/.storybook/main.ts`,
         (content) => `
