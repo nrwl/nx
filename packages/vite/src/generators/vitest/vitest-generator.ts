@@ -79,6 +79,45 @@ export async function vitestGeneratorInternal(
   }
 
   if (!schema.skipViteConfig) {
+    if (schema.uiFramework === 'angular') {
+      const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
+
+      const setupFile = joinPathFragments(root, relativeTestSetupPath);
+      if (!tree.exists(setupFile)) {
+        tree.write(
+          setupFile,
+          `import '@analogjs/vitest-angular/setup-zone';
+
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+`
+        );
+      }
+
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: false,
+          includeVitest: true,
+          inSourceTests: false,
+          imports: [`import angular from '@analogjs/vite-plugin-angular'`],
+          plugins: ['angular()'],
+          setupFile: relativeTestSetupPath,
+          useEsmExtension: true,
+        },
+        true
+      );
+    }
+
     if (schema.uiFramework === 'react') {
       createOrEditViteConfig(
         tree,
