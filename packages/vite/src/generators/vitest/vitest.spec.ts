@@ -108,6 +108,12 @@ describe('vitest generator', () => {
       mockReactAppGenerator(appTree);
       await generator(appTree, options);
     });
+
+    it('should add @nx/vite dependency', async () => {
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['@nx/vite']).toBeDefined();
+    });
+
     it('should create correct vite.config.ts file for apps', async () => {
       expect(
         appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
@@ -168,15 +174,12 @@ describe('vitest generator', () => {
       expect(tsConfig.exclude).toContain('src/test-setup.ts');
     });
 
-    it.skip('🚧 should update tsconfig.spec.json', async () => {
-      expect(
-        appTree.read('apps/my-test-angular-app/tsconfig.spec.json', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it.skip('🚧 should add @nx/vite dependency', async () => {
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['@nx/vite']).toBeDefined();
+    it.skip('🚧 should include src/test-setup.ts in tsconfig.spec.json', async () => {
+      const tsConfig = readJson(
+        appTree,
+        'apps/my-test-angular-app/tsconfig.spec.json'
+      );
+      expect(tsConfig.files).toContain('src/test-setup.ts');
     });
 
     it.skip('🚧 should add vitest-angular', async () => {
