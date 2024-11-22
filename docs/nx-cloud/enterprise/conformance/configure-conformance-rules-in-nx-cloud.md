@@ -1,32 +1,32 @@
-# Configuring Conformance Rules in Nx Cloud
+# Configure Conformance Rules in Nx Cloud
 
-Nx Cloud Enterprise allows you to publish your organization's Nx Conformance rules to your Nx Cloud Organization, and consume them in any of your other Nx Workspaces without having to deal with the complexity and friction of dealing with a private NPM registry or similar. Authentication is handled automatically through your Nx Cloud connection and rules are downloaded and applied based on your preferences configured in the Nx Cloud UI.
+[Nx Cloud Enterprise](/enterprise) allows you to publish your organization's [Nx Conformance](/nx-enterprise/powerpack/conformance) rules to your Nx Cloud Organization, and consume them in any of your other Nx Workspaces without having to deal with the complexity and friction of dealing with a private NPM registry or similar. Authentication is handled automatically through your Nx Cloud connection and rules are downloaded and applied based on your preferences configured in the Nx Cloud UI.
 
-<!-- TODO: Finalize this link -->
-
-To learn about how to create and publish custom rules to your Nx Cloud Organization, please refer to the [Publish Conformance Rules to Nx Cloud](./publish-conformance-rules-to-nx-cloud.md) recipe.
+To learn about how to create and publish custom rules to your Nx Cloud Organization, please refer to the [Publish Conformance Rules to Nx Cloud](/ci/recipes/enterprise/publish-conformance-rules-to-nx-cloud) recipe.
 
 Once you have one or more rules published to your Nx Cloud Organization, you can configure your Nx Cloud Organization to use them in the Nx Cloud UI by visiting:
 
-https://staging.nx.app/go/organization/conformance-rules
+https://nx.app/go/organization/conformance-rules
 
-## Choose the scope of configured rules
+## Choose the Scope of Configured Rules
 
 The value in the dropdown will determine what workspace(s) the rules will be applied to. By default, "All Workspaces" is the selected value, but you can change this to focus on a specific workspace instead.
 
-## Configure a rule for the chosen workspace scope
+## Configure a Rule for the Chosen Workspace Scope
 
 After choosing the target workspace(s), click on the "Configure rule" to open the rule configuration dialog.
 
 Here you will choose which of the rules published to your Nx Cloud Organization should be applied to the chosen workspace(s), and configure any options that the chosen rule supports.
 
-### Rule options
+### Rule Options
 
-> The rule options are currently provided via JSON, but in the near future we will dynamically generate a UI for configuring the options of each rule.
+{% callout title="Rule Options UI" %}
+The rule options are currently provided via JSON, but in the near future we will dynamically generate a UI for configuring the options of each rule.
+{% /callout %}
 
 The rule options will be validated against the rule's JSON schema definition before being saved, and you will be notified of any validation errors.
 
-### Rule status
+### Rule Status
 
 Here you will choose whether or not the rule should be:
 
@@ -45,10 +45,12 @@ By toggling on the "Schedule configuration", you can choose to set a future date
 
 Most commonly this would be used to transition a rule from **Evaluated** to **Enabled** after a grace period, to allow contributors to address the violations before enforcement begins, but any combination of current and scheduled statuses is supported.
 
-## Notes on the application of rules at runtime
+## Notes on the Application of Rules at Runtime
 
-When `nx-cloud conformance`/`nx-cloud conformance:check` is run, the any configured rules for the current workspace will be dynamically downloaded from your Nx Cloud Organization and applied to the resolved conformance configuration. This means that the conformance configuration itself is completely optional when using it with Nx Cloud, but it can still be useful if the workspace wants to combine cloud rules with other rules locally.
+When `nx-cloud conformance` or `nx-cloud conformance:check` are run, any configured rules for the current workspace will be dynamically downloaded from your Nx Cloud Organization and applied to the resolved conformance configuration. This means that the conformance configuration itself is completely optional when using it with Nx Cloud, but it can still be useful if the workspace wants to combine cloud rules with other locally-defined rules.
 
-> By design, the workspace cannot choose to disable the rules configured in Nx Cloud - any conflict between local and cloud rules will result in the local configuration being overridden by the cloud configuration.
+{% callout title="Organization Rules Override Local Rules" %}
+By design, the workspace cannot choose to disable the rules configured in Nx Cloud - any conflict between local and cloud rules will result in the local configuration being overridden by the cloud configuration.
+{% /callout %}
 
-If the cloud rules we were written to depend on a different version of Nx or Nx Powerpack than is installed within the current workspace, Nx Cloud will handle installing applicable versions dynamically at runtime of the conformance commands.
+If the cloud rules were written to depend on a different version of Nx or Nx Powerpack than is installed within the current workspace, Nx Cloud will handle installing applicable versions dynamically at runtime.

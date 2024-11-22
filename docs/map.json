@@ -1953,6 +1953,25 @@
                       "file": "nx-cloud/enterprise/dte/jenkins-dte"
                     }
                   ]
+                },
+                {
+                  "name": "Conformance",
+                  "id": "conformance",
+                  "description": "Conformance features that are available to Nx Cloud Enterprise customers",
+                  "itemList": [
+                    {
+                      "name": "Configure Conformance Rules in Nx Cloud",
+                      "id": "configure-conformance-rules-in-nx-cloud",
+                      "tags": ["conformance"],
+                      "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+                    },
+                    {
+                      "name": "Publish Conformance Rules to Nx Cloud",
+                      "id": "publish-conformance-rules-to-nx-cloud",
+                      "tags": ["conformance"],
+                      "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
+                    }
+                  ]
                 }
               ]
             },

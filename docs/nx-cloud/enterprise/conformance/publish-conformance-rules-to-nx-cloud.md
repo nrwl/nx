@@ -1,6 +1,6 @@
 # Publish Conformance Rules to Nx Cloud
 
-Nx Cloud Enterprise allows you to publish your organization's Nx Conformance rules to your Nx Cloud Organization, and consume them in any of your other Nx Workspaces without having to deal with the complexity and friction of dealing with a private NPM registry or similar. Authentication is handled automatically through your Nx Cloud connection and rules are downloaded and applied based on your preferences configured in the Nx Cloud UI.
+[Nx Cloud Enterprise](/enterprise) allows you to publish your organization's [Nx Conformance](/nx-enterprise/powerpack/conformance) rules to your Nx Cloud Organization, and consume them in any of your other Nx Workspaces without having to deal with the complexity and friction of dealing with a private NPM registry or similar. Authentication is handled automatically through your Nx Cloud connection and rules are downloaded and applied based on your preferences configured in the Nx Cloud UI.
 
 Let's create a custom rule which we can then publish to Nx Cloud. We will first create a new library project to contain our rule (and any others we might create in the future):
 
@@ -8,7 +8,7 @@ Let's create a custom rule which we can then publish to Nx Cloud. We will first 
 nx generate @nx/js:library cloud-conformance-rules
 ```
 
-Each rule is a named subdirectory in the `src/` directory of our new project, and each rule directory contains an `index.ts` and a `schema.json` file.
+The Nx Cloud distribution mechanism expects each rule to be created in a named subdirectory in the `src/` directory of our new project, and each rule directory to contain an `index.ts` and a `schema.json` file.
 
 E.g.
 
@@ -52,7 +52,7 @@ And because we do not yet have any options that we want to support for our rule,
 }
 ```
 
-We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The `@nx/powerpack-conformance` plugin provides a dedicated executor called `bundle-rules` for creating appropriate build artifacts for this purpose, so we will wire that executor up to a new build target in our `cloud-conformance-rules` project's `project.json` file:
+We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The [`@nx/powerpack-conformance` plugin](/nx-api/powerpack-conformance) provides a [dedicated executor called `bundle-rules`](/nx-api/powerpack-conformance) for creating appropriate build artifacts for this purpose, so we will wire that executor up to a new build target in our `cloud-conformance-rules` project's `project.json` file:
 
 ```jsonc {% fileName="cloud-conformance-rules/project.json" %}
 {
@@ -78,7 +78,7 @@ Our final step is to publish the rule artifacts to Nx Cloud. We achieve this by 
 nx-cloud publish-conformance-rules cloud-conformance-rules/dist
 ```
 
-Subsequent calls to this command will overwrite the previously published rule artifacts for that rule, including implementation and schema changes. Effectively, the rules are always "at HEAD" and do not therefore have explicitly versioning. If you need to support different versions of various setups, the rule implementation should handle it at runtime. This approach helps reduce a lot of complexity and friction when managing Nx Conformance configurations across your organization.
+Subsequent calls to this command will overwrite the previously published rule artifacts for that rule, including implementation and schema changes. Effectively, the rules are always "at HEAD" and do not therefore have explicit versioning. If you need to support different versions of various setups, you should write the rule implementation to handle it at runtime. This approach helps reduce a lot of complexity and friction when managing Nx Conformance configurations across your organization.
 
 Because publishing the rules is a relatively common operation, you can also wire up a target in your `cloud-conformance-rules` project to wrap the CLI command. Therefore, including our build target from before, our `project.json` file now looks like this:
 
@@ -93,7 +93,7 @@ Because publishing the rules is a relatively common operation, you can also wire
         "outputPath": "{projectRoot}/dist"
       }
     },
-    "publish-conformance-rules": {
+    "publish": {
       "dependsOn": ["build"],
       "command": "npx nx-cloud publish-conformance-rules {projectRoot}/dist"
     }
@@ -101,4 +101,4 @@ Because publishing the rules is a relatively common operation, you can also wire
 }
 ```
 
-We can now run `nx publish-conformance-rules cloud-conformance-rules` to both build and publish our rule (and any future rules in this project) to Nx Cloud.
+We can now run `nx publish cloud-conformance-rules` to both build and publish our rule (and any future rules in this project) to Nx Cloud.
