@@ -45,15 +45,9 @@ export async function handleServerProcessTermination({
   sockets,
 }: HandleServerProcessTerminationParams) {
   try {
-    await new Promise((res) => {
-      server.close(() => {
-        res(null);
-      });
-
-      for (const socket of sockets) {
-        socket.destroy();
-      }
-    });
+    for (const socket of sockets) {
+      socket.destroy();
+    }
 
     if (watcherInstance) {
       await watcherInstance.stop();
@@ -73,6 +67,12 @@ export async function handleServerProcessTermination({
     cleanupPlugins();
 
     removeDbConnections();
+
+    await new Promise((res) => {
+      server.close(() => {
+        res(null);
+      });
+    });
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {

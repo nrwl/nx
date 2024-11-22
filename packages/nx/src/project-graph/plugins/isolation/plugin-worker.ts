@@ -25,8 +25,11 @@ const server = createServer((socket) => {
   // after the worker connected but before the worker was
   // instructed to load the plugin.
   const loadTimeout = setTimeout(() => {
+    console.error(
+      `Plugin Worker exited because no plugin was loaded within 10 seconds of starting up.`
+    );
     process.exit(1);
-  }, 10000);
+  }, 10000).unref();
 
   socket.on(
     'data',
@@ -145,16 +148,16 @@ const server = createServer((socket) => {
   });
 });
 
-server.listen(socketPath, () => {
-  // If the worker is unable to connect to the host within 10 seconds,
-  // it should exit... This handles cases where the host process was killed
-  // before the server socket was established.
-  setTimeout(() => {
-    if (!connected) {
-      process.exit(1);
-    }
-  }, 1000);
-});
+server.listen(socketPath);
+
+setTimeout(() => {
+  if (!connected) {
+    console.error(
+      'Shutting down Plugin worker which was not connected to within 5 seconds.'
+    );
+    process.exit(1);
+  }
+}, 5000).unref();
 
 const exitHandler = (exitCode: number) => () => {
   server.close();

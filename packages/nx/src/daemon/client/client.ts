@@ -520,6 +520,7 @@ export class DaemonClient {
           process.exit(1);
         } else {
           await this.startInBackground();
+        }
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;

@@ -10,7 +10,7 @@ import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { writeDaemonJsonProcessCache } from '../cache';
+import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import {
   getFullOsSocketPath,
   isWindows,
@@ -503,11 +503,6 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 export async function startServer(): Promise<Server> {
   setupWorkspaceContext(workspaceRoot);
 
-  // Persist metadata about the background process so that it can be cleaned up later if needed
-  await writeDaemonJsonProcessCache({
-    processId: process.pid,
-  });
-
   // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
   if (!isWindows) {
     killSocketOrPath();
@@ -518,6 +513,22 @@ export async function startServer(): Promise<Server> {
       server.listen(getFullOsSocketPath(), async () => {
         try {
           serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
+
+          // Persist metadata about the background process so that it can be cleaned up later if needed
+          await writeDaemonJsonProcessCache({
+            processId: process.pid,
+          });
+
+          setInterval(() => {
+            if (getDaemonProcessIdSync() !== process.pid) {
+              return handleServerProcessTermination({
+                server,
+                reason: 'this process is no longer the current daemon (native)',
+                sockets: openSockets,
+              });
+            }
+          }, 5000);
+
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
