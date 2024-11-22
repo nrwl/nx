@@ -1,5 +1,12 @@
 {
-  "generators": {},
+  "generators": {
+    "update-20-2-0-update-with-module-federation-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.3",
+      "description": "Update the withModuleFederation import use @nx/module-federation/rspack.",
+      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
+    }
+  },
   "packageJsonUpdates": {
     "18.1.0": {
       "version": "18.1.0-beta.0",
