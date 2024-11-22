@@ -582,6 +582,12 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
+    if (global.NX_PLUGIN_WORKER) {
+      throw new Error(
+        'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
+      );
+    }
+
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
     if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
