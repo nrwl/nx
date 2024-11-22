@@ -28,10 +28,11 @@
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "picocolors": "^1.1.0",
-    "@module-federation/sdk": "0.7.6",
     "webpack": "5.88.0",
     "@rspack/core": "1.1.2",
     "@module-federation/enhanced": "0.7.6",
+    "@module-federation/node": "2.6.11",
+    "@module-federation/sdk": "0.7.6",
     "express": "^4.19.2",
     "http-proxy-middleware": "^3.0.3"
   },

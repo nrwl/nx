@@ -1,7 +1,7 @@
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import type { NormalModuleReplacementPlugin } from 'webpack';
 

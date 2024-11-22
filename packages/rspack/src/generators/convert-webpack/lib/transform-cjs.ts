@@ -186,7 +186,7 @@ function transformWithModuleFederation(
   const configContents = tree.read(configPath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederation]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/react/module-federation]`;
+  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederation]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/module-federation/webpack]`;
   const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
@@ -219,7 +219,7 @@ function transformWithModuleFederationSSR(
   const configContents = tree.read(configPath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/react/module-federation]`;
+  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `VariableDeclaration:has(Identifier[name=withModuleFederationForSSR]) > CallExpression:has(Identifier[name=require]) StringLiteral[value=${scope}/module-federation/webpack]`;
   const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
