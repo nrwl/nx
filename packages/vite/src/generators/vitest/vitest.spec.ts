@@ -154,19 +154,19 @@ describe('vitest generator', () => {
       });
     });
 
-    it.skip('🚧 should generate vite.config.mts', async () => {
+    it('should generate vite.config.mts', async () => {
       expect(
         appTree.read('apps/my-test-angular-app/vite.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
 
-    it.skip('🚧 should generate src/test-setup.ts', async () => {
+    it('should generate src/test-setup.ts', async () => {
       expect(
         appTree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
-    it.skip('🚧 should exclude src/test-setup.ts in tsconfig.app.json', async () => {
+    it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
       const tsConfig = readJson(
         appTree,
         'apps/my-test-angular-app/tsconfig.app.json'
@@ -174,7 +174,7 @@ describe('vitest generator', () => {
       expect(tsConfig.exclude).toContain('src/test-setup.ts');
     });
 
-    it.skip('🚧 should include src/test-setup.ts in tsconfig.spec.json', async () => {
+    it('should include src/test-setup.ts in tsconfig.spec.json', async () => {
       const tsConfig = readJson(
         appTree,
         'apps/my-test-angular-app/tsconfig.spec.json'
