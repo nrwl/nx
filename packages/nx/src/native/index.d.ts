@@ -281,3 +281,4 @@ export declare const enum WorkspaceErrors {
   ParseError = 'ParseError',
   Generic = 'Generic'
 }
+
