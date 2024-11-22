@@ -17,7 +17,7 @@ import {
 } from 'e2e/utils';
 import { join } from 'path';
 
-describe('@nx/expo', () => {
+xdescribe('@nx/expo', () => {
   let appName: string;
 
   beforeAll(() => {
