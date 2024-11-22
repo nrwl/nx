@@ -1855,6 +1855,17 @@
         "tags": []
       },
       {
+        "id": "assignment-rules",
+        "name": "Assignment Rules",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/assignment-rules",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/assignment-rules",
+        "tags": []
+      },
+      {
         "id": "custom-steps",
         "name": "Custom Steps",
         "description": "",
@@ -1923,6 +1934,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/launch-templates",
+    "tags": []
+  },
+  "/ci/reference/assignment-rules": {
+    "id": "assignment-rules",
+    "name": "Assignment Rules",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/assignment-rules",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/assignment-rules",
     "tags": []
   },
   "/ci/reference/custom-steps": {
