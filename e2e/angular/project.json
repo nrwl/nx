@@ -5,5 +5,9 @@
   "projectType": "application",
   "implicitDependencies": ["angular"],
   "// targets": "to see all targets run: nx show project e2e-angular --web",
-  "targets": {}
+  "targets": {
+    "hello": {
+      "command": "echo hello"
+    }
+  }
 }
