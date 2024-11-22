@@ -6,6 +6,7 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateNxJson,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
@@ -47,6 +48,21 @@ function addTargetDefaults(tree: Tree) {
     `{workspaceRoot}/eslint.config.js`,
   ];
   updateNxJson(tree, nxJson);
+}
+
+function updateVsCodeRecommendedExtensions(host: Tree) {
+  if (!host.exists('.vscode/extensions.json')) {
+    return;
+  }
+
+  updateJson(host, '.vscode/extensions.json', (json) => {
+    json.recommendations = json.recommendations || [];
+    const extension = 'dbaeumer.vscode-eslint';
+    if (!json.recommendations.includes(extension)) {
+      json.recommendations.push(extension);
+    }
+    return json;
+  });
 }
 
 export async function initEsLint(
@@ -92,6 +108,8 @@ export async function initEsLint(
   }
 
   updateProductionFileset(tree);
+
+  updateVsCodeRecommendedExtensions(tree);
 
   if (options.addPlugin) {
     await addPlugin(

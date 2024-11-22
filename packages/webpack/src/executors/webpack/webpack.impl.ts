@@ -15,10 +15,6 @@ import {
   tap,
 } from 'rxjs/operators';
 import { resolve } from 'path';
-import {
-  calculateProjectBuildableDependencies,
-  createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
 import { runWebpack } from './lib/run-webpack';
 import { deleteOutputDir } from '../../utils/fs';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';

@@ -1,25 +1,71 @@
 import { ChevronRightIcon } from '@heroicons/react/24/solid';
+import { ProcessedDocument } from '@nx/nx-dev/models-document';
 import classNames from 'classnames';
 
-export function Breadcrumbs({ path }: { path: string }): JSX.Element {
-  const cleanedPath = path.includes('?')
-    ? path.slice(0, path.indexOf('?'))
-    : path;
-  const pages = [
-    ...cleanedPath
-      .split('/')
-      .filter(Boolean)
-      .map((segment, index, segments) => ({
-        name: segment.includes('#')
-          ? segment.slice(0, segment.indexOf('#'))
-          : segment,
-        // We do not have dedicated page view for executors & generators
-        href: '/' + segments.slice(0, index + 1).join('/'),
-        current: '/' + segments.slice(0, index + 1).join('/') === cleanedPath,
-      })),
-  ];
+interface Crumb {
+  id: string;
+  name: string;
+  href: string;
+  current: boolean;
+}
 
-  if (pages.length === 1) {
+const sectionNames: Record<string, string> = {
+  ci: 'CI',
+  'extending-nx': 'Extending Nx',
+  'nx-api': 'Nx API',
+};
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+export function Breadcrumbs({
+  document,
+  path,
+}: {
+  document?: ProcessedDocument;
+  path?: string;
+}): JSX.Element {
+  let crumbs: Crumb[] = [];
+
+  if (path) {
+    const cleanedPath = path.includes('?')
+      ? path.slice(0, path.indexOf('?'))
+      : path;
+    crumbs = [
+      ...cleanedPath
+        .split('/')
+        .filter(Boolean)
+        .map((segment, index, segments) => {
+          const strippedName = segment.includes('#')
+            ? segment.slice(0, segment.indexOf('#'))
+            : segment;
+          const name =
+            sectionNames[strippedName] ||
+            strippedName.split('-').map(capitalize).join(' ');
+          return {
+            id: segment,
+            name,
+            // We do not have dedicated page view for executors & generators
+            href: '/' + segments.slice(0, index + 1).join('/'),
+            current:
+              '/' + segments.slice(0, index + 1).join('/') === cleanedPath,
+          };
+        }),
+    ];
+  }
+
+  if (document && document.parentDocuments) {
+    crumbs = document.parentDocuments.map((parentDocument, index) => ({
+      id: parentDocument.id,
+      name:
+        parentDocument.name ||
+        sectionNames[parentDocument.id] ||
+        parentDocument.id.split('-').map(capitalize).join(' '),
+      href: parentDocument.path,
+      current: index + 1 === document.parentDocuments?.length,
+    }));
+  }
+
+  if (crumbs.length < 2) {
     return <></>;
   }
 
@@ -27,8 +73,8 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
     <div>
       <nav className="flex" aria-labelledby="breadcrumb">
         <ol role="list" className="flex items-center space-x-4">
-          {pages.map((page, index) => (
-            <li key={page.name.concat('-', index.toString())}>
+          {crumbs.map((crumb, index) => (
+            <li key={crumb.id.concat('-', index.toString())}>
               <div className="flex items-center">
                 {!!index && (
                   <ChevronRightIcon
@@ -37,15 +83,15 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
                   />
                 )}
                 <a
-                  href={page.href}
+                  href={crumb.href}
                   className={classNames(
-                    'text-sm font-medium capitalize hover:text-slate-600',
-                    page.current ? 'text-slate-600' : 'text-slate-400',
+                    'text-sm font-medium hover:text-slate-600',
+                    crumb.current ? 'text-slate-600' : 'text-slate-400',
                     !!index ? 'ml-4' : ''
                   )}
-                  aria-current={page.current ? 'page' : undefined}
+                  aria-current={crumb.current ? 'page' : undefined}
                 >
-                  {page.name.replace(/-/gi, ' ')}
+                  {crumb.name}
                 </a>
               </div>
             </li>

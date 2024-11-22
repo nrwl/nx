@@ -1,28 +1,49 @@
-import type { Mode } from '@rspack/core';
+import type { DevTool, Mode } from '@rspack/core';
 
 export interface RspackExecutorSchema {
-  target?: 'web' | 'node';
-  main?: string;
-  index?: string;
-  tsConfig?: string;
-  typeCheck?: boolean;
-  skipTypeChecking?: boolean;
-  outputPath?: string;
-  outputFileName?: string;
+  additionalEntryPoints?: AdditionalEntryPoint[];
+  assets?: Array<AssetGlobPattern | string>;
+  baseHref?: string;
+  buildLibsFromSource?: boolean;
+  deployUrl?: string;
+  extractCss?: boolean;
+  extractLicenses?: boolean;
+  externalDependencies?: 'all' | 'none' | string[];
+  fileReplacements?: FileReplacement[];
+  generateIndexHtml?: boolean;
+  generatePackageJson?: boolean;
   index?: string;
   indexHtml?: string;
+  main?: string;
+  memoryLimit?: number;
   mode?: Mode;
-  watch?: boolean;
-  baseHref?: string;
-  deployUrl?: string;
-
-  rspackConfig: string;
+  namedChunks?: boolean;
   optimization?: boolean | OptimizationOptions;
-  sourceMap?: boolean | string;
-  assets?: any[];
-  extractLicenses?: boolean;
-  fileReplacements?: FileReplacement[];
-  generatePackageJson?: boolean;
+  outputFileName?: string;
+  outputHashing?: any;
+  outputPath?: string;
+  poll?: number;
+  polyfills?: string;
+  postcssConfig?: string;
+  progress?: boolean;
+  publicPath?: string;
+  rebaseRootRelative?: boolean;
+  rspackConfig?: string;
+  runtimeChunk?: boolean;
+  scripts?: Array<ExtraEntryPointClass | string>;
+  skipTypeChecking?: boolean;
+  sourceMap?: boolean | DevTool;
+  standardRspackConfigFunction?: boolean;
+  statsJson?: boolean;
+  stylePreprocessorOptions?: any;
+  styles?: Array<ExtraEntryPointClass | string>;
+  target?: 'web' | 'node';
+  transformers?: TransformerEntry[];
+  tsConfig?: string;
+  typeCheck?: boolean;
+  verbose?: boolean;
+  vendorChunk?: boolean;
+  watch?: boolean;
 }
 
 export interface AssetGlobPattern {

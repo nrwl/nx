@@ -4796,9 +4796,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Custom Task Runners",
-            "path": "/deprecated/custom-task-runners",
-            "id": "custom-task-runners",
+            "name": "Legacy Cache",
+            "path": "/deprecated/legacy-cache",
+            "id": "legacy-cache",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4919,9 +4919,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Custom Task Runners",
-        "path": "/deprecated/custom-task-runners",
-        "id": "custom-task-runners",
+        "name": "Legacy Cache",
+        "path": "/deprecated/legacy-cache",
+        "id": "legacy-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6091,6 +6091,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+                "path": "/ci/recipes/other/cipe-affected-project-graph",
+                "id": "cipe-affected-project-graph",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6793,6 +6801,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+            "path": "/ci/recipes/other/cipe-affected-project-graph",
+            "id": "cipe-affected-project-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6809,6 +6825,14 @@
         "name": "Prepare applications for deployment via CI",
         "path": "/ci/recipes/other/ci-deployment",
         "id": "ci-deployment",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+        "path": "/ci/recipes/other/cipe-affected-project-graph",
+        "id": "cipe-affected-project-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6839,6 +6863,14 @@
             "name": "Launch Templates",
             "path": "/ci/reference/launch-templates",
             "id": "launch-templates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Assignment Rules",
+            "path": "/ci/reference/assignment-rules",
+            "id": "assignment-rules",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -6890,6 +6922,14 @@
         "name": "Launch Templates",
         "path": "/ci/reference/launch-templates",
         "id": "launch-templates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Assignment Rules",
+        "path": "/ci/reference/assignment-rules",
+        "id": "assignment-rules",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -9965,6 +10005,22 @@
                 "id": "convert-webpack",
                 "path": "/nx-api/rspack/generators/convert-webpack",
                 "name": "convert-webpack",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-config-to-rspack-plugin",
+                "path": "/nx-api/rspack/generators/convert-config-to-rspack-plugin",
+                "name": "convert-config-to-rspack-plugin",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/rspack/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

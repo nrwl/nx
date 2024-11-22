@@ -2,13 +2,18 @@
 
 Tools such as Changesets and Beachball helped popularize the concept of tracking the desired semver version bump in a separate file on disk (which is committed to your repository alongside your code changes). This has the advantage of separating the desired bump from your git commits themselves, which can be very useful if you are not able to enforce that all contributors follow a strict commit message format ([e.g. Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)), or if you want multiple commits to be included in the same version bump and therefore not map commits 1:1 with changelog entries.
 
-Nx release supports file based versioning as a first class use-case through a feature called "version plans". The idea behind the name is that you are creating a _plan_ to version; a plan which will be _applied_ sometime in the future when you actually invoke the `nx release` CLI or programmatic API. Therefore you can think about version plans as having two main processes: creating version plans and applying version plans. We will cover both in this recipe, but first we need to enable the feature itself.
+Nx release supports file based versioning as a first class use-case through a feature called "version plans". The idea behind the name is that you are creating a _plan_ to version; a plan which will be _applied_ sometime in the future when you actually invoke the `nx release` CLI or programmatic API. Therefore you can think about version plans as having two main processes:
+
+- creating version plans and
+- applying version plans.
+
+We will cover both in this recipe, but first we need to enable the feature itself.
 
 ## Enable Version Plans
 
 To enable version plans as a feature in your workspace, set `release.versionPlans` to `true` in `nx.json`:
 
-```jsonc
+```jsonc {% fileName="nx.json" %}
 {
   "release": {
     "versionPlans": true
@@ -69,11 +74,27 @@ One change that affects multiple projects and release groups.
 
 The project or release group names specified in the Front Matter YAML section must match the names of the projects and/or release groups in your workspace. If a project or release group is not found, an error will be thrown when applying the version plan as part of running `nx release`.
 
+{% callout type="note" title="Single Version for All Packages" %}
+
+If you use a single version for all your packages (see [Release projects independetly](/recipes/nx-release/release-projects-independently)) your version plan file might look like this:
+
+```md {% fileName=".nx/version-plans/version-plan-1723732065047.md" %}
+---
+__default__: minor
+---
+
+This is an awesome change!
+```
+
+While you could still specify the name of the project it is redundant in this case because all projects will be bumped to the same version.
+
+{% /callout %}
+
 Because these are just files, they can be created manually or by any custom scripts you may wish to write. They simply have to follow the guidance above around structure, location (`./.nx/version-plans/`) and naming (`.md` extension). The exact file name does not matter, it just needs to be unique within the `.nx/version-plans/` directory.
 
 To make things easier, Nx release comes with a built in command to help you generate valid version plan files:
 
-```sh
+```shell
 nx release plan
 ```
 
@@ -93,7 +114,7 @@ When making changes to your codebase and using version plans as your versioning 
 
 Attempting to keep track of this manually as a part of pull request reviews can be error prone and time consuming, therefore Nx release provides a `nx release plan:check` command which can be used to ensure that a version plan file exists for the changes you are making.
 
-```sh
+```shell
 nx release plan:check
 ```
 
@@ -144,6 +165,6 @@ By default, all files that have changed are considered, but you may not want all
 
 To see more details about the changed files that were detected and the filtering logic that was used to determine the ultimately changed projects behind the scenes, you can pass `--verbose` to the command:
 
-```sh
+```shell
 nx release plan:check --verbose
 ```

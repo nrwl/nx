@@ -8,7 +8,6 @@ import {
   SwcJsMinimizerRspackPlugin,
   CopyRspackPlugin,
   RspackOptionsNormalized,
-  ExternalItem,
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
@@ -88,11 +87,7 @@ function applyNxIndependentConfig(
   config.cache = options.target === 'node' && options.watch ? true : undefined;
 
   config.devtool =
-    options.sourceMap === 'hidden'
-      ? 'hidden-source-map'
-      : options.sourceMap
-      ? 'source-map'
-      : false;
+    options.sourceMap === true ? 'source-map' : options.sourceMap;
 
   config.output = {
     ...(config.output ?? {}),
@@ -117,6 +112,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
+    clean: options.deleteOutputPath,
   };
 
   config.watch = options.watch;

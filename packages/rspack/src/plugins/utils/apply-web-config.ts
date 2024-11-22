@@ -7,6 +7,7 @@ import {
   HtmlRspackPlugin,
   CssExtractRspackPlugin,
   EnvironmentPlugin,
+  RspackOptionsNormalized,
 } from '@rspack/core';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
@@ -21,7 +22,7 @@ import { NormalizedNxAppRspackPluginOptions } from './models';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,
-  config: Configuration = {},
+  config: Partial<RspackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
   }: {
@@ -119,12 +120,6 @@ export function applyWebConfig(
       const resolvedPath = style.input.startsWith('.')
         ? style.input
         : resolve(options.root, style.input);
-      // Add style entry points.
-      if (entries[style.bundleName]) {
-        entries[style.bundleName].import.push(resolvedPath);
-      } else {
-        entries[style.bundleName] = { import: [resolvedPath] };
-      }
 
       // Add global css paths.
       globalStylePaths.push(resolvedPath);
@@ -357,7 +352,7 @@ export function applyWebConfig(
   });
 
   config.optimization = !isProd
-    ? undefined
+    ? {}
     : {
         ...(config.optimization ?? {}),
         minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],

@@ -1388,9 +1388,9 @@
               "file": "shared/deprecated/workspace-generators"
             },
             {
-              "name": "Custom Task Runners",
-              "id": "custom-task-runners",
-              "file": "shared/deprecated/custom-task-runners"
+              "name": "Legacy Cache",
+              "id": "legacy-cache",
+              "file": "shared/deprecated/legacy-cache"
             },
             {
               "name": "Workspace Executors",
@@ -1990,6 +1990,11 @@
                   "id": "ci-deployment",
                   "tags": ["docker", "deploy"],
                   "file": "shared/recipes/ci-deployment"
+                },
+                {
+                  "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+                  "id": "cipe-affected-project-graph",
+                  "file": "nx-cloud/recipes/cipe-affected-project-graph"
                 }
               ]
             }
@@ -2014,6 +2019,11 @@
               "name": "Launch Templates",
               "id": "launch-templates",
               "file": "nx-cloud/reference/launch-templates"
+            },
+            {
+              "name": "Assignment Rules",
+              "id": "assignment-rules",
+              "file": "nx-cloud/reference/assignment-rules"
             },
             {
               "name": "Custom Steps",

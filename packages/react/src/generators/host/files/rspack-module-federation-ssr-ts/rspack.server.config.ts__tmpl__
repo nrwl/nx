@@ -1,5 +1,5 @@
 import {composePlugins, withNx, withReact} from '@nx/rspack';
-import {withModuleFederationForSSR} from '@nx/rspack/module-federation';
+import {withModuleFederationForSSR} from '@nx/module-federation/rspack';
 
 import baseConfig from './module-federation.config';
 

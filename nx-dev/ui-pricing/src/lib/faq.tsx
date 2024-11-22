@@ -54,12 +54,12 @@ export function Faq(): ReactElement {
       question:
         'What happens if I consume all my credits while on the Hobby plan?',
       answer:
-        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Pro or wait for the next billing cycle.',
+        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Team or wait for the next billing cycle.',
     },
     {
       question: 'What is a CI Pipeline Execution?',
       answer:
-        'By default, a CI pipeline execution is a 1:1 match to your CI provider of choice\'s concept of a "workflow".',
+        'A CI Pipeline Execution is a CI run or a Workflow run (depending on your CI provider). For instance, running a PR or running CI on the main branch are CI Pipeline Executions.',
     },
     {
       question: 'What is the Team Plan?',
