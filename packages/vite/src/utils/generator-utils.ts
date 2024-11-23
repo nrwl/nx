@@ -374,10 +374,7 @@ export function createOrEditViteConfig(
   projectAlreadyHasViteTargets?: TargetFlags,
   vitestFileName?: boolean
 ) {
-  const { root: projectRoot, projectType } = readProjectConfiguration(
-    tree,
-    options.project
-  );
+  const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
   const extension = options.useEsmExtension ? 'mts' : 'ts';
   const viteConfigPath = vitestFileName
