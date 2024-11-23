@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readJson, Tree } from '@nx/devkit';
+import { readJson, Tree, updateJson } from '@nx/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
@@ -19,6 +19,53 @@ describe('vitest generator', () => {
     coverageProvider: 'v8',
     addPlugin: true,
   };
+
+  describe('test target', () => {
+    it.todo('🚧 should not add test target to the project');
+
+    it.todo('🚧 should remove existing test target');
+
+    it.skip('🚧 should add test target to the project if inference is disabled', async () => {
+      const { runGenerator, tree } = setUpAngularWorkspace();
+
+      updateJson(tree, 'nx.json', (json) => {
+        return {
+          ...json,
+          useInferencePlugins: false,
+        };
+      });
+      updateJson(tree, 'apps/my-test-angular-app/project.json', (json) => {
+        delete json.targets.test;
+        return json;
+      });
+
+      await runGenerator();
+
+      expect(
+        readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
+          .executor
+      ).toBe('@nx/vite:test');
+    });
+
+    it.todo('🚧 should replace test target if inference is disabled');
+
+    function setUpAngularWorkspace() {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      mockAngularAppGenerator(tree);
+      return {
+        async runGenerator() {
+          await generator(tree, {
+            project: 'my-test-angular-app',
+            uiFramework: 'angular',
+            coverageProvider: 'istanbul',
+            addPlugin: true,
+          });
+          return tree;
+        },
+        tree,
+      };
+    }
+  });
 
   describe('tsconfig', () => {
     beforeAll(async () => {
