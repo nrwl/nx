@@ -116,9 +116,7 @@ getTestBed().initTestEnvironment(
         },
         true
       );
-    }
-
-    if (schema.uiFramework === 'react') {
+    } else if (schema.uiFramework === 'react') {
       createOrEditViteConfig(
         tree,
         {
