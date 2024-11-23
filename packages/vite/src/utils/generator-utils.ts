@@ -16,6 +16,7 @@ import { VitePreviewServerExecutorOptions } from '../executors/preview-server/sc
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { VitestGeneratorSchema } from '../generators/vitest/schema';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -81,7 +82,7 @@ export function findExistingJsBuildTargetInProject(targets: {
 
 export function addOrChangeTestTarget(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
+  options: VitestGeneratorSchema,
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
