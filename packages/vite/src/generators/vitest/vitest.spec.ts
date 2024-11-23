@@ -160,6 +160,12 @@ describe('vitest generator', () => {
       ).toMatchSnapshot();
     });
 
+    it('should not generate vite.config.ts', async () => {
+      expect(appTree.exists('apps/my-test-angular-app/vite.config.ts')).toBe(
+        false
+      );
+    });
+
     it('should generate src/test-setup.ts', async () => {
       expect(
         appTree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8')
