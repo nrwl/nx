@@ -3012,6 +3012,24 @@
         "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
         "path": "/nx-api/rspack/generators/convert-webpack",
         "type": "generator"
+      },
+      "/nx-api/rspack/generators/convert-config-to-rspack-plugin": {
+        "description": "Convert the project to use the `NxAppRspackPlugin` and `NxReactRspackPlugin`.",
+        "file": "generated/packages/rspack/generators/convert-config-to-rspack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-rspack-plugin",
+        "originalFilePath": "/packages/rspack/src/generators/convert-config-to-rspack-plugin/schema.json",
+        "path": "/nx-api/rspack/generators/convert-config-to-rspack-plugin",
+        "type": "generator"
+      },
+      "/nx-api/rspack/generators/convert-to-inferred": {
+        "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
+        "file": "generated/packages/rspack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rspack/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/rspack/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/rspack"
@@ -3663,13 +3681,13 @@
     "root": "/libs/nx-packages/powerpack-conformance",
     "source": "/libs/nx-packages/powerpack-conformance/src",
     "executors": {
-      "/nx-api/powerpack-conformance/executors/bundle-rule": {
-        "description": "Compile and bundle an Nx Conformance Rule",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+      "/nx-api/powerpack-conformance/executors/bundle-rules": {
+        "description": "Compile and bundle one or more Nx Conformance Rules",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
         "hidden": false,
-        "name": "bundle-rule",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
-        "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
+        "name": "bundle-rules",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
+        "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
         "type": "executor"
       }
     },

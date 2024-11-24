@@ -8,7 +8,6 @@ import {
   SwcJsMinimizerRspackPlugin,
   CopyRspackPlugin,
   RspackOptionsNormalized,
-  type DevTool,
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
@@ -113,6 +112,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
+    clean: options.deleteOutputPath,
   };
 
   config.watch = options.watch;

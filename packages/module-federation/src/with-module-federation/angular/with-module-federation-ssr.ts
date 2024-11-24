@@ -1,7 +1,7 @@
 import type {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
 
 export async function withModuleFederationForSSR(

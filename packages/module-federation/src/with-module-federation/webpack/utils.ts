@@ -5,10 +5,9 @@ import {
   mapRemotes,
   mapRemotesForSSR,
   ModuleFederationConfig,
-  SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nx/module-federation';
+} from '../../utils';
 
 import {
   createProjectGraphAsync,
@@ -17,36 +16,9 @@ import {
 } from '@nx/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
-export function applyDefaultEagerPackages(
-  sharedConfig: Record<string, SharedLibraryConfig>
-) {
-  const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = [
-    '@angular/localize',
-    '@angular/localize/init',
-  ];
-  for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
-    if (!sharedConfig[pkg]) {
-      continue;
-    }
-
-    sharedConfig[pkg] = { ...sharedConfig[pkg], eager: true };
-  }
-}
-
-export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
-  'zone.js',
-  '@nx/angular/mf',
-  '@nrwl/angular/mf',
-];
-export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
-  '@angular/core',
-  '@angular/animations',
-  '@angular/common',
-];
-
 export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
   const target = 'serve';
-  const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.mjs';
+  const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.js';
 
   return function (remote: string) {
     const mappedStaticRemotesFromEnv = process.env
@@ -62,14 +34,14 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
       remoteConfiguration = readCachedProjectConfiguration(remote);
     } catch (e) {
       throw new Error(
-        `Cannot find remote "${remote}". Check that the remote name is correct in your module federation config file.\n`
+        `Cannot find remote: "${remote}". Check that the remote name is correct in your module federation config file.\n`
       );
     }
     const serveTarget = remoteConfiguration?.targets?.[target];
 
     if (!serveTarget) {
       throw new Error(
-        `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve" target.\n
+        `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "${serveTarget}" target.\n
       You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
       );
     }
@@ -98,7 +70,9 @@ export async function getModuleFederationConfig(
     projectGraph = await createProjectGraphAsync();
   }
 
-  if (!projectGraph.nodes[mfConfig.name]?.data) {
+  const project = projectGraph.nodes[mfConfig.name]?.data;
+
+  if (!project) {
     throw Error(
       `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
     );
@@ -122,45 +96,40 @@ export async function getModuleFederationConfig(
     dependencies.workspaceLibraries
   );
 
-  const npmPackages = sharePackages(
-    Array.from(
-      new Set([
-        ...DEFAULT_ANGULAR_PACKAGES_TO_SHARE,
-        ...dependencies.npmPackages.filter(
-          (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
-        ),
-      ])
-    )
-  );
-
-  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
-    if (pkgName in npmPackages) {
-      delete npmPackages[pkgName];
-    }
-  });
+  const npmPackages = sharePackages(dependencies.npmPackages);
 
   const sharedDependencies = {
-    ...sharedLibraries.getLibraries(
-      projectGraph.nodes[mfConfig.name].data.root
-    ),
+    ...sharedLibraries.getLibraries(project.root),
     ...npmPackages,
   };
 
-  applyDefaultEagerPackages(sharedDependencies);
   applySharedFunction(sharedDependencies, mfConfig.shared);
   applyAdditionalShared(
     sharedDependencies,
     mfConfig.additionalShared,
     projectGraph
   );
-  const determineRemoteUrlFn =
-    options.determineRemoteUrl ||
-    getFunctionDeterminateRemoteUrl(options.isServer);
 
+  // Choose the correct mapRemotes function based on the server state.
   const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
-  const mappedRemotes =
-    !mfConfig.remotes || mfConfig.remotes.length === 0
-      ? {}
-      : mapRemotesFunction(mfConfig.remotes, 'mjs', determineRemoteUrlFn);
+
+  // Determine the URL function, either from provided options or by using a default.
+  const determineRemoteUrlFunction = options.determineRemoteUrl
+    ? options.determineRemoteUrl
+    : getFunctionDeterminateRemoteUrl(options.isServer);
+
+  // Map the remotes if they exist, otherwise default to an empty object.
+  let mappedRemotes = {};
+
+  if (mfConfig.remotes && mfConfig.remotes.length > 0) {
+    const isLibraryTypeVar = mfConfig.library?.type === 'var';
+    mappedRemotes = mapRemotesFunction(
+      mfConfig.remotes,
+      'js',
+      determineRemoteUrlFunction,
+      true
+    );
+  }
+
   return { sharedLibraries, sharedDependencies, mappedRemotes };
 }
