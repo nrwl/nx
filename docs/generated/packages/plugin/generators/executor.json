@@ -11,23 +11,21 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g executor my-executor --project=my-plugin",
+        "command": "nx g executor libs/my-plugin/src/executors/my-executor",
         "description": "Generate `libs/my-plugin/src/executors/my-executor`"
       }
     ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path at which to generate the executor file.",
-        "x-prompt": "What path would you like to use for the executor?",
+        "description": "The file path to the executor without the file extension (e.g. `my-plugin/src/executors/my-executor` generates the file `my-plugin/src/executors/my-executor.ts`). Relative to the current working directory.",
+        "x-prompt": "What is the executor file path?",
         "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "Executor name.",
-        "x-prompt": "What name would you like to use for the executor?",
-        "x-priority": "important"
+        "description": "The executor name to export in the plugin executors collection."
       },
       "description": {
         "type": "string",

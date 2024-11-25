@@ -10,15 +10,10 @@
     "type": "object",
     "properties": {
       "path": {
-        "description": "Path where the service will be generated.",
+        "description": "The file path to the service without the file extension and suffix (e.g. `my-app/src/app/my-service/my-service` generates the file `my-app/src/app/my-service/my-service.service.ts`). Relative to the current working directory.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the service be generated?"
-      },
-      "name": {
-        "description": "The name of the service.",
-        "type": "string",
-        "x-prompt": "What name would you like to use?"
+        "x-prompt": "What is the service file path?"
       },
       "skipFormat": {
         "description": "Skip formatting files.",

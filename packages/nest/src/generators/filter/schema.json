@@ -7,18 +7,13 @@
   "type": "object",
   "properties": {
     "path": {
-      "description": "Path where the filter will be generated.",
+      "description": "The file path to the filter without the file extension and suffix (e.g. `my-app/src/app/my-filter/my-filter` generates the file `my-app/src/app/my-filter/my-filter.filter.ts`). Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Where should the filter be generated?"
-    },
-    "name": {
-      "description": "The name of the filter.",
-      "type": "string",
-      "x-prompt": "What name would you like to use?"
+      "x-prompt": "What is the filter file path?"
     },
     "skipFormat": {
       "type": "boolean",

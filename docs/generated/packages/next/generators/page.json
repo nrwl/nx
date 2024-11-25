@@ -11,16 +11,14 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the page will be generated.",
+        "description": "The path to the directory where the page will be generated. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the page be generated?",
+        "x-prompt": "Which directory do you want to create the page in?",
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "The name of the page.",
-        "x-prompt": "What name would you like to use for the page?",
-        "x-priority": "important"
+        "description": "The page symbol name. If not provided, it defaults to the page directory name."
       },
       "style": {
         "description": "The file extension to be used for style files.",

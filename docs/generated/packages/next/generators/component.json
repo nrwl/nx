@@ -11,16 +11,14 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the component will be generated.",
+        "description": "The file path to the component without the file extension (e.g. `my-app/components/my-component/my-component` generates the file `my-app/components/my-component/my-component.tsx`). Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the component be generated?",
+        "x-prompt": "What is the component file path?",
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "x-prompt": "What name would you like to use for the component?",
-        "x-priority": "important"
+        "description": "The component symbol name. If not provided, it defaults to the last segment of the provided `path`."
       },
       "style": {
         "description": "The file extension to be used for style files.",

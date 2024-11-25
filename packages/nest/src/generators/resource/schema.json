@@ -8,17 +8,12 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "Path where the resource will be generated.",
+      "description": "The file path to the resource without the file extension and suffix (e.g. `my-app/src/app/my-resource/my-resource` generates the file `my-app/src/app/my-resource/my-resource.entity.ts`). Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Where should the resource be generated?"
-    },
-    "name": {
-      "type": "string",
-      "description": "The name of the resource.",
-      "x-prompt": "What name would you like to use for this resource (plural, e.g., `users`)?"
+      "x-prompt": "What is the resource file path?"
     },
     "skipFormat": {
       "description": "Skip formatting files.",

@@ -7,18 +7,13 @@
   "type": "object",
   "properties": {
     "path": {
-      "description": "Path where the resolver will be generated.",
+      "description": "The file path to the resolver without the file extension and suffix (e.g. `my-app/src/app/my-resolver/my-resolver` generates the file `my-app/src/app/my-resolver/my-resolver.resolver.ts`). Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Where should the resolver be generated?"
-    },
-    "name": {
-      "description": "The name of the resolver.",
-      "type": "string",
-      "x-prompt": "What name would you like to use?"
+      "x-prompt": "What is the resolver file path?"
     },
     "skipFormat": {
       "description": "Skip formatting files.",

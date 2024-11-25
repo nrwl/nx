@@ -11,15 +11,14 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the Redux slice will be generated.",
+        "description": "The file path to the Redux state slice without the file extension (e.g. `my-app/src/app/my-slice/my-slice` generates the file `my-app/src/app/my-slice/my-slice.ts`). Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the Redux slice be generated?",
+        "x-prompt": "What is the Redux stateslice file path?",
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "Redux slice name.",
-        "x-priority": "important"
+        "description": "The Redux state slice symbol name. It not provided, it defaults to the last segment of the provided `path`."
       },
       "appProject": {
         "type": "string",

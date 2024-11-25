@@ -17,15 +17,14 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the migration will be generated.",
+        "description": "The file path to the migration without the file extension (e.g. `my-plugin/src/migrations/my-migration` generates the file `my-plugin/src/migrations/my-migration.ts`). Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the migration be generated?",
+        "x-prompt": "What is the migration file path?",
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "Migration name.",
-        "x-priority": "important"
+        "description": "The migration name to export in the plugin migrations collection."
       },
       "description": {
         "type": "string",

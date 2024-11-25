@@ -9,26 +9,24 @@
     "type": "object",
     "examples": [
       {
-        "command": "g @nx/expo:component mylib/my-component --name my-component",
+        "command": "g @nx/expo:component mylib/my-component",
         "description": "Generate a component in the mylib library"
       },
       {
-        "command": "g @nx/expo:component mylib/my-component --name my-component --classComponent",
+        "command": "g @nx/expo:component mylib/my-component --classComponent",
         "description": "Generate a class component in the mylib library"
       }
     ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the component will be generated.",
+        "description": "The file path to the component without the file extension (e.g. `my-app/src/app/my-component/my-component` generates the file `my-app/src/app/my-component/my-component.tsx`). Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the component be generated?",
-        "x-priority": "important"
+        "x-prompt": "What is the component file path?"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "x-prompt": "What name would you like to use for the component?"
+        "description": "The component symbol name. It not provided, it defaults to the last segment of the provided `path`."
       },
       "js": {
         "type": "boolean",

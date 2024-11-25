@@ -14,19 +14,17 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "Path where the hook will be generated.",
+      "description": "The file path to the hook without the file extension (e.g. `my-app/src/app/my-hook/use-my-hook` generates the file `my-app/src/app/my-hook/use-my-hook.ts`). Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Where should the hook be generated?",
+      "x-prompt": "What is the hook file path?",
       "x-priority": "important"
     },
     "name": {
       "type": "string",
-      "description": "The name of the hook.",
-      "x-prompt": "What name would you like to use for the hook?",
-      "x-priority": "important"
+      "description": "The hook symbol name. It not provided, it defaults to the last segment of the provided `path`."
     },
     "js": {
       "type": "boolean",

@@ -9,17 +9,16 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The path at which to create the pipe file, relative to the workspace root.",
+      "description": "The file path to the pipe without the file extension and suffix (e.g. `my-app/src/app/my-pipe/my-pipe` generates the file `my-app/src/app/my-pipe/my-pipe.pipe.ts`). Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What is the path of the new pipe?"
+      "x-prompt": "What is the pipe file path?"
     },
     "name": {
       "type": "string",
-      "description": "The name of the pipe.",
-      "x-prompt": "What name would you like to use for the pipe?"
+      "description": "The pipe symbol name. It not provided, it defaults to the last segment of the provided `path`."
     },
     "skipTests": {
       "type": "boolean",
