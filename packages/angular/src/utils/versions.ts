@@ -28,6 +28,6 @@ export const tsNodeVersion = '10.9.1';
 export const jestPresetAngularVersion = '~14.4.0-rc.0';
 export const typesNodeVersion = '18.16.9';
 export const jasmineMarblesVersion = '^0.9.2';
-export const analogVitestAngular = '~1.9.4';
+export const analogVitestAngular = '~1.10.0-beta.5';
 
 export const jsoncEslintParserVersion = '^2.1.0';
