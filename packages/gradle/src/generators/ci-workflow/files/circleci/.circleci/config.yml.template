@@ -10,7 +10,7 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0-node
+      - image: cimg/openjdk:21.0-node
     steps:
       - checkout
 

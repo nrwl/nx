@@ -240,6 +240,10 @@
         "serveStaticTargetName": "serve-static"
       }
     },
+    {
+      "plugin": "@nx/gradle",
+      "options": { "checkTargetName": "lint" }
+    },
     "@nx/powerpack-enterprise-cloud"
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
