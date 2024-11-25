@@ -25,7 +25,7 @@ export const postcssUrlVersion = '~10.1.3';
 export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 
-export const jestPresetAngularVersion = '~14.1.0';
+export const jestPresetAngularVersion = '~14.4.0-rc.0';
 export const typesNodeVersion = '18.16.9';
 export const jasmineMarblesVersion = '^0.9.2';
 export const analogVitestAngular = '~1.9.4';
