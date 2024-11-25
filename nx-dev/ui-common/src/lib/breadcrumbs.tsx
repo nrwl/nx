@@ -72,9 +72,12 @@ export function Breadcrumbs({
   return (
     <div>
       <nav className="flex" aria-labelledby="breadcrumb">
-        <ol role="list" className="flex items-center space-x-4">
+        <ol role="list" className="flex flex-wrap items-center space-x-3">
           {crumbs.map((crumb, index) => (
-            <li key={crumb.id.concat('-', index.toString())}>
+            <li
+              className="m-1 block"
+              key={crumb.id.concat('-', index.toString())}
+            >
               <div className="flex items-center">
                 {!!index && (
                   <ChevronRightIcon
