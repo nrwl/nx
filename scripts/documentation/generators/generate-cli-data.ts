@@ -21,7 +21,13 @@ const importFresh = require('import-fresh');
 const sharedCommands = ['generate', 'exec'];
 
 // These commands are hidden from the documentation.
-const hiddenCommands = ['$0'];
+const hiddenCommands = [
+  '$0',
+  // These commands are only applicable to powerpack users
+  // TODO: Introduce custom formatting for such commands, instead of hiding them
+  'conformance',
+  'conformance:check',
+];
 
 export async function generateCliDocumentation(
   commandsOutputDirectory: string
