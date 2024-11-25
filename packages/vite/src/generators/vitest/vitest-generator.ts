@@ -28,13 +28,25 @@ import {
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 
-export function vitestGenerator(tree: Tree, schema: VitestGeneratorSchema) {
-  return vitestGeneratorInternal(tree, { addPlugin: false, ...schema });
+/**
+ * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
+ */
+export function vitestGenerator(
+  tree: Tree,
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
+) {
+  return vitestGeneratorInternal(
+    tree,
+    { addPlugin: false, ...schema },
+    hasPlugin
+  );
 }
 
 export async function vitestGeneratorInternal(
   tree: Tree,
-  schema: VitestGeneratorSchema
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
 ) {
   // Setting default to jsdom since it is the most common use case (React, Web).
   // The @nx/js:lib generator specifically sets this to node to be more generic.
@@ -57,7 +69,7 @@ export async function vitestGeneratorInternal(
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
-  addOrChangeTestTarget(tree, schema);
+  addOrChangeTestTarget(tree, schema, hasPlugin);
 
   if (!schema.skipViteConfig) {
     if (schema.uiFramework === 'angular') {
