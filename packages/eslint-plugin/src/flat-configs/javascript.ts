@@ -27,7 +27,6 @@ export default tseslint.config(
     files: ['**/*.js', '**/*.jsx'],
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
   },
-  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
   {
     languageOptions: {
       parser: tseslint.parser,
@@ -80,5 +79,9 @@ export default tseslint.config(
        */
       '@typescript-eslint/no-require-imports': 'off',
     },
-  }
+  },
+  /**
+   * We include it last so it overrides the conflicting rules from the configuration blocks above.
+   */
+  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );

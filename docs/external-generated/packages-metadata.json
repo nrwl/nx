@@ -39,12 +39,12 @@
     ],
     "executors": [
       {
-        "description": "Compile and bundle an Nx Conformance Rule",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+        "description": "Compile and bundle one or more Nx Conformance Rules",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
         "hidden": false,
-        "name": "bundle-rule",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
-        "path": "powerpack-conformance/executors/bundle-rule",
+        "name": "bundle-rules",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
+        "path": "powerpack-conformance/executors/bundle-rules",
         "type": "executor"
       }
     ],

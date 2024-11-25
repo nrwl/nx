@@ -219,7 +219,7 @@ module.exports = {
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -435,7 +435,7 @@ export default AppServerModule;
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./src/main.server');"`;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 6`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -452,7 +452,7 @@ export default config;
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 7`] = `
-"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+"import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -540,7 +540,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -553,7 +553,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 2`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -566,7 +566,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host when --typescriptConfiguration=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -579,7 +579,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host when --typescriptConfiguration=true 2`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -592,7 +592,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -605,7 +605,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host when --typescriptConfiguration=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -691,7 +691,7 @@ bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',

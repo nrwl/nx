@@ -4796,9 +4796,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Custom Task Runners",
-            "path": "/deprecated/custom-task-runners",
-            "id": "custom-task-runners",
+            "name": "Legacy Cache",
+            "path": "/deprecated/legacy-cache",
+            "id": "legacy-cache",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4919,9 +4919,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Custom Task Runners",
-        "path": "/deprecated/custom-task-runners",
-        "id": "custom-task-runners",
+        "name": "Legacy Cache",
+        "path": "/deprecated/legacy-cache",
+        "id": "legacy-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6041,6 +6041,31 @@
                   }
                 ],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Conformance",
+                "path": "/ci/recipes/enterprise/conformance",
+                "id": "conformance",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Configure Conformance Rules in Nx Cloud",
+                    "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+                    "id": "configure-conformance-rules-in-nx-cloud",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Publish Conformance Rules to Nx Cloud",
+                    "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+                    "id": "publish-conformance-rules-to-nx-cloud",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6063,6 +6088,14 @@
                 "name": "Prepare applications for deployment via CI",
                 "path": "/ci/recipes/other/ci-deployment",
                 "id": "ci-deployment",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+                "path": "/ci/recipes/other/cipe-affected-project-graph",
+                "id": "cipe-affected-project-graph",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6451,6 +6484,31 @@
               }
             ],
             "disableCollapsible": false
+          },
+          {
+            "name": "Conformance",
+            "path": "/ci/recipes/enterprise/conformance",
+            "id": "conformance",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Configure Conformance Rules in Nx Cloud",
+                "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+                "id": "configure-conformance-rules-in-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Publish Conformance Rules to Nx Cloud",
+                "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+                "id": "publish-conformance-rules-to-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6682,6 +6740,47 @@
         "disableCollapsible": false
       },
       {
+        "name": "Conformance",
+        "path": "/ci/recipes/enterprise/conformance",
+        "id": "conformance",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Configure Conformance Rules in Nx Cloud",
+            "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+            "id": "configure-conformance-rules-in-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Publish Conformance Rules to Nx Cloud",
+            "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+            "id": "publish-conformance-rules-to-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Conformance Rules in Nx Cloud",
+        "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+        "id": "configure-conformance-rules-in-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish Conformance Rules to Nx Cloud",
+        "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+        "id": "publish-conformance-rules-to-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Other",
         "path": "/ci/recipes/other",
         "id": "other",
@@ -6702,6 +6801,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+            "path": "/ci/recipes/other/cipe-affected-project-graph",
+            "id": "cipe-affected-project-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6718,6 +6825,14 @@
         "name": "Prepare applications for deployment via CI",
         "path": "/ci/recipes/other/ci-deployment",
         "id": "ci-deployment",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
+        "path": "/ci/recipes/other/cipe-affected-project-graph",
+        "id": "cipe-affected-project-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6748,6 +6863,14 @@
             "name": "Launch Templates",
             "path": "/ci/reference/launch-templates",
             "id": "launch-templates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Assignment Rules",
+            "path": "/ci/reference/assignment-rules",
+            "id": "assignment-rules",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -6799,6 +6922,14 @@
         "name": "Launch Templates",
         "path": "/ci/reference/launch-templates",
         "id": "launch-templates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Assignment Rules",
+        "path": "/ci/reference/assignment-rules",
+        "id": "assignment-rules",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -9877,6 +10008,22 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-config-to-rspack-plugin",
+                "path": "/nx-api/rspack/generators/convert-config-to-rspack-plugin",
+                "name": "convert-config-to-rspack-plugin",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/rspack/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -10587,9 +10734,9 @@
             "name": "executors",
             "children": [
               {
-                "id": "bundle-rule",
-                "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
-                "name": "bundle-rule",
+                "id": "bundle-rules",
+                "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
+                "name": "bundle-rules",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

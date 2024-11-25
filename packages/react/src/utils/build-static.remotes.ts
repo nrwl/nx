@@ -1,4 +1,4 @@
-import type { StaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
+import { StaticRemotesConfig } from '@nx/module-federation/src/utils';
 import { ExecutorContext } from '@nx/devkit';
 import { ModuleFederationDevServerOptions } from '../executors/module-federation-dev-server/schema';
 import { logger } from 'nx/src/utils/logger';

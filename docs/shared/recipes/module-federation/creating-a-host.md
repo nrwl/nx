@@ -269,6 +269,6 @@ To support [Independent Deployability](/concepts/module-federation/module-federa
 ```json
 {
   ...,
-  "implicitDependencies": ["remote-one", "remote-two"]
+  "implicitDependencies": ["remote1", "remote2"]
 }
 ```
