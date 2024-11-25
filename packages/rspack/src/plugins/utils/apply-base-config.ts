@@ -46,6 +46,7 @@ export function applyBaseConfig(
   options.memoryLimit ??= 2048;
   options.transformers ??= [];
   options.progress ??= true;
+  options.outputHashing ??= 'all';
 
   applyNxIndependentConfig(options, config);
 
