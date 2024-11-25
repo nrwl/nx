@@ -83,13 +83,15 @@ export function findExistingJsBuildTargetInProject(targets: {
 
 export function addOrChangeTestTarget(
   tree: Tree,
-  options: VitestGeneratorSchema
+  options: VitestGeneratorSchema,
+  hasPlugin: boolean
 ) {
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
+
+  hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin' || hasPlugin
   );
 
   const project = readProjectConfiguration(tree, options.project);
