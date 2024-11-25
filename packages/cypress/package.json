@@ -23,6 +23,18 @@
   ],
   "main": "./index",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./executors.json": "./executors.json",
+    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./plugin": "./plugin.js",
+    "./src/utils/*": "./src/utils/*.js",
+    "./plugins/cypress-preset": "./plugins/cypress-preset.js"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
