@@ -21,9 +21,30 @@ describe('vitest generator', () => {
   };
 
   describe('test target', () => {
-    it.todo('🚧 should not add test target to the project');
+    it.skip('🚧 should remove existing test target', async () => {
+      const { runGenerator, tree } = setUpAngularWorkspace();
 
-    it.todo('🚧 should remove existing test target');
+      await runGenerator();
+
+      expect(
+        readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
+      ).toBeUndefined();
+    });
+
+    it.skip('🚧 should not add test target to the project', async () => {
+      const { runGenerator, tree } = setUpAngularWorkspace();
+
+      updateJson(tree, 'apps/my-test-angular-app/project.json', (json) => {
+        delete json.targets.test;
+        return json;
+      });
+
+      await runGenerator();
+
+      expect(
+        readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
+      ).toBeUndefined();
+    });
 
     it.skip('🚧 should add test target to the project if inference is disabled', async () => {
       const { runGenerator, tree } = setUpAngularWorkspace();
@@ -47,7 +68,23 @@ describe('vitest generator', () => {
       ).toBe('@nx/vite:test');
     });
 
-    it.todo('🚧 should replace test target if inference is disabled');
+    it.skip('🚧 should replace test target if inference is disabled', async () => {
+      const { runGenerator, tree } = setUpAngularWorkspace();
+
+      updateJson(tree, 'nx.json', (json) => {
+        return {
+          ...json,
+          useInferencePlugins: false,
+        };
+      });
+
+      await runGenerator();
+
+      expect(
+        readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
+          .executor
+      ).toBe('@nx/vite:test');
+    });
 
     function setUpAngularWorkspace() {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
