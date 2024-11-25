@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>dev.nx.gradle.project-graph</groupId>
+  <artifactId>dev.nx.gradle.project-graph.gradle.plugin</artifactId>
+  <version>0.0.2</version>
+  <packaging>pom</packaging>
+  <name>Nx Gradle Project Graph Plugin</name>
+  <description>A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx</description>
+  <url>https://github.com/nrwl/nx</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>nx</id>
+      <name>Nx</name>
+      <email>java-services@nrwl.io</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/nrwl/nx.git</connection>
+    <developerConnection>scm:git:ssh://github.com/nrwl/nx.git</developerConnection>
+    <url>https://github.com/nrwl/nx</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>dev.nx.gradle</groupId>
+      <artifactId>project-graph</artifactId>
+      <version>0.0.2</version>
+    </dependency>
+  </dependencies>
+</project>
