@@ -281,7 +281,7 @@
     },
     "update-angular-cli-version-19-0-0": {
       "cli": "nx",
-      "version": "20.2.0-beta.3",
+      "version": "20.2.0-beta.4",
       "requires": {
         "@angular/core": ">=19.0.0"
       },
@@ -290,7 +290,7 @@
     },
     "add-localize-polyfill-to-targets": {
       "cli": "nx",
-      "version": "20.2.0-beta.3",
+      "version": "20.2.0-beta.4",
       "requires": {
         "@angular/core": ">=19.0.0-rc.1"
       },
@@ -299,7 +299,7 @@
     },
     "update-angular-ssr-imports-to-use-node-entry-point": {
       "cli": "nx",
-      "version": "20.2.0-beta.3",
+      "version": "20.2.0-beta.4",
       "requires": {
         "@angular/core": ">=19.0.0-rc.1"
       },
@@ -1220,7 +1220,7 @@
       }
     },
     "20.2.0": {
-      "version": "20.2.0-beta.3",
+      "version": "20.2.0-beta.4",
       "x-prompt": "Do you want to update the Angular version to v19?",
       "requires": {
         "@angular/core": ">=18.2.0 <19.0.0"
@@ -1285,7 +1285,7 @@
       }
     },
     "20.2.0-analog": {
-      "version": "20.2.0-beta.3",
+      "version": "20.2.0-beta.4",
       "packages": {
         "@analogjs/vitest-angular": {
           "version": "~1.9.4",
