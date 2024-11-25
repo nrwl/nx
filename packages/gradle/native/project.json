@@ -1,0 +1,12 @@
+{
+  "name": "gradle-native-plugin",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "command": "./gradlew :native:test",
+      "options": {
+        "args": []
+      }
+    }
+  }
+}

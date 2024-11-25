@@ -2287,7 +2287,17 @@
         "originalFilePath": "shared/packages/gradle/gradle-plugin"
       }
     ],
-    "executors": [],
+    "executors": [
+      {
+        "description": "gradlew.impl executor",
+        "file": "generated/packages/gradle/executors/gradlew.json",
+        "hidden": false,
+        "name": "gradlew",
+        "originalFilePath": "/packages/gradle/src/executors/gradlew/schema.json",
+        "path": "gradle/executors/gradlew",
+        "type": "executor"
+      }
+    ],
     "generators": [
       {
         "description": "Initializes a Gradle project in the current workspace",
@@ -2309,6 +2319,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Change @nx/gradle plugin to version 1",
+        "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
+        "hidden": false,
+        "name": "change-plugin-to-v1",
+        "version": "20.7.0-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-to-v1",
+        "type": "migration"
+      },
       {
         "description": "Add includeSubprojectsTasks to build.gradle file",
         "file": "generated/packages/gradle/migrations/add-include-subprojects-tasks.json",

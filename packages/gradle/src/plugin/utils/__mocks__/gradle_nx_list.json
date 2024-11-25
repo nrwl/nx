@@ -1,0 +1,590 @@
+{
+  "targets": {
+    "assemble": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:jar"],
+      "command": "./gradlew :list:assemble",
+      "metadata": {
+        "description": "Assembles the outputs of this project.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:assemble" }
+      },
+      "options": { "cwd": "." }
+    },
+    "build": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:check", "list:assemble"],
+      "command": "./gradlew :list:build",
+      "metadata": {
+        "description": "Assembles and tests this project.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:build" }
+      },
+      "options": { "cwd": "." }
+    },
+    "buildDependents": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:buildDependents",
+      "metadata": {
+        "description": "Assembles and tests this project and all projects that depend on it.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:buildDependents" }
+      },
+      "options": { "cwd": "." }
+    },
+    "buildEnvironment": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:buildEnvironment",
+      "metadata": {
+        "description": "Displays all buildscript dependencies declared in project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:buildEnvironment"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "buildNeeded": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:build"],
+      "command": "./gradlew :list:buildNeeded",
+      "metadata": {
+        "description": "Assembles and tests this project and all projects it depends on.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:buildNeeded" }
+      },
+      "options": { "cwd": "." }
+    },
+    "check": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:test"],
+      "command": "./gradlew :list:check",
+      "metadata": {
+        "description": "Runs all checks.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:check" }
+      },
+      "options": { "cwd": "." }
+    },
+    "classes": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:compileJava", "list:processResources"],
+      "command": "./gradlew :list:classes",
+      "metadata": {
+        "description": "Assembles main classes.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:classes" }
+      },
+      "options": { "cwd": "." }
+    },
+    "clean": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:clean",
+      "metadata": {
+        "description": "Deletes the build directory.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:clean" }
+      },
+      "options": { "cwd": "." }
+    },
+    "compileJava": {
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "{projectRoot}/src/main/java/org/example/list/LinkedList.java"
+      ],
+      "outputs": [
+        "{projectRoot}/build/classes/java/main",
+        "{projectRoot}/build/generated/sources/annotationProcessor/java/main",
+        "{projectRoot}/build/generated/sources/headers/java/main",
+        "{projectRoot}/build/tmp/compileJava/previous-compilation-data.bin"
+      ],
+      "command": "./gradlew :list:compileJava",
+      "metadata": {
+        "description": "Compiles main Java source.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:compileJava" }
+      },
+      "options": { "cwd": "." }
+    },
+    "compileTestJava": {
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "{projectRoot}/src/test/java/org/example/list/LinkedListTest.java",
+        "{projectRoot}/src/test/java/org/example/list/LinkedList2Test.java"
+      ],
+      "outputs": [
+        "{projectRoot}/build/classes/java/test",
+        "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+        "{projectRoot}/build/generated/sources/headers/java/test",
+        "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+      ],
+      "dependsOn": ["list:classes", "list:compileJava"],
+      "command": "./gradlew :list:compileTestJava",
+      "metadata": {
+        "description": "Compiles test Java source.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:compileTestJava" }
+      },
+      "options": { "cwd": "." }
+    },
+    "ci--LinkedListTest": {
+      "command": "./gradlew :list:test --tests LinkedListTest",
+      "metadata": {
+        "description": "Runs Gradle test LinkedListTest in CI",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:test" }
+      },
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "{projectRoot}/src/test/java/org/example/list/LinkedListTest.java"
+      ],
+      "dependsOn": [
+        "list:compileTestJava",
+        "list:testClasses",
+        "list:classes",
+        "list:compileJava"
+      ],
+      "outputs": [
+        "{projectRoot}/build/test-results/test/binary",
+        "{projectRoot}/build/reports/tests/test",
+        "{projectRoot}/build/test-results/test"
+      ]
+    },
+    "ci--LinkedList2Test": {
+      "command": "./gradlew :list:test --tests LinkedList2Test",
+      "metadata": {
+        "description": "Runs Gradle test LinkedList2Test in CI",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:test" }
+      },
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "{projectRoot}/src/test/java/org/example/list/LinkedList2Test.java"
+      ],
+      "dependsOn": [
+        "list:compileTestJava",
+        "list:testClasses",
+        "list:classes",
+        "list:compileJava"
+      ],
+      "outputs": [
+        "{projectRoot}/build/test-results/test/binary",
+        "{projectRoot}/build/reports/tests/test",
+        "{projectRoot}/build/test-results/test"
+      ]
+    },
+    "ci": {
+      "executor": "nx:noop",
+      "metadata": {
+        "description": "Runs Gradle Tests in CI",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:test" }
+      },
+      "dependsOn": [
+        {
+          "target": "ci--LinkedListTest",
+          "projects": "self",
+          "params": "forward"
+        },
+        {
+          "target": "ci--LinkedList2Test",
+          "projects": "self",
+          "params": "forward"
+        }
+      ],
+      "cache": true,
+      "parallelism": false
+    },
+    "components": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:components",
+      "metadata": {
+        "description": "Displays the components produced by project \u0027:list\u0027. [deprecated]",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:components" }
+      },
+      "options": { "cwd": "." }
+    },
+    "createNodes": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:createNodesLocal"],
+      "command": "./gradlew :list:createNodes",
+      "metadata": {
+        "description": "Print nodes report for Nx",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:createNodes" }
+      },
+      "options": { "cwd": "." }
+    },
+    "createNodesLocal": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/nx/list.json"],
+      "command": "./gradlew :list:createNodesLocal",
+      "metadata": {
+        "description": "Create nodes and dependencies for Nx",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:createNodesLocal"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "dependencies": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:dependencies",
+      "metadata": {
+        "description": "Displays all dependencies declared in project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:dependencies" }
+      },
+      "options": { "cwd": "." }
+    },
+    "dependencyInsight": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:dependencyInsight",
+      "metadata": {
+        "description": "Displays the insight into a specific dependency in project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:dependencyInsight"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "dependencyReport": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/reports/project/dependencies.txt"],
+      "command": "./gradlew :list:dependencyReport",
+      "metadata": {
+        "description": "Generates a report about your library dependencies.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:dependencyReport"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "dependentComponents": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:dependentComponents",
+      "metadata": {
+        "description": "Displays the dependent components of components in project \u0027:list\u0027. [deprecated]",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:dependentComponents"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "help": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:help",
+      "metadata": {
+        "description": "Displays a help message.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:help" }
+      },
+      "options": { "cwd": "." }
+    },
+    "htmlDependencyReport": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/reports/project/dependencies"],
+      "command": "./gradlew :list:htmlDependencyReport",
+      "metadata": {
+        "description": "Generates an HTML report about your library dependencies.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:htmlDependencyReport"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "jar": {
+      "cache": true,
+      "parallelism": false,
+      "inputs": ["{projectRoot}/build/tmp/jar/MANIFEST.MF"],
+      "outputs": ["{projectRoot}/build/libs/list.jar"],
+      "dependsOn": ["list:classes", "list:compileJava"],
+      "command": "./gradlew :list:jar",
+      "metadata": {
+        "description": "Assembles a jar archive containing the classes of the \u0027main\u0027 feature.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:jar" }
+      },
+      "options": { "cwd": "." }
+    },
+    "javaToolchains": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:javaToolchains",
+      "metadata": {
+        "description": "Displays the detected java toolchains.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:javaToolchains" }
+      },
+      "options": { "cwd": "." }
+    },
+    "javadoc": {
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "{projectRoot}/src/main/java/org/example/list/LinkedList.java"
+      ],
+      "outputs": ["{projectRoot}/build/docs/javadoc"],
+      "dependsOn": ["list:classes", "list:compileJava"],
+      "command": "./gradlew :list:javadoc",
+      "metadata": {
+        "description": "Generates Javadoc API documentation for the \u0027main\u0027 feature.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:javadoc" }
+      },
+      "options": { "cwd": "." }
+    },
+    "kotlinDslAccessorsReport": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:kotlinDslAccessorsReport",
+      "metadata": {
+        "description": "Prints the Kotlin code for accessing the currently available project extensions and conventions.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:kotlinDslAccessorsReport"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "model": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:model",
+      "metadata": {
+        "description": "Displays the configuration model of project \u0027:list\u0027. [deprecated]",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:model" }
+      },
+      "options": { "cwd": "." }
+    },
+    "outgoingVariants": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:outgoingVariants",
+      "metadata": {
+        "description": "Displays the outgoing variants of project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:outgoingVariants"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "processResources": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/resources/main"],
+      "command": "./gradlew :list:processResources",
+      "metadata": {
+        "description": "Processes main resources.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:processResources"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "processTestResources": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/resources/test"],
+      "command": "./gradlew :list:processTestResources",
+      "metadata": {
+        "description": "Processes test resources.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:processTestResources"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "projectReport": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": [
+        "list:taskReport",
+        "list:dependencyReport",
+        "list:propertyReport",
+        "list:htmlDependencyReport"
+      ],
+      "command": "./gradlew :list:projectReport",
+      "metadata": {
+        "description": "Generates a report about your project.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:projectReport" }
+      },
+      "options": { "cwd": "." }
+    },
+    "projects": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:projects",
+      "metadata": {
+        "description": "Displays the sub-projects of project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:projects" }
+      },
+      "options": { "cwd": "." }
+    },
+    "properties": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:properties",
+      "metadata": {
+        "description": "Displays the properties of project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:properties" }
+      },
+      "options": { "cwd": "." }
+    },
+    "propertyReport": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/reports/project/properties.txt"],
+      "command": "./gradlew :list:propertyReport",
+      "metadata": {
+        "description": "Generates a report about your properties.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:propertyReport" }
+      },
+      "options": { "cwd": "." }
+    },
+    "resolvableConfigurations": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:resolvableConfigurations",
+      "metadata": {
+        "description": "Displays the configurations that can be resolved in project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": {
+          "command": "./gradlew help --task :list:resolvableConfigurations"
+        }
+      },
+      "options": { "cwd": "." }
+    },
+    "taskReport": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": ["{projectRoot}/build/reports/project/tasks.txt"],
+      "command": "./gradlew :list:taskReport",
+      "metadata": {
+        "description": "Generates a report about your tasks.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:taskReport" }
+      },
+      "options": { "cwd": "." }
+    },
+    "tasks": {
+      "cache": true,
+      "parallelism": false,
+      "command": "./gradlew :list:tasks",
+      "metadata": {
+        "description": "Displays the tasks runnable from project \u0027:list\u0027.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:tasks" }
+      },
+      "options": { "cwd": "." }
+    },
+    "test": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/build/test-results/test/binary",
+        "{projectRoot}/build/reports/tests/test",
+        "{projectRoot}/build/test-results/test"
+      ],
+      "dependsOn": [
+        "list:compileTestJava",
+        "list:testClasses",
+        "list:classes",
+        "list:compileJava"
+      ],
+      "command": "./gradlew :list:test",
+      "metadata": {
+        "description": "Runs the test suite.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:test" }
+      },
+      "options": { "cwd": "." }
+    },
+    "testClasses": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": ["list:processTestResources", "list:compileTestJava"],
+      "command": "./gradlew :list:testClasses",
+      "metadata": {
+        "description": "Assembles test classes.",
+        "technologies": ["gradle"],
+        "help": { "command": "./gradlew help --task :list:testClasses" }
+      },
+      "options": { "cwd": "." }
+    }
+  },
+  "metadata": {
+    "targetGroups": {
+      "build": [
+        "assemble",
+        "build",
+        "buildDependents",
+        "buildNeeded",
+        "classes",
+        "clean",
+        "jar",
+        "testClasses"
+      ],
+      "help": [
+        "buildEnvironment",
+        "dependencies",
+        "dependencyInsight",
+        "help",
+        "javaToolchains",
+        "kotlinDslAccessorsReport",
+        "outgoingVariants",
+        "projects",
+        "properties",
+        "resolvableConfigurations",
+        "tasks"
+      ],
+      "verification": [
+        "check",
+        "ci--LinkedListTest",
+        "ci--LinkedList2Test",
+        "ci",
+        "test"
+      ],
+      "Nx Custom": ["createNodes", "createNodesLocal"],
+      "documentation": ["javadoc"],
+      "reporting": ["projectReport"]
+    },
+    "technologies": ["gradle"]
+  },
+  "name": "list"
+}

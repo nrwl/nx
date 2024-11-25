@@ -1,10 +1,8 @@
-#### Add includeSubprojectsTasks to build.gradle File
+#### Add includeSubprojectsTasks to @nx/gradle Plugin Options
 
-Add includeSubprojectsTasks to build.gradle file
+Add includeSubprojectsTasks to @nx/graple plugin options in nx.json file
 
 #### Sample Code Changes
-
-Update import paths for `withModuleFederation` and `withModuleFederationForSSR`.
 
 {% tabs %}
 {% tab label="Before" %}
