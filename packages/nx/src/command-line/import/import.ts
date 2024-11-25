@@ -7,7 +7,7 @@ import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 import * as createSpinner from 'ora';
-import { detectPlugins, installPlugins } from '../init/init-v2';
+import { detectPlugins } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -24,11 +24,11 @@ import { runInstall } from '../init/implementation/utils';
 import { getBaseRef } from '../../utils/command-line-utils';
 import { prepareSourceRepo } from './utils/prepare-source-repo';
 import { mergeRemoteSource } from './utils/merge-remote-source';
-import {
-  getPackagesInPackageManagerWorkspace,
-  needsInstall,
-} from './utils/needs-install';
 import { minimatch } from 'minimatch';
+import {
+  configurePlugins,
+  runPackageManagerInstallPlugins,
+} from '../init/configure-plugins';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -60,7 +60,7 @@ export interface ImportOptions {
 
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
-  let { sourceRepository, ref, source, destination } = options;
+  let { sourceRepository, ref, source, destination, verbose } = options;
   const destinationGitClient = new GitRepository(process.cwd());
 
   if (await destinationGitClient.hasUncommittedChanges()) {
@@ -219,11 +219,6 @@ export async function importHandler(options: ImportOptions) {
   }
 
   const packageManager = detectPackageManager(workspaceRoot);
-
-  const originalPackageWorkspaces = await getPackagesInPackageManagerWorkspace(
-    packageManager
-  );
-
   const sourceIsNxWorkspace = existsSync(join(sourceGitClient.root, 'nx.json'));
 
   const relativeDestination = relative(
@@ -287,42 +282,28 @@ export async function importHandler(options: ImportOptions) {
     destinationGitClient
   );
 
-  // If install fails, we should continue since the errors could be resolved later.
-  let installFailed = false;
-  if (plugins.length > 0) {
-    try {
-      output.log({ title: 'Installing Plugins' });
-      installPlugins(workspaceRoot, plugins, pmc, updatePackageScripts);
+  let installed = await runInstallDestinationRepo(
+    packageManager,
+    destinationGitClient
+  );
 
-      await destinationGitClient.amendCommit();
-    } catch (e) {
-      installFailed = true;
-      output.error({
-        title: `Install failed: ${e.message || 'Unknown error'}`,
-        bodyLines: [e.stack],
-      });
-    }
-  } else if (await needsInstall(packageManager, originalPackageWorkspaces)) {
-    try {
-      output.log({
-        title: 'Installing dependencies for imported code',
-      });
-
-      runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
-
-      await destinationGitClient.amendCommit();
-    } catch (e) {
-      installFailed = true;
-      output.error({
-        title: `Install failed: ${e.message || 'Unknown error'}`,
-        bodyLines: [e.stack],
-      });
+  if (installed && plugins.length > 0) {
+    installed = await runPluginsInstall(plugins, pmc, destinationGitClient);
+    if (installed) {
+      await configurePlugins(
+        plugins,
+        updatePackageScripts,
+        pmc,
+        workspaceRoot,
+        verbose,
+        destinationGitClient
+      );
     }
   }
 
   console.log(await destinationGitClient.showStat());
 
-  if (installFailed) {
+  if (installed === false) {
     const pmc = getPackageManagerCommand(packageManager);
     output.warn({
       title: `The import was successful, but the install failed`,
@@ -397,6 +378,62 @@ async function createTemporaryRemote(
 }
 
 /**
+ * Run install for the imported code and plugins
+ * @returns true if the install failed
+ */
+async function runInstallDestinationRepo(
+  packageManager: PackageManager,
+  destinationGitClient: GitRepository
+): Promise<boolean> {
+  let installed = true;
+  try {
+    output.log({
+      title: 'Installing dependencies for imported code',
+    });
+    runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
+    await destinationGitClient.amendCommit();
+  } catch (e) {
+    installed = false;
+    output.error({
+      title: `Install failed: ${e.message || 'Unknown error'}`,
+      bodyLines: [e.stack],
+    });
+  }
+  return installed;
+}
+
+async function runPluginsInstall(
+  plugins: string[],
+  pmc: PackageManagerCommands,
+  destinationGitClient: GitRepository
+) {
+  let installed = true;
+  output.log({ title: 'Installing Plugins' });
+  try {
+    runPackageManagerInstallPlugins(workspaceRoot, pmc, plugins);
+    await destinationGitClient.amendCommit();
+  } catch (e) {
+    installed = false;
+    output.error({
+      title: `Install failed: ${e.message || 'Unknown error'}`,
+      bodyLines: [
+        'The following plugins were not installed:',
+        ...plugins.map((p) => `- ${chalk.bold(p)}`),
+        e.stack,
+      ],
+    });
+    output.error({
+      title: `To install the plugins manually`,
+      bodyLines: [
+        'You may need to run commands to install the plugins:',
+        ...plugins.map((p) => `- ${chalk.bold(pmc.exec + ' nx add ' + p)}`),
+      ],
+    });
+  }
+  return installed;
+}
+
+/*
  * If the user imports a project that isn't in the workspaces entry, we should add that path to the workspaces entry.
  */
 async function handleMissingWorkspacesEntry(
