@@ -7,7 +7,7 @@
   "// targets": "to see all targets run: nx show project e2e-angular --web",
   "targets": {
     "hello": {
-      "command": "echo hello"
+      "command": "echo hello 2"
     }
   }
 }
