@@ -16,6 +16,9 @@ import { Github } from "./Github";
   </div>
   <div class="flex items-center p-3 px-4">
     <div class="flex flex-1"></div>
+    <div class="mr-2" id="download-button">
+      <slot name="download-button" />
+    </div>
     <div class="mr-2">
       <slot name="open-in-stackblitz-link" />
     </div>
@@ -24,9 +27,6 @@ import { Github } from "./Github";
 
     <div>
       <slot name="theme-switch" />
-    </div>
-    <div>
-      <slot name="login-button" />
     </div>
   </div>
 </nav>

@@ -1,6 +1,6 @@
 ---
 type: chapter
-title: Manage Releases
+title: Fast CI
 editor: false
 previews: false
 terminal: false

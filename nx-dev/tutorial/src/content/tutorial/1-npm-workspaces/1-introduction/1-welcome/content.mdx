@@ -17,7 +17,7 @@ What will you learn?
 
 ## Starting Repository
 
-This tutorial uses the [nrwl/tuskydesign](https://github.com/nrwl/tuskydesign) GitHub repository as a starting point.  If you want to follow the tutorial on your own machine instead of in the browser, you can clone the repository.
+This tutorial uses the [nrwl/tuskydesign](https://github.com/nrwl/tuskydesign) GitHub repository as a starting point. If you want to follow the tutorial on your own machine instead of in the browser, you can clone the repository.
 
 import { GithubRepository } from '@nx/nx-dev/ui-markdoc';
 
@@ -31,11 +31,7 @@ The repository has three TypeScript packages under `packages/animals`, `packages
 }
 ```
 
-Because of this setting, when the install command is run at the root, the correct packages are installed for each project. NPM will create dedicated `node_modules` folders inside of each project folder where necessary.
-
-```shell
-npm install
-```
+Because of this setting, when the install command is run at the root, the correct packages are installed for each project. NPM will create dedicated `node_modules` folders inside of each project folder where necessary. The `npm install` command has already been run for you.
 
 Now let's try running some tasks. To build the `animals` package, use the `build` npm script:
 
