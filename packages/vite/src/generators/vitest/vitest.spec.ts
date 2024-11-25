@@ -3,7 +3,7 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, Tree, updateJson } from '@nx/devkit';
 
-import generator from './vitest-generator';
+import { vitestGeneratorInternal } from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
 import {
   mockAngularAppGenerator,
@@ -17,7 +17,6 @@ describe('vitest generator', () => {
     project: 'my-test-react-app',
     uiFramework: 'react',
     coverageProvider: 'v8',
-    addPlugin: true,
   };
 
   describe('test target', () => {
@@ -91,7 +90,7 @@ describe('vitest generator', () => {
       mockAngularAppGenerator(tree);
       return {
         async runGenerator() {
-          await generator(tree, {
+          await vitestGeneratorInternal(tree, {
             project: 'my-test-angular-app',
             uiFramework: 'angular',
             coverageProvider: 'istanbul',
@@ -107,7 +106,7 @@ describe('vitest generator', () => {
     beforeAll(async () => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(appTree);
-      await generator(appTree, options);
+      await vitestGeneratorInternal(appTree, options);
     });
 
     it('should add vitest.workspace.ts at the root', async () => {
@@ -167,7 +166,7 @@ describe('vitest generator', () => {
 
     it('should add vitest/importMeta when inSourceTests is true', async () => {
       mockReactAppGenerator(appTree, 'my-test-react-app-2');
-      await generator(appTree, {
+      await vitestGeneratorInternal(appTree, {
         ...options,
         inSourceTests: true,
         project: 'my-test-react-app-2',
@@ -189,7 +188,7 @@ describe('vitest generator', () => {
     beforeAll(async () => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(appTree);
-      await generator(appTree, options);
+      await vitestGeneratorInternal(appTree, options);
     });
 
     it('should add @nx/vite dependency', async () => {
@@ -205,7 +204,10 @@ describe('vitest generator', () => {
 
     it('should create correct vite.config.ts file for non buildable libs', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(appTree);
-      await generator(appTree, { ...options, project: 'react-lib-nonb-jest' });
+      await vitestGeneratorInternal(appTree, {
+        ...options,
+        project: 'react-lib-nonb-jest',
+      });
       expect(
         appTree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
@@ -216,7 +218,10 @@ describe('vitest generator', () => {
     beforeAll(async () => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(appTree);
-      await generator(appTree, { ...options, inSourceTests: true });
+      await vitestGeneratorInternal(appTree, {
+        ...options,
+        inSourceTests: true,
+      });
     });
     it('should add the insourceSource option in the vite config', async () => {
       expect(
@@ -229,11 +234,10 @@ describe('vitest generator', () => {
     beforeAll(async () => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockAngularAppGenerator(appTree);
-      await generator(appTree, {
+      await vitestGeneratorInternal(appTree, {
         project: 'my-test-angular-app',
         uiFramework: 'angular',
         coverageProvider: 'istanbul',
-        addPlugin: true,
       });
     });
 
