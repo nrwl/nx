@@ -25,7 +25,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/react:library lib/storybook-host --bundler=none --unitTestRunner=none --projectNameAndRootFormat=as-provided
+nx g @nx/react:library lib/storybook-host --bundler=none --unitTestRunner=none
 ```
 
 Now, you have a new library, which will act as a shell/host for all your stories.
