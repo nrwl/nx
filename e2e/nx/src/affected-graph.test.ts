@@ -405,6 +405,65 @@ describe('Nx Affected and Graph Tests', () => {
       );
     }, 1000000);
 
+    it.each(['--print', '--file=stdout'])(
+      'graph should output json to %s',
+      (arg) => {
+        const output = runCLI(`graph ${arg}`);
+
+        const jsonFileContents = JSON.parse(output);
+
+        expect(jsonFileContents.graph.dependencies).toEqual(
+          expect.objectContaining({
+            [myapp3E2e]: [
+              {
+                source: myapp3E2e,
+                target: myapp3,
+                type: 'implicit',
+              },
+            ],
+            [myapp2]: [
+              {
+                source: myapp2,
+                target: mylib,
+                type: 'static',
+              },
+            ],
+            [myapp2E2e]: [
+              {
+                source: myapp2E2e,
+                target: myapp2,
+                type: 'implicit',
+              },
+            ],
+            [mylib]: [
+              {
+                source: mylib,
+                target: mylib2,
+                type: 'static',
+              },
+            ],
+            [mylib2]: [],
+            [myapp]: [
+              {
+                source: myapp,
+                target: mylib,
+                type: 'static',
+              },
+            ],
+            [myappE2e]: [
+              {
+                source: myappE2e,
+                target: myapp,
+                type: 'implicit',
+              },
+            ],
+            [myapp3]: [],
+          })
+        );
+      },
+      1000000
+    );
+
     if (isNotWindows()) {
       it('graph should output json to file by absolute path', () => {
         runCLI(`graph --file=/tmp/project-graph.json`);
