@@ -1235,6 +1235,20 @@
       "id": "conformance",
       "name": "Run Language-Agnostic Conformance Rules",
       "path": "/nx-enterprise/powerpack/conformance"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+      "id": "configure-conformance-rules-in-nx-cloud",
+      "name": "Configure Conformance Rules in Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+      "id": "publish-conformance-rules-to-nx-cloud",
+      "name": "Publish Conformance Rules to Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
     }
   ],
   "owners": [

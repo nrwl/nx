@@ -105,9 +105,18 @@ Nx Cloud side. You can disable this by passing `--require-explicit-completion`. 
 ### --stop-agents-after
 
 You can tell Nx Cloud to terminate agents after it sees a certain
-target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
+target or group of targets: `npx nx-cloud start-ci-run --stop-agents-after=build,test,e2e`.
 
-The target name for `--stop-agents-after` should be the last target run within your pipeline. If not, Nx Cloud will end the CI pipeline execution, preventing the subsequent commands from running.
+{% callout type="note" title="Tip: Be as specific as possible when listing targets" %}
+For the best results, always tell Nx Cloud about all targets that should be expected during your pipeline. This will
+prevent your CI Pipeline Execution from ending prematurely, cutting off any unfinished work.
+{% /callout %}
+
+Whether you are running commands serially or in parallel (through use of the `&` operand or discrete jobs), you should
+include one or more targets from each command.
+
+{% tabs %}
+{% tab label="Serial command execution" %}
 
 #### Incorrect example:
 
@@ -118,15 +127,64 @@ The target name for `--stop-agents-after` should be the last target run within y
 - run: nx affected -t test
 ```
 
-If build tasks are all cached, then all build tasks will complete immediately causing lint and test tasks to fail with an error saying the CI pipeline execution has already been completed. Instead you should re-order your targets to make sure the build target is last.
+Nx Cloud will only look for the presence of a `build` target before determining your pipeline can be shut down. Since
+both `lint` and `test` will only run after `build` is complete, your pipeline would end before all intended work is
+executed.
 
 #### Corrected example:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=build
+- run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
 - run: nx affected -t lint
 - run: nx affected -t test
 - run: nx affected -t build
+```
+
+{% /tab %}
+{% tab label="Parallel command execution" %}
+
+#### Incorrect example:
+
+```yaml
+- run: npx nx-cloud start-ci-run --stop-agents-after=test
+- run: nx affected -t build & nx affected -t lint & nx affected -t test
+```
+
+At first glance, this example may appear correct. However, since all the commands are executed in parallel, it could
+be possible that your `test` command results in full cache hits and finishes faster than the `build` and `lint` commands.
+In this case, Nx Cloud will stop your pipeline, leaving work incomplete for both the `build` and `lint` commands.
+
+#### Corrected example:
+
+```yaml
+- run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
+- run: nx affected -t build & nx affected -t lint & nx affected -t test
+```
+
+{% /tab %}
+{% /tabs %}
+
+#### Advanced shutdown targeting
+
+In advanced pipeline setups, it is possible that you want to run multiple commands with the same target, but with
+distinct configurations. An example of this may be doing static translations for different locales during your builds.
+
+```yaml
+- run: npx nx-cloud start-ci-run --stop-agents-after=build
+- run: nx affected -t build --configuration=locale-en
+- run: nx affected -t build --configuration=locale-es
+```
+
+In this case, the `build` target will be executed twice, once with the `locale-en` configuration and once with the
+`locale-es` configuration. However, Nx Cloud is only looking for the `build` target to assess whether the CI Pipeline
+Execution can be marked complete.
+
+To address this, you can pass an optional `configuration` to make your `target`s more specific.
+
+```yaml
+- run: npx nx-cloud start-ci-run --stop-agents-after=build:locale-en,build:locale-es
+- run: nx affected -t build --configuration=locale-en
+- run: nx affected -t build --configuration=locale-es
 ```
 
 ### --stop-agents-on-failure

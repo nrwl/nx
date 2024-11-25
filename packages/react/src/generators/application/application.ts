@@ -47,7 +47,6 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { addProjectRootToRspackPluginExcludesIfExists } from './lib/add-project-root-to-rspack-plugin-excludes';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -165,6 +164,17 @@ export async function applicationGeneratorInternal(
       );
       tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
     }
+  } else if (options.bundler === 'rspack') {
+    const { rspackInitGenerator } = ensurePackage(
+      '@nx/rspack',
+      nxRspackVersion
+    );
+    const rspackInitTask = await rspackInitGenerator(host, {
+      ...options,
+      addPlugin: false,
+      skipFormat: true,
+    });
+    tasks.push(rspackInitTask);
   }
 
   if (!options.rootProject) {
@@ -226,30 +236,6 @@ export async function applicationGeneratorInternal(
       },
       false
     );
-  } else if (options.bundler === 'rspack') {
-    const { configurationGenerator } = ensurePackage(
-      '@nx/rspack',
-      nxRspackVersion
-    );
-    const rspackTask = await configurationGenerator(host, {
-      project: options.projectName,
-      main: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(
-          {
-            js: options.js,
-            useJsx: true,
-          },
-          `src/main.tsx`
-        )
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      target: 'web',
-      newProject: true,
-      framework: 'react',
-    });
-    tasks.push(rspackTask);
-    addProjectRootToRspackPluginExcludesIfExists(host, options.appProjectRoot);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {

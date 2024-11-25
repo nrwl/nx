@@ -255,7 +255,7 @@ module.exports = {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
@@ -447,7 +447,7 @@ module.exports = {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
-"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
@@ -669,7 +669,7 @@ export default config;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 6`] = `
-"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+"import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -907,7 +907,7 @@ export default config;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 7`] = `
-"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+"import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -978,7 +978,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 `;
 
 exports[`Host App Generator should generate a host app with a remote 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -991,7 +991,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -1004,7 +1004,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with a remote when --typesscript=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -1017,7 +1017,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with a remote when --typesscript=true 2`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -1030,7 +1030,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -1043,7 +1043,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with no remotes when --typescript=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**

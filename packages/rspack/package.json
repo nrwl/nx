@@ -29,8 +29,8 @@
     "@nx/web": "file:../web",
     "@nx/module-federation": "file:../module-federation",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@rspack/core": "^1.0.4",
-    "@rspack/dev-server": "^1.0.4",
+    "@rspack/core": "^1.1.2",
+    "@rspack/dev-server": "^1.0.9",
     "@rspack/plugin-react-refresh": "^1.0.0",
     "autoprefixer": "^10.4.9",
     "browserslist": "^4.21.4",
@@ -51,11 +51,12 @@
     "postcss-loader": "^8.1.1",
     "postcss": "^8.4.38",
     "tslib": "^2.3.0",
+    "webpack": "^5.80.0",
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "~0.6.0",
-    "@module-federation/node": "~2.5.10"
+    "@module-federation/enhanced": "~0.7.6",
+    "@module-federation/node": "~2.6.11"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

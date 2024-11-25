@@ -11,6 +11,7 @@ import { webStaticServeGenerator } from '@nx/web';
 import { nxVersion } from '../../../utils/versions';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { hasVitePlugin } from '../../../utils/has-vite-plugin';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
@@ -22,6 +23,7 @@ export async function addE2e(
 ): Promise<GeneratorCallback> {
   const hasNxBuildPlugin =
     (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
+    (options.bundler === 'rspack' && hasRspackPlugin(tree)) ||
     (options.bundler === 'vite' && hasVitePlugin(tree));
 
   let e2eWebServerInfo: E2EWebServerDetails = {

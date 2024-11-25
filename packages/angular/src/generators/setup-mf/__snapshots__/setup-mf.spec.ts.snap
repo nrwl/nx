@@ -209,7 +209,7 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -245,7 +245,7 @@ module.exports = {
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 3`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -271,7 +271,7 @@ module.exports = {
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -311,7 +311,7 @@ export default config;
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 3`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**

@@ -13,7 +13,7 @@ import {
   mapRemotes,
   mapRemotesForSSR,
   getDependentPackagesForProject,
-} from '@nx/module-federation';
+} from '../../utils';
 
 export function getFunctionDeterminateRemoteUrl(isServer = false) {
   const target = 'serve';

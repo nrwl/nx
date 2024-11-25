@@ -1,11 +1,11 @@
-import type {
+import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
+import type { NormalModuleReplacementPlugin } from 'webpack';
 
-export async function withModuleFederation(
+export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
 ) {
@@ -14,46 +14,30 @@ export async function withModuleFederation(
   }
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options);
+    await getModuleFederationConfig(options, {
+      isServer: true,
+    });
 
   return (config) => {
-    const updatedConfig = {
-      ...(config ?? {}),
-      output: {
-        ...(config.output ?? {}),
-        uniqueName: options.name,
-        publicPath: 'auto',
-      },
-      optimization: {
-        ...(config.optimization ?? {}),
-        runtimeChunk: false,
-      },
-      resolve: {
-        ...(config.resolve ?? {}),
-        alias: {
-          ...(config.resolve?.alias ?? {}),
-          ...sharedLibraries.getAliases(),
-        },
-      },
-      experiments: {
-        ...(config.experiments ?? {}),
-        outputModule: true,
-      },
-      plugins: [
-        ...(config.plugins ?? []),
-        new ModuleFederationPlugin({
+    config.target = 'async-node';
+    config.output.uniqueName = options.name;
+    config.optimization = {
+      ...(config.optimization ?? {}),
+      runtimeChunk: false,
+    };
+
+    config.plugins.push(
+      new (require('@module-federation/enhanced').ModuleFederationPlugin)(
+        {
           name: options.name.replace(/-/g, '_'),
-          filename: 'remoteEntry.mjs',
+          filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,
           shared: {
             ...sharedDependencies,
           },
-          library: {
-            type: 'module',
-          },
           /**
-           * Apply user-defined config override
+           * Apply user-defined config overrides
            */
           ...(configOverride ? configOverride : {}),
           runtimePlugins:
@@ -65,21 +49,25 @@ export async function withModuleFederation(
                     '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
                   ),
                 ]
-              : configOverride?.runtimePlugins,
+              : [
+                  ...(configOverride?.runtimePlugins ?? []),
+                  require.resolve('@module-federation/node/runtimePlugin'),
+                ],
           virtualRuntimeEntry: true,
-        }),
-        sharedLibraries.getReplacementPlugin(),
-      ],
-    };
+        },
+        {}
+      ),
+      sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
+    );
 
     // The env var is only set from the module-federation-dev-server
     // Attach the runtime plugin
-    updatedConfig.plugins.push(
+    config.plugins.push(
       new (require('webpack').DefinePlugin)({
         'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
       })
     );
 
-    return updatedConfig;
+    return config;
   };
 }

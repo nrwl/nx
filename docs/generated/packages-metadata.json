@@ -2981,6 +2981,24 @@
         "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
         "path": "rspack/generators/convert-webpack",
         "type": "generator"
+      },
+      {
+        "description": "Convert the project to use the `NxAppRspackPlugin` and `NxReactRspackPlugin`.",
+        "file": "generated/packages/rspack/generators/convert-config-to-rspack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-rspack-plugin",
+        "originalFilePath": "/packages/rspack/src/generators/convert-config-to-rspack-plugin/schema.json",
+        "path": "rspack/generators/convert-config-to-rspack-plugin",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
+        "file": "generated/packages/rspack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rspack/src/generators/convert-to-inferred/schema.json",
+        "path": "rspack/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

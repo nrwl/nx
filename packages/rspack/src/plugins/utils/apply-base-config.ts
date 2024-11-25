@@ -46,6 +46,7 @@ export function applyBaseConfig(
   options.memoryLimit ??= 2048;
   options.transformers ??= [];
   options.progress ??= true;
+  options.outputHashing ??= 'all';
 
   applyNxIndependentConfig(options, config);
 
@@ -112,6 +113,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
+    clean: options.deleteOutputPath,
   };
 
   config.watch = options.watch;

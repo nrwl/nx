@@ -1,45 +1,30 @@
-import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
-import type { Configuration } from '@rspack/core';
-import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
-} from '@nx/module-federation';
+} from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { NxRspackExecutionContext } from '../../config';
-
-const isVarOrWindow = (libType?: string) =>
-  libType === 'var' || libType === 'window';
+import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
+import type { NormalModuleReplacementPlugin } from 'webpack';
 
 /**
  * @param {ModuleFederationConfig} options
- * @param {NxModuleFederationConfigOverride} configOverride
  */
 export async function withModuleFederation(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
 ) {
   if (global.NX_GRAPH_CREATION) {
-    return function makeConfig(config: Configuration): Configuration {
-      return config;
-    };
+    return (config) => config;
   }
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
-  const isGlobal = isVarOrWindow(options.library?.type);
 
-  return function makeConfig(
-    config: Configuration,
-    { context }: NxRspackExecutionContext
-  ): Configuration {
+  return (config, ctx) => {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 
-    if (isGlobal) {
-      config.output.scriptType = 'text/javascript';
-    }
-
+    config.output.scriptType = 'text/javascript';
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: false,
@@ -68,7 +53,7 @@ export async function withModuleFederation(
          *  { appX: 'appX@http://localhost:3001/remoteEntry.js' }
          *  { appY: 'appY@http://localhost:3002/remoteEntry.js' }
          */
-        ...(isGlobal ? { remoteType: 'script' } : {}),
+        remoteType: 'script',
         /**
          * Apply user-defined config overrides
          */
@@ -85,13 +70,13 @@ export async function withModuleFederation(
             : configOverride?.runtimePlugins,
         virtualRuntimeEntry: true,
       }),
-      sharedLibraries.getReplacementPlugin()
+      sharedLibraries.getReplacementPlugin() as NormalModuleReplacementPlugin
     );
 
     // The env var is only set from the module-federation-dev-server
     // Attach the runtime plugin
     config.plugins.push(
-      new DefinePlugin({
+      new (require('webpack').DefinePlugin)({
         'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
       })
     );
