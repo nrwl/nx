@@ -21,7 +21,7 @@ describe('vitest generator', () => {
   };
 
   describe('test target', () => {
-    it.skip('🚧 should remove existing test target', async () => {
+    it('should remove existing test target', async () => {
       const { runGenerator, tree } = setUpAngularWorkspace();
 
       await runGenerator();
@@ -31,7 +31,7 @@ describe('vitest generator', () => {
       ).toBeUndefined();
     });
 
-    it.skip('🚧 should not add test target to the project', async () => {
+    it('should not add test target to the project', async () => {
       const { runGenerator, tree } = setUpAngularWorkspace();
 
       updateJson(tree, 'apps/my-test-angular-app/project.json', (json) => {
@@ -46,7 +46,7 @@ describe('vitest generator', () => {
       ).toBeUndefined();
     });
 
-    it.skip('🚧 should add test target to the project if inference is disabled', async () => {
+    it('should add test target to the project if inference is disabled', async () => {
       const { runGenerator, tree } = setUpAngularWorkspace();
 
       updateJson(tree, 'nx.json', (json) => {
@@ -68,7 +68,7 @@ describe('vitest generator', () => {
       ).toBe('@nx/vite:test');
     });
 
-    it.skip('🚧 should replace test target if inference is disabled', async () => {
+    it('should replace test target if inference is disabled', async () => {
       const { runGenerator, tree } = setUpAngularWorkspace();
 
       updateJson(tree, 'nx.json', (json) => {
@@ -95,7 +95,6 @@ describe('vitest generator', () => {
             project: 'my-test-angular-app',
             uiFramework: 'angular',
             coverageProvider: 'istanbul',
-            addPlugin: true,
           });
           return tree;
         },
