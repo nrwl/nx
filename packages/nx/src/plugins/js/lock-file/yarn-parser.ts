@@ -477,7 +477,7 @@ function mapSnapshots(
         const regEx = new RegExp(`@patch:${packageName}@(npm%3A)?(.*)$`);
         normalizedKey = key
           .slice(0, key.indexOf('#'))
-          .replace(regEx, '@npm:$2')
+          .replace(regEx, '@npm:$2');
       }
       if (
         !existingKeys.get(packageName) ||
