@@ -42,6 +42,16 @@ export function updateTsConfig(
       root,
       options.runtimeTsconfigFileName
     );
+    // If the app is Next.js it will not have a tsconfig.app.json
+    const extensions = ['js', 'ts', 'mjs', 'cjs'];
+    const hasNextConfig = extensions.some((ext) =>
+      host.exists(joinPathFragments(root, `next.config.${ext}`))
+    );
+
+    if (hasNextConfig && projectType === 'application') {
+      runtimeTsconfigPath = joinPathFragments(root, 'tsconfig.json');
+    }
+
     if (!host.exists(runtimeTsconfigPath)) {
       // the user provided a runtimeTsconfigFileName that doesn't exist, so we throw an error
       throw new Error(
