@@ -62,3 +62,7 @@ target
 /wasi-sdk*
 
 vite.config.*.timestamp*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+.kotlin

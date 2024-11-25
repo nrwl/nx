@@ -14,6 +14,8 @@ import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { dirname, join, basename } from 'path';
 
+const nativePluginName = 'dev.nx.gradle.native';
+
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
 
@@ -52,7 +54,6 @@ function addPlugin(tree: Tree) {
         testTargetName: 'test',
         classesTargetName: 'classes',
         buildTargetName: 'build',
-        includeSubprojectsTasks: false,
       },
     });
     updateNxJson(tree, nxJson);
@@ -67,16 +68,18 @@ export async function addBuildGradleFileNextToSettingsGradle(tree: Tree) {
     '**/settings.gradle?(.kts)',
   ]);
   settingsGradleFiles.forEach((settingsGradleFile) => {
-    addProjectReportToBuildGradle(settingsGradleFile, tree);
+    addCreateNodesPluginToBuildGradle(settingsGradleFile, tree);
   });
 }
 
 /**
  * - creates a build.gradle file next to the settings.gradle file if it does not exist.
- * - adds the project-report plugin to the build.gradle file if it does not exist.
- * - adds a task to generate project reports for all subprojects and included builds.
+ * - adds the createNodes plugin to the build.gradle file if it does not exist.
  */
-function addProjectReportToBuildGradle(settingsGradleFile: string, tree: Tree) {
+function addCreateNodesPluginToBuildGradle(
+  settingsGradleFile: string,
+  tree: Tree
+) {
   const filename = basename(settingsGradleFile);
   let gradleFilePath = 'build.gradle';
   if (filename.endsWith('.kts')) {
@@ -90,53 +93,47 @@ function addProjectReportToBuildGradle(settingsGradleFile: string, tree: Tree) {
     buildGradleContent = tree.read(gradleFilePath).toString();
   }
 
-  if (buildGradleContent.includes('allprojects')) {
-    if (!buildGradleContent.includes('"project-report"')) {
-      logger.warn(`Please add the project-report plugin to your ${gradleFilePath}:
-allprojects {
-  apply {
-      plugin("project-report")
-  }
-}`);
+  const nodesPlugin = filename.endsWith('.kts')
+    ? `id("${nativePluginName}") version("+")`
+    : `id "${nativePluginName}" version "+"`;
+  if (buildGradleContent.includes('plugins {')) {
+    if (!buildGradleContent.includes(nativePluginName)) {
+      buildGradleContent = buildGradleContent.replace(
+        'plugins {',
+        `plugins {
+    ${nodesPlugin}`
+      );
     }
   } else {
-    buildGradleContent += `\n\rallprojects {
+    buildGradleContent = `plugins {
+    ${nodesPlugin}
+}\n\r${buildGradleContent}`;
+  }
+
+  const applyNodesPlugin = `plugin("${nativePluginName}")`;
+  if (buildGradleContent.includes('allprojects {')) {
+    if (
+      !buildGradleContent.includes(`plugin("${nativePluginName}")`) &&
+      !buildGradleContent.includes(`plugin('${nativePluginName}')`)
+    ) {
+      logger.warn(
+        `Please add the ${nativePluginName} plugin to your ${gradleFilePath}:
+allprojects {
   apply {
-      plugin("project-report")
+      ${applyNodesPlugin}
   }
-}`;
+}`
+      );
+    }
+  } else {
+    buildGradleContent = `${buildGradleContent}\n\rallprojects {
+    apply {
+        ${applyNodesPlugin}
+    }
+  }`;
   }
 
-  if (!buildGradleContent.includes(`tasks.register("projectReportAll")`)) {
-    if (gradleFilePath.endsWith('.kts')) {
-      buildGradleContent += `\n\rtasks.register("projectReportAll") {
-    // All project reports of subprojects
-    allprojects.forEach {
-        dependsOn(it.tasks.get("projectReport"))
-    }
-
-    // All projectReportAll of included builds
-    gradle.includedBuilds.forEach {
-        dependsOn(it.task(":projectReportAll"))
-    }
-}`;
-    } else {
-      buildGradleContent += `\n\rtasks.register("projectReportAll") {
-        // All project reports of subprojects
-        allprojects.forEach {
-            dependsOn(it.tasks.getAt("projectReport"))
-        }
-    
-        // All projectReportAll of included builds
-        gradle.includedBuilds.forEach {
-            dependsOn(it.task(":projectReportAll"))
-        }
-    }`;
-    }
-  }
-  if (buildGradleContent) {
-    tree.write(gradleFilePath, buildGradleContent);
-  }
+  tree.write(gradleFilePath, buildGradleContent);
 }
 
 export function updateNxJsonConfiguration(tree: Tree) {
