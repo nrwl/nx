@@ -93,7 +93,7 @@ describe('vitest generator', () => {
           await vitestGeneratorInternal(tree, {
             project: 'my-test-angular-app',
             uiFramework: 'angular',
-            coverageProvider: 'istanbul',
+            coverageProvider: 'v8',
           });
           return tree;
         },
@@ -237,7 +237,7 @@ describe('vitest generator', () => {
       await vitestGeneratorInternal(appTree, {
         project: 'my-test-angular-app',
         uiFramework: 'angular',
-        coverageProvider: 'istanbul',
+        coverageProvider: 'v8',
       });
     });
 
