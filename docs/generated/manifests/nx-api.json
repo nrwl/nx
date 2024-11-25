@@ -2303,7 +2303,17 @@
     },
     "root": "/packages/gradle",
     "source": "/packages/gradle/src",
-    "executors": {},
+    "executors": {
+      "/nx-api/gradle/executors/gradlew": {
+        "description": "gradlew.impl executor",
+        "file": "generated/packages/gradle/executors/gradlew.json",
+        "hidden": false,
+        "name": "gradlew",
+        "originalFilePath": "/packages/gradle/src/executors/gradlew/schema.json",
+        "path": "/nx-api/gradle/executors/gradlew",
+        "type": "executor"
+      }
+    },
     "generators": {
       "/nx-api/gradle/generators/init": {
         "description": "Initializes a Gradle project in the current workspace",
@@ -2325,6 +2335,16 @@
       }
     },
     "migrations": {
+      "/nx-api/gradle/migrations/change-plugin-to-v1": {
+        "description": "Change @nx/gradle plugin to version 1",
+        "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
+        "hidden": false,
+        "name": "change-plugin-to-v1",
+        "version": "20.7.0-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-plugin-to-v1",
+        "type": "migration"
+      },
       "/nx-api/gradle/migrations/add-include-subprojects-tasks": {
         "description": "Add includeSubprojectsTasks to build.gradle file",
         "file": "generated/packages/gradle/migrations/add-include-subprojects-tasks.json",
