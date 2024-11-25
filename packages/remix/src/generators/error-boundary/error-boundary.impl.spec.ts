@@ -14,7 +14,6 @@ describe('ErrorBoundary', () => {
     );
   });
   describe('--apiVersion=2', () => {
-    const nameAndDirectoryFormat = 'as-provided';
     it('should correctly add the ErrorBoundary to the route file', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -30,7 +29,6 @@ describe('ErrorBoundary', () => {
 
       // ACT
       await errorBoundaryGenerator(tree, {
-        nameAndDirectoryFormat,
         path: routeFilePath,
       });
 
@@ -54,7 +52,6 @@ describe('ErrorBoundary', () => {
       // ACT & ASSERT
       await expect(
         errorBoundaryGenerator(tree, {
-          nameAndDirectoryFormat,
           path: `my-route.tsx`,
         })
       ).rejects.toThrow();

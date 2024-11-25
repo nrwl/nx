@@ -37,16 +37,6 @@
       "default": false,
       "x-priority": "internal"
     },
-    "directory": {
-      "type": "string",
-      "description": "The directory at which to create the hook file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-      "x-priority": "important"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
     "export": {
       "type": "boolean",
       "description": "When true, the hook is exported from the project `index.ts` (if it exists).",

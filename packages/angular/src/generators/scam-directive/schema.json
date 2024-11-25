@@ -26,26 +26,6 @@
       "type": "string",
       "description": "The directive symbol name. It not provided, it defaults to the last segment of the provided `path`."
     },
-    "directory": {
-      "type": "string",
-      "description": "The directory at which to create the SCAM Directive files. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-      "aliases": ["dir", "path"],
-      "x-priority": "important"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
-    "project": {
-      "type": "string",
-      "description": "The name of the project.",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-dropdown": "projects",
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
     "skipTests": {
       "type": "boolean",
       "description": "Do not create `spec.ts` test files for the new directive.",
@@ -56,12 +36,6 @@
       "description": "Create the `NgModule` in the same file as the Directive.",
       "default": true,
       "x-priority": "important"
-    },
-    "flat": {
-      "type": "boolean",
-      "description": "Create the new files at the top level of the current project.",
-      "default": true,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
     },
     "selector": {
       "type": "string",

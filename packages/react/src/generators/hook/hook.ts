@@ -23,6 +23,7 @@ interface NormalizedSchema extends Schema {
   hookTypeName: string;
   fileName: string;
   projectName: string;
+  directory: string;
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
@@ -96,8 +97,6 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
-
   const {
     directory,
     fileName: _fileName,
@@ -138,22 +137,6 @@ async function normalizeOptions(
     projectSourceRoot,
     projectName,
   };
-}
-
-function assertValidOptions(options: Schema) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the hook name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
-      );
-    }
-  });
 }
 
 export default hookGenerator;
