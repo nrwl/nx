@@ -3,6 +3,7 @@ import {
   logger,
   offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
@@ -82,10 +83,17 @@ export function findExistingJsBuildTargetInProject(targets: {
 
 export function addOrChangeTestTarget(
   tree: Tree,
-  options: VitestGeneratorSchema,
-  target: string
+  options: VitestGeneratorSchema
 ) {
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin'
+  );
+
   const project = readProjectConfiguration(tree, options.project);
+  const target = options.testTarget ?? 'test';
 
   const reportsDirectory = joinPathFragments(
     offsetFromRoot(project.root),
@@ -98,15 +106,19 @@ export function addOrChangeTestTarget(
 
   project.targets ??= {};
 
-  if (project.targets[target]) {
-    project.targets[target].executor = '@nx/vite:test';
-    delete project.targets[target].options?.jestConfig;
+  if (hasPlugin) {
+    delete project.targets[target];
   } else {
-    project.targets[target] = {
-      executor: '@nx/vite:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: testOptions,
-    };
+    if (project.targets[target]) {
+      project.targets[target].executor = '@nx/vite:test';
+      delete project.targets[target].options?.jestConfig;
+    } else {
+      project.targets[target] = {
+        executor: '@nx/vite:test',
+        outputs: ['{options.reportsDirectory}'],
+        options: testOptions,
+      };
+    }
   }
 
   updateProjectConfiguration(tree, options.project, project);
