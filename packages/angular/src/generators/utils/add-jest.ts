@@ -49,18 +49,25 @@ export async function addJest(
     'src',
     'test-setup.ts'
   );
-  if (options.strict && tree.exists(setupFile)) {
+  if (tree.exists(setupFile)) {
     const contents = tree.read(setupFile, 'utf-8');
-    tree.write(
-      setupFile,
-      `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
-globalThis.ngJest = {
-  testEnvironmentOptions: {
+    if (options.strict) {
+      tree.write(
+        setupFile,
+        `${contents}
+setupZoneTestEnv({
     errorOnUnknownElements: true,
-    errorOnUnknownProperties: true,
-  },
-};
-${contents}`
-    );
+    errorOnUnknownProperties: true
+});          
+`
+      );
+    } else {
+      tree.write(
+        setupFile,
+        `${contents}
+setupZoneTestEnv();          
+`
+      );
+    }
   }
 }
