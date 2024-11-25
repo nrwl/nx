@@ -9,7 +9,7 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { gradlePluginVersion, nxVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { dirname, join, basename } from 'path';
@@ -31,6 +31,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
     );
   }
   await addBuildGradleFileNextToSettingsGradle(tree);
+  await disableConfigurationCacheProperty(tree);
   addPlugin(tree);
   updateNxJsonConfiguration(tree);
 
@@ -52,7 +53,6 @@ function addPlugin(tree: Tree) {
         testTargetName: 'test',
         classesTargetName: 'classes',
         buildTargetName: 'build',
-        includeSubprojectsTasks: false,
       },
     });
     updateNxJson(tree, nxJson);
@@ -67,16 +67,18 @@ export async function addBuildGradleFileNextToSettingsGradle(tree: Tree) {
     '**/settings.gradle?(.kts)',
   ]);
   settingsGradleFiles.forEach((settingsGradleFile) => {
-    addProjectReportToBuildGradle(settingsGradleFile, tree);
+    addCreateNodesPluginToBuildGradle(settingsGradleFile, tree);
   });
 }
 
 /**
  * - creates a build.gradle file next to the settings.gradle file if it does not exist.
- * - adds the project-report plugin to the build.gradle file if it does not exist.
- * - adds a task to generate project reports for all subprojects and included builds.
+ * - adds the createNodes plugin to the build.gradle file if it does not exist.
  */
-function addProjectReportToBuildGradle(settingsGradleFile: string, tree: Tree) {
+function addCreateNodesPluginToBuildGradle(
+  settingsGradleFile: string,
+  tree: Tree
+) {
   const filename = basename(settingsGradleFile);
   let gradleFilePath = 'build.gradle';
   if (filename.endsWith('.kts')) {
@@ -90,53 +92,45 @@ function addProjectReportToBuildGradle(settingsGradleFile: string, tree: Tree) {
     buildGradleContent = tree.read(gradleFilePath).toString();
   }
 
-  if (buildGradleContent.includes('allprojects')) {
-    if (!buildGradleContent.includes('"project-report"')) {
-      logger.warn(`Please add the project-report plugin to your ${gradleFilePath}:
-allprojects {
-  apply {
-      plugin("project-report")
-  }
-}`);
+  const nodesPlugin = filename.endsWith('.kts')
+    ? ` id("io.nx.gradle.plugin.Nodes") version("${gradlePluginVersion}")`
+    : ` id "io.nx.gradle.plugin.Nodes" version "${gradlePluginVersion}"`;
+  if (buildGradleContent.includes('plugins {')) {
+    if (!buildGradleContent.includes('"io.nx.gradle.plugin.Nodes"')) {
+      buildGradleContent = buildGradleContent.replace(
+        'plugins {',
+        `plugins {
+    ${nodesPlugin}`
+      );
     }
   } else {
-    buildGradleContent += `\n\rallprojects {
-  apply {
-      plugin("project-report")
-  }
+    buildGradleContent += `\n\rplugins {
+    ${nodesPlugin}
 }`;
   }
 
-  if (!buildGradleContent.includes(`tasks.register("projectReportAll")`)) {
-    if (gradleFilePath.endsWith('.kts')) {
-      buildGradleContent += `\n\rtasks.register("projectReportAll") {
-    // All project reports of subprojects
-    allprojects.forEach {
-        dependsOn(it.tasks.get("projectReport"))
-    }
-
-    // All projectReportAll of included builds
-    gradle.includedBuilds.forEach {
-        dependsOn(it.task(":projectReportAll"))
-    }
-}`;
-    } else {
-      buildGradleContent += `\n\rtasks.register("projectReportAll") {
-        // All project reports of subprojects
-        allprojects.forEach {
-            dependsOn(it.tasks.getAt("projectReport"))
-        }
-    
-        // All projectReportAll of included builds
-        gradle.includedBuilds.forEach {
-            dependsOn(it.task(":projectReportAll"))
-        }
-    }`;
-    }
-  }
   if (buildGradleContent) {
     tree.write(gradleFilePath, buildGradleContent);
   }
+}
+
+/**
+ * Need to set org.gradle.configuration-cache=false for createNodes task to not throw an error.
+ * @param tree
+ */
+export async function disableConfigurationCacheProperty(tree: Tree) {
+  const gradlePropertiesFiles = await globAsync(tree, ['**/gradle.properties']);
+  gradlePropertiesFiles.forEach((gradlePropertiesFile) => {
+    const content = tree.read(gradlePropertiesFile).toString();
+    if (
+      content.includes('org.gradle.configuration-cache') &&
+      !content.includes('org.gradle.configuration-cache=false')
+    ) {
+      logger.warn(
+        'org.gradle.configuration-cache property is set to true. Setting it to false to avoid issues with createNodes task.'
+      );
+    }
+  });
 }
 
 export function updateNxJsonConfiguration(tree: Tree) {
