@@ -17,11 +17,11 @@ What will you learn?
 
 ## Starting Repository
 
-To get started, fork [the sample repository](https://github.com/nrwl/tuskydesign/fork) and clone it on your local machine:
+This tutorial uses the [nrwl/tuskydesign](https://github.com/nrwl/tuskydesign) GitHub repository as a starting point.  If you want to follow the tutorial on your own machine instead of in the browser, you can clone the repository.
 
-```shell
-git clone https://github.com/<your-username>/tuskydesign.git
-```
+import { GithubRepository } from '@nx/nx-dev/ui-markdoc';
+
+<GithubRepository url="https://github.com/nrwl/tuskydesign"></GithubRepository>
 
 The repository has three TypeScript packages under `packages/animals`, `packages/names` and `packages/zoo`. The `zoo` package uses `animals` and `names` to generate a random message. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
 
