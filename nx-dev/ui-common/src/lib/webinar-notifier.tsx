@@ -76,15 +76,8 @@ export function WebinarNotifier(): ReactElement | null {
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
-                onClick={() =>
-                  sendCustomEvent(
-                    'webinar-sign-up-click',
-                    'december-10-2024',
-                    'webinar-notifier'
-                  )
-                }
                 title="Signup"
-                href="https://go.nx.dev/december-webinar"
+                href="https://bit.ly/3B0Ebfe"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
