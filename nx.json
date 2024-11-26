@@ -246,5 +246,12 @@
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "bust": 1,
-  "defaultBase": "master"
+  "defaultBase": "master",
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json"
+      }
+    ]
+  }
 }
