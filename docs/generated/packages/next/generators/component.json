@@ -18,7 +18,7 @@
       },
       "name": {
         "type": "string",
-        "description": "The component symbol name. If not provided, it defaults to the last segment of the provided `path`."
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "style": {
         "description": "The file extension to be used for style files.",

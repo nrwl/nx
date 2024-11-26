@@ -18,7 +18,7 @@
     },
     "name": {
       "type": "string",
-      "description": "The directive symbol name. It not provided, it defaults to the last segment of the provided `path`."
+      "description": "The directive symbol name. Defaults to the last segment of the file path."
     },
     "prefix": {
       "type": "string",

@@ -18,7 +18,7 @@
       },
       "name": {
         "type": "string",
-        "description": "The page symbol name. If not provided, it defaults to the page directory name."
+        "description": "The page symbol name. Defaults to the page directory name."
       },
       "style": {
         "description": "The file extension to be used for style files.",
