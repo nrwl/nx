@@ -52,11 +52,11 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
 }
 ```
 
-## Enforce Rules with the `nx conformance` and `nx conformance:check` commands
+## Enforce Rules with the `nx conformance` and `nx conformance:check` Commands
 
-The `@nx/powerpack-conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which checks all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and provide violations if applicable.
+The `@nx/powerpack-conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which check all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and show any violations.
 
-Therefore, `nx conformance` is intended to be run locally while working on a feature branch, be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
+Therefore, `nx conformance` is intended to be run locally while working on a feature branch. `nx conformance:check` should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
 
 {% tabs %}
 {% tab label="Without Nx Cloud" %}
