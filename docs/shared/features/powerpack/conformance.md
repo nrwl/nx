@@ -52,16 +52,18 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
 }
 ```
 
-## Enforce Rules with the `nx conformance` Command
+## Enforce Rules with the `nx conformance` and `nx conformance:check` commands
 
-The `@nx/powerpack-conformance` plugin enables the `nx conformance` command which checks all the configured rules. This command should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
+The `@nx/powerpack-conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which checks all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and provide violations if applicable.
+
+Therefore, `nx conformance` is intended to be run locally while working on a feature branch, while `nx conformance:check` should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
 
 {% tabs %}
 {% tab label="Without Nx Cloud" %}
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx conformance
+  run: npx nx conformance:check
 ```
 
 {% /tab %}
@@ -69,10 +71,20 @@ The `@nx/powerpack-conformance` plugin enables the `nx conformance` command whic
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx-cloud record -- npx nx conformance
+  run: npx nx-cloud record -- npx nx conformance:check
 ```
 
-Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx Cloud dashboard.
+Use `npx nx-cloud record --` to capture the logs for `nx conformance:check` in the Nx Cloud dashboard.
+
+{% /tab %}
+{% tab label="Using Nx Cloud (Organizations on the Enterprise Plan)" %}
+
+```yaml
+- name: Enforce all conformance rules
+  run: npx nx-cloud record -- npx nx-cloud conformance:check
+```
+
+Here we are using the `nx-cloud` CLI to run the `conformance:check` command so that we can hook into the power of Conformance rules configured in your Nx Cloud Enterprise organization. Learn more about [conformance rules in Nx Cloud](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud).
 
 {% /tab %}
 {% /tabs %}
