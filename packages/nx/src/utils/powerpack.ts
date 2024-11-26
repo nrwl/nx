@@ -19,10 +19,15 @@ export async function printPowerpackLicense() {
 
 export async function getPowerpackLicenseInformation() {
   try {
-    const { getPowerpackLicenseInformation } = (await import(
+    const {
+      getPowerpackLicenseInformation,
+      getPowerpackLicenseInformationAsync,
+    } = (await import(
       '@nx/powerpack-license'
     )) as typeof import('@nx/powerpack-license');
-    return getPowerpackLicenseInformation(workspaceRoot);
+    return (
+      getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
+    )(workspaceRoot);
   } catch (e) {
     if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
       throw new NxPowerpackNotInstalledError(e);
