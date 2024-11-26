@@ -49,7 +49,7 @@ import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
 export function EnterpriseCustomers(): JSX.Element {
   return (
     <section id="customers">
-      <div className="mx-auto max-w-7xl text-center">
+      <div className="mx-auto max-w-7xl">
         <div className="mt-8">
           <div className="grid grid-cols-2 justify-between md:grid-cols-4">
             <a
@@ -216,7 +216,7 @@ export function EnterpriseCustomers(): JSX.Element {
               <DownloadCaseStudy
                 title="Financial Institution Case Study"
                 description="$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud."
-                buttonHref="https://go.nx.dev/financial-casestudy"
+                buttonHref="https://go.nx.dev/financial-case-study"
               />
             </div>
             <a
