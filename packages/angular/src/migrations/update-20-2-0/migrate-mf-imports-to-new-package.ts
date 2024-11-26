@@ -13,13 +13,13 @@ export default async function migrateMfImportsToNewPackage(tree: Tree) {
 
   const graph = await createProjectGraphAsync();
   for (const [project, dependencies] of Object.entries(graph.dependencies)) {
+    if (!graph.nodes[project]) {
+      continue;
+    }
     const usesNxWebpack = dependencies.some(
       (dep) => dep.target === 'npm:@nx/webpack'
     );
     if (usesNxWebpack) {
-      if (graph.externalNodes[project]) {
-        continue;
-      }
       const root = graph.nodes[project].data.root;
       rootsToCheck.add(root);
     }
