@@ -29,10 +29,6 @@ nx add @nx/express
 
 Use the `app` generator to create a new Express app.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 ```shell
 nx g @nx/express:app apps/my-express-api
 ```
@@ -48,10 +44,6 @@ This starts the application on localhost:3333/api by default.
 ## Create a Library
 
 The `@nx/express` plugin does not have a `library` generator, but we can use the `library` generator from the `@nx/js` plugin. To create a new library, install the `@nx/js` package and run:
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g @nx/js:lib libs/my-lib
