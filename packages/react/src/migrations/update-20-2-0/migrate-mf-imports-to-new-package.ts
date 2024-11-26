@@ -19,6 +19,9 @@ export default async function migrateMfImportsToNewPackage(tree: Tree) {
         dep.target === 'npm:@nx/webpack' || dep.target === 'npm:@nx/rspack'
     );
     if (usesNxWebpackOrRspack) {
+      if (graph.externalNodes[project]) {
+        continue;
+      }
       const root = graph.nodes[project].data.root;
       rootsToCheck.add(root);
     }
