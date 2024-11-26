@@ -1,5 +1,5 @@
 ---
-title: 'Enable read/write access to your Nx remote cache from CI'
+title: 'Enable Read/Write Access to your Nx Remote Cache from CI'
 videoUrl: 'https://youtu.be/vBokLJ_F8qs'
 duration: '1:45'
 ---

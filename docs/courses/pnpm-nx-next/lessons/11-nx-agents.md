@@ -1,5 +1,5 @@
 ---
-title: 'Speed up CI by running tasks in parallel on different machines'
+title: 'Speed Up CI by Running Tasks in Parallel on Different Machines'
 videoUrl: 'https://youtu.be/lO_p4tA6IZI'
 duration: '2:08'
 ---

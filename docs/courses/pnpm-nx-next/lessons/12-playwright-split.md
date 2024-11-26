@@ -1,5 +1,5 @@
 ---
-title: 'Run Playwright e2e Tests faster by Parallelizing Them on CI'
+title: 'Run Playwright E2E Tests Faster by Parallelizing Them on CI'
 videoUrl: 'https://youtu.be/42XnmzxEXM8'
 duration: '5:47'
 ---
