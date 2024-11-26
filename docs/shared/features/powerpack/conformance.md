@@ -56,7 +56,7 @@ Conformance rules are configured in the `conformance` property of the `nx.json` 
 
 The `@nx/powerpack-conformance` plugin enables the `nx conformance` and `nx conformance:check` commands which checks all the configured rules. The difference is that `nx conformance` will invoke any fix generators on a configured rule automatically, whereas `nx conformance:check` will only check the current workspace state and provide violations if applicable.
 
-Therefore, `nx conformance` is intended to be run locally while working on a feature branch, while `nx conformance:check` should be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
+Therefore, `nx conformance` is intended to be run locally while working on a feature branch, be added to the beginning of your CI process so that the conformance rules are enforced for every PR.
 
 {% tabs %}
 {% tab label="Without Nx Cloud" %}
@@ -89,4 +89,19 @@ Here we are using the `nx-cloud` CLI to run the `conformance:check` command so t
 {% /tab %}
 {% /tabs %}
 
-If there is not a valid Powerpack license in the workspace, the `nx conformance` command will fail without checking any rules.
+If a valid Powerpack license is not available to the workspace (either locally or via Nx Cloud), the `nx conformance` and `nx conformance:check` commands will fail without checking any rules.
+
+## Taking things further with Nx Cloud Enterprise
+
+Organizations on the Nx Cloud Enterprise plan can [publish custom conformance rules](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud) to their Nx Cloud organization without the friction of a custom registry, and then [configure the rules](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud) to apply to the workspaces in their organization automatically when `nx-cloud conformance` or `nx-cloud conformance:check` is run (note that the `nx-cloud` CLI is used in this case in order to handle the authentication with Nx Cloud).
+
+The Powerpack license will be applied automatically via Nx Cloud in all contexts, and so there is zero setup required for the end developer.
+
+Simply add an appropriate invocation of the `nx-cloud conformance:check` command to your CI process and all cloud configured rules will be applied and merged with any local rules:
+
+```yaml
+- name: Enforce all conformance rules
+  run: npx nx-cloud record -- npx nx-cloud conformance:check
+```
+
+Learn more about [publishing](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud) and [configuring conformance rules in Nx Cloud](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud).
