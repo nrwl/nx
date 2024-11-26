@@ -128,7 +128,7 @@ export function EnterpriseCustomers(): JSX.Element {
               <DownloadCaseStudy
                 title="Banking Case Study"
                 description="$7B European bank cuts CI times by 62% and boosts team productivity."
-                buttonHref="https://go.nx.dev/bank-case-study"
+                buttonHref="https://go.nx.dev/banking-case-study"
               />
             </div>
             <a
