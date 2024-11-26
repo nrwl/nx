@@ -22,6 +22,7 @@ jest.debug.config.js
 /graph/client/src/assets/generated-source-maps
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
+**/tests/temp-db
 
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
@@ -31,12 +32,13 @@ CHANGELOG.md
 
 # Next.js
 .next
+out
 
 # Angular Cache
 .angular
 
 # Local dev files
-.env
+.env.local
 .bashrc
 .nx
 
@@ -45,6 +47,7 @@ CHANGELOG.md
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
 .nx/cache
+.nx/workspace-data
 
 .cargo/.package-cache
 .cargo/bin/
@@ -54,3 +57,6 @@ CHANGELOG.md
 .npm/
 .profile
 .rustup/
+target
+*.wasm
+/wasi-sdk*

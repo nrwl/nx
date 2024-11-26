@@ -1,5 +1,4 @@
 import {
-  joinPathFragments,
   logger,
   ProjectGraphProjectNode,
   readJsonFile,
@@ -8,12 +7,12 @@ import {
 import { findNodes } from '@nx/js';
 import { getModifiers } from '@typescript-eslint/type-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import ts = require('typescript');
 
 function tryReadBaseJson() {
   try {
-    return readJsonFile(joinPathFragments(workspaceRoot, 'tsconfig.base.json'));
+    return readJsonFile(join(workspaceRoot, 'tsconfig.base.json'));
   } catch (e) {
     logger.warn(`Error reading "tsconfig.base.json": \n${JSON.stringify(e)}`);
     return null;
@@ -126,7 +125,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       /^index\.[jt]sx?$/.exec(file)
     );
     if (file) {
-      filePath = joinPathFragments(filePath, file);
+      filePath = join(filePath, file);
     } else {
       return;
     }
@@ -252,35 +251,23 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
 
       let moduleFilePath;
       if (modulePath.endsWith('.js') || modulePath.endsWith('.jsx')) {
-        moduleFilePath = joinPathFragments(dirname(filePath), modulePath);
+        moduleFilePath = join(dirname(filePath), modulePath);
         if (!existsSync(moduleFilePath)) {
           const tsifiedModulePath = modulePath.replace(/\.js(x?)$/, '.ts$1');
-          moduleFilePath = joinPathFragments(
-            dirname(filePath),
-            `${tsifiedModulePath}`
-          );
+          moduleFilePath = join(dirname(filePath), `${tsifiedModulePath}`);
         }
       } else if (modulePath.endsWith('.ts') || modulePath.endsWith('.tsx')) {
-        moduleFilePath = joinPathFragments(dirname(filePath), modulePath);
+        moduleFilePath = join(dirname(filePath), modulePath);
       } else {
-        moduleFilePath = joinPathFragments(
-          dirname(filePath),
-          `${modulePath}.ts`
-        );
+        moduleFilePath = join(dirname(filePath), `${modulePath}.ts`);
         if (!existsSync(moduleFilePath)) {
           // might be a tsx file
-          moduleFilePath = joinPathFragments(
-            dirname(filePath),
-            `${modulePath}.tsx`
-          );
+          moduleFilePath = join(dirname(filePath), `${modulePath}.tsx`);
         }
       }
       if (!existsSync(moduleFilePath)) {
         // might be an index.ts
-        moduleFilePath = joinPathFragments(
-          dirname(filePath),
-          `${modulePath}/index.ts`
-        );
+        moduleFilePath = join(dirname(filePath), `${modulePath}/index.ts`);
       }
 
       if (hasMemberExport(exportedMember, moduleFilePath)) {

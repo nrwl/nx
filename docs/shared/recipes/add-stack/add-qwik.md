@@ -13,7 +13,7 @@ We'll be using an Nx Plugin for Qwik called [qwik-nx](https://github.com/qwikifi
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
@@ -42,6 +42,14 @@ yarn add -D qwik-nx
 
 ```shell
 pnpm add -D qwik-nx
+```
+
+{% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add -D qwik-nx
 ```
 
 {% /tab %}

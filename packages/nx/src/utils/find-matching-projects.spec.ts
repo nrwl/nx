@@ -162,6 +162,22 @@ describe('findMatchingProjects', () => {
       'nested',
     ]);
   });
+
+  it('should support "all except" style patterns', () => {
+    expect(findMatchingProjects(['!a'], projectGraph)).toEqual([
+      'test-project',
+      'b',
+      'c',
+      'nested',
+    ]);
+    expect(findMatchingProjects(['!tag:api'], projectGraph)).toEqual([
+      'b',
+      'nested',
+    ]);
+    expect(
+      findMatchingProjects(['!tag:api', 'test-project'], projectGraph)
+    ).toEqual(['b', 'nested', 'test-project']);
+  });
 });
 
 const projects = [

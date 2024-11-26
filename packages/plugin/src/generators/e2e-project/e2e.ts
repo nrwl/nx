@@ -11,6 +11,7 @@ import {
   names,
   offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   updateProjectConfiguration,
@@ -20,7 +21,8 @@ import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import type { Schema } from './schema';
 
@@ -28,7 +30,7 @@ interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectName: string;
   pluginPropertyName: string;
-  linter: Linter;
+  linter: Linter | LinterType;
 }
 
 async function normalizeOptions(
@@ -37,37 +39,26 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   let projectRoot: string;
-  if (options.projectNameAndRootFormat === 'as-provided') {
-    const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
-      host,
-      {
-        name: projectName,
-        projectType: 'application',
-        directory:
-          options.rootProject || !options.projectDirectory
-            ? projectName
-            : `${options.projectDirectory}-e2e`,
-        projectNameAndRootFormat: `as-provided`,
-        callingGenerator: '@nx/plugin:e2e-project',
-      }
-    );
-    projectRoot = projectNameAndRootOptions.projectRoot;
-  } else {
-    const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-      options.projectDirectory
-    );
-    const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
-    const appsDir = layoutDirectory ?? defaultAppsDir;
-
-    projectRoot = options.rootProject
-      ? projectName
-      : projectDirectory
-      ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
-      : joinPathFragments(appsDir, projectName);
-  }
+  const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
+    host,
+    {
+      name: projectName,
+      projectType: 'application',
+      directory:
+        options.rootProject || !options.projectDirectory
+          ? projectName
+          : `${options.projectDirectory}-e2e`,
+    }
+  );
+  projectRoot = projectNameAndRootOptions.projectRoot;
 
   const pluginPropertyName = names(options.pluginName).propertyName;
 
@@ -181,12 +172,13 @@ async function addLintingToApplication(
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   return await e2eProjectGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
 
 export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'e2e-project');
+
   const tasks: GeneratorCallback[] = [];
 
   validatePlugin(host, schema.pluginName);

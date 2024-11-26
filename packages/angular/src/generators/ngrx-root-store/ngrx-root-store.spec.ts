@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -457,7 +459,7 @@ describe('NgRxRootStoreGenerator', () => {
 
 async function createNgModuleApp(tree: Tree, name = 'my-app') {
   await generateTestApplication(tree, {
-    name,
+    directory: name,
     standalone: false,
     routing: true,
     skipFormat: true,
@@ -466,7 +468,7 @@ async function createNgModuleApp(tree: Tree, name = 'my-app') {
 
 async function createStandaloneApp(tree: Tree, name = 'my-app') {
   await generateTestApplication(tree, {
-    name,
+    directory: name,
     standalone: true,
     routing: true,
     skipFormat: true,

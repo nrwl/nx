@@ -4,7 +4,5 @@
   "sourceRoot": "nx-dev/ui-primitives/src",
   "projectType": "library",
   "tags": [],
-  "targets": {
-    "lint": {}
-  }
+  "targets": {}
 }

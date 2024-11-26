@@ -17,7 +17,6 @@ import { output } from '../../utils/output';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { generateGraph } from '../graph/graph';
 
 export async function runOne(
@@ -27,17 +26,19 @@ export async function runOne(
     string,
     (TargetDependencyConfig | string)[]
   > = {},
-  extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
+  extraOptions = {
+    excludeTaskDependencies: args.excludeTaskDependencies,
+    loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+  } as {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
   }
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
-  workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const projectGraph = await createProjectGraphAsync();
 
   const opts = parseRunOneOptions(cwd, args, projectGraph, nxJson);
 
@@ -52,9 +53,6 @@ export async function runOne(
     nxJson
   );
 
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
   if (nxArgs.help) {
     await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);
@@ -70,7 +68,7 @@ export async function runOne(
 
     return await generateGraph(
       {
-        watch: false,
+        watch: true,
         open: true,
         view: 'tasks',
         targets: nxArgs.targets,

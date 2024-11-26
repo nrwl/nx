@@ -9,6 +9,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
+import { TaskHistory, getTaskHistory } from '../utils/task-history';
 
 export interface Batch {
   executorName: string;
@@ -19,16 +20,39 @@ export class TasksSchedule {
   private notScheduledTaskGraph = this.taskGraph;
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
   private reverseProjectGraph = reverse(this.projectGraph);
+  private taskHistory: TaskHistory | null = getTaskHistory();
+
   private scheduledBatches: Batch[] = [];
   private scheduledTasks: string[] = [];
+  private runningTasks = new Set<string>();
   private completedTasks = new Set<string>();
   private scheduleRequestsExecutionChain = Promise.resolve();
+  private estimatedTaskTimings: Record<string, number> = {};
+  private projectDependencies: Record<string, number> = {};
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
+
+  public async init() {
+    if (this.taskHistory) {
+      this.estimatedTaskTimings =
+        await this.taskHistory.getEstimatedTaskTimings(
+          Object.values(this.taskGraph.tasks).map((t) => t.target)
+        );
+    }
+
+    for (const project of Object.values(this.taskGraph.tasks).map(
+      (t) => t.target.project
+    )) {
+      this.projectDependencies[project] ??= findAllProjectNodeDependencies(
+        project,
+        this.reverseProjectGraph
+      ).length;
+    }
+  }
 
   public async scheduleNextTasks() {
     this.scheduleRequestsExecutionChain =
@@ -48,6 +72,7 @@ export class TasksSchedule {
   public complete(taskIds: string[]) {
     for (const taskId of taskIds) {
       this.completedTasks.add(taskId);
+      this.runningTasks.delete(taskId);
     }
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
@@ -110,23 +135,38 @@ export class TasksSchedule {
         const project1 = this.taskGraph.tasks[taskId1].target.project;
         const project2 = this.taskGraph.tasks[taskId2].target.project;
 
-        return (
-          findAllProjectNodeDependencies(project2, this.reverseProjectGraph)
-            .length -
-          findAllProjectNodeDependencies(project1, this.reverseProjectGraph)
-            .length
-        );
+        const project1NodeDependencies = this.projectDependencies[project1];
+        const project2NodeDependencies = this.projectDependencies[project2];
+
+        const dependenciesDiff =
+          project2NodeDependencies - project1NodeDependencies;
+
+        if (dependenciesDiff !== 0) {
+          return dependenciesDiff;
+        }
+
+        const task1Timing: number | undefined =
+          this.estimatedTaskTimings[taskId1];
+        if (!task1Timing) {
+          // if no timing or 0, put task1 at beginning
+          return -1;
+        }
+        const task2Timing: number | undefined =
+          this.estimatedTaskTimings[taskId2];
+        if (!task2Timing) {
+          // if no timing or 0, put task2 at beginning
+          return 1;
+        }
+        return task2Timing - task1Timing;
       });
+    this.runningTasks.add(taskId);
   }
 
   private async scheduleBatches() {
     const batchMap: Record<string, TaskGraph> = {};
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
-      const executorName = await getExecutorNameForTask(
-        rootTask,
-        this.projectGraph
-      );
+      const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
       await this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -149,16 +189,16 @@ export class TasksSchedule {
     task: Task,
     rootExecutorName: string,
     isRoot: boolean
-  ) {
-    if (!this.canBatchTaskBeScheduled(task.id, batches[rootExecutorName])) {
+  ): Promise<void> {
+    if (!this.canBatchTaskBeScheduled(task, batches[rootExecutorName])) {
       return;
     }
 
-    const { batchImplementationFactory } = await getExecutorForTask(
+    const { batchImplementationFactory } = getExecutorForTask(
       task,
       this.projectGraph
     );
-    const executorName = await getExecutorNameForTask(task, this.projectGraph);
+    const executorName = getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
       return;
     }
@@ -194,18 +234,45 @@ export class TasksSchedule {
   }
 
   private canBatchTaskBeScheduled(
-    taskId: string,
+    task: Task,
     batchTaskGraph: TaskGraph | undefined
   ): boolean {
+    // task self needs to have parallelism true
     // all deps have either completed or belong to the same batch
-    return this.taskGraph.dependencies[taskId].every(
-      (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+    return (
+      task.parallelism === true &&
+      this.taskGraph.dependencies[task.id].every(
+        (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+      )
     );
   }
 
-  private canBeScheduled(taskId: string) {
-    return this.taskGraph.dependencies[taskId].every((id) =>
-      this.completedTasks.has(id)
+  private canBeScheduled(taskId: string): boolean {
+    const hasDependenciesCompleted = this.taskGraph.dependencies[taskId].every(
+      (id) => this.completedTasks.has(id)
     );
+
+    // if dependencies have not completed, cannot schedule
+    if (!hasDependenciesCompleted) {
+      return false;
+    }
+
+    // if there are no running tasks, can schedule anything
+    if (this.runningTasks.size === 0) {
+      return true;
+    }
+
+    const runningTasksNotSupportParallelism = Array.from(
+      this.runningTasks
+    ).some((taskId) => {
+      return this.taskGraph.tasks[taskId].parallelism === false;
+    });
+    if (runningTasksNotSupportParallelism) {
+      // if any running tasks do not support parallelism, no other tasks can be scheduled
+      return false;
+    } else {
+      // if all running tasks support parallelism, can only schedule task with parallelism
+      return this.taskGraph.tasks[taskId].parallelism === true;
+    }
   }
 }

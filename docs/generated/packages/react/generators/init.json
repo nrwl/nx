@@ -29,7 +29,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/react` plugin.",
+  "description": "Initialize the `@nx/react` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/react/src/generators/init/init#reactInitGenerator.ts",

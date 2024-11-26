@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
+{
+  "projects": {
+    "mylib": {
+      "root": "mylib",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "rollup -c rollup.config.js",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "rollup",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "mylib",
+          },
+          "outputs": [
+            "{workspaceRoot}/mylib/build",
+            "{workspaceRoot}/mylib/dist",
+          ],
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/rollup/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "rollup -c rollup.config.js",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "rollup",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist",
+          ],
+        },
+      },
+    },
+  },
+}
+`;

@@ -2,20 +2,28 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
+  logger,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
-  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { minimatch } from 'minimatch';
+
+const pmc = getPackageManagerCommand();
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -23,81 +31,139 @@ export interface VitePluginOptions {
   serveTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
+  typecheckTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'vite.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
+type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
-  return readJsonFile(cachePath);
+function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
+  writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
   return [];
 };
 
-export const createNodes: CreateNodes<VitePluginOptions> = [
-  '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
-  async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
+const viteVitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
+
+export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
+  viteVitestConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
     }
-
-    options = normalizeOptions(options);
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildViteTargets(configFilePath, projectRoot, options, context);
-
-    calculatedTargets[hash] = targets;
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets,
-        },
-      },
-    };
   },
 ];
+
+export const createNodes: CreateNodes<VitePluginOptions> = [
+  viteVitestConfigGlob,
+  async (configFilePath, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(configFilePath, options, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: VitePluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, ViteTargets>
+) {
+  const projectRoot = dirname(configFilePath);
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const tsConfigFiles =
+    siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ?? [];
+
+  const normalizedOptions = normalizeOptions(options);
+
+  // We do not want to alter how the hash is calculated, so appending the config file path to the hash
+  // to prevent vite/vitest files overwriting the target cache created by the other
+  const hash =
+    (await calculateHashForCreateNodes(
+      projectRoot,
+      normalizedOptions,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    )) + configFilePath;
+
+  const { isLibrary, ...viteTargets } = await buildViteTargets(
+    configFilePath,
+    projectRoot,
+    normalizedOptions,
+    tsConfigFiles,
+    context
+  );
+  targetsCache[hash] ??= viteTargets;
+
+  const { targets, metadata } = targetsCache[hash];
+  const project: ProjectConfiguration = {
+    root: projectRoot,
+    targets,
+    metadata,
+  };
+
+  // If project is buildable, then the project type.
+  // If it is not buildable, then leave it to other plugins/project.json to set the project type.
+  if (project.targets[options.buildTargetName]) {
+    project.projectType = isLibrary ? 'library' : 'application';
+  }
+
+  return {
+    projects: {
+      [projectRoot]: project,
+    },
+  };
+}
 
 async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
+  tsConfigFiles: string[],
   context: CreateNodesContext
-) {
+): Promise<ViteTargets & { isLibrary: boolean }> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
   );
+  // Workaround for the `build$3 is not a function` error that we sometimes see in agents.
+  // This should be removed later once we address the issue properly
+  try {
+    const importEsbuild = () => new Function('return import("esbuild")')();
+    await importEsbuild();
+  } catch {
+    // do nothing
+  }
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteConfig = await resolveConfig(
+  const viteBuildConfig = await resolveConfig(
     {
       configFile: absoluteConfigFilePath,
       mode: 'development',
@@ -105,17 +171,22 @@ async function buildViteTargets(
     'build'
   );
 
-  const { buildOutputs, testOutputs, hasTest, isBuildable } = getOutputs(
-    viteConfig,
-    projectRoot
-  );
+  const { buildOutputs, testOutputs, hasTest, isBuildable, hasServeConfig } =
+    getOutputs(viteBuildConfig, projectRoot, context.workspaceRoot);
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
 
   // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
-  if (!configFilePath.includes('vitest.config') && isBuildable) {
+  const hasRemixPlugin =
+    viteBuildConfig.plugins &&
+    viteBuildConfig.plugins.some((p) => p.name === 'remix');
+  if (
+    !configFilePath.includes('vitest.config') &&
+    !hasRemixPlugin &&
+    isBuildable
+  ) {
     targets[options.buildTargetName] = await buildTarget(
       options.buildTargetName,
       namedInputs,
@@ -123,11 +194,44 @@ async function buildViteTargets(
       projectRoot
     );
 
-    targets[options.serveTargetName] = serveTarget(projectRoot);
+    // If running in library mode, then there is nothing to serve.
+    if (!viteBuildConfig.build?.lib || hasServeConfig) {
+      targets[options.serveTargetName] = serveTarget(projectRoot);
+      targets[options.previewTargetName] = previewTarget(
+        projectRoot,
+        options.buildTargetName
+      );
+      targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+    }
+  }
 
-    targets[options.previewTargetName] = previewTarget(projectRoot);
-
-    targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+  if (tsConfigFiles.length) {
+    const tsConfigToUse =
+      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
+        tsConfigFiles.includes(t)
+      ) ?? tsConfigFiles[0];
+    targets[options.typecheckTargetName] = {
+      cache: true,
+      inputs: [
+        ...('production' in namedInputs
+          ? ['production', '^production']
+          : ['default', '^default']),
+        { externalDependencies: ['typescript'] },
+      ],
+      command: `tsc --noEmit -p ${tsConfigToUse}`,
+      options: { cwd: joinPathFragments(projectRoot) },
+      metadata: {
+        description: `Run Typechecking`,
+        help: {
+          command: `${pmc.exec} tsc --help -p ${tsConfigToUse}`,
+          example: {
+            options: {
+              noEmit: true,
+            },
+          },
+        },
+      },
+    };
   }
 
   // if file is vitest.config or vite.config has definition for test, create target for test
@@ -139,7 +243,8 @@ async function buildViteTargets(
     );
   }
 
-  return targets;
+  const metadata = {};
+  return { targets, metadata, isLibrary: Boolean(viteBuildConfig.build?.lib) };
 }
 
 async function buildTarget(
@@ -164,6 +269,19 @@ async function buildTarget(
       },
     ],
     outputs,
+    metadata: {
+      technologies: ['vite'],
+      description: `Run Vite build`,
+      help: {
+        command: `${pmc.exec} vite build --help`,
+        example: {
+          options: {
+            sourcemap: true,
+            manifest: 'manifest.json',
+          },
+        },
+      },
+    },
   };
 }
 
@@ -173,16 +291,41 @@ function serveTarget(projectRoot: string) {
     options: {
       cwd: joinPathFragments(projectRoot),
     },
+    metadata: {
+      technologies: ['vite'],
+      description: `Starts Vite dev server`,
+      help: {
+        command: `${pmc.exec} vite --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
+    },
   };
 
   return targetConfig;
 }
 
-function previewTarget(projectRoot: string) {
+function previewTarget(projectRoot: string, buildTargetName) {
   const targetConfig: TargetConfiguration = {
     command: `vite preview`,
+    dependsOn: [buildTargetName],
     options: {
       cwd: joinPathFragments(projectRoot),
+    },
+    metadata: {
+      technologies: ['vite'],
+      description: `Locally preview Vite production build`,
+      help: {
+        command: `${pmc.exec} vite preview --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
     },
   };
 
@@ -197,7 +340,7 @@ async function testTarget(
   projectRoot: string
 ) {
   return {
-    command: `vitest run`,
+    command: `vitest`,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
@@ -207,8 +350,22 @@ async function testTarget(
       {
         externalDependencies: ['vitest'],
       },
+      { env: 'CI' },
     ],
     outputs,
+    metadata: {
+      technologies: ['vite'],
+      description: `Run Vite tests`,
+      help: {
+        command: `${pmc.exec} vitest --help`,
+        example: {
+          options: {
+            bail: 1,
+            coverage: true,
+          },
+        },
+      },
+    },
   };
 }
 
@@ -217,6 +374,7 @@ function serveStaticTarget(options: VitePluginOptions) {
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
+      spa: true,
     },
   };
 
@@ -224,30 +382,36 @@ function serveStaticTarget(options: VitePluginOptions) {
 }
 
 function getOutputs(
-  viteConfig: Record<string, any> | undefined,
-  projectRoot: string
+  viteBuildConfig: Record<string, any> | undefined,
+  projectRoot: string,
+  workspaceRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
   hasTest: boolean;
   isBuildable: boolean;
+  hasServeConfig: boolean;
 } {
-  const { build, test } = viteConfig;
+  const { build, test, server } = viteBuildConfig;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
     projectRoot,
+    workspaceRoot,
     'dist'
   );
 
   const isBuildable =
     build?.lib ||
-    build?.rollupOptions?.inputs ||
+    build?.rollupOptions?.input ||
     existsSync(join(workspaceRoot, projectRoot, 'index.html'));
+
+  const hasServeConfig = Boolean(server);
 
   const reportsDirectoryPath = normalizeOutputPath(
     test?.coverage?.reportsDirectory,
     projectRoot,
+    workspaceRoot,
     'coverage'
   );
 
@@ -256,12 +420,14 @@ function getOutputs(
     testOutputs: [reportsDirectoryPath],
     hasTest: !!test,
     isBuildable,
+    hasServeConfig,
   };
 }
 
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string,
+  workspaceRoot: string,
   path: 'coverage' | 'dist'
 ): string | undefined {
   if (!outputPath) {
@@ -290,5 +456,6 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.previewTargetName ??= 'preview';
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';
+  options.typecheckTargetName ??= 'typecheck';
   return options;
 }

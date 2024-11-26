@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxJestConvertToInferred",
+  "description": "Convert existing Jest project(s) using `@nx/jest:jest` executor to use `@nx/jest/plugin`.",
+  "title": "Convert Jest project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/jest:jest` executor to use `@nx/jest/plugin`. If not provided, all projects using the `@nx/jest:jest` executor will be converted.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files.",
+      "default": false
+    }
+  }
+}

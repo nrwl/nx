@@ -1,9 +1,11 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
-  readProjectConfiguration,
-  updateJson,
-  Tree,
   readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
 } from '@nx/devkit';
 
 import { Linter } from '../utils/linter';
@@ -40,7 +42,63 @@ describe('@nx/eslint:lint-project', () => {
     });
   });
 
-  it('should generate a eslint config and configure the target in project configuration', async () => {
+  it('should generate a flat eslint base config', async () => {
+    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+      "const nx = require("@nx/eslint-plugin");
+
+      module.exports = [
+          ...nx.configs["flat/base"],
+          ...nx.configs["flat/typescript"],
+          ...nx.configs["flat/javascript"],
+          {
+              ignores: ["**/dist"]
+          },
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              rules: { "@nx/enforce-module-boundaries": [
+                      "error",
+                      {
+                          enforceBuildableLibDependency: true,
+                          allow: ["^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"],
+                          depConstraints: [{
+                                  sourceTag: "*",
+                                  onlyDependOnLibsWithTags: ["*"]
+                              }]
+                      }
+                  ] }
+          },
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              // Override or add rules here
+              rules: {}
+          },
+      ];
+      "
+    `);
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
+  it('should generate a eslint config (legacy)', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
@@ -119,7 +177,12 @@ describe('@nx/eslint:lint-project', () => {
             "files": ["*.json"],
             "parser": "jsonc-eslint-parser",
             "rules": {
-              "@nx/dependency-checks": "error"
+              "@nx/dependency-checks": [
+                "error",
+                {
+                  "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs}"]
+                }
+              ]
             }
           }
         ]
@@ -297,5 +360,40 @@ describe('@nx/eslint:lint-project', () => {
           "node_modules
           "
         `);
+  });
+
+  it('should support generating explicit targets on project config', async () => {
+    addProjectConfiguration(tree, 'explicit-lib', {
+      root: 'libs/explicit-lib',
+      projectType: 'library',
+      targets: {},
+    });
+    addProjectConfiguration(tree, 'inferred-lib', {
+      root: 'libs/inferred-lib',
+      projectType: 'library',
+      targets: {},
+    });
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'explicit-lib',
+      addExplicitTargets: true,
+    });
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'inferred-lib',
+      addExplicitTargets: false,
+    });
+
+    const explicitCOnfig = readProjectConfiguration(tree, 'explicit-lib');
+    expect(explicitCOnfig.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
+      }
+    `);
+    const inferredConfig = readProjectConfiguration(tree, 'inferred-lib');
+    expect(inferredConfig.targets.lint).toBeUndefined();
   });
 });

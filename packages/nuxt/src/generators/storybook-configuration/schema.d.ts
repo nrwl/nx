@@ -1,4 +1,4 @@
-import { Linter } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
   project: string;
@@ -6,7 +6,7 @@ export interface Schema {
   generateStories?: boolean;
   js?: boolean;
   tsConfiguration?: boolean;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   ignorePaths?: string[];
   configureStaticServe?: boolean;
 }

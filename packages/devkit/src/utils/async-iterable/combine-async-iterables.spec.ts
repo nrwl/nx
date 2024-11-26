@@ -1,5 +1,7 @@
 import { combineAsyncIterables } from './combine-async-iterables';
 import { createAsyncIterable } from './create-async-iterable';
+import { eachValueFrom } from 'nx/src/adapter/rxjs-for-await';
+import { Subject } from 'rxjs';
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -143,4 +145,44 @@ describe('combineAsyncIterables', () => {
       expect(e.message).toMatch(/threw in b/);
     }
   });
+
+  it('should handle throws from combined iterator which uses combineAsyncIterable and eachValueFrom', async () => {
+    // ARRANGE
+    const subjectThatWontThrow = new Subject<string>();
+    const iter =
+      createCombinedAsyncIterableFromEachValueFrom(subjectThatWontThrow);
+    const subjectThatThrows = new Subject<string>();
+    const iter2 =
+      createCombinedAsyncIterableFromEachValueFrom(subjectThatThrows);
+
+    // ACT
+    const c = combineAsyncIterables(iter, iter2);
+    subjectThatWontThrow.next('from test');
+    subjectThatThrows.next('from test');
+    subjectThatThrows.error('my error');
+
+    // ASSERT
+    try {
+      for await (const _x of c) {
+        // do nothing
+      }
+    } catch (e) {
+      expect(e).toMatch(/my error/);
+    }
+  });
 });
+
+async function* createCombinedAsyncIterableFromEachValueFrom(
+  subject: Subject<string>
+) {
+  async function* otherIterable() {
+    yield 'foo';
+    yield 'bar';
+    yield 'baz';
+  }
+  async function* fromEachValueFrom() {
+    return yield* eachValueFrom(subject.asObservable());
+  }
+
+  return yield* combineAsyncIterables(otherIterable(), fromEachValueFrom());
+}

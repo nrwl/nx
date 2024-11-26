@@ -1,9 +1,10 @@
 import { names, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../../utils/test-runners';
-import { normalizeNewProjectPrefix } from '../../utils/project';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -28,6 +29,7 @@ export async function normalizeOptions(
     ...schema,
   };
 
+  await ensureProjectName(host, options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -38,8 +40,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/angular:library',
   });
 
   const fileName = options.simpleName
@@ -52,15 +52,12 @@ export async function normalizeOptions(
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
 
-  const npmScope = getNpmScope(host);
-  const prefix = normalizeNewProjectPrefix(options.prefix, npmScope, 'lib');
-
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
-    prefix,
+    prefix: options.prefix ?? 'lib',
     name: projectName,
     projectRoot,
     entryFile: 'index',

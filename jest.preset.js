@@ -1,4 +1,5 @@
-const nxPreset = require('@nx/jest/preset').default;
+// Ensure that the preset loads from node_modules rather than our local typescript source
+const nxPreset = require('./node_modules/@nx/jest/preset').default;
 
 module.exports = {
   ...nxPreset,
@@ -8,10 +9,9 @@ module.exports = {
     '^.+\\.(ts|js|html)$': 'ts-jest',
   },
   resolver: '../../scripts/patched-jest-resolver.js',
-  // Fixes https://github.com/jestjs/jest/issues/11956
-  runtime: '@side/jest-runtime',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
   maxWorkers: 1,
   testEnvironment: 'node',
+  setupFiles: ['../../scripts/unit-test-setup.js'],
 };

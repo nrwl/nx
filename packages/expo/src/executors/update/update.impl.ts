@@ -3,11 +3,7 @@ import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { resolveEas } from '../../utils/resolve-eas';
-import {
-  displayNewlyAddedDepsMessage,
-  syncDeps,
-} from '../sync-deps/sync-deps.impl';
-import { installAsync } from '../install/install.impl';
+import { installAndUpdatePackageJson } from '../install/install.impl';
 
 import { ExpoEasUpdateOptions } from './schema';
 
@@ -23,13 +19,11 @@ export default async function* buildExecutor(
 ): AsyncGenerator<ReactNativeUpdateOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  await installAsync(context.root, { packages: ['expo-updates'] });
-  displayNewlyAddedDepsMessage(
-    context.projectName,
-    await syncDeps(projectRoot, context.root, ['expo-updates'])
-  );
 
   try {
+    await installAndUpdatePackageJson(context, {
+      packages: ['expo-updates'],
+    });
     await runCliUpdate(context.root, projectRoot, options);
     yield { success: true };
   } finally {

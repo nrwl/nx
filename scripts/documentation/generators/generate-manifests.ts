@@ -43,6 +43,10 @@ export function generateManifests(workspace: string): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Manifests`);
   const documentationPath = resolve(workspace, 'docs');
   const generatedDocumentationPath = resolve(documentationPath, 'generated');
+  const generatedExternalDocumentationPath = resolve(
+    documentationPath,
+    'external-generated'
+  );
   const targetFolder: string = resolve(generatedDocumentationPath, 'manifests');
   const documents: Partial<DocumentMetadata>[] = readJsonSync(
     `${documentationPath}/map.json`,
@@ -50,12 +54,17 @@ export function generateManifests(workspace: string): Promise<void[]> {
       encoding: 'utf8',
     }
   ).content;
-  const packages: PackageMetadata[] = readJsonSync(
-    `${generatedDocumentationPath}/packages-metadata.json`,
-    {
+  const packages: PackageMetadata[] = [
+    ...readJsonSync(`${generatedDocumentationPath}/packages-metadata.json`, {
       encoding: 'utf8',
-    }
-  );
+    }),
+    ...readJsonSync(
+      `${generatedExternalDocumentationPath}/packages-metadata.json`,
+      {
+        encoding: 'utf8',
+      }
+    ),
+  ];
 
   /**
    * We are starting by selecting what section of the map.json we want to work with.
@@ -183,11 +192,15 @@ function generateTags(manifests: Manifest[]) {
         Object.values(item.documents).forEach(
           (documentMetadata: DocumentMetadata) => {
             documentMetadata.tags.forEach((t: string) => {
+              const filePath = documentMetadata.file.startsWith(
+                'generated/packages'
+              )
+                ? documentMetadata.file
+                : ['generated', 'packages', documentMetadata.file].join('/');
+
               const tagData = {
                 description: documentMetadata.description,
-                file: ['generated', 'packages', documentMetadata.file].join(
-                  '/'
-                ),
+                file: filePath,
                 id: documentMetadata.id,
                 name: documentMetadata.name,
                 path: documentMetadata.path,

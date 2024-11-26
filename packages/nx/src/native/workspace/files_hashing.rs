@@ -10,7 +10,8 @@ use crate::native::walker::{nx_walker, NxFile};
 use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
 
 pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
-    let files = nx_walker(workspace_root).collect::<Vec<_>>();
+    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
+    trace!("Found {} files", files.len());
     hash_files(files).into_iter().collect()
 }
 
@@ -18,7 +19,7 @@ pub fn selective_files_hash(
     workspace_root: &Path,
     mut archived_files: NxFileHashes,
 ) -> NxFileHashes {
-    let files = nx_walker(workspace_root).collect::<Vec<_>>();
+    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
     let mut archived = vec![];
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
@@ -50,15 +51,17 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
     let chunks = files.len() / num_parallelism;
 
     let now = std::time::Instant::now();
-    let files = if chunks < num_parallelism {
+    let files = if cfg!(target_arch = "wasm32") || chunks < num_parallelism {
+        trace!("hashing workspace files in parallel");
         files
-            .into_iter()
+            .into_par_iter()
             .filter_map(|file| {
                 hash_file_path(&file.full_path)
                     .map(|hash| (file.normalized_path, NxFileHashed(hash, file.mod_time)))
             })
             .collect::<Vec<_>>()
     } else {
+        trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
         files
             .par_chunks(chunks)
             .flat_map_iter(|chunks| {

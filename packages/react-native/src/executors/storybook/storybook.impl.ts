@@ -1,4 +1,5 @@
-import { join } from 'path';
+import { writeFileSync } from 'node:fs';
+import { join, relative, resolve, dirname } from 'path';
 import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
 import { fileExists } from '@nx/workspace/src/utilities/fileutils';
 import * as chalk from 'chalk';
@@ -9,17 +10,18 @@ import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
-import { writeFileSync } from 'fs-extra';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 /**
- * TODO (@xiongemi): remove this function in v19.
+ * TODO (@xiongemi): remove this function in v20.
  * @deprecated Going to use the default react storybook target. Use @nx/react:storybook executor instead.
  */
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
+  const { syncDeps: isSyncDepsEnabled = true } = options;
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   logger.info(
@@ -37,13 +39,15 @@ export default async function* reactNativeStorybookExecutor(
   );
   const projectPackageJson = readJsonFile<PackageJson>(packageJsonPath);
 
-  if (fileExists(packageJsonPath))
+  if (isSyncDepsEnabled && fileExists(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
       await syncDeps(
+        context.projectName,
         projectPackageJson,
         packageJsonPath,
         workspacePackageJson,
+        context.projectGraph,
         [
           `@storybook/react-native`,
           '@storybook/addon-ondevice-actions',
@@ -64,9 +68,15 @@ export function runCliStorybook(
   workspaceRoot: string,
   options: ReactNativeStorybookOptions
 ) {
-  const storiesFiles: string[] = options.searchDir.flatMap((dir) =>
-    globSync(join(dir, options.pattern))
-  );
+  const storiesFiles: string[] = options.searchDir.flatMap((dir) => {
+    const storyFilePaths: string[] = globSync(join(dir, options.pattern));
+
+    return storyFilePaths.map((storyFilePath) => {
+      const loaderPath: string = resolve(dirname(options.outputFile));
+      return relative(loaderPath, storyFilePath);
+    });
+  });
+
   if (storiesFiles.length === 0) {
     logger.warn(`${chalk.bold.yellow('warn')} No stories found.`);
   }

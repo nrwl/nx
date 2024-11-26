@@ -1,4 +1,4 @@
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import * as migrationsJson from '../../../migrations.json';
 import { executeMigrations } from '../migrate/migrate';
 import { output } from '../../utils/output';
@@ -7,11 +7,7 @@ export async function repair(
   args: { verbose: boolean },
   extraMigrations = [] as any[]
 ) {
-  if (args['verbose']) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-  const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  return handleErrors(verbose, async () => {
+  return handleErrors(args.verbose, async () => {
     const nxMigrations = Object.entries(migrationsJson.generators).reduce(
       (agg, [name, migration]) => {
         const skip = migration['x-repair-skip'];
@@ -33,7 +29,7 @@ export async function repair(
     const migrationsThatMadeNoChanges = await executeMigrations(
       process.cwd(),
       migrations,
-      verbose,
+      args.verbose,
       false,
       ''
     );

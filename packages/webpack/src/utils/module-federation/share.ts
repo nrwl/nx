@@ -41,8 +41,18 @@ export function shareWorkspaceLibraries(
     return getEmptySharedLibrariesConfig();
   }
 
+  // Nested projects must come first, sort them as such
+  const sortedTsConfigPathAliases = {};
+  Object.keys(tsconfigPathAliases)
+    .sort((a, b) => {
+      return b.split('/').length - a.split('/').length;
+    })
+    .forEach(
+      (key) => (sortedTsConfigPathAliases[key] = tsconfigPathAliases[key])
+    );
+
   const pathMappings: { name: string; path: string }[] = [];
-  for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
+  for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
     const library = workspaceLibs.find((lib) => lib.importKey === key);
     if (!library) {
       continue;
@@ -52,7 +62,7 @@ export function shareWorkspaceLibraries(
     // It will do nothing for React Projects
     collectWorkspaceLibrarySecondaryEntryPoints(
       library,
-      tsconfigPathAliases
+      sortedTsConfigPathAliases
     ).forEach(({ name, path }) =>
       pathMappings.push({
         name,
@@ -71,7 +81,12 @@ export function shareWorkspaceLibraries(
   return {
     getAliases: () =>
       pathMappings.reduce(
-        (aliases, library) => ({ ...aliases, [library.name]: library.path }),
+        (aliases, library) => ({
+          ...aliases,
+          // If the library path ends in a wildcard, remove it as webpack can't handle this in resolve.alias
+          // e.g. path/to/my/lib/* -> path/to/my/lib
+          [library.name]: library.path.replace(/\/\*$/, ''),
+        }),
         {}
       ),
     getLibraries: (
@@ -135,7 +150,22 @@ export function shareWorkspaceLibraries(
         for (const library of pathMappings) {
           const libFolder = normalize(dirname(library.path));
           if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
-            req.request = library.name;
+            const newReq = library.name.endsWith('/*')
+              ? /**
+                 * req usually is in the form of "../../../path/to/file"
+                 * library.path is usually in the form of "/Users/username/path/to/Workspace/path/to/library"
+                 *
+                 * When a wildcard is used in the TS path mappings, we want to get everything after the import to
+                 * re-route the request correctly inline with the webpack resolve.alias
+                 */
+                join(
+                  library.name,
+                  req.request.split(
+                    library.path.replace(workspaceRoot, '').replace('/*', '')
+                  )[1]
+                )
+              : library.name;
+            req.request = newReq;
           }
         }
       }),
@@ -276,10 +306,14 @@ function addStringDependencyToSharedConfig(
 
     sharedConfig[dependency] = config;
   } else {
-    throw new Error(
-      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
-        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
-    );
+    const pkgJsonPath = require.resolve(`${dependency}/package.json`);
+    if (!pkgJsonPath) {
+      throw new Error(
+        `Could not find package ${dependency} when applying it as a shared package. Are you sure it has been installed?`
+      );
+    }
+    const pkgJson = readJsonFile(pkgJsonPath);
+    const config = getNpmPackageSharedConfig(dependency, pkgJson.version);
   }
 }
 

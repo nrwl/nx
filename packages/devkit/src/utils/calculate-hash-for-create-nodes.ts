@@ -1,16 +1,20 @@
-import type { CreateNodesContext } from 'nx/src/devkit-exports';
-import { requireNx } from '../../nx';
 import { join } from 'path';
-const { hashWithWorkspaceContext, hashArray, hashObject } = requireNx();
+import {
+  CreateNodesContext,
+  CreateNodesContextV2,
+  hashArray,
+} from 'nx/src/devkit-exports';
 
-export function calculateHashForCreateNodes(
+import { hashObject, hashWithWorkspaceContext } from 'nx/src/devkit-internals';
+
+export async function calculateHashForCreateNodes(
   projectRoot: string,
   options: object,
-  context: CreateNodesContext,
+  context: CreateNodesContext | CreateNodesContextV2,
   additionalGlobs: string[] = []
-): string {
+): Promise<string> {
   return hashArray([
-    hashWithWorkspaceContext(context.workspaceRoot, [
+    await hashWithWorkspaceContext(context.workspaceRoot, [
       join(projectRoot, '**/*'),
       ...additionalGlobs,
     ]),

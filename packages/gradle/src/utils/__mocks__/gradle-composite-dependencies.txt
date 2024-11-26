@@ -1,0 +1,60 @@
+
+------------------------------------------------------------
+Project ':my-app:app'
+------------------------------------------------------------
+
+annotationProcessor - Annotation processors and their dependencies for source set 'main'.
+No dependencies
+
+compileClasspath - Compile classpath for source set 'main'.
++--- org.sample:number-utils:1.0 -> project :my-utils:number-utils
+\--- org.sample:string-utils:1.0 -> project :my-utils:string-utils
+
+compileOnly - Compile-only dependencies for the 'main' feature. (n)
+No dependencies
+
+default - Configuration for default artifacts. (n)
+No dependencies
+
+implementation - Implementation dependencies for the 'main' feature. (n)
++--- org.sample:number-utils:1.0 (n)
+\--- org.sample:string-utils:1.0 (n)
+
+mainSourceElements - List of source directories contained in the Main SourceSet. (n)
+No dependencies
+
+runtimeClasspath - Runtime classpath of source set 'main'.
++--- org.sample:number-utils:1.0 -> project :my-utils:number-utils
+\--- org.sample:string-utils:1.0 -> project :my-utils:string-utils
+     \--- org.apache.commons:commons-lang3:3.4
+
+runtimeElements - Runtime elements for the 'main' feature. (n)
+No dependencies
+
+runtimeOnly - Runtime-only dependencies for the 'main' feature. (n)
+No dependencies
+
+testAnnotationProcessor - Annotation processors and their dependencies for source set 'test'.
+No dependencies
+
+testCompileClasspath - Compile classpath for source set 'test'.
++--- org.sample:number-utils:1.0 -> project :my-utils:number-utils
+\--- org.sample:string-utils:1.0 -> project :my-utils:string-utils
+
+testCompileOnly - Compile only dependencies for source set 'test'. (n)
+No dependencies
+
+testImplementation - Implementation only dependencies for source set 'test'. (n)
+No dependencies
+
+testRuntimeClasspath - Runtime classpath of source set 'test'.
++--- org.sample:number-utils:1.0 -> project :my-utils:number-utils
+\--- org.sample:string-utils:1.0 -> project :my-utils:string-utils
+     \--- org.apache.commons:commons-lang3:3.4
+
+testRuntimeOnly - Runtime only dependencies for source set 'test'. (n)
+No dependencies
+
+(n) - A dependency or dependency configuration that cannot be resolved.
+
+A web-based, searchable dependency report is available by adding the --scan option.

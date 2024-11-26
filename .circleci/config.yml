@@ -6,7 +6,7 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.2
   rust: circleci/rust@1.6.0
-  browser-tools: circleci/browser-tools@1.4.6
+  browser-tools: circleci/browser-tools@1.4.8
 
 # -------------------------
 #        EXECUTORS
@@ -48,7 +48,7 @@ commands:
             - run:
                 name: Install pnpm package manager (linux)
                 command: |
-                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.14
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@9.8.0
       - when:
           condition:
             equal: [<< parameters.os >>, macos]
@@ -56,12 +56,12 @@ commands:
             - run:
                 name: Install pnpm package manager (macos)
                 command: |
-                  npm install -g @pnpm/exe@8.14
+                  npm install -g @pnpm/exe@9.8.0
       - run:
           name: Install Dependencies
           command: |
             pnpm install --frozen-lockfile
-            pnpm playwright install --with-deps firefox webkit chrome
+            pnpm playwright install --with-deps
       - save_cache:
           name: Save pnpm Package Cache
           key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
@@ -85,17 +85,19 @@ jobs:
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
+      NX_CLOUD_DTE_V2: 'true'
+      NX_CLOUD_DTE_SUMMARY: 'true'
+      NX_CLOUD_NO_TIMEOUTS: 'true'
     steps:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e" --require-explicit-completion
       - run:
           command: |
             sudo apt-get update
-            sudo apt-get install -y ca-certificates lsof
+            sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
       - browser-tools/install-chrome
-      - browser-tools/install-chromedriver
       - run-pnpm-install:
           os: linux
       - run:
@@ -114,13 +116,16 @@ jobs:
             pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
-            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
+      - run:
+          name: End CI Run
+          command: npx nx-cloud@next complete-ci-run
+          no_output_timeout: 20m
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
@@ -158,7 +163,12 @@ jobs:
       - run:
           name: Run E2E Tests for macOS
           command: |
-            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
+            if $HAS_CHANGED; then
+              pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            else
+              echo "Skip E2E tests for macOS as there are no changes in React Native projects."
+            fi
           no_output_timeout: 45m
 
 # -------------------------

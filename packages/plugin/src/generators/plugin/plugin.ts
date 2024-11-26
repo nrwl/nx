@@ -12,6 +12,7 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Linter } from '@nx/eslint';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
@@ -74,19 +75,16 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 }
 
 export async function pluginGenerator(host: Tree, schema: Schema) {
-  return await pluginGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'plugin');
 
-export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(
     await jsLibraryGenerator(host, {
       ...schema,
+      name: options.name,
+      directory: options.projectRoot,
       config: 'project',
       bundler: options.bundler,
       publishable: options.publishable,
@@ -133,7 +131,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         npmPackageName: options.npmPackageName,
         skipFormat: true,
         rootProject: options.rootProject,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
       })
     );
   }

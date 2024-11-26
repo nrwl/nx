@@ -6,6 +6,10 @@ The rule uses the project graph to collect all the dependencies of your project,
 
 We use the version numbers of the installed packages when checking whether the version specifier in `package.json` is correct. We do this because this is the only version for which we can "guarantee" that things work and were tested. If you specify a range outside of that version, that would mean that you are shipping potentially untested code.
 
+{% callout type="check" title="Keep the Package Manager Lock File Up-to-Date" %}
+The `@nx/dependency-checks` rule requires the presence of an up-to-date lock file in the workspace root to detect installed packages and their versions correctly. If the `package.json` file has changes that are not reflected in the lock file, make sure to perform a package installation.
+{% /callout %}
+
 ## Usage
 
 Library generators from `@nx` packages will configure this rule automatically when you opt-in for bundler/build setup. This rule is intended for publishable/buildable libraries, so it will only run if a `build` target is detected in the configuration (this name can be modified - see [options](#options)).
@@ -61,12 +65,13 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
     "error",
     {
       "buildTargets": ["build", "custom-build"], // add non standard build target names
-      "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
-      "includeTransitiveDependencies": true, // collect dependencies transitively from children
-      "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
       "checkMissingDependencies": true, // toggle to disable
       "checkObsoleteDependencies": true, // toggle to disable
-      "checkVersionMismatches": true // toggle to disable
+      "checkVersionMismatches": true, // toggle to disable
+      "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
+      "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
+      "includeTransitiveDependencies": true, // collect dependencies transitively from children
+      "useLocalPathsForWorkspaceDependencies": true // toggle to disable
     }
   ]
 }
@@ -74,12 +79,13 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
 
 ## Options
 
-| Property                      | Type            | Default     | Description                                                                                                                               |
-| ----------------------------- | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| buildTargets                  | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                |
-| ignoredDependencies           | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                 |
-| includeTransitiveDependencies | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                       |
-| ignoredFiles                  | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation. |
-| checkMissingDependencies      | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                         |
-| checkObsoleteDependencies     | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                          |
-| checkVersionMismatches        | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                   |
+| Property                              | Type            | Default     | Description                                                                                                                               |
+| ------------------------------------- | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| buildTargets                          | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                |
+| checkMissingDependencies              | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                         |
+| checkObsoleteDependencies             | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                          |
+| checkVersionMismatches                | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                   |
+| ignoredDependencies                   | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                 |
+| ignoredFiles                          | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation. |
+| includeTransitiveDependencies         | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                       |
+| useLocalPathsForWorkspaceDependencies | _boolean_       | _false_     | Set workspace dependencies as relative file:// paths. Useful for monorepos that link via file:// in package.json files.                   |

@@ -3,6 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -46,14 +47,31 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {}
 ): Promise<{ tag: string; extractedVersion: string } | null> {
   try {
-    const tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-      (r) =>
-        r
-          .trim()
-          .split('\n')
-          .map((t) => t.trim())
-          .filter(Boolean)
+    let tags: string[];
+    tags = await execCommand('git', [
+      'tag',
+      '--sort',
+      '-v:refname',
+      '--merged',
+    ]).then((r) =>
+      r
+        .trim()
+        .split('\n')
+        .map((t) => t.trim())
+        .filter(Boolean)
     );
+    if (!tags.length) {
+      // try again, but include all tags on the repo instead of just --merged ones
+      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
+        (r) =>
+          r
+            .trim()
+            .split('\n')
+            .map((t) => t.trim())
+            .filter(Boolean)
+      );
+    }
+
     if (!tags.length) {
       return null;
     }
@@ -97,21 +115,32 @@ export async function getGitDiff(
   from: string | undefined,
   to = 'HEAD'
 ): Promise<RawGitCommit[]> {
+  let range = '';
+  if (!from || from === to) {
+    range = to;
+  } else {
+    range = `${from}..${to}`;
+  }
+
+  // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
+  const separator = '§§§';
+
   // https://git-scm.com/docs/pretty-formats
   const r = await execCommand('git', [
     '--no-pager',
     'log',
-    `${from ? `${from}...` : ''}${to}`,
-    '--pretty="----%n%s|%h|%an|%ae%n%b"',
+    range,
+    `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
     '--name-status',
   ]);
+
   return r
     .split('----\n')
     .splice(1)
     .map((line) => {
       const [firstLine, ..._body] = line.split('\n');
       const [message, shortHash, authorName, authorEmail] =
-        firstLine.split('|');
+        firstLine.split(separator);
       const r: RawGitCommit = {
         message,
         shortHash,
@@ -122,19 +151,71 @@ export async function getGitDiff(
     });
 }
 
+async function getChangedTrackedFiles(cwd: string): Promise<Set<string>> {
+  const result = await execCommand('git', ['status', '--porcelain'], {
+    cwd,
+  });
+  const lines = result.split('\n').filter((l) => l.trim().length > 0);
+  return new Set(lines.map((l) => l.substring(3)));
+}
+
 export async function gitAdd({
   changedFiles,
+  deletedFiles,
   dryRun,
   verbose,
   logFn,
+  cwd,
 }: {
-  changedFiles: string[];
+  changedFiles?: string[];
+  deletedFiles?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  cwd?: string;
   logFn?: (...messages: string[]) => void;
 }): Promise<string> {
   logFn = logFn || console.log;
-  const commandArgs = ['add', ...changedFiles];
+  // Default to running git add related commands from the workspace root
+  cwd = cwd || workspaceRoot;
+
+  let ignoredFiles: string[] = [];
+  let filesToAdd: string[] = [];
+  for (const f of changedFiles ?? []) {
+    const isFileIgnored = await isIgnored(f, cwd);
+    if (isFileIgnored) {
+      ignoredFiles.push(f);
+    } else {
+      filesToAdd.push(f);
+    }
+  }
+
+  if (deletedFiles?.length > 0) {
+    const changedTrackedFiles = await getChangedTrackedFiles(cwd);
+    for (const f of deletedFiles ?? []) {
+      const isFileIgnored = await isIgnored(f, cwd);
+      if (isFileIgnored) {
+        ignoredFiles.push(f);
+        // git add will fail if trying to add an untracked file that doesn't exist
+      } else if (changedTrackedFiles.has(f) || dryRun) {
+        filesToAdd.push(f);
+      }
+    }
+  }
+
+  if (verbose && ignoredFiles.length) {
+    logFn(`Will not add the following files because they are ignored by git:`);
+    ignoredFiles.forEach((f) => logFn(f));
+  }
+
+  if (!filesToAdd.length) {
+    if (!dryRun) {
+      logFn('\nNo files to stage. Skipping git add.');
+    }
+    // if this is a dry run, it's possible that there would have been actual files to add, so it's deceptive to say "No files to stage".
+    return;
+  }
+
+  const commandArgs = ['add', ...filesToAdd];
   const message = dryRun
     ? `Would stage files in git with the following command, but --dry-run was set:`
     : `Staging files in git with the following command:`;
@@ -145,7 +226,21 @@ export async function gitAdd({
   if (dryRun) {
     return;
   }
-  return execCommand('git', commandArgs);
+  return execCommand('git', commandArgs, {
+    cwd,
+  });
+}
+
+async function isIgnored(filePath: string, cwd: string): Promise<boolean> {
+  try {
+    // This command will error if the file is not ignored
+    await execCommand('git', ['check-ignore', filePath], {
+      cwd,
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function gitCommit({
@@ -156,7 +251,7 @@ export async function gitCommit({
   logFn,
 }: {
   messages: string[];
-  additionalArgs?: string;
+  additionalArgs?: string | string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
@@ -168,7 +263,11 @@ export async function gitCommit({
     commandArgs.push('--message', message);
   }
   if (additionalArgs) {
-    commandArgs.push(...additionalArgs.split(' '));
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
   }
 
   if (verbose) {
@@ -210,7 +309,7 @@ export async function gitTag({
 }: {
   tag: string;
   message?: string;
-  additionalArgs?: string;
+  additionalArgs?: string | string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
@@ -226,7 +325,11 @@ export async function gitTag({
     message || tag,
   ];
   if (additionalArgs) {
-    commandArgs.push(...additionalArgs.split(' '));
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
   }
 
   if (verbose) {
@@ -249,17 +352,40 @@ export async function gitTag({
   }
 }
 
-export async function gitPush(gitRemote?: string) {
+export async function gitPush({
+  gitRemote,
+  dryRun,
+  verbose,
+}: {
+  gitRemote?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+}) {
+  const commandArgs = [
+    'push',
+    // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
+    '--follow-tags',
+    '--no-verify',
+    '--atomic',
+    // Set custom git remote if provided
+    ...(gitRemote ? [gitRemote] : []),
+  ];
+
+  if (verbose) {
+    console.log(
+      dryRun
+        ? `Would push the current branch to the remote with the following command, but --dry-run was set:`
+        : `Pushing the current branch to the remote with the following command:`
+    );
+    console.log(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
   try {
-    await execCommand('git', [
-      'push',
-      // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
-      '--follow-tags',
-      '--no-verify',
-      '--atomic',
-      // Set custom git remote if provided
-      ...(gitRemote ? [gitRemote] : []),
-    ]);
+    await execCommand('git', commandArgs);
   } catch (err) {
     throw new Error(`Unexpected git push error: ${err}`);
   }
@@ -267,6 +393,54 @@ export async function gitPush(gitRemote?: string) {
 
 export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
   return commits.map((commit) => parseGitCommit(commit)).filter(Boolean);
+}
+
+export function parseConventionalCommitsMessage(message: string): {
+  type: string;
+  scope: string;
+  description: string;
+  breaking: boolean;
+} | null {
+  const match = message.match(ConventionalCommitRegex);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    type: match.groups.type || '',
+    scope: match.groups.scope || '',
+    description: match.groups.description || '',
+    breaking: Boolean(match.groups.breaking),
+  };
+}
+
+function extractReferencesFromCommitMessage(
+  message: string,
+  shortHash: string
+): Reference[] {
+  const references: Reference[] = [];
+  for (const m of message.matchAll(PullRequestRE)) {
+    references.push({ type: 'pull-request', value: m[1] });
+  }
+  for (const m of message.matchAll(IssueRE)) {
+    if (!references.some((i) => i.value === m[1])) {
+      references.push({ type: 'issue', value: m[1] });
+    }
+  }
+  references.push({ value: shortHash, type: 'hash' });
+  return references;
+}
+
+function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
+  const authors: GitCommitAuthor[] = [commit.author];
+  // Additional authors can be specified in the commit body (depending on the VCS provider)
+  for (const match of commit.body.matchAll(CoAuthoredByRegex)) {
+    authors.push({
+      name: (match.groups.name || '').trim(),
+      email: (match.groups.email || '').trim(),
+    });
+  }
+  return authors;
 }
 
 // https://www.conventionalcommits.org/en/v1.0.0/
@@ -279,34 +453,52 @@ const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
-export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
-  const match = commit.message.match(ConventionalCommitRegex);
-  if (!match) {
+export function parseGitCommit(
+  commit: RawGitCommit,
+  isVersionPlanCommit = false
+): GitCommit | null {
+  // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
+  if (isVersionPlanCommit) {
+    return {
+      ...commit,
+      description: commit.message,
+      type: '',
+      scope: '',
+      references: extractReferencesFromCommitMessage(
+        commit.message,
+        commit.shortHash
+      ),
+      // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
+      // TODO(v20): Make the current GitCommit interface more clearly tied to conventional commits
+      isBreaking: false,
+      authors: getAllAuthorsForCommit(commit),
+      // Not applicable to version plans
+      affectedFiles: [],
+      // Not applicable, a version plan cannot have been added in a commit that also reverts another commit
+      revertedHashes: [],
+    };
+  }
+
+  const parsedMessage = parseConventionalCommitsMessage(commit.message);
+  if (!parsedMessage) {
     return null;
   }
 
-  const scope = match.groups.scope || '';
-
+  const scope = parsedMessage.scope;
   const isBreaking =
-    Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
-  let description = match.groups.description;
+    parsedMessage.breaking || commit.body.includes('BREAKING CHANGE:');
+  let description = parsedMessage.description;
 
   // Extract references from message
-  const references: Reference[] = [];
-  for (const m of description.matchAll(PullRequestRE)) {
-    references.push({ type: 'pull-request', value: m[1] });
-  }
-  for (const m of description.matchAll(IssueRE)) {
-    if (!references.some((i) => i.value === m[1])) {
-      references.push({ type: 'issue', value: m[1] });
-    }
-  }
-  references.push({ value: commit.shortHash, type: 'hash' });
+  const references = extractReferencesFromCommitMessage(
+    description,
+    commit.shortHash
+  );
 
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
 
-  let type = match.groups.type;
+  let type = parsedMessage.type;
   // Extract any reverted hashes, if applicable
   const revertedHashes = [];
   const matchedHashes = commit.body.matchAll(RevertHashRE);
@@ -319,22 +511,13 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   }
 
   // Find all authors
-  const authors: GitCommitAuthor[] = [commit.author];
-  for (const match of commit.body.matchAll(CoAuthoredByRegex)) {
-    authors.push({
-      name: (match.groups.name || '').trim(),
-      email: (match.groups.email || '').trim(),
-    });
-  }
+  const authors = getAllAuthorsForCommit(commit);
 
   // Extract file changes from commit body
   const affectedFiles = Array.from(
     commit.body.matchAll(ChangedFileRegex)
   ).reduce(
-    (
-      prev,
-      [fullLine, changeType, file1, file2]: [string, string, string, string?]
-    ) =>
+    (prev, [fullLine, changeType, file1, file2]: RegExpExecArray) =>
       // file2 only exists for some change types, such as renames
       file2 ? [...prev, file1, file2] : [...prev, file1],
     [] as string[]
@@ -364,7 +547,12 @@ export async function getCommitHash(ref: string) {
 export async function getFirstGitCommit() {
   try {
     return (
-      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+      await execCommand('git', [
+        'rev-list',
+        '--max-parents=0',
+        'HEAD',
+        '--first-parent',
+      ])
     ).trim();
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);

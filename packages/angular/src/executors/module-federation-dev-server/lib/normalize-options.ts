@@ -4,6 +4,8 @@ import type {
   SchemaWithBrowserTarget,
   SchemaWithBuildTarget,
 } from '../schema';
+import { join } from 'path';
+import { workspaceRoot } from '@nx/devkit';
 
 export function normalizeOptions(schema: Schema): NormalizedSchema {
   let buildTarget = (schema as SchemaWithBuildTarget).buildTarget;
@@ -18,10 +20,13 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
   return {
     ...schema,
     buildTarget,
+    devRemotes: schema.devRemotes ?? [],
     host: schema.host ?? 'localhost',
     port: schema.port ?? 4200,
     liveReload: schema.liveReload ?? true,
     open: schema.open ?? false,
     ssl: schema.ssl ?? false,
+    sslCert: schema.sslCert ? join(workspaceRoot, schema.sslCert) : undefined,
+    sslKey: schema.sslKey ? join(workspaceRoot, schema.sslKey) : undefined,
   };
 }

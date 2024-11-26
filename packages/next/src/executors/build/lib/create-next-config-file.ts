@@ -9,14 +9,13 @@ import {
 import * as ts from 'typescript';
 import {
   copyFileSync,
-  ensureDirSync,
   existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
-} from 'fs-extra';
+} from 'node:fs';
 import { dirname, extname, join, relative } from 'path';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nx/js';
 
 import type { NextBuildBuilderOptions } from '../../../utils/types';
 
@@ -76,11 +75,19 @@ export function createNextConfigFile(
     projectRoot
   );
   for (const moduleFile of moduleFilesToCopy) {
-    ensureDirSync(dirname(join(context.root, options.outputPath, moduleFile)));
-    copyFileSync(
-      join(context.root, projectRoot, moduleFile),
+    const moduleFileDir = dirname(
       join(context.root, options.outputPath, moduleFile)
     );
+
+    mkdirSync(moduleFileDir, { recursive: true });
+
+    // We already generate a build version of package.json in the dist folder.
+    if (moduleFile !== 'package.json') {
+      copyFileSync(
+        join(context.root, projectRoot, moduleFile),
+        join(context.root, options.outputPath, moduleFile)
+      );
+    }
   }
 }
 
@@ -121,7 +128,11 @@ export function getWithNxContent(
         index: getWithNxContextDeclaration.getStart(withNxSource),
         text: stripIndents`function getWithNxContext() {
           return {
-            workspaceRoot: '${workspaceRoot}',
+            workspaceRoot: '${
+              // For Windows, paths like C:\Users\foo\bar need to be written as C:\\Users\\foo\\bar,
+              // or else when the file is read back, the single "\" will be treated as an escape character.
+              workspaceRoot.replaceAll('\\', '\\\\')
+            }',
             libsDir: '${workspaceLayout().libsDir}'
           }
         }`,

@@ -5,7 +5,7 @@
     "init": {
       "factory": "./src/generators/init/init#jestInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/jest` plugin.",
+      "description": "Initialize the `@nx/jest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -14,6 +14,11 @@
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Jest configuration to a project.",
       "hidden": true
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Jest project(s) using `@nx/jest:jest` executor to use `@nx/jest/plugin`."
     }
   }
 }

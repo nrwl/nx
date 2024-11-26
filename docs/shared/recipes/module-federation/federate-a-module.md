@@ -10,7 +10,7 @@ In order to share a module, it must be _federated_. This means that the module m
 
 {% callout type="info" title="Assumption" %}
 With this recipe we assume that you have already created a workspace with at least one React or Angular Module Federation host application.
-If you haven't, you can follow the [Create a Host Recipe](https://nx.dev/recipes/module-federation/create-a-host).
+If you haven't, you can follow the [Create a Host Recipe](/recipes/module-federation/create-a-host).
 {% /callout %}
 
 ## Step 1: Create the module
@@ -21,7 +21,7 @@ Since we are using Nx, we will create a library for this module.
 **Create a library**
 
 ```shell
-nx generate @nx/js:library --name=hello --unitTestRunner=jest --projectNameAndRootFormat=as-provided
+nx generate @nx/js:library hello --unitTestRunner=jest --projectNameAndRootFormat=as-provided
 ```
 
 Update the `hello.ts` file with the following code:
@@ -46,14 +46,14 @@ Now that we have created the module, we need to configure it to be federated.
 {%tab label="React"%}
 
 ```shell
-nx generate @nx/react:federate-module hello/src/index.ts --name=hello --remote=greeting --projectNameAndRootFormat=as-provided
+nx generate @nx/react:federate-module hello/src/index.ts --name=hello --remote=greeting
 ```
 
 {% /tab %}
 {%tab label="Angular"%}
 
 ```shell
-nx generate @nx/angular:federate-module hello/src/index.ts --name=hello --remote=greeting --projectNameAndRootFormat=as-provided
+nx generate @nx/angular:federate-module hello/src/index.ts --name=hello --remote=greeting
 ```
 
 {% /tab %}
@@ -161,4 +161,4 @@ Just run the application as usual.
 nx serve host
 ```
 
-To start the application, use the following address: [http://localhost:4200](http://localhost:4200). Once opened, you'll see the message **"Hello from Nx."** This message is loaded from the greeting remote, which runs on port 4201.
+To start the application, use the following address: [http://localhost:4200](http://localhost:4200). Once opened, you'll see the message **"Hello from Nx"**. This message is loaded from the greeting remote, which runs on port 4201.

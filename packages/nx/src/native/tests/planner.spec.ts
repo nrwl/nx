@@ -1,18 +1,14 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-let tempFs = new TempFs('task-planner');
-
 import { HashPlanner, transferProjectGraph } from '../index';
-import { Task, TaskGraph } from '../../config/task-graph';
-import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { transformProjectGraphForRust } from '../transform-objects';
+import { DependencyType } from '../../config/project-graph';
+
+let tempFs = new TempFs('task-planner');
 
 describe('task planner', () => {
-  // disable NX_NATIVE_TASK_HASHER for this test because we need to compare the results of the new planner with the old task hasher
-  process.env.NX_NATIVE_TASK_HASHER = 'false';
-
   const packageJson = {
     name: 'nrwl',
   };
@@ -26,60 +22,6 @@ describe('task planner', () => {
       },
     },
   });
-  const allWorkspaceFiles = [
-    { file: 'yarn.lock', hash: 'yarn.lock.hash' },
-    { file: 'nx.json', hash: 'nx.json.hash' },
-    { file: 'package-lock.json', hash: 'package-lock.json.hash' },
-    { file: 'package.json', hash: 'package.json.hash' },
-    { file: 'pnpm-lock.yaml', hash: 'pnpm-lock.yaml.hash' },
-    { file: 'tsconfig.base.json', hash: tsConfigBaseJson },
-    { file: 'workspace.json', hash: 'workspace.json.hash' },
-    { file: 'global1', hash: 'global1.hash' },
-    { file: 'global2', hash: 'global2.hash' },
-  ];
-
-  // TODO(cammisuli): This function is temporary until the new file hashing is implemented
-  // This should just match snapshots of the planner
-  async function assertHashPlan(
-    task: Task | Task[],
-    taskGraph: TaskGraph,
-    taskHasher: InProcessTaskHasher,
-    hashPlanner: HashPlanner
-  ) {
-    if (!Array.isArray(task)) task = [task];
-
-    function getHashPlans(
-      tasks: Task[],
-      taskGraph: TaskGraph
-    ): Record<string, string[]> {
-      const plans = hashPlanner.getPlans(
-        tasks.map((task) => task.id),
-        taskGraph
-      );
-
-      for (const planId of Object.keys(plans)) {
-        plans[planId] = plans[planId].sort();
-      }
-
-      return plans;
-    }
-
-    const hashes = await taskHasher.hashTasks(task, taskGraph);
-    const plans = getHashPlans(task, taskGraph);
-
-    // hashNodes here are completed in order because this is run with javascript.
-    // we can then map the task id's by their index number with the hash nodes
-    let hashNodes: Record<string, object> = task.reduce((acc, task, index) => {
-      acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
-      return acc;
-    }, {});
-
-    for (let taskId of task.map((task) => task.id)) {
-      expect(plans[taskId]).toEqual(hashNodes[taskId]);
-    }
-
-    return plans;
-  }
 
   beforeEach(async () => {
     await tempFs.createFiles({
@@ -93,13 +35,8 @@ describe('task planner', () => {
     tempFs.reset();
   });
 
-  it('should build a plan that matches the original task-hasher', async () => {
+  it('should build a plan', async () => {
     await withEnvironmentVariables({ TESTENV: 'env123' }, async () => {
-      let projectFileMap = {
-        parent: [{ file: '/file', hash: 'file.hash' }],
-        unrelated: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
-      };
-
       const builder = new ProjectGraphBuilder();
 
       builder.addNode({
@@ -155,26 +92,33 @@ describe('task planner', () => {
 
       let nxJson = {} as any;
 
-      const hasher = new InProcessTaskHasher(
-        projectFileMap,
-        allWorkspaceFiles,
-        projectGraph,
-        nxJson,
-        null,
-        {}
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
       );
+      const planner = new HashPlanner(nxJson as any, ref);
 
-      const planner = new HashPlanner(
-        nxJson as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
-      );
-
-      await assertHashPlan(
-        taskGraph.tasks['parent:build'],
-        taskGraph,
-        hasher,
-        planner
-      );
+      const plans = planner.getPlans(['parent:build'], taskGraph);
+      expect(plans).toMatchInlineSnapshot(`
+        {
+          "parent:build": [
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]",
+            "runtime:echo runtime123",
+            "env:NONEXISTENTENV",
+            "env:NX_CLOUD_ENCRYPTION_KEY",
+            "env:TESTENV",
+            "parent:{projectRoot}/**/*",
+            "tagged:{projectRoot}/**/*",
+            "unrelated:{projectRoot}/**/*",
+            "parent:ProjectConfiguration",
+            "tagged:ProjectConfiguration",
+            "unrelated:ProjectConfiguration",
+            "parent:TsConfig",
+            "tagged:TsConfig",
+            "unrelated:TsConfig",
+            "AllExternalDependencies",
+          ],
+        }
+      `);
     });
   });
 
@@ -235,26 +179,13 @@ describe('task planner', () => {
       {}
     );
     let nxJson = {} as any;
-    const hasher = new InProcessTaskHasher(
-      projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      null,
-      {}
-    );
     const planner = new HashPlanner(
       nxJson as any,
       transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
-    const hashPlan = await assertHashPlan(
-      taskGraph.tasks['parent:build'],
-      taskGraph,
-      hasher,
-      planner
-    );
+    const plans = planner.getPlans(['parent:build'], taskGraph);
 
-    expect(hashPlan).toMatchSnapshot();
+    expect(plans).toMatchSnapshot();
   });
 
   it('should plan non-default filesets', async () => {
@@ -312,26 +243,13 @@ describe('task planner', () => {
         prod: ['!{projectRoot}/**/*.spec.ts'],
       },
     } as any;
-    const hasher = new InProcessTaskHasher(
-      projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      null,
-      {}
-    );
     const planner = new HashPlanner(
       nxJson as any,
       transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
-    let hashPlans = await assertHashPlan(
-      taskGraph.tasks['parent:build'],
-      taskGraph,
-      hasher,
-      planner
-    );
+    const plans = planner.getPlans(['parent:build'], taskGraph);
 
-    expect(hashPlans).toMatchSnapshot();
+    expect(plans).toMatchSnapshot();
   });
 
   it('should make a plan with multiple filesets of a project', async () => {
@@ -375,21 +293,13 @@ describe('task planner', () => {
         prod: ['!{projectRoot}/**/*.spec.ts'],
       },
     } as any;
-    const hasher = new InProcessTaskHasher(
-      projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      null,
-      {}
-    );
     const planner = new HashPlanner(
       nxJson as any,
       transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
-    const tasks = Object.values(taskGraph.tasks);
+    const taskIds = Object.keys(taskGraph.tasks);
 
-    let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+    const plans = planner.getPlans(taskIds, taskGraph);
     expect(plans).toMatchSnapshot();
   });
 
@@ -457,24 +367,85 @@ describe('task planner', () => {
             prod: ['!{projectRoot}/**/*.spec.ts'],
           },
         };
-        const hasher = new InProcessTaskHasher(
-          projectFileMap,
-          allWorkspaceFiles,
-          projectGraph,
-          nxJson as any,
-          null,
-          {}
-        );
 
         const planner = new HashPlanner(
           nxJson as any,
           transferProjectGraph(transformProjectGraphForRust(projectGraph))
         );
-        const tasks = Object.values(taskGraph.tasks);
-        let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+        const taskIds = Object.keys(taskGraph.tasks);
+
+        const plans = planner.getPlans(taskIds, taskGraph);
         expect(plans).toMatchSnapshot();
       }
     );
+  });
+
+  it('should hash executors', async () => {
+    let projectFileMap = {
+      parent: [],
+      child: [],
+    };
+    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'proj',
+      type: 'lib',
+      data: {
+        root: 'libs/proj',
+        targets: {
+          lint: {
+            inputs: ['default'],
+            executor: '@nx/eslint:lint',
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:@nx/eslint',
+      data: {
+        packageName: '@nx/eslint',
+        hash: 'hash1',
+        version: '1.0.0',
+      },
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:@nx/devkit',
+      data: {
+        packageName: '@nx/devkit',
+        hash: 'hash2',
+        version: '1.0.0',
+      },
+    });
+    builder.addDependency(
+      'npm:@nx/eslint',
+      'npm:@nx/devkit',
+      DependencyType.static
+    );
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['proj'],
+      ['lint'],
+      undefined,
+      {}
+    );
+    let nxJson = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*', '{workspaceRoot}/global1'],
+        prod: ['!{projectRoot}/**/*.spec.ts'],
+      },
+    };
+
+    const planner = new HashPlanner(
+      nxJson as any,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+    const taskIds = Object.keys(taskGraph.tasks);
+
+    const plans = planner.getPlans(taskIds, taskGraph);
+    expect(plans).toMatchSnapshot();
   });
 
   it('should build plans where the project graph has circular dependencies', async () => {
@@ -511,20 +482,13 @@ describe('task planner', () => {
       {}
     );
     let nxJson = {} as any;
-    const hasher = new InProcessTaskHasher(
-      projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      null,
-      {}
-    );
     const planner = new HashPlanner(
       nxJson as any,
       transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
-    let tasks = Object.values(taskGraph.tasks);
-    let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+    const taskIds = Object.keys(taskGraph.tasks);
+
+    const plans = planner.getPlans(taskIds, taskGraph);
     expect(plans).toMatchSnapshot();
   });
 
@@ -560,24 +524,12 @@ describe('task planner', () => {
       {}
     );
     let nxJson = {} as any;
-    const hasher = new InProcessTaskHasher(
-      projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      null,
-      {}
-    );
     const transformed = transferProjectGraph(
       transformProjectGraphForRust(projectGraph)
     );
     const planner = new HashPlanner(nxJson as any, transformed);
-    let plans = await assertHashPlan(
-      taskGraph.tasks['app:build'],
-      taskGraph,
-      hasher,
-      planner
-    );
+
+    const plans = planner.getPlans(['app:build'], taskGraph);
     expect(plans).toMatchSnapshot();
   });
 
@@ -682,25 +634,12 @@ describe('task planner', () => {
         'dist/libs/grandchild/index.d.ts': '',
       });
 
-      const hasher = new InProcessTaskHasher(
-        projectFileMap,
-        allWorkspaceFiles,
-        projectGraph,
-        nxJson,
-        null,
-        {}
-      );
-
       const transformed = transferProjectGraph(
         transformProjectGraphForRust(projectGraph)
       );
       const planner = new HashPlanner(nxJson, transformed);
-      let plans = await assertHashPlan(
-        taskGraph.tasks['parent:build'],
-        taskGraph,
-        hasher,
-        planner
-      );
+
+      const plans = planner.getPlans(['parent:build'], taskGraph);
       expect(plans).toMatchSnapshot();
     });
   });

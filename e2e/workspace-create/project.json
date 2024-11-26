@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/workspace-create",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["create-nx-workspace"]
+  "implicitDependencies": ["create-nx-workspace"],
+  "// targets": "to see all targets run: nx show project e2e-workspace-create --web",
+  "targets": {}
 }

@@ -2,12 +2,14 @@ import {
   addProjectConfiguration,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   runTasksInSerial,
   toJS,
   Tree,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -27,10 +29,18 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   _options: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(tree, 'vue', 'application');
+
   const options = await normalizeOptions(tree, _options);
+  const nxJson = readNxJson(tree);
+
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   const tasks: GeneratorCallback[] = [];
 
-  addProjectConfiguration(tree, options.name, {
+  addProjectConfiguration(tree, options.projectName, {
     root: options.appProjectRoot,
     projectType: 'application',
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -60,7 +70,7 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(tree);
   }
 
-  createApplicationFiles(tree, options);
+  await createApplicationFiles(tree, options);
 
   tasks.push(
     await addLinting(

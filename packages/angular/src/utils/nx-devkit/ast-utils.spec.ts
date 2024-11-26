@@ -5,6 +5,7 @@ import {
   addImportToPipe,
   addProviderToAppConfig,
   addProviderToBootstrapApplication,
+  addViewProviderToComponent,
   isStandalone,
 } from './ast-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -332,6 +333,52 @@ export const appConfig: ApplicationConfig = {
       export const appConfig: ApplicationConfig = {
         providers: [provideStore(),provideRouter(routes) ]
       };"
+    `);
+  });
+
+  it('should add view provider to a component', () => {
+    // ARRANGE
+    const pathToComponent = 'app.component.ts';
+    const componentOriginal = `import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-app',
+  template: ''
+})
+export class AppComponent {}
+`;
+    const providerName = 'MyViewProvider';
+
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    tree.write(pathToComponent, componentOriginal);
+
+    const tsSourceFile = createSourceFile(
+      pathToComponent,
+      componentOriginal,
+      ScriptTarget.Latest,
+      true
+    );
+
+    // ACT
+    addViewProviderToComponent(
+      tree,
+      tsSourceFile,
+      pathToComponent,
+      providerName
+    );
+
+    // ASSERT
+    expect(tree.read(pathToComponent, 'utf-8')).toMatchInlineSnapshot(`
+      "import { Component } from '@angular/core';
+
+      @Component({
+        selector: 'app-app',
+        template: '',
+        viewProviders: [MyViewProvider]
+      })
+      export class AppComponent {}
+      "
     `);
   });
 });

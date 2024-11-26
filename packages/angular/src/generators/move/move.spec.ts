@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import * as devkit from '@nx/devkit';
 import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -32,7 +34,7 @@ describe('@nx/angular:move', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       buildable: false,
       linter: Linter.EsLint,
       publishable: false,
@@ -55,7 +57,6 @@ describe('@nx/angular:move', () => {
       newProjectName: 'mynewlib',
       destination: 'mynewlib',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -64,7 +65,7 @@ describe('@nx/angular:move', () => {
 
   it('should update ng-package.json dest property', async () => {
     await generateTestLibrary(tree, {
-      name: 'mylib2',
+      directory: 'mylib2',
       buildable: true,
       skipFormat: true,
     });
@@ -74,7 +75,6 @@ describe('@nx/angular:move', () => {
       projectName: 'mylib2',
       destination: 'mynewlib2',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -84,7 +84,7 @@ describe('@nx/angular:move', () => {
 
   it('should update secondary entry points readme file', async () => {
     await generateTestLibrary(tree, {
-      name: 'mylib2',
+      directory: 'mylib2',
       buildable: true,
       skipFormat: true,
     });
@@ -100,7 +100,6 @@ describe('@nx/angular:move', () => {
       newProjectName: 'mynewlib2',
       destination: 'mynewlib2',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -120,7 +119,6 @@ describe('@nx/angular:move', () => {
       projectName: 'my-lib',
       destination: 'my/lib',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     });
 
@@ -132,7 +130,7 @@ describe('@nx/angular:move', () => {
   describe('move to subfolder', () => {
     beforeEach(async () => {
       await generateTestLibrary(tree, {
-        name: 'my-lib2',
+        directory: 'my-lib2',
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
@@ -185,7 +183,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -224,7 +221,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -248,7 +244,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -262,7 +257,7 @@ describe('@nx/angular:move', () => {
   describe('rename', () => {
     beforeEach(async () => {
       await generateTestLibrary(tree, {
-        name: 'my-importer',
+        directory: 'my-importer',
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
@@ -287,7 +282,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -310,7 +304,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -334,7 +327,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -348,7 +340,7 @@ describe('@nx/angular:move', () => {
       // create different project whose main module name starts with the same
       // name of the project we're moving
       await generateTestLibrary(tree, {
-        name: 'my-lib-demo',
+        directory: 'my-lib-demo',
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
@@ -364,7 +356,6 @@ describe('@nx/angular:move', () => {
         newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
       });
 
@@ -374,29 +365,5 @@ describe('@nx/angular:move', () => {
       );
       expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
     });
-  });
-
-  it('should move project correctly when --project-name-and-root-format=derived', async () => {
-    await generateTestLibrary(tree, {
-      name: 'mylib2',
-      buildable: true,
-      standalone: false,
-      skipFormat: true,
-    });
-    addProjectToGraph('mylib2');
-
-    await angularMoveGenerator(tree, {
-      projectName: 'mylib2',
-      destination: 'mynewlib',
-      updateImportPath: true,
-      projectNameAndRootFormat: 'derived',
-      skipFormat: true,
-    });
-
-    expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
-      true
-    );
-    const ngPackageJson = readJson(tree, 'libs/mynewlib/ng-package.json');
-    expect(ngPackageJson.dest).toEqual('../../dist/libs/mynewlib');
   });
 });

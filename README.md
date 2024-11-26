@@ -21,25 +21,44 @@
 
 # Smart Monorepos · Fast CI
 
-Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.
+Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.
 
-A few links to help you get started:
+Create a new Nx workspace with
 
-- [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Nx.Dev: Core Tutorials](https://nx.dev/getting-started/intro)
-- [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipes/adopting-nx/adding-to-monorepo)
-- [Official Nx YouTube Channel](https://www.youtube.com/@NxDevtools)
-- [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
+```shell
+npx create-nx-workspace
+```
 
-<p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
+...or run
+
+```
+npx nx init
+```
+
+to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro#try-nx-yourself).
+
+## Learn about CI with Nx Cloud
+
+[Nx Cloud](https://nx.dev/nx-cloud) connects directly to your existing CI setup, helping you scale your monorepos on CI by leveraging [remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo), [task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo), [automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo) and [automated task flakiness detection](https://nx.dev/ci/features/flaky-tasks?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo)
+
+Connect your existing Nx workspace with
+
+```
+npx nx connect
+```
+
+Learn more in the [Nx CI docs &raquo;](https://nx.dev/ci/intro?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo)
+
+## Useful links
+
+- [Our docs](https://nx.dev/docs)
+- [Our blog](https://nx.dev/blog)
+- [Our community discord, live stream,...](https://nx.dev/community)
+- [Our YouTube channel](https://www.youtube.com/@NxDevtools)
+- [Our Twitter/X](https://x.com/nxdevtools)
+
+<p style="text-align: center;"><a href="https://www.youtube.com/@nxdevtools/videos" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
 width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>
-
-# Engage with the Core Team and the Community
-
-- [Nx.Dev Community Page: Community Discord Channel, Newsletter, etc.](https://nx.dev/community)
-- [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
-  regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
-- [Follow Nx on Twitter](https://twitter.com/NxDevTools)
 
 ## Want to help?
 

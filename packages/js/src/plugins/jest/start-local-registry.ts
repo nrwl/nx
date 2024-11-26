@@ -5,15 +5,18 @@ import { execSync, fork } from 'child_process';
  * @param localRegistryTarget the target to run to start the local registry e.g. workspace:local-registry
  * @param storage the storage location for the local registry
  * @param verbose whether to log verbose output
+ * @param clearStorage whether to clear the verdaccio storage before running the registry
  */
 export function startLocalRegistry({
   localRegistryTarget,
   storage,
   verbose,
+  clearStorage,
 }: {
   localRegistryTarget: string;
   storage?: string;
   verbose?: boolean;
+  clearStorage?: boolean;
 }) {
   if (!localRegistryTarget) {
     throw new Error(`localRegistryTarget is required`);
@@ -22,7 +25,9 @@ export function startLocalRegistry({
     const childProcess = fork(
       require.resolve('nx'),
       [
-        ...`run ${localRegistryTarget} --location none --clear true`.split(' '),
+        ...`run ${localRegistryTarget} --location none --clear ${
+          clearStorage ?? true
+        }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
       ],
       { stdio: 'pipe' }
@@ -41,7 +46,10 @@ export function startLocalRegistry({
         const registry = `http://localhost:${port}`;
         process.env.npm_config_registry = registry;
         execSync(
-          `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`
+          `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`,
+          {
+            windowsHide: true,
+          }
         );
 
         // yarnv1
@@ -54,7 +62,9 @@ export function startLocalRegistry({
 
         resolve(() => {
           childProcess.kill();
-          execSync(`npm config delete //localhost:${port}/:_authToken`);
+          execSync(`npm config delete //localhost:${port}/:_authToken`, {
+            windowsHide: true,
+          });
         });
         childProcess?.stdout?.off('data', listener);
       }

@@ -13,11 +13,11 @@ export interface TaskMetadata {
 }
 
 export interface LifeCycle {
-  startCommand?(): void;
+  startCommand?(): void | Promise<void>;
 
-  endCommand?(): void;
+  endCommand?(): void | Promise<void>;
 
-  scheduleTask?(task: Task): void;
+  scheduleTask?(task: Task): void | Promise<void>;
 
   /**
    * @deprecated use startTasks
@@ -33,9 +33,12 @@ export interface LifeCycle {
    */
   endTask?(task: Task, code: number): void;
 
-  startTasks?(task: Task[], metadata: TaskMetadata): void;
+  startTasks?(task: Task[], metadata: TaskMetadata): void | Promise<void>;
 
-  endTasks?(taskResults: TaskResult[], metadata: TaskMetadata): void;
+  endTasks?(
+    taskResults: TaskResult[],
+    metadata: TaskMetadata
+  ): void | Promise<void>;
 
   printTaskTerminalOutput?(
     task: Task,
@@ -47,26 +50,26 @@ export interface LifeCycle {
 export class CompositeLifeCycle implements LifeCycle {
   constructor(private readonly lifeCycles: LifeCycle[]) {}
 
-  startCommand(): void {
+  async startCommand(): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.startCommand) {
-        l.startCommand();
+        await l.startCommand();
       }
     }
   }
 
-  endCommand(): void {
+  async endCommand(): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.endCommand) {
-        l.endCommand();
+        await l.endCommand();
       }
     }
   }
 
-  scheduleTask(task: Task): void {
+  async scheduleTask(task: Task): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.scheduleTask) {
-        l.scheduleTask(task);
+        await l.scheduleTask(task);
       }
     }
   }
@@ -87,20 +90,23 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  startTasks(tasks: Task[], metadata: TaskMetadata): void {
+  async startTasks(tasks: Task[], metadata: TaskMetadata): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.startTasks) {
-        l.startTasks(tasks, metadata);
+        await l.startTasks(tasks, metadata);
       } else if (l.startTask) {
         tasks.forEach((t) => l.startTask(t));
       }
     }
   }
 
-  endTasks(taskResults: TaskResult[], metadata: TaskMetadata): void {
+  async endTasks(
+    taskResults: TaskResult[],
+    metadata: TaskMetadata
+  ): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.endTasks) {
-        l.endTasks(taskResults, metadata);
+        await l.endTasks(taskResults, metadata);
       } else if (l.endTask) {
         taskResults.forEach((t) => l.endTask(t.task, t.code));
       }

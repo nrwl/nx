@@ -1,5 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
+import { readJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 import {
   backwardCompatibleVersions,
@@ -56,45 +55,15 @@ export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   return version ? { major: major(coerce(version)), version } : null;
 }
 
-export function addDependenciesToPackageJsonIfDontExist(
-  tree: Tree,
-  dependencies: Record<string, string>,
-  devDependencies: Record<string, string>,
-  packageJsonPath: string = 'package.json'
-): GeneratorCallback {
-  const packageJson = readJson(tree, packageJsonPath);
-
-  function filterExisting(
-    deps: Record<string, string>
-  ): Record<string, string> {
-    return Object.keys(deps)
-      .filter(
-        (d) =>
-          !packageJson.dependencies?.[d] && !packageJson.devDependencies?.[d]
-      )
-      .reduce((acc, d) => ({ ...acc, [d]: deps[d] }), {});
-  }
-
-  const depsToAdd = filterExisting(dependencies);
-  const devDepsToAdd = filterExisting(devDependencies);
-
-  return addDependenciesToPackageJson(
-    tree,
-    depsToAdd,
-    devDepsToAdd,
-    packageJsonPath
-  );
-}
-
 export function versions(
   tree: Tree
 ): PackageLatestVersions | PackageCompatVersions {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
   switch (majorAngularVersion) {
-    case 15:
-      return backwardCompatibleVersions.angularV15;
     case 16:
       return backwardCompatibleVersions.angularV16;
+    case 17:
+      return backwardCompatibleVersions.angularV17;
     default:
       return latestVersions;
   }

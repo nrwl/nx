@@ -1,7 +1,7 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 
-import * as nxPlugin from '../../../utils/nx-plugin';
+import * as nxPlugin from '../../../project-graph/plugins';
 import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
 

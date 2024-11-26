@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/cypress",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["cypress", "react"]
+  "implicitDependencies": ["cypress", "react"],
+  "// targets": "to see all targets run: nx show project e2e-cypress --web",
+  "targets": {}
 }

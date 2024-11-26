@@ -19,12 +19,18 @@ export function generateEntryPoints(appConfig: {
     return [...new Set(entryPoints)];
   };
 
+  const styleEntryPoints = appConfig.styles.filter(
+    (style) => !(typeof style !== 'string' && !style.inject)
+  );
+  const scriptEntryPoints = appConfig.scripts.filter(
+    (script) => !(typeof script !== 'string' && !script.inject)
+  );
   const entryPoints = [
     'runtime',
     'polyfills',
     'sw-register',
-    ...extraEntryPoints(appConfig.styles, 'styles'),
-    ...extraEntryPoints(appConfig.scripts, 'scripts'),
+    ...extraEntryPoints(styleEntryPoints, 'styles'),
+    ...extraEntryPoints(scriptEntryPoints, 'scripts'),
     'vendor',
     'main',
   ];

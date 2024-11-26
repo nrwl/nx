@@ -67,7 +67,7 @@ function updateConfig(config: {
   browserTarget?: string;
   buildTarget?: string;
 }): void {
-  if (config.browserTarget) {
+  if (config && config.browserTarget) {
     config.buildTarget ??= config.browserTarget;
     delete config.browserTarget;
   }

@@ -3,15 +3,7 @@ import { WorkspaceLibrarySecondaryEntryPoint } from './models';
 import { dirname, join, relative } from 'path';
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import { readJsonFile, joinPathFragments, workspaceRoot } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { requireNx } from '@nx/devkit/nx';
-
-let { readModulePackageJson } = requireNx();
-
-// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
-readModulePackageJson =
-  readModulePackageJson ??
-  require('nx/src/utils/package-json').readModulePackageJson;
+import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
 
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,
@@ -113,6 +105,38 @@ export function recursivelyCollectSecondaryEntryPointsFromDirectory(
   }
 }
 
+function collectPackagesFromExports(
+  pkgName: string,
+  pkgVersion: string,
+  exports: any | undefined,
+  collectedPackages: {
+    name: string;
+    version: string;
+  }[]
+): void {
+  for (const [relativeEntryPoint, exportOptions] of Object.entries(exports)) {
+    const defaultExportOptions =
+      typeof exportOptions?.['default'] === 'string'
+        ? exportOptions?.['default']
+        : exportOptions?.['default']?.['default'];
+
+    if (defaultExportOptions?.search(/\.(js|mjs|cjs)$/)) {
+      let entryPointName = joinPathFragments(pkgName, relativeEntryPoint);
+      if (entryPointName.endsWith('.json')) {
+        entryPointName = dirname(entryPointName);
+      }
+      if (entryPointName === '.') {
+        continue;
+      }
+      if (collectedPackages.find((p) => p.name === entryPointName)) {
+        continue;
+      }
+
+      collectedPackages.push({ name: entryPointName, version: pkgVersion });
+    }
+  }
+}
+
 export function collectPackageSecondaryEntryPoints(
   pkgName: string,
   pkgVersion: string,
@@ -138,6 +162,9 @@ export function collectPackageSecondaryEntryPoints(
   }
 
   const { exports } = packageJson;
+  if (exports) {
+    collectPackagesFromExports(pkgName, pkgVersion, exports, collectedPackages);
+  }
   const subDirs = getNonNodeModulesSubDirs(pathToPackage);
   recursivelyCollectSecondaryEntryPointsFromDirectory(
     pkgName,

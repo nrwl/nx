@@ -156,8 +156,7 @@ describe('create-nx-workspace', () => {
 
   it('should fail correctly when preset errors', () => {
     // Using Angular Preset as the example here to test
-    // It will error when npmScope is of form `<char>-<num>-<char>`
-    // Due to a validation error Angular will throw.
+    // It will error when prefix is not valid
     const wsName = uniq('angular-1-test');
     const appName = uniq('app');
     expect(() =>
@@ -171,6 +170,7 @@ describe('create-nx-workspace', () => {
         e2eTestRunner: 'none',
         bundler: 'webpack',
         ssr: false,
+        prefix: '1-one',
       })
     ).toThrow();
   });
@@ -212,6 +212,20 @@ describe('create-nx-workspace', () => {
     const packageJson = readJson('package.json');
     expect(packageJson.devDependencies['@nx/webpack']).not.toBeDefined();
     expect(packageJson.devDependencies['@nx/vite']).toBeDefined();
+    expectCodeIsFormatted();
+  });
+
+  it('should be able to create a react workspace without options and --no-interactive', () => {
+    const wsName = uniq('react');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-monorepo',
+    });
+
+    expectNoAngularDevkit();
+    expectNoTsJestInJestConfig(wsName);
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nx/vite']).toBeDefined(); // vite should be default bundler
     expectCodeIsFormatted();
   });
 
@@ -307,6 +321,7 @@ describe('create-nx-workspace', () => {
       preset: 'react-native',
       appName,
       packageManager: 'npm',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -320,6 +335,7 @@ describe('create-nx-workspace', () => {
       preset: 'expo',
       appName,
       packageManager: 'npm',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -374,7 +390,7 @@ describe('create-nx-workspace', () => {
   });
 
   describe('Use detected package manager', () => {
-    function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
+    function setupProject(envPm: 'npm' | 'yarn' | 'pnpm' | 'bun') {
       process.env.SELECTED_PM = envPm;
       runCreateWorkspace(uniq('pm'), {
         preset: 'apps',
@@ -389,7 +405,8 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['npm']);
         checkFilesDoNotExist(
           packageManagerLockFile['yarn'],
-          packageManagerLockFile['pnpm']
+          packageManagerLockFile['pnpm'],
+          packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -401,7 +418,21 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['pnpm']);
         checkFilesDoNotExist(
           packageManagerLockFile['yarn'],
-          packageManagerLockFile['npm']
+          packageManagerLockFile['npm'],
+          packageManagerLockFile['bun']
+        );
+        process.env.SELECTED_PM = packageManager;
+      }, 90000);
+    }
+
+    if (packageManager === 'bun') {
+      it('should use bun when invoked with bunx', () => {
+        setupProject('bun');
+        checkFilesExist(packageManagerLockFile['bun']);
+        checkFilesDoNotExist(
+          packageManagerLockFile['yarn'],
+          packageManagerLockFile['npm'],
+          packageManagerLockFile['pnpm']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -414,7 +445,8 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['yarn']);
         checkFilesDoNotExist(
           packageManagerLockFile['pnpm'],
-          packageManagerLockFile['npm']
+          packageManagerLockFile['npm'],
+          packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);

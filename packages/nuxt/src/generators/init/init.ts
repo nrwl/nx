@@ -1,20 +1,29 @@
-import { GeneratorCallback, Tree } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createProjectGraphAsync, GeneratorCallback, Tree } from '@nx/devkit';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { createNodes } from '../../plugins/plugin';
 import { InitSchema } from './schema';
-import { addPlugin, updateDependencies } from './lib/utils';
+import { updateDependencies } from './lib/utils';
 
 export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
-  addPlugin(host);
+  assertNotUsingTsSolutionSetup(host, 'nuxt', 'init');
+
+  await addPluginV1(
+    host,
+    await createProjectGraphAsync(),
+    '@nx/nuxt/plugin',
+    createNodes,
+    {
+      buildTargetName: ['build', 'nuxt:build', 'nuxt-build'],
+      serveTargetName: ['serve', 'nuxt:serve', 'nuxt-serve'],
+    },
+    schema.updatePackageScripts
+  );
 
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(host, schema);
-  }
-
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(host, createNodes);
   }
 
   return installTask;

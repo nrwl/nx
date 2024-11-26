@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   ProjectConfiguration,
   readProjectConfiguration,
@@ -17,8 +19,7 @@ describe('moveProject', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });

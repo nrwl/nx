@@ -57,7 +57,7 @@ Currently, Nx module federation requires an enhanced Webpack configuration file 
 A basic Webpack configuration was introduced in Nx 18, and it looks like this:
 
 ```js {% fileName="apps/demo/webpack.config.js" %}
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -68,7 +68,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
       index: './src/index.html',
@@ -80,7 +80,7 @@ module.exports = {
 };
 ```
 
-The [`NxWebpackPlugin`](/recipes/webpack/webpack-plugins#nxwebpackplugin) plugin takes a `main` entry file and produces a bundle in the output directory as defined in `output.path`. You can also pass the `index` option if it is a webapp, which will handle outputting scripts and stylesheets in the output file. Note that `NxWebpackPlugin` is optional, and you can bring your own Webpack configuration without using it or any plugins from `@nx/webpack`.
+The [`NxAppWebpackPlugin`](/recipes/webpack/webpack-plugins#nxappwebpackplugin) plugin takes a `main` entry file and produces a bundle in the output directory as defined in `output.path`. You can also pass the `index` option if it is a webapp, which will handle outputting scripts and stylesheets in the output file. Note that `NxWebpackPlugin` is optional, and you can bring your own Webpack configuration without using it or any plugins from `@nx/webpack`.
 
 For more information, see the [Webpack plugins guide](/recipes/webpack/webpack-plugins).
 
@@ -132,8 +132,8 @@ React projects use the `@nx/react` package to build their apps. This package pro
 {% tab label="Basic Webpack configuration" %}
 
 ```js {% fileName="apps/demo/app/webpack.config.js" %}
-const { NxWebpackPlugin } = require('@nx/webpack');
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -144,7 +144,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'swc',
       main: './src/main.tsx',

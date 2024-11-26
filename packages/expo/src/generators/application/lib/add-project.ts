@@ -8,7 +8,7 @@ import {
 
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);

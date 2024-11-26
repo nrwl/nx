@@ -1,6 +1,12 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
-import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
+import {
+  cacheDir,
+  joinPathFragments,
+  logger,
+  stripIndents,
+  writeJsonFile,
+} from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -13,7 +19,6 @@ import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
-import { removeSync, writeJsonSync } from 'fs-extra';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
@@ -22,12 +27,13 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import { join } from 'path';
+import { rmSync } from 'node:fs';
+import { join, relative } from 'path';
 
-const BUILD_WATCH_FAILED = `[ ${chalk.red(
+const BUILD_WATCH_FAILED = `[ ${pc.red(
   'watch'
 )} ] build finished with errors (see above), watching for changes...`;
-const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
+const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
@@ -43,7 +49,8 @@ export async function* esbuildExecutor(
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
   const options = normalizeOptions(_options, context);
-  if (options.deleteOutputPath) removeSync(options.outputPath);
+  if (options.deleteOutputPath)
+    rmSync(options.outputPath, { recursive: true, force: true });
 
   const assetsResult = await copyAssets(options, context);
 
@@ -76,7 +83,7 @@ export async function* esbuildExecutor(
     if (context.projectGraph.nodes[context.projectName].type !== 'app') {
       logger.warn(
         stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
-        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/nx-api/eslint-plugin/documents/dependency-checks).`
       );
     }
 
@@ -189,7 +196,7 @@ export async function* esbuildExecutor(
           options.format.length === 1
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
-        writeJsonSync(
+        writeJsonFile(
           joinPathFragments(options.outputPath, filename),
           buildResult.metafile
         );
@@ -210,14 +217,21 @@ function getTypeCheckOptions(
   context: ExecutorContext
 ) {
   const { watch, tsConfig, outputPath } = options;
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   const typeCheckOptions: TypeCheckOptions = {
-    // TODO(jack): Add support for d.ts declaration files -- once the `@nx/js:tsc` changes are in we can use the same logic.
-    mode: 'noEmit',
-    tsConfigPath: tsConfig,
-    // outDir: outputPath,
+    ...(options.declaration
+      ? {
+          mode: 'emitDeclarationOnly',
+          outDir: outputPath,
+        }
+      : {
+          mode: 'noEmit',
+        }),
+    tsConfigPath: relative(process.cwd(), join(context.root, tsConfig)),
     workspaceRoot: context.root,
-    rootDir: context.root,
+    rootDir: options.declarationRootDir ?? context.root,
+    projectRoot,
   };
 
   if (watch) {

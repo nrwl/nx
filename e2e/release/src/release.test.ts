@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nx/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   createFile,
@@ -6,7 +6,6 @@ import {
   killProcessAndPorts,
   newProject,
   readFile,
-  readJson,
   runCLI,
   runCommandAsync,
   runCommandUntil,
@@ -53,7 +52,6 @@ describe('nx release', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -93,9 +91,6 @@ describe('nx release', () => {
       `git remote add origin https://github.com/nrwl/fake-repo.git`
     );
 
-    const pkg1ContentsBeforeVersioning = readFile(`${pkg1}/package.json`);
-    const pkg2ContentsBeforeVersioning = readFile(`${pkg2}/package.json`);
-
     const versionOutput = runCLI(`release version 999.9.9`);
 
     /**
@@ -123,61 +118,16 @@ describe('nx release', () => {
       ).length
     ).toEqual(3);
 
-    // Only one dependency relationship exists, so this log should only match once
-    const dependencyRelationshipLogMatch = versionOutput.match(
-      /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-    );
-    if (
-      !dependencyRelationshipLogMatch ||
-      dependencyRelationshipLogMatch.length !== 1
-    ) {
-      const projectGraphDependencies = readJson(
-        '.nx/cache/project-graph.json'
-      ).dependencies;
-      const firstPartyProjectGraphDependencies = JSON.stringify(
-        Object.fromEntries(
-          Object.entries(projectGraphDependencies).filter(
-            ([key]) => !key.startsWith('npm:')
-          )
-        )
-      );
-
-      // From JamesHenry: explicit warning to assist troubleshooting NXC-143.
-      console.warn(
-        `
-WARNING: Expected to find exactly one dependency relationship log line.
-
-If you are seeing this message then you have been impacted by some flakiness in the test.
-
-${JSON.stringify(
-  {
-    versionOutput,
-    pkg1Name: pkg1,
-    pkg2Name: pkg2,
-    pkg1ContentsBeforeVersioning,
-    pkg2ContentsBeforeVersioning,
-    pkg2ContentsAfterVersioning: readFile(`${pkg2}/package.json`),
-    firstPartyProjectGraphDependencies,
-  },
-  null,
-  2
-)}`
-      );
-    }
-    // TODO: re-enable this assertion once the flakiness documented in NXC-143 is resolved
-    // expect(dependencyRelationshipLogMatch.length).toEqual(1);
-
     // Generate a changelog for the new version
     expect(exists('CHANGELOG.md')).toEqual(false);
 
     const changelogOutput = runCLI(`release changelog 999.9.9`);
     expect(changelogOutput).toMatchInlineSnapshot(`
 
-      >  NX   Generating an entry in CHANGELOG.md for v999.9.9
+      NX   Generating an entry in CHANGELOG.md for v999.9.9
 
 
       + ## 999.9.9 (YYYY-MM-DD)
-      +
       +
       + ### 🚀 Features
       +
@@ -188,17 +138,16 @@ ${JSON.stringify(
       + - Test @{COMMIT_AUTHOR}
 
 
-      >  NX   Committing changes with git
+      NX   Committing changes with git
 
 
-      >  NX   Tagging commit with git
+      NX   Tagging commit with git
 
 
     `);
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
       ## 999.9.9 (YYYY-MM-DD)
-
 
       ### 🚀 Features
 
@@ -218,7 +167,7 @@ ${JSON.stringify(
     const publishOutput = runCLI(`release publish`);
     expect(publishOutput).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -291,7 +240,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -378,20 +327,12 @@ ${JSON.stringify(
       ).length
     ).toEqual(3);
 
-    // TODO: Also impacted by NXC-143
-    // Only one dependency relationship exists, so this log should only match once
-    // expect(
-    //   versionOutput2.match(
-    //     /Applying new version 1000.0.0-next.0 to 1 package which depends on my-pkg-\d*/g
-    //   ).length
-    // ).toEqual(1);
-
     // Perform an initial dry-run of the publish to the custom registry (not e2e registry), and a custom dist tag of "next"
     const publishToNext = `release publish --registry=${customRegistryUrl} --tag=next`;
     const publishOutput2 = runCLI(`${publishToNext} --dry-run`);
     expect(publishOutput2).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -407,7 +348,7 @@ ${JSON.stringify(
       > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0-next.0
+      📦  @proj/{project-name}@X.X.X-dry-run
       === Tarball Contents ===
 
       XXB  index.js
@@ -415,8 +356,8 @@ ${JSON.stringify(
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0-next.0
-      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      version:       X.X.X-dry-run
+      filename:      proj-{project-name}-X.X.X-dry-run.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -428,7 +369,7 @@ ${JSON.stringify(
       > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0-next.0
+      📦  @proj/{project-name}@X.X.X-dry-run
       === Tarball Contents ===
 
       XXB  index.js
@@ -436,8 +377,8 @@ ${JSON.stringify(
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0-next.0
-      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      version:       X.X.X-dry-run
+      filename:      proj-{project-name}-X.X.X-dry-run.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -449,7 +390,7 @@ ${JSON.stringify(
       > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0-next.0
+      📦  @proj/{project-name}@X.X.X-dry-run
       === Tarball Contents ===
 
       XXB  index.js
@@ -457,8 +398,8 @@ ${JSON.stringify(
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0-next.0
-      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      version:       X.X.X-dry-run
+      filename:      proj-{project-name}-X.X.X-dry-run.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -469,7 +410,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -496,7 +437,7 @@ ${JSON.stringify(
     const publishOutput3 = runCLI(publishToNext);
     expect(publishOutput3).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -573,7 +514,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -583,7 +524,7 @@ ${JSON.stringify(
     const publishOutput3Repeat = runCLI(publishToNext);
     expect(publishOutput3Repeat).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -609,7 +550,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -621,7 +562,7 @@ ${JSON.stringify(
     );
     expect(publishOutput3NewDistTags).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -650,7 +591,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -713,7 +654,7 @@ ${JSON.stringify(
     );
     expect(changelogDryRunOutput).toMatchInlineSnapshot(`
 
-      >  NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.0
 
 
 
@@ -723,18 +664,10 @@ ${JSON.stringify(
       +
       ## 999.9.9 (YYYY-MM-DD)
 
+      ### 🚀 Features
 
 
-
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
-
-
-      + ## 1000.0.0-next.0
-      +
-      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
-
-
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -742,7 +675,7 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -750,10 +683,45 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Committing changes with git
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
-      >  NX   Tagging commit with git
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      NX   Committing changes with git
+
+
+      NX   Tagging commit with git
+
+
+      NX   Pushing to git remote
+
+
+      NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
     `);
@@ -820,14 +788,6 @@ ${JSON.stringify(
         /New version 1100.1.0 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
-
-    // TODO: Also impacted by NXC-143
-    // Only one dependency relationship exists, so this log should only match once
-    // expect(
-    //   versionOutput3.match(
-    //     /Applying new version 1100.1.0 to 1 package which depends on my-pkg-\d*/g
-    //   ).length
-    // ).toEqual(1);
 
     createFile(
       `${pkg1}/my-file.txt`,
@@ -1085,11 +1045,11 @@ ${JSON.stringify(
 
     expect(releaseOutput4a).toMatchInlineSnapshot(`
 
-      >  NX   Running release version for project: {project-name}
+      NX   Running release version for project: {project-name}
 
       {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
 
-      >  NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
+      NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
 
 
     `);

@@ -3,6 +3,7 @@ import {
   cleanupProject,
   killPorts,
   newProject,
+  readJson,
   runCLI,
   uniq,
 } from '@nx/e2e/utils';
@@ -12,14 +13,13 @@ describe('Nuxt Plugin', () => {
 
   beforeAll(() => {
     newProject({
-      packages: ['@nx/nuxt', '@nx/storybook'],
-      unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/nuxt'],
     });
     runCLI(
-      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided`
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress`
     );
     runCLI(
-      `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
+      `generate @nx/nuxt:component ${app}/src/components/one/one --name=one --unitTestRunner=vitest`
     );
   });
 
@@ -29,22 +29,17 @@ describe('Nuxt Plugin', () => {
   });
 
   it('should build application', async () => {
-    const result = runCLI(`build ${app}`);
-    expect(result).toContain(
-      `Successfully ran target build for project ${app}`
-    );
-    checkFilesExist(`dist/${app}/.nuxt/nuxt.d.ts`);
-    checkFilesExist(`dist/${app}/.output/nitro.json`);
+    expect(() => runCLI(`build ${app}`)).not.toThrow();
+    checkFilesExist(`${app}/.nuxt/nuxt.d.ts`);
+    checkFilesExist(`${app}/.output/nitro.json`);
   });
 
   it('should test application', async () => {
-    const result = runCLI(`test ${app}`);
-    expect(result).toContain(`Successfully ran target test for project ${app}`);
+    expect(() => runCLI(`test ${app}`)).not.toThrow();
   }, 150_000);
 
   it('should lint application', async () => {
-    const result = runCLI(`lint ${app}`);
-    expect(result).toContain(`Successfully ran target lint for project ${app}`);
+    expect(() => runCLI(`lint ${app}`)).not.toThrow();
   });
 
   it('should build storybook for app', () => {
@@ -54,4 +49,14 @@ describe('Nuxt Plugin', () => {
     runCLI(`run ${app}:build-storybook --verbose`);
     checkFilesExist(`${app}/storybook-static/index.html`);
   }, 300_000);
+
+  it('should have build, serve, build-static, server-static targets', () => {
+    runCLI(`show project ${app} --json > targets.json`);
+
+    const targets = readJson('targets.json');
+    expect(targets.targets['build']).toBeDefined();
+    expect(targets.targets['serve']).toBeDefined();
+    expect(targets.targets['serve-static']).toBeDefined();
+    expect(targets.targets['build-static']).toBeDefined();
+  });
 });

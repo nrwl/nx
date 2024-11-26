@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -36,8 +38,7 @@ describe('web app generator (legacy)', () => {
 
   it('should setup webpack configuration', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-app',
     });
     const project = readProjectConfiguration(tree, 'my-app');
     expect(project).toMatchInlineSnapshot(`
@@ -104,6 +105,16 @@ describe('web app generator (legacy)', () => {
               "buildTarget": "my-app:build",
             },
           },
+          "serve-static": {
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/web:file-server",
+            "options": {
+              "buildTarget": "my-app:build",
+              "spa": true,
+            },
+          },
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
@@ -133,7 +144,7 @@ describe('web app generator (legacy)', () => {
 
   it('should add targets for vite', async () => {
     await applicationGenerator(tree, {
-      name: 'my-vite-app',
+      directory: 'my-vite-app',
       bundler: 'vite',
     });
     const projects = getProjects(tree);
@@ -177,6 +188,9 @@ describe('web app generator (legacy)', () => {
               },
             },
             "defaultConfiguration": "development",
+            "dependsOn": [
+              "build",
+            ],
             "executor": "@nx/vite:preview-server",
             "options": {
               "buildTarget": "my-vite-app:build",
@@ -199,13 +213,23 @@ describe('web app generator (legacy)', () => {
               "buildTarget": "my-vite-app:build",
             },
           },
-          "test": {
-            "executor": "@nx/vite:test",
+          "serve-static": {
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/web:file-server",
             "options": {
-              "reportsDirectory": "../coverage/my-vite-app",
+              "buildTarget": "my-vite-app:build",
+              "spa": true,
+            },
+          },
+          "test": {
+            "executor": "@nx/jest:jest",
+            "options": {
+              "jestConfig": "my-vite-app/jest.config.ts",
             },
             "outputs": [
-              "{options.reportsDirectory}",
+              "{workspaceRoot}/coverage/{projectRoot}",
             ],
           },
         },

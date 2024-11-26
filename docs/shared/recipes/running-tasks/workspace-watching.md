@@ -1,10 +1,8 @@
 # Workspace Watching
 
-Nx can watch your workspace and execute commands based on project or files changes.
+{% youtube src="https://youtu.be/0eVplUl1zBE?si=KtmiyRm1AcYc01td" title="Workspace watching" /%}
 
-{% callout type="note" title="Nx Versioning" %}
-Workspace watching is available with Nx version 15.4.0 and higher.
-{% /callout %}
+Nx can watch your workspace and execute commands based on project or files changes.
 
 Imagine the following project graph with these projects:
 
@@ -94,6 +92,18 @@ There are also some quirks if this command is ran with a package manager. [Find 
 
 {% /callout %}
 
+{% callout type="note" title="Windows" %}
+
+If you're running this command on Windows Powershell (not WSL), the environment variables need to be wrapped in `%`.
+
+For example:
+
+```shell
+nx watch --all -- nx run %NX_PROJECT_NAME%:build
+```
+
+{% /callout %}
+
 Now every time a package changes, Nx will run the build.
 
 If multiple packages change at the same time, Nx will run the callback for each changed project. Then if additional changes happen while a command is in progress, Nx will batch those changes, and execute them once the current command completes.
@@ -131,18 +141,6 @@ yarn nx -- watch --all -- echo \$NX_PROJECT_NAME
 npx -c 'nx watch --all -- echo \$NX_PROJECT_NAME'
 ```
 
-{% callout type="note" title="Windows" %}
-
-If you're running these commands on Windows Powershell (not WSL), the environment variables need to be wrapped in `%`.
-
-For example:
-
-```shell
-yarn nx -- watch --all -- echo %NX_PROJECT_NAME%
-```
-
-{% /callout %}
-
 ## Additional Use Cases
 
 ### Watching for specific projects
@@ -160,3 +158,15 @@ To watch for a project and it's dependencies, run this command:
 ```shell
 nx watch --projects=app1 --includeDependentProjects -- echo \$NX_PROJECT_NAME
 ```
+
+### Rebuilding dependent projects while developing an application
+
+In a monorepo setup, your application might rely on several libraries that need to be built before they can be used in the application. While the [task pipeline](/recipes/running-tasks/defining-task-pipeline) automatically handles this during builds, you'd want the same behavior during development when serving your application with a dev server.
+
+To watch and rebuild the dependent libraries of an application, use the following command:
+
+```shell
+nx watch --projects=my-app --includeDependentProjects -- nx run-many -t build -p \$NX_PROJECT_NAME --exclude=my-app
+```
+
+`--includeDependentProjects` ensures that any changes to projects your application depends on trigger a rebuild, while `--exclude=my-app` skips rebuilding the app itself since it's already being served by the development server.

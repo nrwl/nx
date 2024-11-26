@@ -19,7 +19,7 @@ import {
   PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
-import * as ora from 'ora';
+import ora from 'ora';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../../../utilities/angular-version-utils';

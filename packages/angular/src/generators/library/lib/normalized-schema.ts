@@ -1,14 +1,14 @@
 import { UnitTestRunner } from '../../../utils/test-runners';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface NormalizedSchema {
   libraryOptions: {
-    name: string;
+    directory: string;
+    name?: string;
     addTailwind?: boolean;
     skipFormat?: boolean;
     simpleName?: boolean;
     addModuleSpec?: boolean;
-    directory?: string;
     sourceDir?: string;
     buildable?: boolean;
     publishable?: boolean;
@@ -27,7 +27,7 @@ export interface NormalizedSchema {
     skipPackageJson?: boolean;
     skipPostInstall?: boolean;
     standalone?: boolean;
-    linter: Linter;
+    linter: Linter | LinterType;
     unitTestRunner: UnitTestRunner;
     prefix: string;
     fileName: string;

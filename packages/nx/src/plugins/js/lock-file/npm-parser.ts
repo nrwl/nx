@@ -13,7 +13,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 /**
  * NPM
@@ -305,7 +305,19 @@ function findTarget(
 
   if (keyMap.has(searchPath)) {
     const child = keyMap.get(searchPath);
+    // if the version is alias to another package we need to parse the versions to compare
     if (
+      child.data.version.startsWith('npm:') &&
+      versionRange.startsWith('npm:')
+    ) {
+      const nodeVersion = child.data.version.slice(
+        child.data.version.indexOf('@', 5) + 1
+      );
+      const depVersion = versionRange.slice(versionRange.indexOf('@', 5) + 1);
+      if (nodeVersion === depVersion || satisfies(nodeVersion, depVersion)) {
+        return child;
+      }
+    } else if (
       child.data.version === versionRange ||
       satisfies(child.data.version, versionRange)
     ) {
@@ -465,9 +477,13 @@ function mapSnapshots(
   graph: ProjectGraph
 ): MappedPackage[] {
   const nestedNodes = new Set<ProjectGraphExternalNode>();
-  const visitedNodes = new Map<ProjectGraphExternalNode, Set<string>>();
-  const visitedPaths = new Set<string>();
-
+  const visitedNodes = new Map<
+    ProjectGraphExternalNode,
+    {
+      packagePaths: Set<string>;
+      unresolvedParents: Set<string>;
+    }
+  >();
   const remappedPackages: Map<string, MappedPackage> = new Map();
 
   // add first level children
@@ -479,8 +495,10 @@ function mapSnapshots(
         node.data.version
       );
       remappedPackages.set(mappedPackage.path, mappedPackage);
-      visitedNodes.set(node, new Set([mappedPackage.path]));
-      visitedPaths.add(mappedPackage.path);
+      visitedNodes.set(node, {
+        packagePaths: new Set([mappedPackage.path]),
+        unresolvedParents: new Set(),
+      });
     } else {
       nestedNodes.add(node);
     }
@@ -494,7 +512,6 @@ function mapSnapshots(
       remappedPackages,
       nestedNodes,
       visitedNodes,
-      visitedPaths,
       rootLockFile
     );
     // initially we naively map package paths to topParent/../parent/child
@@ -542,8 +559,13 @@ function nestMappedPackages(
   invertedGraph: ProjectGraph,
   result: Map<string, MappedPackage>,
   nestedNodes: Set<ProjectGraphExternalNode>,
-  visitedNodes: Map<ProjectGraphExternalNode, Set<string>>,
-  visitedPaths: Set<string>,
+  visitedNodes: Map<
+    ProjectGraphExternalNode,
+    {
+      packagePaths: Set<string>;
+      unresolvedParents: Set<string>;
+    }
+  >,
   rootLockFile: NpmLockFile
 ) {
   const initialSize = nestedNodes.size;
@@ -553,12 +575,26 @@ function nestMappedPackages(
   }
 
   nestedNodes.forEach((node) => {
-    let unresolvedParents = invertedGraph.dependencies[node.name].length;
-    invertedGraph.dependencies[node.name].forEach(({ target }) => {
-      const targetNode = invertedGraph.externalNodes[target];
+    if (!visitedNodes.has(node)) {
+      visitedNodes.set(node, {
+        packagePaths: new Set(),
+        unresolvedParents: new Set(
+          invertedGraph.dependencies[node.name].map(({ target }) => target)
+        ),
+      });
+    }
 
-      if (visitedNodes.has(targetNode)) {
-        visitedNodes.get(targetNode).forEach((path) => {
+    invertedGraph.dependencies[node.name].forEach(({ target }) => {
+      if (!visitedNodes.get(node).unresolvedParents.has(target)) {
+        return;
+      }
+
+      const targetNode = invertedGraph.externalNodes[target];
+      if (
+        visitedNodes.has(targetNode) &&
+        !visitedNodes.get(targetNode).unresolvedParents.size
+      ) {
+        visitedNodes.get(targetNode).packagePaths.forEach((path) => {
           const mappedPackage = mapPackage(
             rootLockFile,
             node.data.packageName,
@@ -566,17 +602,12 @@ function nestMappedPackages(
             path + '/'
           );
           result.set(mappedPackage.path, mappedPackage);
-          if (visitedNodes.has(node)) {
-            visitedNodes.get(node).add(mappedPackage.path);
-          } else {
-            visitedNodes.set(node, new Set([mappedPackage.path]));
-          }
-          visitedPaths.add(mappedPackage.path);
+          visitedNodes.get(node).packagePaths.add(mappedPackage.path);
+          visitedNodes.get(node).unresolvedParents.delete(target);
         });
-        unresolvedParents--;
       }
     });
-    if (!unresolvedParents) {
+    if (!visitedNodes.get(node).unresolvedParents.size) {
       nestedNodes.delete(node);
     }
   });
@@ -594,7 +625,6 @@ function nestMappedPackages(
       result,
       nestedNodes,
       visitedNodes,
-      visitedPaths,
       rootLockFile
     );
   }

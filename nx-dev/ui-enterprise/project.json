@@ -1,0 +1,11 @@
+{
+  "name": "nx-dev-ui-enterprise",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/ui-enterprise/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:ui"],
+  "targets": {
+    "lint": {},
+    "test": {}
+  }
+}

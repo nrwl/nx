@@ -62,7 +62,7 @@ export function Prompt({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="relative flex gap-2 max-w-3xl mx-auto py-0 px-2 shadow-lg rounded-md border border-slate-300 bg-white dark:border-slate-900 dark:bg-slate-700"
+      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 py-0 shadow-lg dark:border-slate-900 dark:bg-slate-700"
     >
       <div
         className={cx(
@@ -104,7 +104,7 @@ export function Prompt({
           </Button>
         )}
       </div>
-      <div className="overflow-y-auto w-full h-full max-h-[300px]">
+      <div className="h-full max-h-[300px] w-full overflow-y-auto">
         <Textarea
           onKeyDown={(event) => {
             if (
@@ -123,7 +123,7 @@ export function Prompt({
           name="query"
           maxLength={500}
           disabled={isGenerating}
-          className="block w-full p-0 resize-none bg-transparent text-sm placeholder-slate-500 pl-2 py-[1.3rem] focus-within:outline-none focus:placeholder-slate-400 dark:focus:placeholder-slate-300 dark:text-white focus:outline-none focus:ring-0 border-none disabled:cursor-not-allowed"
+          className="block w-full resize-none border-none bg-transparent p-0 py-[1.3rem] pl-2 text-sm placeholder-slate-500 focus-within:outline-none focus:placeholder-slate-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-slate-300"
           placeholder="How does caching work?"
           rows={1}
         />
@@ -134,7 +134,7 @@ export function Prompt({
           size="small"
           type="submit"
           disabled={isGenerating}
-          className="self-end w-12 h-12 disabled:cursor-not-allowed"
+          className="h-12 w-12 self-end disabled:cursor-not-allowed"
         >
           <div hidden className="sr-only">
             Ask

@@ -5,9 +5,10 @@ exports[`react:storybook-configuration should configure everything and install c
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 const config: StorybookConfig = {
-  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
@@ -16,7 +17,7 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [react(), nxViteTsPaths()],
     }),
 };
 
@@ -52,23 +53,6 @@ export const Heading: Story = {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/Welcome to MyComponent!/gi)).toBeTruthy();
   },
-};
-"
-`;
-
-exports[`react:storybook-configuration should generate stories for components without interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react';
-import { MyComponent } from './my-component';
-
-const meta: Meta<typeof MyComponent> = {
-  component: MyComponent,
-  title: 'MyComponent',
-};
-export default meta;
-type Story = StoryObj<typeof MyComponent>;
-
-export const Primary = {
-  args: {},
 };
 "
 `;

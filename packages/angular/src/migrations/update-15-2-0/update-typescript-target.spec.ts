@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   readJson,
   readProjectConfiguration,
@@ -19,16 +21,14 @@ describe('Migration to update target and add useDefineForClassFields', () => {
       .spyOn(devkit, 'formatFiles')
       .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
-      name: 'test',
+      directory: 'test',
       bundler: 'webpack',
-      projectNameAndRootFormat: 'derived',
       skipFormat: true,
     });
     await generateTestApplication(tree, {
-      name: 'karma',
+      directory: 'karma',
       unitTestRunner: UnitTestRunner.None,
       bundler: 'webpack',
-      projectNameAndRootFormat: 'derived',
       skipFormat: true,
     });
 

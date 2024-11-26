@@ -5,7 +5,7 @@
     "init": {
       "factory": "./src/generators/init/init#esbuildInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/esbuild` plugin.",
+      "description": "Initialize the `@nx/esbuild` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },

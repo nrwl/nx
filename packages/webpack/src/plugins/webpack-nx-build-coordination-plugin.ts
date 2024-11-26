@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import type { Compiler } from 'webpack';
-import { daemonClient } from 'nx/src/daemon/client/client';
-import { BatchFunctionRunner } from 'nx/src/command-line/watch';
+import { daemonClient, isDaemonEnabled } from 'nx/src/daemon/client/client';
+import { BatchFunctionRunner } from 'nx/src/command-line/watch/watch';
 import { output } from 'nx/src/utils/output';
 
 export class WebpackNxBuildCoordinationPlugin {
@@ -12,7 +12,14 @@ export class WebpackNxBuildCoordinationPlugin {
     if (!skipInitialBuild) {
       this.buildChangedProjects();
     }
-    this.startWatchingBuildableLibs();
+    if (isDaemonEnabled()) {
+      this.startWatchingBuildableLibs();
+    } else {
+      output.warn({
+        title:
+          'Nx Daemon is not enabled. Buildable libs will not be rebuilt on file changes.',
+      });
+    }
   }
 
   apply(compiler: Compiler) {
@@ -45,7 +52,9 @@ export class WebpackNxBuildCoordinationPlugin {
     this.currentlyRunning = 'nx-build';
     try {
       return await new Promise<void>((res) => {
-        this.buildCmdProcess = exec(this.buildCmd);
+        this.buildCmdProcess = exec(this.buildCmd, {
+          windowsHide: true,
+        });
 
         this.buildCmdProcess.stdout.pipe(process.stdout);
         this.buildCmdProcess.stderr.pipe(process.stderr);

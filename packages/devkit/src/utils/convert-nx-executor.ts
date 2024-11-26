@@ -1,14 +1,17 @@
 import type { Observable } from 'rxjs';
-import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
-import type { ProjectsConfigurations } from 'nx/src/devkit-exports';
+import type {
+  Executor,
+  ExecutorContext,
+  ProjectsConfigurations,
+} from 'nx/src/devkit-exports';
 
-import { requireNx } from '../../nx';
-
-const {
-  Workspaces,
+import { NX_VERSION } from './package-json';
+import { lt } from 'semver';
+import {
   readNxJsonFromDisk,
+  readProjectConfigurationsFromRootMap,
   retrieveProjectConfigurationsWithAngularProjects,
-} = requireNx();
+} from 'nx/src/devkit-internals';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -18,26 +21,35 @@ const {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
-    const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const nxJsonConfiguration = readNxJsonFromDisk
-      ? readNxJsonFromDisk(builderContext.workspaceRoot)
-      : // TODO(v19): remove readNxJson. This is to be backwards compatible with Nx 16.5 and below.
-        (workspaces as any).readNxJson();
+    const nxJsonConfiguration = readNxJsonFromDisk(
+      builderContext.workspaceRoot
+    );
 
     const promise = async () => {
-      const projectsConfigurations: ProjectsConfigurations =
-        retrieveProjectConfigurationsWithAngularProjects
-          ? {
-              version: 2,
-              projects: await retrieveProjectConfigurationsWithAngularProjects(
-                builderContext.workspaceRoot,
-                nxJsonConfiguration
-              ).then((p) => (p as any).projectNodes ?? p.projects),
-            }
-          : // TODO(v19): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
-            (workspaces as any).readProjectsConfigurations({
-              _includeProjectsFromAngularJson: true,
-            });
+      const projectsConfigurations: ProjectsConfigurations = {
+        version: 2,
+        projects: await retrieveProjectConfigurationsWithAngularProjects(
+          builderContext.workspaceRoot,
+          nxJsonConfiguration
+        ).then((p) => {
+          if ((p as any).projectNodes) {
+            return (p as any).projectNodes;
+          }
+          // v18.3.4 changed projects to be keyed by root
+          // rather than project name
+          if (lt(NX_VERSION, '18.3.4')) {
+            return p.projects;
+          }
+
+          if (readProjectConfigurationsFromRootMap) {
+            return readProjectConfigurationsFromRootMap(p.projects);
+          }
+
+          throw new Error(
+            'Unable to successfully map Nx executor -> Angular Builder'
+          );
+        }),
+      };
 
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,

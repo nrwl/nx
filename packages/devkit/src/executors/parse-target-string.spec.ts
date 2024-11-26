@@ -1,7 +1,11 @@
 import { parseTargetString, targetToTargetString } from './parse-target-string';
 
 import * as splitTarget from 'nx/src/utils/split-target';
-import { ExecutorContext } from 'nx/src/devkit-exports';
+import {
+  ExecutorContext,
+  ProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from 'nx/src/devkit-exports';
 
 const cases = [
   { input: 'one:two', expected: { project: 'one', target: 'two' } },
@@ -16,28 +20,31 @@ const cases = [
 ];
 
 describe('parseTargetString', () => {
+  const graph: ProjectGraph = {
+    nodes: {
+      'my-project': {
+        type: 'lib',
+        name: 'my-project',
+        data: { root: '/packages/my-project' },
+      },
+      'other-project': {
+        type: 'lib',
+        name: 'other-project',
+        data: { root: '/packages/other-project' },
+      },
+    },
+    dependencies: {},
+    externalNodes: {},
+    version: '',
+  };
   const mockContext: ExecutorContext = {
     projectName: 'my-project',
     cwd: '/virtual',
     root: '/virtual',
     isVerbose: false,
-    projectGraph: {
-      nodes: {
-        'my-project': {
-          type: 'lib',
-          name: 'my-project',
-          data: { root: '/packages/my-project' },
-        },
-        'other-project': {
-          type: 'lib',
-          name: 'other-project',
-          data: { root: '/packages/other-project' },
-        },
-      },
-      dependencies: {},
-      externalNodes: {},
-      version: '',
-    },
+    projectGraph: graph,
+    projectsConfigurations: readProjectsConfigurationFromProjectGraph(graph),
+    nxJsonConfiguration: {},
   };
 
   it.each(cases)('$input -> $expected', ({ input, expected }) => {

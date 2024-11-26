@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
@@ -15,8 +17,7 @@ describe('updateJestConfig', () => {
 
   it('should handle jest config not existing', async () => {
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
@@ -44,8 +45,7 @@ describe('updateJestConfig', () => {
     const jestConfigPath = 'my-destination/jest.config.ts';
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(jestConfigPath, jestConfig);
@@ -66,7 +66,7 @@ describe('updateJestConfig', () => {
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../coverage/my-destination'`
     );
-    expect(rootJestConfigAfter).toContain('getJestProjects()');
+    expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 
   it('should update the name and dir correctly when moving to a nested dir', async () => {
@@ -81,8 +81,7 @@ describe('updateJestConfig', () => {
     };`;
     const jestConfigPath = 'my-source/data-access/jest.config.ts';
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(jestConfigPath, jestConfig);
@@ -119,7 +118,6 @@ describe('updateJestConfig', () => {
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
       directory: 'some/test/dir/my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(
       tree,
@@ -142,7 +140,7 @@ describe('updateJestConfig', () => {
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../coverage/other/test/dir/my-destination'`
     );
-    expect(rootJestConfigAfter).toContain('getJestProjects()');
+    expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 
   it('updates the root config if not using `getJestProjects()`', async () => {
@@ -150,7 +148,6 @@ describe('updateJestConfig', () => {
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
       directory: 'some/test/dir/my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     tree.write(
       rootJestConfigPath,
@@ -188,7 +185,6 @@ describe('updateJestConfig', () => {
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
       directory: 'some/test/dir/my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     tree.write(
       rootJestConfigPath,
@@ -229,7 +225,6 @@ module.exports = {
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
       directory: 'some/test/dir/my-source',
-      projectNameAndRootFormat: 'as-provided',
     });
     tree.write(
       rootJestConfigPath,

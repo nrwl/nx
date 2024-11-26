@@ -17,16 +17,21 @@ We are generally following the [Diataxis](https://diataxis.fr) model where docum
 
 We also have different audiences in mind when writing docs:
 
-👶 New user
+👶 New user starting from scratch
 
 - They know their framework of choice
 - They have probably heard the term monorepo but don't really know what it is
 - They're smart and eager to learn
 
+👶 New user migrating an existing repo
+
+- They know their framework of choice
+- They know how npm workspaces work
+- They're smart and eager to learn
+
 👦 Intermediate User
 
 - They know how to create an Nx repo or add Nx to an existing repo
-- They have heard the terms integrated and package-based
 - They know what a project is and how to make one
 - They understand how to run a task and the basics of caching
 - They can launch the graph
@@ -88,14 +93,14 @@ Your content goes here.
 {% /callout %}
 ```
 
-#### Disclosure
+#### Deep Dives
 
-A disclosure can be used for less important information that is initially collapsed.
+These are special callouts that are collapsed with the intention of containing more deep-dive information about the topic which isn't required to understand right away.
 
 ```markdown
-{% disclosure title="string" %}
-Your content goes here.
-{% /disclosure %}
+{% callout type="deepdive" title="string" %}
+Your deep-dive content goes here.
+{% /callout %}
 ```
 
 #### Cards
@@ -173,6 +178,14 @@ To display a terminal command, use:
 
 ````
 ‎```shell
+‎ npx nx build
+‎```
+````
+
+You can also add a title to the shell as follows:
+
+````
+‎```shell {% title="Build the app" %}
 ‎ npx nx build
 ‎```
 ````
@@ -402,3 +415,44 @@ Embed an Nx Graph visualization that can be panned by the user.
 
 {% /graph %}
 ````
+
+## Generating API Documentation
+
+To generate API documentation for the codebase and update the menu for the docs on nx.dev, you can run:
+
+```
+nx documentation
+```
+
+This will happen automatically in a `git push` hook, so you'll be reminded if you forget.
+
+### Generate API Documentation for Ocean Plugins
+
+To generate API documentation for plugins in the ocean repository, run the `nx documentation` command with the `NX_OCEAN_RELATIVE_PATH` environment variable set to the relative path to your checked out copy of the ocean repo.
+
+```
+NX_OCEAN_RELATIVE_PATH=../ocean nx documentation
+```
+
+This will create generated API documentation in the `docs/external-generated` folder. This API will be merged into the normal `docs/generated` documentation when the docs site is built.
+
+Because there are two separate output folders, if someone runs `nx documentation` without the `NX_OCEAN_RELATIVE_PATH` environment variable, the ocean documentation will not be overwritten. The ocean documentation will only be updated or deleted when someone explicitly chooses to do so.
+
+## Publishing Process
+
+There are multiple versions of the `nx.dev` site.
+
+- [canary.nx.dev](https://canary.nx.dev) contains the documentation on the `master` branch
+- [nx.dev](https://nx.dev) contains the documentation as of the latest release of Nx to npm. The main site will not include reference documentation for APIs that have been merged to the codebase, but not yet released to the public.
+- `[version].nx.dev` contains the documentation for that version of Nx. `[version]` in this case is the major version up to the current LTS version of Nx. So [18.nx.dev](https://18.nx.dev) will show the Nx documentation as of the last released version of Nx 18.
+
+When a commit that contains documentation is merged into `master`, it will be immediately published to `canary.nx.dev`. Whenever a new release of Nx is published to npm, that documentation will then be available on the main site.
+
+### Immediately Publishing Time-Sensitive Documentation
+
+If you have a documentation change that should be published immediately, you'll need to create 2 PRs.
+
+1. First, create a PR against `master` in the normal manner.
+2. Your second PR needs to be made against the website branch with the latest major version of Nx. So your second PR can be created against `website-19` if the latest version of Nx is `19.1.0`. Once `website-19` is updated with your changes, the main `nx.dev` site will be updated.
+
+Later, when Nx `19.1.1` is released, `website-19` will be overwritten with whatever is on `master` and the first PR you created will take effect.

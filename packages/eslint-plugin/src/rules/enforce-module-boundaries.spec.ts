@@ -2,15 +2,16 @@ import 'nx/src/internal-testing-utils/mock-fs';
 
 import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';
+import { TargetProjectLocator } from '@nx/js/src/internal';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
-import { TargetProjectLocator } from '@nx/js/src/internal';
+import { join } from 'node:path';
+import { FileDataDependency } from 'nx/src/config/project-graph';
+import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
-import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
-import { FileDataDependency } from 'nx/src/config/project-graph';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -19,6 +20,17 @@ jest.mock('@nx/devkit', () => ({
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
+}));
+
+jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+    return join(
+      '/root',
+      'node_modules',
+      pathOrPackage,
+      pathOrPackage.endsWith('package.json') ? '' : 'package.json'
+    );
+  }),
 }));
 
 const tsconfig = {
@@ -98,6 +110,22 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
   './package.json': JSON.stringify(packageJson),
   './nx.json': JSON.stringify({ npmScope: 'happyorg' }),
+  './node_modules/npm-package/package.json': JSON.stringify({
+    name: 'npm-package',
+    version: '2.3.4',
+  }),
+  './node_modules/npm-awesome-package/package.json': JSON.stringify({
+    name: 'npm-awesome-package',
+    version: '1.2.3',
+  }),
+  './node_modules/1npm-package/package.json': JSON.stringify({
+    name: '1npm-package',
+    version: '0.0.0',
+  }),
+  './node_modules/npm-package2/package.json': JSON.stringify({
+    name: 'npm-package2',
+    version: '0.0.0',
+  }),
 };
 
 describe('Enforce Module Boundaries (eslint)', () => {
@@ -635,6 +663,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
+          import { existsSync } from 'node:fs';
+          import { join } from 'path';
           import 'npm-package2';
           import('npm-package2');
         `,
@@ -643,7 +673,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported';
+        'Only packages defined in the "package.json" can be imported. Transitive or unresolvable dependencies are not allowed.';
+      // NOTE: only 2 failures, the node:fs and path imports are node built ins and therefore should not trigger lint errors
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -1578,6 +1609,68 @@ Violation detected in:
     expect(failures.length).toBe(0);
   });
 
+  it('should ignore detected absolute path within project if ignoredCircularDependencies matches the project', () => {
+    const failures = runRule(
+      {
+        ignoredCircularDependencies: [['mylibName', 'mylibName']],
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/mylib';
+        import('@mycompany/mylib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: 'lib',
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: 'app',
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        anotherlibName: [createFile(`libs/anotherlib/src/main.ts`)],
+        myappName: [createFile(`apps/myapp/src/index.ts`)],
+      }
+    );
+    expect(failures.length).toBe(0);
+  });
+
   it('should error when circular dependency detected', () => {
     const failures = runRule(
       {},
@@ -1748,6 +1841,282 @@ Circular file chain:
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
+  });
+
+  it('should not error when circular dependency detected (indirect) if ignoredCircularDependencies matches link in chain', () => {
+    const failures = runRule(
+      {
+        ignoredCircularDependencies: [['anotherlibName', 'mylibName']],
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/badcirclelib';
+        import('@mycompany/badcirclelib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: 'lib',
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          badcirclelibName: {
+            name: 'badcirclelibName',
+            type: 'lib',
+            data: {
+              root: 'libs/badcirclelib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: 'app',
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'badcirclelibName',
+              type: DependencyType.static,
+            },
+          ],
+          badcirclelibName: [
+            {
+              source: 'badcirclelibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+          anotherlibName: [
+            {
+              source: 'anotherlibName',
+              target: 'mylibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`, ['mylibName'])],
+        anotherlibName: [
+          createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+          createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+        ],
+        badcirclelibName: [
+          createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+        ],
+        myappName: [createFile(`apps/myapp/index.ts`)],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
+
+  it('should not error when circular dependency detected (indirect) if ignoredCircularDependencies matches link in chain (second member catch all)', () => {
+    const failures = runRule(
+      {
+        ignoredCircularDependencies: [['anotherlibName', '*']],
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/badcirclelib';
+        import('@mycompany/badcirclelib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: 'lib',
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          badcirclelibName: {
+            name: 'badcirclelibName',
+            type: 'lib',
+            data: {
+              root: 'libs/badcirclelib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: 'app',
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'badcirclelibName',
+              type: DependencyType.static,
+            },
+          ],
+          badcirclelibName: [
+            {
+              source: 'badcirclelibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+          anotherlibName: [
+            {
+              source: 'anotherlibName',
+              target: 'mylibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`, ['mylibName'])],
+        anotherlibName: [
+          createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+          createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+        ],
+        badcirclelibName: [
+          createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+        ],
+        myappName: [createFile(`apps/myapp/index.ts`)],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
+
+  it('should not error when circular dependency detected (indirect) if ignoredCircularDependencies matches link in chain (first member catch all)', () => {
+    const failures = runRule(
+      {
+        ignoredCircularDependencies: [['*', 'mylibName']],
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/badcirclelib';
+        import('@mycompany/badcirclelib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: 'lib',
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          badcirclelibName: {
+            name: 'badcirclelibName',
+            type: 'lib',
+            data: {
+              root: 'libs/badcirclelib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: 'app',
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'badcirclelibName',
+              type: DependencyType.static,
+            },
+          ],
+          badcirclelibName: [
+            {
+              source: 'badcirclelibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+          anotherlibName: [
+            {
+              source: 'anotherlibName',
+              target: 'mylibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {
+        mylibName: [createFile(`libs/mylib/src/main.ts`, ['mylibName'])],
+        anotherlibName: [
+          createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
+          createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+        ],
+        badcirclelibName: [
+          createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+        ],
+        myappName: [createFile(`apps/myapp/index.ts`)],
+      }
+    );
+    expect(failures.length).toEqual(0);
   });
 
   describe('buildable library imports', () => {

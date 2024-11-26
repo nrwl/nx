@@ -1,17 +1,17 @@
 import {
-  Tree,
-  names,
+  detectPackageManager,
+  formatFiles,
   generateFiles,
   getPackageManagerCommand,
-  readJson,
+  names,
   NxJsonConfiguration,
-  formatFiles,
+  readJson,
+  Tree,
   writeJson,
-  detectPackageManager,
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
-import { getNxCloudUrl } from 'nx/src/utils/nx-cloud-utils';
+import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 
 export interface Schema {
   name: string;
@@ -20,22 +20,19 @@ export interface Schema {
 
 export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   const ci = schema.ci;
-
-  const nxJson: NxJsonConfiguration = readJson(tree, 'nx.json');
-  const nxCloudUsed =
-    nxJson.nxCloudAccessToken ??
-    Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
-    );
-  if (!nxCloudUsed) {
-    throw new Error('This workspace is not connected to Nx Cloud.');
-  }
-  if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
-    writeJson(tree, 'nx.json', appendOriginPrefix(nxJson));
-  }
-
   const options = normalizeOptions(schema, tree);
+  const nxJson: NxJsonConfiguration = readJson(tree, 'nx.json');
+
+  if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
+    appendOriginPrefix(nxJson);
+  }
+
   generateFiles(tree, join(__dirname, 'files', ci), '', options);
+
+  addWorkflowFileToSharedGlobals(nxJson, schema.ci, options.workflowFileName);
+
+  writeJson(tree, 'nx.json', nxJson);
+
   await formatFiles(tree);
 }
 
@@ -46,9 +43,11 @@ interface Substitutes {
   packageManager: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
+  packageManagerPreInstallPrefix: string;
   nxCloudHost: string;
   hasE2E: boolean;
   tmpl: '';
+  connectedToCloud: boolean;
 }
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
@@ -56,11 +55,17 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     options.name
   );
   const packageManager = detectPackageManager();
-  const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
-    getPackageManagerCommand(packageManager);
+  const {
+    exec: packageManagerPrefix,
+    ciInstall: packageManagerInstall,
+    dlx: packageManagerPreInstallPrefix,
+  } = getPackageManagerCommand(packageManager);
 
-  const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
-  const nxCloudHost = new URL(nxCloudUrl).host;
+  let nxCloudHost: string = 'nx.app';
+  try {
+    const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
+    nxCloudHost = new URL(nxCloudUrl).host;
+  } catch {}
 
   const packageJson = readJson(tree, 'package.json');
   const allDependencies = {
@@ -71,31 +76,63 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
   const hasE2E =
     allDependencies['@nx/cypress'] || allDependencies['@nx/playwright'];
 
+  const connectedToCloud = isNxCloudUsed(readJson(tree, 'nx.json'));
+
   return {
     workflowName,
     workflowFileName,
     packageManager,
     packageManagerInstall,
     packageManagerPrefix,
+    packageManagerPreInstallPrefix,
     mainBranch: deduceDefaultBase(),
     hasE2E,
     nxCloudHost,
     tmpl: '',
+    connectedToCloud,
   };
 }
 
 function defaultBranchNeedsOriginPrefix(nxJson: NxJsonConfiguration): boolean {
-  return !nxJson.affected?.defaultBase?.startsWith('origin/');
+  const base = nxJson.defaultBase ?? nxJson.affected?.defaultBase;
+  return !base?.startsWith('origin/');
 }
 
-function appendOriginPrefix(nxJson: NxJsonConfiguration): NxJsonConfiguration {
-  return {
-    ...nxJson,
-    affected: {
-      ...(nxJson.affected ?? {}),
-      defaultBase: nxJson.affected?.defaultBase
-        ? `origin/${nxJson.affected.defaultBase}`
-        : 'origin/main',
-    },
-  };
+function appendOriginPrefix(nxJson: NxJsonConfiguration): void {
+  if (nxJson?.affected?.defaultBase) {
+    nxJson.affected.defaultBase = `origin/${nxJson.affected.defaultBase}`;
+  }
+  if (nxJson.defaultBase || !nxJson.affected) {
+    nxJson.defaultBase = `origin/${nxJson.defaultBase ?? deduceDefaultBase()}`;
+  }
+}
+
+const ciWorkflowInputs: Record<Schema['ci'], string> = {
+  azure: 'azure-pipelines.yml',
+  'bitbucket-pipelines': 'bitbucket-pipelines.yml',
+  circleci: '.circleci/config.yml',
+  github: '.github/workflows/',
+  gitlab: '.gitlab-ci.yml',
+};
+
+function addWorkflowFileToSharedGlobals(
+  nxJson: NxJsonConfiguration,
+  ci: Schema['ci'],
+  workflowFileName: string
+): void {
+  let input = `{workspaceRoot}/${ciWorkflowInputs[ci]}`;
+  if (ci === 'github') input += `${workflowFileName}.yml`;
+  nxJson.namedInputs ??= {};
+  nxJson.namedInputs.sharedGlobals ??= [];
+  nxJson.namedInputs.sharedGlobals.push(input);
+
+  // Ensure 'default' named input exists and includes 'sharedGlobals'
+  if (!nxJson.namedInputs.default) {
+    nxJson.namedInputs.default = ['sharedGlobals'];
+  } else if (
+    Array.isArray(nxJson.namedInputs.default) &&
+    !nxJson.namedInputs.default.includes('sharedGlobals')
+  ) {
+    nxJson.namedInputs.default.push('sharedGlobals');
+  }
 }

@@ -8,7 +8,7 @@ description: Learn how to set up individual Storybook instances for each scope w
 This guide extends the
 [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
-Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/concepts/more-concepts/library-types) documentation page, and also in the [Code Organization and Naming Conventions](/concepts/more-concepts/monorepo-nx-enterprise#code-organization-&-naming-conventions) documentation section.
+Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/concepts/decisions/project-dependency-rules) documentation page.
 
 In this case, you can have one Storybook instance per scope. If you follow the folder organization convention described above, it is easy to configure Storybook to import all the stories under a specific folder, for example, which are associated with a specific app or scope.
 
@@ -91,15 +91,15 @@ The commands below uses the `as-provided` directory flag behavior, which is the 
 {% /callout %}
 
 ```shell
-nx g @nx/angular:lib storybook-host-client --directory=libs/storybook-host-client --projectNameAndRootFormat=as-provided
+nx g @nx/angular:lib libs/storybook-host-client
 ```
 
 ```shell
-nx g @nx/angular:lib storybook-host-admin --directory=libs/storybook-host-admin --projectNameAndRootFormat=as-provided
+nx g @nx/angular:lib libs/storybook-host-admin
 ```
 
 ```shell
-nx g @nx/angular:lib storybook-host-shared --directory=libs/storybook-host-shared --projectNameAndRootFormat=as-provided
+nx g @nx/angular:lib libs/storybook-host-shared
 ```
 
 ### Generate the Storybook configuration for the libraries

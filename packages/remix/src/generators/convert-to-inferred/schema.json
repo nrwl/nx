@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxRemixConvertToInferred",
+  "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "title": "Convert Remix project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/remix:*` executors to use `@nx/remix/plugin`.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files at the end of the migration.",
+      "default": false
+    }
+  }
+}

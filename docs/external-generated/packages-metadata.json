@@ -1,0 +1,144 @@
+[
+  {
+    "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/powerpack-conformance/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-conformance/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-conformance",
+    "packageName": "@nx/powerpack-conformance",
+    "root": "/libs/nx-packages/powerpack-conformance",
+    "source": "/libs/nx-packages/powerpack-conformance/src"
+  },
+  {
+    "description": "Package to provide the ability to activate and read licenses for Nx Powerpack.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-license",
+    "packageName": "@nx/powerpack-license",
+    "root": "/libs/nx-packages/powerpack-license",
+    "source": "/libs/nx-packages/powerpack-license/src"
+  },
+  {
+    "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
+        "file": "external-generated/packages/powerpack-owners/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-owners/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Initialize Nx Powerpack Owners config",
+        "file": "external-generated/packages/powerpack-owners/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/init/schema.json",
+        "path": "powerpack-owners/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
+        "file": "external-generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
+        "hidden": false,
+        "name": "sync-codeowners-file",
+        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/schema.json",
+        "path": "powerpack-owners/generators/sync-codeowners-file",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-owners",
+    "packageName": "@nx/powerpack-owners",
+    "root": "/libs/nx-packages/powerpack-owners",
+    "source": "/libs/nx-packages/powerpack-owners/src"
+  },
+  {
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
+        "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-s3-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Initialize the S3 Cache",
+        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
+        "path": "powerpack-s3-cache/generators/init",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-s3-cache",
+    "packageName": "@nx/powerpack-s3-cache",
+    "root": "/libs/nx-packages/powerpack-s3-cache",
+    "source": "/libs/nx-packages/powerpack-s3-cache/src"
+  },
+  {
+    "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Add the shared fs cache",
+        "file": "external-generated/packages/powerpack-shared-fs-cache/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/schema.json",
+        "path": "powerpack-shared-fs-cache/generators/init",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-shared-fs-cache",
+    "packageName": "@nx/powerpack-shared-fs-cache",
+    "root": "/libs/nx-packages/powerpack-shared-fs-cache",
+    "source": "/libs/nx-packages/powerpack-shared-fs-cache/src"
+  }
+]

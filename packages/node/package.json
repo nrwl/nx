@@ -14,7 +14,8 @@
     "Nest",
     "Jest",
     "Cypress",
-    "CLI"
+    "CLI",
+    "Backend"
   ],
   "main": "./index",
   "typings": "./index.d.ts",

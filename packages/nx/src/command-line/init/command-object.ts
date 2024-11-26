@@ -1,7 +1,10 @@
 import { Argv, CommandModule } from 'yargs';
 import { parseCSV } from '../yargs-utils/shared-options';
+import { readNxJson } from '../../config/nx-json';
 
-const useV2 = process.env['NX_ADD_PLUGINS'] !== 'false';
+const useV2 =
+  process.env['NX_ADD_PLUGINS'] !== 'false' &&
+  readNxJson().useInferencePlugins !== false;
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',

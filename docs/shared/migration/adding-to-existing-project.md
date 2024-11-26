@@ -1,6 +1,7 @@
 # Adding Nx to your Existing Project
 
-Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package scripts. Each project usually has a set of scripts in the `package.json`:
+Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
+scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
 {
@@ -13,10 +14,13 @@ Nx can be added to any type of project, not just monorepos. The main benefit is 
 }
 ```
 
-You can make these scripts faster by leveraging Nx's caching capabilities. For example:
+You can make these scripts faster by leveraging Nx's [caching capabilities](/features/cache-task-results). For example:
 
 - You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
-- You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on your CI. All you might want to do is trigger the Docusaurus build.
+- You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on
+  your CI. All you might want to do is trigger the Docusaurus build.
+
+Additionally, Nx also [speeds up your CI ⚡](#fast-ci) with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
 
 ## Install Nx on a Non-Monorepo Project
 
@@ -26,7 +30,55 @@ Run the following command:
 npx nx@latest init
 ```
 
-This will set up Nx for you - updating the `package.json` file and creating a new `nx.json` file with Nx configuration based on your answers during the set up process. The set up process will suggest installing Nx plugins that might be useful based on your existing repository. The example below is using the `@nx/eslint` and `@nx/next` plugins to run ESLint and Next.js tasks with Nx:
+Running this command will ask you a few questions about your workspace and then set up Nx for you accordingly. The setup
+process detects tools which are used in your workspace and suggests installing Nx plugins to integrate the tools you use
+with Nx. Running those tools through Nx will have caching enabled when possible, providing you with a faster alternative
+for running those tools. You can start with a few to see how it works and then add more with
+the [`nx add`](/nx-api/nx/documents/add) command later. You can also decide to add them all and get the full experience
+right
+away because adding plugins will not break your existing workflow.
+
+The first thing you may notice is that Nx updates your `package.json` scripts during the setup process. Nx Plugins setup
+Nx commands which run the underlying tool with caching enabled. When a `package.json` script runs a command which can be
+run through Nx, Nx will replace that script in the `package.json` scripts with an Nx command that has
+caching automatically enabled. Anywhere those `package.json` scripts are used, including your CI, will become faster
+when possible. Let's go through an example where the `@nx/next/plugin` and `@nx/eslint/plugin` plugins are added to a
+workspace with the
+following `package.json`.
+
+```diff {% fileName="package.json" %}
+{
+  "name": "my-workspace",
+  ...
+  "scripts": {
+-     "build": "next build && echo 'Build complete'",
++     "build": "nx next:build && echo 'Build complete'",
+-     "lint": "eslint ./src",
++     "lint": "nx eslint:lint",
+    "test": "node ./run-tests.js"
+  },
++   "nx": {}
+}
+```
+
+The `@nx/next/plugin` plugin adds a `next:build` target which runs `next build` and sets up caching correctly. In other
+words, running `nx next:build` is the same as running `next build` with the added benefit of it being cacheable. Hence,
+Nx replaces `next build` in the `package.json` `build` script to add caching to anywhere running `npm run build`.
+Similarly, `@nx/eslint/plugin` sets up the `nx eslint:lint` command to run `eslint ./src` with caching enabled.
+The `test` script was not recognized by any Nx plugin, so it was left as is. After Nx has been setup,
+running `npm run build` or `npm run lint` multiple times, will be instant when possible.
+
+You can also run any npm scripts directly through Nx with `nx build` or `nx lint` which will run the `npm run build`
+and `npm run lint` scripts respectively. In the later portion of the setup flow, Nx will ask if you would like some of
+those npm scripts to be cacheable. By making those cacheable, running `nx build` rather than `npm run build` will add
+another layer of cacheability. However, `nx build` must be run instead of `npm run build` to take advantage of the
+cache.
+
+## Inferred Tasks
+
+You may have noticed that `@nx/next` provides `dev` and `start` tasks in addition to the `next:build` task. Those tasks
+were created by the `@nx/next/plugin` plugin from your existing Next.js configuration. You can see the configuration for
+the Nx Plugins in `nx.json`:
 
 ```json {% fileName="nx.json" %}
 {
@@ -34,13 +86,13 @@ This will set up Nx for you - updating the `package.json` file and creating a ne
     {
       "plugin": "@nx/eslint/plugin",
       "options": {
-        "targetName": "lint"
+        "targetName": "eslint:lint"
       }
     },
     {
       "plugin": "@nx/next/plugin",
       "options": {
-        "buildTargetName": "build",
+        "buildTargetName": "next:build",
         "devTargetName": "dev",
         "startTargetName": "start"
       }
@@ -49,39 +101,17 @@ This will set up Nx for you - updating the `package.json` file and creating a ne
 }
 ```
 
-When Nx updates your `package.json` scripts, it looks for scripts that can be replaced with an Nx command that has caching automatically enabled. The `package.json` defined above would be updated to look like this:
+Each plugin can accept options to customize the projects which they create. You can see more information about
+configuring the plugins on the [`@nx/next/plugin`](/nx-api/next) and [`@nx/eslint/plugin`](/nx-api/eslint) plugin pages.
 
-```json {% fileName="package.json" %}
-{
-  "name": "my-workspace",
-  ...
-  "scripts": {
-    "build": "nx build",
-    "lint": "nx lint",
-    "test": "node ./run-tests.js"
-  },
-  ...
-  "nx": {
-    "includedScripts": []
-  }
-}
-```
-
-The `@nx/next` plugin can run `next build` for you and set up caching correctly, so it replaces `next build` with `nx build`. Similarly, `@nx/eslint` can set up caching for `eslint ./src`. When you run `npm run build` or `npm run lint` multiple times, you'll see that caching is enabled. You can also call Nx directly from the terminal with `nx build` or `nx lint`.
-
-The `test` script was not recognized by any Nx plugin, so it was left as is.
-
-The `includedScripts` array allows you to specify `package.json` scripts that can be run with the `nx build` syntax.
-
-## Inferred Tasks
-
-You may have noticed that `@nx/next` provides `dev` and `start` tasks in addition to the `build` task. Those tasks were created by the `@nx/next` plugin from your existing Next.js configuration. To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project details in a browser window.
+To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project
+details in a browser window.
 
 ```shell
 nx show project my-workspace --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {
@@ -90,7 +120,7 @@ nx show project my-workspace --web
     "data": {
       "root": ".",
       "targets": {
-        "lint": {
+        "eslint:lint": {
           "cache": true,
           "options": {
             "cwd": ".",
@@ -105,9 +135,12 @@ nx show project my-workspace --web
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         },
-        "build": {
+        "next:build": {
           "options": {
             "cwd": ".",
             "command": "next build"
@@ -123,7 +156,10 @@ nx show project my-workspace --web
           ],
           "outputs": ["{projectRoot}/.next", "{projectRoot}/.next/!(cache)"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         },
         "dev": {
           "options": {
@@ -131,7 +167,10 @@ nx show project my-workspace --web
             "command": "next dev"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         },
         "start": {
           "options": {
@@ -140,13 +179,15 @@ nx show project my-workspace --web
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         }
       },
       "sourceRoot": ".",
       "name": "my-workspace",
       "projectType": "library",
-      "includedScripts": [],
       "implicitDependencies": [],
       "tags": []
     }
@@ -154,20 +195,20 @@ nx show project my-workspace --web
   "sourceMap": {
     "root": ["package.json", "nx/core/package-json-workspaces"],
     "targets": ["package.json", "nx/core/package-json-workspaces"],
-    "targets.lint": ["package.json", "@nx/eslint/plugin"],
-    "targets.lint.command": ["package.json", "@nx/eslint/plugin"],
-    "targets.lint.cache": ["package.json", "@nx/eslint/plugin"],
-    "targets.lint.options": ["package.json", "@nx/eslint/plugin"],
-    "targets.lint.inputs": ["package.json", "@nx/eslint/plugin"],
-    "targets.lint.options.cwd": ["package.json", "@nx/eslint/plugin"],
-    "targets.build": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.dependsOn": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.cache": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.inputs": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.outputs": ["next.config.js", "@nx/next/plugin"],
-    "targets.build.options.cwd": ["next.config.js", "@nx/next/plugin"],
+    "targets.eslint:lint": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.command": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.cache": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.inputs": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options.cwd": [".eslintrc.json", "@nx/eslint/plugin"],
+    "targets.next:build": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.command": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.options": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.dependsOn": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.cache": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.inputs": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.outputs": ["next.config.js", "@nx/next/plugin"],
+    "targets.next:build.options.cwd": ["next.config.js", "@nx/next/plugin"],
     "targets.dev": ["next.config.js", "@nx/next/plugin"],
     "targets.dev.command": ["next.config.js", "@nx/next/plugin"],
     "targets.dev.options": ["next.config.js", "@nx/next/plugin"],
@@ -180,7 +221,6 @@ nx show project my-workspace --web
     "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
     "name": ["package.json", "nx/core/package-json-workspaces"],
     "projectType": ["package.json", "nx/core/package-json-workspaces"],
-    "includedScripts": ["package.json", "nx/core/package-json-workspaces"],
     "targets.nx-release-publish": [
       "package.json",
       "nx/core/package-json-workspaces"
@@ -203,34 +243,38 @@ nx show project my-workspace --web
 
 {% /project-details %}
 
-The project detail view lists all available tasks, the configuration values for those tasks and where those configuration values are being set.
+The project detail view lists all available tasks, the configuration values for those tasks and where those
+configuration values are being set.
 
 ## Configure an Existing Script to Run with Nx
 
 If you want to run one of your existing scripts with Nx, you need to tell Nx about it.
 
 1. Preface the script with `nx exec -- ` to have `npm run test` invoke the command with Nx.
-2. Add the script to `includedScripts`.
-3. Define caching settings.
+2. Define caching settings.
 
-The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as you're accustomed to. But still get the benefits of making those operations cacheable. Configuring the `test` script from the example above to run with Nx would look something like this:
+The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as
+you're accustomed to. But still get the benefits of making those operations cacheable. Configuring the `test` script
+from the example above to run with Nx would look something like this:
 
 ```json {% fileName="package.json" %}
 {
   "name": "my-workspace",
   ...
   "scripts": {
-    "build": "nx build",
-    "lint": "nx lint",
+    "build": "nx next:build",
+    "lint": "nx eslint:lint",
     "test": "nx exec -- node ./run-tests.js"
   },
   ...
   "nx": {
-    "includedScripts": ["test"],
     "targets": {
       "test": {
         "cache": "true",
-        "inputs": ["default", "^default"],
+        "inputs": [
+          "default",
+          "^default"
+        ],
         "outputs": []
       }
     }
@@ -238,28 +282,122 @@ The `nx exec` command allows you to keep using `npm test` or `npm run test` (or 
 }
 ```
 
-Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in this example are as cautious as possible, so you can significantly improve the value of the cache by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
+Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in
+this example are as cautious as possible, so you can significantly improve the value of the cache
+by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
+
+## Fast CI ⚡ {% highlightColor="green" %}
+
+This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
+
+- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+
+### Connect to Nx Cloud {% highlightColor="green" %}
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
+
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
+
+1. Commit your existing changes with `git add . && git commit -am "updates"`
+2. [Create a new GitHub repository](https://github.com/new)
+3. Follow GitHub's instructions to push your existing code to the repository
+
+Now connect your repository to Nx Cloud with the following command:
+
+```shell
+npx nx connect
+```
+
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
+
+![](/shared/tutorials/nx-cloud-github-connect.avif)
+
+Once the PR is created, merge it into your main branch.
+
+![](/shared/tutorials/github-cloud-pr-merged.avif)
+
+And make sure you pull the latest changes locally:
+
+```shell
+git pull
+```
+
+You should now have an `nxCloudId` property specified in the `nx.json` file.
+
+### Create a CI Workflow {% highlightColor="green" %}
+
+Use the following command to generate a CI workflow file.
+
+```shell
+npx nx generate ci-workflow --ci=github
+```
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
+
+The key lines in the CI pipeline are:
+
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+name: CI
+# ...
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - uses: nrwl/nx-set-shas@v4
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+```
+
+### Open a Pull Request {% highlightColor="green" %}
+
+Commit the changes and open a new PR on GitHub.
+
+```shell
+git add .
+git commit -m 'add CI workflow file'
+git push origin add-workflow
+```
+
+When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+
+![Nx Cloud report](/shared/tutorials/github-pr-cloud-report.avif)
+
+The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+
+![Run details](/shared/tutorials/nx-cloud-run-details.avif)
+
+For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
+
+- [Circle CI with Nx](/ci/intro/tutorials/circle)
+- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Learn More
 
 {% cards %}
 
-{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/recipes/running-tasks/configure-inputs" /%}
+{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom
+inputs" type="documentation" url="/recipes/running-tasks/configure-inputs" /%}
 
-{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/features/cache-task-results" /%}
+{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="
+/features/cache-task-results" /%}
 
-{% card title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing monorepo" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
+{% card title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing
+monorepo" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
 
 {% /cards %}
-
-<!-- {% short-embeds %}
-{% short-video
-title="Nx Tips: Nx Init"
-embedUrl="https://www.youtube.com/embed/Wpj3KSpN0Xw" /%}
-{% short-video
-title="How Long Does It Take To Add Nx?"
-embedUrl="https://www.youtube.com/embed/fPt_pFP6hn8" /%}
-{% short-video
-title="Nx is Complicated?"
-embedUrl="https://www.youtube.com/embed/AQbSwPtPBiw" /%}
-{% /short-embeds %} -->

@@ -4,6 +4,27 @@
   "title": "JSON schema for Nx projects",
   "type": "object",
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project's name. Optional if specified in workspace.json"
+    },
+    "root": {
+      "type": "string",
+      "description": "Project's location relative to the root of the workspace"
+    },
+    "sourceRoot": {
+      "type": "string",
+      "description": "The location of project's sources relative to the root of the workspace"
+    },
+    "projectType": {
+      "type": "string",
+      "description": "Type of project supported",
+      "enum": ["library", "application"]
+    },
+    "generators": {
+      "type": "object",
+      "description": "List of default values used by generators"
+    },
     "namedInputs": {
       "type": "object",
       "description": "Named inputs used by inputs defined in targets",
@@ -94,8 +115,12 @@
                       "required": ["target"],
                       "not": {
                         "anyOf": [
-                          { "required": ["projects"] },
-                          { "required": ["dependencies"] }
+                          {
+                            "required": ["projects"]
+                          },
+                          {
+                            "required": ["dependencies"]
+                          }
                         ]
                       }
                     }
@@ -112,6 +137,29 @@
           "cache": {
             "type": "boolean",
             "description": "Specifies if the given target should be cacheable"
+          },
+          "parallelism": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this target can be run in parallel with other tasks"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the target",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "A description of the target"
+              }
+            },
+            "additionalProperties": true
+          },
+          "syncGenerators": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of generators to run before the target to ensure the workspace is up to date"
           }
         }
       }
@@ -126,6 +174,37 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata about the project.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A description of the project."
+        }
+      },
+      "additionalProperties": true
+    },
+    "release": {
+      "type": "object",
+      "description": "Configuration for the nx release commands.",
+      "properties": {
+        "version": {
+          "type": "object",
+          "description": "Configuration for the nx release version command.",
+          "properties": {
+            "generator": {
+              "type": "string",
+              "description": "The version generator to use. Defaults to @nx/js:release-version."
+            },
+            "generatorOptions": {
+              "type": "object",
+              "description": "Options for the version generator."
+            }
+          }
+        }
       }
     }
   },
@@ -159,7 +238,9 @@
                   {
                     "type": "array",
                     "description": "The projects that the targets belong to.",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 ]
               },
@@ -183,8 +264,12 @@
                 "required": ["input"],
                 "not": {
                   "anyOf": [
-                    { "required": ["projects"] },
-                    { "required": ["dependencies"] }
+                    {
+                      "required": ["projects"]
+                    },
+                    {
+                      "required": ["dependencies"]
+                    }
                   ]
                 }
               }
@@ -216,7 +301,9 @@
             "properties": {
               "externalDependencies": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
               }
             },

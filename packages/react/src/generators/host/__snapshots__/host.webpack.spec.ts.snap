@@ -1,0 +1,170 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`hostGenerator bundler=webpack should generate host files and configs for SSR 1`] = `
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+const { withModuleFederationForSSR } = require('@nx/react/module-federation');
+
+const baseConfig = require('./module-federation.config');
+
+const defaultConfig = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = composePlugins(
+  withNx(),
+  withReact({ ssr: true }),
+  withModuleFederationForSSR(defaultConfig, { dts: false })
+);
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs for SSR 2`] = `
+"// @ts-check
+
+/**
+ * @type {import('@nx/webpack').ModuleFederationConfig}
+ **/
+const moduleFederationConfig = {
+  name: 'test',
+  remotes: [],
+};
+
+module.exports = moduleFederationConfig;
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
+"import { composePlugins, withNx } from '@nx/webpack';
+import { withReact } from '@nx/react';
+import { withModuleFederationForSSR } from '@nx/react/module-federation';
+
+import baseConfig from './module-federation.config';
+
+const defaultConfig = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default composePlugins(
+  withNx(),
+  withReact({ ssr: true }),
+  withModuleFederationForSSR(defaultConfig, { dts: false })
+);
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs for SSR when --typescriptConfiguration=true 2`] = `
+"import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+  remotes: [],
+};
+
+export default config;
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=false 1`] = `
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+const { withModuleFederation } = require('@nx/react/module-federation');
+
+const baseConfig = require('./module-federation.config');
+
+const config = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = composePlugins(
+  withNx(),
+  withReact(),
+  withModuleFederation(config, { dts: false })
+);
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=false 2`] = `
+"module.exports = {
+  name: 'test',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: [],
+};
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=true 1`] = `
+"import {composePlugins, withNx, ModuleFederationConfig} from '@nx/webpack';
+import {withReact} from '@nx/react';
+import {withModuleFederation} from '@nx/react/module-federation';
+
+import baseConfig from './module-federation.config';
+
+const config: ModuleFederationConfig = {
+    ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default composePlugins(withNx(), withReact(), withModuleFederation(config, { dts: false }));
+"
+`;
+
+exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=true 2`] = `
+"import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+    name: 'test',
+    /**
+     * To use a remote that does not exist in your current Nx Workspace
+     * You can use the tuple-syntax to define your remote
+     *
+     * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+     *
+     * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+     * following content:
+     *
+     * declare module 'my-external-remote';
+     *
+     */
+    remotes: [
+            
+  ],
+};
+
+export default config;
+"
+`;

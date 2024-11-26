@@ -8,7 +8,11 @@ import {
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
-    { name: '@proj/lib', node: {} as any, outputs: ['dist/libs/lib'] },
+    {
+      name: '@proj/lib',
+      node: { data: { root: 'libs/lib' } } as any,
+      outputs: ['dist/libs/lib'],
+    },
   ];
 
   it('should add path', () => {
@@ -30,7 +34,11 @@ describe('updatePaths', () => {
     updatePaths(deps, paths);
     expect(paths).toEqual({
       '@proj/lib': ['dist/libs/lib'],
-      '@proj/lib/sub': ['dist/libs/lib/sub'],
+      '@proj/lib/sub': [
+        'dist/libs/lib/sub',
+        'dist/libs/lib/sub/src/index',
+        'dist/libs/lib/sub/src/index.ts',
+      ],
     });
   });
 });
@@ -389,30 +397,35 @@ describe('calculateDependenciesFromTaskGraph', () => {
           overrides: {},
           target: { project: 'lib1', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib2:build': {
           id: 'lib2:build',
           overrides: {},
           target: { project: 'lib2', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
           overrides: {},
           target: { project: 'lib2', target: 'build-base' },
           outputs: [],
+          parallelism: true,
         },
         'lib3:build': {
           id: 'lib3:build',
           overrides: {},
           target: { project: 'lib3', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib4:build': {
           id: 'lib4:build',
           overrides: {},
           target: { project: 'lib4', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
       },
     };
@@ -559,48 +572,56 @@ describe('calculateDependenciesFromTaskGraph', () => {
           overrides: {},
           target: { project: 'lib1', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib1:build-base': {
           id: 'lib1:build-base',
           overrides: {},
           target: { project: 'lib1', target: 'build-base' },
           outputs: [],
+          parallelism: true,
         },
         'lib2:build': {
           id: 'lib2:build',
           overrides: {},
           target: { project: 'lib2', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
           overrides: {},
           target: { project: 'lib2', target: 'build-base' },
           outputs: [],
+          parallelism: true,
         },
         'lib3:build': {
           id: 'lib3:build',
           overrides: {},
           target: { project: 'lib3', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib3:build-base': {
           id: 'lib3:build-base',
           overrides: {},
           target: { project: 'lib3', target: 'build-base' },
           outputs: [],
+          parallelism: true,
         },
         'lib4:build': {
           id: 'lib4:build',
           overrides: {},
           target: { project: 'lib4', target: 'build' },
           outputs: [],
+          parallelism: true,
         },
         'lib4:build-base': {
           id: 'lib4:build-base',
           overrides: {},
           target: { project: 'lib4', target: 'build-base' },
           outputs: [],
+          parallelism: true,
         },
       },
     };

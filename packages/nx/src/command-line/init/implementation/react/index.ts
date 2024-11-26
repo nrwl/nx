@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
-import { join } from 'path';
+import { cpSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
+import { dirname, join } from 'path';
 import { InitArgs } from '../../init-v1';
 import {
   fileExists,
@@ -14,7 +14,6 @@ import {
   PackageManagerCommands,
 } from '../../../../utils/package-manager';
 import { PackageJson } from '../../../../utils/package-json';
-import { printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { cleanUpFiles } from './clean-up-files';
@@ -71,6 +70,7 @@ function installDependencies(options: NormalizedOptions) {
 
   execSync(`${options.pmc.addDev} ${dependencies.join(' ')}`, {
     stdio: [0, 1, 2],
+    windowsHide: true,
   });
 }
 
@@ -87,7 +87,9 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
     ...packageJson.devDependencies,
   };
   const isCRA5 = /^[^~]?5/.test(deps['react-scripts']);
-  const npmVersion = execSync('npm -v').toString();
+  const npmVersion = execSync('npm -v', {
+    windowsHide: true,
+  }).toString();
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
   const isVite = options.vite;
@@ -127,8 +129,14 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   output.log({ title: '🧶  Updating .gitignore file' });
 
-  execSync(`echo "node_modules" >> .gitignore`, { stdio: [0, 1, 2] });
-  execSync(`echo "dist" >> .gitignore`, { stdio: [0, 1, 2] });
+  execSync(`echo "node_modules" >> .gitignore`, {
+    stdio: [0, 1, 2],
+    windowsHide: true,
+  });
+  execSync(`echo "dist" >> .gitignore`, {
+    stdio: [0, 1, 2],
+    windowsHide: true,
+  });
 
   process.chdir('..');
 
@@ -140,26 +148,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   output.log({ title: '📦 Installing dependencies' });
   installDependencies(options);
-
-  const buildCommand = options.integrated
-    ? `npx nx build ${options.reactAppName}`
-    : 'npm run build';
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/react/migration-cra',
-    bodyLines: [
-      `- Execute "${buildCommand}" twice to see the computation caching in action.`,
-    ],
-  });
-
-  output.note({
-    title: 'First time using Nx? Check out this interactive Nx tutorial.',
-    bodyLines: [
-      `https://nx.dev/react-tutorial/1-code-generation`,
-      ` `,
-      `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
-      `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
-    ],
-  });
 
   if (options.isVite) {
     const indexPath = options.isStandalone
@@ -175,7 +163,7 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 }
 
 function createTempWorkspace(options: NormalizedOptions) {
-  removeSync('temp-workspace');
+  rmSync('temp-workspace', { recursive: true, force: true });
 
   execSync(
     `npx ${
@@ -186,20 +174,26 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.isVite ? 'vite' : 'webpack'
     } --packageManager=${options.packageManager} ${
       options.nxCloud ? '--nxCloud=yes' : '--nxCloud=skip'
-    } ${options.addE2e ? '--e2eTestRunner=cypress' : '--e2eTestRunner=none'}`,
-    { stdio: [0, 1, 2] }
+    } ${
+      options.addE2e ? '--e2eTestRunner=playwright' : '--e2eTestRunner=none'
+    }`,
+    { stdio: [0, 1, 2], windowsHide: true }
   );
 
   output.log({ title: '👋 Welcome to Nx!' });
 
   output.log({ title: '🧹 Clearing unused files' });
 
-  copySync(
+  cpSync(
     join('temp-workspace', 'apps', options.reactAppName, 'project.json'),
-    'project.json'
+    'project.json',
+    { recursive: true }
   );
-  removeSync(join('temp-workspace', 'apps', options.reactAppName));
-  removeSync('node_modules');
+  rmSync(join('temp-workspace', 'apps', options.reactAppName), {
+    recursive: true,
+    force: true,
+  });
+  rmSync('node_modules', { recursive: true, force: true });
 }
 
 function copyPackageJsonDepsFromTempWorkspace() {
@@ -249,6 +243,13 @@ function overridePackageDeps(
   return base;
 }
 
+function moveSync(src: string, dest: string) {
+  const destParentDir = dirname(dest);
+  mkdirSync(destParentDir, { recursive: true });
+  rmSync(dest, { recursive: true, force: true });
+  return renameSync(src, dest);
+}
+
 function moveFilesToTempWorkspace(options: NormalizedOptions) {
   output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
 
@@ -262,6 +263,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
     options.packageManager === 'yarn' ? 'yarn.lock' : null,
     options.packageManager === 'pnpm' ? 'pnpm-lock.yaml' : null,
     options.packageManager === 'npm' ? 'package-lock.json' : null,
+    options.packageManager === 'bun' ? 'bun.lockb' : null,
   ];
 
   const optionalCraFiles = ['README.md'];
@@ -276,10 +278,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
         f,
         options.isStandalone
           ? join('temp-workspace', f)
-          : join('temp-workspace', 'apps', options.reactAppName, f),
-        {
-          overwrite: true,
-        }
+          : join('temp-workspace', 'apps', options.reactAppName, f)
       );
     } catch (error) {
       if (requiredCraFiles.includes(f)) {
@@ -308,7 +307,7 @@ async function addBundler(options: NormalizedOptions) {
       options.isStandalone,
       options.appIsJs
     );
-    renameJsToJsx(options.reactAppName, options.isStandalone);
+    await renameJsToJsx(options.reactAppName, options.isStandalone);
   } else {
     output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(
@@ -329,7 +328,10 @@ async function addBundler(options: NormalizedOptions) {
       title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
     });
 
-    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, { stdio: [0, 1, 2] });
+    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, {
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    });
   }
 }
 
@@ -337,7 +339,7 @@ function copyFromTempWorkspaceToRoot() {
   output.log({ title: '🚚 Folder restructuring.' });
 
   readdirSync('temp-workspace').forEach((f) => {
-    moveSync(join('temp-workspace', f), f, { overwrite: true });
+    moveSync(join('temp-workspace', f), f);
   });
 }
 
@@ -351,6 +353,6 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
   setupTsConfig(options.reactAppName, options.isStandalone);
 
   if (options.isStandalone) {
-    removeSync('apps');
+    rmSync('apps', { recursive: true, force: true });
   }
 }

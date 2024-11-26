@@ -1,16 +1,23 @@
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
 import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import {
   ConfigurationSourceMaps,
+  SourceInformation,
+  createProjectConfigurations,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
+  mergeTargetDefaultWithTargetDefinition,
+  normalizeTarget,
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
+import { NxPluginV2 } from '../plugins';
+import { LoadedNxPlugin } from '../plugins/internal-api';
+import { dirname } from 'path';
+import { isProjectConfigurationsError } from '../error-types';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -23,6 +30,16 @@ describe('project-configuration-utils', () => {
       build: {
         options: {
           key: 'default-value-for-targetname',
+        },
+      },
+      'e2e-ci--*': {
+        options: {
+          key: 'default-value-for-e2e-ci',
+        },
+      },
+      'e2e-ci--file-*': {
+        options: {
+          key: 'default-value-for-e2e-ci-file',
         },
       },
     };
@@ -52,6 +69,26 @@ describe('project-configuration-utils', () => {
           'other-executor'
         )
       ).toBeNull();
+    });
+
+    it('should return longest matching target', () => {
+      expect(
+        // This matches both 'e2e-ci--*' and 'e2e-ci--file-*', we expect the first match to be returned.
+        readTargetDefaultsForTarget('e2e-ci--file-foo', targetDefaults, null)
+          .options['key']
+      ).toEqual('default-value-for-e2e-ci-file');
+    });
+
+    it('should return longest matching target even if executor is passed', () => {
+      expect(
+        // This uses an executor which does not have settings in target defaults
+        // thus the target name pattern target defaults are used
+        readTargetDefaultsForTarget(
+          'e2e-ci--file-foo',
+          targetDefaults,
+          'other-executor'
+        ).options['key']
+      ).toEqual('default-value-for-e2e-ci-file');
     });
 
     it('should not merge top level properties for incompatible targets', () => {
@@ -418,6 +455,101 @@ describe('project-configuration-utils', () => {
         expect(result.cache).not.toBeDefined();
       });
     });
+
+    describe('metadata', () => {
+      it('should be added', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do stuff',
+                  technologies: ['tech'],
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].targets.build.metadata).toEqual({
+          description: 'do stuff',
+          technologies: ['tech'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'targets.build.metadata.description': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies.0': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should be merged', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do stuff',
+                  technologies: ['tech'],
+                },
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'targets.build.metadata.technologies': ['existing', 'existing.ts'],
+            'targets.build.metadata.technologies.0': [
+              'existing',
+              'existing.ts',
+            ],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do cool stuff',
+                  technologies: ['tech2'],
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].targets.build.metadata).toEqual({
+          description: 'do cool stuff',
+          technologies: ['tech', 'tech2'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'targets.build.metadata.description': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies': ['existing', 'existing.ts'],
+          'targets.build.metadata.technologies.0': ['existing', 'existing.ts'],
+          'targets.build.metadata.technologies.1': ['dummy', 'dummy.ts'],
+        });
+      });
+    });
   });
 
   describe('mergeProjectConfigurationIntoRootMap', () => {
@@ -442,7 +574,7 @@ describe('project-configuration-utils', () => {
           },
         },
       });
-      expect(rootMap.get('libs/lib-a')).toMatchInlineSnapshot(`
+      expect(rootMap['libs/lib-a']).toMatchInlineSnapshot(`
         {
           "name": "lib-a",
           "root": "libs/lib-a",
@@ -536,7 +668,7 @@ describe('project-configuration-utils', () => {
           newTarget: newTargetConfiguration,
         },
       });
-      const merged = rootMap.get('libs/lib-a');
+      const merged = rootMap['libs/lib-a'];
       expect(merged.targets['existingTarget']).toEqual(
         existingTargetConfiguration
       );
@@ -567,47 +699,6 @@ describe('project-configuration-utils', () => {
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
     });
 
-    it('should not create new targets if ONLY_MODIFIES_EXISTING_TARGET is true', () => {
-      const rootMap = new RootMapBuilder()
-        .addProject({
-          root: 'libs/lib-a',
-          name: 'lib-a',
-          targets: {
-            echo: {
-              command: 'echo lib-a',
-            },
-          },
-        })
-        .getRootMap();
-      mergeProjectConfigurationIntoRootMap(rootMap, {
-        root: 'libs/lib-a',
-        name: 'lib-a',
-        targets: {
-          build: {
-            command: 'tsc',
-            [ONLY_MODIFIES_EXISTING_TARGET]: true,
-          } as any,
-          echo: {
-            options: {
-              cwd: '{projectRoot}',
-            },
-            [ONLY_MODIFIES_EXISTING_TARGET]: true,
-          } as any,
-        },
-      });
-      const { targets } = rootMap.get('libs/lib-a');
-      expect(targets.build).toBeUndefined();
-      // cwd was merged in, and ONLY_MODIFIES_EXISTING_TARGET was removed
-      expect(targets.echo).toMatchInlineSnapshot(`
-        {
-          "command": "echo lib-a",
-          "options": {
-            "cwd": "{projectRoot}",
-          },
-        }
-      `);
-    });
-
     it('should concatenate tags and implicitDependencies', () => {
       const rootMap = new RootMapBuilder()
         .addProject({
@@ -623,8 +714,8 @@ describe('project-configuration-utils', () => {
         tags: ['b', 'c'],
         implicitDependencies: ['lib-c', '!lib-b'],
       });
-      expect(rootMap.get('libs/lib-a').tags).toEqual(['a', 'b', 'c']);
-      expect(rootMap.get('libs/lib-a').implicitDependencies).toEqual([
+      expect(rootMap['libs/lib-a'].tags).toEqual(['a', 'b', 'c']);
+      expect(rootMap['libs/lib-a'].implicitDependencies).toEqual([
         'lib-b',
         'lib-c',
         '!lib-b',
@@ -655,7 +746,7 @@ describe('project-configuration-utils', () => {
           },
         },
       });
-      expect(rootMap.get('libs/lib-a').generators).toMatchInlineSnapshot(`
+      expect(rootMap['libs/lib-a'].generators).toMatchInlineSnapshot(`
         {
           "@nx/angular:component": {
             "flat": true,
@@ -690,7 +781,7 @@ describe('project-configuration-utils', () => {
           production: ['{projectRoot}/**/*.prod.ts'],
         },
       });
-      expect(rootMap.get('libs/lib-a').namedInputs).toMatchInlineSnapshot(`
+      expect(rootMap['libs/lib-a'].namedInputs).toMatchInlineSnapshot(`
         {
           "another": [
             "{projectRoot}/**/*.ts",
@@ -703,6 +794,218 @@ describe('project-configuration-utils', () => {
           ],
         }
       `);
+    });
+
+    it('should merge release', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+        })
+        .getRootMap();
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        release: {
+          version: {
+            generatorOptions: {
+              packageRoot: 'dist/libs/lib-a',
+            },
+          },
+        },
+      });
+      expect(rootMap['libs/lib-a'].release).toMatchInlineSnapshot(`
+        {
+          "version": {
+            "generatorOptions": {
+              "packageRoot": "dist/libs/lib-a",
+            },
+          },
+        }
+      `);
+    });
+
+    describe('metadata', () => {
+      it('should be set if not previously defined', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology'],
+              targetGroups: {
+                group1: ['target1', 'target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          technologies: ['technology'],
+          targetGroups: {
+            group1: ['target1', 'target2'],
+          },
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'metadata.technologies': ['dummy', 'dummy.ts'],
+          'metadata.targetGroups': ['dummy', 'dummy.ts'],
+          'metadata.targetGroups.group1': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should concat arrays', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology1'],
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'metadata.technologies': ['existing', 'existing.ts'],
+            'metadata.technologies.0': ['existing', 'existing.ts'],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology2'],
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          technologies: ['technology1', 'technology2'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'metadata.technologies': ['existing', 'existing.ts'],
+          'metadata.technologies.0': ['existing', 'existing.ts'],
+          'metadata.technologies.1': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should concat second level arrays', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group1: ['target1'],
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'metadata.targetGroups': ['existing', 'existing.ts'],
+            'metadata.targetGroups.group1': ['existing', 'existing.ts'],
+            'metadata.targetGroups.group1.0': ['existing', 'existing.ts'],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group1: ['target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          targetGroups: {
+            group1: ['target1', 'target2'],
+          },
+        });
+
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'metadata.targetGroups': ['existing', 'existing.ts'],
+          'metadata.targetGroups.group1': ['existing', 'existing.ts'],
+          'metadata.targetGroups.group1.0': ['existing', 'existing.ts'],
+          'metadata.targetGroups.group1.1': ['dummy', 'dummy.ts'],
+        });
+
+        expect(sourceMap['libs/lib-a']['metadata.targetGroups']).toEqual([
+          'existing',
+          'existing.ts',
+        ]);
+        expect(sourceMap['libs/lib-a']['metadata.targetGroups.group1']).toEqual(
+          ['existing', 'existing.ts']
+        );
+        expect(
+          sourceMap['libs/lib-a']['metadata.targetGroups.group1.0']
+        ).toEqual(['existing', 'existing.ts']);
+        expect(
+          sourceMap['libs/lib-a']['metadata.targetGroups.group1.1']
+        ).toEqual(['dummy', 'dummy.ts']);
+      });
+
+      it('should not clobber targetGroups', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group2: ['target3'],
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology'],
+              targetGroups: {
+                group1: ['target1', 'target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          technologies: ['technology'],
+          targetGroups: {
+            group1: ['target1', 'target2'],
+            group2: ['target3'],
+          },
+        });
+      });
     });
 
     describe('source map', () => {
@@ -815,7 +1118,7 @@ describe('project-configuration-utils', () => {
       });
 
       it('should merge root level properties', () => {
-        const rootMap = new Map();
+        const rootMap: Record<string, ProjectConfiguration> = {};
         const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
@@ -1232,14 +1535,438 @@ describe('project-configuration-utils', () => {
         )
       ).toBe(false);
     });
+
+    it('should return false if one target specifies a command, and the other specifies commands', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo',
+            },
+          },
+          {
+            executor: 'nx:run-commands',
+            options: {
+              commands: ['echo', 'other'],
+            },
+          }
+        )
+      ).toBe(false);
+    });
+  });
+
+  describe('normalizeTarget', () => {
+    it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
+      const config = {
+        name: 'project',
+        root: 'libs/project',
+        targets: {
+          foo: { command: 'echo {projectRoot}' },
+        },
+      };
+      expect(normalizeTarget(config.targets.foo, config))
+        .toMatchInlineSnapshot(`
+        {
+          "configurations": {},
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo libs/project",
+          },
+          "parallelism": true,
+        }
+      `);
+    });
+    it('should not mutate the target', () => {
+      const config = {
+        name: 'project',
+        root: 'libs/project',
+        targets: {
+          foo: {
+            executor: 'nx:noop',
+            options: {
+              config: '{projectRoot}/config.json',
+            },
+            configurations: {
+              prod: {
+                config: '{projectRoot}/config.json',
+              },
+            },
+          },
+          bar: {
+            command: 'echo {projectRoot}',
+            options: {
+              config: '{projectRoot}/config.json',
+            },
+            configurations: {
+              prod: {
+                config: '{projectRoot}/config.json',
+              },
+            },
+          },
+        },
+      };
+      const originalConfig = JSON.stringify(config, null, 2);
+
+      normalizeTarget(config.targets.foo, config);
+      normalizeTarget(config.targets.bar, config);
+      expect(JSON.stringify(config, null, 2)).toEqual(originalConfig);
+    });
+  });
+
+  describe('createProjectConfigurations', () => {
+    /* A fake plugin that sets `fake-lib` tag to libs. */
+    const fakeTagPlugin: NxPluginV2 = {
+      name: 'fake-tag-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (vitestConfigPath) => {
+          const [_libs, name, _config] = vitestConfigPath.split('/');
+          return {
+            projects: {
+              [name]: {
+                name: name,
+                root: `libs/${name}`,
+                tags: ['fake-lib'],
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    const fakeTargetsPlugin: NxPluginV2 = {
+      name: 'fake-targets-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (projectJsonPath) => {
+          const root = dirname(projectJsonPath);
+          return {
+            projects: {
+              [root]: {
+                root,
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    options: {
+                      command: 'echo {projectName} @ {projectRoot}',
+                    },
+                  },
+                },
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    const sameNamePlugin: NxPluginV2 = {
+      name: 'same-name-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (projectJsonPath) => {
+          const root = dirname(projectJsonPath);
+          return {
+            projects: {
+              [root]: {
+                root,
+                name: 'same-name',
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    it('should create nodes for files matching included patterns only', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+          }),
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        'libs/a': {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+        'libs/b': {
+          name: 'b',
+          root: 'libs/b',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should create nodes for files matching included patterns only', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+            include: ['libs/a/**'],
+          }),
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        'libs/a': {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should not create nodes for files matching excluded patterns', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+            exclude: ['libs/b/**'],
+          }),
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        'libs/a': {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should normalize targets', async () => {
+      const { projects } = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json'],
+        [
+          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+        ]
+      );
+      expect(projects['libs/a'].targets.build).toMatchInlineSnapshot(`
+        {
+          "configurations": {},
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo a @ libs/a",
+          },
+          "parallelism": true,
+        }
+      `);
+    });
+
+    it('should validate that project names are unique', async () => {
+      const error = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json'],
+        [new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin')]
+      ).catch((e) => e);
+      const isErrorType = isProjectConfigurationsError(error);
+      expect(isErrorType).toBe(true);
+      if (isErrorType) {
+        expect(error.errors).toMatchInlineSnapshot(`
+          [
+            [MultipleProjectsWithSameNameError: The following projects are defined in multiple locations:
+          - same-name: 
+            - libs/a
+            - libs/b
+            - libs/c
+
+          To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.],
+          ]
+        `);
+      }
+    });
+
+    it('should validate that projects have a name', async () => {
+      const error = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json'],
+        [new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin')]
+      ).catch((e) => e);
+      const isErrorType = isProjectConfigurationsError(error);
+      expect(isErrorType).toBe(true);
+      if (isErrorType) {
+        expect(error.errors).toMatchInlineSnapshot(`
+          [
+            [ProjectsWithNoNameError: The projects in the following directories have no name provided:
+            - libs/a
+            - libs/b
+            - libs/c],
+          ]
+        `);
+      }
+    });
+
+    it('should correctly set source maps', async () => {
+      const { sourceMaps } = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json'],
+        [
+          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+        ]
+      );
+      expect(sourceMaps).toMatchInlineSnapshot(`
+        {
+          "libs/a": {
+            "name": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "root": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "tags": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "tags.fake-lib": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "targets": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build.executor": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build.options": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build.options.command": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+          },
+        }
+      `);
+    });
+  });
+
+  describe('merge target default with target definition', () => {
+    it('should merge options', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        targets: ['dummy', 'dummy.ts'],
+        'targets.build': ['dummy', 'dummy.ts'],
+        'targets.build.options': ['dummy', 'dummy.ts'],
+        'targets.build.options.command': ['dummy', 'dummy.ts'],
+        'targets.build.options.cwd': ['project.json', 'nx/project-json'],
+      };
+      const result = mergeTargetDefaultWithTargetDefinition(
+        'build',
+        {
+          name: 'myapp',
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                command: 'echo',
+                cwd: '{workspaceRoot}',
+              },
+            },
+          },
+        },
+        {
+          options: {
+            command: 'tsc',
+            cwd: 'apps/myapp',
+          },
+        },
+        sourceMap
+      );
+
+      // Command was defined by a non-core plugin so it should be
+      // overwritten.
+      expect(result.options.command).toEqual('tsc');
+      expect(sourceMap['targets.build.options.command']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+      // Cwd was defined by a core plugin so it should be left unchanged.
+      expect(result.options.cwd).toEqual('{workspaceRoot}');
+      expect(sourceMap['targets.build.options.cwd']).toEqual([
+        'project.json',
+        'nx/project-json',
+      ]);
+      // other source map entries should be left unchanged
+      expect(sourceMap['targets']).toEqual(['dummy', 'dummy.ts']);
+    });
+
+    it('should not overwrite dependsOn', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        targets: ['dummy', 'dummy.ts'],
+        'targets.build': ['dummy', 'dummy.ts'],
+        'targets.build.options': ['dummy', 'dummy.ts'],
+        'targets.build.options.command': ['dummy', 'dummy.ts'],
+        'targets.build.options.cwd': ['project.json', 'nx/project-json'],
+        'targets.build.dependsOn': ['project.json', 'nx/project-json'],
+      };
+      const result = mergeTargetDefaultWithTargetDefinition(
+        'build',
+        {
+          name: 'myapp',
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                command: 'echo',
+                cwd: '{workspaceRoot}',
+              },
+              dependsOn: [],
+            },
+          },
+        },
+        {
+          options: {
+            command: 'tsc',
+            cwd: 'apps/myapp',
+          },
+          dependsOn: ['^build'],
+        },
+        sourceMap
+      );
+
+      // Command was defined by a core plugin so it should
+      // not be replaced by target default
+      expect(result.dependsOn).toEqual([]);
+    });
   });
 });
 
 class RootMapBuilder {
-  private rootMap: Map<string, ProjectConfiguration> = new Map();
+  private rootMap: Record<string, ProjectConfiguration> = {};
 
   addProject(p: ProjectConfiguration) {
-    this.rootMap.set(p.root, p);
+    this.rootMap[p.root] = p;
     return this;
   }
 

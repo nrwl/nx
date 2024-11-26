@@ -53,7 +53,11 @@
     },
     "testFile": {
       "description": "The name of the file to test.",
-      "type": "string"
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
     },
     "tsConfig": {
       "description": "The name of the Typescript configuration file.",

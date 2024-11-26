@@ -10,7 +10,7 @@ import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
-import { getDefaultsForComponent } from '../../utils/component-props';
+import { getComponentPropDefaults } from '../../utils/component-props';
 import { nxVersion } from '../../utils/versions';
 import { ComponentTestSchema } from './schema';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
@@ -72,7 +72,7 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
 
   if (cmpNodes?.length) {
     const components = cmpNodes.map((cmp) => {
-      const defaults = getDefaultsForComponent(sourceFile, cmp);
+      const defaults = getComponentPropDefaults(sourceFile, cmp);
       const isDefaultExport = defaultExport
         ? (defaultExport as any).name.text === (cmp as any).name.text
         : false;
@@ -81,6 +81,7 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
         props: [...defaults.props, ...defaults.argTypes],
         name: (cmp as any).name.text as string,
         typeName: defaults.propsTypeName,
+        inlineTypeString: defaults.inlineTypeString,
       };
     });
     const namedImports = components

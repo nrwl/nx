@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  expectTestsPass,
   getPackageManagerCommand,
   killPorts,
   newProject,
@@ -23,10 +22,15 @@ describe('@nx/expo (legacy)', () => {
   let proj: string;
   let appName = uniq('my-app');
   let libName = uniq('lib');
+  let originalEnv: string;
 
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/expo'] });
     // we create empty preset above which skips creation of `production` named input
+
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
@@ -36,20 +40,22 @@ describe('@nx/expo (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/expo:application ${appName} --e2eTestRunner=cypress --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/expo:application apps/${appName} --e2eTestRunner=cypress --no-interactive`
     );
     runCLI(
-      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+      `generate @nx/expo:library libs/${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
   });
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+    cleanupProject();
+  });
 
   it('should test and lint', async () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/expo:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/expo:component libs/${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -57,8 +63,8 @@ describe('@nx/expo (legacy)', () => {
       return updated;
     });
 
-    expectTestsPass(await runCLIAsync(`test ${appName}`));
-    expectTestsPass(await runCLIAsync(`test ${libName}`));
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain(
@@ -137,16 +143,28 @@ describe('@nx/expo (legacy)', () => {
     );
   });
 
-  // TODO (@xiongemi): this test is disabled due to expo requires typescript ^5.3.0
-  // re-enable it when typescript is updated
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
-    const installResults = await runCLIAsync(
-      `install ${appName} --no-interactive`
+    let installResults = await runCLIAsync(
+      `install ${appName} --no-interactive --force`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
+
+    installResults = await runCLIAsync(
+      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+    );
+    expect(installResults.combinedOutput).toContain(
+      'Successfully ran target install'
+    );
+    const packageJson = readJson(join('apps', appName, 'package.json'));
+    expect(packageJson).toMatchObject({
+      dependencies: {
+        '@react-native-async-storage/async-storage': '*',
+        'react-native-image-picker': '*',
+      },
+    });
   });
 
   it('should start', async () => {
@@ -192,10 +210,7 @@ describe('@nx/expo (legacy)', () => {
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    runCLI(
-      `generate @nx/expo:application ${appName} --project-name-and-root-format=as-provided --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
-    );
+    runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
@@ -206,16 +221,7 @@ describe('@nx/expo (legacy)', () => {
       `Successfully ran target test for project ${appName}`
     );
 
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=derived`
-      )
-    ).toThrow();
-
-    runCLI(
-      `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/expo:library ${libName} --buildable`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -268,8 +274,7 @@ describe('@nx/expo (legacy)', () => {
   it('should run e2e for playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`
     );
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });

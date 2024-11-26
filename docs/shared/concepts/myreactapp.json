@@ -7,7 +7,7 @@
       "targets": {
         "build": {
           "options": {
-            "cwd": "apps/apps/myreactapp",
+            "cwd": "apps/myreactapp",
             "command": "vite build"
           },
           "cache": true,
@@ -19,25 +19,34 @@
               "externalDependencies": ["vite"]
             }
           ],
-          "outputs": ["{workspaceRoot}/dist/apps/app1"],
+          "outputs": ["{workspaceRoot}/dist/apps/myreactapp"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "serve": {
           "options": {
-            "cwd": "apps/apps/myreactapp",
+            "cwd": "apps/myreactapp",
             "command": "vite serve"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "preview": {
           "options": {
-            "cwd": "apps/apps/myreactapp",
+            "cwd": "apps/myreactapp",
             "command": "vite preview"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "serve-static": {
           "executor": "@nx/web:file-server",
@@ -48,7 +57,7 @@
         },
         "test": {
           "options": {
-            "cwd": "apps/apps/myreactapp",
+            "cwd": "apps/myreactapp",
             "command": "vitest run"
           },
           "cache": true,
@@ -59,9 +68,12 @@
               "externalDependencies": ["vitest"]
             }
           ],
-          "outputs": ["{workspaceRoot}/coverage/apps/app1"],
+          "outputs": ["{workspaceRoot}/coverage/apps/myreactapp"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "lint": {
           "cache": true,
@@ -79,15 +91,21 @@
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       },
       "name": "myreactapp",
       "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-      "sourceRoot": "apps/apps/myreactapp/src",
+      "sourceRoot": "apps/myreactapp/src",
       "projectType": "application",
       "tags": [],
-      "implicitDependencies": []
+      "implicitDependencies": [],
+      "metadata": {
+        "technologies": ["react"]
+      }
     }
   },
   "sourceMap": {

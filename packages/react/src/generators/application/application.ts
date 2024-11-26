@@ -3,7 +3,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
-import { addProject, maybeJs } from './lib/add-project';
+import { addProject } from './lib/add-project';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
@@ -15,9 +15,11 @@ import {
   GeneratorCallback,
   joinPathFragments,
   logger,
+  readNxJson,
   runTasksInSerial,
   stripIndents,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
@@ -27,18 +29,24 @@ import {
   nxRspackVersion,
   nxVersion,
 } from '../../utils/versions';
+import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { addE2e } from './lib/add-e2e';
 import {
   addExtendsToLintConfig,
+  addOverrideToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -58,7 +66,25 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     tasks.push(lintTask);
 
     if (isEslintConfigSupported(host)) {
-      addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+      if (useFlatConfig(host)) {
+        addPredefinedConfigToFlatLintConfig(
+          host,
+          options.appProjectRoot,
+          'flat/react'
+        );
+        // Add an empty rules object to users know how to add/override rules
+        addOverrideToLintConfig(host, options.appProjectRoot, {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          rules: {},
+        });
+      } else {
+        const addExtendsTask = addExtendsToLintConfig(
+          host,
+          options.appProjectRoot,
+          { name: 'plugin:@nx/react', needCompatFixup: true }
+        );
+        tasks.push(addExtendsTask);
+      }
     }
 
     if (!options.skipPackageJson) {
@@ -80,7 +106,6 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -89,6 +114,8 @@ export async function applicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(host, 'react', 'application');
+
   const tasks = [];
 
   const options = await normalizeOptions(host, schema);
@@ -106,6 +133,20 @@ export async function applicationGeneratorInternal(
     skipFormat: true,
   });
   tasks.push(initTask);
+
+  if (!options.addPlugin) {
+    const nxJson = readNxJson(host);
+    nxJson.targetDefaults ??= {};
+    if (!Object.keys(nxJson.targetDefaults).includes('build')) {
+      nxJson.targetDefaults.build = {
+        cache: true,
+        dependsOn: ['^build'],
+      };
+    } else if (!nxJson.targetDefaults.build.dependsOn) {
+      nxJson.targetDefaults.build.dependsOn = ['^build'];
+    }
+    updateNxJson(host, nxJson);
+  }
 
   if (options.bundler === 'webpack') {
     const { webpackInitGenerator } = ensurePackage<
@@ -129,8 +170,15 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(host);
   }
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
+
+  if (options.style === 'tailwind') {
+    const twTask = await setupTailwindGenerator(host, {
+      project: options.projectName,
+    });
+    tasks.push(twTask);
+  }
 
   if (options.bundler === 'vite') {
     const { createOrEditViteConfig, viteConfigurationGenerator } =
@@ -186,12 +234,18 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       main: joinPathFragments(
         options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`)
+        maybeJs(
+          {
+            js: options.js,
+            useJsx: true,
+          },
+          `src/main.tsx`
+        )
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       target: 'web',
       newProject: true,
-      uiFramework: 'react',
+      framework: 'react',
     });
     tasks.push(rspackTask);
   }
@@ -268,9 +322,9 @@ export async function applicationGeneratorInternal(
 
   if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
     logger.warn(
-      `${chalk.bold('styled-jsx')} is not supported by ${chalk.bold(
+      `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
         'Rspack'
-      )}. We've added ${chalk.bold(
+      )}. We've added ${pc.bold(
         'babel-loader'
       )} to your project, but using babel will slow down your build.`
     );
@@ -286,8 +340,8 @@ export async function applicationGeneratorInternal(
     host.write(
       joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
       stripIndents`
-        const { composePlugins, withNx, withWeb } = require('@nx/rspack');
-        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+        const { composePlugins, withNx, withReact } = require('@nx/rspack');
+        module.exports = composePlugins(withNx(), withReact(), (config) => {
           config.module.rules.push({
             test: /\\.[jt]sx$/i,
             use: [

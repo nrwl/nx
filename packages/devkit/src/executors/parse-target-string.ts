@@ -1,20 +1,11 @@
-import type { Target } from 'nx/src/command-line/run/run';
-import type { ProjectGraph } from 'nx/src/config/project-graph';
-import type { ExecutorContext } from 'nx/src/devkit-exports';
+import {
+  ExecutorContext,
+  ProjectGraph,
+  readCachedProjectGraph,
+  Target,
+} from 'nx/src/devkit-exports';
+import { splitByColons, splitTarget } from 'nx/src/devkit-internals';
 
-import { requireNx } from '../../nx';
-
-let { readCachedProjectGraph, splitTarget, splitByColons } = requireNx();
-
-// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
-splitTarget = splitTarget ?? require('nx/src/utils/split-target').splitTarget;
-splitByColons =
-  splitByColons ?? ((s: string) => s.split(':') as [string, ...string[]]);
-
-/**
- * @deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
- */
-export function parseTargetString(targetString: string): Target;
 /**
  * Parses a target string into {project, target, configuration}
  *

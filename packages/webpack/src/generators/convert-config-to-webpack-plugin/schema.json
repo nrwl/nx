@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxWebpackConvertConfigToWebpackPlugin",
+  "description": "Convert existing Webpack project(s) using `@nx/webpack:webpack` executor that uses `withNx` to use `NxAppWebpackPlugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "title": "Convert Webpack project using withNx to NxAppWebpackPlugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/webpack:webpack` executor and `withNx` plugin to use `NxAppWebpackPlugin`.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files at the end of the migration.",
+      "default": false
+    }
+  }
+}

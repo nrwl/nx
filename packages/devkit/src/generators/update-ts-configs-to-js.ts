@@ -1,7 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
-import { requireNx } from '../../nx';
-
-const { updateJson } = requireNx();
+import { Tree, updateJson } from 'nx/src/devkit-exports';
 
 export function updateTsConfigsToJs(
   tree: Tree,

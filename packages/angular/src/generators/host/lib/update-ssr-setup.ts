@@ -71,21 +71,32 @@ export async function updateSsrSetup(
     ),
   };
 
+  if (
+    project.targets.server.configurations &&
+    project.targets.server.configurations.development
+  ) {
+    if ('vendorChunk' in project.targets.server.configurations.development) {
+      delete project.targets.server.configurations.development.vendorChunk;
+    }
+  }
+
   project.targets['serve-ssr'].executor =
     '@nx/angular:module-federation-dev-ssr';
 
   updateProjectConfiguration(tree, appName, project);
 
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    {
-      cors: corsVersion,
-      '@module-federation/node': moduleFederationNodeVersion,
-    },
-    {
-      '@types/cors': typesCorsVersion,
-    }
-  );
+  if (!options.skipPackageJson) {
+    return addDependenciesToPackageJson(
+      tree,
+      {
+        cors: corsVersion,
+        '@module-federation/node': moduleFederationNodeVersion,
+      },
+      {
+        '@types/cors': typesCorsVersion,
+      }
+    );
+  }
 
-  return installTask;
+  return () => {};
 }

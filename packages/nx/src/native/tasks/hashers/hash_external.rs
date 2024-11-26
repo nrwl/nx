@@ -54,6 +54,7 @@ mod test {
             (
                 "my_external".to_string(),
                 ExternalNode {
+                    package_name: Some("my_external".into()),
                     version: "0.0.1".into(),
                     hash: None,
                 },
@@ -61,6 +62,7 @@ mod test {
             (
                 "my_external_with_hash".to_string(),
                 ExternalNode {
+                    package_name: Some("my_external_with_hash".into()),
                     version: "0.0.1".into(),
                     hash: Some("hashvalue".into()),
                 },

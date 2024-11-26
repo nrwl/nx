@@ -7,8 +7,31 @@ export function generateID(
   if (attributes['id'] && typeof attributes['id'] === 'string') {
     return attributes['id'];
   }
-  return children
-    .filter((child) => typeof child === 'string')
+
+  const validChildrenNodes: RenderableTreeNode[] = [];
+
+  for (const child of children) {
+    if (!child) {
+      continue;
+    }
+
+    if (typeof child === 'string') {
+      validChildrenNodes.push(child);
+    } else if (
+      // allow rendering titles that are wrapped in `code` tags
+      typeof child === 'object' &&
+      'children' in child &&
+      child.name === 'code' &&
+      Array.isArray(child.children)
+    ) {
+      const validNestedChild = child.children.filter(
+        (c) => typeof c === 'string'
+      );
+      validChildrenNodes.push(...validNestedChild);
+    }
+  }
+
+  return validChildrenNodes
     .join(' ')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -18,13 +41,14 @@ export function generateID(
     .replace(/\s+/g, '-');
 }
 
-export const heading: Schema = {
+export const getHeadingSchema = (headingClass: string): Schema => ({
   render: 'Heading',
   children: ['inline'],
   attributes: {
     id: { type: 'String' },
     level: { type: 'Number', required: true, default: 1 },
     className: { type: 'String' },
+    highlightColor: { type: 'String' },
   },
   transform(node, config) {
     const attributes = node.transformAttributes(config);
@@ -34,8 +58,8 @@ export const heading: Schema = {
     return new Tag(
       this.render,
       // `h${node.attributes['level']}`,
-      { ...attributes, id },
+      { ...attributes, id, className: headingClass },
       children
     );
   },
-};
+});

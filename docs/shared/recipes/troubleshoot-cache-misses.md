@@ -2,7 +2,12 @@
 
 Problem: A task is being executed when you expect it to be replayed from the cache.
 
-1. Check if your task is either marked with `"cache": true` in `nx.json#targetDefaults` or listed in `cacheableOperations` defined in `nx.json#tasksRunnerOptions`
+1. Check if your task is marked as cacheable:
+
+   - Check the task has a "Cacheable" label in the Project Details View. You can do so by running `nx show project <project-name> --web` or by checking it in [Nx Console](/recipes/nx-console/console-project-details).
+   - If you're using a version lower than Nx 17.2.0, check:
+     - the target configuration in the project's `project.json` file has `"cache": true` set, or
+     - the target configuration in `nx.json#targetDefaults` has `"cache": true` set, or
 
 1. Check if the output of your task is changing the inputs of your task
 
@@ -11,11 +16,10 @@ Problem: A task is being executed when you expect it to be replayed from the cac
    - To check your input glob patterns file-by-file, you can get a list of all the files associated with each project by running `nx graph --file=output.json` or by clicking on a task in the task graph in the `nx graph` visualization.
 
 1. Use the Nx Cloud troubleshooting tools
-   - Make sure your repo is [connected to Nx Cloud](/features/cache-task-results#remote-computation-caching)
+   - Make sure your repo is [connected to Nx Cloud](/ci/features/remote-cache)
    - Click on the run details link that is printed in the terminal after you run a task
-   - Expand a task that had a cache miss
-   - Click "Check For Near Misses" to see other similar tasks
-   - Copy one of those similar tasks' run details links (or a run details link from another local run)
-   - Click the "Compare to Similar Tasks" link in the task details on the run details page
-   - Paste the other run details link you copied into the form to see exactly why the two tasks were different.
-   - Note: Nx Cloud does not have access to your actual source code, so it can only tell you which projects were different, not the exact git diff of the source code.
+   - Click on the task with cache miss that you want to investigate 
+   - Click the "Compare to similar tasks" link in the top right corner of the task details
+   - Select one of the similar tasks from the list in the "Compare to" section (or paste a URL of another run)
+   - Nx Cloud will compare the input hashes of both tasks and will mark all the differences
+   - Note: Nx Cloud cannot access your source code, so it can only tell you which inputs are different based on their saved content hash.

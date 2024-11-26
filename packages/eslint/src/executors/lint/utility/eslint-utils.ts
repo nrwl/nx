@@ -1,36 +1,22 @@
 import type { ESLint } from 'eslint';
+import { isFlatConfig } from '../../../utils/config-file';
+import { resolveESLintClass } from '../../../utils/resolve-eslint-class';
 import type { Schema } from '../schema';
-
-async function resolveESLintClass(
-  useFlatConfig = false
-): Promise<typeof ESLint> {
-  try {
-    if (!useFlatConfig) {
-      return (await import('eslint')).ESLint;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { FlatESLint } = require('eslint/use-at-your-own-risk');
-    return FlatESLint;
-  } catch {
-    throw new Error('Unable to find ESLint. Ensure ESLint is installed.');
-  }
-}
 
 export async function resolveAndInstantiateESLint(
   eslintConfigPath: string | undefined,
   options: Schema,
   useFlatConfig = false
 ) {
-  if (
-    useFlatConfig &&
-    eslintConfigPath &&
-    !eslintConfigPath?.endsWith('eslint.config.js')
-  ) {
+  if (useFlatConfig && eslintConfigPath && !isFlatConfig(eslintConfigPath)) {
     throw new Error(
-      'When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
+      // todo: add support for eslint.config.mjs,
+      'When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files'
     );
   }
-  const ESLint = await resolveESLintClass(useFlatConfig);
+  const ESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: useFlatConfig,
+  });
 
   const eslintOptions: ESLint.Options = {
     overrideConfigFile: eslintConfigPath,

@@ -1,6 +1,15 @@
-import { useTheme } from '@nx/nx-dev/ui-theme';
-import { JSX, ReactElement, useEffect, useState } from 'react';
-import { ProjectDetails as ProjectDetailsUi } from '@nx/graph/ui-project-details';
+'use client';
+import {
+  createRef,
+  JSX,
+  ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'react';
+import { ProjectDetails as ProjectDetailsUi } from '@nx/graph-internal/ui-project-details';
+import { ExpandedTargetsProvider } from '@nx/graph/shared';
+import { twMerge } from 'tailwind-merge';
 
 export function Loading() {
   return (
@@ -19,15 +28,17 @@ export function ProjectDetails({
   height,
   title,
   jsonFile,
+  expandedTargets = [],
   children,
 }: {
   height: string;
   title: string;
   jsonFile?: string;
+  expandedTargets?: string[];
   children: ReactElement;
 }): JSX.Element {
-  const [theme] = useTheme();
   const [parsedProps, setParsedProps] = useState<any>();
+  const elementRef = createRef<HTMLDivElement>();
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
       headers: {
@@ -42,6 +53,27 @@ export function ProjectDetails({
       getData(jsonFile);
     }
   }, [jsonFile, setParsedProps]);
+
+  useLayoutEffect(() => {
+    if (elementRef && expandedTargets?.length > 0) {
+      const header = document.getElementById('target-' + expandedTargets[0]);
+      const container = document.getElementById('project-details-container');
+      if (header && container) {
+        const groupHeaderOffset =
+          header
+            .closest('[id^="target-group-container-"]')
+            ?.querySelector('[id^="target-group-header-"]')
+            ?.getBoundingClientRect().height ?? 0;
+        elementRef.current?.scrollTo({
+          top:
+            header?.getBoundingClientRect().top -
+            container.getBoundingClientRect()?.top -
+            groupHeaderOffset,
+          behavior: 'instant',
+        });
+      }
+    }
+  }, [elementRef, expandedTargets]);
 
   if (!jsonFile && !parsedProps) {
     if (!children || !children.hasOwnProperty('props')) {
@@ -73,20 +105,25 @@ export function ProjectDetails({
   return (
     <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       {title && (
-        <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
+        <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
           {title}
         </div>
       )}
       <div
-        className={`not-prose ${
-          height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
-        }`}
+        id="project-details-container"
+        className={twMerge('not-prose', height && 'overflow-y-auto')}
+        style={{ height }}
+        ref={elementRef}
       >
-        <ProjectDetailsUi
-          project={parsedProps.project}
-          sourceMap={parsedProps.sourceMap}
-          variant="compact"
-        />
+        <div className="m-4">
+          <ExpandedTargetsProvider initialExpanededTargets={expandedTargets}>
+            <ProjectDetailsUi
+              project={parsedProps.project}
+              sourceMap={parsedProps.sourceMap}
+              variant="compact"
+            />
+          </ExpandedTargetsProvider>
+        </div>
       </div>
     </div>
   );

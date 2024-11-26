@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
+import Link from 'next/link';
 
 export default function CustomApp({
   Component,
@@ -23,12 +24,12 @@ export default function CustomApp({
     <>
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast CI"
-        description="Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI."
+        description="Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
+            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -45,6 +46,9 @@ export default function CustomApp({
           site: '@nxdevtools',
           cardType: 'summary_large_image',
         }}
+        dangerouslySetAllPagesToNoIndex={
+          process.env.NEXT_PUBLIC_NO_INDEX === 'true'
+        }
       />
       <Head>
         <meta name="apple-mobile-web-app-title" content="Nx" />
@@ -66,15 +70,16 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <a
+      <Link
         id="skip-to-content-link"
         href="#main"
         tabIndex={0}
-        className="absolute top-3 left-8 -translate-y-24 rounded-md bg-green-400 px-4 py-2 text-white transition focus:translate-y-0"
+        className="absolute left-8 top-3 -translate-y-24 rounded-md bg-green-400 px-4 py-2 text-white transition focus:translate-y-0"
       >
         Skip to content
-      </a>
+      </Link>
       <Component {...pageProps} />
+
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script
         id="gtag-script-dependency"
@@ -95,11 +100,27 @@ export default function CustomApp({
           `,
         }}
       />
+      {/* Apollo.io Embed Code */}
+      <Script
+        type="text/javascript"
+        id="apollo-script-loader"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `function initApollo(){var n=Math.random().toString(36).substring(7),o=document.createElement("script"); o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,o.onload=function(){window.trackingFunctions.onLoad({appId:"65e1db2f1976f30300fd8b26"})},document.head.appendChild(o)}initApollo();`,
+        }}
+      />
       {/* HubSpot Analytics */}
       <Script
         id="hs-script-loader"
         strategy="afterInteractive"
         src="https://js.hs-scripts.com/2757427.js"
+      />
+      {/* HubSpot FORMS Embed Code */}
+      <Script
+        type="text/javascript"
+        id="hs-forms-script-loader"
+        strategy="afterInteractive"
+        src="//js.hsforms.net/forms/v2.js"
       />
       {/* Hotjar Analytics */}
       <Script

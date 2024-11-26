@@ -67,12 +67,12 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
-      const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
 
       const compat = new FlatCompat({
-          baseDirectory: __dirname,
-          recommendedConfig: js.configs.recommended,
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
       });
 
       module.exports = [
@@ -102,7 +102,9 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.ts",
                   "**/*.tsx"
               ],
-              rules: {}
+              rules: {
+                  ...config.rules
+              }
           })),
           ...compat.config({ env: { jest: true } }).map(config => ({
               ...config,
@@ -112,7 +114,9 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.spec.js",
                   "**/*.spec.jsx"
               ],
-              rules: {}
+              rules: {
+                  ...config.rules
+              }
           })),
           { ignores: ["src/ignore/to/keep.ts"] },
           { ignores: ["something/else"] }
@@ -178,13 +182,13 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
+      const js = require("@eslint/js");
       const baseConfig = require("../../eslint.config.js");
       const globals = require("globals");
-      const js = require("@eslint/js");
 
       const compat = new FlatCompat({
-          baseDirectory: __dirname,
-          recommendedConfig: js.configs.recommended,
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
       });
 
       module.exports = [
@@ -209,6 +213,7 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.ts",
                   "**/*.tsx"
               ],
+              // Override or add rules here
               rules: {}
           },
           {
@@ -216,13 +221,14 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
+              // Override or add rules here
               rules: {}
           },
-          ...compat.config({ parser: "jsonc-eslint-parser" }).map(config => ({
-              ...config,
+          {
               files: ["**/*.json"],
-              rules: { "@nx/dependency-checks": "error" }
-          })),
+              rules: { "@nx/dependency-checks": "error" },
+              languageOptions: { parser: require("jsonc-eslint-parser") }
+          },
           { ignores: [".next/**/*"] },
           { ignores: ["something/else"] }
       ];

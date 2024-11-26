@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "name": "rspack",
+  "version": "0.0.1",
+  "generators": {
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Rspack configuration generator."
+    },
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Rspack init generator.",
+      "hidden": true
+    },
+    "preset": {
+      "factory": "./src/generators/preset/preset",
+      "schema": "./src/generators/preset/schema.json",
+      "description": "React preset generator.",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "React application generator."
+    }
+  }
+}

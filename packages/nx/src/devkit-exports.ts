@@ -27,6 +27,8 @@ export type {
 export type {
   Generator,
   GeneratorCallback,
+  PromiseExecutor,
+  AsyncIteratorExecutor,
   Executor,
   ExecutorContext,
   TaskGraphExecutor,
@@ -37,26 +39,29 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
-// TODO(v19): Remove this export
-/**
- * @category Workspace
- */
-export { Workspaces } from './config/workspaces';
-
 export { workspaceLayout } from './config/configuration';
 
 export type {
   NxPlugin,
-  NxPluginV1,
   NxPluginV2,
-  ProjectTargetConfigurator,
   CreateNodes,
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,
+  CreateNodesContextV2,
+  CreateNodesFunctionV2,
+  CreateNodesResultV2,
+  CreateNodesV2,
   CreateDependencies,
   CreateDependenciesContext,
-} from './utils/nx-plugin';
+  CreateMetadata,
+  CreateMetadataContext,
+  ProjectsMetadata,
+} from './project-graph/plugins';
+
+export { AggregateCreateNodesError } from './project-graph/error-types';
+
+export { createNodesFromFiles } from './project-graph/plugins';
 
 /**
  * @category Workspace
@@ -71,6 +76,7 @@ export type {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
   PluginConfiguration,
+  ExpandedPluginConfiguration,
   TargetDefaults,
   NxAffectedConfig,
 } from './config/nx-json';
@@ -97,6 +103,7 @@ export {
   getPackageManagerCommand,
   detectPackageManager,
   getPackageManagerVersion,
+  isWorkspacesEnabled,
 } from './utils/package-manager';
 
 /**
@@ -122,7 +129,7 @@ export {
 /**
  * @category Generators
  */
-export { glob } from './generators/utils/glob';
+export { glob, globAsync } from './generators/utils/glob';
 
 /**
  * @category Generators
@@ -141,11 +148,11 @@ export type {
   FileData,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode,
   ProjectGraphProjectNode,
   ProjectGraphExternalNode,
-  ProjectGraphProcessorContext,
 } from './config/project-graph';
+
+export type { GraphJson } from './command-line/graph/graph';
 
 /**
  * @category Project Graph
@@ -156,7 +163,6 @@ export { DependencyType } from './config/project-graph';
  * @category Project Graph
  */
 export {
-  ProjectGraphBuilder,
   RawProjectGraphDependency,
   DynamicDependency,
   ImplicitDependency,
@@ -194,11 +200,10 @@ export { stripIndents } from './utils/strip-indents';
  */
 export { joinPathFragments, normalizePath } from './utils/path';
 
-// TODO(v16): Change this to export from './utils/workspace-root'
 /**
  * @category Utils
  */
-export { workspaceRoot, appRootPath } from './utils/app-root';
+export { workspaceRoot } from './utils/workspace-root';
 
 /**
  * @category Utils
@@ -242,3 +247,5 @@ export { cacheDir } from './utils/cache-directory';
  * @category Utils
  */
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
+
+export { isDaemonEnabled } from './daemon/client/client';

@@ -21,8 +21,12 @@ export async function setupSsrForRemote(
   const project = readProjectConfiguration(tree, appName);
 
   const pathToModuleFederationSsrFiles = options.typescriptConfiguration
-    ? 'module-federation-ssr-ts'
-    : 'module-federation-ssr';
+    ? `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation-ssr-ts`
+    : `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation-ssr`;
 
   generateFiles(
     tree,
@@ -30,6 +34,7 @@ export async function setupSsrForRemote(
     project.root,
     {
       ...options,
+      port: Number(options?.devServerPort) || 4200,
       appName,
       tmpl: '',
       browserBuildOutputPath: project.targets.build.options.outputPath,

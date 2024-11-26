@@ -7,4 +7,19 @@ describe('heading schema: generateID', () => {
       'pro-simple-setup'
     );
   });
+
+  it('should create id for code based headers', () => {
+    const codeHeader = [
+      {
+        $$mdtype: 'Tag',
+        name: 'code',
+        attributes: {},
+        children: ['launch-templates.<template-name>.init-steps[*].env'],
+      },
+    ];
+
+    expect(generateID(codeHeader, {})).toEqual(
+      'launchtemplatestemplatenameinitstepsenv'
+    );
+  });
 });

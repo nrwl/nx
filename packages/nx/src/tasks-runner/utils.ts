@@ -1,54 +1,97 @@
 import { output } from '../utils/output';
 import { relative } from 'path';
+import { join } from 'path/posix';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import {
+  TargetConfiguration,
+  TargetDependencyConfig,
+} from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
-import { CustomHasher } from '../config/misc-interfaces';
+import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { minimatch } from 'minimatch';
+import { isGlobPattern } from '../utils/globs';
+import {
+  getTransformableOutputs,
+  validateOutputs as nativeValidateOutputs,
+} from '../native';
 
-export function getCommandAsString(execCommand: string, task: Task) {
-  const args = getPrintableCommandArgsForTask(task);
-  return [execCommand, 'nx', ...args].join(' ').trim();
-}
+export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
+  projects: string[];
+};
 
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
-  projectGraph: ProjectGraph
-): TargetDependencyConfig[] | undefined {
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
+  projectGraph: ProjectGraph,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] | undefined {
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-    defaultDependencyConfigs[target] ??
+    // This is passed into `run-command` from programmatic invocations
+    extraTargetDependencies[target] ??
     []
-  ).map((config) =>
-    typeof config === 'string'
-      ? expandDependencyConfigSyntaxSugar(config, projectGraph)
-      : config
+  ).flatMap((config) =>
+    normalizeDependencyConfigDefinition(
+      config,
+      project,
+      projectGraph,
+      allTargetNames
+    )
   );
-  for (const dependencyConfig of dependencyConfigs) {
-    if (dependencyConfig.projects && dependencyConfig.dependencies) {
-      output.error({
-        title: `dependsOn is improperly configured for ${project}:${target}`,
-        bodyLines: [
-          `dependsOn.projects and dependsOn.dependencies cannot be used together.`,
-        ],
-      });
-      process.exit(1);
-    }
-  }
   return dependencyConfigs;
 }
 
+export function normalizeDependencyConfigDefinition(
+  definition: string | TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] {
+  return expandWildcardTargetConfiguration(
+    normalizeDependencyConfigProjects(
+      expandDependencyConfigSyntaxSugar(definition, graph),
+      currentProject,
+      graph
+    ),
+    allTargetNames
+  );
+}
+
+export function normalizeDependencyConfigProjects(
+  dependencyConfig: TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph
+): NormalizedTargetDependencyConfig {
+  const noStringConfig =
+    normalizeTargetDependencyWithStringProjects(dependencyConfig);
+
+  if (noStringConfig.projects) {
+    dependencyConfig.projects = findMatchingProjects(
+      noStringConfig.projects,
+      graph.nodes
+    );
+  } else if (!noStringConfig.dependencies) {
+    dependencyConfig.projects = [currentProject];
+  }
+  return dependencyConfig as NormalizedTargetDependencyConfig;
+}
+
 export function expandDependencyConfigSyntaxSugar(
-  dependencyConfigString: string,
+  dependencyConfigString: string | TargetDependencyConfig,
   graph: ProjectGraph
 ): TargetDependencyConfig {
+  if (typeof dependencyConfigString !== 'string') {
+    return dependencyConfigString;
+  }
+
   const [dependencies, targetString] = dependencyConfigString.startsWith('^')
     ? [true, dependencyConfigString.substring(1)]
     : [false, dependencyConfigString];
@@ -62,22 +105,79 @@ export function expandDependencyConfigSyntaxSugar(
     };
   }
 
+  const { projects, target } = readProjectAndTargetFromTargetString(
+    targetString,
+    graph.nodes
+  );
+
+  return projects ? { projects, target } : { target };
+}
+
+// Weakmap let's the cache get cleared by garbage collector if allTargetNames is no longer used
+const patternResultCache = new WeakMap<
+  string[],
+  // Map< Pattern, Dependency Configs >
+  Map<string, string[]>
+>();
+
+function findMatchingTargets(pattern: string, allTargetNames: string[]) {
+  let cache = patternResultCache.get(allTargetNames);
+  if (!cache) {
+    cache = new Map();
+    patternResultCache.set(allTargetNames, cache);
+  }
+
+  const cachedResult = cache.get(pattern);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  const matcher = minimatch.filter(pattern);
+
+  const matchingTargets = allTargetNames.filter((t) => matcher(t));
+  cache.set(pattern, matchingTargets);
+  return matchingTargets;
+}
+
+export function expandWildcardTargetConfiguration(
+  dependencyConfig: NormalizedTargetDependencyConfig,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] {
+  if (!isGlobPattern(dependencyConfig.target)) {
+    return [dependencyConfig];
+  }
+
+  const matchingTargets = findMatchingTargets(
+    dependencyConfig.target,
+    allTargetNames
+  );
+
+  return matchingTargets.map((t) => ({
+    target: t,
+    projects: dependencyConfig.projects,
+    dependencies: dependencyConfig.dependencies,
+  }));
+}
+
+export function readProjectAndTargetFromTargetString(
+  targetString: string,
+  projects: Record<string, ProjectGraphProjectNode>
+): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitByColons(targetString);
 
-  // if no additional segments are provided, then the string references
-  // a target of the same project
   if (!segments.length) {
+    // if no additional segments are provided, then the string references
+    // a target of the same project
     return { target: maybeProject };
-  }
-
-  return {
+  } else if (maybeProject in projects) {
     // Only the first segment could be a project. If it is, the rest is a target.
     // If its not, then the whole targetString was a target with colons in its name.
-    target: maybeProject in graph.nodes ? segments.join(':') : targetString,
+    return { projects: [maybeProject], target: segments.join(':') };
+  } else {
     // If the first segment is a project, then we have a specific project. Otherwise, we don't.
-    projects: maybeProject in graph.nodes ? [maybeProject] : undefined,
-  };
+    return { target: targetString };
+  }
 }
 
 export function getOutputs(
@@ -92,6 +192,33 @@ export function getOutputs(
   );
 }
 
+export function normalizeTargetDependencyWithStringProjects(
+  dependencyConfig: TargetDependencyConfig
+): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
+  if (typeof dependencyConfig.projects === 'string') {
+    /** LERNA SUPPORT START - Remove in v20 */
+    // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
+    // support for it until lerna can be updated to use the syntax.
+    //
+    // This should have been removed in v17, but the updates to lerna had not
+    // been made yet.
+    //
+    // TODO(@agentender): Remove this part in v20
+    if (dependencyConfig.projects === 'self') {
+      delete dependencyConfig.projects;
+    } else if (dependencyConfig.projects === 'dependencies') {
+      dependencyConfig.dependencies = true;
+      delete dependencyConfig.projects;
+      /** LERNA SUPPORT END - Remove in v20 */
+    } else {
+      dependencyConfig.projects = [dependencyConfig.projects];
+    }
+  }
+  return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
+    projects: string[];
+  };
+}
+
 class InvalidOutputsError extends Error {
   constructor(public outputs: string[], public invalidOutputs: Set<string>) {
     super(InvalidOutputsError.createMessage(invalidOutputs));
@@ -104,25 +231,42 @@ class InvalidOutputsError extends Error {
   }
 }
 
-export function validateOutputs(outputs: string[]) {
-  const invalidOutputs = new Set<string>();
-
-  for (const output of outputs) {
-    if (!/^!?{[\s\S]+}/.test(output)) {
-      invalidOutputs.add(output);
-    }
+function assertOutputsAreValidType(outputs: unknown) {
+  if (!Array.isArray(outputs)) {
+    throw new Error("The 'outputs' field must be an array");
   }
-  if (invalidOutputs.size > 0) {
-    throw new InvalidOutputsError(outputs, invalidOutputs);
+
+  const typesArray = [];
+  let hasInvalidType = false;
+  for (const output of outputs) {
+    if (typeof output !== 'string') {
+      hasInvalidType = true;
+    }
+    typesArray.push(typeof output);
+  }
+
+  if (hasInvalidType) {
+    throw new Error(
+      `The 'outputs' field must contain only strings, but received types: [${typesArray.join(
+        ', '
+      )}]`
+    );
   }
 }
 
-export function transformLegacyOutputs(
-  projectRoot: string,
-  error: InvalidOutputsError
-) {
-  return error.outputs.map((output) => {
-    if (!error.invalidOutputs.has(output)) {
+export function validateOutputs(outputs: string[]) {
+  assertOutputsAreValidType(outputs);
+
+  nativeValidateOutputs(outputs);
+}
+
+export function transformLegacyOutputs(projectRoot: string, outputs: string[]) {
+  const transformableOutputs = new Set(getTransformableOutputs(outputs));
+  if (transformableOutputs.size === 0) {
+    return outputs;
+  }
+  return outputs.map((output) => {
+    if (!transformableOutputs.has(output)) {
       return output;
     }
 
@@ -146,7 +290,7 @@ export function transformLegacyOutputs(
 }
 
 /**
- * @deprecated Pass the target and overrides instead. This will be removed in v19.
+ * @deprecated Pass the target and overrides instead. This will be removed in v20.
  */
 export function getOutputsForTargetAndConfiguration(
   task: Task,
@@ -176,7 +320,7 @@ export function getOutputsForTargetAndConfiguration(
   const targetConfiguration = node.data.targets[target];
 
   const options = {
-    ...targetConfiguration.options,
+    ...targetConfiguration?.options,
     ...targetConfiguration?.configurations?.[configuration],
     ...overrides,
   };
@@ -184,19 +328,22 @@ export function getOutputsForTargetAndConfiguration(
   if (targetConfiguration?.outputs) {
     validateOutputs(targetConfiguration.outputs);
 
-    return targetConfiguration.outputs
-      .map((output: string) => {
-        return interpolate(output, {
-          projectRoot: node.data.root,
-          projectName: node.name,
-          project: { ...node.data, name: node.name }, // this is legacy
-          options,
-        });
-      })
-      .filter(
-        (output) =>
-          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
-      );
+    const result = new Set<string>();
+    for (const output of targetConfiguration.outputs) {
+      const interpolatedOutput = interpolate(output, {
+        projectRoot: node.data.root,
+        projectName: node.name,
+        project: { ...node.data, name: node.name }, // this is legacy
+        options,
+      });
+      if (
+        !!interpolatedOutput &&
+        !interpolatedOutput.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+      ) {
+        result.add(interpolatedOutput);
+      }
+    }
+    return Array.from(result);
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -216,7 +363,18 @@ export function getOutputsForTargetAndConfiguration(
   }
 }
 
+/**
+ * Matches portions of a string which need to be interpolated.
+ * Matches anything within curly braces, excluding the braces.
+ */
+const replacementRegex = /{([\s\S]+?)}/g;
+
 export function interpolate(template: string, data: any): string {
+  // Path is absolute or doesn't need interpolation
+  if (template.startsWith('/') || !replacementRegex.test(template)) {
+    return template;
+  }
+
   if (template.includes('{workspaceRoot}', 1)) {
     throw new Error(
       `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
@@ -229,13 +387,19 @@ export function interpolate(template: string, data: any): string {
     );
   }
 
-  let res = template.replace('{workspaceRoot}/', '');
+  const parts = template.split('/').map((s) => _interpolate(s, data));
+
+  return join(...parts).replace('{workspaceRoot}/', '');
+}
+
+function _interpolate(template: string, data: any): string {
+  let res = template;
 
   if (data.projectRoot == '.') {
-    res = res.replace('{projectRoot}/', '');
+    res = res.replace('{projectRoot}', '');
   }
 
-  return res.replace(/{([\s\S]+?)}/g, (match: string) => {
+  return res.replace(replacementRegex, (match: string) => {
     let value = data;
     let path = match.slice(1, -1).trim().split('.');
     for (let idx = 0; idx < path.length; idx++) {
@@ -248,19 +412,23 @@ export function interpolate(template: string, data: any): string {
   });
 }
 
-export async function getExecutorNameForTask(
+export function getTargetConfigurationForTask(
   task: Task,
   projectGraph: ProjectGraph
-) {
+): TargetConfiguration | undefined {
   const project = projectGraph.nodes[task.target.project].data;
-  return project.targets[task.target.target].executor;
+  return project.targets[task.target.target];
 }
 
-export async function getExecutorForTask(
+export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
+  return getTargetConfigurationForTask(task, projectGraph)?.executor;
+}
+
+export function getExecutorForTask(
   task: Task,
   projectGraph: ProjectGraph
-) {
-  const executor = await getExecutorNameForTask(task, projectGraph);
+): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
+  const executor = getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return getExecutorInformation(
@@ -271,11 +439,11 @@ export async function getExecutorForTask(
   );
 }
 
-export async function getCustomHasher(
+export function getCustomHasher(
   task: Task,
   projectGraph: ProjectGraph
-): Promise<CustomHasher> | null {
-  const factory = (await getExecutorForTask(task, projectGraph)).hasherFactory;
+): CustomHasher | null {
+  const factory = getExecutorForTask(task, projectGraph).hasherFactory;
   return factory ? factory() : null;
 }
 

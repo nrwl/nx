@@ -146,8 +146,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'none',
-    name: libName,
-    projectNameAndRootFormat: 'as-provided',
+    directory: libName,
   });
   return appTree;
 }
@@ -164,15 +163,13 @@ export async function createTestAppLib(
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {
     name: 'my-component',
-    project: libName,
-    directory: 'app',
+    path: `${libName}/src/app/my-component/my-component`,
   });
 
   return appTree;

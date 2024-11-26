@@ -15,10 +15,18 @@ export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
   return result;
 }
 
+export function withUseGitHub<T = unknown>(argv: yargs.Argv<T>) {
+  return argv.option('useGitHub', {
+    describe: chalk.dim`Will you be using GitHub as your git hosting provider?`,
+    type: 'boolean',
+    default: false,
+  });
+}
+
 export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
   return argv.option('allPrompts', {
     alias: 'a',
-    describe: chalk.dim`Show all prompts`,
+    describe: chalk.dim`Show all prompts.`,
     type: 'boolean',
     default: false,
   });
@@ -27,7 +35,7 @@ export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
 export function withPackageManager<T = unknown>(argv: yargs.Argv<T>) {
   return argv.option('packageManager', {
     alias: 'pm',
-    describe: chalk.dim`Package manager to use`,
+    describe: chalk.dim`Package manager to use.`,
     choices: [...packageManagerList].sort(),
     defaultDescription: 'npm',
     type: 'string',
@@ -38,25 +46,25 @@ export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
   return argv
     .option('defaultBase', {
       defaultDescription: 'main',
-      describe: chalk.dim`Default base to use for new projects`,
+      describe: chalk.dim`Default base to use for new projects.`,
       type: 'string',
     })
     .option('skipGit', {
-      describe: chalk.dim`Skip initializing a git repository`,
+      describe: chalk.dim`Skip initializing a git repository.`,
       type: 'boolean',
       default: false,
       alias: 'g',
     })
     .option('commit.name', {
-      describe: chalk.dim`Name of the committer`,
+      describe: chalk.dim`Name of the committer.`,
       type: 'string',
     })
     .option('commit.email', {
-      describe: chalk.dim`E-mail of the committer`,
+      describe: chalk.dim`E-mail of the committer.`,
       type: 'string',
     })
     .option('commit.message', {
-      describe: chalk.dim`Commit message`,
+      describe: chalk.dim`Commit message.`,
       type: 'string',
       default: 'Initial commit',
     });

@@ -1,65 +1,5 @@
 {
   "generators": {
-    "15.0.0-migrate-to-inputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.1",
-      "description": "Replace implicitDependencies with namedInputs + target inputs",
-      "implementation": "./src/migrations/update-15-0-0/migrate-to-inputs"
-    },
-    "15.0.0-prefix-outputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.1",
-      "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
-      "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
-    },
-    "15.1.0-set-project-names": {
-      "cli": "nx",
-      "version": "15.0.12-beta.1",
-      "description": "Set project names in project.json files",
-      "implementation": "./src/migrations/update-15-1-0/set-project-names"
-    },
-    "15.8.2-update-nx-wrapper": {
-      "cli": "nx",
-      "version": "15.8.2-beta.0",
-      "description": "Updates the nx wrapper.",
-      "implementation": "./src/migrations/update-15-8-2/update-nxw"
-    },
-    "16.0.0-remove-nrwl-cli": {
-      "cli": "nx",
-      "version": "16.0.0-beta.0",
-      "description": "Remove @nrwl/cli.",
-      "implementation": "./src/migrations/update-16-0-0/remove-nrwl-cli"
-    },
-    "16.0.0-tokens-for-depends-on": {
-      "cli": "nx",
-      "version": "16.0.0-beta.9",
-      "description": "Replace `dependsOn.projects` and `inputs` definitions with new configuration format.",
-      "implementation": "./src/migrations/update-16-0-0/update-depends-on-to-tokens"
-    },
-    "16.0.0-update-nx-cloud-runner": {
-      "cli": "nx",
-      "version": "16.0.0-beta.0",
-      "description": "Replace @nrwl/nx-cloud with nx-cloud",
-      "implementation": "./src/migrations/update-16-0-0/update-nx-cloud-runner"
-    },
-    "16.2.0-remove-output-path-from-run-commands": {
-      "cli": "nx",
-      "version": "16.2.0-beta.0",
-      "description": "Remove outputPath from run commands",
-      "implementation": "./src/migrations/update-16-2-0/remove-run-commands-output-path"
-    },
-    "16.6.0-prefix-outputs": {
-      "cli": "nx",
-      "version": "16.6.0-beta.6",
-      "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
-      "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
-    },
-    "16.8.0-escape-dollar-sign-env": {
-      "cli": "nx",
-      "version": "16.8.0-beta.3",
-      "description": "Escape $ in env variables",
-      "implementation": "./src/migrations/update-16-8-0/escape-dollar-sign-env-variables"
-    },
     "17.0.0-move-cache-directory": {
       "cli": "nx",
       "version": "17.0.0-beta.1",
@@ -86,9 +26,37 @@
     "18.0.0-disable-adding-plugins-for-existing-workspaces": {
       "cli": "nx",
       "version": "18.0.0-beta.2",
-      "description": "Updates .env to disabled adding plugins when generating projects in an existing Nx workspace",
+      "description": "Updates nx.json to disabled adding plugins when generating projects in an existing Nx workspace",
       "implementation": "./src/migrations/update-18-0-0/disable-crystal-for-existing-workspaces",
       "x-repair-skip": true
+    },
+    "move-default-base-to-nx-json-root": {
+      "version": "18.1.0-beta.3",
+      "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
+      "implementation": "./src/migrations/update-17-2-0/move-default-base"
+    },
+    "19-2-0-move-graph-cache-directory": {
+      "cli": "nx",
+      "version": "19.2.0-beta.2",
+      "description": "Updates the default workspace data directory to .nx/workspace-data",
+      "implementation": "./src/migrations/update-19-2-0/move-workspace-data-directory"
+    },
+    "19-2-2-update-nx-wrapper": {
+      "cli": "nx",
+      "version": "19.2.2-beta.0",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-17-3-0/update-nxw"
+    },
+    "19-2-4-set-project-name": {
+      "version": "19.2.4-beta.0",
+      "description": "Set project name in nx.json explicitly",
+      "implementation": "./src/migrations/update-19-2-4/set-project-name",
+      "x-repair-skip": true
+    },
+    "move-use-daemon-process": {
+      "version": "20.0.0-beta.7",
+      "description": "Migration for v20.0.0-beta.7",
+      "implementation": "./src/migrations/update-20-0-0/move-use-daemon-process"
     }
   }
 }

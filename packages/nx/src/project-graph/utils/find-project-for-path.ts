@@ -13,9 +13,8 @@ export function createProjectRootMappingsFromProjectConfigurations(
   projects: Record<string, ProjectConfiguration>
 ) {
   const projectRootMappings: ProjectRootMappings = new Map();
-  for (const projectName of Object.keys(projects)) {
-    const root = projects[projectName].root;
-    projectRootMappings.set(normalizeProjectRoot(root), projectName);
+  for (const { name, root } of Object.values(projects)) {
+    projectRootMappings.set(normalizeProjectRoot(root), name);
   }
   return projectRootMappings;
 }

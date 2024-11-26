@@ -1,6 +1,14 @@
-import { ExecutorContext, joinPathFragments, readJsonFile } from '@nx/devkit';
+import {
+  detectPackageManager,
+  ExecutorContext,
+  readJsonFile,
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
+import { join } from 'path';
+import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
+import { parseRegistryOptions } from '../../utils/npm-config';
+import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
@@ -23,6 +31,7 @@ export default async function runExecutor(
   options: PublishExecutorSchema,
   context: ExecutorContext
 ) {
+  const pm = detectPackageManager();
   /**
    * We need to check both the env var and the option because the executor may have been triggered
    * indirectly via dependsOn, in which case the env var will be set, but the option will not.
@@ -32,14 +41,39 @@ export default async function runExecutor(
   const projectConfig =
     context.projectsConfigurations!.projects[context.projectName!]!;
 
-  const packageRoot = joinPathFragments(
+  const packageRoot = join(
     context.root,
     options.packageRoot ?? projectConfig.root
   );
 
-  const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
-  const projectPackageJson = readJsonFile(packageJsonPath);
-  const packageName = projectPackageJson.name;
+  const packageJsonPath = join(packageRoot, 'package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+  const packageName = packageJson.name;
+
+  /**
+   * pnpm supports dynamically updating locally linked packages during its packing phase, but other package managers do not.
+   * Therefore, protect the user from publishing invalid packages by checking if it contains local dependency protocols.
+   */
+  if (pm !== 'pnpm') {
+    const depTypes = ['dependencies', 'devDependencies', 'peerDependencies'];
+    for (const depType of depTypes) {
+      const deps = packageJson[depType];
+      if (deps) {
+        for (const depName in deps) {
+          if (isLocallyLinkedPackageVersion(deps[depName])) {
+            console.error(
+              `Error: Cannot publish package "${packageName}" because it contains a local dependency protocol in its "${depType}", and your package manager is ${pm}.
+
+Please update the local dependency on "${depName}" to be a valid semantic version (e.g. using \`nx release\`) before publishing, or switch to pnpm as a package manager, which supports dynamically replacing these protocols during publishing.`
+            );
+            return {
+              success: false,
+            };
+          }
+        }
+      }
+    }
+  }
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
@@ -47,7 +81,7 @@ export default async function runExecutor(
       ? `package "${packageName}"`
       : `package "${packageName}" from project "${context.projectName}"`;
 
-  if (projectPackageJson.private === true) {
+  if (packageJson.private === true) {
     console.warn(
       `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
     );
@@ -56,32 +90,28 @@ export default async function runExecutor(
     };
   }
 
-  const npmPublishCommandSegments = [`npm publish --json`];
+  const warnFn = (message: string) => {
+    console.log(chalk.keyword('orange')(message));
+  };
+  const { registry, tag, registryConfigKey } = await parseRegistryOptions(
+    context.root,
+    {
+      packageRoot,
+      packageJson,
+    },
+    {
+      registry: options.registry,
+      tag: options.tag,
+    },
+    warnFn
+  );
+
   const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json`,
+    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
   ];
-
-  if (options.registry) {
-    npmPublishCommandSegments.push(`--registry=${options.registry}`);
-    npmViewCommandSegments.push(`--registry=${options.registry}`);
-  }
-
-  if (options.tag) {
-    npmPublishCommandSegments.push(`--tag=${options.tag}`);
-  }
-
-  if (options.otp) {
-    npmPublishCommandSegments.push(`--otp=${options.otp}`);
-  }
-
-  if (isDryRun) {
-    npmPublishCommandSegments.push(`--dry-run`);
-  }
-
-  // Resolve values using the `npm config` command so that things like environment variables and `publishConfig`s are accounted for
-  const registry =
-    options.registry ?? execSync(`npm config get registry`).toString().trim();
-  const tag = options.tag ?? execSync(`npm config get tag`).toString().trim();
+  const npmDistTagAddCommandSegments = [
+    `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
+  ];
 
   /**
    * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
@@ -89,15 +119,16 @@ export default async function runExecutor(
    * request with.
    *
    * Therefore, so as to not produce misleading output in dry around dist-tags being altered, we do not
-   * perform the npm view step, and just show npm publish's dry-run output.
+   * perform the npm view step, and just show npm/pnpm publish's dry-run output.
    */
   if (!isDryRun && !options.firstRelease) {
-    const currentVersion = projectPackageJson.version;
+    const currentVersion = packageJson.version;
     try {
       const result = execSync(npmViewCommandSegments.join(' '), {
         env: processEnv(true),
-        cwd: packageRoot,
+        cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
       });
 
       const resultJson = JSON.parse(result.toString());
@@ -111,17 +142,20 @@ export default async function runExecutor(
         };
       }
 
-      if (resultJson.versions.includes(currentVersion)) {
+      // If only one version of a package exists in the registry, versions will be a string instead of an array.
+      const versions = Array.isArray(resultJson.versions)
+        ? resultJson.versions
+        : [resultJson.versions];
+
+      if (versions.includes(currentVersion)) {
         try {
           if (!isDryRun) {
-            execSync(
-              `npm dist-tag add ${packageName}@${currentVersion} ${tag} --registry=${registry}`,
-              {
-                env: processEnv(true),
-                cwd: packageRoot,
-                stdio: 'ignore',
-              }
-            );
+            execSync(npmDistTagAddCommandSegments.join(' '), {
+              env: processEnv(true),
+              cwd: context.root,
+              stdio: 'ignore',
+              windowsHide: true,
+            });
             console.log(
               `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
             );
@@ -205,19 +239,80 @@ export default async function runExecutor(
     console.log('Skipped npm view because --first-release was set');
   }
 
+  /**
+   * NOTE: If this is ever changed away from running the command at the workspace root and pointing at the package root (e.g. back
+   * to running from the package root directly), then special attention should be paid to the fact that npm/pnpm publish will nest its
+   * JSON output under the name of the package in that case (and it would need to be handled below).
+   */
+  const publishCommandSegments = [
+    pm === 'pnpm'
+      ? // Unlike npm, pnpm publish does not support a custom registryConfigKey option, and will error on uncommitted changes by default if --no-git-checks is not set
+        `pnpm publish "${packageRoot}" --json --registry="${registry}" --tag=${tag} --no-git-checks`
+      : `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+  ];
+
+  if (options.otp) {
+    publishCommandSegments.push(`--otp=${options.otp}`);
+  }
+
+  if (options.access) {
+    publishCommandSegments.push(`--access=${options.access}`);
+  }
+
+  if (isDryRun) {
+    publishCommandSegments.push(`--dry-run`);
+  }
+
   try {
-    const output = execSync(npmPublishCommandSegments.join(' '), {
+    const output = execSync(publishCommandSegments.join(' '), {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(true),
-      cwd: packageRoot,
+      cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
     });
 
-    const stdoutData = JSON.parse(output.toString());
+    /**
+     * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm/pnpm will mix its publish output with the JSON output all on stdout.
+     * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
+     */
+    const { beforeJsonData, jsonData, afterJsonData } =
+      extractNpmPublishJsonData(output.toString());
+    if (!jsonData) {
+      console.error(
+        `The ${pm} publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx`
+      );
+      return {
+        success: false,
+      };
+    }
 
-    // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
-    logTar(normalizedStdoutData);
+    // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
+    const dryRunVersionPlaceholder = 'X.X.X-dry-run';
+    if (isDryRun) {
+      for (const [key, val] of Object.entries(jsonData)) {
+        if (typeof val !== 'string') {
+          continue;
+        }
+        jsonData[key] = val.replace(
+          new RegExp(packageJson.version, 'g'),
+          dryRunVersionPlaceholder
+        );
+      }
+    }
+
+    if (
+      typeof beforeJsonData === 'string' &&
+      beforeJsonData.trim().length > 0
+    ) {
+      console.log(beforeJsonData);
+    }
+
+    logTar(jsonData);
+
+    if (typeof afterJsonData === 'string' && afterJsonData.trim().length > 0) {
+      console.log(afterJsonData);
+    }
 
     if (isDryRun) {
       console.log(
@@ -236,24 +331,29 @@ export default async function runExecutor(
     try {
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
-      console.error('npm publish error:');
-      if (stdoutData.error.summary) {
+      console.error(`${pm} publish error:`);
+      if (stdoutData.error?.summary) {
         console.error(stdoutData.error.summary);
       }
-      if (stdoutData.error.detail) {
+      if (stdoutData.error?.detail) {
         console.error(stdoutData.error.detail);
       }
 
       if (context.isVerbose) {
-        console.error('npm publish stdout:');
+        console.error(`${pm} publish stdout:`);
         console.error(JSON.stringify(stdoutData, null, 2));
       }
+
+      if (!stdoutData.error) {
+        throw err;
+      }
+
       return {
         success: false,
       };
     } catch (err) {
       console.error(
-        'Something unexpected went wrong when processing the npm publish output\n',
+        `Something unexpected went wrong when processing the ${pm} publish output\n`,
         err
       );
       return {

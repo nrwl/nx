@@ -127,7 +127,7 @@ export async function getModuleFederationConfig(
       mfConfig.remotes,
       'js',
       determineRemoteUrlFunction,
-      isLibraryTypeVar
+      true
     );
   }
 

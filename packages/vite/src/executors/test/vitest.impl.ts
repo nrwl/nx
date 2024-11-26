@@ -3,7 +3,8 @@ import { VitestExecutorOptions } from './schema';
 import { resolve } from 'path';
 import { registerTsConfigPaths } from '@nx/js/src/internal';
 import { NxReporter } from './lib/nx-reporter';
-import { getExtraArgs, getOptions } from './lib/utils';
+import { getOptions } from './lib/utils';
+import { loadVitestDynamicImport } from '../../utils/executor-utils';
 
 export async function* vitestExecutor(
   options: VitestExecutorOptions,
@@ -16,15 +17,14 @@ export async function* vitestExecutor(
 
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { startVitest } = await (Function(
-    'return import("vitest/node")'
-  )() as Promise<typeof import('vitest/node')>);
+  const { startVitest } = await loadVitestDynamicImport();
 
-  const extraArgs = await getExtraArgs(options);
   const resolvedOptions =
-    (await getOptions(options, context, projectRoot, extraArgs)) ?? {};
+    (await getOptions(options, context, projectRoot)) ?? {};
 
-  const nxReporter = new NxReporter(resolvedOptions['watch']);
+  const watch = resolvedOptions['watch'] === true;
+
+  const nxReporter = new NxReporter(watch);
   if (resolvedOptions['reporters'] === undefined) {
     resolvedOptions['reporters'] = [];
   } else if (typeof resolvedOptions['reporters'] === 'string') {
@@ -51,16 +51,21 @@ export async function* vitestExecutor(
     }
   };
 
-  if (resolvedOptions['watch'] === true) {
+  if (watch) {
     process.on('SIGINT', processExit);
     process.on('SIGTERM', processExit);
     process.on('exit', processExit);
   }
 
-  for await (const report of nxReporter) {
-    // vitest sets the exitCode = 1 when code coverage isn't met
-    hasErrors =
-      report.hasErrors || (process.exitCode && process.exitCode !== 0);
+  // vitest sets the exitCode in case of exception without notifying reporters
+  if (process.exitCode === undefined) {
+    for await (const report of nxReporter) {
+      // vitest sets the exitCode = 1 when code coverage isn't met
+      hasErrors =
+        report.hasErrors || (process.exitCode && process.exitCode !== 0);
+    }
+  } else {
+    hasErrors = process.exitCode !== 0;
   }
 
   return {

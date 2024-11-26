@@ -207,6 +207,7 @@ export function Persona({
           title={title}
           aria-hidden="true"
           className="absolute inset-0"
+          prefetch={false}
         />
       </div>
     </section>

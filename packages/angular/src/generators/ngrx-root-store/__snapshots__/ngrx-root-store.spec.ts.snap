@@ -426,7 +426,7 @@ export class AppModule {}
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 1`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -436,7 +436,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideEffects(),provideStore(),provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -473,7 +473,7 @@ export class UsersFacade {
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 1`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -482,7 +482,7 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -722,20 +722,20 @@ describe('Users Selectors', () => {
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add an empty root module when --minimal=true 1`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(),provideStore(),provideRouter(appRoutes) ]
+  providers: [provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should instrument the store devtools when "addDevTools: true" 1`] = `
-"import { ApplicationConfig, isDevMode } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore } from '@ngrx/store';
@@ -743,7 +743,7 @@ import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),provideStore(),provideRouter(appRoutes) ]
+  providers: [provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;

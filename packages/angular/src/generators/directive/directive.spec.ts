@@ -1,5 +1,11 @@
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import type { AngularProjectConfiguration } from '../../utils/types';
 import { directiveGenerator } from './directive';
 import type { Schema } from './schema';
 
@@ -47,8 +53,7 @@ describe('directive generator', () => {
 
     // ACT
     await generateDirectiveWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-directives',
+      path: 'test/src/app/my-directives/test',
       skipTests: true,
     });
 
@@ -84,12 +89,11 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the directive correctly when flat=false', async () => {
+    it('should import the directive correctly', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
         standalone: false,
       });
 
@@ -105,13 +109,12 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the directive correctly when flat=false and path is nested deeper', async () => {
+    it('should import the directive correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        path: 'test/src/app/my-directives/test/test',
         standalone: false,
       });
 
@@ -130,13 +133,12 @@ describe('directive generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should export the directive correctly when flat=false and path is nested deeper', async () => {
+    it('should export the directive correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-directives',
+        path: 'test/src/app/my-directives/test/test',
         export: true,
         standalone: false,
       });
@@ -152,7 +154,6 @@ describe('directive generator', () => {
 
       // ACT
       await generateDirectiveWithDefaultOptions(tree, {
-        flat: false,
         path: 'test/src/app/my-directives',
         skipImport: true,
         standalone: false,
@@ -162,6 +163,74 @@ describe('directive generator', () => {
       expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
         'TestDirective'
       );
+    });
+  });
+
+  describe('prefix & selector', () => {
+    it('should use the prefix', async () => {
+      await directiveGenerator(tree, {
+        path: 'test/src/app/example/example',
+        name: 'example',
+        prefix: 'foo',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[fooExample\]'/);
+    });
+
+    it('should use the default project prefix if none is passed', async () => {
+      const projectConfig = readProjectConfiguration(tree, 'test');
+      updateProjectConfiguration(tree, 'test', {
+        ...projectConfig,
+        prefix: 'bar',
+      } as AngularProjectConfiguration);
+
+      await directiveGenerator(tree, {
+        path: 'test/src/app/example/example',
+        name: 'example',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[barExample\]'/);
+    });
+
+    it('should not use the default project prefix when supplied prefix is ""', async () => {
+      const projectConfig = readProjectConfiguration(tree, 'test');
+      updateProjectConfiguration(tree, 'test', {
+        ...projectConfig,
+        prefix: '',
+      } as AngularProjectConfiguration);
+
+      await directiveGenerator(tree, {
+        path: 'test/src/app/example/example',
+        name: 'example',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[example\]'/);
+    });
+
+    it('should use provided selector as is', async () => {
+      await directiveGenerator(tree, {
+        path: 'test/src/app/example/example',
+        name: 'example',
+        selector: 'mySelector',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[mySelector\]'/);
     });
   });
 });
@@ -186,8 +255,7 @@ async function generateDirectiveWithDefaultOptions(
 ) {
   await directiveGenerator(tree, {
     name: 'test',
-    project: 'test',
-    flat: true,
+    path: 'test/src/app/test',
     skipFormat: true,
     ...overrides,
   });

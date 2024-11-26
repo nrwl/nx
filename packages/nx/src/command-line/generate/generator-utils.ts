@@ -10,14 +10,9 @@ import {
   resolveSchema,
 } from '../../config/schema-utils';
 import { readJsonFile } from '../../utils/fileutils';
-import { readPluginPackageJson } from '../../utils/nx-plugin';
+import { readPluginPackageJson } from '../../project-graph/plugins';
 
-export function getGeneratorInformation(
-  collectionName: string,
-  generatorName: string,
-  root: string | null,
-  projects: Record<string, ProjectConfiguration>
-): {
+export type GeneratorInformation = {
   resolvedCollectionName: string;
   normalizedGeneratorName: string;
   schema: any;
@@ -25,7 +20,14 @@ export function getGeneratorInformation(
   isNgCompat: boolean;
   isNxGenerator: boolean;
   generatorConfiguration: GeneratorsJsonEntry;
-} {
+};
+
+export function getGeneratorInformation(
+  collectionName: string,
+  generatorName: string,
+  root: string | null,
+  projects: Record<string, ProjectConfiguration>
+): GeneratorInformation {
   try {
     const {
       generatorsFilePath,

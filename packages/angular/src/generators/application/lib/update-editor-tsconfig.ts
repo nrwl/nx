@@ -1,10 +1,16 @@
-import type { Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  type Tree,
+} from '@nx/devkit';
+import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { joinPathFragments, readJson, updateJson } from '@nx/devkit';
-
 interface TsConfig {
-  compilerOptions: { types: string[] };
+  compilerOptions?: { types: string[] };
+  exclude?: string[];
 }
 
 function getCompilerOptionsTypes(tsConfig: TsConfig): string[] {
@@ -12,42 +18,24 @@ function getCompilerOptionsTypes(tsConfig: TsConfig): string[] {
 }
 
 export function updateEditorTsConfig(tree: Tree, options: NormalizedSchema) {
-  const types = getCompilerOptionsTypes(
-    readJson<TsConfig>(
-      tree,
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json')
-    )
+  const appTsConfig = readJson<TsConfig>(
+    tree,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.app.json')
   );
+  const types = getCompilerOptionsTypes(appTsConfig);
 
-  if (options.unitTestRunner !== 'none') {
-    types.push(
-      ...getCompilerOptionsTypes(
-        readJson<TsConfig>(
-          tree,
-          joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json')
-        )
-      )
+  if (types?.length) {
+    updateJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'tsconfig.editor.json'),
+      (json) => {
+        json.compilerOptions ??= {};
+        json.compilerOptions.types = Array.from(new Set(types));
+        return json;
+      }
     );
   }
 
-  updateJson(
-    tree,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.editor.json'),
-    (json) => {
-      json.compilerOptions.types = types;
-      return json;
-    }
-  );
-
-  // This should be the last tsconfig references so it's not in the template
-  updateJson(
-    tree,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
-    (json) => {
-      json.references.push({
-        path: './tsconfig.editor.json',
-      });
-      return json;
-    }
-  );
+  const project = readProjectConfiguration(tree, options.name);
+  updateAppEditorTsConfigExcludedFiles(tree, project);
 }

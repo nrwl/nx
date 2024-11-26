@@ -1,8 +1,8 @@
-jest.mock('eslint', () => ({
-  ESLint: jest.fn(),
+jest.mock('eslint/use-at-your-own-risk', () => ({
+  LegacyESLint: jest.fn(),
 }));
 
-import { ESLint } from 'eslint';
+const { LegacyESLint } = require('eslint/use-at-your-own-risk');
 import { resolveAndInstantiateESLint } from './eslint-utils';
 
 describe('eslint-utils', () => {
@@ -18,7 +18,7 @@ describe('eslint-utils', () => {
       cacheStrategy: 'content',
     }).catch(() => {});
 
-    expect(ESLint).toHaveBeenCalledWith({
+    expect(LegacyESLint).toHaveBeenCalledWith({
       overrideConfigFile: './.eslintrc.json',
       fix: true,
       cache: true,
@@ -40,7 +40,7 @@ describe('eslint-utils', () => {
       cacheStrategy: 'content',
     }).catch(() => {});
 
-    expect(ESLint).toHaveBeenCalledWith({
+    expect(LegacyESLint).toHaveBeenCalledWith({
       overrideConfigFile: undefined,
       fix: true,
       cache: true,
@@ -63,7 +63,7 @@ describe('eslint-utils', () => {
         noEslintrc: true,
       }).catch(() => {});
 
-      expect(ESLint).toHaveBeenCalledWith({
+      expect(LegacyESLint).toHaveBeenCalledWith({
         overrideConfigFile: undefined,
         fix: true,
         cache: true,
@@ -89,7 +89,7 @@ describe('eslint-utils', () => {
         rulesdir: extraRuleDirectories,
       } as any).catch(() => {});
 
-      expect(ESLint).toHaveBeenCalledWith({
+      expect(LegacyESLint).toHaveBeenCalledWith({
         overrideConfigFile: undefined,
         fix: true,
         cache: true,
@@ -114,7 +114,7 @@ describe('eslint-utils', () => {
         resolvePluginsRelativeTo: './some-path',
       } as any).catch(() => {});
 
-      expect(ESLint).toHaveBeenCalledWith({
+      expect(LegacyESLint).toHaveBeenCalledWith({
         overrideConfigFile: undefined,
         fix: true,
         cache: true,
@@ -135,7 +135,7 @@ describe('eslint-utils', () => {
         reportUnusedDisableDirectives: 'error',
       } as any).catch(() => {});
 
-      expect(ESLint).toHaveBeenCalledWith({
+      expect(LegacyESLint).toHaveBeenCalledWith({
         cache: false,
         cacheLocation: undefined,
         cacheStrategy: undefined,
@@ -153,7 +153,7 @@ describe('eslint-utils', () => {
     it('should create a ESLint instance with no "reportUnusedDisableDirectives" if it is undefined', async () => {
       await resolveAndInstantiateESLint(undefined, {} as any);
 
-      expect(ESLint).toHaveBeenCalledWith(
+      expect(LegacyESLint).toHaveBeenCalledWith(
         expect.objectContaining({
           reportUnusedDisableDirectives: undefined,
         })
@@ -162,11 +162,11 @@ describe('eslint-utils', () => {
   });
 
   describe('ESLint Flat Config', () => {
-    it('should throw if a non eslint.config.js file is used with ESLint Flat Config', async () => {
+    it('should throw if a non eslint.config.js or eslint.config.cjs file is used with ESLint Flat Config', async () => {
       await expect(
         resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true)
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files"`
       );
     });
 

@@ -31,6 +31,7 @@ export const customSelectedStateConfig: ProjectGraphStateNodeConfig = {
             workspaceLayout: ctx.workspaceLayout,
             groupByFolder: ctx.groupByFolder,
             selectedProjects: ctx.selectedProjects,
+            composite: ctx.compositeGraph,
           }),
           {
             to: (context) => context.graphActor,

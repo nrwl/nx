@@ -44,6 +44,7 @@ async function addMigrationPackageGroup(
         '@angular/cdk',
         '@angular/ssr',
         '@angular/pwa',
+        '@angular/build',
       ].includes(pkgName)
     ) {
       continue;

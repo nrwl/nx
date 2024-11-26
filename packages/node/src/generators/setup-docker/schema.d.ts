@@ -3,4 +3,5 @@ export interface SetUpDockerOptions {
   targetName?: string;
   buildTarget?: string;
   skipFormat?: boolean;
+  outputPath: string;
 }

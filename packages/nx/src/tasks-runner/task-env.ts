@@ -2,6 +2,7 @@ import { Task } from '../config/task-graph';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { workspaceRoot } from '../utils/workspace-root';
+import { join } from 'node:path';
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -121,24 +122,68 @@ function getNxEnvVariablesForTask(
   };
 }
 
-function loadDotEnvFilesForTask(
-  task: Task,
-  environmentVariables: NodeJS.ProcessEnv
+/**
+ * This function loads a .env file and expands the variables in it.
+ * @param filename the .env file to load
+ * @param environmentVariables the object to load environment variables into
+ * @param override whether to override existing environment variables
+ */
+export function loadAndExpandDotEnvFile(
+  filename: string,
+  environmentVariables: NodeJS.ProcessEnv,
+  override = false
 ) {
+  const myEnv = loadDotEnvFile({
+    path: filename,
+    processEnv: environmentVariables,
+    override,
+  });
+  return expand({
+    ...myEnv,
+    processEnv: environmentVariables,
+  });
+}
+
+/**
+ * This function unloads a .env file and removes the variables in it from the environmentVariables.
+ * @param filename
+ * @param environmentVariables
+ */
+export function unloadDotEnvFile(
+  filename: string,
+  environmentVariables: NodeJS.ProcessEnv,
+  override = false
+) {
+  const parsedDotEnvFile: NodeJS.ProcessEnv = {};
+  loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
+  Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
+    if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
+      delete environmentVariables[envVarKey];
+    }
+  });
+}
+
+function getEnvFilesForTask(task: Task): string[] {
   // Collect dot env files that may pertain to a task
-  const dotEnvFiles = [
+  return [
     // Load DotEnv Files for a configuration in the project root
     ...(task.target.configuration
       ? [
+          `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}.local`,
           `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`,
+          `${task.projectRoot}/.env.${task.target.configuration}.local`,
           `${task.projectRoot}/.env.${task.target.configuration}`,
+          `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.local.env`,
           `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`,
+          `${task.projectRoot}/.${task.target.configuration}.local.env`,
           `${task.projectRoot}/.${task.target.configuration}.env`,
         ]
       : []),
 
     // Load DotEnv Files for a target in the project root
+    `${task.projectRoot}/.env.${task.target.target}.local`,
     `${task.projectRoot}/.env.${task.target.target}`,
+    `${task.projectRoot}/.${task.target.target}.local.env`,
     `${task.projectRoot}/.${task.target.target}.env`,
     `${task.projectRoot}/.env.local`,
     `${task.projectRoot}/.local.env`,
@@ -147,15 +192,21 @@ function loadDotEnvFilesForTask(
     // Load DotEnv Files for a configuration in the workspace root
     ...(task.target.configuration
       ? [
+          `.env.${task.target.target}.${task.target.configuration}.local`,
           `.env.${task.target.target}.${task.target.configuration}`,
+          `.env.${task.target.configuration}.local`,
           `.env.${task.target.configuration}`,
+          `.${task.target.target}.${task.target.configuration}.local.env`,
           `.${task.target.target}.${task.target.configuration}.env`,
+          `.${task.target.configuration}.local.env`,
           `.${task.target.configuration}.env`,
         ]
       : []),
 
     // Load DotEnv Files for a target in the workspace root
+    `.env.${task.target.target}.local`,
     `.env.${task.target.target}`,
+    `.${task.target.target}.local.env`,
     `.${task.target.target}.env`,
 
     // Load base DotEnv Files at workspace root
@@ -163,39 +214,22 @@ function loadDotEnvFilesForTask(
     `.env.local`,
     `.env`,
   ];
+}
 
+function loadDotEnvFilesForTask(
+  task: Task,
+  environmentVariables: NodeJS.ProcessEnv
+) {
+  const dotEnvFiles = getEnvFilesForTask(task);
   for (const file of dotEnvFiles) {
-    const myEnv = loadDotEnvFile({
-      path: file,
-      processEnv: environmentVariables,
-      // Do not override existing env variables as we load
-      override: false,
-    });
-    environmentVariables = {
-      ...expand({
-        ...myEnv,
-        ignoreProcessEnv: true, // Do not override existing env variables as we load
-      }).parsed,
-      ...environmentVariables,
-    };
+    loadAndExpandDotEnvFile(join(workspaceRoot, file), environmentVariables);
   }
-
   return environmentVariables;
 }
 
 function unloadDotEnvFiles(environmentVariables: NodeJS.ProcessEnv) {
-  const unloadDotEnvFile = (filename: string) => {
-    let parsedDotEnvFile: NodeJS.ProcessEnv = {};
-    loadDotEnvFile({ path: filename, processEnv: parsedDotEnvFile });
-    Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
-      if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
-        delete environmentVariables[envVarKey];
-      }
-    });
-  };
-
   for (const file of ['.env', '.local.env', '.env.local']) {
-    unloadDotEnvFile(file);
+    unloadDotEnvFile(join(workspaceRoot, file), environmentVariables);
   }
   return environmentVariables;
 }

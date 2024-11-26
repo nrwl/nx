@@ -1,5 +1,8 @@
-import { Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { Tree, readNxJson } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/src/generators/application/schema';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
@@ -8,23 +11,23 @@ export async function normalizeOptions(
   tree: Tree,
   options: ApplicationGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(tree, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-    callingGenerator: '@nx/nest:application',
-  });
+  await ensureProjectName(tree, options, 'application');
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
+
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   return {
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
     ...options,
     strict: options.strict ?? false,
     appProjectName,
@@ -42,7 +45,6 @@ export function toNodeApplicationGeneratorOptions(
     name: options.name,
     directory: options.directory,
     frontendProject: options.frontendProject,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     linter: options.linter,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,

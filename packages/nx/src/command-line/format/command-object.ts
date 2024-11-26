@@ -4,7 +4,7 @@ import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
 
 export const yargsFormatCheckCommand: CommandModule = {
   command: 'format:check',
-  describe: 'Check for un-formatted files',
+  describe: 'Check for un-formatted files.',
   builder: (yargs) =>
     linkToNxDevAndExamples(withFormatOptions(yargs), 'format:check'),
   handler: async (args) => {
@@ -15,7 +15,7 @@ export const yargsFormatCheckCommand: CommandModule = {
 
 export const yargsFormatWriteCommand: CommandModule = {
   command: 'format:write',
-  describe: 'Overwrite un-formatted files',
+  describe: 'Overwrite un-formatted files.',
   aliases: ['format'],
   builder: (yargs) =>
     linkToNxDevAndExamples(withFormatOptions(yargs), 'format:write'),
@@ -35,12 +35,12 @@ function withFormatOptions(yargs: Argv): Argv {
       type: 'boolean',
     })
     .option('projects', {
-      describe: 'Projects to format (comma/space delimited)',
+      describe: 'Projects to format (comma/space delimited).',
       type: 'string',
       coerce: parseCSV,
     })
     .option('all', {
-      describe: 'Format all projects',
+      describe: 'Format all projects.',
       type: 'boolean',
     })
     .conflicts({

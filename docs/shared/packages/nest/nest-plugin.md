@@ -34,7 +34,7 @@ In any Nx workspace, you can install `@nx/nest` by running the following command
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/nest
 ```
 
@@ -57,7 +57,7 @@ npm add -D @nx/nest
 You can add a new Nest application with the following command:
 
 ```shell
-nx g @nx/nest:app my-nest-app
+nx g @nx/nest:app apps/my-nest-app
 ```
 
 #### Application Proxies
@@ -65,7 +65,7 @@ nx g @nx/nest:app my-nest-app
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nx/nest:app my-nest-app --frontendProject my-angular-app
+nx g @nx/nest:app apps/my-nest-app --frontendProject my-angular-app
 ```
 
 ### Create Libraries
@@ -73,22 +73,22 @@ nx g @nx/nest:app my-nest-app --frontendProject my-angular-app
 You can add a new Nest library with the following command:
 
 ```shell
-nx g @nx/nest:lib my-nest-lib
+nx g @nx/nest:lib libs/my-nest-lib
 ```
 
 To make the library `buildable`, use the following command:
 
 ```shell
-nx g @nx/nest:lib my-nest-lib --buildable
+nx g @nx/nest:lib libs/my-nest-lib --buildable
 ```
 
 To make the library `publishable`, use the following command:
 
 ```shell
-nx g @nx/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
+nx g @nx/nest:lib libs/my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
-> Read more about [building and publishing libraries here](/concepts/more-concepts/buildable-and-publishable-libraries).
+> Read more about [building and publishing libraries here](/concepts/buildable-and-publishable-libraries).
 
 ### Nest Generators
 
@@ -163,6 +163,52 @@ You can run unit test for a library with the following command:
 ```shell
 nx test my-nest-lib
 ```
+
+## Using CLI Plugins
+
+Nest supports the use of various CLI plugins to enhance the development experience. Plugins can be configured via **transformers** property in NxWebpackPlugin.
+As an example, to set up a [Swagger plugin](https://docs.nestjs.com/openapi/cli-plugin), modify the Nest application's Webpack configuration as follows:
+
+```javascript
+const { NxWebpackPlugin } = require('@nx/webpack');
+
+module.exports = {
+  // ...
+  plugins: [
+    new NxWebpackPlugin({
+      // ...
+      transformers: [
+        {
+          name: '@nestjs/swagger/plugin',
+          options: {
+            dtoFileNameSuffix: ['.dto.ts', '.entity.ts'],
+          },
+        },
+      ],
+    }),
+  ],
+};
+```
+
+## Deployment
+
+Ensuring a smooth and reliable deployment of a Nest.js application in a production environment requires careful planning and the right strategy. Depending on your specific needs and infrastructure, you can choose from several deployment approaches. Below are four commonly used methods:
+
+1. **Using Docker:**
+   Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
+
+2. **Installing Dependencies on the Server:**
+   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/recipes/webpack/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
+
+3. **Transferring Pre-installed Dependencies:**
+   Install dependencies during the build process, and transfer the build artifacts along with the `node_modules` directory to the server. Typically, the artifacts are archived for faster transfer and then unarchived on the server.
+
+4. **Bundling Dependencies:**
+   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/recipes/webpack/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
+
+{% callout type="note" title="Bundling Dependencies" %}
+Bundling dependencies is typically not recommended for Node applications.
+{% /callout %}
 
 ## More Documentation
 

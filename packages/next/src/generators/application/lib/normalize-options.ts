@@ -1,5 +1,8 @@
-import { joinPathFragments, names, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
@@ -20,21 +23,22 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    rootProject: options.rootProject,
-    callingGenerator: '@nx/next:application',
-  });
+  await ensureProjectName(host, options, 'application');
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      rootProject: options.rootProject,
+    });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -56,7 +60,7 @@ export async function normalizeOptions(
   const appDir = options.appDir ?? true;
   const src = options.src ?? true;
 
-  const styledModule = /^(css|scss|less)$/.test(options.style)
+  const styledModule = /^(css|scss|less|tailwind)$/.test(options.style)
     ? null
     : options.style;
 
@@ -69,7 +73,7 @@ export async function normalizeOptions(
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
-    e2eTestRunner: options.e2eTestRunner || 'cypress',
+    e2eTestRunner: options.e2eTestRunner || 'playwright',
     fileName,
     linter: options.linter || Linter.EsLint,
     name,

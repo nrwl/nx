@@ -1,7 +1,7 @@
 import { output } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
-import type { LifeCycle } from '../life-cycle';
+import type { LifeCycle, TaskResult } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 import { formatTargetsAndProjects } from './formatting-utils';
 
@@ -24,6 +24,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     private readonly args: {
       targets?: string[];
       configuration?: string;
+      verbose?: boolean;
     }
   ) {}
 
@@ -89,9 +90,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[]
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
@@ -110,13 +109,20 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     status: TaskStatus,
     terminalOutput: string
   ) {
+    const args = getPrintableCommandArgsForTask(task);
     if (
+      this.args.verbose ||
       status === 'success' ||
       status === 'failure' ||
       task.target.project === this.initiatingProject
     ) {
-      const args = getPrintableCommandArgsForTask(task);
       output.logCommandOutput(args.join(' '), status, terminalOutput);
+    } else {
+      /**
+       * Do not show the terminal output in the case where it is not the initiating project and verbose is not set,
+       * but still print the command that was run and its status (so that cache hits can still be traced).
+       */
+      output.logCommandOutput(args.join(' '), status, '');
     }
   }
 }

@@ -756,7 +756,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -765,7 +765,7 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -782,14 +782,14 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`ngrx Standalone APIs should add an empty provideStore when minimal and root are set to true 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(),provideStore(),provideRouter(appRoutes) ]
+  providers: [provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -806,7 +806,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`ngrx Standalone APIs should add facade provider when facade is true 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
@@ -816,7 +816,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),UsersFacade,provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),UsersFacade,provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;

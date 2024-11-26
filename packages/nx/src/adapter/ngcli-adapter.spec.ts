@@ -5,6 +5,14 @@ import {
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import { addProjectConfiguration } from '../generators/utils/project-configuration';
 
+jest.mock('../project-graph/project-graph', () => ({
+  ...jest.requireActual('../project-graph/project-graph'),
+  createProjectGraphAsync: () => ({
+    nodes: {},
+    externalNodes: {},
+  }),
+}));
+
 describe('ngcli-adapter', () => {
   it('arrayBufferToString should support large buffers', () => {
     const largeString = 'a'.repeat(1000000);

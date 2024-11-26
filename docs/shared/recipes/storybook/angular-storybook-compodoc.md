@@ -81,6 +81,14 @@ pnpm add -D @compodoc/compodoc
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add -D @compodoc/compodoc
+```
+
+{% /tab %}
 {% /tabs %}
 
 ### 2. Include the component files in the TypeScript compilation for Compodoc

@@ -52,6 +52,14 @@ pnpm add -D tailwindcss@latest postcss@latest autoprefixer@latest
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add -D tailwindcss@latest postcss@latest autoprefixer@latest
+```
+
+{% /tab %}
 {% /tabs %}
 
 This installs the requisite tailwind dependencies.

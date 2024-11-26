@@ -3,6 +3,8 @@ import { serializeResult } from '../socket-utils';
 import { serverLogger } from './logger';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { HandlerResult } from './server';
+import { getPlugins } from './plugins';
+import { readNxJson } from '../../config/nx-json';
 
 export async function handleRequestProjectGraph(): Promise<HandlerResult> {
   try {

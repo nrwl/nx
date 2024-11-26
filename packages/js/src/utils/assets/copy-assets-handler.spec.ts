@@ -1,7 +1,6 @@
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as fse from 'fs-extra';
 
 import { CopyAssetsHandler } from './copy-assets-handler';
 
@@ -78,12 +77,12 @@ describe('AssetInputOutputHandler', () => {
     outputDir = path.join(rootDir, 'dist/mylib');
 
     // Reset temp directory
-    fse.removeSync(rootDir);
-    fse.mkdirpSync(path.join(projectDir, 'docs/a/b'));
+    fs.rmSync(rootDir, { recursive: true, force: true });
+    fs.mkdirSync(path.join(projectDir, 'docs/a/b'), { recursive: true });
 
     // Workspace ignore files
-    fse.writeFileSync(path.join(rootDir, '.gitignore'), `git-ignore.md`);
-    fse.writeFileSync(path.join(rootDir, '.nxignore'), `nx-ignore.md`);
+    fs.writeFileSync(path.join(rootDir, '.gitignore'), `git-ignore.md`);
+    fs.writeFileSync(path.join(rootDir, '.nxignore'), `nx-ignore.md`);
 
     sut = new CopyAssetsHandler({
       rootDir,
@@ -167,19 +166,26 @@ describe('AssetInputOutputHandler', () => {
         dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
       },
     ]);
+    expect(callback).not.toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/a/b/nested-ignore.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/a/b/nested-ignore.md'),
+      },
+    ]);
 
     dispose();
   });
 
   test('processAllAssetsOnce', async () => {
-    fse.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
-    fse.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
-    fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
-    fse.writeFileSync(path.join(projectDir, 'docs/test2.md'), 'test');
-    fse.writeFileSync(path.join(projectDir, 'docs/ignore.md'), 'IGNORE ME');
-    fse.writeFileSync(path.join(projectDir, 'docs/git-ignore.md'), 'IGNORE ME');
-    fse.writeFileSync(path.join(projectDir, 'docs/nx-ignore.md'), 'IGNORE ME');
-    fse.writeFileSync(
+    fs.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
+    fs.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
+    fs.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
+    fs.writeFileSync(path.join(projectDir, 'docs/test2.md'), 'test');
+    fs.writeFileSync(path.join(projectDir, 'docs/ignore.md'), 'IGNORE ME');
+    fs.writeFileSync(path.join(projectDir, 'docs/git-ignore.md'), 'IGNORE ME');
+    fs.writeFileSync(path.join(projectDir, 'docs/nx-ignore.md'), 'IGNORE ME');
+    fs.writeFileSync(
       path.join(projectDir, 'docs/a/b/nested-ignore.md'),
       'IGNORE ME'
     );

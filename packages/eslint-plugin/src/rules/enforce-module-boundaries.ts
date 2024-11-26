@@ -6,14 +6,30 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nx/devkit';
+import {
+  AST_NODE_TYPES,
+  ESLintUtils,
+  TSESTree,
+} from '@typescript-eslint/utils';
+import { isBuiltinModuleImport } from '@nx/js/src/internal';
 import { isRelativePath } from 'nx/src/utils/fileutils';
+import { basename, dirname, join, relative } from 'path';
+import {
+  getBarrelEntryPointByImportScope,
+  getBarrelEntryPointProjectNode,
+  getRelativeImportPath,
+} from '../utils/ast-utils';
 import {
   checkCircularPath,
+  circularPathHasPair,
+  expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
 } from '../utils/graph-utils';
+import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
+  belongsToDifferentNgEntryPoint,
   DepConstraint,
   findConstraintsFor,
   findDependenciesWithTags,
@@ -27,23 +43,13 @@ import {
   hasBannedImport,
   hasBuildExecutor,
   hasNoneOfTheseTags,
+  hasStaticImportOfDynamicResource,
   isAbsoluteImportIntoAnotherProject,
-  belongsToDifferentNgEntryPoint,
   isComboDepConstraint,
   isDirectDependency,
   matchImportWithWildcard,
-  onlyLoadChildren,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
-import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
-import { basename, dirname, relative } from 'path';
-import {
-  getBarrelEntryPointByImportScope,
-  getBarrelEntryPointProjectNode,
-  getRelativeImportPath,
-} from '../utils/ast-utils';
-import { readProjectGraph } from '../utils/project-graph-utils';
-import { ESLintUtils } from '@typescript-eslint/utils';
 
 type Options = [
   {
@@ -52,6 +58,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
+    ignoredCircularDependencies: Array<[string, string]>;
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
@@ -84,7 +91,6 @@ export default ESLintUtils.RuleCreator(
     type: 'suggestion',
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [
@@ -96,6 +102,15 @@ export default ESLintUtils.RuleCreator(
           checkDynamicDependenciesExceptions: {
             type: 'array',
             items: { type: 'string' },
+          },
+          ignoredCircularDependencies: {
+            type: 'array',
+            items: {
+              type: 'array',
+              items: { type: 'string' },
+              minItems: 2,
+              maxItems: 2,
+            },
           },
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
@@ -175,7 +190,7 @@ export default ESLintUtils.RuleCreator(
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}"`,
       nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}". Nested import found at {{childProjectName}}`,
-      noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
+      noTransitiveDependencies: `Only packages defined in the "package.json" can be imported. Transitive or unresolvable dependencies are not allowed.`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
       emptyOnlyTagsConstraintViolation:
         'A project tagged with "{{sourceTag}}" cannot depend on any libs with tags',
@@ -190,6 +205,7 @@ export default ESLintUtils.RuleCreator(
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       checkDynamicDependenciesExceptions: [],
+      ignoredCircularDependencies: [],
       banTransitiveDependencies: false,
       checkNestedExternalImports: false,
     },
@@ -204,6 +220,7 @@ export default ESLintUtils.RuleCreator(
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         checkDynamicDependenciesExceptions,
+        ignoredCircularDependencies,
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
@@ -215,7 +232,7 @@ export default ESLintUtils.RuleCreator(
     const projectPath = normalizePath(
       (global as any).projectPath || workspaceRoot
     );
-    const fileName = normalizePath(context.getFilename());
+    const fileName = normalizePath(context.filename ?? context.getFilename());
 
     const {
       projectGraph,
@@ -229,6 +246,12 @@ export default ESLintUtils.RuleCreator(
     }
 
     const workspaceLayout = (global as any).workspaceLayout;
+
+    const expandedIgnoreCircularDependencies =
+      expandIgnoredCircularDependencies(
+        ignoredCircularDependencies,
+        projectGraph
+      );
 
     function run(
       node:
@@ -314,7 +337,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      joinPathFragments(workspaceRoot, entryPointPath.path),
+                      join(workspaceRoot, entryPointPath.path),
                       sourceProject.data.sourceRoot
                     );
                     // we cannot remap, so leave it as is
@@ -358,14 +381,34 @@ export default ESLintUtils.RuleCreator(
             node,
             messageId: 'noRelativeOrAbsoluteExternals',
           });
+        } else if (banTransitiveDependencies && !isBuiltinModuleImport(imp)) {
+          /**
+           * At this point, the target project could not be found in the project graph, and it is not a relative or absolute import.
+           * Therefore it could be an external/npm package dependency (but not a node built in module) which has not yet been installed
+           * in the workspace.
+           *
+           * If the banTransitiveDependencies option is enabled, we should flag this case as an error because the user is trying to
+           * depend on something which is not explicitly defined/resolvable on disk for their project.
+           */
+          context.report({
+            node,
+            messageId: 'noTransitiveDependencies',
+          });
         }
+
         // If target is not found (including node internals) we bail early
         return;
       }
 
       // we only allow relative paths within the same project
       // and if it's not a secondary entrypoint in an angular lib
-      if (sourceProject === targetProject) {
+      if (
+        sourceProject === targetProject &&
+        !circularPathHasPair(
+          [sourceProject, targetProject],
+          expandedIgnoreCircularDependencies
+        )
+      ) {
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
@@ -401,7 +444,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      joinPathFragments(workspaceRoot, entryPointPath),
+                      join(workspaceRoot, entryPointPath),
                       sourceProject.data.sourceRoot
                     );
                     if (importPath) {
@@ -491,7 +534,10 @@ export default ESLintUtils.RuleCreator(
         sourceProject,
         targetProject
       );
-      if (circularPath.length !== 0) {
+      if (
+        circularPath.length !== 0 &&
+        !circularPathHasPair(circularPath, expandedIgnoreCircularDependencies)
+      ) {
         const circularFilePath = findFilesInCircularPath(
           projectFileMap,
           circularPath
@@ -566,16 +612,14 @@ export default ESLintUtils.RuleCreator(
 
       // if we import a library using loadChildren, we should not import it using es6imports
       if (
-        node.type === AST_NODE_TYPES.ImportDeclaration &&
-        node.importKind !== 'type' &&
         !checkDynamicDependenciesExceptions.some((a) =>
           matchImportWithWildcard(a, imp)
         ) &&
-        onlyLoadChildren(
+        hasStaticImportOfDynamicResource(
+          node,
           projectGraph,
           sourceProject.name,
-          targetProject.name,
-          []
+          targetProject.name
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(

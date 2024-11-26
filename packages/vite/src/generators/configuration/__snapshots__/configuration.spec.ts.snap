@@ -1,5 +1,172 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+import * as path from 'path';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-lib',
+  plugins: [
+    nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+    }),
+  ],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  // Configuration for building your library.
+  // See: https://vitejs.dev/guide/build.html#library-mode
+  build: {
+    outDir: '../dist/my-lib',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    lib: {
+      // Could also be a dictionary or array of multiple entry points.
+      entry: 'src/index.ts',
+      name: 'my-lib',
+      fileName: 'index',
+      // Change this to the formats you want to support.
+      // Don't forget to update your package.json as well.
+      formats: ['es', 'cjs'],
+    },
+    rollupOptions: {
+      // External packages that should not be bundled into your library.
+      external: [],
+    },
+  },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-lib',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 2`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Vitest](https://vitest.dev/).
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 3`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
+}
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
+"export default {
+  displayName: 'my-lib',
+  preset: '../jest.preset.js',
+  transform: {
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../coverage/my-lib',
+};
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"]
+}
+"
+`;
+
 exports[`@nx/vite:configuration library mode should add config for building library 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -7,30 +174,29 @@ import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
   plugins: [
     react(),
     nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
-      skipDiagnostics: true,
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -60,30 +226,29 @@ import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-
   plugins: [
     react(),
     nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
-      skipDiagnostics: true,
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -102,15 +267,11 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
-
   test: {
+    watch: false,
     globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
@@ -118,36 +279,6 @@ export default defineConfig({
     },
   },
 });
-"
-`;
-
-exports[`@nx/vite:configuration library mode should set up non buildable library correctly 2`] = `
-"{
-  "projects": {
-    "react-lib-nonb-jest": {
-      "name": "react-lib-nonb-jest",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "root": "libs/react-lib-nonb-jest",
-      "sourceRoot": "libs/react-lib-nonb-jest/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"]
-        },
-        "test": {
-          "executor": "@nx/jest:jest",
-          "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-          "options": {
-            "jestConfig": "libs/react-lib-nonb-jest/jest.config.ts",
-            "passWithNoTests": true
-          }
-        }
-      },
-      "tags": []
-    }
-  }
-}
 "
 `;
 
@@ -161,9 +292,9 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
-  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
   build: {
     outDir: '../../dist/libs/react-lib-nonb-vitest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -182,19 +313,19 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
+  cacheDir: '../../node_modules/.vitest',
   plugins: [
     nxViteTsPaths(),
     react(),
+    nxCopyAssetsPlugin(['*.md']),
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
-      skipDiagnostics: true,
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
 
   test: {
     globals: true,
-    cache: { dir: '../../node_modules/.vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
@@ -207,120 +338,32 @@ export default defineConfig({
 "
 `;
 
-exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 2`] = `
-"{
-  "projects": {
-    "react-lib-nonb-vitest": {
-      "name": "react-lib-nonb-vitest",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "root": "libs/react-lib-nonb-vitest",
-      "sourceRoot": "libs/react-lib-nonb-vitest/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"]
-        },
-        "test": {
-          "executor": "@nx/vite:test",
-          "outputs": ["{projectRoot}/coverage"],
-          "options": {
-            "passWithNoTests": true,
-            "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}"
-          }
-        }
-      },
-      "tags": []
-    }
-  }
-}
-"
-`;
-
-exports[`@nx/vite:configuration transform React app to use Vite by providing custom targets transform React app if supported executor is provided should transform workspace.json project config 1`] = `
-"{
-  "projects": {
-    "my-test-mixed-react-app": {
-      "name": "my-test-mixed-react-app",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "root": "apps/my-test-mixed-react-app",
-      "sourceRoot": "apps/my-test-mixed-react-app/src",
-      "projectType": "application",
-      "targets": {
-        "invalid-build": {
-          "executor": "@nx/js:tsc",
-          "outputs": ["{options.outputPath}"]
-        },
-        "valid-build": {
-          "executor": "@nx/webpack:webpack",
-          "outputs": ["{options.outputPath}"]
-        },
-        "serve": {
-          "executor": "@nx/webpack:dev-server",
-          "defaultConfiguration": "development",
-          "options": {
-            "buildTarget": "my-test-mixed-react-app:build",
-            "hmr": true
-          },
-          "configurations": {
-            "development": {
-              "buildTarget": "my-test-mixed-react-app:build:development"
-            },
-            "production": {
-              "buildTarget": "my-test-mixed-react-app:build:production",
-              "hmr": false
-            }
-          }
-        },
-        "lint": {
-          "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"]
-        },
-        "test": {
-          "executor": "@nx/jest:jest",
-          "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-          "options": {
-            "jestConfig": "apps/my-test-mixed-react-app/jest.config.ts",
-            "passWithNoTests": true
-          }
-        }
-      },
-      "tags": []
-    }
-  }
-}
-"
-`;
-
 exports[`@nx/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
-  plugins: [react(), nxViteTsPaths()],
-
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -349,125 +392,32 @@ exports[`@nx/vite:configuration transform React app to use Vite should move inde
 "
 `;
 
-exports[`@nx/vite:configuration transform React app to use Vite should transform workspace.json project config 1`] = `
-"{
-  "projects": {
-    "my-test-react-app": {
-      "name": "my-test-react-app",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "root": "apps/my-test-react-app",
-      "sourceRoot": "apps/my-test-react-app/src",
-      "projectType": "application",
-      "targets": {
-        "build": {
-          "executor": "@nx/webpack:webpack",
-          "outputs": ["{options.outputPath}"],
-          "defaultConfiguration": "production",
-          "options": {
-            "compiler": "babel",
-            "outputPath": "dist/apps/my-test-react-app",
-            "index": "apps/my-test-react-app/src/index.html",
-            "baseHref": "/",
-            "main": "apps/my-test-react-app/src/main.tsx",
-            "polyfills": "apps/my-test-react-app/src/polyfills.ts",
-            "tsConfig": "apps/my-test-react-app/tsconfig.app.json",
-            "assets": [
-              "apps/my-test-react-app/src/favicon.ico",
-              "apps/my-test-react-app/src/assets"
-            ],
-            "styles": ["apps/my-test-react-app/src/styles.css"],
-            "scripts": [],
-            "webpackConfig": "@nx/react/plugins/webpack"
-          },
-          "configurations": {
-            "development": {
-              "extractLicenses": false,
-              "optimization": false,
-              "sourceMap": true,
-              "vendorChunk": true
-            },
-            "production": {
-              "fileReplacements": [
-                {
-                  "replace": "apps/my-test-react-app/src/environments/environment.ts",
-                  "with": "apps/my-test-react-app/src/environments/environment.prod.ts"
-                }
-              ],
-              "optimization": true,
-              "outputHashing": "all",
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false
-            }
-          }
-        },
-        "serve": {
-          "executor": "@nx/webpack:dev-server",
-          "defaultConfiguration": "development",
-          "options": {
-            "buildTarget": "my-test-react-app:build",
-            "hmr": true
-          },
-          "configurations": {
-            "development": {
-              "buildTarget": "my-test-react-app:build:development"
-            },
-            "production": {
-              "buildTarget": "my-test-react-app:build:production",
-              "hmr": false
-            }
-          }
-        },
-        "lint": {
-          "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"]
-        },
-        "test": {
-          "executor": "@nx/jest:jest",
-          "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-          "options": {
-            "jestConfig": "apps/my-test-react-app/jest.config.ts",
-            "passWithNoTests": true
-          }
-        }
-      },
-      "tags": []
-    }
-  }
-}
-"
-`;
-
 exports[`@nx/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
-  plugins: [nxViteTsPaths()],
-
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-web-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -496,126 +446,42 @@ exports[`@nx/vite:configuration transform Web app to use Vite should move index.
 "
 `;
 
-exports[`@nx/vite:configuration transform Web app to use Vite should transform workspace.json project config 1`] = `
-"{
-  "projects": {
-    "my-test-web-app": {
-      "name": "my-test-web-app",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "projectType": "application",
-      "root": "apps/my-test-web-app",
-      "sourceRoot": "apps/my-test-web-app/src",
-      "tags": [],
-      "targets": {
-        "build": {
-          "executor": "@nx/webpack:webpack",
-          "outputs": ["{options.outputPath}"],
-          "defaultConfiguration": "production",
-          "options": {
-            "outputPath": "dist/apps/my-test-web-app",
-            "compiler": "babel",
-            "main": "apps/my-test-web-app/src/main.ts",
-            "tsConfig": "apps/my-test-web-app/tsconfig.app.json",
-            "assets": [
-              "apps/my-test-web-app/src/favicon.ico",
-              "apps/my-test-web-app/src/assets"
-            ],
-            "index": "apps/my-test-web-app/src/index.html",
-            "baseHref": "/",
-            "polyfills": "apps/my-test-web-app/src/polyfills.ts",
-            "styles": ["apps/my-test-web-app/src/styles.css"],
-            "scripts": []
-          },
-          "configurations": {
-            "production": {
-              "optimization": true,
-              "outputHashing": "all",
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "fileReplacements": [
-                {
-                  "replace": "apps/my-test-web-app/src/environments/environment.ts",
-                  "with": "apps/my-test-web-app/src/environments/environment.prod.ts"
-                }
-              ]
-            }
-          }
-        },
-        "serve": {
-          "executor": "@nx/webpack:dev-server",
-          "options": {
-            "buildTarget": "my-test-web-app:build"
-          },
-          "configurations": {
-            "production": {
-              "buildTarget": "my-test-web-app:build:production"
-            }
-          }
-        },
-        "lint": {
-          "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"]
-        },
-        "test": {
-          "executor": "@nx/jest:jest",
-          "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-          "options": {
-            "jestConfig": "apps/my-test-web-app/jest.config.ts",
-            "passWithNoTests": true
-          }
-        }
-      }
-    }
-  }
-}
-"
-`;
-
 exports[`@nx/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
-
   server: {
     port: 4200,
     host: 'localhost',
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
-  plugins: [react(), nxViteTsPaths()],
-
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
     },
   },
-
   test: {
+    watch: false,
     globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',

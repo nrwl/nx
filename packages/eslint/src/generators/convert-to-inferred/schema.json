@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxEslintConvertToInferred",
+  "description": "Convert existing Eslint project(s) using `@nx/eslint:lint` executor to use `@nx/eslint/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "title": "Convert Eslint project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/eslint:lint` executor to use `@nx/eslint/plugin`.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files at the end of the migration.",
+      "default": false
+    }
+  }
+}

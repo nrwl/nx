@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 jest.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 import { Tree } from '@nx/devkit';
@@ -21,10 +23,9 @@ describe('route', () => {
   });
 
   it('should add css file to shared styles directory', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      project: 'demo',
-      path: 'path/to/example',
+      path: 'apps/demo/app/routes/path/to/example.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -32,8 +33,7 @@ describe('route', () => {
       skipChecks: false,
     });
     await styleGenerator(tree, {
-      project: 'demo',
-      path: 'path/to/example',
+      path: 'apps/demo/app/routes/path/to/example.tsx',
     });
 
     expect(
@@ -42,10 +42,9 @@ describe('route', () => {
   });
 
   it('should handle routes that have a param', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      project: 'demo',
-      path: '/example/$withParam.tsx',
+      path: 'apps/demo/app/routes/example/$withParam.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -53,8 +52,7 @@ describe('route', () => {
       skipChecks: false,
     });
     await styleGenerator(tree, {
-      project: 'demo',
-      path: '/example/$withParam.tsx',
+      path: 'apps/demo/app/routes/example/$withParam.tsx',
     });
 
     expect(
@@ -63,7 +61,7 @@ describe('route', () => {
   });
 
   it('should place styles correctly when app dir is changed', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
 
     tree.write(
       'apps/demo/remix.config.js',
@@ -84,8 +82,7 @@ describe('route', () => {
     );
 
     await routeGenerator(tree, {
-      project: 'demo',
-      path: 'route.tsx',
+      path: 'apps/demo/my-custom-dir/routes/route.tsx',
       style: 'none',
       loader: true,
       action: true,
@@ -93,18 +90,16 @@ describe('route', () => {
       skipChecks: false,
     });
     await styleGenerator(tree, {
-      project: 'demo',
-      path: '/route.tsx',
+      path: 'apps/demo/my-custom-dir/routes/route.tsx',
     });
 
     expect(tree.exists('apps/demo/my-custom-dir/styles/route.css')).toBe(true);
   });
 
   it('should import stylesheet with a relative path in an integrated workspace', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      project: 'demo',
-      path: '/example/$withParam.tsx',
+      path: 'apps/demo/app/routes/example/$withParam.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -112,8 +107,7 @@ describe('route', () => {
       skipChecks: false,
     });
     await styleGenerator(tree, {
-      project: 'demo',
-      path: '/example/$withParam.tsx',
+      path: 'apps/demo/app/routes/example/$withParam.tsx',
     });
     const content = tree.read(
       'apps/demo/app/routes/example/$withParam.tsx',
@@ -129,8 +123,7 @@ describe('route', () => {
     await presetGenerator(tree, { name: 'demo' });
 
     await routeGenerator(tree, {
-      project: 'demo',
-      path: '/example/$withParam.tsx',
+      path: 'app/routes/example/$withParam.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -139,8 +132,7 @@ describe('route', () => {
     });
 
     await styleGenerator(tree, {
-      project: 'demo',
-      path: '/example/$withParam.tsx',
+      path: 'app/routes/example/$withParam.tsx',
     });
     const content = tree.read('app/routes/example/$withParam.tsx', 'utf-8');
 
@@ -150,10 +142,9 @@ describe('route', () => {
   });
 
   it('--nameAndDirectoryFormat=as-provided', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
       path: 'apps/demo/app/routes/example/$withParam.tsx',
-      nameAndDirectoryFormat: 'as-provided',
       style: 'none',
       loader: false,
       action: false,
@@ -162,7 +153,6 @@ describe('route', () => {
     });
     await styleGenerator(tree, {
       path: 'apps/demo/app/routes/example/$withParam.tsx',
-      nameAndDirectoryFormat: 'as-provided',
     });
     const content = tree.read(
       'apps/demo/app/routes/example/$withParam.tsx',

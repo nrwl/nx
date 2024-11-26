@@ -8,7 +8,7 @@ import {
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { frameworkIcons } from '@nx/nx-dev/ui-markdoc';
+import { frameworkIcons } from '@nx/graph/ui-icons';
 import { ReactNode, useEffect, useState } from 'react';
 
 interface NewYearTip {
@@ -42,7 +42,8 @@ const tips: NewYearTip[] = [
           Read more in our{' '}
           <Link
             href="/getting-started/intro"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Intro to Nx
           </Link>
@@ -76,8 +77,9 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more in our{' '}
           <Link
-            href="/concepts/integrated-vs-package-based"
-            className="underline text-slate-900 dark:text-slate-100"
+            href="/deprecated/integrated-vs-package-based"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Types of Repos Guide
           </Link>
@@ -107,8 +109,9 @@ const tips: NewYearTip[] = [
           large monorepo - it also makes your CI fast. With features like remote
           caching, distributed task execution,{' '}
           <Link
-            href="/ci/features/nx-agents"
-            className="underline text-slate-900 dark:text-slate-100"
+            href="/ci/features/distribute-task-execution"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Nx Agents
           </Link>
@@ -119,7 +122,8 @@ const tips: NewYearTip[] = [
           Read more about how to set up{' '}
           <Link
             href="/ci/intro/ci-with-nx"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             CI with Nx
           </Link>
@@ -152,7 +156,8 @@ const tips: NewYearTip[] = [
           Read more about how to{' '}
           <Link
             href="/recipes/adopting-nx/adding-to-existing-project"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Add Nx to an Existing Project
           </Link>
@@ -186,7 +191,8 @@ const tips: NewYearTip[] = [
           Read more about how to set up{' '}
           <Link
             href="/concepts/module-federation/micro-frontend-architecture"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Micro Frontends with Nx
           </Link>
@@ -207,22 +213,25 @@ const tips: NewYearTip[] = [
           Nx can work with any technology stack and we have created examples for
           many of them.
         </p>
-        <div className="flex justify-center items-center">
+        <div className="flex items-center justify-center">
           <Link
             href="/getting-started/tutorials/react-standalone-tutorial"
-            className="w-20 m-4"
+            className="m-4 w-20"
+            prefetch={false}
           >
             {frameworkIcons.react.image}
           </Link>
           <Link
             href="/getting-started/tutorials/angular-standalone-tutorial"
-            className="w-20 m-4"
+            className="m-4 w-20"
+            prefetch={false}
           >
             {frameworkIcons.angular.image}
           </Link>
           <Link
             href="/getting-started/tutorials/vue-standalone-tutorial"
-            className="w-20 m-4"
+            className="m-4 w-20"
+            prefetch={false}
           >
             {frameworkIcons.vue.image}
           </Link>
@@ -231,7 +240,8 @@ const tips: NewYearTip[] = [
           Read more about using{' '}
           <Link
             href="/showcase/example-repos"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Nx with your Favorite Tech
           </Link>
@@ -265,7 +275,8 @@ const tips: NewYearTip[] = [
           Read more about how to use Nx to{' '}
           <Link
             href="/extending-nx/recipes/create-install-package"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Build Your Own CLI
           </Link>
@@ -303,7 +314,8 @@ const tips: NewYearTip[] = [
           experience this groundbreaking tool.{' '}
           <Link
             href="https://go.nx.dev/nx-agents-ea"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Sign up now for early access.
           </Link>
@@ -311,8 +323,9 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more about the upcoming{' '}
           <Link
-            href="/ci/features/nx-agents"
-            className="underline text-slate-900 dark:text-slate-100"
+            href="/ci/features/distribute-task-execution"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Nx Agents
           </Link>
@@ -345,8 +358,9 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more about using Nx to{' '}
           <Link
-            href="/recipes/tips-n-tricks/standalone-to-integrated"
-            className="underline text-slate-900 dark:text-slate-100"
+            href="/recipes/tips-n-tricks/standalone-to-monorepo"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             convert a standalone app repo to a monorepo
           </Link>
@@ -377,7 +391,8 @@ const tips: NewYearTip[] = [
           to date - even after breaking changes. You can think of it as{' '}
           <Link
             href="https://blog.nrwl.io/evergreen-tooling-more-than-just-codemods-fc68f32ce605"
-            className="underline text-slate-900 dark:text-slate-100"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Evergreen Tooling
           </Link>
@@ -386,8 +401,9 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more about using Nx to{' '}
           <Link
-            href="/core-features/automate-updating-dependencies"
-            className="underline text-slate-900 dark:text-slate-100"
+            href="/features/automate-updating-dependencies"
+            className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Automate Updating Dependencies
           </Link>
@@ -447,13 +463,13 @@ export default function NewYear(): JSX.Element {
       />
       <Header />
       <main id="main" role="main">
-        <div className="w-full py-10 bg-slate-50 dark:bg-slate-800/40 dark:text-slate-300">
+        <div className="w-full bg-slate-50 py-10 dark:bg-slate-800/40 dark:text-slate-300">
           <div
             id="new-year"
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips-intro" className="relative">
-              <h1 className="text-3xl font-semibold my-8 dark:text-white sm:text-5xl">
+              <h1 className="my-8 text-3xl font-semibold sm:text-5xl dark:text-white">
                 Nx New Year Tips
               </h1>
               <p>
@@ -461,7 +477,7 @@ export default function NewYear(): JSX.Element {
                 of Nx. Each day, a new card will be unlocked for you to flip.
                 You can{' '}
                 <a
-                  className="underline text-slate-900 dark:text-slate-100"
+                  className="text-slate-900 underline dark:text-slate-100"
                   href="https://share.hsforms.com/1cShEClnQRIuu5w-1cLalZw1n3n7"
                 >
                   sign up to receive an email
@@ -477,7 +493,7 @@ export default function NewYear(): JSX.Element {
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips" className="relative">
-              <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16 dark:text-slate-100">
+              <div className="mx-auto grid grid-cols-1 items-stretch gap-8 py-12 sm:grid-cols-2 md:grid-cols-3 lg:py-16 dark:text-slate-100">
                 {shownTips.map((tip) => (
                   <FlipCard
                     key={tip.day}

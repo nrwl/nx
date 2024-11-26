@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { buildSelector } from '../../utils/selector';
+import { buildSelector, validateHtmlSelector } from '../../utils/selector';
 import type { NormalizedSchema, Schema } from '../schema';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
@@ -16,13 +16,8 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'directive',
-    callingGenerator: '@nx/angular:directive',
     name: options.name,
-    directory: options.directory ?? options.path,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
+    path: options.path,
     suffix: 'directive',
   });
 
@@ -37,7 +32,8 @@ export async function normalizeOptions(
 
   const selector =
     options.selector ??
-    buildSelector(tree, name, options.prefix, prefix, 'propertyName');
+    buildSelector(name, options.prefix, prefix, 'propertyName');
+  validateHtmlSelector(selector);
 
   return {
     ...options,

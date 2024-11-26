@@ -12,20 +12,43 @@ export async function formatChangedFilesWithPrettierIfAvailable(
     silent?: boolean;
   }
 ): Promise<void> {
+  const files = new Set(
+    tree.listChanges().filter((file) => file.type !== 'DELETE')
+  );
+
+  const results = await formatFilesWithPrettierIfAvailable(
+    Array.from(files),
+    tree.root,
+    options
+  );
+
+  for (const [path, content] of results) {
+    tree.write(path, content);
+  }
+}
+
+export async function formatFilesWithPrettierIfAvailable(
+  files: { path: string; content: string | Buffer }[],
+  root: string,
+  options?: {
+    silent?: boolean;
+  }
+): Promise<Map<string, string>> {
+  const results = new Map<string, string>();
+
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
   } catch {}
 
-  if (!prettier) return;
+  if (!prettier) {
+    return results;
+  }
 
-  const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
-  );
   await Promise.all(
     Array.from(files).map(async (file) => {
       try {
-        const systemPath = path.join(tree.root, file.path);
+        const systemPath = path.join(root, file.path);
         let options: any = {
           filepath: systemPath,
         };
@@ -46,7 +69,7 @@ export async function formatChangedFilesWithPrettierIfAvailable(
           return;
         }
 
-        tree.write(
+        results.set(
           file.path,
           // In prettier v3 the format result is a promise
           await (prettier.format(file.content.toString('utf-8'), options) as
@@ -60,4 +83,6 @@ export async function formatChangedFilesWithPrettierIfAvailable(
       }
     })
   );
+
+  return results;
 }

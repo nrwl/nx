@@ -1,5 +1,14 @@
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import {
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  type Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { E2eTestRunner } from '../../utils/test-runners';
+import { nxVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
 
@@ -9,13 +18,13 @@ describe('Init MF', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       routing: true,
       standalone: false,
       skipFormat: true,
     });
     await generateTestApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -338,7 +347,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       standalone: false,
       skipFormat: true,
     });
@@ -380,7 +389,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already when --typescriptConfiguration=true', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       standalone: false,
       skipFormat: true,
     });
@@ -422,7 +431,7 @@ describe('Init MF', () => {
   it('should add a remote application and add it to a specified host applications router config', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'remote2',
+      directory: 'remote2',
       routing: true,
       standalone: false,
       skipFormat: true,
@@ -465,10 +474,11 @@ describe('Init MF', () => {
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'test-app',
+      directory: 'test-app',
       routing: true,
       standalone: false,
       skipFormat: true,
+      e2eTestRunner: E2eTestRunner.Cypress,
     });
 
     // ACT
@@ -509,7 +519,7 @@ describe('Init MF', () => {
         'remotes: []'
       );
       expect(
-        tree.exists('app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/public/module-federation.manifest.json')
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -531,9 +541,79 @@ describe('Init MF', () => {
         'remotes: []'
       );
       expect(
-        tree.exists('app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/public/module-federation.manifest.json')
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should wire up existing remote to dynamic host correctly', async () => {
+      await setupMf(tree, {
+        appName: 'remote1',
+        mfType: 'remote',
+        port: 4201,
+        routing: true,
+        typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        routing: true,
+        federationType: 'dynamic',
+        remotes: ['remote1'],
+        typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('app1/module-federation.config.js', 'utf-8')).toContain(
+        'remotes: []'
+      );
+      expect(
+        readJson(tree, 'app1/public/module-federation.manifest.json')
+      ).toEqual({
+        remote1: 'http://localhost:4201',
+      });
+      expect(
+        tree.read('app1/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should wire up existing remote to dynamic host correctly when --typescriptConfiguration=true', async () => {
+      await setupMf(tree, {
+        appName: 'remote1',
+        mfType: 'remote',
+        port: 4201,
+        routing: true,
+        typescriptConfiguration: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        routing: true,
+        federationType: 'dynamic',
+        remotes: ['remote1'],
+        typescriptConfiguration: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('app1/module-federation.config.ts', 'utf-8')).toContain(
+        'remotes: []'
+      );
+      expect(
+        readJson(tree, 'app1/public/module-federation.manifest.json')
+      ).toEqual({
+        remote1: 'http://localhost:4201',
+      });
+      expect(
+        tree.read('app1/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
@@ -566,7 +646,7 @@ describe('Init MF', () => {
       'remotes: []'
     );
     expect(
-      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/public/module-federation.manifest.json')
     ).toEqual({
       remote1: 'http://localhost:4201',
     });
@@ -602,10 +682,184 @@ describe('Init MF', () => {
       'remotes: []'
     );
     expect(
-      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/public/module-federation.manifest.json')
     ).toEqual({
       remote1: 'http://localhost:4201',
     });
     expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
+  });
+
+  it('should generate the host app component test file correctly', async () => {
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      prefix: 'my-org',
+    });
+
+    expect(tree.read('app1/src/app/app.component.spec.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+      import { AppComponent } from './app.component';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { Router, RouterModule } from '@angular/router';
+
+      describe('AppComponent', () => {
+        beforeEach(async () => {
+          await TestBed.configureTestingModule({
+            imports: [
+              RouterModule.forRoot([{ path: '', component: NxWelcomeComponent }]),
+              AppComponent,
+              NxWelcomeComponent,
+            ],
+          }).compileComponents();
+        });
+
+        it('should create the app', () => {
+          const fixture = TestBed.createComponent(AppComponent);
+          const app = fixture.componentInstance;
+          expect(app).toBeTruthy();
+        });
+
+        it(\`should have as title 'app1'\`, () => {
+          const fixture = TestBed.createComponent(AppComponent);
+          const app = fixture.componentInstance;
+          expect(app.title).toEqual('app1');
+        });
+
+        it('should render title', fakeAsync(() => {
+          const fixture = TestBed.createComponent(AppComponent);
+          const router = TestBed.inject(Router);
+          fixture.ngZone?.run(() => router.navigate(['']));
+          tick();
+          fixture.detectChanges();
+          const compiled = fixture.nativeElement as HTMLElement;
+          expect(compiled.querySelector('h1')?.textContent).toContain('Welcome app1');
+        }));
+      });
+      "
+    `);
+  });
+
+  it('should move the @nx/angular plugin to dependencies when --mfType=host', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: {
+        ...json.devDependencies,
+        '@nx/angular': nxVersion,
+      },
+    }));
+
+    await setupMf(tree, { appName: 'app1', mfType: 'host' });
+
+    const { devDependencies, dependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/angular']).toBeUndefined();
+    expect(dependencies['@nx/angular']).toBe(nxVersion);
+  });
+
+  it('should move the @nx/angular plugin to dependencies when --federationType=dynamic', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: {
+        ...json.devDependencies,
+        '@nx/angular': nxVersion,
+      },
+    }));
+
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'remote',
+      federationType: 'dynamic',
+    });
+
+    const { devDependencies, dependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/angular']).toBeUndefined();
+    expect(dependencies['@nx/angular']).toBe(nxVersion);
+  });
+
+  describe('angular compat support', () => {
+    beforeEach(() => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~17.2.0',
+        },
+      }));
+    });
+
+    it('should generate the host app component test file using RouterTestingModule', async () => {
+      await setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        prefix: 'my-org',
+      });
+
+      expect(tree.read('app1/src/app/app.component.spec.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+        import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { RouterTestingModule } from '@angular/router/testing';
+        import { Router } from '@angular/router';
+
+        describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              imports: [
+                RouterTestingModule.withRoutes([
+                  { path: '', component: NxWelcomeComponent },
+                ]),
+                AppComponent,
+                NxWelcomeComponent,
+              ],
+            }).compileComponents();
+          });
+
+          it('should create the app', () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const app = fixture.componentInstance;
+            expect(app).toBeTruthy();
+          });
+
+          it(\`should have as title 'app1'\`, () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const app = fixture.componentInstance;
+            expect(app.title).toEqual('app1');
+          });
+
+          it('should render title', fakeAsync(() => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const router = TestBed.inject(Router);
+            fixture.ngZone?.run(() => router.navigate(['']));
+            tick();
+            fixture.detectChanges();
+            const compiled = fixture.nativeElement as HTMLElement;
+            expect(compiled.querySelector('h1')?.textContent).toContain('Welcome app1');
+          }));
+        });
+        "
+      `);
+    });
   });
 });

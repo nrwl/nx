@@ -58,6 +58,30 @@ describe('MF Share Utils', () => {
       });
     });
 
+    it('should order nested projects first', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+        '@myorg/shared/components': ['/libs/shared/components/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries([
+        { name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' },
+        {
+          name: 'shared-components',
+          root: 'libs/shared/components',
+          importKey: '@myorg/shared/components',
+        },
+      ]);
+
+      // ASSERT
+      expect(Object.keys(sharedLibraries.getAliases())[0]).toEqual(
+        '@myorg/shared/components'
+      );
+    });
+
     it('should handle path mappings with wildcards correctly in non-buildable libraries', () => {
       // ARRANGE
       jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => true);
@@ -139,20 +163,110 @@ describe('MF Share Utils', () => {
       ]);
       // ASSERT
       expect(packages).toEqual({
-        '@angular/core': {
-          singleton: true,
-          strictVersion: true,
-          requiredVersion: '~13.2.0',
-        },
         '@angular/common': {
+          requiredVersion: '~13.2.0',
           singleton: true,
           strictVersion: true,
+        },
+        '@angular/common/http': {
           requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/http/testing': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/locales/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/locales/global/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/testing': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/upgrade': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/event-dispatch-contract.min.js': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/event-dispatch': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/signals': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/rxjs-interop': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/schematics/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/testing': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
         },
         rxjs: {
+          requiredVersion: '~7.4.0',
           singleton: true,
           strictVersion: true,
+        },
+        'rxjs/ajax': {
           requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/fetch': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/internal/*': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/operators': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/testing': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/webSocket': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
         },
       });
     });
@@ -194,6 +308,36 @@ describe('MF Share Utils', () => {
       // ASSERT
       expect(packages).toEqual({
         '@angular/core': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/event-dispatch-contract.min.js': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/event-dispatch': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/signals': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/rxjs-interop': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/schematics/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/testing': {
           singleton: true,
           strictVersion: true,
           requiredVersion: '~13.2.0',
@@ -203,12 +347,67 @@ describe('MF Share Utils', () => {
           strictVersion: true,
           requiredVersion: '~13.2.0',
         },
-        '@angular/common/http/testing': {
+        '@angular/common/http': {
+          requiredVersion: '~13.2.0',
           singleton: true,
           strictVersion: true,
+        },
+        '@angular/common/http/testing': {
           requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/locales/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/locales/global/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/testing': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/common/upgrade': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
         },
         rxjs: {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/ajax': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/fetch': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/internal/*': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/operators': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/testing': {
+          requiredVersion: '~7.4.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        'rxjs/webSocket': {
           singleton: true,
           strictVersion: true,
           requiredVersion: '~7.4.0',
@@ -260,6 +459,31 @@ describe('MF Share Utils', () => {
           singleton: true,
           strictVersion: true,
           requiredVersion: '~13.2.0',
+        },
+        '@angular/core/event-dispatch-contract.min.js': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/event-dispatch': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/signals': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/rxjs-interop': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/schematics/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
         },
         '@angular/core/testing': {
           singleton: true,
@@ -336,6 +560,31 @@ describe('MF Share Utils', () => {
           singleton: true,
           strictVersion: true,
           requiredVersion: '~13.2.0',
+        },
+        '@angular/core/event-dispatch-contract.min.js': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/event-dispatch': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/signals': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/rxjs-interop': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/schematics/*': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
         },
         '@angular/core/testing': {
           singleton: true,

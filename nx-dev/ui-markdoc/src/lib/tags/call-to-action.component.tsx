@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { frameworkIcons } from '../icons';
+import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
 
 export function CallToAction({
   url,
@@ -13,12 +13,14 @@ export function CallToAction({
   icon?: string;
 }): JSX.Element {
   return (
-    <div className="not-prose group relative my-12 mx-auto flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
+    <div className="not-prose group relative mx-auto my-12 flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
       <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500"></div>
       <div className="w-2 bg-blue-500 dark:bg-sky-500"></div>
 
       <div className="z-10 flex flex-grow items-center py-3">
-        <div className="h-10 w-10">{icon && frameworkIcons[icon]?.image}</div>
+        <div className="h-10 w-10">
+          {icon && frameworkIcons[icon as Framework]?.image}
+        </div>
 
         <div className="mx-3">
           <p>

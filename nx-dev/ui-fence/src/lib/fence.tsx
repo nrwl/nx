@@ -1,10 +1,11 @@
+'use client';
 import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
-  InformationCircleIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { ReactNode, JSX, useEffect, useState } from 'react';
+import cx from 'classnames';
+import { JSX, ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
@@ -28,31 +29,32 @@ function resolveLanguage(lang: string) {
 function CodeWrapper(options: {
   fileName: string;
   command: string;
+  title: string;
   path: string;
-  isMessageBelow: boolean;
   language: string;
+  isWithinTab?: boolean;
   children: string; // intentionally typed as such
 }): ({ children }: { children: ReactNode }) => JSX.Element {
   return ({ children }: { children: ReactNode }) =>
     options.language === 'shell' ? (
       <TerminalOutput
         command={options.children}
-        path=""
+        path={options.path}
+        title={options.title}
         content={null}
-        isMessageBelow={options.isMessageBelow}
       />
     ) : options.command ? (
       <TerminalOutput
         content={children}
         command={options.command}
         path={options.path}
-        isMessageBelow={options.isMessageBelow}
+        title={options.title}
       />
     ) : (
       <CodeOutput
         content={children}
         fileName={options.fileName}
-        isMessageBelow={options.isMessageBelow}
+        isWithinTab={options.isWithinTab}
       />
     );
 }
@@ -86,19 +88,23 @@ function processHighlightLines(highlightLines: any): number[] {
 export interface FenceProps {
   children: string;
   command: string;
+  title: string;
   path: string;
   fileName: string;
   highlightLines: number[];
   lineGroups: Record<string, number[]>;
   language: string;
   enableCopy: boolean;
+  skipRescope?: boolean;
   selectedLineGroup?: string;
   onLineGroupSelectionChange?: (selection: string) => void;
+  isWithinTab?: boolean;
 }
 
 export function Fence({
   children,
   command,
+  title,
   path,
   fileName,
   lineGroups,
@@ -106,7 +112,9 @@ export function Fence({
   language,
   enableCopy,
   selectedLineGroup,
+  skipRescope,
   onLineGroupSelectionChange,
+  isWithinTab,
 }: FenceProps) {
   if (highlightLines) {
     highlightLines = processHighlightLines(highlightLines);
@@ -136,6 +144,7 @@ export function Fence({
       position: 'absolute',
     };
   }
+
   const highlightOptions = Object.keys(lineGroups).map((lineNumberKey) => ({
     label: lineNumberKey,
     value: lineNumberKey,
@@ -161,15 +170,20 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
-  const showRescopeMessage =
-    children.includes('@nx/') || command.includes('@nx/');
+
   function highlightChange(item: { label: string; value: string }) {
     onLineGroupSelectionChange?.(item.value);
   }
+
   return (
-    <div className="code-block group relative w-full">
+    <div
+      className={cx(
+        'code-block group relative mb-4',
+        isWithinTab ? '-ml-4 -mr-4 w-[calc(100%+2rem)]' : 'w-auto'
+      )}
+    >
       <div>
-        <div className="absolute top-0 right-0 z-10 flex">
+        <div className="absolute right-0 top-0 z-10 flex">
           {enableCopy && enableCopy === true && (
             <CopyToClipboard
               text={command && command !== '' ? command : children}
@@ -180,8 +194,8 @@ export function Fence({
               <button
                 type="button"
                 className={
-                  'opacity-0 transition-opacity group-hover:opacity-100 not-prose flex border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60' +
-                  (highlightOptions && highlightOptions[0]
+                  'not-prose flex border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800/60' +
+                  ((highlightOptions && highlightOptions[0]) || isWithinTab
                     ? ''
                     : ' rounded-tr-lg')
                 }
@@ -196,12 +210,12 @@ export function Fence({
           )}
           {highlightOptions && highlightOptions[0] && (
             <Selector
-              className="rounded-tr-lg"
+              className={cx(isWithinTab ? '' : 'rounded-tr-lg')}
               items={highlightOptions}
               selected={selectedOption}
               onChange={highlightChange}
             >
-              <SparklesIcon className="h-5 w-5 mr-1"></SparklesIcon>
+              <SparklesIcon className="mr-1 h-5 w-5"></SparklesIcon>
             </Selector>
           )}
         </div>
@@ -214,25 +228,13 @@ export function Fence({
           PreTag={CodeWrapper({
             fileName,
             command,
+            title,
             path,
-            isMessageBelow: showRescopeMessage,
             language,
             children,
+            isWithinTab,
           })}
         />
-        {showRescopeMessage && (
-          <a
-            className="relative block rounded-b-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium no-underline hover:underline dark:border-slate-700 dark:bg-slate-800"
-            href="/recipes/other/rescope"
-            title="Nx 16 package name changes"
-          >
-            <InformationCircleIcon
-              className="mr-2 inline-block h-5 w-5"
-              aria-hidden="true"
-            />
-            Nx 15 and lower use @nrwl/ instead of @nx/
-          </a>
-        )}
       </div>
     </div>
   );

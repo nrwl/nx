@@ -3,19 +3,53 @@
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations 1`] = `
 "import { setRemoteDefinitions } from '@nx/angular/mf';
 
-fetch('/assets/module-federation.manifest.json')
+fetch('/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch(err => console.error(err));)"
+  .then(() => import('./bootstrap').catch(err => console.error(err)));"
 `;
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations when --typescriptConfiguration=true 1`] = `
 "import { setRemoteDefinitions } from '@nx/angular/mf';
 
-fetch('/assets/module-federation.manifest.json')
+fetch('/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch(err => console.error(err));)"
+  .then(() => import('./bootstrap').catch(err => console.error(err)));"
+`;
+
+exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly 1`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+import { loadRemoteModule } from '@nx/angular/mf';
+
+export const appRoutes: Route[] = [
+    {
+    path: 'remote1',
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
+"
+`;
+
+exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly when --typescriptConfiguration=true 1`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+import { loadRemoteModule } from '@nx/angular/mf';
+
+export const appRoutes: Route[] = [
+    {
+    path: 'remote1',
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
+"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
@@ -163,7 +197,13 @@ export const appRoutes: Route[] = [
 exports[`Init MF should create webpack and mf configs correctly 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -190,7 +230,13 @@ exports[`Init MF should create webpack and mf configs correctly 2`] = `
 exports[`Init MF should create webpack and mf configs correctly 3`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -208,7 +254,12 @@ exports[`Init MF should create webpack and mf configs correctly when --typescrip
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -240,7 +291,12 @@ exports[`Init MF should create webpack and mf configs correctly when --typescrip
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -262,8 +318,8 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-remote1-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+  selector: 'app-remote1-entry',
+  template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "

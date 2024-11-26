@@ -1,0 +1,184 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files 1`] = `
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+const { withModuleFederation } = require('@nx/react/module-federation');
+
+const baseConfig = require('./module-federation.config');
+
+const config = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config, { dts: false }));
+"
+`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files 2`] = `"module.exports = require('./webpack.config');"`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files 3`] = `
+"module.exports = {
+   name: 'test',
+   
+   exposes: {
+     './Module': './src/remote-entry.ts',
+   },
+};
+"
+`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 1`] = `
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+const { withModuleFederation } = require('@nx/react/module-federation');
+
+const baseConfig = require('./module-federation.config');
+
+const config = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config, { dts: false }));
+"
+`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./webpack.config');"`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --js=true 3`] = `
+"module.exports = {
+   name: 'test',
+   
+   exposes: {
+     './Module': './src/remote-entry.js',
+   },
+};
+"
+`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
+"import { composePlugins, withNx } from '@nx/webpack';
+import { withReact } from '@nx/react';
+import { withModuleFederation } from '@nx/react/module-federation';
+
+import baseConfig from './module-federation.config';
+
+const config = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default composePlugins(
+  withNx(),
+  withReact(),
+  withModuleFederation(config, { dts: false })
+);
+"
+`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
+"export default require('./webpack.config');
+"
+`;
+
+exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
+"import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
+};
+
+export default config;
+"
+`;
+
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr 1`] = `
+"const {composePlugins, withNx} = require('@nx/webpack');
+const {withReact} = require('@nx/react');
+const {withModuleFederationForSSR} = require('@nx/react/module-federation');
+
+const baseConfig = require("./module-federation.server.config");
+
+const defaultConfig = {
+    ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = composePlugins(withNx(), withReact({ssr: true}), withModuleFederationForSSR(defaultConfig, { dts: false }));
+"
+`;
+
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr 2`] = `
+"module.exports = {
+    name: 'test',
+   exposes: {
+     './Module': 'test/src/remote-entry.ts',
+   },
+};
+"
+`;
+
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
+"import { composePlugins, withNx } from '@nx/webpack';
+import { withReact } from '@nx/react';
+import { withModuleFederationForSSR } from '@nx/react/module-federation';
+
+import baseConfig from './module-federation.server.config';
+
+const defaultConfig = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default composePlugins(
+  withNx(),
+  withReact({ ssr: true }),
+  withModuleFederationForSSR(defaultConfig, { dts: false })
+);
+"
+`;
+
+exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 2`] = `
+"import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+  exposes: {
+    './Module': 'test/src/remote-entry.ts',
+  },
+};
+
+export default config;
+"
+`;

@@ -205,7 +205,7 @@ function getTsConfigFromJestConfig(
   const jestConfigAst = tsquery.ast(jestConfig);
   const tsJestTsConfigStringLiteral = tsquery(
     jestConfigAst,
-    'PropertyAssignment:has(Identifier[name=globals]) PropertyAssignment:has(StringLiteral[value=ts-jest]) PropertyAssignment Identifier[name=tsconfig] ~ StringLiteral',
+    'PropertyAssignment:has(Identifier[name=globals]) PropertyAssignment:has(StringLiteral[value=ts-jest]) PropertyAssignment:has(Identifier[name=tsconfig]) > StringLiteral',
     { visitAllChildren: true }
   )[0] as StringLiteral;
 

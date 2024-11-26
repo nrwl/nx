@@ -6,7 +6,12 @@ import {
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { DependencyType, ExecutorContext, ProjectGraph } from '@nx/devkit';
+import {
+  DependencyType,
+  ExecutorContext,
+  ProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
@@ -200,6 +205,7 @@ describe('getUpdatedPackageJsonContent', () => {
               'proj/src/foo.ts',
               'proj/src/bar.ts',
               'proj/migrations.json',
+              'proj/feature/index.ts',
             ],
             outputPath: 'dist/proj',
             projectRoot: 'proj',
@@ -219,6 +225,8 @@ describe('getUpdatedPackageJsonContent', () => {
           './bar': './src/bar.js',
           './package.json': './package.json',
           './migrations.json': './migrations.json',
+          './feature': './feature/index.js',
+          './feature/index': './feature/index.js',
         },
       });
 
@@ -231,7 +239,11 @@ describe('getUpdatedPackageJsonContent', () => {
           },
           {
             main: 'proj/src/index.ts',
-            additionalEntryPoints: ['proj/src/foo.ts', 'proj/src/bar.ts'],
+            additionalEntryPoints: [
+              'proj/src/foo.ts',
+              'proj/src/bar.ts',
+              'proj/feature/index.ts',
+            ],
             outputPath: 'dist/proj',
             projectRoot: 'proj',
             format: ['esm'],
@@ -250,6 +262,8 @@ describe('getUpdatedPackageJsonContent', () => {
           './foo': './src/foo.js',
           './bar': './src/bar.js',
           './package.json': './package.json',
+          './feature': './feature/index.js',
+          './feature/index': './feature/index.js',
         },
       });
 
@@ -262,7 +276,11 @@ describe('getUpdatedPackageJsonContent', () => {
           },
           {
             main: 'proj/src/index.ts',
-            additionalEntryPoints: ['proj/src/foo.ts', 'proj/src/bar.ts'],
+            additionalEntryPoints: [
+              'proj/src/foo.ts',
+              'proj/src/bar.ts',
+              'proj/feature/index.ts',
+            ],
             outputPath: 'dist/proj',
             projectRoot: 'proj',
             format: ['cjs', 'esm'],
@@ -288,6 +306,14 @@ describe('getUpdatedPackageJsonContent', () => {
           './bar': {
             import: './src/bar.js',
             default: './src/bar.cjs',
+          },
+          './feature': {
+            import: './feature/index.js',
+            default: './feature/index.cjs',
+          },
+          './feature/index': {
+            import: './feature/index.js',
+            default: './feature/index.cjs',
           },
           './package.json': './package.json',
         },
@@ -328,6 +354,37 @@ describe('getUpdatedPackageJsonContent', () => {
         },
         './package.json': './package.json',
         './custom': './custom.js',
+      },
+    });
+  });
+
+  it('should no override existing type', () => {
+    // Leave existing type untouched
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+          type: 'module',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.cjs',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      type: 'module',
+      exports: {
+        '.': './src/index.cjs',
+        './package.json': './package.json',
       },
     });
   });
@@ -419,6 +476,9 @@ describe('updatePackageJson', () => {
     cwd: '',
     targetName: 'build',
     projectGraph,
+    projectsConfigurations:
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+    nxJsonConfiguration: {},
   };
 
   it('should generate new package if missing', () => {
@@ -496,9 +556,6 @@ describe('updatePackageJson', () => {
           "external1": "~1.0.0",
           "external2": "^4.0.0",
           "lib2": "^0.0.1",
-        },
-        "devDependencies": {
-          "jest": "27",
         },
         "main": "./main.js",
         "name": "@org/lib1",

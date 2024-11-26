@@ -1,5 +1,3 @@
-import * as path from 'path';
-import { join } from 'path';
 import {
   DependencyType,
   joinPathFragments,
@@ -11,17 +9,19 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nx/devkit';
-import { getPath, pathExists } from './graph-utils';
-import { readFileIfExisting } from 'nx/src/utils/fileutils';
-import {
-  findProjectForPath,
-  ProjectRootMappings,
-} from 'nx/src/project-graph/utils/find-project-for-path';
 import { getRootTsConfigFileName } from '@nx/js';
 import {
   resolveModuleByImport,
   TargetProjectLocator,
 } from '@nx/js/src/internal';
+import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
+import * as path from 'node:path';
+import {
+  findProjectForPath,
+  ProjectRootMappings,
+} from 'nx/src/project-graph/utils/find-project-for-path';
+import { readFileIfExisting } from 'nx/src/utils/fileutils';
+import { getPath, pathExists } from './graph-utils';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -185,7 +185,7 @@ export function findProjectUsingImport(
   filePath: string,
   imp: string
 ): ProjectGraphProjectNode | ProjectGraphExternalNode {
-  const target = targetProjectLocator.findProjectWithImport(imp, filePath);
+  const target = targetProjectLocator.findProjectFromImport(imp, filePath);
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
 
@@ -202,17 +202,42 @@ export function findConstraintsFor(
   });
 }
 
-export function onlyLoadChildren(
+export function hasStaticImportOfDynamicResource(
+  node:
+    | TSESTree.ImportDeclaration
+    | TSESTree.ImportExpression
+    | TSESTree.ExportAllDeclaration
+    | TSESTree.ExportNamedDeclaration,
+  graph: ProjectGraph,
+  sourceProjectName: string,
+  targetProjectName: string
+): boolean {
+  if (
+    node.type !== AST_NODE_TYPES.ImportDeclaration ||
+    node.importKind === 'type'
+  ) {
+    return false;
+  }
+  return onlyLoadChildren(graph, sourceProjectName, targetProjectName, []);
+}
+
+function onlyLoadChildren(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
 ) {
-  if (visited.indexOf(sourceProjectName) > -1) return false;
+  if (visited.indexOf(sourceProjectName) > -1) {
+    return false;
+  }
   return (
     (graph.dependencies[sourceProjectName] || []).filter((d) => {
-      if (d.type !== DependencyType.dynamic) return false;
-      if (d.target === targetProjectName) return true;
+      if (d.type !== DependencyType.dynamic) {
+        return false;
+      }
+      if (d.target === targetProjectName) {
+        return true;
+      }
       return onlyLoadChildren(graph, d.target, targetProjectName, [
         ...visited,
         sourceProjectName,
@@ -367,7 +392,7 @@ function packageExistsInPackageJson(
   projectRoot: string
 ): boolean {
   const content = readFileIfExisting(
-    join(workspaceRoot, projectRoot, 'package.json')
+    path.join(workspaceRoot, projectRoot, 'package.json')
   );
   if (content) {
     const { dependencies, devDependencies, peerDependencies } =
@@ -416,7 +441,7 @@ export function hasBuildExecutor(
   );
 }
 
-const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
+const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
 
@@ -473,7 +498,7 @@ export function belongsToDifferentNgEntryPoint(
   const resolvedImportFile = resolveModuleByImport(
     importExpr,
     filePath, // not strictly necessary, but speeds up resolution
-    join(workspaceRoot, getRootTsConfigFileName())
+    path.join(workspaceRoot, getRootTsConfigFileName())
   );
 
   if (!resolvedImportFile) {
@@ -496,7 +521,7 @@ function getAngularEntryPoint(file: string, projectRoot: string): string {
     // we need to find closest existing ng-package.json
     // in order to determine if the file matches the secondary entry point
     const ngPackageContent = readFileIfExisting(
-      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
+      path.join(workspaceRoot, parent, 'ng-package.json')
     );
     if (ngPackageContent) {
       // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
@@ -514,18 +539,10 @@ function getAngularEntryPoint(file: string, projectRoot: string): string {
 export function appIsMFERemote(project: ProjectGraphProjectNode): boolean {
   const mfeConfig =
     readFileIfExisting(
-      joinPathFragments(
-        workspaceRoot,
-        project.data.root,
-        'module-federation.config.js'
-      )
+      path.join(workspaceRoot, project.data.root, 'module-federation.config.js')
     ) ||
     readFileIfExisting(
-      joinPathFragments(
-        workspaceRoot,
-        project.data.root,
-        'module-federation.config.ts'
-      )
+      path.join(workspaceRoot, project.data.root, 'module-federation.config.ts')
     );
 
   if (mfeConfig) {
@@ -533,4 +550,23 @@ export function appIsMFERemote(project: ProjectGraphProjectNode): boolean {
   }
 
   return false;
+}
+
+/**
+ * parserServices moved from the context object to the nested sourceCode object in v8,
+ * and was removed from its original location in v9.
+ */
+export function getParserServices(
+  context: Readonly<TSESLint.RuleContext<any, any>>
+): any {
+  if (context.sourceCode && context.sourceCode.parserServices) {
+    return context.sourceCode.parserServices;
+  }
+  const parserServices = context.parserServices;
+  if (!parserServices) {
+    throw new Error(
+      'Parser Services are not available, please check your ESLint configuration'
+    );
+  }
+  return parserServices;
 }

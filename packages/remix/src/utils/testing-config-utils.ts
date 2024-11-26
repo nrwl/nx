@@ -100,6 +100,33 @@ export function updateJestTestSetup(
   }
 }
 
+export function updateJestTestMatch(
+  tree: Tree,
+  pathToJestConfig: string,
+  includesString: string
+) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const fileContents = tree.read(pathToJestConfig, 'utf-8');
+
+  const ast = tsquery.ast(fileContents);
+
+  const TEST_MATCH_SELECTOR =
+    'PropertyAssignment:has(Identifier[name=testMatch])';
+  const nodes = tsquery(ast, TEST_MATCH_SELECTOR, { visitAllChildren: true });
+
+  if (nodes.length !== 0) {
+    const updatedFileContents = stripIndents`${fileContents.slice(
+      0,
+      nodes[0].getStart()
+    )}testMatch: ["${includesString}"]${fileContents.slice(nodes[0].getEnd())}`;
+
+    tree.write(pathToJestConfig, updatedFileContents);
+  }
+}
+
 export function updateVitestTestIncludes(
   tree: Tree,
   pathToVitestConfig: string,

@@ -29,7 +29,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/esbuild` plugin.",
+  "description": "Initialize the `@nx/esbuild` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/esbuild/src/generators/init/init#esbuildInitGenerator.ts",

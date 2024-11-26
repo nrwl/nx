@@ -4,8 +4,13 @@ import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-conf
 
 const processed = new Set();
 
+export interface SvgrOptions {
+  svgo?: boolean;
+  titleProp?: boolean;
+  ref?: boolean;
+}
 export interface WithReactOptions extends WithWebOptions {
-  svgr?: false;
+  svgr?: boolean | SvgrOptions;
 }
 
 /**

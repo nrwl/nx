@@ -24,7 +24,7 @@ In any Nx workspace, you can install `@nx/playwright` by running the following c
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/playwright
 ```
 
@@ -63,7 +63,25 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `targetName` and `ciTargetName` options control the namea of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
+The `targetName` and `ciTargetName` options control the name of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
+
+### Splitting E2E Tests
+
+The `@nx/playwright/plugin` will automatically split your e2e tasks by file if you provide a `ciTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). This will create a target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
+}
+```
 
 ### Splitting E2E tasks by file
 
@@ -74,7 +92,7 @@ The `@nx/playwright/plugin` will automatically split your e2e tasks by file. You
 
 Install the `@nx/playwright` package with your package manager.
 
-```shell
+```shell {% skipRescope=true %}
 npm add -D @nx/playwright
 ```
 
@@ -86,7 +104,7 @@ npm add -D @nx/playwright
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`
 
 ```shell
-nx g @nx/web:app frontend --e2eTestRunner=playwright
+nx g @nx/web:app apps/frontend --e2eTestRunner=playwright
 ```
 
 ### Add Playwright e2e to an existing project

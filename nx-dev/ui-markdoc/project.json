@@ -4,8 +4,5 @@
   "sourceRoot": "nx-dev/ui-markdoc/src",
   "projectType": "library",
   "tags": [],
-  "targets": {
-    "lint": {},
-    "test": {}
-  }
+  "targets": {}
 }

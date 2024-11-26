@@ -23,11 +23,17 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
 import { join } from 'path';
+
+let originalEnvPort;
+
+function getRandomPort() {
+  return Math.floor(1000 + Math.random() * 9000);
+}
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -49,18 +55,25 @@ function getData(port, path = '/api'): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  beforeAll(() =>
+  beforeAll(() => {
+    originalEnvPort = process.env.PORT;
     newProject({
-      packages: ['@nx/node', '@nx/express', '@nx/nest'],
-    })
-  );
+      packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
+    });
+  });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.PORT = originalEnvPort;
+    cleanupProject();
+  });
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
-
-    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+    runCLI(
+      `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -73,12 +86,13 @@ describe('Node Applications', () => {
       cwd: tmpProjPath(),
     }).toString();
     expect(result).toContain('Hello World!');
+    await killPorts(port);
   }, 300000);
 
-  // TODO(crystal, @ndcunningham): What is the alternative here?
+  // TODO(crystal, @ndcunningham): This does not work because NxWebpackPlugin({}) outputFilename does not work.
   xit('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/node:app apps/${nodeapp} --linter=eslint`);
 
     updateJson(join('apps', nodeapp, 'project.json'), (config) => {
       config.targets.build.options.outputFileName = 'index.js';
@@ -89,26 +103,47 @@ describe('Node Applications', () => {
     checkFilesExist(`dist/apps/${nodeapp}/index.js`);
   }, 300000);
 
-  // TODO(crystal, @ndcunningham): What is the alternative here?
-  xit('should be able to generate an empty application with additional entries', async () => {
+  it('should be able to generate an empty application with additional entries', async () => {
     const nodeapp = uniq('nodeapp');
-
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint --bundler=webpack`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
 
-    updateJson(join('apps', nodeapp, 'project.json'), (config) => {
-      config.targets.build.options.additionalEntryPoints = [
+    updateFile(
+      `apps/${nodeapp}/webpack.config.js`,
+      `
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../../dist/apps/${nodeapp}'),
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      target: 'node',
+      compiler: 'tsc',
+      main: './src/main.ts',
+      tsConfig: './tsconfig.app.json',
+      assets: ['./src/assets'],
+      additionalEntryPoints: [
         {
+          entryPath: 'apps/${nodeapp}/src/additional-main.ts',
           entryName: 'additional-main',
-          entryPath: `apps/${nodeapp}/src/additional-main.ts`,
-        },
-      ];
-      return config;
-    });
+        }
+      ],
+      optimization: false,
+      outputHashing: 'none',
+    }),
+  ],
+};
+     `
+    );
 
     updateFile(
       `apps/${nodeapp}/src/additional-main.ts`,
@@ -144,6 +179,8 @@ describe('Node Applications', () => {
       }
     ).toString();
     expect(additionalResult).toContain('Hello Additional World!');
+
+    await killPorts(port);
   }, 300_000);
 
   it('should be able to generate an empty application with variable in .env file', async () => {
@@ -153,7 +190,7 @@ describe('Node Applications', () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`
+      `generate @nx/node:app apps/${nodeapp} --linter=eslint --bundler=webpack --framework=none`
     );
 
     updateFile('.env', `NX_FOOBAR="test foo bar"`);
@@ -172,6 +209,11 @@ describe('Node Applications', () => {
       (output) => {
         process.stdout.write(output);
         return output.includes(`foobar: test foo bar`);
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
       }
     );
     try {
@@ -182,13 +224,30 @@ describe('Node Applications', () => {
     }
   }, 60000);
 
+  it("should exclude 'test' target from e2e project that uses jest", async () => {
+    const appName = uniq('nodeapp');
+
+    runCLI(`generate @nx/node:app ${appName} --no-interactive`);
+
+    const nxJson = JSON.parse(readFile('nx.json'));
+    expect(nxJson.plugins).toBeDefined();
+
+    const jestPlugin = nxJson.plugins.find(
+      (p) => p.plugin === '@nx/jest/plugin'
+    );
+    expect(jestPlugin).toBeDefined();
+    expect(jestPlugin.exclude).toContain(`${appName}-e2e/**/*`);
+  });
+
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const originalEnvPort = process.env.PORT;
-    const port = 3456;
+    const port = 3499;
     process.env.PORT = `${port}`;
 
-    runCLI(`generate @nx/express:app ${nodeapp} --linter=eslint`);
+    runCLI(
+      `generate @nx/express:app apps/${nodeapp} --port=${port} --linter=eslint`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -209,8 +268,15 @@ describe('Node Applications', () => {
 
     // checking serve
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
-    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
-      output.includes(`Listening at http://localhost:${port}`)
+    const p = await runCommandUntil(
+      `serve ${nodeapp}`,
+      (output) => output.includes(`Listening at http://localhost:${port}`),
+
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
     );
 
     let result = await getData(port);
@@ -221,16 +287,16 @@ describe('Node Applications', () => {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      await killPorts(port);
-    } finally {
-      process.env.port = originalEnvPort;
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
     }
   }, 120_000);
 
-  xit('should be able to generate a nest application', async () => {
+  it('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     const port = 3335;
-    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+    runCLI(`generate @nx/nest:app apps/${nestapp} --linter=eslint`);
 
     const lintResults = runCLI(`lint ${nestapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -241,52 +307,54 @@ describe('Node Applications', () => {
       'Test Suites: 2 passed, 2 total'
     );
 
-    await runCLIAsync(`build ${nestapp}`);
+    const buildResult = runCLI(`build ${nestapp}`);
 
     checkFilesExist(
       `dist/apps/${nestapp}/main.js`,
-      `dist/apps/${nestapp}/assets/file.txt`,
-      `dist/apps/${nestapp}/main.js.map`
+      `dist/apps/${nestapp}/assets/file.txt`
     );
 
-    const server = exec(`node ./dist/apps/${nestapp}/main.js`, {
-      cwd: tmpProjPath(),
-    });
-    expect(server).toBeTruthy();
-
-    // checking build
-    await new Promise((resolve) => {
-      server.stdout.on('data', async (data) => {
-        const message = data.toString();
-        if (message.includes(`Listening at http://localhost:${port}`)) {
-          const result = await getData(port);
-
-          expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-          server.kill();
-          resolve(null);
-        }
-      });
-    });
+    expect(buildResult).toContain(
+      `Successfully ran target build for project ${nestapp}`
+    );
 
     // checking serve
     const p = await runCommandUntil(
       `serve ${nestapp} --port=${port}`,
       (output) => {
         process.stdout.write(output);
-        return output.includes(`Listening at http://localhost:${port}`);
+        return output.includes(`listening on ws://localhost:${port}`);
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
       }
     );
-    const result = await getData(port);
-    expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-    try {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
+
+    const e2eRsult = await runCLIAsync(`e2e ${nestapp}-e2e`);
+
+    expect(e2eRsult.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+
+    await killPorts(port);
+    await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 120000);
 
+  it('should generate a nest application with docker', async () => {
+    const nestapp = 'node-nest-docker-test';
+
+    runCLI(
+      `generate @nx/node:app ${nestapp} --bundler=webpack --framework=nest --docker`
+    );
+
+    checkFilesExist(`${nestapp}/Dockerfile`);
+
+    const dockerFile = readFile(`${nestapp}/Dockerfile`);
+    expect(dockerFile).toMatchSnapshot();
+  });
+
   // TODO(crystal, @ndcunningham): how do we handle this now?
+  // Revisit when NxWebpackPlugin({}) outputFilename is working.
   xit('should be able to run ESM applications', async () => {
     const esmapp = uniq('esmapp');
 
@@ -323,28 +391,40 @@ describe('Node Applications', () => {
       `
     );
     await runCLIAsync(`build ${esmapp}`);
-    const p = await runCommandUntil(`serve ${esmapp}`, (output) => {
-      return output.includes('Hello World');
-    });
-    p.kill();
+    const p = await runCommandUntil(
+      `serve ${esmapp}`,
+      (output) => {
+        return output.includes('Hello World');
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
+    );
+    await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 300000);
 });
 
 describe('Build Node apps', () => {
   let scope: string;
   beforeAll(() => {
+    originalEnvPort = process.env.PORT;
     scope = newProject({
       packages: ['@nx/node', '@nx/express', '@nx/nest'],
     });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.PORT = originalEnvPort;
+    cleanupProject();
+  });
 
   // TODO(crystal, @ndcunningham): What is the alternative here?
   xit('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
-    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+    runCLI(`generate @nx/nest:app apps/${nestapp} --linter=eslint`);
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
@@ -445,7 +525,12 @@ ${jslib}();
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/node:app ${appName} --no-interactive`);
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+
+    runCLI(
+      `generate @nx/node:app apps/${appName} --port=${port} --no-interactive`
+    );
 
     // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -481,9 +566,10 @@ ${jslib}();
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    runCLI(
-      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+
+    runCLI(`generate @nx/node:app ${appName} --port=${port} --no-interactive`);
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
@@ -498,16 +584,7 @@ ${jslib}();
       `Successfully ran target test for project ${appName}`
     );
 
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`
-      )
-    ).toThrow();
-
-    runCLI(
-      `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/node:lib ${libName} --buildable --no-interactive`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -582,7 +659,7 @@ ${jslib}();
   describe('nest libraries', function () {
     it('should be able to generate a nest library', async () => {
       const nestlib = uniq('nestlib');
-      runCLI(`generate @nx/nest:lib ${nestlib}`);
+      runCLI(`generate @nx/nest:lib libs/${nestlib}`);
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
@@ -637,7 +714,7 @@ ${jslib}();
 
     it('should have plugin output if specified in `transformers`', async () => {
       const nestlib = uniq('nestlib');
-      runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
+      runCLI(`generate @nx/nest:lib libs/${nestlib} --buildable`);
 
       packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 

@@ -21,11 +21,13 @@ export async function updateSsrSetup(
     port,
     standalone,
     typescriptConfiguration,
+    skipPackageJson,
   }: {
     appName: string;
     port: number;
     standalone: boolean;
     typescriptConfiguration: boolean;
+    skipPackageJson?: boolean;
   }
 ) {
   let project = readProjectConfiguration(tree, appName);
@@ -98,6 +100,14 @@ export async function updateSsrSetup(
       `webpack.server.config.${typescriptConfiguration ? 'ts' : 'js'}`
     ),
   };
+  if (
+    project.targets.server.configurations &&
+    project.targets.server.configurations.development
+  ) {
+    if ('vendorChunk' in project.targets.server.configurations.development) {
+      delete project.targets.server.configurations.development.vendorChunk;
+    }
+  }
   project.targets['serve-ssr'].options = {
     ...(project.targets['serve-ssr'].options ?? {}),
     port,
@@ -116,16 +126,18 @@ export async function updateSsrSetup(
 
   updateProjectConfiguration(tree, appName, project);
 
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    {
-      cors: corsVersion,
-      '@module-federation/node': moduleFederationNodeVersion,
-    },
-    {
-      '@types/cors': typesCorsVersion,
-    }
-  );
+  if (!skipPackageJson) {
+    return addDependenciesToPackageJson(
+      tree,
+      {
+        cors: corsVersion,
+        '@module-federation/node': moduleFederationNodeVersion,
+      },
+      {
+        '@types/cors': typesCorsVersion,
+      }
+    );
+  }
 
-  return installTask;
+  return () => {};
 }

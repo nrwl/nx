@@ -43,7 +43,7 @@ export function FadingCollapsible({ children }: { children: ReactNode }) {
       </div>
       {isCollapsible && (
         <div
-          className="h-4 w-4 absolute bottom-2 right-1/2 cursor-pointer"
+          className="absolute bottom-2 right-1/2 h-4 w-4 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             toggleCollapsed();

@@ -6,6 +6,7 @@ export interface Schema {
   preset: Preset;
   style?: string;
   linter?: string;
+  formatter?: 'none' | 'prettier';
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
@@ -18,4 +19,6 @@ export interface Schema {
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
   ssr?: boolean;
+  prefix?: string;
+  nxCloudToken?: string;
 }

@@ -1,33 +1,45 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-import { useNavigate, useSearchParams } from 'react-router-dom';
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
 import {
+  ErrorToast,
+  ExpandedTargetsContext,
   getExternalApiService,
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
-import {
-  ProjectDetails,
-  ProjectDetailsImperativeHandle,
-} from '@nx/graph/ui-project-details';
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { Spinner } from '@nx/graph/ui-components';
 
-export interface ProjectDetailsProps {
+import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
+import { useCallback, useContext, useEffect } from 'react';
+
+interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
+  errors?: GraphError[];
+  connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
 }
 
-export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
-  const projectDetailsRef = useRef<ProjectDetailsImperativeHandle>(null);
+export function ProjectDetailsWrapper({
+  project,
+  sourceMap,
+  errors,
+  connectedToCloud,
+  disabledTaskSyncGenerators,
+}: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
   const navigate = useNavigate();
+  const { state: navigationState, location } = useNavigation();
   const routeConstructor = useRouteConstructor();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { expandedTargets, setExpandedTargets, collapseAllTargets } =
+    useContext(ExpandedTargetsContext);
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
@@ -42,7 +54,8 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
         navigate(
           routeConstructor(
             `/projects/${encodeURIComponent(data.projectName)}`,
-            true
+            true,
+            ['expanded'] // omit expanded targets from search params
           )
         );
       }
@@ -67,7 +80,8 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
               pathname: `/tasks/${encodeURIComponent(data.targetName)}`,
               search: `?projects=${encodeURIComponent(data.projectName)}`,
             },
-            true
+            true,
+            ['expanded'] // omit expanded targets from search params
           )
         );
       }
@@ -85,75 +99,86 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
     [externalApiService]
   );
 
-  const updateSearchParams = (params: URLSearchParams, sections: string[]) => {
-    if (sections.length === 0) {
+  const handleNxConnect = useCallback(
+    () =>
+      externalApiService.postEvent({
+        type: 'nx-connect',
+      }),
+    [externalApiService]
+  );
+
+  const updateSearchParams = (
+    params: URLSearchParams,
+    targetNames?: string[]
+  ) => {
+    if (!targetNames || targetNames.length === 0) {
       params.delete('expanded');
     } else {
-      params.set('expanded', sections.join(','));
+      params.set('expanded', targetNames.join(','));
     }
   };
 
-  const handleTargetCollapse = useCallback(
-    (targetName: string) => {
-      const expandedSections = searchParams.get('expanded')?.split(',') || [];
-      if (!expandedSections.includes(targetName)) return;
-      const newExpandedSections = expandedSections.filter(
-        (section) => section !== targetName
-      );
-      setSearchParams(
-        (currentSearchParams) => {
-          updateSearchParams(currentSearchParams, newExpandedSections);
-          return currentSearchParams;
-        },
-        {
-          replace: true,
-          preventScrollReset: true,
-        }
-      );
-    },
-    [setSearchParams, searchParams]
-  );
-
-  const handleTargetExpand = useCallback(
-    (targetName: string) => {
-      const expandedSections = searchParams.get('expanded')?.split(',') || [];
-      if (expandedSections.includes(targetName)) return;
-      expandedSections.push(targetName);
-      setSearchParams(
-        (currentSearchParams) => {
-          updateSearchParams(currentSearchParams, expandedSections);
-          return currentSearchParams;
-        },
-        { replace: true, preventScrollReset: true }
-      );
-    },
-    [setSearchParams, searchParams]
-  );
-
-  useLayoutEffect(() => {
-    if (!props.project.data.targets) return;
-
-    const expandedSections = searchParams.get('expanded')?.split(',') || [];
-    for (const targetName of Object.keys(props.project.data.targets)) {
-      if (expandedSections.includes(targetName)) {
-        projectDetailsRef.current?.expandTarget(targetName);
-      } else {
-        projectDetailsRef.current?.collapseTarget(targetName);
-      }
+  useEffect(() => {
+    const expandedTargetsParams = searchParams.get('expanded')?.split(',');
+    if (
+      expandedTargetsParams &&
+      expandedTargetsParams.length > 0 &&
+      setExpandedTargets
+    ) {
+      setExpandedTargets(expandedTargetsParams);
     }
-  }, [searchParams, props.project.data.targets, projectDetailsRef]);
+
+    return () => {
+      if (collapseAllTargets) {
+        collapseAllTargets();
+      }
+    };
+  }, []); // only run on mount
+
+  useEffect(() => {
+    const expandedTargetsParams =
+      searchParams.get('expanded')?.split(',') || [];
+
+    if (expandedTargetsParams.join(',') === expandedTargets?.join(',')) {
+      return;
+    }
+
+    setSearchParams(
+      (currentSearchParams) => {
+        updateSearchParams(currentSearchParams, expandedTargets);
+        return currentSearchParams;
+      },
+      { replace: true, preventScrollReset: true }
+    );
+  }, [expandedTargets, searchParams, setSearchParams]);
+
+  if (
+    navigationState === 'loading' &&
+    !location.pathname.includes('project-details') // do not show spinner when updating search params
+  ) {
+    return (
+      <div className="flex justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
-    <ProjectDetails
-      ref={projectDetailsRef}
-      {...props}
-      onTargetCollapse={handleTargetCollapse}
-      onTargetExpand={handleTargetExpand}
-      onViewInProjectGraph={handleViewInProjectGraph}
-      onViewInTaskGraph={handleViewInTaskGraph}
-      onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
-    />
+    <>
+      <ProjectDetails
+        project={project}
+        sourceMap={sourceMap}
+        onViewInProjectGraph={handleViewInProjectGraph}
+        onViewInTaskGraph={handleViewInTaskGraph}
+        onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
+        viewInProjectGraphPosition={
+          environment === 'nx-console' ? 'bottom' : 'top'
+        }
+        connectedToCloud={connectedToCloud}
+        onNxConnect={environment === 'nx-console' ? handleNxConnect : undefined}
+        disabledTaskSyncGenerators={disabledTaskSyncGenerators}
+      />
+      <ErrorToast errors={errors} />
+    </>
   );
 }
-
-export default ProjectDetailsWrapper;

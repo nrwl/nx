@@ -3,7 +3,6 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
-  logger,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -27,25 +26,25 @@ function normalizeOptions(
 }
 
 function addDocker(tree: Tree, options: SetUpDockerOptions) {
-  const project = readProjectConfiguration(tree, options.project);
-  if (!project || !options.targetName) {
-    return;
+  const projectConfig = readProjectConfiguration(tree, options.project);
+
+  const outputPath =
+    projectConfig.targets[options.buildTarget]?.options['outputPath'];
+
+  if (!projectConfig) {
+    throw new Error(`Cannot find project configuration for ${options.project}`);
   }
 
-  if (tree.exists(joinPathFragments(project.root, 'DockerFile'))) {
-    logger.info(
-      `Skipping setup since a Dockerfile already exists inside ${project.root}`
+  if (!outputPath && !options.outputPath) {
+    throw new Error(
+      `The output path for the project ${options.project} is not defined. Please provide it as an option to the generator.`
     );
-  } else {
-    const outputPath =
-      project.targets[`${options.buildTarget}`]?.options.outputPath;
-    generateFiles(tree, join(__dirname, './files'), project.root, {
-      tmpl: '',
-      app: project.sourceRoot,
-      buildLocation: outputPath,
-      project: options.project,
-    });
   }
+  generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
+    tmpl: '',
+    buildLocation: options.outputPath ?? outputPath,
+    project: options.project,
+  });
 }
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {

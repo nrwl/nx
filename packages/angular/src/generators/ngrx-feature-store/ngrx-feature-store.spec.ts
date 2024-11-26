@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -576,7 +578,7 @@ describe('ngrx-feature-store', () => {
 
 async function addNgModuleLib(tree: Tree, name = 'feature-module') {
   await libraryGenerator(tree, {
-    name,
+    directory: name,
     standalone: false,
     skipFormat: true,
   });
@@ -584,7 +586,7 @@ async function addNgModuleLib(tree: Tree, name = 'feature-module') {
 
 async function addStandaloneLib(tree: Tree, name = 'feature') {
   await libraryGenerator(tree, {
-    name,
+    directory: name,
     standalone: true,
     routing: true,
     skipFormat: true,

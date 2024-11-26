@@ -1,5 +1,8 @@
-import { type Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { readNxJson, type Tree } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { type NxRemixGeneratorSchema } from '../schema';
 import { Linter } from '@nx/eslint';
 
@@ -15,18 +18,22 @@ export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<NormalizedSchema> {
-  const { projectName, projectRoot, projectNameAndRootFormat } =
-    await determineProjectNameAndRootOptions(tree, {
+  await ensureProjectName(tree, options, 'application');
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
       rootProject: options.rootProject,
-      callingGenerator: '@nx/remix:application',
-    });
+    }
+  );
   options.rootProject = projectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${projectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${projectRoot}-e2e`;

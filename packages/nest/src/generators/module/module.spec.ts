@@ -5,18 +5,20 @@ import { moduleGenerator } from './module';
 
 describe('module generator', () => {
   let tree: Tree;
-  const project = 'api';
+  const path = 'api';
   const options: ModuleGeneratorOptions = {
     name: 'test',
-    project,
+    path,
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(moduleGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      moduleGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

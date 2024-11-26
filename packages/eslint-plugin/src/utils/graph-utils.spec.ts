@@ -1,158 +1,189 @@
 import type { ProjectGraph } from '@nx/devkit';
-import { checkCircularPath } from './graph-utils';
+import {
+  checkCircularPath,
+  expandIgnoredCircularDependencies,
+} from './graph-utils';
 
-describe('should find the path between nodes', () => {
-  it('should return empty path when when there are no connecting edges', () => {
-    /*
+describe('graph utils', () => {
+  describe('should find the path between nodes', () => {
+    it('should return empty path when when there are no connecting edges', () => {
+      /*
 
-    A -> B -> C - > E
+      A -> B -> C - > E
 
-     */
+       */
 
-    const graph = {
-      nodes: ['A', 'B'],
-      dependencies: {
-        A: ['B'],
-      },
-    };
+      const graph = {
+        nodes: ['A', 'B'],
+        dependencies: {
+          A: ['B'],
+        },
+      };
 
-    const g = transformGraph(graph);
-    const path = getPath(g, { from: 'B', to: 'A' });
+      const g = transformGraph(graph);
+      const path = getPath(g, { from: 'B', to: 'A' });
 
-    expect(path).toEqual([]);
+      expect(path).toEqual([]);
+    });
+
+    it('should find direct path', () => {
+      /*
+
+      A -> B
+
+      */
+
+      const graph = {
+        nodes: ['A', 'B'],
+        dependencies: {
+          A: ['B'],
+        },
+      };
+
+      const g = transformGraph(graph);
+      const path = getPath(g, { from: 'A', to: 'B' });
+
+      expect(path).toEqual(['A', 'B']);
+    });
+
+    it('should find indirect path', () => {
+      /*
+
+      A -> B -> E -> F
+           \
+            C -> D
+
+      */
+
+      const graph = {
+        nodes: ['A', 'B', 'C', 'D', 'E', 'F'],
+        dependencies: {
+          A: ['B'],
+          B: ['C', 'E'],
+          C: ['D'],
+          E: ['F'],
+        },
+      };
+
+      const g = transformGraph(graph);
+      const path = getPath(g, { from: 'A', to: 'F' });
+
+      expect(path).toEqual(['A', 'B', 'E', 'F']);
+    });
+
+    it('should find indirect path in a graph that has a simple cycle', () => {
+      /*
+
+      A -> B -> C -> F
+       \       /
+        E <-- D
+
+      */
+
+      const graph = {
+        nodes: ['A', 'B', 'C', 'D', 'E', 'F'],
+        dependencies: {
+          A: ['B'],
+          B: ['C'],
+          C: ['D', 'F'],
+          D: ['E'],
+          E: ['A'],
+        },
+      };
+
+      const g = transformGraph(graph);
+      const path = getPath(g, { from: 'A', to: 'F' });
+
+      expect(path).toEqual(['A', 'B', 'C', 'F']);
+    });
+
+    it('should find indirect path in a graph that has a cycle', () => {
+      /*
+
+      B <- A ->  D -> E
+       \  /^
+        C
+
+      */
+
+      const graph = {
+        nodes: ['A', 'B', 'C', 'D', 'E'],
+        dependencies: {
+          A: ['B', 'D'],
+          B: ['C'],
+          C: ['A'],
+          D: ['E'],
+        },
+      };
+
+      const g = transformGraph(graph);
+      const path = getPath(g, { from: 'A', to: 'E' });
+
+      expect(path).toEqual(['A', 'D', 'E']);
+    });
+
+    it('should find indirect path in a graph with inner and outer cycles', () => {
+      /*
+
+          A  -->  B
+        /^  \   /^ \
+       C    D  E   F
+       ^\  /   ^\  /
+         G  <--  H
+
+      */
+
+      const graph = {
+        nodes: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+        dependencies: {
+          A: ['B', 'D'],
+          B: ['F'],
+          C: ['A'],
+          D: ['G'],
+          E: ['B'],
+          F: ['H'],
+          G: ['C'],
+          H: ['G', 'E'],
+        },
+      };
+
+      const g = transformGraph(graph);
+
+      const path1 = getPath(g, { from: 'A', to: 'H' });
+      expect(path1).toEqual(['A', 'B', 'F', 'H']);
+
+      const path2 = getPath(g, { from: 'A', to: 'G' });
+      expect(path2).toEqual(['A', 'D', 'G']);
+
+      const path3 = getPath(g, { from: 'B', to: 'D' });
+      expect(path3).toEqual(['B', 'F', 'H', 'G', 'C', 'A', 'D']);
+    });
   });
 
-  it('should find direct path', () => {
-    /*
+  describe('expandIgnoreCircularDependencies', () => {
+    let graph: ProjectGraph;
+    beforeEach(() => {
+      graph = {
+        nodes: {
+          a: { name: 'a', type: 'lib', data: { root: 'a' } },
+          b: { name: 'b', type: 'lib', data: { root: 'b' } },
+          c: { name: 'c', type: 'lib', data: { root: 'c' } },
+          d: { name: 'd', type: 'lib', data: { root: 'd' } },
+        },
+        dependencies: {},
+      };
+    });
 
-    A -> B
+    it('should return a map with all combinations of ignored circular dependencies', () => {
+      const res = expandIgnoredCircularDependencies([['a', 'b']], graph);
 
-    */
+      expect(res.get('a')).toContain('b');
+      expect(res.get('b')).toContain('a');
 
-    const graph = {
-      nodes: ['A', 'B'],
-      dependencies: {
-        A: ['B'],
-      },
-    };
-
-    const g = transformGraph(graph);
-    const path = getPath(g, { from: 'A', to: 'B' });
-
-    expect(path).toEqual(['A', 'B']);
-  });
-
-  it('should find indirect path', () => {
-    /*
-
-    A -> B -> E -> F
-         \
-          C -> D
-
-    */
-
-    const graph = {
-      nodes: ['A', 'B', 'C', 'D', 'E', 'F'],
-      dependencies: {
-        A: ['B'],
-        B: ['C', 'E'],
-        C: ['D'],
-        E: ['F'],
-      },
-    };
-
-    const g = transformGraph(graph);
-    const path = getPath(g, { from: 'A', to: 'F' });
-
-    expect(path).toEqual(['A', 'B', 'E', 'F']);
-  });
-
-  it('should find indirect path in a graph that has a simple cycle', () => {
-    /*
-
-    A -> B -> C -> F
-     \       /
-      E <-- D
-
-    */
-
-    const graph = {
-      nodes: ['A', 'B', 'C', 'D', 'E', 'F'],
-      dependencies: {
-        A: ['B'],
-        B: ['C'],
-        C: ['D', 'F'],
-        D: ['E'],
-        E: ['A'],
-      },
-    };
-
-    const g = transformGraph(graph);
-    const path = getPath(g, { from: 'A', to: 'F' });
-
-    expect(path).toEqual(['A', 'B', 'C', 'F']);
-  });
-
-  it('should find indirect path in a graph that has a cycle', () => {
-    /*
-
-    B <- A ->  D -> E
-     \  /^
-      C
-
-    */
-
-    const graph = {
-      nodes: ['A', 'B', 'C', 'D', 'E'],
-      dependencies: {
-        A: ['B', 'D'],
-        B: ['C'],
-        C: ['A'],
-        D: ['E'],
-      },
-    };
-
-    const g = transformGraph(graph);
-    const path = getPath(g, { from: 'A', to: 'E' });
-
-    expect(path).toEqual(['A', 'D', 'E']);
-  });
-
-  it('should find indirect path in a graph with inner and outer cycles', () => {
-    /*
-
-        A  -->  B
-      /^  \   /^ \
-     C    D  E   F
-     ^\  /   ^\  /
-       G  <--  H
-
-    */
-
-    const graph = {
-      nodes: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
-      dependencies: {
-        A: ['B', 'D'],
-        B: ['F'],
-        C: ['A'],
-        D: ['G'],
-        E: ['B'],
-        F: ['H'],
-        G: ['C'],
-        H: ['G', 'E'],
-      },
-    };
-
-    const g = transformGraph(graph);
-
-    const path1 = getPath(g, { from: 'A', to: 'H' });
-    expect(path1).toEqual(['A', 'B', 'F', 'H']);
-
-    const path2 = getPath(g, { from: 'A', to: 'G' });
-    expect(path2).toEqual(['A', 'D', 'G']);
-
-    const path3 = getPath(g, { from: 'B', to: 'D' });
-    expect(path3).toEqual(['B', 'F', 'H', 'G', 'C', 'A', 'D']);
+      expect(res.get('a')).not.toContain('c');
+      expect(res.get('b')).not.toContain('c');
+      expect(res.get('c')).not.toBeDefined();
+    });
   });
 });
 

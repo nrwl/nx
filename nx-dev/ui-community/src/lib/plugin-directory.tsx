@@ -6,14 +6,15 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard, SectionHeading } from '@nx/nx-dev/ui-common';
-import { useState } from 'react';
+import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev/ui-common';
+import { useParams } from 'next/navigation';
+import { useEffect, useState, useRef, ElementRef } from 'react';
 
 interface Plugin {
   description: string;
   name: string;
   url: string;
-  isOfficial: boolean;
+  pluginType: PluginType;
   lastPublishedDate?: string;
   npmDownloads?: string;
   githubStars?: string;
@@ -36,11 +37,38 @@ interface Modifiers {
   orderDirection: 'ASC' | 'DESC';
 }
 
+const useUrlHash = (initialValue: string) => {
+  const [hash, setHash] = useState(initialValue);
+
+  const updateHash = (str: string) => {
+    if (!str) return;
+    setHash(str.split('#')[1]);
+  };
+
+  const params = useParams();
+
+  useEffect(() => {
+    updateHash(window.location.hash);
+  }, [params]);
+
+  return hash;
+};
+
 export function PluginDirectory({
   pluginList,
 }: {
   pluginList: Plugin[];
 }): JSX.Element {
+  const hash = decodeURIComponent(useUrlHash(''));
+  const searchRef = useRef<ElementRef<'input'>>(null);
+  useEffect(() => {
+    if (searchRef.current) {
+      // Set input value and trigger the onChange event
+      searchRef.current.setAttribute('value', hash);
+      const event = new Event('input', { bubbles: true });
+      searchRef.current.dispatchEvent(event);
+    }
+  }, [searchRef, hash]);
   const [modifiers, setModifiers] = useState<Modifiers>({
     term: '',
     officialStatus: undefined,
@@ -66,8 +94,8 @@ export function PluginDirectory({
   return (
     <div id="plugin-directory">
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
-        <SectionHeading as="h2" variant="display" id="plugins-registry">
-          <span className="whitespace-nowrap">Nx Plugins</span> Registry
+        <SectionHeading as="h2" variant="title" id="plugins-registry">
+          <span className="whitespace-nowrap">Nx Plugin</span> Registry
         </SectionHeading>
         <div>
           <label htmlFor="search" className="sr-only">
@@ -79,6 +107,7 @@ export function PluginDirectory({
             </div>
             <input
               id="search"
+              ref={searchRef}
               name="search"
               className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-500 transition focus:placeholder-slate-400 dark:border-slate-900 dark:bg-slate-700"
               placeholder="Quick search"
@@ -88,56 +117,56 @@ export function PluginDirectory({
               type="search"
             />
           </div>
-          <div className="text-xs my-2 flex whitespace-nowrap">
-            <div className="py-1 mr-1">Order by:</div>
+          <div className="my-2 flex whitespace-nowrap text-xs">
+            <div className="mr-1 py-1">Order by:</div>
             <div className="flex flex-wrap gap-1">
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('lastPublishDate')}
               >
-                <ClockIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ClockIcon>
+                <ClockIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></ClockIcon>
                 Release Date
                 {modifiers.orderBy === 'lastPublishDate' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'lastPublishDate' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('npmDownloads')}
               >
-                <ArrowDownTrayIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ArrowDownTrayIcon>
+                <ArrowDownTrayIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></ArrowDownTrayIcon>
                 Downloads
                 {modifiers.orderBy === 'npmDownloads' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'npmDownloads' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('githubStars')}
               >
-                <StarIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></StarIcon>
+                <StarIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></StarIcon>
                 GH Stars
                 {modifiers.orderBy === 'githubStars' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'githubStars' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('nxVersion')}
               >
                 {/* Nx Logo */}
@@ -145,7 +174,7 @@ export function PluginDirectory({
                   role="img"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 inline-block mx-0.5 align-bottom"
+                  className="mx-0.5 inline-block h-4 w-4 align-bottom"
                   fill="currentColor"
                 >
                   <title>Nx</title>
@@ -154,11 +183,11 @@ export function PluginDirectory({
                 Nx Version
                 {modifiers.orderBy === 'nxVersion' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'nxVersion' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
             </div>
@@ -231,7 +260,7 @@ export function PluginDirectory({
               key={plugin.name}
               name={plugin.name}
               description={plugin.description}
-              isOfficial={plugin.isOfficial}
+              pluginType={plugin.pluginType}
               lastPublishedDate={plugin.lastPublishedDate}
               npmDownloads={plugin.npmDownloads}
               githubStars={plugin.githubStars}

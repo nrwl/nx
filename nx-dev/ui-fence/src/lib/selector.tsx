@@ -22,7 +22,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
             <div className="relative">
               <Listbox.Button
                 className={
-                  'relative w-full cursor-pointer border border-slate-200 dark:border-slate-700 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm' +
+                  'relative w-full cursor-pointer border border-slate-200 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-slate-700' +
                   (props.className ? ` ${props.className}` : '')
                 }
               >
@@ -51,13 +51,13 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
               >
                 <Listbox.Options
                   static
-                  className="absolute z-10 mt-1 pl-0 max-h-60 w-full overflow-auto rounded-sm py-1 text-base shadow-md focus:outline-none sm:text-sm bg-white dark:bg-slate-800/60 dark:focus-within:ring-sky-500"
+                  className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-white py-1 pl-0 text-base shadow-md focus:outline-none sm:text-sm dark:bg-slate-800/60 dark:focus-within:ring-sky-500"
                 >
                   {props.items.map((item, personIdx) => (
                     <Listbox.Option
                       key={personIdx}
                       className={({ active }) =>
-                        `relative list-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 select-none py-2 px-3`
+                        `relative cursor-pointer select-none list-none px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800`
                       }
                       value={item}
                     >

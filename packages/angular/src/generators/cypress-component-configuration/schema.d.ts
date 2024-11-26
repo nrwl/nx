@@ -3,5 +3,4 @@ export interface CypressComponentConfigSchema {
   generateTests: boolean;
   skipFormat?: boolean;
   buildTarget?: string;
-  addPlugin?: boolean;
 }

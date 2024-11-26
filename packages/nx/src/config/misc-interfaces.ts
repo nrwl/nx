@@ -37,13 +37,14 @@ export interface GeneratorsJsonEntry {
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
 
-export interface ExecutorsJsonEntry {
+export interface ExecutorJsonEntryConfig {
   schema: string;
   implementation: string;
   batchImplementation?: string;
   description?: string;
   hasher?: string;
 }
+export type ExecutorsJsonEntry = string | ExecutorJsonEntryConfig;
 
 export type Dependencies = 'dependencies' | 'devDependencies';
 
@@ -105,17 +106,31 @@ export interface ExecutorConfig {
 }
 
 /**
- * Implementation of a target of a project
+ * An executor implementation that returns a promise
  */
-export type Executor<T = any> = (
+export type PromiseExecutor<T = any> = (
   /**
    * Options that users configure or pass via the command line
    */
   options: T,
   context: ExecutorContext
-) =>
-  | Promise<{ success: boolean }>
-  | AsyncIterableIterator<{ success: boolean }>;
+) => Promise<{ success: boolean }>;
+
+/**
+ * An executor implementation that returns an async iterator
+ */
+export type AsyncIteratorExecutor<T = any> = (
+  /**
+   * Options that users configure or pass via the command line
+   */
+  options: T,
+  context: ExecutorContext
+) => AsyncIterableIterator<{ success: boolean }>;
+
+/**
+ * Implementation of a target of a project
+ */
+export type Executor<T = any> = PromiseExecutor<T> | AsyncIteratorExecutor<T>;
 
 export interface HasherContext {
   hasher: TaskHasher;
@@ -194,17 +209,13 @@ export interface ExecutorContext {
 
   /**
    * Projects config
-   *
-   * @todo(vsavkin): mark this as required for v17
    */
-  projectsConfigurations?: ProjectsConfigurations;
+  projectsConfigurations: ProjectsConfigurations;
 
   /**
    * The contents of nx.json.
-   *
-   * @todo(vsavkin): mark this as required for v17
    */
-  nxJsonConfiguration?: NxJsonConfiguration;
+  nxJsonConfiguration: NxJsonConfiguration;
 
   /**
    * The current working directory
@@ -219,21 +230,12 @@ export interface ExecutorContext {
   /**
    * A snapshot of the project graph as
    * it existed when the Nx command was kicked off
-   *
-   * @todo(vsavkin) mark this required for v17
    */
-  projectGraph?: ProjectGraph;
+  projectGraph: ProjectGraph;
 
   /**
    * A snapshot of the task graph as
    * it existed when the Nx command was kicked off
    */
   taskGraph?: TaskGraph;
-
-  /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
-   * The full workspace configuration
-   * @todo(vsavkin): remove after v17
-   */
-  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 }

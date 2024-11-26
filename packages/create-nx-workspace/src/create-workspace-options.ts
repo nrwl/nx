@@ -5,6 +5,7 @@ export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
+  useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?
   /**
    * @description Enable interactive mode with presets
    * @default true

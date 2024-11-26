@@ -9,9 +9,9 @@ export function TaskNodeActions(props: TaskNodeTooltipProps) {
   }, [props.id]);
   const project = props.id.split(':')[0];
   return (
-    <div className="overflow-auto w-full min-w-[350px] max-w-full rounded-md border border-slate-200 dark:border-slate-800 w-full">
+    <div className="w-full w-full min-w-[350px] max-w-full overflow-auto rounded-md border border-slate-200 dark:border-slate-800">
       <div
-        className="flex justify-between items-center w-full bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+        className="flex w-full items-center justify-between bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400"
         onClick={() => setIsOpen(!isOpen)}
         data-cy="inputs-accordion"
       >
@@ -53,11 +53,11 @@ function InputAccordion({ section, inputs }) {
   return [
     <li
       key={section}
-      className="flex justify-between items-center whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-300"
+      className="flex items-center justify-between whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-300"
       onClick={() => setIsOpen(!isOpen)}
       data-cy="input-section-entry"
     >
-      <span className="block truncate font-normal font-bold">{section}</span>
+      <span className="block truncate font-bold font-normal">{section}</span>
       <span>
         {isOpen ? (
           <ChevronUpIcon className="h-4 w-4" />

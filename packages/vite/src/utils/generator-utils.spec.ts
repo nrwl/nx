@@ -1,19 +1,21 @@
 import {
+  addProjectConfiguration,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-  findExistingTargetsInProject,
+  findExistingJsBuildTargetInProject,
   getViteConfigPathForProject,
-  handleUnsupportedUserProvidedTargets,
+  createOrEditViteConfig,
 } from './generator-utils';
 import {
   mockReactAppGenerator,
   mockViteReactAppGenerator,
   mockAngularAppGenerator,
 } from './test-utils';
+
 describe('generator utils', () => {
   let tree: Tree;
 
@@ -97,105 +99,153 @@ describe('generator utils', () => {
     });
   });
 
-  describe('findExistingTargetsInProject', () => {
-    it('should return the correct targets', () => {
+  describe('findExistingJsBuildTargetInProject', () => {
+    it('should return no targets', () => {
       mockReactAppGenerator(tree);
       const { targets } = readProjectConfiguration(tree, 'my-test-react-app');
 
-      const existingTargets = findExistingTargetsInProject(targets);
-      expect(existingTargets).toMatchObject({
-        userProvidedTargetIsUnsupported: {},
-        validFoundTargetName: {
-          build: 'build',
-          serve: 'serve',
-          test: 'test',
-        },
-        projectContainsUnsupportedExecutor: false,
-      });
+      const existingTargets = findExistingJsBuildTargetInProject(targets);
+      expect(existingTargets).toMatchObject({});
     });
 
     it('should return the correct - undefined - targets for Angular apps', () => {
       mockAngularAppGenerator(tree);
       const { targets } = readProjectConfiguration(tree, 'my-test-angular-app');
-      const existingTargets = findExistingTargetsInProject(targets);
+      const existingTargets = findExistingJsBuildTargetInProject(targets);
       expect(existingTargets).toMatchObject({
-        userProvidedTargetIsUnsupported: {},
-        validFoundTargetName: {
-          test: 'test',
-        },
-        projectContainsUnsupportedExecutor: true,
+        unsupported: 'build',
       });
     });
   });
 
-  describe('handleUnsupportedUserProvidedTargets', () => {
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-    it('should throw error if unsupported and user does not want to confirm', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValueOnce(false);
-      const object = {
-        unsupportedUserProvidedTarget: {
-          build: true,
+  describe('createOrEditViteConfig', () => {
+    it('should generate formatted config', () => {
+      addProjectConfiguration(tree, 'myproj', {
+        name: 'myproj',
+        root: 'myproj',
+      });
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'myproj',
+          inSourceTests: true,
+          includeVitest: true,
+          includeLib: true,
         },
-        userProvidedTargets: {
-          build: 'my-build',
-          serve: 'my-serve',
-          test: 'my-test',
-        },
-        targets: {
-          build: 'build',
-          serve: 'serve',
-          test: 'test',
-        },
-      };
+        false
+      );
 
-      expect(async () => {
-        await handleUnsupportedUserProvidedTargets(
-          object.unsupportedUserProvidedTarget,
-          object.userProvidedTargets,
-          object.targets
-        );
-      }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "The build target my-build cannot be converted to use the @nx/vite:build executor.
-              Please try again, either by providing a different build target or by not providing a target at all (Nx will
-                convert the first one it finds, most probably this one: build)
+      expect(tree.read('myproj/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import dts from 'vite-plugin-dts';
+        import * as path from 'path';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-              Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-              your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
-              "
+        export default defineConfig({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/myproj',
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          // Configuration for building your library.
+          // See: https://vitejs.dev/guide/build.html#library-mode
+          build: {
+            outDir: '../dist/myproj',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'myproj',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es', 'cjs']
+            },
+            rollupOptions: {
+              // External packages that should not be bundled into your library.
+              external: []
+            },
+          },
+          define: {
+            'import.meta.vitest': undefined
+          },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/myproj',
+              provider: 'v8',
+            }
+          },
+        });
+        "
       `);
     });
 
-    it('should NOT throw error if unsupported and user confirms', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValue(true);
-      const object = {
-        unsupportedUserProvidedTarget: {
-          build: true,
+    it('should generate formatted config without library and in-source tests', () => {
+      addProjectConfiguration(tree, 'myproj', {
+        name: 'myproj',
+        root: 'myproj',
+      });
+      createOrEditViteConfig(
+        tree,
+        {
+          project: 'myproj',
+          inSourceTests: false,
+          includeVitest: false,
+          includeLib: false,
         },
-        userProvidedTargets: {
-          build: 'my-build',
-          serve: 'my-serve',
-          test: 'my-test',
-        },
-        targets: {
-          build: 'build',
-          serve: 'serve',
-          test: 'test',
-        },
-      };
+        false
+      );
 
-      expect(async () => {
-        await handleUnsupportedUserProvidedTargets(
-          object.unsupportedUserProvidedTarget,
-          object.userProvidedTargets,
-          object.targets
-        );
-      }).not.toThrow();
+      expect(tree.read('myproj/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/myproj',
+          server:{
+            port: 4200,
+            host: 'localhost',
+          },
+          preview:{
+            port: 4300,
+            host: 'localhost',
+          },
+          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          build: {
+            outDir: '../dist/myproj',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+          },
+        });
+        "
+      `);
     });
   });
 });

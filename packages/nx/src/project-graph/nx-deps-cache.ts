@@ -1,5 +1,4 @@
-import { existsSync } from 'fs';
-import { ensureDirSync, renameSync } from 'fs-extra';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
@@ -10,7 +9,7 @@ import {
   ProjectGraph,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { projectGraphCacheDirectory } from '../utils/cache-directory';
+import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   directoryExists,
   fileExists,
@@ -23,7 +22,6 @@ import { nxVersion } from '../utils/versions';
 export interface FileMapCache {
   version: string;
   nxVersion: string;
-  deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
@@ -31,15 +29,15 @@ export interface FileMapCache {
 }
 
 export const nxProjectGraph = join(
-  projectGraphCacheDirectory,
+  workspaceDataDirectory,
   'project-graph.json'
 );
-export const nxFileMap = join(projectGraphCacheDirectory, 'file-map.json');
+export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 
 export function ensureCacheDirectory(): void {
   try {
-    if (!existsSync(projectGraphCacheDirectory)) {
-      ensureDirSync(projectGraphCacheDirectory);
+    if (!existsSync(workspaceDataDirectory)) {
+      mkdirSync(workspaceDataDirectory, { recursive: true });
     }
   } catch (e) {
     /*
@@ -52,10 +50,8 @@ export function ensureCacheDirectory(): void {
      * In this case, we're creating the directory. If the operation failed, we ensure that the directory
      * exists before continuing (or raise an exception).
      */
-    if (!directoryExists(projectGraphCacheDirectory)) {
-      throw new Error(
-        `Failed to create directory: ${projectGraphCacheDirectory}`
-      );
+    if (!directoryExists(workspaceDataDirectory)) {
+      throw new Error(`Failed to create directory: ${workspaceDataDirectory}`);
     }
   }
 }
@@ -116,7 +112,6 @@ export function createProjectFileMapCache(
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
-    deps: packageJsonDeps, // TODO(v19): We can remove this in favor of nxVersion
     // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,

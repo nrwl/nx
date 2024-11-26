@@ -1,6 +1,7 @@
 import { ProjectConfiguration, Tree } from '@nx/devkit';
 import * as path from 'path';
 import { NormalizedSchema } from '../schema';
+import { findRootJestConfig } from '../../utils/jest-config';
 
 /**
  * Updates the project name and coverage folder in the jest.config.js if it exists
@@ -58,9 +59,9 @@ export function updateJestConfig(
   }
 
   // update root jest.config.ts
-  const rootJestConfigPath = '/jest.config.ts';
+  const rootJestConfigPath = findRootJestConfig(tree);
 
-  if (!tree.exists(rootJestConfigPath)) {
+  if (!rootJestConfigPath || !tree.exists(rootJestConfigPath)) {
     return;
   }
 
@@ -68,7 +69,8 @@ export function updateJestConfig(
 
   const oldRootJestConfigContent = tree.read(rootJestConfigPath, 'utf-8');
   const usingJestProjects =
-    oldRootJestConfigContent.includes('getJestProjects()');
+    oldRootJestConfigContent.includes('getJestProjects()') ||
+    oldRootJestConfigContent.includes('getJestProjectsAsync()');
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,

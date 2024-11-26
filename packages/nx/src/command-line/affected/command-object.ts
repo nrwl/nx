@@ -1,19 +1,19 @@
-import { boolean, CommandModule, middleware } from 'yargs';
+import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
   withBatch,
   withConfiguration,
-  withDepGraphOptions,
   withOutputStyleOption,
   withOverrides,
   withRunOptions,
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
-  describe: 'Run target for affected projects',
+  describe: 'Run target for affected projects.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
@@ -36,8 +36,18 @@ export const yargsAffectedCommand: CommandModule = {
         }),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', withOverrides(args)),
+  handler: async (args) => {
+    const exitCode = await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected(
+          'affected',
+          withOverrides(args)
+        );
+      }
+    );
+    process.exit(exitCode);
+  },
 };
 
 export const yargsAffectedTestCommand: CommandModule = {
@@ -50,11 +60,18 @@ export const yargsAffectedTestCommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'test',
-    }),
+  handler: async (args) => {
+    const exitCode = await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'test',
+        });
+      }
+    );
+    process.exit(exitCode);
+  },
 };
 
 export const yargsAffectedBuildCommand: CommandModule = {
@@ -67,11 +84,18 @@ export const yargsAffectedBuildCommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'build',
-    }),
+  handler: async (args) => {
+    const exitCode = await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'build',
+        });
+      }
+    );
+    process.exit(exitCode);
+  },
 };
 
 export const yargsAffectedLintCommand: CommandModule = {
@@ -84,11 +108,18 @@ export const yargsAffectedLintCommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'lint',
-    }),
+  handler: async (args) => {
+    const exitCode = await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'lint',
+        });
+      }
+    );
+    process.exit(exitCode);
+  },
 };
 
 export const yargsAffectedE2ECommand: CommandModule = {
@@ -101,66 +132,16 @@ export const yargsAffectedE2ECommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'e2e',
-    }),
-};
-
-export const affectedGraphDeprecationMessage =
-  'Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 19.';
-/**
- * @deprecated 'Use `nx graph --affected`, or` nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 19.'
- */
-export const yargsAffectedGraphCommand: CommandModule = {
-  command: 'affected:graph',
-  describe: 'Graph dependencies affected by changes',
-  aliases: ['affected:dep-graph'],
-  builder: (yargs) =>
-    linkToNxDevAndExamples(
-      withAffectedOptions(withDepGraphOptions(yargs)),
-      'affected:graph'
-    ),
-  handler: async (args) =>
-    await (
-      await import('./affected')
-    ).affected('graph', {
-      ...args,
-    }),
-  deprecated: affectedGraphDeprecationMessage,
-};
-
-export const printAffectedDeprecationMessage =
-  'Use `nx show projects --affected`, `nx affected --graph -t build` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 19.';
-/**
- * @deprecated 'Use `nx show --affected`, `nx affected --graph` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 19.'
- */
-export const yargsPrintAffectedCommand: CommandModule = {
-  command: 'print-affected',
-  describe:
-    'Prints information about the projects and targets affected by changes',
-  builder: (yargs) =>
-    linkToNxDevAndExamples(
-      withAffectedOptions(withTargetAndConfigurationOption(yargs, false)),
-      'print-affected'
-    )
-      .option('select', {
-        type: 'string',
-        describe:
-          'Select the subset of the returned json document (e.g., --select=projects)',
-      })
-      .option('type', {
-        type: 'string',
-        choices: ['app', 'lib'],
-        describe:
-          'Select the type of projects to be returned (e.g., --type=app)',
-      }),
   handler: async (args) => {
-    await (
-      await import('./affected')
-    ).affected('print-affected', withOverrides(args));
-    process.exit(0);
+    const exitCode = await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'e2e',
+        });
+      }
+    );
+    process.exit(exitCode);
   },
-  deprecated: printAffectedDeprecationMessage,
 };

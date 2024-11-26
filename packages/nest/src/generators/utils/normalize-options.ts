@@ -8,20 +8,12 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 
 export async function normalizeOptions(
   tree: Tree,
-  artifactType: string,
-  callingGenerator: string,
   options: NestGeneratorOptions
 ): Promise<NormalizedOptions> {
   const { directory, fileName } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      callingGenerator,
-      artifactType,
       name: options.name,
-      directory: options.directory,
-      project: options.project,
-      flat: options.flat,
-      derivedDirectory: options.directory,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+      path: options.path,
     });
 
   return {

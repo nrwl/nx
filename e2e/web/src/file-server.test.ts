@@ -22,7 +22,7 @@ describe('file-server', () => {
     const appName = uniq('app');
     const port = 4301;
 
-    runCLI(`generate @nx/web:app ${appName} --no-interactive`);
+    runCLI(`generate @nx/web:app apps/${appName} --no-interactive`);
     updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets['serve'] = {
         executor: '@nx/web:file-server',
@@ -52,7 +52,7 @@ describe('file-server', () => {
     const appName = uniq('app');
     const port = 4301;
 
-    runCLI(`generate @nx/web:app ${appName} --no-interactive`);
+    runCLI(`generate @nx/web:app apps/${appName} --no-interactive`);
     // Used to copy index.html rather than the normal webpack build.
     updateFile(
       `apps/${appName}/copy-index.js`,
@@ -71,6 +71,9 @@ describe('file-server', () => {
       config.targets['build'] = {
         command: `node copy-index.js`,
         outputs: [`{workspaceRoot}/dist/foobar`],
+        options: {
+          cwd: '{projectRoot}',
+        },
       };
       config.targets['serve'] = {
         executor: '@nx/web:file-server',

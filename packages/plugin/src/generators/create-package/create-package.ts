@@ -13,31 +13,30 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from 'nx/src/utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
 import { hasGenerator } from '../../utils/has-generator';
 import { join } from 'path';
+import { tsLibVersion } from '@nx/js/src/utils/versions';
 
 export async function createPackageGenerator(
   host: Tree,
   schema: CreatePackageSchema
 ) {
-  return await createPackageGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(host, 'plugin', 'create-package');
 
-export async function createPackageGeneratorInternal(
-  host: Tree,
-  schema: CreatePackageSchema
-) {
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeSchema(host, schema);
   const pluginPackageName = await addPresetGenerator(host, options);
+
+  if (options.bundler === 'tsc') {
+    tasks.push(addTsLibDependencies(host));
+  }
 
   const installTask = addDependenciesToPackageJson(
     host,
@@ -74,10 +73,9 @@ async function addPresetGenerator(
   if (!hasGenerator(host, schema.project, 'preset')) {
     await generatorGenerator(host, {
       name: 'preset',
-      directory: join(projectRoot, 'src/generators/preset'),
+      path: join(projectRoot, 'src/generators/preset'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
@@ -91,6 +89,7 @@ async function createCliPackage(
 ) {
   await jsLibraryGenerator(host, {
     ...options,
+    directory: options.directory,
     rootProject: false,
     config: 'project',
     publishable: true,
@@ -112,6 +111,7 @@ async function createCliPackage(
       };
       packageJson.dependencies = {
         'create-nx-workspace': nxVersion,
+        ...(options.bundler === 'tsc' && { tslib: tsLibVersion }),
       };
       return packageJson;
     }

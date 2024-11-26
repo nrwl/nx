@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import runCommands from './run-commands';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
@@ -17,7 +19,7 @@ describe('run-commands', () => {
     };
 
     await libraryGenerator(tree, {
-      name: 'lib',
+      directory: 'lib',
     });
 
     await runCommands(tree, opts);

@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs-extra';
+import { readFileSync } from 'node:fs';
 import ignore from 'ignore';
 import { readFileIfExisting } from './fileutils';
 import { joinPathFragments } from './path';
@@ -32,7 +32,14 @@ export function getIgnoredGlobs(
 }
 
 export function getAlwaysIgnore(root?: string) {
-  const paths = ['node_modules', '**/node_modules', '.git'];
+  const paths = [
+    'node_modules',
+    '**/node_modules',
+    '.git',
+    '.nx',
+    '.vscode',
+    '.yarn/cache',
+  ];
   return root ? paths.map((x) => joinPathFragments(root, x)) : paths;
 }
 

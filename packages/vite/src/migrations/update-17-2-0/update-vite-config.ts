@@ -12,6 +12,7 @@ import { updateTestConfig } from './lib/edit-test-config';
 import { addFileReplacements } from './lib/add-file-replacements';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
+import { findViteConfig } from '../../utils/find-vite-config';
 
 export default async function updateBuildDir(tree: Tree) {
   const projects = getProjects(tree);
@@ -54,32 +55,24 @@ export default async function updateBuildDir(tree: Tree) {
   await formatFiles(tree);
 }
 
-function findViteConfig(tree: Tree, searchRoot: string) {
-  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
-
-  for (const ext of allowsExt) {
-    if (tree.exists(joinPathFragments(searchRoot, `vite.config.${ext}`))) {
-      return joinPathFragments(searchRoot, `vite.config.${ext}`);
-    }
-  }
-}
-
 export function getConfigNode(configFileContents: string): ts.Node | undefined {
   if (!configFileContents) {
     return;
   }
   let configNode = tsquery.query(
     configFileContents,
-    `ObjectLiteralExpression`
+    `CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression`
   )?.[0];
 
-  const arrowFunctionReturnStatement = tsquery.query(
-    configFileContents,
-    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
-  )?.[0];
+  if (!configNode) {
+    const arrowFunctionReturnStatement = tsquery.query(
+      configFileContents,
+      `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
+    )?.[0];
 
-  if (arrowFunctionReturnStatement) {
-    configNode = arrowFunctionReturnStatement;
+    if (arrowFunctionReturnStatement) {
+      configNode = arrowFunctionReturnStatement;
+    }
   }
 
   return configNode;

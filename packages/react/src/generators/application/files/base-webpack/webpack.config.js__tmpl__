@@ -1,6 +1,6 @@
 <% if (webpackPluginOptions) { %>
-const { NxWebpackPlugin } = require('@nx/webpack');
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -8,10 +8,15 @@ module.exports = {
     path: join(__dirname, '<%= offsetFromRoot %><%= webpackPluginOptions.outputPath %>'),
   },
   devServer: {
-    port: 4200
+    port: 4200,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: '<%= webpackPluginOptions.tsConfig %>',
       compiler: '<%= webpackPluginOptions.compiler %>',
       main: '<%= webpackPluginOptions.main %>',

@@ -14,24 +14,30 @@ import {
 } from '@nx/e2e/utils';
 
 describe('Linter (legacy)', () => {
-  describe('Integrated', () => {
+  describe('Integrated (eslintrc config)', () => {
+    let originalEslintUseFlatConfigVal: string | undefined;
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
 
-    let projScope;
-
     beforeAll(() => {
-      projScope = newProject({
+      // Opt into legacy .eslintrc config format for these tests
+      originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
+      newProject({
         packages: ['@nx/react', '@nx/js', '@nx/eslint'],
       });
-      runCLI(`generate @nx/react:app ${myapp} --tags=validtag`, {
+      runCLI(`generate @nx/react:app apps/${myapp} --tags=validtag`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
-      runCLI(`generate @nx/js:lib ${mylib}`, {
+      runCLI(`generate @nx/js:lib apps/${mylib}`, {
         env: { NX_ADD_PLUGINS: 'false' },
       });
     });
-    afterAll(() => cleanupProject());
+    afterAll(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+      cleanupProject();
+    });
 
     describe('linting errors', () => {
       let defaultEslintrc;
@@ -58,8 +64,7 @@ describe('Linter (legacy)', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         // 1. linting should error when rules are not followed
-        let out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('Unexpected console statement');
+        expect(() => runCLI(`lint ${myapp}`)).toThrow();
 
         // 2. linting should not error when rules are not followed and the force flag is specified
         expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
@@ -72,8 +77,9 @@ describe('Linter (legacy)', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         // 3. linting should not error when all rules are followed
-        out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
+        expect(() =>
+          runCLI(`lint ${myapp}`, { silenceError: true })
+        ).not.toThrow();
       }, 1000000);
 
       it('should print the effective configuration for a file specified using --print-config', () => {
@@ -86,6 +92,7 @@ describe('Linter (legacy)', () => {
         });
         updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
         const out = runCLI(`lint ${myapp} --print-config src/index.ts`, {
+          env: { CI: 'false' }, // We don't want to show the summary table from cloud runner
           silenceError: true,
         });
         expect(out).toContain('"specific-rule": [');
@@ -93,8 +100,18 @@ describe('Linter (legacy)', () => {
     });
   });
 
-  describe('Flat config', () => {
+  describe('eslintrc convert to flat config', () => {
+    let originalEslintUseFlatConfigVal: string | undefined;
     const packageManager = getSelectedPackageManager() || 'pnpm';
+
+    beforeAll(() => {
+      // Opt into legacy .eslintrc config format for these tests
+      originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    });
+    afterAll(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+    });
 
     beforeEach(() => {
       process.env.NX_ADD_PLUGINS = 'false';
@@ -118,18 +135,12 @@ describe('Linter (legacy)', () => {
         bundler: 'vite',
         e2eTestRunner: 'none',
       });
-      runCLI(
-        `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`,
-        {
-          env: { NX_ADD_PLUGINS: 'false' },
-        }
-      );
-      runCLI(
-        `generate @nx/js:lib ${mylib2} --directory libs/${mylib2} --projectNameAndRootFormat as-provided`,
-        {
-          env: { NX_ADD_PLUGINS: 'false' },
-        }
-      );
+      runCLI(`generate @nx/js:lib libs/${mylib}`, {
+        env: { NX_ADD_PLUGINS: 'false' },
+      });
+      runCLI(`generate @nx/js:lib libs/${mylib2}`, {
+        env: { NX_ADD_PLUGINS: 'false' },
+      });
 
       // migrate to flat structure
       runCLI(`generate @nx/eslint:convert-to-flat-config`, {
@@ -162,7 +173,9 @@ describe('Linter (legacy)', () => {
       const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
-      expect(outFlat).toContain('ran target lint');
+      expect(outFlat).toContain(`${myapp}:lint`);
+      expect(outFlat).toContain(`${mylib}:lint`);
+      expect(outFlat).toContain(`${mylib2}:lint`);
     }, 1000000);
 
     it('should convert standalone to flat config', () => {
@@ -199,7 +212,8 @@ describe('Linter (legacy)', () => {
       const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
-      expect(outFlat).toContain('ran target lint');
+      expect(outFlat).toContain(`${myapp}:lint`);
+      expect(outFlat).toContain(`${mylib}:lint`);
     }, 1000000);
   });
 });

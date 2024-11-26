@@ -1,15 +1,15 @@
 import type { ExecutorContext, ProjectGraphProjectNode } from '@nx/devkit';
 import { normalizePath, readJsonFile } from '@nx/devkit';
 import {
-  copySync,
+  cpSync,
+  existsSync,
   readdirSync,
   readFileSync,
-  removeSync,
+  rmSync,
   writeFileSync,
-} from 'fs-extra';
+} from 'node:fs';
 import { join, relative } from 'path';
 import type { NormalizedExecutorOptions } from './schema';
-import { existsSync } from 'fs';
 
 interface InlineProjectNode {
   name: string;
@@ -85,7 +85,7 @@ export function postProcessInlinedDependencies(
       const isBuildable = !!inlineDependency.buildOutputPath;
 
       if (isBuildable) {
-        copySync(depOutputPath, destDepOutputPath, { overwrite: true });
+        cpSync(depOutputPath, destDepOutputPath, { recursive: true });
       } else {
         movePackage(depOutputPath, destDepOutputPath);
         markedForDeletion.add(depOutputPath);
@@ -97,7 +97,9 @@ export function postProcessInlinedDependencies(
     }
   }
 
-  markedForDeletion.forEach((path) => removeSync(path));
+  markedForDeletion.forEach((path) =>
+    rmSync(path, { recursive: true, force: true })
+  );
   updateImports(outputPath, inlinedDepsDestOutputRecord);
 }
 
@@ -271,7 +273,7 @@ function buildInlineGraphExternals(
 
 function movePackage(from: string, to: string) {
   if (from === to) return;
-  copySync(from, to, { overwrite: true });
+  cpSync(from, to, { recursive: true });
 }
 
 function updateImports(

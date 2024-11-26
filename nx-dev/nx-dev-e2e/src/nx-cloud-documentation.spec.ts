@@ -32,35 +32,39 @@ const pages: Array<{ title: string; path: string }> = [
   },
   {
     title: 'Running Nx Cloud Enterprise',
-    path: '/ci/features/on-premise',
+    path: '/ci/recipes/enterprise/on-premise/on-premise',
   },
   {
     title: 'Auth (Basic)',
-    path: '/ci/recipes/on-premise/auth-single-admin',
+    path: '/ci/recipes/enterprise/on-premise/auth-single-admin',
   },
   {
     title: 'GitHub Auth',
-    path: '/ci/recipes/on-premise/auth-github',
+    path: '/ci/recipes/enterprise/on-premise/auth-github',
   },
   {
     title: 'GitLab Auth',
-    path: '/ci/recipes/on-premise/auth-gitlab',
+    path: '/ci/recipes/enterprise/on-premise/auth-gitlab',
   },
   {
     title: 'Setting up a dedicated Nx Cloud VM',
-    path: '/ci/recipes/on-premise/ami-setup',
+    path: '/ci/recipes/enterprise/on-premise/ami-setup',
   },
   {
-    title: 'BitBucket Auth',
-    path: '/ci/recipes/on-premise/auth-bitbucket',
+    title: 'BitBucket Cloud Auth',
+    path: '/ci/recipes/enterprise/on-premise/auth-bitbucket',
+  },
+  {
+    title: 'BitBucket Data Center Auth',
+    path: '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center',
   },
   {
     title: 'SAML Auth',
-    path: '/ci/recipes/on-premise/auth-saml',
+    path: '/ci/recipes/enterprise/on-premise/auth-saml',
   },
   {
     title: 'Advanced Configuration',
-    path: '/ci/recipes/on-premise/advanced-config',
+    path: '/ci/recipes/enterprise/on-premise/advanced-config',
   },
   {
     title: 'Configuring the Cloud Runner / Nx CLI',
@@ -69,10 +73,6 @@ const pages: Array<{ title: string; path: string }> = [
   {
     title: 'Environment Variables',
     path: '/ci/reference/env-vars',
-  },
-  {
-    title: 'Nx Cloud Server API Reference',
-    path: '/ci/reference/server-api',
   },
   {
     title: 'Enterprise Release Notes',

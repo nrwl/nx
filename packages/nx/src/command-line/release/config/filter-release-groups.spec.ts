@@ -1,6 +1,7 @@
-import { type ProjectGraph } from '../../../devkit-exports';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 import { filterReleaseGroups } from './filter-release-groups';
+import type { ProjectGraph } from '../../../config/project-graph';
 
 describe('filterReleaseGroups()', () => {
   let projectGraph: ProjectGraph;
@@ -37,6 +38,7 @@ describe('filterReleaseGroups()', () => {
           tagMessage: '',
           tagArgs: '',
         },
+        preVersionCommand: '',
       },
       releaseTagPattern: '',
       git: {
@@ -48,6 +50,8 @@ describe('filterReleaseGroups()', () => {
         tagArgs: '',
         stageChanges: false,
       },
+      conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+      versionPlans: false,
     };
     projectGraph = {
       nodes: {
@@ -98,8 +102,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
       };
       const { error } = filterReleaseGroups(projectGraph, nxReleaseConfig, [
@@ -125,8 +131,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
         bar: {
           projectsRelationship: 'fixed',
@@ -136,8 +144,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -153,11 +163,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           },
           {
             "changelog": false,
@@ -167,11 +180,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           },
         ]
       `);
@@ -185,11 +201,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           } => Set {
             "lib-a",
           },
@@ -201,11 +220,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           } => Set {
             "lib-b",
           },
@@ -223,8 +245,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
       };
       const { error } = filterReleaseGroups(projectGraph, nxReleaseConfig, [
@@ -249,8 +273,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
         bar: {
           projectsRelationship: 'independent',
@@ -260,8 +286,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
       };
       const { error } = filterReleaseGroups(projectGraph, nxReleaseConfig, [
@@ -287,8 +315,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
         bar: {
           projectsRelationship: 'fixed',
@@ -298,8 +328,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -315,11 +347,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           },
         ]
       `);
@@ -333,11 +368,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           } => Set {
             "lib-a",
           },
@@ -371,8 +409,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
         bar: {
           projectsRelationship: 'fixed',
@@ -382,8 +422,10 @@ describe('filterReleaseGroups()', () => {
             conventionalCommits: false,
             generator: '',
             generatorOptions: {},
+            groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          versionPlans: false,
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -399,11 +441,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           },
         ]
       `);
@@ -417,11 +462,14 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
+              "groupPreVersionCommand": "",
             },
+            "versionPlans": false,
           } => Set {
             "lib-a",
           },

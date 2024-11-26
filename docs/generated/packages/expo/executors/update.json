@@ -25,7 +25,7 @@
       },
       "republish": {
         "type": "boolean",
-        "description": "Enable JSON output, non-JSON messages will be printed to stderr",
+        "description": "Republish a previous update within a branch",
         "default": false
       },
       "group": { "type": "string", "description": "Update group to republish" },

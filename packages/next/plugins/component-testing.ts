@@ -10,6 +10,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
   readTargetOptions,
   stripIndents,
   workspaceRoot,
@@ -24,12 +25,13 @@ import {
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
 import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
+import { readNxJson } from 'nx/src/config/configuration';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,
   options?: NxComponentTestingOptions
 ) {
-  if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
+  if (global.NX_GRAPH_CREATION) {
     // this is only used by plugins, so we don't need the component testing
     // options, cast to any to avoid type errors
     return nxBaseCypressPreset(pathToConfig) as any;
@@ -71,6 +73,8 @@ export function nxComponentTestingPreset(
     const parsedBuildTarget = parseTargetString(buildTarget, {
       cwd: process.cwd(),
       root: workspaceRoot,
+      projectsConfigurations: readProjectsConfigurationFromProjectGraph(graph),
+      nxJsonConfiguration: readNxJson(workspaceRoot),
       isVerbose: false,
       projectName: ctProjectName,
       projectGraph: graph,

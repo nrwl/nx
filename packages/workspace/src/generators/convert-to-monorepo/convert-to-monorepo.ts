@@ -4,7 +4,9 @@ import {
   ProjectConfiguration,
   readNxJson,
   Tree,
+  updateJson,
   updateNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { moveGenerator } from '../move/move';
 
@@ -34,6 +36,19 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
   const appsDir = isRootProjectApp ? 'apps' : 'packages';
   const libsDir = isRootProjectApp ? 'libs' : 'packages';
 
+  if (rootProject) {
+    // If project was created using `nx init` then it might not have project.json.
+    // Need to create one to avoid name conflicts with root package.json.
+    if (!tree.exists('project.json')) {
+      writeJson(tree, 'project.json', { name: rootProject.name });
+    }
+    updateJson(tree, 'package.json', (json) => {
+      // Avoid name conflicts once we move root project into its own folder.
+      json.name = `@${rootProject.name}/source`;
+      return json;
+    });
+  }
+
   for (const project of projectsToMove) {
     await moveGenerator(tree, {
       projectName: project.name,
@@ -49,7 +64,6 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
               project.root === '.' ? project.name : project.root
             ),
       updateImportPath: project.projectType === 'library',
-      projectNameAndRootFormat: 'as-provided',
     });
   }
 }

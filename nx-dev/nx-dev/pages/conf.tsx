@@ -74,9 +74,9 @@ export default function ConfPage(): JSX.Element {
                   <path d="M153.224 267C150.787 267 148.615 266.58 146.707 265.74C144.812 264.899 143.304 263.731 142.184 262.236C141.076 260.729 140.473 258.98 140.375 256.99H145.027C145.126 258.214 145.544 259.27 146.283 260.16C147.021 261.038 147.987 261.717 149.181 262.199C150.375 262.681 151.698 262.922 153.15 262.922C154.775 262.922 156.215 262.638 157.471 262.069C158.726 261.501 159.711 260.71 160.424 259.697C161.138 258.683 161.495 257.51 161.495 256.175C161.495 254.779 161.151 253.549 160.461 252.486C159.772 251.411 158.763 250.571 157.434 249.965C156.104 249.36 154.48 249.057 152.56 249.057H149.532V244.979H152.56C154.061 244.979 155.378 244.707 156.511 244.163C157.655 243.62 158.548 242.854 159.188 241.865C159.84 240.876 160.166 239.715 160.166 238.38C160.166 237.095 159.883 235.977 159.317 235.025C158.751 234.074 157.951 233.332 156.917 232.801C155.895 232.269 154.689 232.004 153.298 232.004C151.993 232.004 150.763 232.245 149.606 232.727C148.461 233.196 147.526 233.882 146.8 234.784C146.073 235.674 145.679 236.749 145.618 238.01H141.187C141.261 236.02 141.858 234.278 142.978 232.782C144.098 231.275 145.563 230.101 147.372 229.26C149.193 228.42 151.193 228 153.372 228C155.711 228 157.717 228.476 159.391 229.427C161.064 230.366 162.351 231.608 163.249 233.153C164.148 234.698 164.597 236.366 164.597 238.158C164.597 240.296 164.037 242.118 162.917 243.626C161.809 245.134 160.301 246.178 158.394 246.759V247.055C160.781 247.451 162.646 248.47 163.988 250.114C165.329 251.745 166 253.765 166 256.175C166 258.239 165.44 260.092 164.32 261.736C163.212 263.367 161.698 264.652 159.778 265.591C157.858 266.53 155.674 267 153.224 267Z" />
                 </svg>
               </div>
-              <div className="mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-3/5 lg:pl-16 lg:pb-0">
+              <div className="mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-3/5 lg:pb-0 lg:pl-16">
                 <h2>
-                  <div className="font-input-mono mb-4 inline-block rounded-lg border border-slate-200 bg-white/40 p-4 py-4 px-6 text-xl text-sm font-extrabold leading-none tracking-tight shadow-sm transition hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800 sm:text-2xl lg:text-2xl">
+                  <div className="font-input-mono mb-4 inline-block rounded-lg border border-slate-200 bg-white/40 p-4 px-6 py-4 text-sm text-xl font-extrabold leading-none tracking-tight shadow-sm transition hover:bg-white sm:text-2xl lg:text-2xl dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
                     <span className="sr-only">Announcing Nx Conf on </span>{' '}
                     September 26, 2023
                   </div>
@@ -178,7 +178,7 @@ export default function ConfPage(): JSX.Element {
                   rel="noreferrer"
                   target="_blank"
                   href="https://www.youtube.com/live/IQ5YyEYZw68"
-                  className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
+                  className="font-input-mono group flex w-full items-center text-blue-500 sm:text-xl dark:text-sky-500"
                 >
                   <span className="group-hover:underline">
                     Watch the live stream recording
@@ -228,9 +228,9 @@ export default function ConfPage(): JSX.Element {
         </div>
         <div className="w-full overflow-hidden">
           {/*NAVIGATION*/}
-          <div className="hidden border-t border-b border-slate-200 dark:border-slate-700 md:block">
+          <div className="hidden border-b border-t border-slate-200 md:block dark:border-slate-700">
             <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-              <div className="font-input-mono grid-cols-7 items-center divide-x divide-slate-200 text-center dark:divide-slate-700 md:grid">
+              <div className="font-input-mono grid-cols-7 items-center divide-x divide-slate-200 text-center md:grid dark:divide-slate-700">
                 <div className="p-8">
                   <svg
                     id="nx-conf-logo"

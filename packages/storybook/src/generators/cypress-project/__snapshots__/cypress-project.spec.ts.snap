@@ -1,5 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`@nx/storybook:cypress-project should generate a correct cypress.config.ts file when using inferred plugins 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EStorybookPreset } from '@nx/storybook/presets/cypress';
+
+export default defineConfig({
+  e2e: nxE2EStorybookPreset(__dirname, {
+    cypressDir: 'src',
+    webServerCommands: {
+      default: 'npx nx run test-ui-lib:storybook',
+      ci: 'npx nx run test-ui-lib:storybook:ci',
+    },
+    ciWebServerCommand: 'npx nx run test-ui-lib:storybook:ci',
+  }),
+});
+"
+`;
+
 exports[`@nx/storybook:cypress-project should generate files 1`] = `
 "import { defineConfig } from 'cypress';
 import { nxE2EStorybookPreset } from '@nx/storybook/presets/cypress';

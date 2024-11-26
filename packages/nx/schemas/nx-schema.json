@@ -18,7 +18,12 @@
           "description": "Default based branch used by affected commands."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
+    },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default --base used by affected logic."
     },
     "tasksRunnerOptions": {
       "type": "object",
@@ -96,6 +101,10 @@
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
     },
+    "useInferencePlugins": {
+      "type": "boolean",
+      "description": "Specifies whether to add inference plugins when generating new projects."
+    },
     "release": {
       "type": "object",
       "description": "Configuration for the nx release commands.",
@@ -143,20 +152,7 @@
                 ]
               },
               "version": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
-                  },
-                  {
-                    "anyOf": [
-                      {
-                        "not": {
-                          "required": ["git"]
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "$ref": "#/definitions/NxReleaseGroupVersionConfiguration"
               },
               "changelog": {
                 "oneOf": [
@@ -170,6 +166,17 @@
               },
               "releaseTagPattern": {
                 "type": "string"
+              },
+              "versionPlans": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+                  },
+                  {
+                    "type": "boolean",
+                    "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                  }
+                ]
               }
             },
             "required": ["projects"]
@@ -207,6 +214,9 @@
             }
           }
         },
+        "conventionalCommits": {
+          "$ref": "#/definitions/NxReleaseConventionalCommitsConfiguration"
+        },
         "projectsRelationship": {
           "type": "string",
           "enum": ["fixed", "independent"]
@@ -217,10 +227,53 @@
         "version": {
           "$ref": "#/definitions/NxReleaseVersionConfiguration"
         },
+        "versionPlans": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+            },
+            {
+              "type": "boolean",
+              "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+            }
+          ]
+        },
         "releaseTagPattern": {
           "type": "string"
         }
       }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Configuration for the `nx sync` command",
+      "properties": {
+        "globalGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of workspace-wide sync generators to be run (not attached to targets)"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "description": "Options for the sync generators.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "applyChanges": {
+          "type": "boolean",
+          "description": "Whether to automatically apply sync generator changes when running tasks. If not set, the user will be prompted. If set to `true`, the user will not be prompted and the changes will be applied. If set to `false`, the user will not be prompted and the changes will not be applied."
+        },
+        "disabledTaskSyncGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of registered task sync generators to disable."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "definitions": {
@@ -253,7 +306,9 @@
                   {
                     "type": "array",
                     "description": "The projects that the targets belong to.",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 ]
               },
@@ -277,8 +332,12 @@
                 "required": ["input"],
                 "not": {
                   "anyOf": [
-                    { "required": ["projects"] },
-                    { "required": ["dependencies"] }
+                    {
+                      "required": ["projects"]
+                    },
+                    {
+                      "required": ["dependencies"]
+                    }
                   ]
                 }
               }
@@ -310,7 +369,9 @@
             "properties": {
               "externalDependencies": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
               }
             },
@@ -341,7 +402,7 @@
         "packageManager": {
           "type": "string",
           "description": "The default package manager to use.",
-          "enum": ["yarn", "pnpm", "npm"]
+          "enum": ["yarn", "pnpm", "npm", "bun"]
         }
       }
     },
@@ -362,6 +423,9 @@
           "description": "Default options for the runner.",
           "properties": {
             "accessToken": {
+              "type": "string"
+            },
+            "nxCloudId": {
               "type": "string"
             },
             "captureStderr": {
@@ -424,6 +488,11 @@
             "type": "object"
           }
         },
+        "parallelism": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this target can be run in parallel with other tasks"
+        },
         "inputs": {
           "$ref": "#/definitions/inputs"
         },
@@ -478,8 +547,12 @@
                     "required": ["target"],
                     "not": {
                       "anyOf": [
-                        { "required": ["projects"] },
-                        { "required": ["dependencies"] }
+                        {
+                          "required": ["projects"]
+                        },
+                        {
+                          "required": ["dependencies"]
+                        }
                       ]
                     }
                   }
@@ -512,6 +585,20 @@
             "options": {
               "type": "object",
               "description": "The options passed to the plugin when creating nodes and dependencies"
+            },
+            "include": {
+              "type": "array",
+              "description": "File patterns which are included by the plugin",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "description": "File patterns which are excluded by the plugin",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -529,7 +616,7 @@
           "description": "Custom git commit message to use when committing the changes made by this command"
         },
         "commitArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
         },
         "stageChanges": {
@@ -545,7 +632,7 @@
           "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
         },
         "tagArgs": {
-          "type": "string",
+          "type": ["string", "array"],
           "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
         }
       }
@@ -567,8 +654,35 @@
         },
         "git": {
           "$ref": "#/definitions/NxReleaseGitConfiguration"
+        },
+        "preVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         }
-      }
+      },
+      "additionalProperties": false
+    },
+    "NxReleaseGroupVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "groupPreVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration AND after the release.version.preVersionCommand (if any), but before versioning begins for this specific group. Useful for preparing build artifacts for the group. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+        }
+      },
+      "additionalProperties": false
     },
     "NxReleaseChangelogConfiguration": {
       "type": "object",
@@ -582,6 +696,9 @@
             {
               "type": "boolean",
               "enum": [false]
+            },
+            {
+              "$ref": "#/definitions/CreateReleaseProviderConfiguration"
             }
           ]
         },
@@ -615,9 +732,88 @@
         }
       }
     },
+    "CreateReleaseProviderConfiguration": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["github-enterprise-server"]
+        },
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the VCS provider instance, e.g. github.example.com"
+        },
+        "apiBaseUrl": {
+          "type": "string",
+          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3`"
+        }
+      },
+      "required": ["provider", "hostname"]
+    },
+    "NxReleaseVersionPlansConfiguration": {
+      "type": "object",
+      "properties": {
+        "ignorePatternsForPlanCheck": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check` command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files."
+        }
+      }
+    },
     "ChangelogRenderOptions": {
       "type": "object",
       "additionalProperties": true
+    },
+    "NxReleaseConventionalCommitsConfiguration": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "object",
+          "description": "A map of commit types to their configuration. If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog. If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "semverBump": {
+                    "type": "string",
+                    "enum": ["major", "minor", "patch", "none"],
+                    "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release.",
+                    "default": "patch"
+                  },
+                  "changelog": {
+                    "description": "Configuration for the changelog section for commits of this type. If set to 'true', then commits of this type will be included in the changelog with their default title for the type. If set to 'false', then commits of this type will not be included in the changelog.",
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "The title of the section in the changelog for commits of this type"
+                          },
+                          "hidden": {
+                            "type": "boolean",
+                            "description": "Whether or not to include commits of this type in the changelog",
+                            "default": false
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
     }
   }
 }

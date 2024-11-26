@@ -592,3 +592,221 @@ describe('getComponentNode', () => {
     expect(result).toBeNull();
   });
 });
+
+describe('parseComponentPropsInfo', () => {
+  it('should parse props from a function with typed props using an interface', () => {
+    const sourceCode = `export interface TestProps {
+      name: string;
+      age: number;
+    }
+    export function Test(props: TestProps) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[1]);
+
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect((result.props[0] as ts.PropertySignature).type.getText()).toBe(
+      'string'
+    );
+    expect(result.props[1].name.getText()).toBe('age');
+    expect((result.props[1] as ts.PropertySignature).type.getText()).toBe(
+      'number'
+    );
+    expect(result.propsTypeName).toBe('TestProps');
+    expect(result.inlineTypeString).toBeNull();
+  });
+
+  it('should parse props from a function with destructured typed props using an interface', () => {
+    const sourceCode = `export interface TestProps {
+      name: string;
+      age: number;
+    }
+    export function Test({ name, age }: TestProps) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[1]);
+
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect((result.props[0] as ts.PropertySignature).type.getText()).toBe(
+      'string'
+    );
+    expect(result.props[1].name.getText()).toBe('age');
+    expect((result.props[1] as ts.PropertySignature).type.getText()).toBe(
+      'number'
+    );
+    expect(result.propsTypeName).toBe('TestProps');
+    expect(result.inlineTypeString).toBeNull();
+  });
+
+  it('should parse props from a function with typed props using a literal type', () => {
+    const sourceCode = `export type TestProps = {
+      name: string;
+      age: number;
+    }
+    export function Test(props: TestProps) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[1]);
+
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect((result.props[0] as ts.PropertySignature).type.getText()).toBe(
+      'string'
+    );
+    expect(result.props[1].name.getText()).toBe('age');
+    expect((result.props[1] as ts.PropertySignature).type.getText()).toBe(
+      'number'
+    );
+    expect(result.propsTypeName).toBe('TestProps');
+    expect(result.inlineTypeString).toBeNull();
+  });
+
+  it('should parse props from a function with destructured typed props using a literal type', () => {
+    const sourceCode = `export type TestProps = {
+      name: string;
+      age: number;
+    }
+    export function Test({ name, age }: TestProps) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[1]);
+
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect((result.props[0] as ts.PropertySignature).type.getText()).toBe(
+      'string'
+    );
+    expect(result.props[1].name.getText()).toBe('age');
+    expect((result.props[1] as ts.PropertySignature).type.getText()).toBe(
+      'number'
+    );
+    expect(result.propsTypeName).toBe('TestProps');
+    expect(result.inlineTypeString).toBeNull();
+  });
+
+  it('should parse props from a function with typed props using an inline type', () => {
+    const sourceCode = `export function Test(props: { name: string; age: number }) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[0]);
+
+    expect(result).toBeDefined();
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect((result.props[0] as ts.PropertySignature).type.getText()).toBe(
+      'string'
+    );
+    expect(result.props[1].name.getText()).toBe('age');
+    expect((result.props[1] as ts.PropertySignature).type.getText()).toBe(
+      'number'
+    );
+    expect(result.propsTypeName).toBeNull();
+    expect(result.inlineTypeString).toMatchInlineSnapshot(
+      `"{ name: string; age: number }"`
+    );
+  });
+
+  it('should parse props from a function with destructured typed props using an inline type', () => {
+    const sourceCode = `export function Test({ name, age }: { name: string; age: number }) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[0]);
+
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect((result.props[0] as ts.PropertySignature).type.getText()).toBe(
+      'string'
+    );
+    expect(result.props[1].name.getText()).toBe('age');
+    expect((result.props[1] as ts.PropertySignature).type.getText()).toBe(
+      'number'
+    );
+    expect(result.propsTypeName).toBeNull();
+    expect(result.inlineTypeString).toMatchInlineSnapshot(
+      `"{ name: string; age: number }"`
+    );
+  });
+
+  it('should parse props from a function with no type', () => {
+    const sourceCode = `export function Test({ name, age }) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[0]);
+
+    expect(result.props.length).toBe(2);
+    expect(result.props[0].name.getText()).toBe('name');
+    expect(result.props[1].name.getText()).toBe('age');
+    expect(result.propsTypeName).toBeNull();
+    expect(result.inlineTypeString).toMatchInlineSnapshot(`
+      "{
+      name: unknown;
+      age: unknown;
+      }"
+    `);
+  });
+
+  it('should return null when the props are not destructured and have not type', () => {
+    const sourceCode = `export function Test(props) {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[0]);
+
+    expect(result).toBeNull();
+  });
+
+  it('should return null when there are no props', () => {
+    const sourceCode = `export function Test() {}`;
+    const source = ts.createSourceFile(
+      'some-component.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = utils.parseComponentPropsInfo(source, source.statements[0]);
+
+    expect(result).toBeNull();
+  });
+});

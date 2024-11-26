@@ -49,15 +49,33 @@ The repo comes with a preconfigured `devcontainer.json` file (located in `.devco
 
 If you open the repo in [Github Codespace](https://github.com/features/codespaces), it will also leverage this config file, to setup the codespace, with the same required tools.
 
+> 💡 **Troubleshooting**
+>
+> If you are having issues when running Nx commands like `build`, `test`... related to the version of `GLIBC`,
+> it probably means the version that is installed on the devcontainer, **is outdated** compare to the minimum version required by Nx tools.
+>
+> You can check currently installed version by running the following command, in a terminal within the container:
+>
+> `ldd --version`
+>
+> Then, try updating the base image used in [devcontainer.json](.devcontainer/devcontainer.json) and rebuild it, to see if it solved the issue.
+>
+> Current base image is `"mcr.microsoft.com/devcontainers/typescript-node:20-bookworm"` which is based on `Debian-12 (bookworm)`,
+> which comes with `GLIBC v2.36` pre-installed (Nx tools currenlty requires `GLIBC v2.33` or higher).
+
 ## Building the Project
 
-> Nx uses Rust to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
-> If you have VSCode + Docker, this can be automated for you, see [section](#development-workstation-setup) above
+> 💡 Nx uses `Rust` to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
+> If you have `VSCode` + `Docker`, this can be automated for you, see [section](#development-workstation-setup) above
 
 After cloning the project to your machine, to install the dependencies, run:
 
 ```bash
-pnpm i
+pnpm install
+
+// or prefer...
+
+pnpm install --frozen-lockfile // if you haven't changed any dependency
 ```
 
 To build all the packages, run:
@@ -76,13 +94,13 @@ Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or f
 - Run `pnpm local-registry` in Terminal 1 (keep it running)
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
   be logged in. You can use test/test/test@test.io.)
-- Run `pnpm nx-release 18.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
+- Run `pnpm nx-release 20.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
 - Run `cd ./tmp` in Terminal 2
-- Run `npx create-nx-workspace@18.0.0` in Terminal 2
+- Run `npx create-nx-workspace@20.0.0` in Terminal 2
 
 If you have problems publishing, make sure you use Node 18 and NPM 8.
 
-**NOTE:** To use this newly published local version, you need to make a new workspace, run `nx migrate` or change all of your target packages to this new version, eg: `"nx": "^18.0.0",` and re-run `pnpm i` in your testing project.
+**NOTE:** To use this newly published local version, you need to make a new workspace, run `nx migrate` or change all of your target packages to this new version, eg: `"nx": "^20.0.0",` and re-run `pnpm i` in your testing project.
 
 ### Publishing for Yarn 2+ (Berry)
 
@@ -345,7 +363,7 @@ Including the issue number that the PR relates to also helps with tracking.
 ```plain
 feat(angular): add an option to generate lazy-loadable modules
 
-`nx generate lib mylib --lazy` provisions the mylib project in .eslintrc.json
+`nx generate lib libs/mylib --lazy` provisions the mylib project in .eslintrc.json
 
 Closes #157
 ```
@@ -355,3 +373,7 @@ Closes #157
 To simplify and automate the process of committing with this format,
 **Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and
 execute `pnpm commit`.
+
+#### PR releases
+
+If you are working on a particularly complex change or feature addition, you can request a dedicated Nx release for the associated pull request branch. Mention someone from the Nx team or the `@nrwl/nx-pipelines-reviewers` and they will confirm if the PR warrants its own release for testing purposes, and generate it for you if appropriate.

@@ -6,7 +6,7 @@ export function TooltipTriggerText({
   children: string | ReactNode;
 }) {
   return (
-    <span className="underline cursor-help underline-offset-8 decoration-2 decoration-dotted decoration-slate-700/50 dark:decoration-slate-400/50">
+    <span className="cursor-help underline decoration-slate-700/50 decoration-dotted decoration-2 underline-offset-8 dark:decoration-slate-400/50">
       {children}
     </span>
   );

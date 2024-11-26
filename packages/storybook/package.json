@@ -13,7 +13,10 @@
     "React",
     "Web",
     "Storybook",
-    "Cypress"
+    "Cypress",
+    "CLI",
+    "Front-end",
+    "Testing"
   ],
   "main": "./index",
   "typings": "./index.d.ts",

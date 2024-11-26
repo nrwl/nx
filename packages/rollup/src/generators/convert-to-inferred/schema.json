@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxRollupConvertToInferred",
+  "description": "Convert existing Rollup project(s) using `@nx/rollup:rollup` executor to use `@nx/rollup/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "title": "Convert Rollup project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/rollup:rollup` executor to use `@nx/rollup/plugin`.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files at the end of the migration.",
+      "default": false
+    }
+  }
+}

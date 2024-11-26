@@ -1,6 +1,6 @@
 {
   "name": "host",
-  "factory": "./src/generators/host/host#hostGeneratorInternal",
+  "factory": "./src/generators/host/host",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactHost",
@@ -9,24 +9,18 @@
     "description": "Create Module Federation configuration files for given React Host Application.",
     "type": "object",
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "The name of the host application to generate the Module Federation configuration",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use as the host application?",
-        "pattern": "^[a-zA-Z][^:]*$",
-        "x-priority": "important"
-      },
       "directory": {
         "description": "The directory of the new application.",
         "type": "string",
         "alias": "dir",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the application in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "description": "The name of the host application to generate the Module Federation configuration",
+        "pattern": "^[a-zA-Z][^:]*$",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -45,6 +39,10 @@
             {
               "value": "less",
               "label": "LESS              [ https://lesscss.org                       ]"
+            },
+            {
+              "value": "tailwind",
+              "label": "tailwind [ https://tailwindcss.com/            ]"
             },
             {
               "value": "styled-components",
@@ -80,7 +78,7 @@
         "x-priority": "internal"
       },
       "skipNxJson": {
-        "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
+        "description": "Skip updating nx.json with default options based on values provided to this app (e.g. babel, style).",
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
@@ -93,20 +91,15 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "playwright", "none"],
-        "description": "Test runner to use for end to end (e2e) tests.",
-        "default": "cypress"
+        "enum": ["playwright", "cypress", "none"],
+        "description": "Test runner to use for end to end (E2E) tests.",
+        "x-prompt": "Which E2E test runner would you like to use?",
+        "default": "playwright"
       },
       "tags": {
         "type": "string",
         "description": "Add tags to the application (used for linting).",
         "alias": "t"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case component file name (e.g. App.tsx).",
-        "alias": "P",
-        "default": false
       },
       "classComponent": {
         "type": "boolean",
@@ -164,17 +157,31 @@
       },
       "typescriptConfiguration": {
         "type": "boolean",
-        "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+        "description": "Whether the module federation configuration and webpack configuration files should use TS. When --js is used, this flag is ignored.",
         "default": true
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["rspack", "webpack"],
+        "x-prompt": "Which bundler do you want to use to build the application?",
+        "default": "rspack",
+        "x-priority": "important"
       }
     },
-    "required": ["name"],
+    "required": ["directory"],
     "additionalProperties": false,
     "presets": []
   },
   "x-type": "application",
   "description": "Generate a host react application",
-  "implementation": "/packages/react/src/generators/host/host#hostGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/host/host.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/host/schema.json",

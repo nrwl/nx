@@ -50,7 +50,9 @@ export async function configureCypressCT(
     const executor = buildTargetProject.targets?.[target]?.executor;
     if (!executor || !options.validExecutorNames.has(executor)) {
       throw new Error(
-        `Cypress Component Testing is not currently supported for this project. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
+        `Cypress Component Testing is not currently supported for this project. Either 'executer' is not defined in '${target} target' of '${project} project.json' or executer present is not valid one. Valid ones are ${JSON.stringify(
+          [...options.validExecutorNames]
+        )}. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
       );
     }
   }
@@ -105,10 +107,7 @@ export async function getBundlerFromTarget(
   tree: Tree
 ): Promise<'vite' | 'webpack'> {
   if (found.target && found.config?.executor) {
-    return found.config.executor === '@nrwl/vite:build' ||
-      found.config.executor === '@nx/vite:build'
-      ? 'vite'
-      : 'webpack';
+    return found.config.executor === '@nx/vite:build' ? 'vite' : 'webpack';
   }
 
   const { target, project } = parseTargetString(
@@ -117,9 +116,7 @@ export async function getBundlerFromTarget(
   );
   const projectConfig = readProjectConfiguration(tree, project);
   const executor = projectConfig?.targets?.[target]?.executor;
-  return executor === '@nrwl/vite:build' || executor === '@nx/vite:build'
-    ? 'vite'
-    : 'webpack';
+  return executor === '@nx/vite:build' ? 'vite' : 'webpack';
 }
 
 export async function getActualBundler(

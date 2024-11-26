@@ -23,9 +23,9 @@ the [Nx Webpack configuration guide](/recipes/webpack/webpack-config-setup).
 
 The basic plugins work with a standard webpack configuration file by adding them to the `plugins` option.
 
-### NxWebpackPlugin
+### NxAppWebpackPlugin
 
-The `NxWebpackPlugin` plugin provides common configuration for the build, including TypeScript support and linking
+The `NxAppWebpackPlugin` plugin provides common configuration for the build, including TypeScript support and linking
 workspace libraries (via tsconfig paths).
 
 #### Options
@@ -70,6 +70,12 @@ If true, Babel will look for a babel.config.json up the directory tree.
 Type: `string`
 
 Set `<base href>` for the resulting index.html.
+
+##### buildLibsFromSource
+
+Type: `boolean`
+
+Build the libraries from source. Default is `true`.
 
 ##### compiler
 
@@ -209,6 +215,18 @@ Type: `string[]`
 
 External scripts that will be included before the main application entry.
 
+##### skipOverrides
+
+Type: `boolean`
+
+Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
+##### skipPackageManager
+
+Type: `boolean`
+
+Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
 ##### skipTypeChecking
 
 Type: `boolean`
@@ -286,7 +304,7 @@ Watch for file changes.
 #### Example
 
 ```js
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -297,7 +315,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
       index: './src/index.html',
@@ -322,7 +340,7 @@ Enables or disables [React SVGR](https://react-svgr.com/). Default is `true`.
 #### Example
 
 ```js
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {

@@ -4,7 +4,6 @@
   "sourceRoot": "packages/plugin/src",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -50,10 +49,6 @@
       "options": {
         "command": "node ./scripts/copy-readme.js plugin"
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js plugin @nrwl/nx-plugin"
-    },
-    "lint": {}
+    }
   }
 }

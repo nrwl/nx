@@ -168,9 +168,9 @@ describe('new', () => {
         tree,
         'my-workspace/package.json'
       );
-      expect(dependencies).toStrictEqual({ '@nx/angular': nxVersion });
       expect(devDependencies).toStrictEqual({
         '@angular-devkit/core': angularCliVersion,
+        '@nx/angular': nxVersion,
         '@nx/workspace': nxVersion,
         nx: nxVersion,
         typescript: typescriptVersion,

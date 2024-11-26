@@ -2,8 +2,8 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
-jest.mock('@nuxt/kit', () => ({
-  loadNuxtConfig: jest.fn().mockImplementation(() => {
+jest.mock('@nx/devkit/src/utils/config-utils', () => ({
+  loadConfigFile: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       buildDir: '../dist/my-app/.nuxt',
     });
@@ -38,6 +38,7 @@ describe('@nx/nuxt/plugin', () => {
           },
         },
         workspaceRoot: '',
+        configFiles: [],
       };
     });
 
@@ -51,6 +52,8 @@ describe('@nx/nuxt/plugin', () => {
         {
           buildTargetName: 'build',
           serveTargetName: 'serve',
+          buildStaticTargetName: 'build-static',
+          serveStaticTargetName: 'serve-static',
         },
         context
       );
@@ -70,6 +73,7 @@ describe('@nx/nuxt/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync(
@@ -89,6 +93,8 @@ describe('@nx/nuxt/plugin', () => {
         {
           buildTargetName: 'build-something',
           serveTargetName: 'my-serve',
+          buildStaticTargetName: 'acme-build-static',
+          serveStaticTargetName: 'acme-serve-static',
         },
         context
       );

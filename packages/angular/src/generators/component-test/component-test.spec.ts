@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -23,13 +25,13 @@ describe('Angular Cypress Component Test Generator', () => {
 
   it('should handle component w/o inputs', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib/my-lib',
       name: 'my-lib',
       skipFormat: true,
     });
@@ -47,13 +49,13 @@ describe('Angular Cypress Component Test Generator', () => {
 
   it('should generate a component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib/',
       name: 'my-lib',
       skipFormat: true,
     });
@@ -101,13 +103,13 @@ export class MyLibComponent implements OnInit {
 
   it('should work with standalone components', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib',
       name: 'my-lib',
       standalone: true,
       skipFormat: true,
@@ -154,7 +156,7 @@ export class MyLibComponent implements OnInit {
 
   it('should not overwrite an existing component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
@@ -162,7 +164,7 @@ export class MyLibComponent implements OnInit {
 
     await componentGenerator(tree, {
       name: 'my-lib',
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib',
       skipFormat: true,
     });
     tree.write(
@@ -185,7 +187,7 @@ export class MyLibComponent implements OnInit {
 
   it('should be idempotent', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
       linter: Linter.None,
       skipFormat: true,
@@ -193,7 +195,7 @@ export class MyLibComponent implements OnInit {
 
     await componentGenerator(tree, {
       name: 'my-lib',
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib/my-lib',
       skipFormat: true,
     });
 

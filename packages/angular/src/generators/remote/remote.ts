@@ -5,23 +5,22 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import { setupMf } from '../setup-mf/setup-mf';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { findNextAvailablePort, updateSsrSetup } from './lib';
 import type { Schema } from './schema';
-import { swcHelpersVersion } from '@nx/js/src/utils/versions';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
-export async function remote(tree: Tree, options: Schema) {
-  return await remoteInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
+export async function remote(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'remote');
 
-export async function remoteInternal(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 
@@ -32,15 +31,13 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  const { projectName: remoteProjectName, projectNameAndRootFormat } =
+  await ensureProjectName(tree, options, 'application');
+  const { projectName: remoteProjectName } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/angular:remote',
     });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const port = options.port ?? findNextAvailablePort(tree);
 
@@ -72,21 +69,25 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     setParserOptionsProject: options.setParserOptionsProject,
   });
 
-  const installSwcHelpersTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@swc/helpers': swcHelpersVersion,
-    }
-  );
+  const installTasks = [appInstallTask];
+  if (!options.skipPackageJson) {
+    const installSwcHelpersTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@swc/helpers': swcHelpersVersion,
+      }
+    );
+    installTasks.push(installSwcHelpersTask);
+  }
 
-  let installTasks = [appInstallTask, installSwcHelpersTask];
   if (options.ssr) {
     let ssrInstallTask = await updateSsrSetup(tree, {
       appName: remoteProjectName,
       port,
       typescriptConfiguration,
       standalone: options.standalone,
+      skipPackageJson: options.skipPackageJson,
     });
     installTasks.push(ssrInstallTask);
   }

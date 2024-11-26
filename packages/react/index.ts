@@ -1,3 +1,9 @@
+import { NxReactWebpackPlugin as _NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';
+
+// TODO(v21): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
+/** @deprecated Use '@nx/react/webpack-plugin' instead. */
+export const NxReactWebpackPlugin = _NxReactWebpackPlugin;
+
 export {
   extraEslintDependencies,
   extendReactEslintJson,
@@ -8,7 +14,6 @@ export { reactDomVersion, reactVersion } from './src/utils/versions';
 export { applicationGenerator } from './src/generators/application/application';
 export { componentGenerator } from './src/generators/component/component';
 export { hookGenerator } from './src/generators/hook/hook';
-export { componentCypressGenerator } from './src/generators/component-cypress-spec/component-cypress-spec';
 export { componentStoryGenerator } from './src/generators/component-story/component-story';
 export { libraryGenerator } from './src/generators/library/library';
 export { reactInitGenerator } from './src/generators/init/init';
@@ -22,4 +27,3 @@ export { componentTestGenerator } from './src/generators/component-test/componen
 export { setupTailwindGenerator } from './src/generators/setup-tailwind/setup-tailwind';
 export type { SupportedStyles } from './typings/style';
 export * from './plugins/with-react';
-export { NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';

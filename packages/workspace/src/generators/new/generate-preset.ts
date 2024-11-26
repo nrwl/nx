@@ -36,6 +36,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     shell: true,
     cwd: join(host.root, opts.directory),
+    windowsHide: true,
   };
   const pmc = getPackageManagerCommand();
   const executable = `${pmc.exec} nx`;
@@ -81,6 +82,9 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
       opts.ssr ? `--ssr` : null,
+      opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
+      opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
+      opts.formatter ? `--formatter=${opts.formatter}` : null,
     ].filter((e) => !!e);
   }
 }
@@ -101,9 +105,10 @@ function getPresetDependencies({
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
       return {
-        dependencies: { '@nx/angular': nxVersion },
+        dependencies: {},
         dev: {
           '@angular-devkit/core': angularCliVersion,
+          '@nx/angular': nxVersion,
           typescript: typescriptVersion,
         },
       };
@@ -120,6 +125,10 @@ function getPresetDependencies({
     case Preset.NextJs:
     case Preset.NextJsStandalone:
       return { dependencies: { '@nx/next': nxVersion }, dev: {} };
+
+    case Preset.RemixStandalone:
+    case Preset.RemixMonorepo:
+      return { dependencies: { '@nx/remix': nxVersion }, dev: {} };
 
     case Preset.VueMonorepo:
     case Preset.VueStandalone:

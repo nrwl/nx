@@ -6,6 +6,38 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
     "my-app": {
       "root": "my-app",
       "targets": {
+        "acme-build-static": {
+          "cache": true,
+          "command": "nuxt build --prerender",
+          "dependsOn": [
+            "^acme-build-static",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxt",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist/my-app/.nuxt",
+            "{projectRoot}/.output",
+          ],
+        },
+        "acme-serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "acme-build-static",
+            "port": 4200,
+            "spa": false,
+            "staticFilePath": "{projectRoot}/dist",
+          },
+        },
         "build-something": {
           "cache": true,
           "command": "nuxt build",
@@ -25,7 +57,8 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{workspaceRoot}/dist/my-app/",
+            "{workspaceRoot}/dist/my-app/.nuxt",
+            "{projectRoot}/.output",
           ],
         },
         "my-serve": {
@@ -65,13 +98,46 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "dist/my-app/",
+            "dist/my-app/.nuxt",
+            "{projectRoot}/.output",
+          ],
+        },
+        "build-static": {
+          "cache": true,
+          "command": "nuxt build --prerender",
+          "dependsOn": [
+            "^build-static",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxt",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "dist/my-app/.nuxt",
+            "{projectRoot}/.output",
           ],
         },
         "serve": {
           "command": "nuxt dev",
           "options": {
             "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build-static",
+            "port": 4200,
+            "spa": false,
+            "staticFilePath": "{projectRoot}/dist",
           },
         },
       },

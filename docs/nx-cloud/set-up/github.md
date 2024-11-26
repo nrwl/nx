@@ -31,7 +31,7 @@ Check the "_CI Platform Considerations_" section below and if there are no addit
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Minimum GitHub Personal Access Token Permissions](/nx-cloud/set-up/minimal-github-access-token.png)
+![Minimum GitHub Personal Access Token Permissions](/nx-cloud/set-up/minimal-github-access-token.webp)
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the "_CI Platform Considerations_" section below, and if there are no additional instructions for your platform of choice, setup is complete.
 

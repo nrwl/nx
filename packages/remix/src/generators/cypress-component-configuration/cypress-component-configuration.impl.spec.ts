@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library.impl';
@@ -11,7 +13,7 @@ describe('CypressComponentConfiguration', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
-      name: 'cypress-test',
+      directory: 'cypress-test',
       unitTestRunner: 'vitest',
       style: 'css',
       addPlugin: false,

@@ -1,7 +1,7 @@
 /* eslint-disable */
 export default {
   displayName: 'e2e-nuxt',
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.e2e.js',
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },

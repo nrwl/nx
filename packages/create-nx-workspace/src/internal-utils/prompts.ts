@@ -22,6 +22,24 @@ export async function determineNxCloud(
   }
 }
 
+export async function determineIfGitHubWillBeUsed(
+  nxCloud: NxCloud
+): Promise<boolean> {
+  if (nxCloud === 'yes' || nxCloud === 'circleci') {
+    const reply = await enquirer.prompt<{ github: 'Yes' | 'No' }>([
+      {
+        name: 'github',
+        message: 'Will you be using GitHub as your git hosting provider?',
+        type: 'autocomplete',
+        choices: [{ name: 'Yes' }, { name: 'No' }],
+        initial: 0,
+      },
+    ]);
+    return reply.github === 'Yes';
+  }
+  return false;
+}
+
 async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
   const { message, choices, initial, fallback, footer, hint } =
     messages.getPrompt(key);
@@ -110,6 +128,7 @@ export async function determinePackageManager(
             { name: 'npm', message: 'NPM' },
             { name: 'yarn', message: 'Yarn' },
             { name: 'pnpm', message: 'PNPM' },
+            { name: 'bun', message: 'Bun' },
           ],
         },
       ])

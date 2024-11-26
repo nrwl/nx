@@ -149,8 +149,3 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 
 - [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
 - [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
-
-#### Older migration scenarios
-
-- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-react)
-- [Migrate to the Nx React Storybook Addon](/deprecated/storybook/migrate-webpack-final-react)

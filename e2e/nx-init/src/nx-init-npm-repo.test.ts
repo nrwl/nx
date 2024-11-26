@@ -42,8 +42,7 @@ describe('nx init (NPM repo - legacy)', () => {
         pmc.runUninstalledPackage
       } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
     );
-    console.log(output);
-    expect(output).toContain('Enabled computation caching');
+    expect(output).toContain('Run it again to replay the cached computation.');
 
     expect(runCLI('echo')).toContain('123');
     renameFile('nx.json', 'nx.json.old');
@@ -73,7 +72,7 @@ describe('nx init (NPM repo - legacy)', () => {
     );
 
     const output = runCommand('npm run compound TEST');
-    expect(output).toContain('HELLO\n');
+    expect(output).toContain('HELLO');
     expect(output).toContain('COMPOUND TEST');
     expect(output).not.toContain('HELLO COMPOUND');
     cleanupProject();

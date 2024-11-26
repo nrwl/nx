@@ -1,8 +1,8 @@
-import type { Tree } from 'nx/src/generators/tree';
-import { createTree } from 'nx/src/generators/testing-utils/create-tree';
-import { generateFiles } from './generate-files';
-import { join } from 'path';
 import * as FileType from 'file-type';
+import { createTree } from 'nx/src/generators/testing-utils/create-tree';
+import type { Tree } from 'nx/src/generators/tree';
+import { join } from 'path';
+import { OverwriteStrategy, generateFiles } from './generate-files';
 
 describe('generateFiles', () => {
   let tree: Tree;
@@ -78,5 +78,76 @@ describe('generateFiles', () => {
       ext: 'png',
       mime: 'image/png',
     });
+  });
+
+  it('should throw if overwrite is treated as an error', async () => {
+    expect(() => {
+      generateFiles(
+        tree,
+        join(__dirname, './test-files'),
+        '.',
+        {
+          foo: 'bar',
+          name: 'my-project',
+          projectName: 'my-project-name',
+          dot: '.',
+        },
+        { overwriteStrategy: OverwriteStrategy.ThrowIfExisting }
+      );
+    }).toThrowError(
+      'Generated file already exists, not allowed by overwrite strategy in generator (directory/file-in-directory.txt)'
+    );
+  });
+
+  it('should overwrite files when option is overwrite', async () => {
+    // Write a custom file that will be overwritten
+    tree.write(
+      'directory/file-in-directory.txt',
+      'placeholder text to overwrite'
+    );
+
+    // Run generation again
+    generateFiles(
+      tree,
+      join(__dirname, './test-files'),
+      '.',
+      {
+        foo: 'bar',
+        name: 'my-project',
+        projectName: 'my-project-name',
+        dot: '.',
+      },
+      { overwriteStrategy: OverwriteStrategy.Overwrite }
+    );
+
+    // File must have been overwritten
+    expect(
+      tree.read('directory/file-in-directory.txt', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should keep files when option is to keep existing files', async () => {
+    // Write a custom file that will stay the same
+    const placeholder = 'placeholder text to keep';
+    tree.write('directory/file-in-directory.txt', placeholder);
+
+    // Run generation again
+    generateFiles(
+      tree,
+      join(__dirname, './test-files'),
+      '.',
+      {
+        foo: 'bar',
+        name: 'my-project',
+        projectName: 'my-project-name',
+        dot: '.',
+      },
+      { overwriteStrategy: OverwriteStrategy.KeepExisting }
+    );
+
+    // File must have been kept
+    expect(tree.read('directory/file-in-directory.txt', 'utf-8')).toEqual(
+      placeholder
+    );
   });
 });

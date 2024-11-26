@@ -4,12 +4,14 @@ import {
   runTasksInSerial,
   type GeneratorCallback,
   type Tree,
+  readNxJson,
+  createProjectGraphAsync,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nextVersion, nxVersion } from '../../utils/versions';
-import { addPlugin } from './lib/add-plugin';
 import type { InitSchema } from './schema';
 
 function updateDependencies(host: Tree, schema: InitSchema) {
@@ -44,9 +46,33 @@ export async function nextInitGeneratorInternal(
   host: Tree,
   schema: InitSchema
 ) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  assertNotUsingTsSolutionSetup(host, 'next', 'init');
+
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
-    addPlugin(host);
+    const { createNodes } = await import('../../plugins/plugin');
+    await addPluginV1(
+      host,
+      await createProjectGraphAsync(),
+      '@nx/next/plugin',
+      createNodes,
+      {
+        startTargetName: ['start', 'next:start', 'next-start'],
+        buildTargetName: ['build', 'next:build', 'next-build'],
+        devTargetName: ['dev', 'next:dev', 'next-dev'],
+        serveStaticTargetName: [
+          'serve-static',
+          'next:serve-static',
+          'next-serve-static',
+        ],
+      },
+      schema.updatePackageScripts
+    );
   }
 
   addGitIgnoreEntry(host);
@@ -54,11 +80,6 @@ export async function nextInitGeneratorInternal(
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(host, schema);
-  }
-
-  if (schema.updatePackageScripts) {
-    const { createNodes } = await import('../../plugins/plugin');
-    await updatePackageScripts(host, createNodes);
   }
 
   return installTask;

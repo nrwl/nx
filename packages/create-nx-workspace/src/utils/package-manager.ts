@@ -7,12 +7,14 @@ import { join } from 'path';
  * we duplicate the helper functions from @nx/workspace in this file.
  */
 
-export const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
+export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
 
-export type PackageManager = typeof packageManagerList[number];
+export type PackageManager = (typeof packageManagerList)[number];
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'yarn.lock'))
+  return existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
     ? 'pnpm'
@@ -38,6 +40,8 @@ export function getPackageManagerCommand(
   exec: string;
   preInstall?: string;
   globalAdd: string;
+  // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
+  getRegistryUrl?: string;
 } {
   const pmVersion = getPackageManagerVersion(packageManager);
   const [pmMajor, pmMinor] = pmVersion.split('.');
@@ -54,6 +58,9 @@ export function getPackageManagerCommand(
         // using npx is necessary to avoid yarn classic manipulating the version detection when using berry
         exec: useBerry ? 'npx' : 'yarn',
         globalAdd: 'yarn global add',
+        getRegistryUrl: useBerry
+          ? 'yarn config get npmRegistryServer'
+          : 'yarn config get registry',
       };
 
     case 'pnpm':
@@ -65,6 +72,7 @@ export function getPackageManagerCommand(
         install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
         globalAdd: 'pnpm add -g',
+        getRegistryUrl: 'pnpm config get registry',
       };
 
     case 'npm':
@@ -72,6 +80,14 @@ export function getPackageManagerCommand(
         install: 'npm install --silent --ignore-scripts',
         exec: 'npx',
         globalAdd: 'npm i -g',
+        getRegistryUrl: 'npm config get registry',
+      };
+    case 'bun':
+      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      return {
+        install: 'bun install --silent --ignore-scripts',
+        exec: 'bunx',
+        globalAdd: 'bun install -g',
       };
   }
 }
@@ -107,6 +123,7 @@ export function getPackageManagerVersion(
   const version = execSync(`${packageManager} --version`, {
     cwd,
     encoding: 'utf-8',
+    windowsHide: true,
   }).trim();
   pmVersionCache.set(packageManager, version);
   return version;

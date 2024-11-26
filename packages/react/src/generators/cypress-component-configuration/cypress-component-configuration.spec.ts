@@ -7,11 +7,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
-import { applicationGenerator } from '../application/application';
-import { componentGenerator } from '../component/component';
-import { libraryGenerator } from '../library/library';
-import { cypressComponentConfigGenerator } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -21,6 +16,13 @@ jest.mock('@nx/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
+
+import { Linter } from '@nx/eslint';
+import { applicationGenerator } from '../application/application';
+import { componentGenerator } from '../component/component';
+import { libraryGenerator } from '../library/library';
+import { cypressComponentConfigGenerator } from './cypress-component-configuration';
+
 jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -46,9 +48,14 @@ describe('React:CypressComponentTestConfiguration', () => {
   });
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+
+    projectGraph = {
+      nodes: {},
+      dependencies: {},
+    };
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 
@@ -61,19 +68,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -119,19 +124,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     // --build-target still needs to build the graph in order for readTargetOptions to work
     projectGraph = {
@@ -188,19 +191,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -256,19 +257,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'webpack',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -323,23 +322,21 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'jest',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      project: 'some-lib',
+      path: 'some-lib/src/lib/another-cmp/another-cmp',
       style: 'scss',
     });
 
@@ -370,30 +367,27 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'jest',
       js: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await componentGenerator(tree, {
       name: 'some-cmp',
-      flat: true,
-      project: 'some-lib',
+      path: 'some-lib/src/lib/some-cmp',
       style: 'scss',
       js: true,
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      project: 'some-lib',
+      path: 'some-lib/src/lib/another-cmp/another-cmp',
       style: 'scss',
       js: true,
     });
@@ -420,7 +414,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     ).toBeFalsy();
   });
 
-  it('should not throw error when an invalid --build-target is provided', async () => {
+  it('should throw error when an invalid --build-target is provided', async () => {
     mockedAssertCypressVersion.mockReturnValue();
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
@@ -428,22 +422,21 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
-      name: 'some-lib',
+      directory: 'some-lib',
       style: 'scss',
       unitTestRunner: 'none',
       linter: Linter.None,
       skipFormat: false,
       skipTsConfig: false,
-      projectNameAndRootFormat: 'as-provided',
     });
     const appConfig = readProjectConfiguration(tree, 'my-app');
     appConfig.targets['build'].executor = 'something/else';
     updateProjectConfiguration(tree, 'my-app', appConfig);
+    jest.clearAllMocks();
     projectGraph = {
       nodes: {
         'my-app': {
@@ -463,16 +456,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
       dependencies: {},
     };
-    await expect(async () => {
-      await cypressComponentConfigGenerator(tree, {
+
+    await expect(
+      cypressComponentConfigGenerator(tree, {
         project: 'some-lib',
         generateTests: true,
         buildTarget: 'my-app:build',
-      });
-    }).resolves;
-    expect(
-      require('@nx/devkit').createProjectGraphAsync
-    ).not.toHaveBeenCalled();
+      })
+    ).rejects.toThrow();
+    expect(require('@nx/devkit').createProjectGraphAsync).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   it('should setup cypress config files correctly', async () => {
@@ -484,19 +478,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {

@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/esbuild",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["esbuild"]
+  "implicitDependencies": ["esbuild"],
+  "// targets": "to see all targets run: nx show project e2e-esbuild --web",
+  "targets": {}
 }

@@ -23,7 +23,7 @@ Make sure to install the `@nx/nuxt` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/nuxt` by running the following command:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/nuxt
 ```
 
@@ -56,21 +56,25 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
       "options": {
         "buildTargetName": "build",
         "testTargetName": "test",
-        "serveTargetName": "serve"
+        "serveTargetName": "serve",
+        "buildStaticTargetName": "build-static",
+        "serveStaticTargetName": "serve-static"
       }
     }
   ]
 }
 ```
 
-- The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
+The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
+
+The `buildStaticTargetName` and `serveStaticTargetName` options control the names of the inferred Nuxt static tasks. The default names are `build-static` and `serve-static`.
 
 ## Using Nuxt
 
 ### Generate a new Nuxt app
 
 ```shell
-nx g @nx/nuxt:app my-app
+nx g @nx/nuxt:app apps/my-app
 ```
 
 ### Deploy a Nuxt app
@@ -78,3 +82,23 @@ nx g @nx/nuxt:app my-app
 Once you are ready to deploy your Nuxt application, you have absolute freedom to choose any hosting provider that fits your needs.
 
 We have detailed [how to deploy your Nuxt application to Vercel in a separate guide](/recipes/nuxt/deploy-nuxt-to-vercel).
+
+### E2E testing
+
+By default `nuxt` **does not** generate static HTML files when you run the `build` command. However, Nx provides a `build-static` target that you can use to generate static HTML files for your Nuxt application. Essentially, this target runs the `nuxt build --prerender` command to generate static HTML files.
+
+To perform end-to-end (E2E) testing on static HTML files using a test runner like Cypress. When you create a Nuxt application, Nx automatically creates a `serve-static` target. This target is designed to serve the static HTML files produced by the `build-static` command.
+
+This feature is particularly useful for testing in continuous integration (CI) pipelines, where resources may be constrained. Unlike the `serve` target, `serve-static` does not require a Nuxt's Nitro server to operate, making it more efficient and faster by eliminating background processes, such as file change monitoring.
+
+To utilize the `serve-static` target for testing, run the following command:
+
+```shell
+nx serve-static my-nuxt-app-e2e
+```
+
+This command performs several actions:
+
+1. It will build the Nuxt application and generate the static HTML files.
+2. It will serve the static HTML files using a simple HTTP server.
+3. It will run the Cypress tests against the served static HTML files.

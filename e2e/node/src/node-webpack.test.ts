@@ -11,6 +11,7 @@ import {
   uniq,
   updateFile,
   updateJson,
+  promisifiedTreeKill,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import { join } from 'path';
@@ -28,9 +29,12 @@ describe('Node Applications + webpack', () => {
     const app = uniq('nodeapp');
 
     // This fails with Crystal enabled because `--optimization` is not a correct flag to pass to `webpack`.
-    runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`, {
-      env: { NX_ADD_PLUGINS: 'false' },
-    });
+    runCLI(
+      `generate @nx/node:app apps/${app} --bundler=webpack --no-interactive`,
+      {
+        env: { NX_ADD_PLUGINS: 'false' },
+      }
+    );
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 
@@ -61,7 +65,9 @@ describe('Node Applications + webpack', () => {
 
     // Test that serve can re-run dependency builds.
     const lib = uniq('nodelib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=esbuild --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib libs/${lib} --bundler=esbuild --no-interactive`
+    );
 
     updateJson(join('apps', app, 'project.json'), (config) => {
       // Since we read from lib from dist, we should re-build it when lib changes.
@@ -82,6 +88,11 @@ describe('Node Applications + webpack', () => {
       `serve ${app} --watch --runBuildTargetDependencies`,
       (output) => {
         return output.includes(`Hello`);
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
       }
     );
 
@@ -103,9 +114,9 @@ describe('Node Applications + webpack', () => {
           output.includes(`should rebuild lib`)
         );
       },
-      { timeout: 30_000, ms: 200 }
+      { timeout: 60_000, ms: 200 }
     );
 
-    serveProcess.kill();
+    await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
   }, 300_000);
 });

@@ -4,13 +4,6 @@
   "sourceRoot": "packages/nuxt",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "packages/nuxt/jest.config.ts"
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/nuxt"]
-    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -62,7 +55,6 @@
     "build": {
       "command": "node ./scripts/copy-readme.js nuxt",
       "outputs": ["{workspaceRoot}/build/packages/nuxt"]
-    },
-    "lint": {}
+    }
   }
 }

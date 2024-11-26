@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
@@ -11,10 +13,9 @@ describe('e2eProjectGenerator', () => {
 
   it('should generate default spec for server app (integrated)', async () => {
     await applicationGenerator(tree, {
-      name: 'api',
+      directory: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
-      projectNameAndRootFormat: 'as-provided',
       addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
@@ -28,11 +29,10 @@ describe('e2eProjectGenerator', () => {
 
   it('should generate default spec for server app (standalone)', async () => {
     await applicationGenerator(tree, {
-      name: 'api',
+      directory: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
       rootProject: true,
-      projectNameAndRootFormat: 'as-provided',
       addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
@@ -47,10 +47,9 @@ describe('e2eProjectGenerator', () => {
 
   it('should generate cli project', async () => {
     await applicationGenerator(tree, {
-      name: 'api',
+      directory: 'api',
       framework: 'none',
       e2eTestRunner: 'none',
-      projectNameAndRootFormat: 'as-provided',
       addPlugin: true,
     });
     await e2eProjectGenerator(tree, {

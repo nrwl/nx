@@ -1,3 +1,5 @@
+import { getEnvironmentConfig } from '@nx/graph/shared';
+
 const htmlEl = document.documentElement;
 export const localStorageThemeKey = 'nx-dep-graph-theme';
 export type Theme = 'light' | 'dark' | 'system';
@@ -48,6 +50,10 @@ export function getSystemTheme(): 'light' | 'dark' {
   if (isVSCodeDark || isVSCodeLight) {
     return isVSCodeDark ? 'dark' : 'light';
   }
+  // we don't want to use system theme in nx-console because it might conflict with the IDE theme
+  if (getEnvironmentConfig().environment === 'nx-console') {
+    return 'light';
+  }
   const isDarkMedia = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return isDarkMedia || isVSCodeDark ? 'dark' : 'light';
 }
@@ -65,8 +71,9 @@ export function themeResolver(theme: Theme) {
     currentTheme = theme;
   } else {
     const resolver = getSystemTheme();
-
-    darkMedia.addEventListener('change', mediaListener);
+    if (getEnvironmentConfig().environment !== 'nx-console') {
+      darkMedia.addEventListener('change', mediaListener);
+    }
     vscodeDarkOberserver.observe(document.body, {
       attributes: true,
       attributeFilter: ['class'],

@@ -1,6 +1,6 @@
 # Function: generateFiles
 
-▸ **generateFiles**(`tree`, `srcFolder`, `target`, `substitutions`): `void`
+▸ **generateFiles**(`tree`, `srcFolder`, `target`, `substitutions`, `options?`): `void`
 
 Generates a folder of files based on provided templates.
 
@@ -32,6 +32,7 @@ doesn't get confused about incorrect TypeScript files.
 | `srcFolder`     | `string`                              | the source folder of files (absolute path)    |
 | `target`        | `string`                              | the target folder (relative to the tree root) |
 | `substitutions` | `Object`                              | an object of key-value pairs                  |
+| `options?`      | `GenerateFilesOptions`                | See GenerateFilesOptions                      |
 
 #### Returns
 

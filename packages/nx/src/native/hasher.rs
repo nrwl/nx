@@ -22,12 +22,16 @@ pub fn hash_file(file: String) -> Option<String> {
 #[inline]
 pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
     let path = path.as_ref();
+    trace!("Reading {:?} to hash", path);
     let Ok(content) = std::fs::read(path) else {
         trace!("Failed to read file: {:?}", path);
         return None;
     };
+    trace!("Hashing {:?}", path);
+    let hash = hash(&content);
+    trace!("Hashed file {:?} - {:?}", path, hash);
 
-    Some(hash(&content))
+    Some(hash)
 }
 
 #[cfg(test)]

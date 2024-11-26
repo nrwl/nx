@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 // mock so we can test multiple versions
 jest.mock('@nx/cypress/src/utils/cypress-version');
 // mock bc the nxE2EPreset uses fs for path normalization

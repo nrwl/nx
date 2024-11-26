@@ -14,7 +14,7 @@ Because we are using an Nx plugin for Fastify, all the features of Nx are availa
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
@@ -34,7 +34,7 @@ If you are adding Fastify to an existing repo, continue to the next section.
 
 ## Install the Node Plugin
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/node
 ```
 
@@ -47,7 +47,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/node:app fastify-api --directory=apps/fastify-api
+nx g @nx/node:app apps/fastify-api
 ```
 
 Serve the API by running
@@ -67,7 +67,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/node:lib my-lib --directory=libs/my-lib
+nx g @nx/node:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.

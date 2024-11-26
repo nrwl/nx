@@ -17,8 +17,8 @@ To generate a remote application in your workspace, run the following command:
 {% tabs %}
 {% tab label="React" %}
 
-```{% command="nx g @nx/react:remote myremote --directory=apps/react/myremote" %}
->  NX  Generating @nx/react:remote
+```{% command="nx g @nx/react:remote apps/react/myremote" %}
+NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
 CREATE apps/react/myremote/src/assets/.gitkeep
@@ -49,8 +49,8 @@ UPDATE tsconfig.base.json
 {% /tab %}
 {% tab label="Angular" %}
 
-```{% command="nx g @nx/angular:remote myremote --directory=apps/angular/myremote" %}
-> NX Generating @nx/angular:host
+```{% command="nx g @nx/angular:remote apps/angular/myremote" %}
+NX Generating @nx/angular:host
 
 CREATE apps/angular/myremote/project.json
 CREATE apps/angular/myremote/src/assets/.gitkeep
@@ -125,8 +125,8 @@ The command would look like the following:
 {% tabs %}
 {% tab label="React" %}
 
-```{% command="nx g @nx/react:remote myremote --directory=apps/react/myremote --host=shell" %}
->  NX  Generating @nx/react:remote
+```{% command="nx g @nx/react:remote apps/react/myremote --host=shell" %}
+NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
 CREATE apps/react/myremote/src/assets/.gitkeep
@@ -158,7 +158,7 @@ UPDATE tsconfig.base.json
 {% /tab %}
 {% tab label="Angular" %}
 
-```{% command="nx g @nx/angular:remote myremote --directory=apps/angular/myremote --host=shell" %}
+```{% command="nx g @nx/angular:remote apps/angular/myremote --host=shell" %}
 > NX Generating @nx/angular:host
 
 CREATE apps/angular/myremote/project.json

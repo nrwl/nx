@@ -18,21 +18,19 @@ describe('@nx/react-native', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive`
     );
   });
 
   afterAll(() => cleanupProject());
 
   it('should bundle the app', async () => {
-    const result = runCLI(
-      `bundle ${appName} --platform=ios --bundle-output=dist.js --entry-file=src/main.tsx`
-    );
+    expect(() =>
+      runCLI(
+        `bundle ${appName} --platform=ios --bundle-output=dist.js --entry-file=src/main.tsx`
+      )
+    ).not.toThrow();
     fileExists(` ${appName}/dist.js`);
-
-    expect(result).toContain(
-      `Successfully ran target bundle for project ${appName}`
-    );
   }, 200_000);
 
   it('should start the app', async () => {
@@ -66,7 +64,7 @@ describe('@nx/react-native', () => {
 
     try {
       process = await runCommandUntil(
-        `serve ${appName} --interactive=false --port=${port}`,
+        `serve ${appName} --port=${port}`,
         (output) => {
           return output.includes(`http://localhost:${port}`);
         }
@@ -87,11 +85,20 @@ describe('@nx/react-native', () => {
 
   it('should run e2e for cypress', async () => {
     if (runE2ETests()) {
-      let results = runCLI(`e2e ${appName}-e2e`);
-      expect(results).toContain('Successfully ran target e2e');
+      expect(() => runCLI(`e2e ${appName}-e2e`)).not.toThrow();
 
-      results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
-      expect(results).toContain('Successfully ran target e2e');
+      expect(() =>
+        runCLI(`e2e ${appName}-e2e --configuration=ci`)
+      ).not.toThrow();
+
+      // port and process cleanup
+      try {
+        if (process && process.pid) {
+          await killProcessAndPorts(process.pid, 4200);
+        }
+      } catch (err) {
+        expect(err).toBeFalsy();
+      }
     }
   });
 
@@ -102,6 +109,33 @@ describe('@nx/react-native', () => {
     checkFilesExist(
       `${appName}/.storybook/main.ts`,
       `${appName}/src/app/App.stories.tsx`
+    );
+  });
+
+  it('should run build with vite bundler and e2e with playwright', async () => {
+    const appName2 = uniq('my-app');
+    runCLI(
+      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+    );
+    expect(() => runCLI(`build ${appName2}`)).not.toThrow();
+    if (runE2ETests()) {
+      expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
+      // port and process cleanup
+      try {
+        if (process && process.pid) {
+          await killProcessAndPorts(process.pid, 4200);
+        }
+      } catch (err) {
+        expect(err).toBeFalsy();
+      }
+    }
+
+    runCLI(
+      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+    );
+    checkFilesExist(
+      `apps/${appName2}/.storybook/main.ts`,
+      `apps/${appName2}/src/app/App.stories.tsx`
     );
   });
 });

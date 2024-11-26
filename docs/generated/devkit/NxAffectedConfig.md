@@ -1,5 +1,9 @@
 # Interface: NxAffectedConfig
 
+**`Deprecated`**
+
+Use [NxJsonConfiguration#defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase) instead
+
 ## Table of contents
 
 ### Properties

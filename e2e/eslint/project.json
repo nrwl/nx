@@ -3,16 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/eslint",
   "projectType": "application",
-  "targets": {
-    "e2e": {},
-    "run-e2e-tests": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "e2e/eslint/jest.config.ts",
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/e2e/eslint"]
-    }
-  },
-  "implicitDependencies": ["eslint"]
+  "implicitDependencies": ["eslint"],
+  "// targets": "to see all targets run: nx show project e2e-eslint --web",
+  "targets": {}
 }

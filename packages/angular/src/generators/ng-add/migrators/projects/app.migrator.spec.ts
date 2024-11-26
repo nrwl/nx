@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type {
   ProjectConfiguration,
   TargetConfiguration,
@@ -48,6 +50,18 @@ describe('app migrator', () => {
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
 
     jest.clearAllMocks();
+  });
+
+  it('should not migrate project when validation fails', async () => {
+    // add project with no root
+    const project = addProject('app1', {} as any);
+    const migrator = new AppMigrator(tree, {}, project);
+
+    await migrator.migrate();
+
+    expect(tree.exists('apps/app1/project.json')).toBe(false);
+    const { projects } = readJson(tree, 'angular.json');
+    expect(projects.app1).toBeDefined();
   });
 
   describe('validation', () => {

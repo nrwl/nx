@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/plugin",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["create-nx-plugin"]
+  "implicitDependencies": ["create-nx-plugin"],
+  "// targets": "to see all targets run: nx show project e2e-plugin --web",
+  "targets": {}
 }

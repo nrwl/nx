@@ -107,7 +107,8 @@ async function convertProjectTargets(
   }
 
   const { buildTargetName, serverTargetName } = getTargetsToConvert(
-    project.targets
+    project.targets,
+    angularVersion
   );
   if (!buildTargetName) {
     warnIfProvided(
@@ -181,7 +182,9 @@ async function convertProjectTargets(
     }
 
     // Delete removed options
-    delete options['deployUrl'];
+    if (lt(angularVersion, '17.3.0')) {
+      delete options['deployUrl'];
+    }
     delete options['vendorChunk'];
     delete options['commonChunk'];
     delete options['resourcesOutputPath'];
@@ -266,7 +269,10 @@ async function convertProjectTargets(
   return true;
 }
 
-function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
+function getTargetsToConvert(
+  targets: Record<string, TargetConfiguration>,
+  angularVersion: string
+): {
   buildTargetName?: string;
   serverTargetName?: string;
 } {
@@ -286,7 +292,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
     // build target
     if (executorsToConvert.has(targets[target].executor)) {
       for (const [, options] of allTargetOptions(targets[target])) {
-        if (options.deployUrl) {
+        if (lt(angularVersion, '17.3.0') && options.deployUrl) {
           logger.warn(
             `The project is using the "deployUrl" option which is not available in the application builder. Skipping conversion.`
           );

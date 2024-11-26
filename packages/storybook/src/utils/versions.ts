@@ -6,8 +6,8 @@ export const litVersion = '^2.6.1';
 export const tsNodeVersion = '10.9.1';
 export const tsLibVersion = '^2.3.0';
 
-export const storybookVersion = '^7.5.3';
+export const storybookVersion = '^8.2.8';
 export const reactVersion = '^18.2.0';
 export const viteVersion = '^5.0.0';
 
-export const coreJsVersion = '^3.6.5';
+export const coreJsVersion = '^3.36.1';

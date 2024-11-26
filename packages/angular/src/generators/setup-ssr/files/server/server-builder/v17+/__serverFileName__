@@ -5,7 +5,7 @@ import { CommonEngine } from '@angular/ssr';
 import * as express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import <% if (standalone) { %>bootstrap<% } else { %>{ <%= rootModuleClassName %> }<% } %> from './src/<%= main.slice(0, -3) %>';
+import <% if (standalone) { %>bootstrap<% } else { %><%= rootModuleClassName %><% } %> from './src/<%= main.slice(0, -3) %>';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -23,9 +23,12 @@ export function app(): express.Express {
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
-  server.get('*.*', express.static(distFolder, {
-    maxAge: '1y'
-  }));
+  server.get(
+    '*.*',
+    express.static(distFolder, {
+      maxAge: '1y',
+    })
+  );
 
   // All regular routes use the Angular engine
   server.get('*', (req, res, next) => {

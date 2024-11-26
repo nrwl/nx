@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -10,7 +12,10 @@ describe('webWorker generator', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: appName, skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: appName,
+      skipFormat: true,
+    });
     jest.clearAllMocks();
   });
 

@@ -24,35 +24,26 @@ interface NormalizedSchema extends Schema {
   projectRoot: string;
   filePath: string;
   directory: string;
+  project: string;
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(
-    host,
-    path.join(__dirname, './files/executor'),
-    options.directory,
-    {
-      ...options,
-    }
-  );
+  generateFiles(host, path.join(__dirname, './files/executor'), options.path, {
+    ...options,
+  });
 
   if (options.unitTestRunner === 'none') {
-    host.delete(joinPathFragments(options.directory, `executor.spec.ts`));
+    host.delete(joinPathFragments(options.path, `executor.spec.ts`));
   }
 }
 
 function addHasherFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(
-    host,
-    path.join(__dirname, './files/hasher'),
-    options.directory,
-    {
-      ...options,
-    }
-  );
+  generateFiles(host, path.join(__dirname, './files/hasher'), options.path, {
+    ...options,
+  });
 
   if (options.unitTestRunner === 'none') {
-    host.delete(joinPathFragments(options.directory, 'hasher.spec.ts'));
+    host.delete(joinPathFragments(options.path, 'hasher.spec.ts'));
   }
 }
 
@@ -124,18 +115,18 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
     executors ||= {};
     executors[options.name] = {
       implementation: `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
+        relative(options.projectRoot, options.path),
         'executor'
       )}`,
       schema: `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
+        relative(options.projectRoot, options.path),
         'schema.json'
       )}`,
       description: options.description,
     };
     if (options.includeHasher) {
       executors[options.name].hasher = `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
+        relative(options.projectRoot, options.path),
         'hasher'
       )}`;
     }
@@ -151,14 +142,9 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const { project, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactType: 'executor',
-      callingGenerator: '@nx/plugin:executor',
       name: options.name,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
-      directory: options.directory,
+      path: options.path,
       fileName: 'executor',
-      derivedDirectory: 'executors',
     });
 
   const { className, propertyName } = names(artifactName);
@@ -184,14 +170,7 @@ async function normalizeOptions(
   };
 }
 
-export async function executorGenerator(tree: Tree, rawOptions: Schema) {
-  await executorGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function executorGeneratorInternal(host: Tree, schema: Schema) {
+export async function executorGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);

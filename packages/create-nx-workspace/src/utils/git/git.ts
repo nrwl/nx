@@ -4,7 +4,9 @@ import { output } from '../output';
 
 export function checkGitVersion(): string | null | undefined {
   try {
-    let gitVersionOutput = execSync('git --version').toString().trim();
+    let gitVersionOutput = execSync('git --version', { windowsHide: true })
+      .toString()
+      .trim();
     return gitVersionOutput.match(/[0-9]+\.[0-9]+\.+[0-9]+/)?.[0];
   } catch {
     return null;
@@ -16,6 +18,7 @@ export async function initializeGitRepo(
   options: {
     defaultBase: string;
     commit?: { message: string; name: string; email: string };
+    connectUrl?: string | null;
   }
 ) {
   const execute = (args: ReadonlyArray<string>, ignoreErrorStream = false) => {
@@ -40,6 +43,7 @@ export async function initializeGitRepo(
             }
           : {}),
       },
+      windowsHide: true,
     };
     return new Promise<void>((resolve, reject) => {
       spawn('git', args, spawnOptions).on('close', (code) => {
@@ -80,7 +84,16 @@ export async function initializeGitRepo(
   }
   await execute(['add', '.']);
   if (options.commit) {
-    const message = options.commit.message || 'initial commit';
+    let message = `${options.commit.message}` || 'initial commit';
+    if (options.connectUrl) {
+      message = `${message}
+
+To connect your workspace to Nx Cloud, push your repository
+to your git hosting provider and go to the following URL:
+  
+${options.connectUrl}
+`;
+    }
     await execute(['commit', `-m "${message}"`]);
   }
 }

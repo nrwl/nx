@@ -19,14 +19,16 @@ export function mapRemotes(
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      mappedRemotes[remote[0]] = handleArrayRemote(
+      const remoteName = normalizeRemoteName(remote[0]);
+      mappedRemotes[remoteName] = handleArrayRemote(
         remote,
         remoteEntryExt,
         isRemoteGlobal
       );
     } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = handleStringRemote(
-        remote,
+      const remoteName = normalizeRemoteName(remote);
+      mappedRemotes[remoteName] = handleStringRemote(
+        remoteName,
         determineRemoteUrl,
         isRemoteGlobal
       );
@@ -42,7 +44,8 @@ function handleArrayRemote(
   remoteEntryExt: 'js' | 'mjs',
   isRemoteGlobal: boolean
 ): string {
-  const [remoteName, remoteLocation] = remote;
+  let [remoteName, remoteLocation] = remote;
+  remoteName = normalizeRemoteName(remoteName);
   const remoteLocationExt = extname(remoteLocation);
 
   // If remote location already has .js or .mjs extension
@@ -95,7 +98,8 @@ export function mapRemotesForSSR(
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      const [remoteName, remoteLocation] = remote;
+      let [remoteName, remoteLocation] = remote;
+      remoteName = normalizeRemoteName(remoteName);
       const remoteLocationExt = extname(remoteLocation);
       mappedRemotes[remoteName] = `${remoteName}@${
         ['.js', '.mjs'].includes(remoteLocationExt)
@@ -107,9 +111,14 @@ export function mapRemotesForSSR(
             }/remoteEntry.${remoteEntryExt}`
       }`;
     } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = `${remote}@${determineRemoteUrl(remote)}`;
+      const remoteName = normalizeRemoteName(remote);
+      mappedRemotes[remoteName] = `${remoteName}@${determineRemoteUrl(remote)}`;
     }
   }
 
   return mappedRemotes;
+}
+
+function normalizeRemoteName(remote: string) {
+  return remote.replace(/-/g, '_');
 }

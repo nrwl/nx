@@ -9,7 +9,6 @@ jest.mock('@nx/devkit', () => ({
 import {
   addProjectConfiguration as _addProjectConfiguration,
   readProjectConfiguration,
-  stripIndents,
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
@@ -46,27 +45,19 @@ describe('createJestConfig', () => {
   });
 
   it('should generate files with --js flag', async () => {
-    await createJestConfig(tree, { js: true });
+    await createJestConfig(tree, { js: true }, 'js');
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
-    expect(
-      stripIndents`${tree.read('jest.config.js', 'utf-8')}`
-    ).toMatchSnapshot();
-    expect(
-      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`
-    ).toMatchSnapshot();
+    expect(tree.read('jest.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('jest.preset.js', 'utf-8')).toMatchSnapshot();
   });
 
   it('should generate files ', async () => {
-    await createJestConfig(tree, {});
+    await createJestConfig(tree, {}, 'js');
 
     expect(tree.exists('jest.config.ts')).toBeTruthy();
-    expect(
-      stripIndents`${tree.read('jest.config.ts', 'utf-8')}`
-    ).toMatchSnapshot();
-    expect(
-      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`
-    ).toMatchSnapshot();
+    expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('jest.preset.js', 'utf-8')).toMatchSnapshot();
   });
 
   it('should not override existing files', async () => {
@@ -83,7 +74,7 @@ describe('createJestConfig', () => {
         },
       },
     });
-    const expected = stripIndents`
+    const expected = `
 import { getJestProjects } from '@nx/jest';
 export default {
   projects: getJestProjects(),
@@ -92,13 +83,13 @@ export default {
 `;
     tree.write('jest.config.ts', expected);
 
-    await createJestConfig(tree, {});
+    await createJestConfig(tree, {}, 'js');
 
     expect(tree.read('jest.config.ts', 'utf-8')).toEqual(expected);
   });
 
   it('should make js jest files', async () => {
-    await createJestConfig(tree, { js: true });
+    await createJestConfig(tree, { js: true }, 'js');
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(tree.exists('jest.preset.js')).toBeTruthy();
@@ -106,7 +97,7 @@ export default {
 
   describe('root project', () => {
     it('should not add a monorepo jest.config.ts  to the project', async () => {
-      await createJestConfig(tree, { rootProject: true });
+      await createJestConfig(tree, { rootProject: true }, 'js');
 
       expect(tree.exists('jest.config.ts')).toBeFalsy();
     });
@@ -143,7 +134,7 @@ export default {
 `
       );
 
-      await createJestConfig(tree, { rootProject: false });
+      await createJestConfig(tree, { rootProject: false }, 'js');
 
       expect(tree.exists('jest.config.app.ts')).toBeTruthy();
       expect(tree.read('jest.config.app.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -162,11 +153,11 @@ export default {
         "
       `);
       expect(tree.read('jest.config.ts', 'utf-8'))
-        .toEqual(`import { getJestProjects } from '@nx/jest';
+        .toEqual(`import { getJestProjectsAsync } from '@nx/jest';
 
-export default {
-projects: getJestProjects()
-};`);
+export default async () => ({
+  projects: await getJestProjectsAsync()
+});`);
       expect(readProjectConfiguration(tree, 'my-project').targets.test)
         .toMatchInlineSnapshot(`
         {
@@ -210,15 +201,15 @@ module.exports = {
 `
       );
 
-      await createJestConfig(tree, { js: true, rootProject: false });
+      await createJestConfig(tree, { js: true, rootProject: false }, 'js');
 
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
-        .toEqual(`const { getJestProjects } = require('@nx/jest');
+        .toEqual(`const { getJestProjectsAsync } = require('@nx/jest');
 
-module.exports = {
-projects: getJestProjects()
-};`);
+module.exports = async () => ({
+  projects: await getJestProjectsAsync()
+});`);
     });
   });
 });

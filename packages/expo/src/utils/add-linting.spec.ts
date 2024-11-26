@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -10,9 +12,8 @@ describe('Add Linting', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.None,
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 

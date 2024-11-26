@@ -2,7 +2,7 @@
   "version": 2,
   "outputCapture": "direct-nodejs",
   "title": "File Server",
-  "description": "Serve a web application from a folder.",
+  "description": "Serve a web application from a folder. This executor is a wrapper around the [http-server](https://www.npmjs.com/package/http-server) package.",
   "type": "object",
   "cli": "nx",
   "properties": {
@@ -44,7 +44,7 @@
     },
     "proxyUrl": {
       "type": "string",
-      "description": "URL to proxy unhandled requests to."
+      "description": "URL to proxy unhandled requests to. _Note: If the 'spa' flag is set to true, manually setting this value will override the catch-all redirect functionality from http-server which may lead to unexpected behavior._"
     },
     "proxyOptions": {
       "type": "object",
@@ -94,5 +94,6 @@
       "default": -1
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true,
+  "examplesFile": "../../../docs/file-server-examples.md"
 }

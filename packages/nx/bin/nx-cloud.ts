@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 
-import { findAncestorNodeModules } from '../src/nx-cloud/resolution-helpers';
 import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options';
 import {
   NxCloudClientUnavailableError,
   NxCloudEnterpriseOutdatedError,
-  verifyOrUpdateNxCloudClient,
 } from '../src/nx-cloud/update-manager';
 import type { CloudTaskRunnerOptions } from '../src/nx-cloud/nx-cloud-tasks-runner-shell';
 import { output } from '../src/utils/output';
+import {
+  UnknownCommandError,
+  getCloudClient,
+} from '../src/nx-cloud/utilities/client';
 
 const command = process.argv[2];
 
@@ -16,31 +18,23 @@ const options = getCloudOptions();
 
 Promise.resolve().then(async () => invokeCommandWithNxCloudClient(options));
 
-async function invokeCommandWithNxCloudClient(options: CloudTaskRunnerOptions) {
+export async function invokeCommandWithNxCloudClient(
+  options: CloudTaskRunnerOptions
+) {
   try {
-    const { nxCloudClient } = await verifyOrUpdateNxCloudClient(options);
-
-    const paths = findAncestorNodeModules(__dirname, []);
-    nxCloudClient.configureLightClientRequire()(paths);
-
-    if (command in nxCloudClient.commands) {
-      nxCloudClient.commands[command]()
-        .then(() => process.exit(0))
-        .catch((e) => {
-          console.error(e);
-          process.exit(1);
-        });
-    } else {
+    const client = await getCloudClient(options);
+    client.invoke(command);
+  } catch (e: any) {
+    if (e instanceof UnknownCommandError) {
       output.error({
-        title: `Unknown Command "${command}"`,
+        title: `Unknown Command "${e.command}"`,
       });
       output.log({
         title: 'Available Commands:',
-        bodyLines: Object.keys(nxCloudClient.commands).map((c) => `- ${c}`),
+        bodyLines: e.availableCommands.map((c) => `- ${c}`),
       });
       process.exit(1);
     }
-  } catch (e: any) {
     const body = ['Cannot run commands from the `nx-cloud` CLI.'];
 
     if (e instanceof NxCloudEnterpriseOutdatedError) {

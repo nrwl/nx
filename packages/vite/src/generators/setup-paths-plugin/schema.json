@@ -1,0 +1,14 @@
+{
+  "cli": "nx",
+  "title": "Sets up the nxViteTsPaths plugin.",
+  "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
+  "$id": "setup-paths-plugin-vite-plugin",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

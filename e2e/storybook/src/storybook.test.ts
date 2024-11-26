@@ -2,11 +2,14 @@ import {
   checkFilesExist,
   cleanupProject,
   killPorts,
+  listFiles,
   newProject,
+  readFile,
   runCLI,
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateFile,
 } from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
@@ -16,11 +19,10 @@ describe('Storybook generators and executors for monorepos', () => {
   let proj;
   beforeAll(async () => {
     proj = newProject({
-      packages: ['@nx/react', '@nx/storybook'],
-      unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/react'],
     });
     runCLI(
-      `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --no-interactive`
     );
     runCLI(
       `generate @nx/react:storybook-configuration ${reactStorybookApp} --generateStories --no-interactive --bundler=webpack`
@@ -56,7 +58,7 @@ describe('Storybook generators and executors for monorepos', () => {
     // This test makes sure path resolution works
     it('should build a React based storybook that references another lib and uses rollup', () => {
       runCLI(
-        `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --no-interactive`
       );
 
       // create a component in the first lib to reference the cmp from the 2nd lib
@@ -105,6 +107,33 @@ describe('Storybook generators and executors for monorepos', () => {
       // build React lib
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
+    }, 300_000);
+
+    it('should not bundle in sensitive NX_ environment variables', () => {
+      updateFile(
+        `${reactStorybookApp}/.storybook/main.ts`,
+        (content) => `
+      ${content}
+      console.log(process.env);
+      `
+      );
+      runCLI(`run ${reactStorybookApp}:build-storybook --verbose`, {
+        env: {
+          NX_SOME_SECRET: 'MY SECRET',
+          NX_SOME_TOKEN: 'MY SECRET',
+        },
+      });
+
+      // Check all output chunks for bundled environment variables
+      const outDir = `${reactStorybookApp}/storybook-static`;
+      const files = listFiles(outDir);
+      for (const file of files) {
+        if (!file.endsWith('.js')) continue;
+        const content = readFile(`${outDir}/${file}`);
+        expect(content).not.toMatch(/NX_SOME_SECRET/);
+        expect(content).not.toMatch(/NX_SOME_TOKEN/);
+        expect(content).not.toMatch(/MY SECRET/);
+      }
     }, 300_000);
   });
 });

@@ -1,6 +1,14 @@
 import { minimatch } from 'minimatch';
-import * as path from 'path';
-import * as fse from 'fs-extra';
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
+import * as pathPosix from 'node:path/posix';
+import * as path from 'node:path';
 import ignore from 'ignore';
 import * as fg from 'fast-glob';
 import { AssetGlob } from './assets';
@@ -33,14 +41,14 @@ interface AssetEntry {
 
 export const defaultFileEventHandler = (events: FileEvent[]) => {
   const dirs = new Set(events.map((event) => path.dirname(event.dest)));
-  dirs.forEach((d) => fse.ensureDirSync(d));
+  dirs.forEach((d) => mkdirSync(d, { recursive: true }));
   events.forEach((event) => {
     if (event.type === 'create' || event.type === 'update') {
-      if (fse.lstatSync(event.src).isFile()) {
-        fse.copyFileSync(event.src, event.dest);
+      if (lstatSync(event.src).isFile()) {
+        copyFileSync(event.src, event.dest);
       }
     } else if (event.type === 'delete') {
-      fse.removeSync(event.dest);
+      rmSync(event.dest, { recursive: true, force: true });
     } else {
       logger.error(`Unknown file event: ${event.type}`);
     }
@@ -63,12 +71,12 @@ export class CopyAssetsHandler {
 
     // TODO(jack): Should handle nested .gitignore files
     this.ignore = ignore();
-    const gitignore = path.join(opts.rootDir, '.gitignore');
-    const nxignore = path.join(opts.rootDir, '.nxignore');
-    if (fse.existsSync(gitignore))
-      this.ignore.add(fse.readFileSync(gitignore).toString());
-    if (fse.existsSync(nxignore))
-      this.ignore.add(fse.readFileSync(nxignore).toString());
+    const gitignore = pathPosix.join(opts.rootDir, '.gitignore');
+    const nxignore = pathPosix.join(opts.rootDir, '.nxignore');
+    if (existsSync(gitignore))
+      this.ignore.add(readFileSync(gitignore).toString());
+    if (existsSync(nxignore))
+      this.ignore.add(readFileSync(nxignore).toString());
 
     this.assetGlobs = opts.assets.map((f) => {
       let isGlob = false;
@@ -83,13 +91,14 @@ export class CopyAssetsHandler {
         output = path.relative(opts.rootDir, opts.outputDir);
       } else {
         isGlob = true;
-        pattern = path.join(f.input, f.glob);
+        pattern = pathPosix.join(f.input, f.glob);
         input = f.input;
-        output = path.join(
+        output = pathPosix.join(
           path.relative(opts.rootDir, opts.outputDir),
           f.output
         );
-        if (f.ignore) ignore = f.ignore.map((ig) => path.join(f.input, ig));
+        if (f.ignore)
+          ignore = f.ignore.map((ig) => pathPosix.join(f.input, ig));
       }
       return {
         isGlob,

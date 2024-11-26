@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
-import { readTsConfig } from './typescript/ts-config';
+import { getRootTsConfigFileName, readTsConfig } from './typescript/ts-config';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
@@ -201,8 +201,11 @@ function collectHelperDependencies(
 
   if (target.executor === '@nx/js:tsc' && target.options?.tsConfig) {
     const tsConfig = readTsConfig(join(workspaceRoot, target.options.tsConfig));
-    if (tsConfig?.options['importHelpers']) {
-      npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib']?.data.version;
+    if (
+      tsConfig?.options['importHelpers'] &&
+      projectGraph.externalNodes['npm:tslib']?.type === 'npm'
+    ) {
+      npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
     }
   }
   if (target.executor === '@nx/js:swc') {
@@ -212,9 +215,29 @@ function collectHelperDependencies(
     const swcConfig = fileExists(swcConfigPath)
       ? readJsonFile(swcConfigPath)
       : {};
-    if (swcConfig?.jsc?.externalHelpers) {
+    if (
+      swcConfig?.jsc?.externalHelpers &&
+      projectGraph.externalNodes['npm:@swc/helpers']?.type === 'npm'
+    ) {
       npmDeps['@swc/helpers'] =
-        projectGraph.externalNodes['npm:@swc/helpers']?.data.version;
+        projectGraph.externalNodes['npm:@swc/helpers'].data.version;
+    }
+  }
+
+  // For inferred targets or manually added run-commands, check if user is using `tsc` in build target.
+  if (
+    target.executor === 'nx:run-commands' &&
+    /\btsc\b/.test(target.options.command)
+  ) {
+    const tsConfigFileName = getRootTsConfigFileName();
+    if (tsConfigFileName) {
+      const tsConfig = readTsConfig(join(workspaceRoot, tsConfigFileName));
+      if (
+        tsConfig?.options['importHelpers'] &&
+        projectGraph.externalNodes['npm:tslib']?.type === 'npm'
+      ) {
+        npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
+      }
     }
   }
 }

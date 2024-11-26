@@ -55,7 +55,7 @@ packages:
       ignore: 5.2.4
       nx: 15.4.5
       semver: 7.3.4
-      tslib: 2.4.1
+      tslib: 2.5.0
     transitivePeerDependencies:
       - typescript
     dev: false
@@ -98,7 +98,7 @@ packages:
     engines: {node: '>=14.15.0'}
     dependencies:
       js-yaml: 3.14.1
-      tslib: 2.4.1
+      tslib: 2.5.0
     dev: false
 
   /@zkochan/js-yaml/0.0.6:
@@ -698,7 +698,7 @@ packages:
       tar-stream: 2.2.0
       tmp: 0.2.1
       tsconfig-paths: 4.1.2
-      tslib: 2.4.1
+      tslib: 2.5.0
       v8-compile-cache: 2.3.0
       yargs: 17.6.2
       yargs-parser: 21.1.1
@@ -900,8 +900,8 @@ packages:
       strip-bom: 3.0.0
     dev: false
 
-  /tslib/2.4.1:
-    resolution: {integrity: sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==}
+  /tslib/2.5.0:
+    resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
     dev: false
 
   /typescript/4.8.4:

@@ -28,7 +28,7 @@ describe('js:tsc executor', () => {
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib} --bundler=tsc --no-interactive`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
 
@@ -60,7 +60,12 @@ describe('js:tsc executor', () => {
     });
     const libBuildProcess = await runCommandUntil(
       `build ${lib} --watch`,
-      (output) => output.includes(`Watching for file changes`)
+      (output) => output.includes(`Watching for file changes`),
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
     );
     updateFile(`libs/${lib}/README.md`, `Hello, World!`);
     updateJson(`libs/${lib}/package.json`, (json) => {
@@ -104,7 +109,9 @@ describe('js:tsc executor', () => {
     libBuildProcess.kill();
 
     const parentLib = uniq('parentlib');
-    runCLI(`generate @nx/js:lib ${parentLib} --bundler=tsc --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib libs/${parentLib} --bundler=tsc --no-interactive`
+    );
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
@@ -208,7 +215,7 @@ describe('js:tsc executor', () => {
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');
     runCLI(
-      `generate @nx/js:lib ${lib} --compiler=tsc --includeBabelRc=false --no-interactive`
+      `generate @nx/js:lib libs/${lib} --compiler=tsc --includeBabelRc=false --no-interactive`
     );
 
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
@@ -216,10 +223,10 @@ describe('js:tsc executor', () => {
 
   it('should allow wildcard ts path alias', async () => {
     const base = uniq('base');
-    runCLI(`generate @nx/js:lib ${base} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${base} --bundler=tsc --no-interactive`);
 
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib} --bundler=tsc --no-interactive`);
 
     updateFile(`libs/${base}/src/index.ts`, () => {
       return `
@@ -269,7 +276,7 @@ export function ${lib}Wildcard() {
   it('should update package.json with detected dependencies', async () => {
     const pmc = getPackageManagerCommand();
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib} --bundler=tsc --no-interactive`);
 
     // Add a dependency for this lib to check the built package.json
     runCommand(`${pmc.addProd} react`);

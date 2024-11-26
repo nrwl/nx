@@ -73,8 +73,9 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
     target.options.main =
       target.options.main && this.convertAsset(target.options.main);
     target.options.polyfills = Array.isArray(target.options.polyfills)
-      ? target.options.polyfills.map((p) => this.convertAsset(p))
-      : target.options.polyfills && this.convertAsset(target.options.polyfills);
+      ? target.options.polyfills.map((p) => this.convertSourceRootPath(p))
+      : target.options.polyfills &&
+        this.convertSourceRootPath(target.options.polyfills);
     target.options.tsConfig =
       target.options.tsConfig &&
       joinPathFragments(

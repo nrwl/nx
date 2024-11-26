@@ -4,7 +4,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { swcCoreVersion, swcHelpersVersion } from '@nx/js/src/utils/versions';
-import { swcLoaderVersion, tsLibVersion } from './versions';
+import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
 export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc' | 'tsc';
@@ -14,17 +14,27 @@ export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ): GeneratorCallback {
-  if (options.compiler === 'swc') {
-    return addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@swc/helpers': swcHelpersVersion,
-        '@swc/core': swcCoreVersion,
-        'swc-loader': swcLoaderVersion,
-      }
-    );
+  switch (options.compiler) {
+    case 'swc':
+      return addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@swc/helpers': swcHelpersVersion,
+          '@swc/core': swcCoreVersion,
+          'swc-loader': swcLoaderVersion,
+        }
+      );
+    case 'babel':
+      return addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          'core-js': coreJsVersion, // needed for preset-env to work
+          tslib: tsLibVersion,
+        }
+      );
+    default:
+      return addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
   }
-
-  return addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
 }

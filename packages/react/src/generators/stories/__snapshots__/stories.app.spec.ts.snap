@@ -15,11 +15,15 @@ export default meta;
 type Story = StoryObj<typeof NxWelcome>;
 
 export const Primary = {
-  args: {},
+  args: {
+    title: '',
+  },
 };
 
 export const Heading: Story = {
-  args: {},
+  args: {
+    title: '',
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/Welcome to NxWelcome!/gi)).toBeTruthy();
@@ -74,7 +78,9 @@ export default meta;
 type Story = StoryObj<typeof NxWelcome>;
 
 export const Primary = {
-  args: {},
+  args: {
+    title: '',
+  },
 };
 "
 `;

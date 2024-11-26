@@ -10,7 +10,7 @@ import {
 } from 'webpack';
 
 import { WriteIndexHtmlPlugin } from '../../write-index-html-plugin';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import { getOutputHashFormat } from '../../../utils/hash-format';
 import { getClientEnvironment } from '../../../utils/get-client-environment';
 import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
@@ -24,7 +24,7 @@ import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export function applyWebConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
@@ -112,7 +112,9 @@ export function applyWebConfig(
   // Process global styles.
   if (options.styles.length > 0) {
     normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
-      const resolvedPath = path.resolve(options.root, style.input);
+      const resolvedPath = style.input.startsWith('.')
+        ? style.input
+        : path.resolve(options.root, style.input);
       // Add style entry points.
       if (entries[style.bundleName]) {
         entries[style.bundleName].import.push(resolvedPath);
@@ -170,7 +172,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: path.join(__dirname, 'webpack/deprecated-stylus-loader.js'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-stylus-loader.js'
+          ),
           options: {
             stylusOptions: {
               include: includePaths,
@@ -230,7 +235,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: path.join(__dirname, 'webpack/deprecated-stylus-loader.js'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-stylus-loader.js'
+          ),
           options: {
             sourceMap: !!options.sourceMap,
             stylusOptions: {
@@ -291,7 +299,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: require.resolve('stylus-loader'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-stylus-loader.js'
+          ),
           options: {
             sourceMap: !!options.sourceMap,
             stylusOptions: {
@@ -321,6 +332,7 @@ export function applyWebConfig(
 
   config.output = {
     ...config.output,
+    assetModuleFilename: '[name].[contenthash:20][ext]',
     crossOriginLoading: options.subresourceIntegrity
       ? ('anonymous' as const)
       : (false as const),
@@ -393,9 +405,6 @@ export function applyWebConfig(
             maxSize: 10_000, // 10 kB
           },
         },
-        generator: {
-          filename: `[name]${hashFormat.file}[ext]`,
-        },
       },
       // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
       {
@@ -406,17 +415,11 @@ export function applyWebConfig(
             maxSize: 10_000, // 10 kB
           },
         },
-        generator: {
-          filename: `[name]${hashFormat.file}[ext]`,
-        },
       },
       // Fonts: Emit separate file and export the URL.
       {
         test: /\.(eot|otf|ttf|woff|woff2)$/,
         type: 'asset/resource',
-        generator: {
-          filename: `[name]${hashFormat.file}[ext]`,
-        },
       },
       ...rules,
     ],

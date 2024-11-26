@@ -1,15 +1,14 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { ProjectGraph } from '../../config/project-graph';
-import { projectGraphCacheDirectory } from '../../utils/cache-directory';
+import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
-} from '../../utils/nx-plugin';
+} from '../../project-graph/plugins';
 import {
   getLockFileDependencies,
   getLockFileName,
@@ -24,6 +23,7 @@ import { hashArray } from '../../hasher/file-hasher';
 import { detectPackageManager } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { nxVersion } from '../../utils/versions';
+import { execSync } from 'child_process';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
@@ -31,6 +31,7 @@ interface ParsedLockFile {
   externalNodes?: ProjectGraph['externalNodes'];
   dependencies?: RawProjectGraphDependency[];
 }
+
 let parsedLockFile: ParsedLockFile = {};
 
 export const createNodes: CreateNodes = [
@@ -50,7 +51,13 @@ export const createNodes: CreateNodes = [
     }
 
     const lockFilePath = join(workspaceRoot, lockFile);
-    const lockFileContents = readFileSync(lockFilePath).toString();
+    const lockFileContents =
+      packageManager !== 'bun'
+        ? readFileSync(lockFilePath).toString()
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+            windowsHide: true,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -64,7 +71,8 @@ export const createNodes: CreateNodes = [
     const externalNodes = getLockFileNodes(
       packageManager,
       lockFileContents,
-      lockFileHash
+      lockFileHash,
+      context
     );
     parsedLockFile.externalNodes = externalNodes;
     return {
@@ -86,10 +94,16 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
-    parsedLockFile
+    parsedLockFile.externalNodes
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
-    const lockFileContents = readFileSync(lockFilePath).toString();
+    const lockFileContents =
+      packageManager !== 'bun'
+        ? readFileSync(lockFilePath).toString()
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+            windowsHide: true,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -138,7 +152,7 @@ function writeLastProcessedLockfileHash(
   hash: string,
   lockFile: ParsedLockFile
 ) {
-  ensureDirSync(dirname(lockFileHashFile));
+  mkdirSync(dirname(lockFileHashFile), { recursive: true });
   writeFileSync(cachedParsedLockFile, JSON.stringify(lockFile, null, 2));
   writeFileSync(lockFileHashFile, hash);
 }
@@ -147,8 +161,8 @@ function readCachedParsedLockFile(): ParsedLockFile {
   return JSON.parse(readFileSync(cachedParsedLockFile).toString());
 }
 
-const lockFileHashFile = join(projectGraphCacheDirectory, 'lockfile.hash');
+const lockFileHashFile = join(workspaceDataDirectory, 'lockfile.hash');
 const cachedParsedLockFile = join(
-  projectGraphCacheDirectory,
+  workspaceDataDirectory,
   'parsed-lock-file.json'
 );

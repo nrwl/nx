@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library.impl';
 import storybookConfigurationGenerator from './storybook-configuration.impl';
@@ -11,6 +13,7 @@ describe('Storybook Configuration', () => {
 
       await libraryGenerator(tree, {
         name: 'storybook-test',
+        directory: 'libs/storybook-test',
         style: 'css',
         unitTestRunner,
         addPlugin: true,
@@ -19,14 +22,15 @@ describe('Storybook Configuration', () => {
       // ACT
       await storybookConfigurationGenerator(tree, {
         project: 'storybook-test',
-        configureCypress: false,
         configureStaticServe: false,
         generateStories: true,
         addPlugin: true,
       });
 
       // ASSERT
-      expect(tree.exists(`libs/storybook-test/vite.config.ts`));
+      expect(
+        tree.read(`libs/storybook-test/vite.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
       expect(
         tree.read(`libs/storybook-test/.storybook/main.ts`, 'utf-8')
       ).toMatchSnapshot();

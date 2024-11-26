@@ -1189,27 +1189,111 @@
           }
         ],
         "targets": {
-          "e2e": {
-            "executor": "@nrwl/cypress:cypress",
-            "options": {
-              "cypressConfig": "apps/cart-e2e/cypress.config.ts",
-              "devServerTarget": "cart:serve",
-              "testingType": "e2e"
-            },
-            "configurations": {
-              "production": {
-                "devServerTarget": "cart:serve:production"
-              }
-            },
-            "inputs": ["default", "^production"]
-          },
           "lint": {
-            "executor": "@nrwl/linter:eslint",
+            "cache": true,
             "options": {
-              "lintFilePatterns": ["apps/cart-e2e/**/*.{ts,tsx,js,jsx}"]
+              "cwd": "apps/cart-e2e",
+              "command": "eslint ."
             },
-            "outputs": ["{options.outputFile}"],
-            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
+            "inputs": [
+              "default",
+              "^default",
+              "{workspaceRoot}/.eslintrc.json",
+              "{projectRoot}/.eslintrc.json",
+              "{workspaceRoot}/tools/eslint-rules/**/*",
+              {
+                "externalDependencies": ["eslint"]
+              }
+            ],
+            "executor": "nx:run-commands",
+            "configurations": {}
+          },
+          "e2e": {
+            "cache": true,
+            "inputs": ["default", "^production"],
+            "outputs": [
+              "{workspaceRoot}/dist/cypress/apps/cart-e2e/videos",
+              "{workspaceRoot}/dist/cypress/apps/cart-e2e/screenshots"
+            ],
+            "metadata": {
+              "technologies": ["cypress"],
+              "description": "Runs Cypress Tests"
+            },
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": "apps/cart-e2e",
+              "command": "cypress run"
+            },
+            "configurations": {}
+          },
+          "e2e-ci--src/e2e/app.cy.ts": {
+            "outputs": [
+              "{workspaceRoot}/dist/cypress/apps/cart-e2e/videos",
+              "{workspaceRoot}/dist/cypress/apps/cart-e2e/screenshots"
+            ],
+            "inputs": [
+              "default",
+              "^production",
+              {
+                "externalDependencies": ["cypress"]
+              }
+            ],
+            "cache": true,
+            "options": {
+              "cwd": "apps/cart-e2e",
+              "command": "cypress run --env webServerCommand=\"nx run cart:serve\" --spec src/e2e/app.cy.ts"
+            },
+            "metadata": {
+              "technologies": ["cypress"],
+              "description": "Runs Cypress Tests in src/e2e/app.cy.ts in CI"
+            },
+            "executor": "nx:run-commands",
+            "configurations": {}
+          },
+          "e2e-ci": {
+            "executor": "nx:noop",
+            "cache": true,
+            "inputs": [
+              "default",
+              "^production",
+              {
+                "externalDependencies": ["cypress"]
+              }
+            ],
+            "outputs": [
+              "{workspaceRoot}/dist/cypress/apps/cart-e2e/videos",
+              "{workspaceRoot}/dist/cypress/apps/cart-e2e/screenshots"
+            ],
+            "dependsOn": [
+              {
+                "target": "e2e-ci--src/e2e/app.cy.ts",
+                "projects": "self",
+                "params": "forward"
+              }
+            ],
+            "metadata": {
+              "technologies": ["cypress"],
+              "description": "Runs Cypress Tests in CI"
+            },
+            "options": {},
+            "configurations": {}
+          },
+          "open-cypress": {
+            "options": {
+              "cwd": "apps/cart-e2e",
+              "command": "cypress open"
+            },
+            "metadata": {
+              "technologies": ["cypress"],
+              "description": "Opens Cypress"
+            },
+            "executor": "nx:run-commands",
+            "configurations": {}
+          }
+        },
+        "metadata": {
+          "targetGroups": {
+            "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
           }
         }
       }

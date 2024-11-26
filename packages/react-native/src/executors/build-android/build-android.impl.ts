@@ -15,7 +15,7 @@ export default async function* buildAndroidExecutor(
 ): AsyncGenerator<ReactNativeBuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  chmodAndroidGradlewFiles(join(projectRoot, 'android'));
+  chmodAndroidGradlewFiles(join(context.root, projectRoot, 'android'));
 
   await runCliBuild(context.root, projectRoot, options);
   yield { success: true };

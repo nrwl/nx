@@ -1,9 +1,15 @@
 import {
-  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
+  joinPathFragments,
+  logger,
+  normalizePath,
   NxJsonConfiguration,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -12,90 +18,117 @@ import { dirname, join, relative } from 'path';
 
 import { getLockFileName } from '@nx/js';
 
-import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
-import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { hashObject } from 'nx/src/devkit-internals';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
   targetName?: string;
+  openTargetName?: string;
   componentTestingTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'cypress.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration<CypressExecutorOptions>>
-> {
-  return readJsonFile(cachePath);
+function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<
-    string,
-    Record<string, TargetConfiguration<CypressExecutorOptions>>
-  >
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache(cachePath: string, results: CypressTargets) {
+  writeJsonFile(cachePath, results);
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
-  return [];
-};
+const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
 
-export const createNodes: CreateNodes<CypressPluginOptions> = [
-  '**/cypress.config.{js,ts,mjs,cjs}',
-  async (configFilePath, options, context) => {
-    options = normalizeOptions(options);
-    const projectRoot = dirname(configFilePath);
+const pmc = getPackageManagerCommand();
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
+export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
+  cypressConfigGlob,
+  async (configFiles, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `cypress-${optionsHash}.hash`
+    );
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFiles,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
     }
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildCypressTargets(
-          configFilePath,
-          projectRoot,
-          options,
-          context
-        );
-
-    calculatedTargets[hash] = targets;
-
-    return {
-      projects: {
-        [projectRoot]: {
-          projectType: 'application',
-          targets,
-        },
-      },
-    };
   },
 ];
+
+/**
+ * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
+ * This function will change to the v2 function in Nx 20.
+ */
+export const createNodes: CreateNodes<CypressPluginOptions> = [
+  cypressConfigGlob,
+  (configFile, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(configFile, options, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: CypressPluginOptions,
+  context: CreateNodesContext,
+  targetsCache: CypressTargets
+) {
+  options = normalizeOptions(options);
+  const projectRoot = dirname(configFilePath);
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+
+  targetsCache[hash] ??= await buildCypressTargets(
+    configFilePath,
+    projectRoot,
+    options,
+    context
+  );
+  const { targets, metadata } = targetsCache[hash];
+
+  const project: Omit<ProjectConfiguration, 'root'> = {
+    projectType: 'application',
+    targets,
+    metadata,
+  };
+
+  return {
+    projects: {
+      [projectRoot]: project,
+    },
+  };
+}
 
 function getOutputs(
   projectRoot: string,
@@ -104,9 +137,9 @@ function getOutputs(
 ): string[] {
   function getOutput(path: string): string {
     if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
+      return joinPathFragments('{workspaceRoot}', projectRoot, path);
     } else {
-      return join('{projectRoot}', path);
+      return joinPathFragments('{projectRoot}', path);
     }
   }
 
@@ -145,12 +178,14 @@ function getOutputs(
   return outputs;
 }
 
+type CypressTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+
 async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
   context: CreateNodesContext
-) {
+): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)
   );
@@ -167,6 +202,7 @@ async function buildCypressTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
+  let metadata: ProjectConfiguration['metadata'];
 
   if ('e2e' in cypressConfig) {
     targets[options.targetName] = {
@@ -175,6 +211,17 @@ async function buildCypressTargets(
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
+      parallelism: false,
+      metadata: {
+        technologies: ['cypress'],
+        description: 'Runs Cypress Tests',
+        help: {
+          command: `${pmc.exec} cypress run --help`,
+          example: {
+            args: ['--dev', '--headed'],
+          },
+        },
+      },
     };
 
     if (webServerCommands?.default) {
@@ -204,25 +251,46 @@ async function buildCypressTargets(
         : Array.isArray(cypressConfig.e2e.excludeSpecPattern)
         ? cypressConfig.e2e.excludeSpecPattern.map((p) => join(projectRoot, p))
         : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
-      const specFiles = globWithWorkspaceContext(
+      const specFiles = await globWithWorkspaceContext(
         context.workspaceRoot,
         specPatterns,
         excludeSpecPatterns
       );
 
+      const ciBaseUrl = pluginPresetOptions?.ciBaseUrl;
+
       const dependsOn: TargetConfiguration['dependsOn'] = [];
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
       const inputs = getInputs(namedInputs);
+
+      const groupName = 'E2E (CI)';
+      metadata = { targetGroups: { [groupName]: [] } };
+      const ciTargetGroup = metadata.targetGroups[groupName];
       for (const file of specFiles) {
-        const relativeSpecFilePath = relative(projectRoot, file);
+        const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
+
+        ciTargetGroup.push(targetName);
         targets[targetName] = {
           outputs,
           inputs,
           cache: true,
-          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
+          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}${
+            ciBaseUrl ? ` --config='{"baseUrl": "${ciBaseUrl}"}'` : ''
+          }`,
           options: {
             cwd: projectRoot,
+          },
+          parallelism: false,
+          metadata: {
+            technologies: ['cypress'],
+            description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
+            help: {
+              command: `${pmc.exec} cypress run --help`,
+              example: {
+                args: ['--dev', '--headed'],
+              },
+            },
           },
         };
         dependsOn.push({
@@ -231,7 +299,6 @@ async function buildCypressTargets(
           params: 'forward',
         });
       }
-      targets[options.ciTargetName] ??= {};
 
       targets[options.ciTargetName] = {
         executor: 'nx:noop',
@@ -239,7 +306,20 @@ async function buildCypressTargets(
         inputs,
         outputs,
         dependsOn,
+        parallelism: false,
+        metadata: {
+          technologies: ['cypress'],
+          description: 'Runs Cypress Tests in CI',
+          nonAtomizedTarget: options.targetName,
+          help: {
+            command: `${pmc.exec} cypress run --help`,
+            example: {
+              args: ['--dev', '--headed'],
+            },
+          },
+        },
       };
+      ciTargetGroup.push(options.ciTargetName);
     }
   }
 
@@ -251,15 +331,41 @@ async function buildCypressTargets(
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'component'),
+      metadata: {
+        technologies: ['cypress'],
+        description: 'Runs Cypress Component Tests',
+        help: {
+          command: `${pmc.exec} cypress run --help`,
+          example: {
+            args: ['--dev', '--headed'],
+          },
+        },
+      },
     };
   }
 
-  return targets;
+  targets[options.openTargetName] = {
+    command: `cypress open`,
+    options: { cwd: projectRoot },
+    metadata: {
+      technologies: ['cypress'],
+      description: 'Opens Cypress',
+      help: {
+        command: `${pmc.exec} cypress open --help`,
+        example: {
+          args: ['--dev', '--e2e'],
+        },
+      },
+    },
+  };
+
+  return { targets, metadata };
 }
 
 function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options ??= {};
   options.targetName ??= 'e2e';
+  options.openTargetName ??= 'open-cypress';
   options.componentTestingTargetName ??= 'component-test';
   options.ciTargetName ??= 'e2e-ci';
   return options;

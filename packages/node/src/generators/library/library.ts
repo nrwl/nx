@@ -6,6 +6,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -13,15 +14,19 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -34,12 +39,13 @@ export interface NormalizedSchema extends Schema {
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'node', 'library');
+
   const options = await normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
@@ -56,7 +62,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   const libraryInstall = await jsLibraryGenerator(tree, {
     ...options,
-    bundler: schema.buildable ? 'tsc' : 'none',
+    bundler: schema.buildable || schema.publishable ? 'tsc' : 'none',
     includeBabelRc: schema.babelJest,
     importPath: options.importPath,
     testEnvironment: 'node',
@@ -86,29 +92,31 @@ async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(tree, options, 'library');
   const {
     projectName,
     names: projectNames,
     projectRoot,
     importPath,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/node:library',
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
-  const fileName = getCaseAwareFileName({
-    fileName: options.simpleModuleName
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPluginDefault;
+
+  const fileName = names(
+    options.simpleModuleName
       ? projectNames.projectSimpleName
-      : projectNames.projectFileName,
-    pascalCaseFiles: options.pascalCaseFiles,
-  });
+      : projectNames.projectFileName
+  ).fileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -122,15 +130,6 @@ async function normalizeOptions(
     parsedTags,
     importPath,
   };
-}
-
-function getCaseAwareFileName(options: {
-  pascalCaseFiles: boolean;
-  fileName: string;
-}) {
-  const normalized = names(options.fileName);
-
-  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {

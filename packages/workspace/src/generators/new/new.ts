@@ -1,15 +1,15 @@
 import {
+  formatFiles,
   getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
-  names,
   PackageManager,
   Tree,
 } from '@nx/devkit';
 
 import { join } from 'path';
 import { Preset } from '../utils/presets';
-import { Linter } from '../../utils/lint';
+import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
@@ -27,27 +27,34 @@ interface Schema {
   js?: boolean;
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   bundler?: 'vite' | 'webpack';
   standaloneApi?: boolean;
   routing?: boolean;
   packageManager?: PackageManager;
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
+  prefix?: string;
+  useGitHub?: boolean;
+  nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
+  formatter?: 'none' | 'prettier';
 }
 
 export interface NormalizedSchema extends Schema {
   presetVersion?: string;
   isCustomPreset: boolean;
+  nxCloudToken?: string;
 }
 
 export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  await generateWorkspaceFiles(tree, { ...options, nxCloud: undefined } as any);
+  options.nxCloudToken = await generateWorkspaceFiles(tree, options);
 
   addPresetDependencies(tree, options);
+
+  await formatFiles(tree);
 
   return async () => {
     if (!options.skipInstall) {
@@ -57,6 +64,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+          windowsHide: true,
         });
       }
       installPackagesTask(
@@ -130,7 +138,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ...options,
   };
 
-  normalized.name = names(options.name).fileName;
   if (!options.directory) {
     normalized.directory = normalized.name;
   }

@@ -1,6 +1,6 @@
 export function CodeOfConduct(): JSX.Element {
   return (
-    <div className="border-t border-b border-slate-200 dark:border-slate-700">
+    <div className="border-b border-t border-slate-200 dark:border-slate-700">
       <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
         <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
           <div className="px-5 py-12 md:pr-12">
@@ -27,7 +27,7 @@ export function CodeOfConduct(): JSX.Element {
           <div className="divide-y divide-slate-200 py-12 dark:divide-slate-700">
             <div className="px-5 py-12 md:pl-12">
               <a
-                className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
+                className="font-input-mono group flex w-full items-center text-blue-500 sm:text-xl dark:text-sky-500"
                 href="https://docs.google.com/document/d/1biFWD08Wrd99gRZNv4Q1tawEYGZEI3bd3J55E5uG2ZU/edit?usp=sharing"
               >
                 <span className="group-hover:underline">

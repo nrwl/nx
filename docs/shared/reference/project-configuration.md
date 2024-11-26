@@ -6,13 +6,13 @@ A project's configuration is constructed by Nx from three sources:
 2. [Workspace `targetDefaults`](/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
-Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/features/integrate-with-editors) in your IDE or by running:
+Each source will [overwrite the previous source](/recipes/running-tasks/pass-args-to-commands). That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/getting-started/editor-setup) in your IDE or by running:
 
 ```shell
 nx show project myproject --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {
@@ -26,6 +26,9 @@ nx show project myproject --web
           "executor": "nx:run-commands",
           "options": {
             "command": "vite dev"
+          },
+          "metadata": {
+            "technologies": ["vite"]
           }
         },
         "build": {
@@ -34,6 +37,9 @@ nx show project myproject --web
           "outputs": ["{projectRoot}/dist"],
           "options": {
             "command": "vite build"
+          },
+          "metadata": {
+            "technologies": ["vite"]
           }
         }
       }
@@ -194,6 +200,26 @@ If you are using distributed task execution and disable caching for a given targ
 
 {% /callout %}
 
+### Parallelism
+
+In Nx 19.5.0+, tasks can be configured to support parallelism or not. By default, tasks are run in parallel with other tasks on a given machine. However, in some cases, tasks can require a shared resource such as a port or memory. For these cases, setting `"parallelism": false`, will ensure that those tasks will not run in parallel with other tasks on a single machine. For example, if the `e2e` tasks all require port 4200, running them in parallel will conflict so the targets can specify to not support parallelism:
+
+```json {% fileName="project.json" %}
+{
+  "targets": {
+    "e2e": {
+      "parallelism": false
+    }
+  }
+}
+```
+
+{% callout type="warning" title="Note: Parallelism is only per machine" %}
+
+If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Nx Agents is key to running tasks which do not support parallelism quickly and efficiently.
+
+{% /callout %}
+
 ### Inputs and Named Inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.
@@ -342,7 +368,7 @@ You can also express task dependencies with an object syntax:
 ```json
 {
   "targets": {
-    "build": {
+    "test": {
       "dependsOn": [
         {
           "target": "build", // target name
@@ -413,6 +439,27 @@ You can also express task dependencies with an object syntax:
 
 {% /tab %}
 {% /tabs %}
+
+Starting from v19.5.0, wildcards can be used to define dependencies in the `dependsOn` field.
+
+```json
+{
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        },
+        "build-*", // support for using wildcards in dependsOn, matches: "build-css", "build-js" targets of current project
+        "^build-*", // matches tasks: "build-css", "build-js" targets of dependencies
+        "*build-*", // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of current project
+        "^*build-*" // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of dependencies
+      ]
+    }
+  }
+}
+```
 
 #### Examples
 
@@ -569,6 +616,71 @@ Additionally, when using the expanded object syntax, you can specify individual 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
 
+### Sync Generators
+
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
+
+```json
+{
+  "targets": {
+    "build": {
+      "syncGenerators": ["some-plugin:my-sync-generator"]
+    }
+  }
+}
+```
+
+### Executor/command options
+
+To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
+
+```json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
+
+In the case of an explicit target using an executor, you can specify the executor and the options specific to that executor as follows:
+
+```json
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "generateExportsField": true
+      }
+    }
+  }
+}
+```
+
+### Target Metadata
+
+You can add additional metadata to be attached to a target. For example, you can provide a description stating what the
+target does:
+
+```jsonc {% fileName="project.json" %}
+{
+  "targets": {
+    "build": {
+      "metadata": {
+        "description": "Build the application for production"
+      }
+    }
+  }
+}
+```
+
 ## Project Metadata
 
 The following properties describe the project as a whole.
@@ -688,7 +800,21 @@ An implicit dependency could also be a glob pattern:
 {% /tab %}
 {% /tabs %}
 
-### Including package.json files as projects in the graph
+### Metadata
+
+You can add additional metadata to be attached to the project. For example, you can provide a description for your
+project:
+
+```jsonc {% fileName="project.json" %}
+{
+  "name": "admin",
+  "metadata": {
+    "description": "This is the admin application"
+  }
+}
+```
+
+## Including package.json files as projects in the graph
 
 Any `package.json` file that is referenced by the `workspaces` property in the root `package.json` file will be included as a project in the graph. If you are using Lerna, projects defined in `lerna.json` will be included. If you are using pnpm, projects defined in `pnpm-workspace.yml` will be included.
 

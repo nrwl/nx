@@ -1,8 +1,12 @@
-import type { IndexHtmlTransform } from '@angular-devkit/build-angular/src/utils/index-file/index-html-generator';
 import { registerTsProject } from '@nx/js/src/internal';
-import type { Plugin } from 'esbuild';
-import type { Connect } from 'vite';
 import { loadModule } from './module-loader';
+
+// This is a workaround to make sure we use the same esbuild version as the
+// Angular DevKit uses. This is only used internally to load the plugins and
+// forward them to the Angular DevKit builders.
+type Plugin = Parameters<
+  typeof import('@angular-devkit/build-angular').buildApplication
+>[2]['codePlugins'][number];
 
 export type PluginSpec = {
   path: string;
@@ -45,7 +49,7 @@ async function loadPlugin(pluginSpec: string | PluginSpec): Promise<Plugin> {
 export async function loadMiddleware(
   middlewareFns: string[] | undefined,
   tsConfig: string
-): Promise<Connect.NextHandleFunction[]> {
+): Promise<any[]> {
   if (!middlewareFns?.length) {
     return [];
   }
@@ -61,7 +65,7 @@ export async function loadMiddleware(
 export async function loadIndexHtmlTransformer(
   indexHtmlTransformerPath: string,
   tsConfig: string
-): Promise<IndexHtmlTransform> {
+): Promise<any> {
   const cleanupTranspiler = registerTsProject(tsConfig);
 
   try {

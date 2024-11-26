@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useRef } from 'react';
 
 export function VideoLoop({
@@ -43,8 +44,8 @@ export function VideoLoop({
   return (
     <video ref={videoRef} autoPlay muted loop>
       <source src={src} type="video/mp4" />
-      <div className="text-center p-4">
-        <p className="font-bold pb-3">
+      <div className="p-4 text-center">
+        <p className="pb-3 font-bold">
           Your browser does not support the video tag. Here is a description of
           the video:
         </p>

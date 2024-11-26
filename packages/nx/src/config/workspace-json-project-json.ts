@@ -111,6 +111,46 @@ export interface ProjectConfiguration {
       'generator' | 'generatorOptions'
     >;
   };
+
+  /**
+   * Metadata about the project
+   */
+  metadata?: ProjectMetadata;
+}
+
+export interface ProjectMetadata {
+  description?: string;
+  technologies?: string[];
+  targetGroups?: Record<string, string[]>;
+  owners?: {
+    [ownerId: string]: {
+      ownedFiles: {
+        files: ['*'] | string[];
+        fromConfig?: {
+          filePath: string;
+          location: {
+            startLine: number;
+            endLine: number;
+          };
+        };
+      }[];
+    };
+  };
+}
+
+export interface TargetMetadata {
+  [k: string]: any;
+
+  description?: string;
+  technologies?: string[];
+  nonAtomizedTarget?: string;
+  help?: {
+    command: string;
+    example: {
+      options?: Record<string, unknown>;
+      args?: string[];
+    };
+  };
 }
 
 export interface TargetDependencyConfig {
@@ -199,4 +239,21 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * Metadata about the target
+   */
+  metadata?: TargetMetadata;
+
+  /**
+   * Whether this target can be run in parallel with other tasks
+   * Default is true
+   */
+  parallelism?: boolean;
+
+  /**
+   * List of generators to run before the target to ensure the workspace
+   * is up to date.
+   */
+  syncGenerators?: string[];
 }

@@ -36,37 +36,41 @@ describe('getTouchedProjectsFromLockFile', () => {
     allNodes = Object.keys(graph.nodes);
   });
 
-  ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'pnpm-lock.yml'].forEach(
-    (lockFile) => {
-      describe(`"${lockFile}"`, () => {
-        it(`should not return changes when "${lockFile}" is not touched`, () => {
-          const result = getTouchedProjectsFromLockFile(
-            [
-              {
-                file: 'source.ts',
-                hash: 'some-hash',
-                getChanges: () => [new WholeFileChange()],
-              },
-            ],
-            graph.nodes
-          );
-          expect(result).toEqual([]);
-        });
-
-        it(`should return all nodes when "${lockFile}" is touched`, () => {
-          const result = getTouchedProjectsFromLockFile(
-            [
-              {
-                file: lockFile,
-                hash: 'some-hash',
-                getChanges: () => [new WholeFileChange()],
-              },
-            ],
-            graph.nodes
-          );
-          expect(result).toEqual(allNodes);
-        });
+  [
+    'package-lock.json',
+    'yarn.lock',
+    'pnpm-lock.yaml',
+    'pnpm-lock.yml',
+    'bun.lockb',
+  ].forEach((lockFile) => {
+    describe(`"${lockFile}"`, () => {
+      it(`should not return changes when "${lockFile}" is not touched`, () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: 'source.ts',
+              hash: 'some-hash',
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          graph.nodes
+        );
+        expect(result).toEqual([]);
       });
-    }
-  );
+
+      it(`should return all nodes when "${lockFile}" is touched`, () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: lockFile,
+              hash: 'some-hash',
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          graph.nodes
+        );
+        expect(result).toEqual(allNodes);
+      });
+    });
+  });
 });

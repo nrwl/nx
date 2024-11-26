@@ -1,8 +1,13 @@
-# Inferred Tasks
+# Inferred Tasks (Project Crystal)
 
-In Nx version 18, many Nx plugins will automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
+In Nx version 18, Nx plugins can automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
 
 For example, the `@nx/webpack` plugin infers tasks to run webpack through Nx based on your repository's webpack configuration. This configuration already defines the destination of your build files, so Nx reads that value and caches the correct output files.
+
+{% youtube
+src="https://youtu.be/wADNsVItnsM"
+title="Project Crystal"
+/%}
 
 ## How Does a Plugin Infer Tasks?
 
@@ -65,3 +70,17 @@ More details about how to override task configuration is available in these reci
 - [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
 - [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
 - [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
+- [Pass Arguments to Commands](/recipes/running-tasks/pass-args-to-commands)
+
+## Existing Nx Workspaces
+
+If you have an existing Nx Workspace and upgrade to the latest Nx version, a migration will automatically set `useInferencePlugins` to `false` in `nx.json`. This property allows you to continue to use Nx without inferred tasks.
+
+When `useInferencePlugins` is `false`:
+
+1. A newly generated project will have all targets defined with executors - not with inferred tasks.
+2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
+
+If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/recipes/running-tasks/convert-to-inferred).
+
+Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)).

@@ -66,13 +66,14 @@ export default async function buildExecutor(
       target: context.targetName,
       root: context.root,
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
+      skipPackageManager: options.skipPackageManager,
     });
 
     // Update `package.json` to reflect how users should run the build artifacts
     packageJson.scripts ??= {};
     // Don't override existing custom script since project may have its own server.
     if (!packageJson.scripts.start) {
-      packageJson.scripts['start'] = 'remix-serve ./build';
+      packageJson.scripts['start'] = 'remix-serve ./build/index.js';
     }
 
     updatePackageJson(packageJson, context);

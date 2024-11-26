@@ -18,6 +18,15 @@ where
     }
 }
 
+impl<K, V> Default for NapiDashMap<K, V, RandomState>
+where
+    K: Eq + PartialEq + std::hash::Hash,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K, V, S> Deref for NapiDashMap<K, V, S>
 where
     K: Eq + PartialEq + std::hash::Hash,

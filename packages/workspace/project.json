@@ -4,7 +4,6 @@
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -79,15 +78,7 @@
       "command": "node ./scripts/copy-readme.js workspace"
     },
     "add-extra-dependencies": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "node ./scripts/add-dependency-to-build.js workspace nx",
-          "node ./scripts/add-dependency-to-build.js workspace @nrwl/workspace"
-        ],
-        "parallel": false
-      }
-    },
-    "lint": {}
+      "command": "node ./scripts/add-dependency-to-build.js workspace nx"
+    }
   }
 }

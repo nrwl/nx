@@ -5,6 +5,12 @@
   "title": "Init nx/js",
   "description": "Init generator placeholder for nx/js.",
   "properties": {
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "default": "none"
+    },
     "js": {
       "type": "boolean",
       "default": false,
@@ -27,9 +33,15 @@
       "description": "Keep existing dependencies versions",
       "default": false
     },
+    "addTsConfigBase": {
+      "type": "boolean",
+      "description": "Add a base tsconfig file to the workspace.",
+      "x-priority": "internal",
+      "default": false
+    },
     "tsConfigName": {
       "type": "string",
-      "description": "Customize the generated tsconfig file name.",
+      "description": "Customize the generated base tsconfig file name.",
       "x-priority": "internal"
     }
   }

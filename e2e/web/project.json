@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/web",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["web"]
+  "implicitDependencies": ["web"],
+  "// targets": "to see all targets run: nx show project e2e-web --web",
+  "targets": {}
 }

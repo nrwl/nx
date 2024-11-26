@@ -41,7 +41,7 @@
       }
     },
     "required": ["project"],
-    "examplesFile": "This is a framework-agnostic generator for adding component testing to a project.\n\n```bash\nnx g cypress-component-configuration --project=my-cool-project\n```\n\nRunning this generator, adds the required files to the specified project without any configurations for Cypress. It's best to use the framework specific generator, instead `cypress-component-configuration` directly\n\n- [React component testing](/packages/react/generators/cypress-component-configuration)\n- [Angular component testing](/packages/angular/generators/cypress-component-configuration)\n\nA new `component-test` target will be added to the specified project.\n\n```bash\nnx g component-test my-cool-project\n```\n\nRead more about [Cypress Component Testing](/cypress/cypress-component-testing)\n",
+    "examplesFile": "This is a framework-agnostic generator for adding component testing to a project.\n\n```bash\nnx g cypress-component-configuration --project=my-cool-project\n```\n\nRunning this generator, adds the required files to the specified project without any configurations for Cypress. It's best to use the framework specific generator, instead `cypress-component-configuration` directly\n\n- [React component testing](/nx-api/react/generators/cypress-component-configuration)\n- [Angular component testing](/nx-api/angular/generators/cypress-component-configuration)\n\nA new `component-test` target will be added to the specified project.\n\n```bash\nnx g component-test my-cool-project\n```\n\nRead more about [Cypress Component Testing](/recipes/cypress/cypress-component-testing)\n",
     "presets": []
   },
   "description": "Set up Cypress Component Test for a project",

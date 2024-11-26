@@ -4,8 +4,14 @@ import {
   installPackagesTask,
   joinPathFragments,
   readJson,
+  updateJson,
 } from '@nx/devkit';
-import { swcCliVersion, swcCoreVersion, swcNodeVersion } from './versions';
+import {
+  swcCliVersion,
+  swcCoreVersion,
+  swcNodeVersion,
+  swcHelpersVersion,
+} from '@nx/js/src/utils/versions';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 
 export function configureForSwc(tree: Tree, projectRoot: string) {
@@ -21,7 +27,16 @@ export function configureForSwc(tree: Tree, projectRoot: string) {
     rootPackageJson.devDependencies?.['@swc/cli'];
 
   if (!tree.exists(swcConfigPath)) {
-    addSwcConfig(tree, swcConfigPath);
+    addSwcConfig(tree, projectRoot);
+  }
+
+  if (tree.exists(swcConfigPath)) {
+    updateJson(tree, swcConfigPath, (json) => {
+      return {
+        ...json,
+        exclude: [...json.exclude, '.*.d.ts$'],
+      };
+    });
   }
 
   if (!hasSwcDepedency || !hasSwcCliDependency) {
@@ -33,7 +48,9 @@ export function configureForSwc(tree: Tree, projectRoot: string) {
 function addSwcDependencies(tree: Tree) {
   return addDependenciesToPackageJson(
     tree,
-    {},
+    {
+      '@swc/helpers': swcHelpersVersion,
+    },
     {
       '@swc-node/register': swcNodeVersion,
       '@swc/cli': swcCliVersion,

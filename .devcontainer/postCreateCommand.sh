@@ -1,11 +1,23 @@
 #!/bin/sh
 
 # Update the underlying (Debian) OS, to make sure we have the latest security patches and libraries like 'GLIBC' 
-sudo apt-get update  && sudo apt-get -y upgrade
+echo "⚙️ Updating the underlying OS..."
+sudo apt-get update && sudo apt-get -y upgrade
 
-# Update pnpm
-#npm install -g pnpm
+# Uninstall globally installed PNPM (required version will be reinstalled through corepack)
+echo "❌ Uninstalling globally installed PNPM..."
+npm uninstall -g pnpm
 
-# Install dependencies
+# Prevent corepack from prompting user before downloading PNPM 
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+# Enable corepack 
+corepack enable 
+
+# Install the PNPM version defined in the root package.json
+echo "⚙️ Installing required PNPM version..."
+corepack prepare --activate
+
+# Install NPM dependencies
+echo "⚙️ Installing NPM dependencies..."
 pnpm install --frozen-lockfile
-

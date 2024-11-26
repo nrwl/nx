@@ -3,7 +3,6 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-  targetToTargetString,
 } from '@nx/devkit';
 
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
@@ -100,6 +99,15 @@ export async function* devServerExecutor(
           configuration: serveOptions.buildTarget.split(':')[2],
         }
       );
+    } else if (userDefinedWebpackConfig) {
+      // New behavior, we want the webpack config to export object
+      // If the config is a function, we assume it's a standard webpack config function and it's async
+      if (typeof userDefinedWebpackConfig === 'function') {
+        config = await userDefinedWebpackConfig(process.env.NODE_ENV, {});
+      } else {
+        config = userDefinedWebpackConfig;
+      }
+      config.devServer ??= devServer;
     }
   }
 

@@ -1,6 +1,6 @@
 import { AssetGlob } from './assets';
 import { CopyAssetsHandler, FileEvent } from './copy-assets-handler';
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, isDaemonEnabled, output } from '@nx/devkit';
 
 export interface CopyAssetsOptions {
   outputPath: string;
@@ -35,7 +35,14 @@ export async function copyAssets(
     success: true,
   };
 
-  if (options.watch) {
+  if (!isDaemonEnabled() && options.watch) {
+    output.warn({
+      title:
+        'Nx Daemon is not enabled. Assets will not be updated when they are changed.',
+    });
+  }
+
+  if (isDaemonEnabled() && options.watch) {
     result.stop = await assetHandler.watchAndProcessOnAssetChange();
   }
 

@@ -8,13 +8,13 @@ export async function getNgPackagrInstance(
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
   if (angularMajorVersion >= 17) {
     const { WRITE_BUNDLES_TRANSFORM } = await import(
-      './v17+/ng-package/entry-point/write-bundles.di'
+      './v17+/ng-package/entry-point/write-bundles.di.js'
     );
     const { WRITE_PACKAGE_TRANSFORM } = await import(
-      './v17+/ng-package/entry-point/write-package.di'
+      './v17+/ng-package/entry-point/write-package.di.js'
     );
     const { STYLESHEET_PROCESSOR } = await import(
-      '../../utilities/ng-packagr/stylesheet-processor.di'
+      '../../utilities/ng-packagr/stylesheet-processor.di.js'
     );
 
     const packagr = ngPackagr();
@@ -28,11 +28,13 @@ export async function getNgPackagrInstance(
   }
 
   const { NX_ENTRY_POINT_PROVIDERS } = await import(
-    './pre-v17/ng-package/entry-point/entry-point.di'
+    './pre-v17/ng-package/entry-point/entry-point.di.js'
   );
-  const { nxProvideOptions } = await import('./pre-v17/ng-package/options.di');
+  const { nxProvideOptions } = await import(
+    './pre-v17/ng-package/options.di.js'
+  );
   const { NX_PACKAGE_PROVIDERS, NX_PACKAGE_TRANSFORM } = await import(
-    './pre-v17/ng-package/package.di'
+    './pre-v17/ng-package/package.di.js'
   );
 
   const packagr = new NgPackagr([

@@ -22,6 +22,7 @@ export type GraphRenderEvents =
       };
       groupByFolder: boolean;
       collapseEdges: boolean;
+      composite: { enabled: boolean; context: string | null };
     }
   | {
       type: 'notifyGraphUpdateGraph';
@@ -36,6 +37,7 @@ export type GraphRenderEvents =
       groupByFolder: boolean;
       collapseEdges: boolean;
       selectedProjects: string[];
+      composite: { enabled: boolean; context: string | null };
     }
   | {
       type: 'notifyGraphFocusProject';
@@ -70,4 +72,5 @@ export type GraphRenderEvents =
       start: string;
       end: string;
       algorithm: TracingAlgorithmType;
-    };
+    }
+  | { type: 'notifyGraphDisableCompositeGraph' };

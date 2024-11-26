@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,
@@ -20,7 +22,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       typescriptConfiguration: false,
       standalone: false,
@@ -41,7 +43,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       typescriptConfiguration: true,
       standalone: false,
@@ -57,7 +59,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestHostApplication(tree, {
-      name: 'host',
+      directory: 'host',
       typescriptConfiguration: false,
       standalone: false,
       skipFormat: true,
@@ -65,7 +67,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       host: 'host',
       typescriptConfiguration: false,
       standalone: false,
@@ -82,7 +84,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestHostApplication(tree, {
-      name: 'host',
+      directory: 'host',
       typescriptConfiguration: true,
       standalone: false,
       skipFormat: true,
@@ -90,7 +92,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       host: 'host',
       typescriptConfiguration: true,
       standalone: false,
@@ -109,7 +111,7 @@ describe('MF Remote App Generator', () => {
     // ACT
     try {
       await generateTestRemoteApplication(tree, {
-        name: 'test',
+        directory: 'test',
         host: 'host',
         standalone: false,
         skipFormat: true,
@@ -126,7 +128,7 @@ describe('MF Remote App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
-      name: 'existing',
+      directory: 'existing',
       port: 4201,
       standalone: false,
       skipFormat: true,
@@ -134,7 +136,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       standalone: false,
       skipFormat: true,
     });
@@ -150,7 +152,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       standalone: false,
       skipFormat: true,
     });
@@ -166,7 +168,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       port: 4201,
       standalone: false,
       skipFormat: true,
@@ -183,7 +185,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       typescriptConfiguration: false,
     });
 
@@ -216,7 +218,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       typescriptConfiguration: true,
       skipFormat: true,
     });
@@ -246,7 +248,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'remote1',
+      directory: 'remote1',
       e2eTestRunner: E2eTestRunner.None,
       standalone: false,
       skipFormat: true,
@@ -263,7 +265,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       inlineTemplate: true,
       standalone: false,
       skipFormat: true,
@@ -275,7 +277,7 @@ describe('MF Remote App Generator', () => {
       "import { Component } from '@angular/core';
 
       @Component({
-        selector: 'proj-root',
+        selector: 'app-root',
         template: '<router-outlet></router-outlet>'
 
       })
@@ -289,16 +291,14 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     await generateTestRemoteApplication(tree, {
-      name: 'test',
+      directory: 'test',
       skipFormat: true,
     });
 
     // ASSERT
-    expect(tree.read('test/src/index.html', 'utf-8')).not.toContain(
-      'proj-root'
-    );
+    expect(tree.read('test/src/index.html', 'utf-8')).not.toContain('app-root');
     expect(tree.read('test/src/index.html', 'utf-8')).toContain(
-      'proj-test-entry'
+      'app-test-entry'
     );
   });
 
@@ -309,7 +309,7 @@ describe('MF Remote App Generator', () => {
 
       // ACT
       await generateTestRemoteApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: false,
         standalone: false,
@@ -357,7 +357,7 @@ describe('MF Remote App Generator', () => {
 
       // ACT
       await generateTestRemoteApplication(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         typescriptConfiguration: true,
         standalone: false,
@@ -411,7 +411,7 @@ describe('MF Remote App Generator', () => {
         }));
 
         await generateTestRemoteApplication(tree, {
-          name: 'test',
+          directory: 'test',
           ssr: true,
           skipFormat: true,
         });
@@ -421,40 +421,26 @@ describe('MF Remote App Generator', () => {
     });
   });
 
-  describe('--project-name-and-root-format=derived', () => {
-    it('should generate remote', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
 
-      await generateTestRemoteApplication(tree, {
-        name: 'test',
-        port: 4201,
-        projectNameAndRootFormat: 'derived',
-        typescriptConfiguration: false,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      expect(tree.exists('apps/test/webpack.config.js')).toBe(true);
-      expect(readProjectConfiguration(tree, 'test').root).toBe('apps/test');
+      return json;
     });
 
-    it('should generate remote in a directory', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-      await generateTestRemoteApplication(tree, {
-        name: 'test',
-        port: 4201,
-        directory: 'shared',
-        projectNameAndRootFormat: 'derived',
-        typescriptConfiguration: false,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      expect(tree.exists('apps/shared/test/webpack.config.js')).toBe(true);
-      expect(readProjectConfiguration(tree, 'shared-test').root).toBe(
-        'apps/shared/test'
-      );
+    await generateTestRemoteApplication(tree, {
+      directory: 'test',
+      port: 4201,
+      ssr: true,
+      skipFormat: true,
+      skipPackageJson: true,
     });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

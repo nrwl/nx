@@ -12,7 +12,7 @@ import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { writeDaemonJsonProcessCache } from '../cache';
 import {
-  FULL_OS_SOCKET_PATH,
+  getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
@@ -26,7 +26,6 @@ import {
   handleRecordOutputsHash,
 } from './handle-outputs-tracking';
 import { handleProcessInBackground } from './handle-process-in-background';
-import { handleRequestFileData } from './handle-request-file-data';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleRequestShutdown } from './handle-request-shutdown';
 import { serverLogger } from './logger';
@@ -34,7 +33,10 @@ import {
   disableOutputsTracking,
   processFileChangesInOutputs,
 } from './outputs-tracking';
-import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
+import {
+  addUpdatedAndDeletedFiles,
+  registerProjectGraphRecomputationListener,
+} from './project-graph-incremental-recomputation';
 import {
   getOutputWatcherInstance,
   getWatcherInstance,
@@ -52,10 +54,67 @@ import {
   watchOutputFiles,
   watchWorkspace,
 } from './watcher';
+import { handleGlob } from './handle-glob';
+import { GLOB, isHandleGlobMessage } from '../message-types/glob';
+import {
+  GET_NX_WORKSPACE_FILES,
+  isHandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
+import {
+  GET_CONTEXT_FILE_DATA,
+  isHandleContextFileDataMessage,
+} from '../message-types/get-context-file-data';
+import { handleContextFileData } from './handle-context-file-data';
+import {
+  GET_FILES_IN_DIRECTORY,
+  isHandleGetFilesInDirectoryMessage,
+} from '../message-types/get-files-in-directory';
+import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
+import { HASH_GLOB, isHandleHashGlobMessage } from '../message-types/hash-glob';
+import { handleHashGlob } from './handle-hash-glob';
+import {
+  GET_ESTIMATED_TASK_TIMINGS,
+  GET_FLAKY_TASKS,
+  isHandleGetEstimatedTaskTimings,
+  isHandleGetFlakyTasksMessage,
+  isHandleWriteTaskRunsToHistoryMessage,
+  RECORD_TASK_RUNS,
+} from '../message-types/task-history';
+import {
+  handleRecordTaskRuns,
+  handleGetFlakyTasks,
+  handleGetEstimatedTaskTimings,
+} from './handle-task-history';
+import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
+import { handleForceShutdown } from './handle-force-shutdown';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  isHandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
+import { collectAndScheduleSyncGenerators } from './sync-generators';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  isHandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import {
+  UPDATE_WORKSPACE_CONTEXT,
+  isHandleUpdateWorkspaceContextMessage,
+} from '../message-types/update-workspace-context';
+import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
+import {
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  isHandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
+import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
+
+global.NX_DAEMON = true;
 
 export type HandlerResult = {
   description: string;
@@ -64,9 +123,11 @@ export type HandlerResult = {
 };
 
 let numberOfOpenConnections = 0;
+export const openSockets: Set<Socket> = new Set();
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
+  openSockets.add(socket);
   serverLogger.log(
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
@@ -93,6 +154,7 @@ const server = createServer(async (socket) => {
 
   socket.on('close', () => {
     numberOfOpenConnections -= 1;
+    openSockets.delete(socket);
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
@@ -111,11 +173,13 @@ async function handleMessage(socket, data: string) {
     );
   }
 
-  if (daemonIsOutdated()) {
-    await respondWithErrorAndExit(socket, `Lock files changed`, {
-      name: '',
-      message: 'LOCK-FILES-CHANGED',
-    });
+  const outdated = daemonIsOutdated();
+  if (outdated) {
+    await respondWithErrorAndExit(
+      socket,
+      `Daemon outdated`,
+      new Error(outdated)
+    );
   }
 
   resetInactivityTimeout(handleInactivityTimeout);
@@ -142,10 +206,6 @@ async function handleMessage(socket, data: string) {
     );
   } else if (payload.type === 'HASH_TASKS') {
     await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
-  } else if (payload.type === 'REQUEST_FILE_DATA') {
-    await handleResult(socket, 'REQUEST_FILE_DATA', () =>
-      handleRequestFileData()
-    );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
       handleProcessInBackground(payload)
@@ -164,6 +224,62 @@ async function handleMessage(socket, data: string) {
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+  } else if (isHandleGlobMessage(payload)) {
+    await handleResult(socket, GLOB, () =>
+      handleGlob(payload.globs, payload.exclude)
+    );
+  } else if (isHandleNxWorkspaceFilesMessage(payload)) {
+    await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
+      handleNxWorkspaceFiles(payload.projectRootMap)
+    );
+  } else if (isHandleGetFilesInDirectoryMessage(payload)) {
+    await handleResult(socket, GET_FILES_IN_DIRECTORY, () =>
+      handleGetFilesInDirectory(payload.dir)
+    );
+  } else if (isHandleContextFileDataMessage(payload)) {
+    await handleResult(socket, GET_CONTEXT_FILE_DATA, () =>
+      handleContextFileData()
+    );
+  } else if (isHandleHashGlobMessage(payload)) {
+    await handleResult(socket, HASH_GLOB, () =>
+      handleHashGlob(payload.globs, payload.exclude)
+    );
+  } else if (isHandleGetFlakyTasksMessage(payload)) {
+    await handleResult(socket, GET_FLAKY_TASKS, () =>
+      handleGetFlakyTasks(payload.hashes)
+    );
+  } else if (isHandleGetEstimatedTaskTimings(payload)) {
+    await handleResult(socket, GET_ESTIMATED_TASK_TIMINGS, () =>
+      handleGetEstimatedTaskTimings(payload.targets)
+    );
+  } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
+    await handleResult(socket, RECORD_TASK_RUNS, () =>
+      handleRecordTaskRuns(payload.taskRuns)
+    );
+  } else if (isHandleForceShutdownMessage(payload)) {
+    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
+      handleForceShutdown(server)
+    );
+  } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
+    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
+      handleGetSyncGeneratorChanges(payload.generators)
+    );
+  } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
+    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
+      handleFlushSyncGeneratorChangesToDisk(payload.generators)
+    );
+  } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
+    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
+      handleGetRegisteredSyncGenerators()
+    );
+  } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
+    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
+      handleUpdateWorkspaceContext(
+        payload.createdFiles,
+        payload.updatedFiles,
+        payload.deletedFiles
+      )
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -204,6 +320,7 @@ function handleInactivityTimeout() {
     handleServerProcessTermination({
       server,
       reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
+      sockets: openSockets,
     });
   }
 }
@@ -214,26 +331,34 @@ function registerProcessTerminationListeners() {
       handleServerProcessTermination({
         server,
         reason: 'received process SIGINT',
+        sockets: openSockets,
       })
     )
     .on('SIGTERM', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGTERM',
+        sockets: openSockets,
       })
     )
     .on('SIGHUP', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGHUP',
+        sockets: openSockets,
       })
     );
 }
 
 let existingLockHash: string | undefined;
 
-function daemonIsOutdated(): boolean {
-  return nxVersionChanged() || lockFileHashChanged();
+function daemonIsOutdated(): string | null {
+  if (nxVersionChanged()) {
+    return 'NX_VERSION_CHANGED';
+  } else if (lockFileHashChanged()) {
+    return 'LOCK_FILES_CHANGED';
+  }
+  return null;
 }
 
 function nxVersionChanged(): boolean {
@@ -257,6 +382,7 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'package-lock.json'),
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
+    join(workspaceRoot, 'bun.lockb'),
   ]
     .filter((file) => existsSync(file))
     .map((file) => hashFile(file));
@@ -289,15 +415,17 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
   try {
     resetInactivityTimeout(handleInactivityTimeout);
 
-    if (daemonIsOutdated()) {
+    const outdatedReason = daemonIsOutdated();
+    if (outdatedReason) {
       await handleServerProcessTermination({
         server,
-        reason: 'Lock file changed',
+        reason: outdatedReason,
+        sockets: openSockets,
       });
       return;
     }
 
-    if (err || !changeEvents || !changeEvents.length) {
+    if (err) {
       let error = typeof err === 'string' ? new Error(err) : err;
       serverLogger.watcherLog(
         'Unexpected workspace watcher error',
@@ -387,9 +515,9 @@ export async function startServer(): Promise<Server> {
 
   return new Promise(async (resolve, reject) => {
     try {
-      server.listen(FULL_OS_SOCKET_PATH, async () => {
+      server.listen(getFullOsSocketPath(), async () => {
         try {
-          serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
+          serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
@@ -405,9 +533,16 @@ export async function startServer(): Promise<Server> {
 
           if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(
-              await watchOutputFiles(handleOutputsChanges)
+              await watchOutputFiles(server, handleOutputsChanges)
             );
           }
+
+          // listen for project graph recomputation events to collect and schedule sync generators
+          registerProjectGraphRecomputationListener(
+            collectAndScheduleSyncGenerators
+          );
+          // trigger an initial project graph recomputation
+          addUpdatedAndDeletedFiles([], [], []);
 
           return resolve(server);
         } catch (err) {

@@ -42,6 +42,30 @@ describe('vue setup-tailwind generator', () => {
     );
   });
 
+  it('should update existing stylesheet passed with option', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'example', {
+      root: 'example',
+      sourceRoot: 'example/src',
+      targets: {},
+    });
+    tree.write(`example/src/style.css`, `/* existing content */`);
+
+    await update(tree, {
+      project: 'example',
+      stylesheet: 'src/style.css',
+    });
+
+    expect(tree.read(`example/src/style.css`).toString()).toContain(
+      stripIndents`
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+        /* existing content */
+      `
+    );
+  });
+
   it('should install packages', async () => {
     const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'example', {

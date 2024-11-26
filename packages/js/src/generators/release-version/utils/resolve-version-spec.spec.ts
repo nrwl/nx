@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { resolveVersionSpec } from './resolve-version-spec';
 
 describe('resolveVersionSpec()', () => {
@@ -67,7 +66,7 @@ describe('resolveVersionSpec()', () => {
         'file:../projectB',
         '/packages/projectB'
       )
-    ).toEqual(expect.stringContaining(join('/packages/projectB')));
+    ).toEqual(expect.stringContaining('/packages/projectB'));
   });
 
   it('should work for a yarn classic style link reference', async () => {
@@ -76,8 +75,8 @@ describe('resolveVersionSpec()', () => {
         'projectA',
         '1.0.0',
         'link:../projectB',
-        '/packages/fuck'
+        '/packages/projectB'
       )
-    ).toEqual(expect.stringContaining(join('/packages/projectB')));
+    ).toEqual(expect.stringContaining('/packages/projectB'));
   });
 });

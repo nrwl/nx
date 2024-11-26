@@ -1,5 +1,6 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
-  getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -11,11 +12,11 @@ import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 
-describe('lib', () => {
+describe('library', () => {
   let tree: Tree;
 
   let defaultSchema: Schema = {
-    name: 'myLib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -147,11 +148,80 @@ describe('lib', () => {
     expect(eslintJson).toMatchSnapshot();
   });
 
+  it('should support eslint flat config', async () => {
+    tree.write(
+      'eslint.config.js',
+      `const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
+const js = require('@eslint/js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+  ...compat.config({ env: { jest: true } }).map((config) => ({
+    ...config,
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+];
+`
+    );
+
+    await libraryGenerator(tree, defaultSchema);
+
+    const eslintJson = tree.read('my-lib/eslint.config.js', 'utf-8');
+    expect(eslintJson).toMatchSnapshot();
+    // assert **/*.vue was added to override in base eslint config
+    const eslintBaseJson = tree.read('eslint.config.js', 'utf-8');
+    expect(eslintBaseJson).toContain(
+      `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
+    );
+  });
+
   describe('nested', () => {
     it('should update tags and implicitDependencies', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        directory: 'myDir',
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
         tags: 'one',
       });
       const myLib = readProjectConfiguration(tree, 'my-dir-my-lib');
@@ -163,8 +233,8 @@ describe('lib', () => {
 
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib2',
-        directory: 'myDir',
+        name: 'my-dir-my-lib2',
+        directory: 'my-dir/my-lib2',
         tags: 'one,two',
       });
 
@@ -177,7 +247,11 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
+      });
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.vue')
@@ -188,14 +262,23 @@ describe('lib', () => {
     });
 
     it('should update project configurations', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
+      });
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
       expect(config.root).toEqual('my-dir/my-lib');
     });
 
     it('should update root tsconfig.base.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        name: 'my-dir-my-lib',
+        importPath: '@proj/my-dir/my-lib',
+        directory: 'my-dir/my-lib',
+      });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
         ['my-dir/my-lib/src/index.ts']
@@ -206,7 +289,10 @@ describe('lib', () => {
     });
 
     it('should create a local tsconfig.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+      });
 
       const tsconfigJson = readJson(tree, 'my-dir/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchSnapshot();
@@ -289,7 +375,7 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
         importPath: '@myorg/lib',
       });
       const packageJson = readJson(tree, 'my-dir/my-lib/package.json');
@@ -304,7 +390,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -312,7 +398,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'myLib2',
+          directory: 'myLib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

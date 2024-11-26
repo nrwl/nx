@@ -8,8 +8,6 @@
       "command": "node ./scripts/copy-readme.js remix",
       "outputs": ["{workspaceRoot}/build/packages/remix"]
     },
-    "lint": {},
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
@@ -44,9 +42,6 @@
           "LICENSE"
         ]
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js remix @nrwl/remix"
     }
   },
   "tags": []

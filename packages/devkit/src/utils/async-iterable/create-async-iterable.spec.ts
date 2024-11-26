@@ -1,4 +1,5 @@
 import { createAsyncIterable } from './create-async-iterable';
+import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterator';
 
 describe(createAsyncIterable.name, () => {
   test('simple callback', async () => {
@@ -54,5 +55,16 @@ describe(createAsyncIterable.name, () => {
     }
 
     expect(results).toEqual(['first', 'second', 'third', 'fourth']);
+  });
+
+  test('works with getLastValueFromAsyncIterableIterator', async () => {
+    const it = createAsyncIterable<string>(({ next, done }) => {
+      setTimeout(() => {
+        next('foo');
+        done();
+      });
+    });
+    const result = await getLastValueFromAsyncIterableIterator(it);
+    expect(result).toEqual('foo');
   });
 });

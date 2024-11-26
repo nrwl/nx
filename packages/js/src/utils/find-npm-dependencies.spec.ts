@@ -169,6 +169,137 @@ describe('findNpmDependencies', () => {
     });
   });
 
+  it.each`
+    fileName
+    ${'tsconfig.base.json'}
+    ${'tsconfig.json'}
+  `(
+    'should pick up helper npm dependencies when using tsc and run-commands',
+    ({ fileName }) => {
+      vol.fromJSON(
+        {
+          [`./${fileName}`]: JSON.stringify({
+            compilerOptions: { importHelpers: true },
+          }),
+          './nx.json': JSON.stringify(nxJson),
+          './libs/my-lib/tsconfig.json': JSON.stringify({
+            compilerOptions: {
+              importHelpers: true,
+            },
+          }),
+        },
+        '/root'
+      );
+      const lib = {
+        name: 'my-lib',
+        type: 'lib' as const,
+        data: {
+          root: 'libs/my-lib',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                command: 'tsc --build tsconfig.lib.json --pretty --verbose',
+              },
+            },
+          },
+        },
+      };
+      const projectGraph = {
+        nodes: {
+          'my-lib': lib,
+        },
+        externalNodes: {
+          'npm:tslib': {
+            name: 'npm:tslib' as const,
+            type: 'npm' as const,
+            data: {
+              packageName: 'tslib',
+              version: '2.6.0',
+            },
+          },
+        },
+        dependencies: {},
+      };
+      const projectFileMap = {
+        'my-lib': [],
+      };
+
+      expect(
+        findNpmDependencies('/root', lib, projectGraph, projectFileMap, 'build')
+      ).toEqual({
+        tslib: '2.6.0',
+      });
+    }
+  );
+
+  it('should handle missing ts/swc helper packages from externalNodes', () => {
+    vol.fromJSON(
+      {
+        './nx.json': JSON.stringify(nxJson),
+        './libs/my-lib/tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            importHelpers: true,
+          },
+        }),
+        './libs/my-lib/.swcrc': JSON.stringify({
+          jsc: {
+            externalHelpers: true,
+          },
+        }),
+      },
+      '/root'
+    );
+    const libWithHelpers = {
+      name: 'my-lib',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/my-lib',
+        targets: {
+          build1: {
+            executor: '@nx/js:tsc',
+            options: {
+              tsConfig: 'libs/my-lib/tsconfig.json',
+            },
+          },
+          build2: {
+            executor: '@nx/js:swc',
+            options: {},
+          },
+        },
+      },
+    };
+    const projectGraph = {
+      nodes: {
+        'my-lib': libWithHelpers,
+      },
+      externalNodes: {},
+      dependencies: {},
+    };
+    const projectFileMap = {
+      'my-lib': [],
+    };
+
+    expect(
+      findNpmDependencies(
+        '/root',
+        libWithHelpers,
+        projectGraph,
+        projectFileMap,
+        'build1'
+      )
+    ).toEqual({});
+    expect(
+      findNpmDependencies(
+        '/root',
+        libWithHelpers,
+        projectGraph,
+        projectFileMap,
+        'build2'
+      )
+    ).toEqual({});
+  });
+
   it('should not pick up helper npm dependencies if not required', () => {
     vol.fromJSON(
       {

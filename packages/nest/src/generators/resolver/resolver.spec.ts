@@ -5,19 +5,21 @@ import { resolverGenerator } from './resolver';
 
 describe('resolver generator', () => {
   let tree: Tree;
-  const project = 'api';
+  const path = 'api';
   const options: ResolverGeneratorOptions = {
     name: 'test',
-    project,
+    path,
     unitTestRunner: 'jest',
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(path);
     jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(resolverGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      resolverGenerator(tree, { ...options, path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

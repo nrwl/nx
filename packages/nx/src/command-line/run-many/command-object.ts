@@ -7,10 +7,11 @@ import {
   withOverrides,
   withBatch,
 } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
-  describe: 'Run target for multiple listed projects',
+  describe: 'Run target for multiple listed projects.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withRunManyOptions(
@@ -20,6 +21,13 @@ export const yargsRunManyCommand: CommandModule = {
       ),
       'run-many'
     ),
-  handler: async (args) =>
-    (await import('./run-many')).runMany(withOverrides(args)),
+  handler: async (args) => {
+    const exitCode = await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        await import('./run-many').then((m) => m.runMany(withOverrides(args)));
+      }
+    );
+    process.exit(exitCode);
+  },
 };

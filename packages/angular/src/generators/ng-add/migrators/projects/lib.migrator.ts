@@ -41,11 +41,11 @@ export class LibMigrator extends ProjectMigrator {
   }
 
   override async migrate(): Promise<void> {
+    await super.migrate();
+
     if (this.skipMigration === true) {
       return;
     }
-
-    await super.migrate();
 
     await this.updateProjectConfiguration();
     this.moveProjectFiles();

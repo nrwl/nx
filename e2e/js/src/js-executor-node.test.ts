@@ -21,7 +21,7 @@ describe('js:node executor', () => {
     const esbuildLib = uniq('esbuildlib');
 
     runCLI(
-      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
+      `generate @nx/js:lib libs/${esbuildLib} --bundler=esbuild --no-interactive`
     );
 
     updateFile(`libs/${esbuildLib}/src/index.ts`, () => {
@@ -44,6 +44,7 @@ describe('js:node executor', () => {
 
     const output = runCLI(`run ${esbuildLib}:run-node`, {
       redirectStderr: true,
+      silenceError: true,
     });
     expect(output).toContain('Hello from my library!');
     expect(output).toContain('This is an error');
@@ -54,7 +55,7 @@ describe('js:node executor', () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(
-      `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`
+      `generate @nx/js:lib libs/${rollupLib} --bundler=rollup --no-interactive`
     );
 
     updateFile(`libs/${rollupLib}/src/index.ts`, () => {
@@ -81,7 +82,7 @@ describe('js:node executor', () => {
   it('should execute library compiled with tsc', async () => {
     const tscLib = uniq('tsclib');
 
-    runCLI(`generate @nx/js:lib ${tscLib} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
 
     updateFile(`libs/${tscLib}/src/index.ts`, () => {
       return `
@@ -107,7 +108,7 @@ describe('js:node executor', () => {
   it('should execute library compiled with swc', async () => {
     const swcLib = uniq('swclib');
 
-    runCLI(`generate @nx/js:lib ${swcLib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${swcLib} --bundler=swc --no-interactive`);
 
     updateFile(`libs/${swcLib}/src/index.ts`, () => {
       return `
@@ -134,7 +135,7 @@ describe('js:node executor', () => {
     const webpackProject = uniq('webpackproject');
 
     runCLI(
-      `generate @nx/node:application ${webpackProject} --bundler=webpack --no-interactive`
+      `generate @nx/node:application apps/${webpackProject} --bundler=webpack --no-interactive`
     );
 
     updateFile(`apps/${webpackProject}/src/main.ts`, () => {

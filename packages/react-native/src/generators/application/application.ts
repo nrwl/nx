@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -32,7 +33,6 @@ export async function reactNativeApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -41,6 +41,8 @@ export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertNotUsingTsSolutionSetup(host, 'react-native', 'application');
+
   const options = await normalizeOptions(host, schema);
 
   const tasks: GeneratorCallback[] = [];
@@ -56,7 +58,7 @@ export async function reactNativeApplicationGeneratorInternal(
     tasks.push(ensureDependencies(host));
   }
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   const lintTask = await addLinting(host, {
@@ -98,22 +100,19 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.iosProjectRoot)
   );
   if (options.install) {
-    const workspacePackageJsonPath = joinPathFragments('package.json');
     const projectPackageJsonPath = joinPathFragments(
       options.appProjectRoot,
       'package.json'
     );
 
-    const workspacePackageJson = readJson<PackageJson>(
-      host,
-      workspacePackageJsonPath
-    );
+    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
     const projectPackageJson = readJson<PackageJson>(
       host,
       projectPackageJsonPath
     );
 
     await syncDeps(
+      options.name,
       projectPackageJson,
       projectPackageJsonPath,
       workspacePackageJson

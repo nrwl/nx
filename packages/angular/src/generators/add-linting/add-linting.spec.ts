@@ -1,8 +1,10 @@
-import { ProjectConfiguration, readNxJson, Tree } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
+  ProjectConfiguration,
+  Tree,
   addProjectConfiguration,
   readJson,
-  readProjectConfiguration,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as linter from '@nx/eslint';
@@ -32,7 +34,6 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
     });
 
     expect(linter.lintProjectGenerator).toHaveBeenCalled();
@@ -44,7 +45,6 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -55,37 +55,53 @@ describe('addLinting generator', () => {
     expect(devDependencies['@angular-eslint/template-parser']).toBeDefined();
   });
 
+  it('should use flat config and install correct dependencies when using it', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@typescript-eslint/utils']).toMatchInlineSnapshot(
+      `"^8.0.0"`
+    );
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+  });
+
   it('should correctly generate the .eslintrc.json file', async () => {
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
     });
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
     expect(eslintConfig).toMatchSnapshot();
   });
 
-  it('should add @nx/eslint/plugin', async () => {
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
+      skipPackageJson: true,
     });
 
-    const nxJson = readNxJson(tree);
-    expect(
-      nxJson.plugins.find((p) => {
-        if (typeof p === 'string') {
-          return p === '@nx/eslint/plugin';
-        } else {
-          return p.plugin === '@nx/eslint/plugin';
-        }
-      })
-    ).toBeTruthy();
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

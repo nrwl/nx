@@ -32,7 +32,7 @@ Source file inputs are defined like this:
 }
 ```
 
-Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from.
+Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
 Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself.
@@ -40,7 +40,7 @@ Prefixing a source file input with `^` means this entry applies to the project d
 By default, Nx will use all files in a project as well as all files in the project's dependencies when computing a hash for tasks belonging to the project.
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
-See the [Common Input Sets section](#common-inputs) to see some common examples of source file inputs
+To get a better idea of how to use inputs, you can browse some [common input sets](/recipes/running-tasks/configure-inputs#common-inputs).
 
 ### Environment Variables
 
@@ -188,15 +188,12 @@ Naming a set of inputs with the same name as a set of inputs defined for the wor
 
 By default, Nx Workspaces are generated with the following named inputs:
 
-```jsonc {% fileName="nx.json" highlightLines=["2-6"] %}
+```jsonc {% fileName="nx.json" %}
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"], // Default Inputs
     "production": ["default", "!{projectRoot}/jest.config.ts"], // Production Inputs
     "sharedGlobals": [] // Shared Global Inputs
-  },
-  "targetDefaults": {
-    "inputs": ["default", "^default"]
   }
 }
 ```
@@ -243,7 +240,7 @@ nx test myreactapp
 ```
 
 {% cards %}
-{% card title="nx.json reference" type="documentation" description="namedInputs can be defined in nx.json" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Project configuration reference" type="documentation" description="inputs and namedInputs can be defined in project configuration" url="/reference/nx-json#inputs-&-namedinputs" /%}
+{% card title="nx.json reference" type="documentation" description="namedInputs can be defined in nx.json" url="/reference/nx-json#inputs-namedinputs" /%}
+{% card title="Project configuration reference" type="documentation" description="inputs and namedInputs can be defined in project configuration" url="/reference/project-configuration#inputs-and-named-inputs" /%}
 {% card title="Configure Inputs for Task Caching" type="documentation" description="This recipes walks you through a few examples of how to configure inputs and namedInputs" url="/recipes/running-tasks/configure-inputs" /%}
 {% /cards %}

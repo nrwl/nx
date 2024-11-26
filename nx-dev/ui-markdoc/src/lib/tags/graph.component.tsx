@@ -1,3 +1,4 @@
+'use client';
 import { useTheme } from '@nx/nx-dev/ui-theme';
 import dynamic from 'next/dynamic';
 import { ReactElement, useEffect, useState } from 'react';
@@ -92,20 +93,24 @@ export function Graph({
 
   return (
     <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
-      <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
+      <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
         {title}
       </div>
       {type === 'project' ? (
-        <NxProjectGraphViz
-          height={height}
-          groupByFolder={false}
-          theme={theme}
-          projects={parsedProps.projects}
-          workspaceLayout={parsedProps.workspaceLayout}
-          dependencies={parsedProps.dependencies}
-          affectedProjectIds={parsedProps.affectedProjectIds}
-          enableTooltips={parsedProps.enableTooltips}
-        />
+        <div style={{ height }}>
+          <NxProjectGraphViz
+            renderMode="nx-docs"
+            groupByFolder={false}
+            theme={theme}
+            projects={parsedProps.projects}
+            composite={parsedProps.composite}
+            fileMap={{}}
+            workspaceLayout={parsedProps.workspaceLayout}
+            dependencies={parsedProps.dependencies}
+            affectedProjectIds={parsedProps.affectedProjectIds}
+            enableTooltips={parsedProps.enableTooltips}
+          />
+        </div>
       ) : (
         <NxTaskGraphViz
           height={height}

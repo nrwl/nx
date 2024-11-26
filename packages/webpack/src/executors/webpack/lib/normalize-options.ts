@@ -36,7 +36,9 @@ export function normalizeOptions(
     normalizedOptions.assets = normalizeAssets(
       options.assets,
       root,
-      sourceRoot
+      sourceRoot,
+      projectRoot,
+      false // executor assets are relative to workspace root for consistency
     );
   }
   return normalizedOptions as NormalizedWebpackExecutorOptions;

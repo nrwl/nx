@@ -4,7 +4,6 @@ import { getIgnoreObject } from '../../utils/ignore';
 
 export default function nxReleasePath(tree: Tree) {
   visitNotIgnoredFiles(tree, '', (file) => {
-    console.log({ file });
     const contents = tree.read(file).toString('utf-8');
     if (
       // the deep import usage should be replaced by the new location

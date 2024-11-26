@@ -10,7 +10,6 @@ import { switchMap } from 'rxjs/operators';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { Schema } from './schema';
-import { validateOptions } from './validate-options';
 
 function buildServerApp(
   options: Schema,
@@ -55,7 +54,7 @@ function buildServerAppWithCustomWebpackConfiguration(
     switchMap(({ executeServerBuilder }) =>
       executeServerBuilder(options, context as any, {
         webpackConfiguration: async (baseWebpackConfig) => {
-          // Angular 15 auto includes code from @angular/platform-server
+          // Angular auto includes code from @angular/platform-server
           // This includes the code outside the shared scope created by ModuleFederation
           // This code will be included in the generated code from our generators,
           // maintaining it within the shared scope.
@@ -68,11 +67,7 @@ function buildServerAppWithCustomWebpackConfiguration(
             context.target
           );
 
-          if (
-            mergedConfig.plugins
-              .map((p) => p.constructor.name)
-              .includes('UniversalFederationPlugin')
-          ) {
+          if (mergedConfig.target === 'async-node') {
             mergedConfig.entry.main = mergedConfig.entry.main.filter(
               (m) => !m.startsWith('@angular/platform-server/init')
             );
@@ -96,8 +91,6 @@ export function executeWebpackServerBuilder(
   options: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
-  validateOptions(options);
-
   options.buildLibsFromSource ??= true;
 
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;

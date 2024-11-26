@@ -1,4 +1,5 @@
 import { formatFiles, runTasksInSerial, Tree } from '@nx/devkit';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import detoxInitGenerator from '../init/init';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
@@ -12,7 +13,6 @@ import { ensureDependencies } from './lib/ensure-dependencies';
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -21,6 +21,8 @@ export async function detoxApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
+  assertNotUsingTsSolutionSetup(host, 'detox', 'application');
+
   const options = await normalizeOptions(host, schema);
 
   const initTask = await detoxInitGenerator(host, {

@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Webpack Dev Server",
-  "description": "Serves an Angular application using [Webpack](https://webpack.js.org/) when the build target is using a Webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an esbuild-based executor.",
+  "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor.",
   "examplesFile": "../../../docs/dev-server-examples.md",
   "type": "object",
   "presets": [
@@ -17,7 +17,7 @@
       "type": "string",
       "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
     },
     "buildTarget": {
       "type": "string",
@@ -36,7 +36,7 @@
     },
     "proxyConfig": {
       "type": "string",
-      "description": "Proxy configuration file. For more information, see https://angular.io/guide/build#proxying-to-a-backend-server."
+      "description": "Proxy configuration file. For more information, see https://angular.dev/tools/cli/serve#proxying-to-a-backend-server."
     },
     "ssl": {
       "type": "boolean",
@@ -110,6 +110,40 @@
     "poll": {
       "type": "number",
       "description": "Enable and define the file watching poll time period in milliseconds."
+    },
+    "forceEsbuild": {
+      "type": "boolean",
+      "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system. _Note: this is only supported in Angular versions >= 16.1.0_.",
+      "default": false
+    },
+    "inspect": {
+      "default": false,
+      "description": "Activate debugging inspector. This option only has an effect when 'SSR' or 'SSG' are enabled. _Note: this is only supported in Angular versions >= 18.1.0_.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Activate the inspector on host and port in the format of `[[host:]port]`. See the security warning in https://nodejs.org/docs/latest-v22.x/api/cli.html#warning-binding-inspector-to-a-public-ipport-combination-is-insecure regarding the host parameter usage."
+        },
+        { "type": "boolean" }
+      ]
+    },
+    "prebundle": {
+      "description": "Enable and control the Vite-based development server's prebundling capabilities. To enable prebundling, the Angular CLI cache must also be enabled. This option has no effect when using the 'browser' or other Webpack-based builders. _Note: this is only supported in Angular versions >= 17.2.0_.",
+      "oneOf": [
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "exclude": {
+              "description": "List of package imports that should not be prebundled by the development server. The packages will be bundled into the application code itself.",
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["exclude"]
+        }
+      ]
     },
     "buildLibsFromSource": {
       "type": "boolean",

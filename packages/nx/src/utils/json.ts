@@ -44,7 +44,9 @@ export function parseJson<T extends object = any>(
   options?: JsonParseOptions
 ): T {
   try {
-    return JSON.parse(input);
+    if (options?.expectComments !== true) {
+      return JSON.parse(input);
+    }
   } catch {}
 
   options = { allowTrailingComma: true, ...options };
@@ -94,5 +96,5 @@ export function serializeJson<T extends object = object>(
   input: T,
   options?: JsonSerializeOptions
 ): string {
-  return JSON.stringify(input, null, options?.spaces ?? 2) + '\n';
+  return JSON.stringify(input, null, options?.spaces ?? 2);
 }

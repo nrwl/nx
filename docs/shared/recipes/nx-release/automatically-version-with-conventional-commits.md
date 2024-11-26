@@ -32,7 +32,7 @@ For example, if the git history looks like this:
   - chore(release): 1.0.0
 ```
 
-then Nx Release will select the `minor` version bump and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0.
+then Nx Release will select the `minor` version bump and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0. To customize the version bump for different types of commits, or to trigger a version bump with custom commit types, see the [Customize Conventional Commit Types](/recipes/nx-release/customize-conventional-commit-types) recipe.
 
 {% callout type="info" title="No changes detected" %}
 If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/release-projects-independently) as well, allowing for only some projects to be released and some to be skipped.
@@ -59,14 +59,14 @@ An example partial output of running Nx Release with independent releases and co
 
 ```{% command="nx release" %}
 
- >  NX   Running release version for project: pkg-1
+NX   Running release version for project: pkg-1
 
 pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
 pkg-1 📄 Resolved the current version as 0.4.0 from git tag "pkg-1@0.4.0".
 pkg-1 📄 Resolved the specifier as "minor" using git history and the conventional commits standard.
 pkg-1 ✍️  New version 0.5.0 written to packages/pkg-1/package.json
 
- >  NX   Running release version for project: pkg-2
+NX   Running release version for project: pkg-2
 
 pkg-2 🔍 Reading data for package "@myorg/pkg-2" from packages/pkg-2/package.json
 pkg-2 📄 Resolved the current version as 0.4.0 from git tag "pkg-2@0.4.0".
@@ -74,7 +74,7 @@ pkg-2 📄 Resolved the specifier as "patch" using git history and the conventio
 pkg-2 ✍️  New version 0.4.1 written to packages/pkg-2/package.json
 pkg-2 ✍️  Applying new version 0.4.1 to 1 package which depends on pkg-2
 
- >  NX   Running release version for project: pkg-3
+NX   Running release version for project: pkg-3
 
 pkg-3 🔍 Reading data for package "@myorg/pkg-3" from packages/pkg-3/package.json
 pkg-3 📄 Resolved the current version as 0.4.0 from git tag "pkg-3@0.4.0".

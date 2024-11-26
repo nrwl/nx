@@ -3,24 +3,27 @@ import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { componentGenerator } from '../component/component';
-import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
-import { generateTestApplication, generateTestLibrary } from '../utils/testing';
-import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
-jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
+
+import { componentGenerator } from '../component/component';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
+import { generateTestApplication, generateTestLibrary } from '../utils/testing';
+import { cypressComponentConfiguration } from './cypress-component-configuration';
+
+jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -52,16 +55,16 @@ describe('Cypress Component Testing Configuration', () => {
   describe('updateProjectConfig', () => {
     it('should add project config with --target=<project>:<target>', async () => {
       await generateTestApplication(tree, {
-        name: 'fancy-app',
+        directory: 'fancy-app',
         skipFormat: true,
       });
       await generateTestLibrary(tree, {
-        name: 'fancy-lib',
+        directory: 'fancy-lib',
         skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        path: 'fancy-lib/src/lib/fancy-cmp/fancy-cmp',
         export: true,
         skipFormat: true,
       });
@@ -118,16 +121,16 @@ describe('Cypress Component Testing Configuration', () => {
 
     it('should add project config with --target=<project>:<target>:<config>', async () => {
       await generateTestApplication(tree, {
-        name: 'fancy-app',
+        directory: 'fancy-app',
         skipFormat: true,
       });
       await generateTestLibrary(tree, {
-        name: 'fancy-lib',
+        directory: 'fancy-lib',
         skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        path: 'fancy-lib/src/lib/fancy-cmp/fancy-cmp',
         export: true,
         skipFormat: true,
       });
@@ -184,16 +187,16 @@ describe('Cypress Component Testing Configuration', () => {
 
     it('should not throw with invalid --build-target', async () => {
       await generateTestApplication(tree, {
-        name: 'fancy-app',
+        directory: 'fancy-app',
         skipFormat: true,
       });
       await generateTestLibrary(tree, {
-        name: 'fancy-lib',
+        directory: 'fancy-lib',
         skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        path: 'fancy-lib/src/lib/fancy-cmp/fancy-cmp/',
         export: true,
         skipFormat: true,
       });
@@ -243,13 +246,13 @@ describe('Cypress Component Testing Configuration', () => {
 
     it('should use own project config', async () => {
       await generateTestApplication(tree, {
-        name: 'fancy-app',
+        directory: 'fancy-app',
         bundler: 'webpack',
         skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-app',
+        path: 'fancy-app/src/lib/fancy-cmp/fancy-cmp',
         export: true,
         skipFormat: true,
       });
@@ -287,17 +290,17 @@ describe('Cypress Component Testing Configuration', () => {
 
     it('should use the project graph to find the correct project config', async () => {
       await generateTestApplication(tree, {
-        name: 'fancy-app',
+        directory: 'fancy-app',
         bundler: 'webpack',
         skipFormat: true,
       });
       await generateTestLibrary(tree, {
-        name: 'fancy-lib',
+        directory: 'fancy-lib',
         skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
-        project: 'fancy-lib',
+        path: 'fancy-app/src/app/fancy-lib/fancy-lib',
         export: true,
         skipFormat: true,
       });
@@ -355,7 +358,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should setup angular specific configs', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       skipFormat: true,
     });
     await setup(tree, {
@@ -413,9 +416,53 @@ describe('Cypress Component Testing Configuration', () => {
     ).toMatchSnapshot('component.ts');
   });
 
+  it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
+    await generateTestApplication(tree, {
+      directory: 'fancy-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    await componentGenerator(tree, {
+      name: 'fancy-cmp',
+      path: 'fancy-app/src/app/fancy-cmp/fancy-cmp',
+      export: true,
+      skipFormat: true,
+    });
+    projectGraph = {
+      nodes: {
+        'fancy-app': {
+          name: 'fancy-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'fancy-app'),
+          } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await cypressComponentConfiguration(tree, {
+      project: 'fancy-app',
+      generateTests: false,
+      skipFormat: true,
+    });
+
+    const tsConfig = readJson(tree, 'fancy-app/tsconfig.editor.json');
+    expect(tsConfig.exclude).toStrictEqual(
+      expect.arrayContaining([
+        'cypress/**/*',
+        'cypress.config.ts',
+        '**/*.cy.ts',
+        '**/*.cy.js',
+        '**/*.cy.tsx',
+        '**/*.cy.jsx',
+      ])
+    );
+  });
+
   it('should work with simple components', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       skipFormat: true,
     });
     await setup(tree, {
@@ -469,7 +516,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should work with standalone component', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib-standalone',
+      directory: 'my-lib-standalone',
       skipFormat: true,
     });
     await setup(tree, {
@@ -522,7 +569,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should work with complex component', async () => {
     await generateTestLibrary(tree, {
-      name: 'with-inputs-cmp',
+      directory: 'with-inputs-cmp',
       skipFormat: true,
     });
     await setup(tree, {
@@ -578,7 +625,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should work with complex standalone component', async () => {
     await generateTestLibrary(tree, {
-      name: 'with-inputs-standalone-cmp',
+      directory: 'with-inputs-standalone-cmp',
       skipFormat: true,
     });
     await setup(tree, {
@@ -633,11 +680,11 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should work with secondary entry point libs', async () => {
     await generateTestApplication(tree, {
-      name: 'my-cool-app',
+      directory: 'my-cool-app',
       skipFormat: true,
     });
     await generateTestLibrary(tree, {
-      name: 'secondary',
+      directory: 'secondary',
       buildable: true,
       skipFormat: true,
     });
@@ -648,17 +695,13 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await componentGenerator(tree, {
       name: 'fancy-button',
-      path: 'secondary/src/lib/button',
-      project: 'secondary',
-      flat: true,
+      path: 'secondary/src/lib/button/fancy-button',
       skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'standalone-fancy-button',
-      path: 'secondary/src/lib/button',
-      project: 'secondary',
+      path: 'secondary/src/lib/button/standalone-fancy-button',
       standalone: true,
-      flat: true,
       skipFormat: true,
     });
     projectGraph = {
@@ -704,7 +747,7 @@ describe('Cypress Component Testing Configuration', () => {
 
   it('should not overwrite existing component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'cool-lib',
+      directory: 'cool-lib',
       flat: true,
       skipFormat: true,
     });
@@ -766,20 +809,18 @@ describe('Cypress Component Testing Configuration', () => {
   // TODO: should we support this?
   it.skip('should handle multiple components per file', async () => {
     await generateTestLibrary(tree, {
-      name: 'multiple-components',
+      directory: 'multiple-components',
       flat: true,
       skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'cmp-one',
-      project: 'multiple-components',
-      flat: true,
+      path: 'multiple-components/src/lib/cmp-one',
       skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'cmp-two',
-      project: 'multiple-components',
-      flat: true,
+      path: 'multiple-components/src/lib/cmp-two',
       skipFormat: true,
     });
     tree.write(
@@ -857,7 +898,7 @@ async function setup(
   }
 ) {
   await generateTestApplication(tree, {
-    name: options.name,
+    directory: options.name,
     standalone: options.standalone,
     skipFormat: true,
   });
@@ -867,7 +908,7 @@ async function setup(
     `${options.name}-three`,
   ]) {
     await componentGenerator(tree, {
-      project: options.project,
+      path: `${options.project}/src/lib/${name}/${name}`,
       name,
       skipFormat: true,
     });

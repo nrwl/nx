@@ -1,15 +1,16 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-  updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
-import { createNodes, ExpoPluginOptions } from '../../../plugins/plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { createNodes } from '../../../plugins/plugin';
 import {
   expoCliVersion,
   expoVersion,
@@ -18,7 +19,6 @@ import {
   reactNativeVersion,
   reactVersion,
 } from '../../utils/versions';
-import { hasExpoPlugin } from '../../utils/has-expo-plugin';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
@@ -28,22 +28,46 @@ export function expoInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  assertNotUsingTsSolutionSetup(host, 'expo', 'init');
+
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
 
   addGitIgnoreEntry(host);
 
   if (schema.addPlugin) {
-    addPlugin(host);
+    await addPluginV1(
+      host,
+      await createProjectGraphAsync(),
+      '@nx/expo/plugin',
+      createNodes,
+      {
+        startTargetName: ['start', 'expo:start', 'expo-start'],
+        buildTargetName: ['build', 'expo:build', 'expo-build'],
+        prebuildTargetName: ['prebuild', 'expo:prebuild', 'expo-prebuild'],
+        serveTargetName: ['serve', 'expo:serve', 'expo-serve'],
+        installTargetName: ['install', 'expo:install', 'expo-install'],
+        exportTargetName: ['export', 'expo:export', 'expo-export'],
+        submitTargetName: ['submit', 'expo:submit', 'expo-submit'],
+        runIosTargetName: ['run-ios', 'expo:run-ios', 'expo-run-ios'],
+        runAndroidTargetName: [
+          'run-android',
+          'expo:run-android',
+          'expo-run-android',
+        ],
+      },
+
+      schema.updatePackageScripts
+    );
   }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
-  }
-
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
@@ -73,31 +97,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
 
 function moveDependency(host: Tree) {
   return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
-}
-
-function addPlugin(host: Tree) {
-  const nxJson = readNxJson(host);
-
-  if (hasExpoPlugin(host)) {
-    return;
-  }
-
-  nxJson.plugins ??= [];
-  nxJson.plugins.push({
-    plugin: '@nx/expo/plugin',
-    options: {
-      startTargetName: 'start',
-      serveTargetName: 'serve',
-      runIosTargetName: 'run-ios',
-      runAndroidTargetName: 'run-android',
-      exportTargetName: 'export',
-      prebuildTargetName: 'prebuild',
-      installTargetName: 'install',
-      buildTargetName: 'build',
-      submitTargetName: 'submit',
-    } as ExpoPluginOptions,
-  });
-  updateNxJson(host, nxJson);
 }
 
 export default expoInitGenerator;

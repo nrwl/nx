@@ -11,6 +11,14 @@ import * as yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
+// DO NOT MODIFY, even for testing. This only gates releases to latest.
+const VALID_AUTHORS_FOR_LATEST = [
+  'jaysoo',
+  'JamesHenry',
+  'FrozenPandaz',
+  'vsavkin',
+];
+
 (async () => {
   const options = parseArgs();
   // Perform minimal logging by default
@@ -23,17 +31,11 @@ const LARGE_BUFFER = 1024 * 1000000;
     });
   }
 
-  const buildCommand = 'pnpm build';
-  console.log(`> ${buildCommand}`);
-  execSync(buildCommand, {
-    stdio: [0, 1, 2],
-    maxBuffer: LARGE_BUFFER,
-  });
-
   // Ensure all the native-packages directories are available at the top level of the build directory, enabling consistent packageRoot structure
   execSync(`pnpm nx copy-native-package-directories nx`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
+    windowsHide: true,
   });
 
   // Expected to run as part of the Github `publish` workflow
@@ -43,11 +45,13 @@ const LARGE_BUFFER = 1024 * 1000000;
     execSync('find ./build -name "*.node" -delete', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
+      windowsHide: true,
     });
 
     execSync('pnpm nx run-many --target=artifacts', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
+      windowsHide: true,
     });
   }
 
@@ -65,6 +69,7 @@ const LARGE_BUFFER = 1024 * 1000000;
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
+      windowsHide: true,
     });
   };
 
@@ -73,7 +78,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
-    execSync('git status --ahead-behind');
+    execSync('git status --ahead-behind', {
+      windowsHide: true,
+    });
 
     if (isRelativeVersionKeyword(options.version)) {
       throw new Error(
@@ -86,6 +93,7 @@ const LARGE_BUFFER = 1024 * 1000000;
     execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
+      windowsHide: true,
     });
 
     let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
@@ -105,6 +113,7 @@ const LARGE_BUFFER = 1024 * 1000000;
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
+      windowsHide: true,
     });
 
     console.log(
@@ -118,69 +127,88 @@ const LARGE_BUFFER = 1024 * 1000000;
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
+    windowsHide: true,
   });
 
   const distTag = determineDistTag(options.version);
 
-  if (options.dryRun) {
-    console.warn('Not Publishing because --dryRun was passed');
-  } else {
-    // If publishing locally, force all projects to not be private first
-    if (options.local) {
-      console.log(
-        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
-      );
-      const projectGraph = await createProjectGraphAsync();
-      for (const proj of Object.values(projectGraph.nodes)) {
-        if (proj.data.targets?.['nx-release-publish']) {
-          const packageJsonPath = join(
-            workspaceRoot,
-            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
-            'package.json'
-          );
-          try {
-            const packageJson = require(packageJsonPath);
-            if (packageJson.private) {
-              console.log(
-                '- Publishing private package locally:',
-                packageJson.name
-              );
-              writeFileSync(
-                packageJsonPath,
-                JSON.stringify({ ...packageJson, private: false })
-              );
-            }
-          } catch {}
-        }
+  // If publishing locally, force all projects to not be private first
+  if (options.local) {
+    console.log(
+      chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+    );
+    const projectGraph = await createProjectGraphAsync();
+    for (const proj of Object.values(projectGraph.nodes)) {
+      if (proj.data.targets?.['nx-release-publish']) {
+        const packageJsonPath = join(
+          workspaceRoot,
+          proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+          'package.json'
+        );
+        try {
+          const packageJson = require(packageJsonPath);
+          if (packageJson.private) {
+            console.log(
+              '- Publishing private package locally:',
+              packageJson.name
+            );
+            writeFileSync(
+              packageJsonPath,
+              JSON.stringify({ ...packageJson, private: false })
+            );
+          }
+        } catch {}
       }
     }
+  }
 
-    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
-    if (options.dryRun) {
-      publishCommand += ' --dry-run';
+  if (!options.local && (!distTag || distTag === 'latest')) {
+    // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+    const author = process.env.GITHUB_ACTOR ?? '';
+    if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+      throw new Error(
+        `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+          ', '
+        )}`
+      );
     }
-    console.log(`\n> ${publishCommand}`);
-    execSync(publishCommand, {
-      stdio: [0, 1, 2],
-      maxBuffer: LARGE_BUFFER,
-    });
   }
 
-  let version;
-  if (['minor', 'major', 'patch'].includes(options.version)) {
-    version = execSync(`npm view nx@${distTag} version`).toString().trim();
-  } else {
-    version = options.version;
+  // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+  let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+  if (options.dryRun) {
+    publishCommand += ' --dry-run';
   }
+  console.log(`\n> ${publishCommand}`);
+  execSync(publishCommand, {
+    stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
+    windowsHide: true,
+  });
 
-  console.log(chalk.green` > Published version: ` + version);
-  console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+  if (!options.dryRun) {
+    let version;
+    if (['minor', 'major', 'patch'].includes(options.version)) {
+      version = execSync(`npm view nx@${distTag} version`, {
+        windowsHide: true,
+      })
+        .toString()
+        .trim();
+    } else {
+      version = options.version;
+    }
+
+    console.log(chalk.green` > Published version: ` + version);
+    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+  }
 
   process.exit(0);
 })();
 
 function parseArgs() {
+  const registry = getRegistry();
+  const registryIsLocalhost = registry.hostname === 'localhost';
+
   const parsedArgs = yargs
     .scriptName('pnpm nx-release')
     .wrap(144)
@@ -221,7 +249,20 @@ function parseArgs() {
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
-      coerce: (version) => {
+      coerce: (version: string) => {
+        const isGithubActions = !!process.env.GITHUB_ACTIONS;
+        if (
+          isGithubActions &&
+          !registryIsLocalhost &&
+          isRelativeVersionKeyword(version)
+        ) {
+          // Print error rather than throw to avoid yargs noise in this specifically handled case
+          console.error(
+            'Error: The release script was triggered in a GitHub Actions workflow, to a non-local registry, but a relative version keyword was provided. This is an unexpected combination.'
+          );
+          process.exit(1);
+        }
+
         if (version !== 'canary') {
           return version;
         }
@@ -229,10 +270,14 @@ function parseArgs() {
          * Handle the special case of `canary`
          */
 
-        const currentLatestVersion = execSync('npm view nx@latest version')
+        const currentLatestVersion = execSync('npm view nx@latest version', {
+          windowsHide: true,
+        })
           .toString()
           .trim();
-        const currentNextVersion = execSync('npm view nx@next version')
+        const currentNextVersion = execSync('npm view nx@next version', {
+          windowsHide: true,
+        })
           .toString()
           .trim();
 
@@ -263,7 +308,11 @@ function parseArgs() {
         const YYYYMMDD = `${year}${month}${day}`;
 
         // Get the current short git sha
-        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+        const gitSha = execSync('git rev-parse --short HEAD', {
+          windowsHide: true,
+        })
+          .toString()
+          .trim();
 
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
@@ -308,8 +357,6 @@ function parseArgs() {
     )
     .demandOption('version')
     .check((args) => {
-      const registry = getRegistry();
-      const registryIsLocalhost = registry.hostname === 'localhost';
       if (!args.local) {
         if (!process.env.GH_TOKEN) {
           throw new Error('process.env.GH_TOKEN is not set');
@@ -333,15 +380,26 @@ function parseArgs() {
 }
 
 function getRegistry() {
-  return new URL(execSync('npm config get registry').toString().trim());
+  return new URL(
+    execSync('npm config get registry', {
+      windowsHide: true,
+    })
+      .toString()
+      .trim()
+  );
 }
 
 function determineDistTag(
   newVersion: string
-): 'latest' | 'next' | 'previous' | 'canary' {
+): 'latest' | 'next' | 'previous' | 'canary' | 'pull-request' {
   // Special case of canary
   if (newVersion.includes('canary')) {
     return 'canary';
+  }
+
+  // Special case of PR release
+  if (newVersion.startsWith('0.0.0-pr-')) {
+    return 'pull-request';
   }
 
   // For a relative version keyword, it cannot be previous
@@ -362,7 +420,9 @@ function determineDistTag(
     );
   }
 
-  const currentLatestVersion = execSync('npm view nx version')
+  const currentLatestVersion = execSync('npm view nx version', {
+    windowsHide: true,
+  })
     .toString()
     .trim();
   const parsedCurrentLatestVersion = parse(currentLatestVersion);

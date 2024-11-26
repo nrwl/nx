@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -14,8 +15,9 @@ import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function configurationGenerator(
   tree: Tree,
@@ -28,8 +30,14 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'webpack', 'configuration');
+
   const tasks: GeneratorCallback[] = [];
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const initTask = await webpackInitGenerator(tree, {
     ...options,
@@ -101,7 +109,7 @@ function createWebpackConfig(
       joinPathFragments(project.root, 'webpack.config.js'),
       hasPlugin(tree)
         ? `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -111,7 +119,7 @@ module.exports = {
           }'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: '${buildOptions.target}',
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
@@ -137,7 +145,7 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
       joinPathFragments(project.root, 'webpack.config.js'),
       hasPlugin(tree)
         ? `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -147,7 +155,7 @@ module.exports = {
           }'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: '${buildOptions.target}',
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',

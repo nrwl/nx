@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { ChildProcess, fork, Serializable } from 'child_process';
 import * as chalk from 'chalk';
-import * as logTransformer from 'strong-log-transformer';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
@@ -14,11 +13,12 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
-import { Readable, Transform } from 'stream';
-import { ChildProcess as NativeChildProcess, nxFork } from '../native';
-import { PsuedoIPCServer } from './psuedo-ipc';
-import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
-import { PseudoTtyProcess } from '../utils/child-process';
+import { Transform } from 'stream';
+import {
+  PseudoTtyProcess,
+  getPseudoTerminal,
+  PseudoTerminal,
+} from './pseudo-terminal';
 import { signalToCode } from '../utils/exit-codes';
 
 const forkScript = join(__dirname, './fork.js');
@@ -31,14 +31,16 @@ export class ForkedProcessTaskRunner {
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<ChildProcess | PseudoTtyProcess>();
 
-  private psuedoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
-
-  private psuedoIPC = new PsuedoIPCServer(this.psuedoIPCPath);
+  private pseudoTerminal: PseudoTerminal | null = PseudoTerminal.isSupported()
+    ? getPseudoTerminal()
+    : null;
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
   async init() {
-    await this.psuedoIPC.init();
+    if (this.pseudoTerminal) {
+      await this.pseudoTerminal.init();
+    }
     this.setupProcessEventListeners();
   }
 
@@ -156,15 +158,16 @@ export class ForkedProcessTaskRunner {
     {
       temporaryOutputPath,
       streamOutput,
-      pipeOutput,
       taskGraph,
       env,
+      disablePseudoTerminal,
     }: {
       temporaryOutputPath: string;
       streamOutput: boolean;
       pipeOutput: boolean;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
+      disablePseudoTerminal: boolean;
     }
   ): Promise<{ code: number; terminalOutput: string }> {
     const shouldPrefix =
@@ -172,7 +175,12 @@ export class ForkedProcessTaskRunner {
 
     // streamOutput would be false if we are running multiple targets
     // there's no point in running the commands in a pty if we are not streaming the output
-    if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
+    if (
+      !this.pseudoTerminal ||
+      disablePseudoTerminal ||
+      !streamOutput ||
+      shouldPrefix
+    ) {
       return this.forkProcessWithPrefixAndNotTTY(task, {
         temporaryOutputPath,
         streamOutput,
@@ -180,7 +188,7 @@ export class ForkedProcessTaskRunner {
         env,
       });
     } else {
-      return this.forkProcessWithPsuedoTerminal(task, {
+      return this.forkProcessWithPseudoTerminal(task, {
         temporaryOutputPath,
         streamOutput,
         taskGraph,
@@ -189,7 +197,7 @@ export class ForkedProcessTaskRunner {
     }
   }
 
-  private async forkProcessWithPsuedoTerminal(
+  private async forkProcessWithPseudoTerminal(
     task: Task,
     {
       temporaryOutputPath,
@@ -209,20 +217,14 @@ export class ForkedProcessTaskRunner {
     }
 
     const childId = task.id;
-    const p = new PseudoTtyProcess(
-      nxFork(
-        childId,
-        forkScript,
-        this.psuedoIPCPath,
-        process.cwd(),
-        env,
-        !streamOutput
-      )
-    );
+    const p = await this.pseudoTerminal.fork(childId, forkScript, {
+      cwd: process.cwd(),
+      execArgv: process.execArgv,
+      jsEnv: env,
+      quiet: !streamOutput,
+    });
 
-    await this.psuedoIPC.waitForChildReady(childId);
-
-    this.psuedoIPC.sendMessageToChild(childId, {
+    p.send({
       targetDescription: task.target,
       overrides: task.overrides,
       taskGraph,
@@ -241,7 +243,7 @@ export class ForkedProcessTaskRunner {
         if (code >= 128) {
           process.exit(code);
         }
-
+        this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
         res({
           code,
           terminalOutput,
@@ -323,15 +325,15 @@ export class ForkedProcessTaskRunner {
               .pipe(
                 logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
               )
-              .pipe(logTransformer({ tag: color.bold(prefixText) }))
+              .pipe(addPrefixTransformer(color.bold(prefixText)))
               .pipe(process.stdout);
             p.stderr
               .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
-              .pipe(logTransformer({ tag: color(prefixText) }))
+              .pipe(addPrefixTransformer(color(prefixText)))
               .pipe(process.stderr);
           } else {
-            p.stdout.pipe(logTransformer()).pipe(process.stdout);
-            p.stderr.pipe(logTransformer()).pipe(process.stderr);
+            p.stdout.pipe(addPrefixTransformer()).pipe(process.stdout);
+            p.stderr.pipe(addPrefixTransformer()).pipe(process.stderr);
           }
         }
 
@@ -452,14 +454,18 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
-    this.psuedoIPC.onMessageFromChildren((message: Serializable) => {
-      process.send(message);
-    });
+    if (this.pseudoTerminal) {
+      this.pseudoTerminal.onMessageFromChildren((message: Serializable) => {
+        process.send(message);
+      });
+    }
 
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', (message: Serializable) => {
       // this.publisher.publish(message.toString());
-      this.psuedoIPC.sendMessageToChildren(message);
+      if (this.pseudoTerminal) {
+        this.pseudoTerminal.sendMessageToChildren(message);
+      }
 
       this.processes.forEach((p) => {
         if ('connected' in p && p.connected) {
@@ -504,10 +510,6 @@ export class ForkedProcessTaskRunner {
       // will store results to the cache and will terminate this process
     });
   }
-
-  destroy() {
-    this.psuedoIPC.close();
-  }
 }
 
 const colors = [
@@ -536,7 +538,7 @@ function getColor(projectName: string) {
 /**
  * Prevents terminal escape sequence from clearing line prefix.
  */
-function logClearLineToPrefixTransformer(prefix) {
+function logClearLineToPrefixTransformer(prefix: string) {
   let prevChunk = null;
   return new Transform({
     transform(chunk, _encoding, callback) {
@@ -545,6 +547,23 @@ function logClearLineToPrefixTransformer(prefix) {
       }
       this.push(chunk);
       prevChunk = chunk;
+      callback();
+    },
+  });
+}
+
+function addPrefixTransformer(prefix?: string) {
+  const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      const list = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
+      list
+        .filter(Boolean)
+        .forEach((m) =>
+          this.push(
+            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
+          )
+        );
       callback();
     },
   });

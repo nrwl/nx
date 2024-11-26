@@ -17,22 +17,35 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
-
       <% if(packageManager == 'pnpm'){ %>
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
-      <% } %># Cache node_modules
-      - uses: actions/setup-node@v3
+          version: 9
+      <% } %>
+      <% if(packageManager == 'bun'){ %>
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      <% } %>
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      <% if (connectedToCloud) { %>- run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+      <% } else { %># Connect your workspace by running "nx connect" and uncomment this
+      # - run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+      <% } %>
+      <% if(packageManager != 'bun'){ %>
+      # Cache node_modules
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: '<%= packageManager %>'
+       <% } %>
       - run: <%= packageManagerInstall %>
       - uses: nrwl/nx-set-shas@v4
 
-      - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>

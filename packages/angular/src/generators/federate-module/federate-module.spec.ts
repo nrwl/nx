@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { getProjects } from '@nx/devkit';
 import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
@@ -12,6 +14,7 @@ describe('federate-module', () => {
     name: 'my-federated-module',
     remote: 'my-remote',
     path: 'apps/my-remote/src/my-federated-module.ts',
+    remoteDirectory: 'apps/my-remote',
   };
 
   describe('no remote', () => {
@@ -51,6 +54,7 @@ describe('federate-module', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     let remoteSchema: remoteSchma = {
       name: 'my-remote',
+      directory: 'my-remote',
       e2eTestRunner: E2eTestRunner.Cypress,
       skipFormat: true,
       linter: Linter.EsLint,
@@ -60,7 +64,10 @@ describe('federate-module', () => {
 
     beforeEach(async () => {
       remoteSchema.name = uniq('remote');
-      await remoteGenerator(tree, remoteSchema);
+      await remoteGenerator(tree, {
+        ...remoteSchema,
+        directory: `apps/${remoteSchema.name}`,
+      });
       tree.write(schema.path, `export const isEven = true;`);
     });
 

@@ -8,6 +8,7 @@ Project configuration
 
 - [generators](../../devkit/documents/ProjectConfiguration#generators): Object
 - [implicitDependencies](../../devkit/documents/ProjectConfiguration#implicitdependencies): string[]
+- [metadata](../../devkit/documents/ProjectConfiguration#metadata): ProjectMetadata
 - [name](../../devkit/documents/ProjectConfiguration#name): string
 - [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs): Object
 - [projectType](../../devkit/documents/ProjectConfiguration#projecttype): ProjectType
@@ -50,6 +51,14 @@ Example:
 • `Optional` **implicitDependencies**: `string`[]
 
 List of projects which are added as a dependency
+
+---
+
+### metadata
+
+• `Optional` **metadata**: `ProjectMetadata`
+
+Metadata about the project
 
 ---
 

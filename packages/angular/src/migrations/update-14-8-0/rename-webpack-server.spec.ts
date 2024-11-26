@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readJson, updateJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -16,7 +18,7 @@ describe('renameWebpackServer', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
       name: 'remote',
-      projectNameAndRootFormat: 'derived',
+      directory: 'apps/remote',
       skipFormat: true,
     });
 

@@ -1,4 +1,4 @@
-import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
+import type { GeneratorCallback } from 'nx/src/devkit-exports';
 
 /**
  * Run tasks in serial

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   readJson,
@@ -5,6 +7,7 @@ import {
   Tree,
   updateProjectConfiguration,
   writeJson,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
@@ -259,16 +262,30 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
   });
 
-  it('should always use jest.preset.js with --js', async () => {
-    tree.write('jest.preset.ts', '');
+  it('should generate a jest.preset.js when it does not exist', async () => {
     await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       js: true,
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
       "preset: '../../jest.preset.js',"
+    );
+  });
+
+  it('should not override existing jest preset file and should point to it in jest.config files', async () => {
+    tree.write('jest.preset.mjs', 'export default {}');
+    await configurationGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.exists('jest.preset.mjs')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      "preset: '../../jest.preset.mjs',"
     );
   });
 
@@ -340,8 +357,7 @@ describe('jestProject', () => {
         project: 'my-project',
       });
       expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        export default {
+        "export default {
           displayName: 'my-project',
           preset: './jest.preset.js',
           coverageDirectory: './coverage/my-project',
@@ -372,8 +388,7 @@ describe('jestProject', () => {
         js: true,
       });
       expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        module.exports = {
+        "module.exports = {
           displayName: 'my-project',
           preset: './jest.preset.js',
           coverageDirectory: './coverage/my-project',
@@ -381,6 +396,62 @@ describe('jestProject', () => {
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
             '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
           ],
+        };
+        "
+      `);
+    });
+  });
+
+  describe(`jest.preset.cjs`, () => {
+    it(`root jest.preset.cjs existing should force subsequent configs to point to it correctly`, async () => {
+      // ARRANGE
+      tree.write(
+        `jest.preset.cjs`,
+        `
+      const nxPreset = require('@nx/jest/preset').default;
+
+      module.exports = { ...nxPreset }`
+      );
+
+      // ACT
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      } as JestProjectSchema);
+
+      // ASSERT
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'lib1',
+          preset: '../../jest.preset.cjs',
+          coverageDirectory: '../../coverage/libs/lib1',
+        };
+        "
+      `);
+    });
+
+    it(`root package.json type=module should create jest.preset.cjs and force subsequent configs to point to it correctly`, async () => {
+      // ARRANGE
+      updateJson(tree, 'package.json', (pkgJson) => {
+        pkgJson.type = 'module';
+        return pkgJson;
+      });
+
+      // ACT
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      } as JestProjectSchema);
+
+      // ASSERT
+      expect(tree.exists('jest.preset.cjs')).toBeTruthy();
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export default {
+          displayName: 'lib1',
+          preset: '../../jest.preset.cjs',
+          coverageDirectory: '../../coverage/libs/lib1',
         };
         "
       `);

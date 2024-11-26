@@ -34,6 +34,13 @@ pnpm add -D nx@latest
 ```
 
 {% /tab %}
+{% tab label="bun" %}
+
+```shell
+bun add -D nx@latest
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Create a Basic `nx.json` File
@@ -42,6 +49,16 @@ Next, we'll create a blank `nx.json` configuration file for Nx:
 
 ```json {% fileName="nx.json" %}
 {}
+```
+
+## Add `.nx` directories to `.gitignore`
+
+Next, we'll add the Nx default task cache directory and the project graph cache directory to the list of files to be ignored by Git. Update the `.gitignore` file adding the `.nx/cache` and `.nx/workspace-data` entry:
+
+```text {% fileName=".gitignore" %}
+...
+.nx/cache
+.nx/workspace-data
 ```
 
 ## Set Up Caching For a Task

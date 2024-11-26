@@ -1,19 +1,23 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree, getProjects } from '@nx/devkit';
 import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { Linter } from '@nx/eslint';
-import { remoteGeneratorInternal } from '../remote/remote';
+import remoteGeneratorInternal from '../remote/remote';
 
 describe('federate-module', () => {
   let tree: Tree;
   let schema: Schema = {
     name: 'my-federated-module',
     remote: 'my-remote',
+    remoteDirectory: 'my-remote',
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
     skipFormat: true,
+    bundler: 'webpack',
   };
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
@@ -44,10 +48,10 @@ describe('federate-module', () => {
     it('should contain an entry for the new path for module federation', async () => {
       await federateModuleGenerator(tree, schema);
 
-      expect(tree.exists('my-remote/module-federation.config.js')).toBe(true);
+      expect(tree.exists('my-remote/module-federation.config.ts')).toBe(true);
 
       const content = tree.read(
-        'my-remote/module-federation.config.js',
+        'my-remote/module-federation.config.ts',
         'utf-8'
       );
       expect(content).toContain(
@@ -74,12 +78,13 @@ describe('federate-module', () => {
 
   describe('with remote', () => {
     let remoteSchema: remoteSchma = {
-      name: 'my-remote',
+      directory: 'my-existing-remote',
       e2eTestRunner: 'none',
       skipFormat: false,
       linter: Linter.EsLint,
       style: 'css',
       unitTestRunner: 'none',
+      bundler: 'webpack',
     };
 
     beforeEach(async () => {
@@ -89,7 +94,7 @@ describe('federate-module', () => {
 
     it('should append the new path to the module federation config', async () => {
       let content = tree.read(
-        `${remoteSchema.name}/module-federation.config.js`,
+        `${remoteSchema.directory}/module-federation.config.ts`,
         'utf-8'
       );
 
@@ -99,11 +104,11 @@ describe('federate-module', () => {
 
       await federateModuleGenerator(tree, {
         ...schema,
-        remote: remoteSchema.name,
+        remoteDirectory: remoteSchema.directory,
       });
 
       content = tree.read(
-        `${remoteSchema.name}/module-federation.config.js`,
+        `${remoteSchema.directory}/module-federation.config.ts`,
         'utf-8'
       );
       expect(content).toContain(
@@ -112,9 +117,7 @@ describe('federate-module', () => {
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths[
-          `${remoteSchema.name}/my-federated-module`
-        ]
+        tsconfig.compilerOptions.paths[`${schema.remote}/my-federated-module`]
       ).toEqual(['my-remote/src/my-federated-module.ts']);
     });
   });

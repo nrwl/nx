@@ -19,8 +19,11 @@ Target's configuration
 - [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
 - [executor](../../devkit/documents/TargetConfiguration#executor): string
 - [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
+- [metadata](../../devkit/documents/TargetConfiguration#metadata): TargetMetadata
 - [options](../../devkit/documents/TargetConfiguration#options): T
 - [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
+- [parallelism](../../devkit/documents/TargetConfiguration#parallelism): boolean
+- [syncGenerators](../../devkit/documents/TargetConfiguration#syncgenerators): string[]
 
 ## Properties
 
@@ -86,6 +89,14 @@ This describes filesets, runtime dependencies and other inputs that a target dep
 
 ---
 
+### metadata
+
+• `Optional` **metadata**: `TargetMetadata`
+
+Metadata about the target
+
+---
+
 ### options
 
 • `Optional` **options**: `T`
@@ -100,3 +111,21 @@ Target's options. They are passed in to the executor.
 
 List of the target's outputs. The outputs will be cached by the Nx computation
 caching engine.
+
+---
+
+### parallelism
+
+• `Optional` **parallelism**: `boolean`
+
+Whether this target can be run in parallel with other tasks
+Default is true
+
+---
+
+### syncGenerators
+
+• `Optional` **syncGenerators**: `string`[]
+
+List of generators to run before the target to ensure the workspace
+is up to date.

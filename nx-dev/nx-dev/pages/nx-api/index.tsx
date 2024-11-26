@@ -20,6 +20,7 @@ import { useMemo } from 'react';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../lib/packages.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 export default function Packages({
   packages,
@@ -92,12 +93,12 @@ export default function Packages({
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
-          <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
-          <div
-            id="wrapper"
-            data-testid="wrapper"
-            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-          >
+          <SidebarContainer
+            menu={vm.menu}
+            navIsOpen={navIsOpen}
+            toggleNav={toggleNav}
+          />
+          <ScrollableContent>
             <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
               <div id="content-wrapper" className="w-full flex-auto flex-col">
                 <div className="mb-6 pt-8">
@@ -108,14 +109,17 @@ export default function Packages({
 
                   <section id="packages-section" className="py-1">
                     <p>
-                      In version 16, we have rescoped our packages to{' '}
-                      <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
-                      <a href="/recipes/other/rescope" className="underline">
-                        Read more about the rescope ≫
-                      </a>
+                      Read more about what Nx plugins are on our{' '}
+                      <Link
+                        href="/concepts/nx-plugins"
+                        className="text-blue-600 transition-colors ease-out hover:text-blue-700 dark:text-sky-500 dark:hover:text-sky-400"
+                        prefetch={false}
+                      >
+                        docs page.
+                      </Link>
                     </p>
                   </section>
-                  <section id="packages-section" className="py-12">
+                  <section id="packages-section" className="py-6">
                     <nav
                       aria-labelledby="package-index-navigation"
                       className="relative mb-24 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5"
@@ -125,6 +129,7 @@ export default function Packages({
                           key={'ref-' + pkg.name}
                           href={pkg.path}
                           className="group relative flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm capitalize shadow-sm transition hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                          prefetch={false}
                         >
                           <img
                             className="h-5 w-5 object-cover opacity-75 dark:invert"
@@ -144,7 +149,7 @@ export default function Packages({
               </div>
             </div>
             <Footer />
-          </div>
+          </ScrollableContent>
         </main>
       </div>
     </>

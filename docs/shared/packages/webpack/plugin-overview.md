@@ -36,7 +36,7 @@ In any Nx workspace, you can install `@nx/webpack` by running the following comm
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/webpack
 ```
 
@@ -49,9 +49,7 @@ The `@nx/webpack` plugin will create a task for any project that has a Webpack c
 - `webpack.config.js`
 - `webpack.config.ts`
 - `webpack.config.mjs`
-- `webpack.config.mts`
 - `webpack.config.cjs`
-- `webpack.config.cts`
 
 ### View Inferred Tasks
 
@@ -77,7 +75,7 @@ The `@nx/webpack/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Webpack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
+The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Webpack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}
@@ -98,17 +96,17 @@ You can generate a [React](/nx-api/react) application or a [Web](/nx-api/web) ap
 To generate a React application using Webpack, run the following:
 
 ```bash
-nx g @nx/react:app my-app --bundler=webpack
+nx g @nx/react:app apps/my-app --bundler=webpack
 ```
 
 To generate a Node application using Webpack, run the following:
 
 ```bash
-nx g @nx/node:app my-app --bundler=webpack
+nx g @nx/node:app apps/my-app --bundler=webpack
 ```
 
 To generate a Web application using Webpack, run the following:
 
 ```bash
-nx g @nx/web:app my-app --bundler=webpack
+nx g @nx/web:app apps/my-app --bundler=webpack
 ```

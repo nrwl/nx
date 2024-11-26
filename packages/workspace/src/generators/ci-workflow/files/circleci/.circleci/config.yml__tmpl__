@@ -9,20 +9,32 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
-
-      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
-
       <% if(packageManager == 'pnpm'){ %>
       - run:
           name: Install PNPM
           command: npm install --prefix=$HOME/.local -g pnpm@8
-      <% } %>- run: <%= packageManagerInstall %>
+      <% } %>
+      <% if(packageManager == 'bun'){ %>
+      - run:
+          name: Install Bun
+          command: npm install --prefix=$HOME/.local -g bun
+      <% } %>
+
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      <% if (connectedToCloud) { %>- run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+      <% } else { %># Connect your workspace by running "nx connect" and uncomment this
+      # - run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+      <% } %>
+      - run: <%= packageManagerInstall %>
       - nx/set-shas:
           main-branch-name: '<%= mainBranch %>'
 
-      - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
 
 workflows:

@@ -2,11 +2,16 @@ import { existsSync, readdirSync } from 'fs';
 import { dirname, join, relative } from 'path';
 
 import {
-  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
+  logger,
+  normalizePath,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -17,9 +22,12 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { minimatch } from 'minimatch';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+
+const pmc = getPackageManagerCommand();
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -31,81 +39,110 @@ interface NormalizedOptions {
   ciTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'playwright.hash');
+type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
-  return readJsonFile(cachePath);
+function readTargetsCache(
+  cachePath: string
+): Record<string, PlaywrightTargets> {
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
+  cachePath: string,
+  results: Record<string, PlaywrightTargets>
 ) {
-  writeJsonFile(cachePath, targets);
+  writeJsonFile(cachePath, results);
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
-  return [];
-};
-
-export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
-  '**/playwright.config.{js,ts,cjs,cts,mjs,mts}',
-  async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(projectRoot);
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    const normalizedOptions = normalizeOptions(options);
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-
-    const targets =
-      targetsCache[hash] ??
-      (await buildPlaywrightTargets(
-        configFilePath,
-        projectRoot,
-        normalizedOptions,
+const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
+export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
+  playwrightConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `playwright-${optionsHash}.hash`
+    );
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        options,
         context
-      ));
-
-    calculatedTargets[hash] = targets;
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets,
-        },
-      },
-    };
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
   },
 ];
+
+/**
+ * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
+ * This function will change to the v2 function in Nx 20.
+ */
+export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
+  playwrightConfigGlob,
+  async (configFile, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(configFile, options, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: PlaywrightPluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, PlaywrightTargets>
+) {
+  const projectRoot = dirname(configFilePath);
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const normalizedOptions = normalizeOptions(options);
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+
+  targetsCache[hash] ??= await buildPlaywrightTargets(
+    configFilePath,
+    projectRoot,
+    normalizedOptions,
+    context
+  );
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
   context: CreateNodesContext
-) {
+): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
   // See: https://github.com/microsoft/playwright/pull/11218/files
@@ -117,22 +154,38 @@ async function buildPlaywrightTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const targets: Record<string, TargetConfiguration<unknown>> = {};
+  const targets: ProjectConfiguration['targets'] = {};
+  let metadata: ProjectConfiguration['metadata'];
 
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
       cwd: '{projectRoot}',
     },
+    parallelism: false,
+    metadata: {
+      technologies: ['playwright'],
+      description: 'Runs Playwright Tests',
+      help: {
+        command: `${pmc.exec} playwright test --help`,
+        example: {
+          options: {
+            workers: 1,
+          },
+        },
+      },
+    },
   };
 
   targets[options.targetName] = {
     ...baseTargetConfig,
     cache: true,
-    inputs:
-      'production' in namedInputs
+    inputs: [
+      ...('production' in namedInputs
         ? ['default', '^production']
-        : ['default', '^default'],
+        : ['default', '^default']),
+      { externalDependencies: ['@playwright/test'] },
+    ],
     outputs: getOutputs(projectRoot, playwrightConfig),
   };
 
@@ -140,12 +193,18 @@ async function buildPlaywrightTargets(
     const ciBaseTargetConfig: TargetConfiguration = {
       ...baseTargetConfig,
       cache: true,
-      inputs:
-        'production' in namedInputs
+      inputs: [
+        ...('production' in namedInputs
           ? ['default', '^production']
-          : ['default', '^default'],
+          : ['default', '^default']),
+        { externalDependencies: ['@playwright/test'] },
+      ],
       outputs: getOutputs(projectRoot, playwrightConfig),
     };
+
+    const groupName = 'E2E (CI)';
+    metadata = { targetGroups: { [groupName]: [] } };
+    const ciTargetGroup = metadata.targetGroups[groupName];
 
     const testDir = playwrightConfig.testDir
       ? joinPathFragments(projectRoot, playwrightConfig.testDir)
@@ -155,13 +214,28 @@ async function buildPlaywrightTargets(
     playwrightConfig.testMatch ??= '**/*.@(spec|test).?(c|m)[jt]s?(x)';
 
     const dependsOn: TargetConfiguration['dependsOn'] = [];
-    forEachTestFile(
+    await forEachTestFile(
       (testFile) => {
-        const relativeToProjectRoot = relative(projectRoot, testFile);
-        const targetName = `${options.ciTargetName}--${relativeToProjectRoot}`;
+        const relativeSpecFilePath = normalizePath(
+          relative(projectRoot, testFile)
+        );
+        const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
+        ciTargetGroup.push(targetName);
         targets[targetName] = {
           ...ciBaseTargetConfig,
-          command: `${baseTargetConfig.command} ${relativeToProjectRoot}`,
+          command: `${baseTargetConfig.command} ${relativeSpecFilePath}`,
+          metadata: {
+            technologies: ['playwright'],
+            description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+            help: {
+              command: `${pmc.exec} playwright test --help`,
+              example: {
+                options: {
+                  workers: 1,
+                },
+              },
+            },
+          },
         };
         dependsOn.push({
           target: targetName,
@@ -184,10 +258,25 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
+      parallelism: false,
+      metadata: {
+        technologies: ['playwright'],
+        description: 'Runs Playwright Tests in CI',
+        nonAtomizedTarget: options.targetName,
+        help: {
+          command: `${pmc.exec} playwright test --help`,
+          example: {
+            options: {
+              workers: 1,
+            },
+          },
+        },
+      },
     };
+    ciTargetGroup.push(options.ciTargetName);
   }
 
-  return targets;
+  return { targets, metadata };
 }
 
 async function forEachTestFile(
@@ -198,7 +287,7 @@ async function forEachTestFile(
     config: PlaywrightTestConfig;
   }
 ) {
-  const files = getFilesInDirectoryUsingContext(
+  const files = await getFilesInDirectoryUsingContext(
     opts.context.workspaceRoot,
     opts.path
   );

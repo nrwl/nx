@@ -1,4 +1,3 @@
-import { NormalizedSchema } from '../schema';
 import {
   Tree,
   generateFiles,
@@ -6,6 +5,8 @@ import {
   names,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { maybeJs } from '../../../utils/maybe-js';
+import { NormalizedSchema } from '../schema';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -13,7 +14,7 @@ export function addModuleFederationFiles(
   defaultRemoteManifest: { name: string; port: number }[]
 ) {
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectName),
     ...options,
     static: !options?.dynamic,
     tmpl: '',
@@ -25,7 +26,7 @@ export function addModuleFederationFiles(
     }),
   };
 
-  const projectConfig = readProjectConfiguration(host, options.name);
+  const projectConfig = readProjectConfiguration(host, options.projectName);
   const pathToMFManifest = joinPathFragments(
     projectConfig.sourceRoot,
     'assets/module-federation.manifest.json'
@@ -35,20 +36,45 @@ export function addModuleFederationFiles(
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    joinPathFragments(options.appProjectRoot, 'src/main.tsx'),
-    joinPathFragments(options.appProjectRoot, 'src/bootstrap.tsx')
+    joinPathFragments(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/main.tsx'
+      )
+    ),
+    joinPathFragments(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/bootstrap.tsx'
+      )
+    )
   );
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, `../files/common`),
+    joinPathFragments(
+      __dirname,
+      `../files/${
+        options.js
+          ? options.bundler === 'rspack'
+            ? 'rspack-common'
+            : 'common'
+          : 'common-ts'
+      }`
+    ),
     options.appProjectRoot,
     templateVariables
   );
 
   const pathToModuleFederationFiles = options.typescriptConfiguration
-    ? 'module-federation-ts'
-    : 'module-federation';
+    ? `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation-ts`
+    : `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation`;
   // New entry file is created here.
   generateFiles(
     host,
@@ -63,24 +89,38 @@ export function addModuleFederationFiles(
     }
   }
 
-  function processWebpackConfig(options, host, fileName) {
-    const pathToWebpackConfig = joinPathFragments(
+  function processBundlerConfigFile(options, host, fileName) {
+    const pathToBundlerConfig = joinPathFragments(
       options.appProjectRoot,
       fileName
     );
-    deleteFileIfExists(host, pathToWebpackConfig);
+    deleteFileIfExists(host, pathToBundlerConfig);
   }
 
   if (options.typescriptConfiguration) {
-    processWebpackConfig(options, host, 'webpack.config.js');
-    processWebpackConfig(options, host, 'webpack.config.prod.js');
+    if (options.bundler === 'rspack') {
+      processBundlerConfigFile(options, host, 'rspack.config.js');
+      processBundlerConfigFile(options, host, 'rspack.config.prod.js');
+    } else {
+      processBundlerConfigFile(options, host, 'webpack.config.js');
+      processBundlerConfigFile(options, host, 'webpack.config.prod.js');
+    }
   }
 
   if (options.dynamic) {
-    processWebpackConfig(options, host, 'webpack.config.prod.js');
-    processWebpackConfig(options, host, 'webpack.config.prod.ts');
+    processBundlerConfigFile(options, host, 'webpack.config.prod.js');
+    processBundlerConfigFile(options, host, 'webpack.config.prod.ts');
+    processBundlerConfigFile(options, host, 'rspack.config.prod.js');
+    processBundlerConfigFile(options, host, 'rspack.config.prod.ts');
     if (!host.exists(pathToMFManifest)) {
-      host.write(pathToMFManifest, '{}');
+      host.write(
+        pathToMFManifest,
+        `{
+        ${defaultRemoteManifest
+          .map(({ name, port }) => `"${name}": "http://localhost:${port}"`)
+          .join(',\n')}
+          }`
+      );
     }
   }
 }

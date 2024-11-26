@@ -1,11 +1,13 @@
-import { type ExecSyncOptions, execSync } from 'child_process';
+import { execSync, type ExecSyncOptions } from 'child_process';
 import { join } from 'path';
-import { requireNx } from '../../nx';
 
-import type { Tree } from 'nx/src/generators/tree';
-import type { PackageManager } from 'nx/src/utils/package-manager';
-const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
-  requireNx();
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  joinPathFragments,
+  PackageManager,
+  Tree,
+} from 'nx/src/devkit-exports';
 
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
@@ -18,7 +20,7 @@ export function installPackagesTask(
   tree: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
-  packageManager: PackageManager = detectPackageManager(cwd)
+  packageManager: PackageManager = detectPackageManager(join(tree.root, cwd))
 ): void {
   if (
     !tree
@@ -41,6 +43,7 @@ export function installPackagesTask(
     const execSyncOptions: ExecSyncOptions = {
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+      windowsHide: true,
     };
     // ensure local registry from process is not interfering with the install
     // when we start the process from temp folder the local registry would override the custom registry

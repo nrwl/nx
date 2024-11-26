@@ -3,6 +3,7 @@ import {
   ExclamationTriangleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 function ErrorMessage({ error }: { error: any }): JSX.Element {
   try {
@@ -28,12 +29,12 @@ function ErrorMessage({ error }: { error: any }): JSX.Element {
             </h3>
             <div className="mt-2 text-sm text-yellow-700">
               Sorry, I don't know how to help with that. You can visit the{' '}
-              <a
+              <Link
                 href="https://nx.dev/getting-started/intro"
                 className="underline"
               >
                 Nx documentation
-              </a>{' '}
+              </Link>{' '}
               for more info.
             </div>
           </div>

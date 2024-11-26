@@ -9,7 +9,7 @@ You can read more about how this generator works, in the [Storybook for React ov
 When running this generator, you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.
-- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests)..
+- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. You can read more about this in the [Nx Storybook interaction tests documentation page](/recipes/storybook/storybook-interaction-tests#setup-storybook-interaction-tests)..
 
 You must provide a `name` for the generator to work.
 

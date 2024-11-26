@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 jest.mock('../../utils/remix-config');
 import * as remixConfigUtils from '../../utils/remix-config';
 
@@ -20,10 +22,9 @@ describe('action', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      path: 'example',
-      project: 'demo',
+      path: 'apps/demo/app/routes/example.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -36,19 +37,11 @@ describe('action', () => {
     {
       path: 'apps/demo/app/routes/example.tsx',
     },
-    {
-      path: 'example',
-    },
-    {
-      path: 'example.tsx',
-    },
   ].forEach((config) => {
     describe(`Generating action using path ${config.path}`, () => {
       beforeEach(async () => {
         await actionGenerator(tree, {
           path: config.path,
-          // path: 'apps/demo/app/routes/example.tsx',
-          project: 'demo',
         });
       });
       it('should add imports', async () => {

@@ -9,8 +9,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
 
@@ -29,7 +29,6 @@ import {
   findMetroConfig,
   findNextConfig,
   findViteConfig,
-  getE2EProjectName,
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
@@ -61,11 +60,18 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
-  if (storybookMajorVersion() === 6) {
+  assertNotUsingTsSolutionSetup(tree, 'storybook', 'configuration');
+
+  const storybookMajor = storybookMajorVersion();
+  if (storybookMajor > 0 && storybookMajor === 6) {
     throw new Error(pleaseUpgrade());
+  } else if (storybookMajor === 7) {
+    logger.warn(
+      `Support for Storybook 7 is deprecated. Please upgrade to Storybook 8. See https://nx.dev/nx-api/storybook/generators/migrate-8 for more details.`
+    );
   }
 
-  const schema = normalizeSchema(rawSchema);
+  const schema = normalizeSchema(tree, rawSchema);
 
   const tasks: GeneratorCallback[] = [];
 
@@ -174,7 +180,7 @@ export async function configurationGeneratorInternal(
 
   let devDeps = {};
 
-  if (!hasPlugin) {
+  if (!hasPlugin || schema.addExplicitTargets) {
     if (schema.uiFramework === '@storybook/angular') {
       addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     } else {
@@ -186,33 +192,10 @@ export async function configurationGeneratorInternal(
       );
     }
     if (schema.configureStaticServe) {
-      addStaticTarget(tree, schema);
+      await addStaticTarget(tree, schema);
     }
   } else {
     devDeps['storybook'] = storybookVersion;
-  }
-
-  // TODO(katerina): Nx 19 -> remove Cypress
-  if (schema.configureCypress) {
-    const e2eProject = await getE2EProjectName(tree, schema.project);
-    if (!e2eProject) {
-      const cypressTask = await cypressProjectGenerator(tree, {
-        name: schema.project,
-        js: schema.js,
-        linter: schema.linter,
-        directory: schema.cypressDirectory,
-        standaloneConfig: schema.standaloneConfig,
-        ciTargetName: schema.configureStaticServe
-          ? 'static-storybook'
-          : undefined,
-        skipFormat: true,
-      });
-      tasks.push(cypressTask);
-    } else {
-      logger.warn(
-        `There is already an e2e project setup for ${schema.project}, called ${e2eProject}.`
-      );
-    }
   }
 
   if (schema.tsConfiguration) {
@@ -259,14 +242,20 @@ export async function configurationGeneratorInternal(
 }
 
 function normalizeSchema(
+  tree: Tree,
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   const defaults = {
     interactionTests: true,
     linter: Linter.EsLint,
     js: false,
     tsConfiguration: true,
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
   };
   return {
     ...defaults,

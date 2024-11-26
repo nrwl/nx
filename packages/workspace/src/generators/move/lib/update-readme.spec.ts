@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'path';
@@ -26,8 +28,7 @@ describe('updateReadme', () => {
 
   it('should handle README.md not existing', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
     const readmePath = join(schema.relativeToRootDestination, 'README.md');
     tree.delete(readmePath);
@@ -39,8 +40,7 @@ describe('updateReadme', () => {
 
   it('should update README.md contents', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
     // This step is usually handled elsewhere
     tree.rename('my-lib/README.md', 'shared/my-destination/README.md');

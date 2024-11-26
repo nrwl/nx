@@ -6,7 +6,7 @@ import {
   runCommand,
 } from './command-utils';
 import { uniq } from './create-project-utils';
-import { readFile } from './file-utils';
+import { readFile, updateFile } from './file-utils';
 
 type GeneratorsWithDefaultTests =
   | '@nx/js:lib'
@@ -56,4 +56,21 @@ export function expectNoTsJestInJestConfig(appName: string) {
 
 export function expectCodeIsFormatted() {
   expect(() => runCLI(`format:check`)).not.toThrow();
+}
+
+export function setCypressWebServerTimeout(
+  cypressConfigPath: string,
+  timeout = 60_000
+) {
+  const cypressConfig = readFile(cypressConfigPath);
+  updateFile(
+    cypressConfigPath,
+    cypressConfig.replace(
+      `nxE2EPreset(__filename, {`,
+      `nxE2EPreset(__filename, {
+        webServerConfig: {
+          timeout: ${timeout},
+        },`
+    )
+  );
 }

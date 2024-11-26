@@ -24,7 +24,7 @@ describe('js:swc executor', () => {
 
   it('should create libs with js executors (--bundler=swc)', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib} --bundler=swc --no-interactive`);
 
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
@@ -48,7 +48,7 @@ describe('js:swc executor', () => {
 
   it('should handle swcrc path mappings', async () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib} --bundler=swc --no-interactive`);
 
     // add a dummy x.ts file for path mappings
     updateFile(
@@ -92,4 +92,19 @@ myLib();
     }).toString();
     expect(result).toContain('x');
   }, 240_000);
+
+  it('should support --strip-leading-paths option', () => {
+    const lib = uniq('lib');
+    runCLI(`generate @nx/js:lib libs/${lib} --bundler=swc --no-interactive`);
+
+    runCLI(`build ${lib} --stripLeadingPaths`);
+
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/index.js`,
+      `dist/libs/${lib}/lib/${lib}.js`,
+      `dist/libs/${lib}/index.d.ts`,
+      `dist/libs/${lib}/lib/${lib}.d.ts`
+    );
+  });
 });

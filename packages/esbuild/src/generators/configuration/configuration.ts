@@ -8,16 +8,19 @@ import {
 } from '@nx/devkit';
 
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { EsBuildProjectSchema } from './schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export async function configurationGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'esbuild', 'configuration');
+
   const task = await esbuildInitGenerator(tree, {
     ...options,
     skipFormat: true,

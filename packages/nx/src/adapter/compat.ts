@@ -44,6 +44,7 @@ export const allowedProjectExtensions = [
   'projectType',
   'release',
   'includedScripts',
+  'metadata',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,
@@ -55,6 +56,7 @@ export const allowedProjectExtensions = [
 export const allowedWorkspaceExtensions = [
   'implicitDependencies',
   'affected',
+  'defaultBase',
   'tasksRunnerOptions',
   'workspaceLayout',
   'plugins',
@@ -69,11 +71,16 @@ export const allowedWorkspaceExtensions = [
   'installation',
   'release',
   'nxCloudAccessToken',
+  'nxCloudId',
   'nxCloudUrl',
   'nxCloudEncryptionKey',
   'parallel',
   'cacheDirectory',
   'useDaemonProcess',
+  'useInferencePlugins',
+  'neverConnectToCloud',
+  'sync',
+  'useLegacyCache',
 ] as const;
 
 if (!patched) {

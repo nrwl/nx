@@ -9,8 +9,7 @@ import {
 
 const TEN_MINS_MS = 600_000;
 
-// TODO(crystal, @leosvelperez): Still need to investigate why this is failing on CI
-xdescribe('Cypress E2E Test runner (legacy)', () => {
+describe('Cypress E2E Test runner (legacy)', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular', '@nx/react'] });
   });
@@ -41,7 +40,7 @@ xdescribe('Cypress E2E Test runner (legacy)', () => {
     TEN_MINS_MS
   );
 
-  xit(
+  it(
     `should allow CT and e2e in same project - react`,
     async () => {
       const appName = uniq(`react-cy-app`);
@@ -50,7 +49,7 @@ xdescribe('Cypress E2E Test runner (legacy)', () => {
         { env: { NX_ADD_PLUGINS: 'false' } }
       );
       runCLI(
-        `generate @nx/react:component btn --project=${appName} --no-interactive`,
+        `generate @nx/react:component ${appName}/src/app/btn/btn --no-interactive`,
         { env: { NX_ADD_PLUGINS: 'false' } }
       );
       runCLI(

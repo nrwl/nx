@@ -11,13 +11,14 @@ export async function addStandaloneComponent(
   await componentGenerator(tree, {
     ...componentOptions,
     name: componentOptions.name,
-    directory: joinPathFragments(
+    path: joinPathFragments(
       libraryOptions.projectRoot,
       'src',
       'lib',
-      componentOptions.flat ? '' : componentOptions.name
+      componentOptions.flat
+        ? `${componentOptions.name}`
+        : `${componentOptions.name}/${componentOptions.name}`
     ),
-    nameAndDirectoryFormat: 'as-provided',
     standalone: true,
     export: true,
     skipFormat: true,

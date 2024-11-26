@@ -44,3 +44,13 @@
   opacity: 1;
   visibility: visible;
 }
+
+/* Dark mode */
+html.dark .adaptive-icon {
+  /* fill: white; */
+  filter: invert(1);
+}
+
+.adaptive-icon {
+  fill: black;
+}

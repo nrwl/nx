@@ -1,5 +1,10 @@
 # Deploying AWS Lambda Functions in Node.js
 
+{% callout type="warning"  title="deprecated" %}
+The @nx/aws-lambda plugin is deprecated and unmaintained.
+We are committed to providing high-quality tooling to community, and we no longer have the capacity to keep this plugin updated.
+{% /callout %}
+
 This recipe guides you through setting up AWS Lambda functions with Nx.
 
 ## Getting set up
@@ -21,7 +26,7 @@ npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 
 First, make sure you have `@nx/aws-lambda` installed.
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/aws-lambda
 ```
 

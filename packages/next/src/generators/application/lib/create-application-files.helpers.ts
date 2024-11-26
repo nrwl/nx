@@ -82,7 +82,7 @@ export function createAppJsx(name: string) {
               </svg>
             </a>
             <a
-              href="https://blog.nrwl.io/?utm_source=nx-project"
+              href="https://nx.dev/blog/?utm_source=nx-project"
               target="_blank"
               rel="noreferrer"
               className="list-item-link"
@@ -301,7 +301,7 @@ export function createAppJsx(name: string) {
                 You can activate distributed tasks executions and caching by
                 running:
               </p>
-              <pre>nx connect-to-nx-cloud</pre>
+              <pre>nx connect</pre>
               <a
                 href="https://nx.app/?utm_source=nx-project"
                 target="_blank"

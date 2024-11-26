@@ -1,38 +1,53 @@
-import { printDiagnostics, runTypeCheck } from '@nx/js';
-import { join } from 'path';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, getPackageManagerCommand } from '@nx/devkit';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { getProjectTsConfigPath } from './options-utils';
+import { execSync } from 'node:child_process';
+import { printDiagnostics, runTypeCheck } from '@nx/js';
+import { join } from 'path';
 
 export async function validateTypes(opts: {
   workspaceRoot: string;
-  projectRoot: string;
   tsconfig: string;
+  isVueProject?: boolean;
 }): Promise<void> {
-  const result = await runTypeCheck({
-    workspaceRoot: opts.workspaceRoot,
-    tsConfigPath: join(opts.workspaceRoot, opts.tsconfig),
-    mode: 'noEmit',
-  });
+  if (!opts.isVueProject) {
+    const result = await runTypeCheck({
+      workspaceRoot: opts.workspaceRoot,
+      tsConfigPath: opts.tsconfig.startsWith(opts.workspaceRoot)
+        ? opts.tsconfig
+        : join(opts.workspaceRoot, opts.tsconfig),
+      mode: 'noEmit',
+    });
 
-  await printDiagnostics(result.errors, result.warnings);
+    await printDiagnostics(result.errors, result.warnings);
 
-  if (result.errors.length > 0) {
-    throw new Error('Found type errors. See above.');
+    if (result.errors.length > 0) {
+      throw new Error('Found type errors. See above.');
+    }
+  } else {
+    const pm = getPackageManagerCommand();
+    const cp = execSync(
+      `${pm.exec} vue-tsc --noEmit -p ${opts.tsconfig} --composite false`,
+      {
+        cwd: opts.workspaceRoot,
+        stdio: 'inherit',
+        windowsHide: true,
+      }
+    );
   }
 }
 
 export function createBuildableTsConfig(
   projectRoot: string,
-  options: ViteBuildExecutorOptions | ViteDevServerExecutorOptions,
+  options: { tsConfig?: string; buildLibsFromSource?: boolean },
   context: ExecutorContext
 ) {
-  const tsConfig = getProjectTsConfigPath(projectRoot);
+  const tsConfig = options.tsConfig ?? getProjectTsConfigPath(projectRoot);
   options['buildLibsFromSource'] ??= true;
 
   if (!options['buildLibsFromSource']) {
@@ -55,9 +70,17 @@ export function createBuildableTsConfig(
       dependencies
     );
     process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
+    return tmpTsConfigPath;
   }
+  return tsConfig;
 }
 
 export function loadViteDynamicImport() {
   return Function('return import("vite")')() as Promise<typeof import('vite')>;
+}
+
+export function loadVitestDynamicImport() {
+  return Function('return import("vitest/node")')() as Promise<
+    typeof import('vitest/node')
+  >;
 }

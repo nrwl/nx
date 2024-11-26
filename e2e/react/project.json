@@ -1,0 +1,9 @@
+{
+  "name": "e2e-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/react",
+  "projectType": "application",
+  "implicitDependencies": ["react"],
+  "// targets": "to see all targets run: nx show project e2e-react --web",
+  "targets": {}
+}

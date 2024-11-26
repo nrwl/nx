@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -39,7 +40,12 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  assertNotUsingTsSolutionSetup(tree, 'playwright', 'configuration');
+
+  const nxJson = readNxJson(tree);
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await initGenerator(tree, {
@@ -79,10 +85,12 @@ export async function configurationGeneratorInternal(
           include: [
             '**/*.ts',
             '**/*.js',
-            `${offsetFromProjectRoot}playwright.config.ts`,
-            `${offsetFromProjectRoot}**/*.spec.ts`,
-            `${offsetFromProjectRoot}**/*.spec.js`,
-            `${offsetFromProjectRoot}**/*.d.ts`,
+            'playwright.config.ts',
+            'src/**/*.spec.ts',
+            'src/**/*.spec.js',
+            'src/**/*.test.ts',
+            'src/**/*.test.js',
+            'src/**/*.d.ts',
           ],
         },
         null,
@@ -156,7 +164,10 @@ function getBrowsersInstallTask() {
       bodyLines: ['use --skipInstall to skip installation.'],
     });
     const pmc = getPackageManagerCommand();
-    execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+    execSync(`${pmc.exec} playwright install`, {
+      cwd: workspaceRoot,
+      windowsHide: true,
+    });
   };
 }
 

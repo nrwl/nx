@@ -38,7 +38,8 @@ export function writeJson<T extends object = object>(
   value: T,
   options?: JsonSerializeOptions
 ): void {
-  tree.write(path, serializeJson(value, options));
+  const serialized = serializeJson(value, options);
+  tree.write(path, `${serialized}\n`);
 }
 
 /**

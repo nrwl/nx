@@ -1,13 +1,14 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
   Tree,
-  updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
-import { createNodes, WebpackPluginOptions } from '../../plugins/plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { createNodes } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -16,10 +17,45 @@ export function webpackInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  assertNotUsingTsSolutionSetup(tree, 'webpack', 'init');
+
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    addPlugin(tree);
+    await addPluginV1(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/webpack/plugin',
+      createNodes,
+      {
+        buildTargetName: [
+          'build',
+          'webpack:build',
+          'build:webpack',
+          'webpack-build',
+          'build-webpack',
+        ],
+        serveTargetName: [
+          'serve',
+          'webpack:serve',
+          'serve:webpack',
+          'webpack-serve',
+          'serve-webpack',
+        ],
+        previewTargetName: [
+          'preview',
+          'webpack:preview',
+          'preview:webpack',
+          'webpack-preview',
+          'preview-webpack',
+        ],
+      },
+      schema.updatePackageScripts
+    );
   }
 
   let installTask: GeneratorCallback = () => {};
@@ -42,40 +78,11 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
-  }
-
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
   return installTask;
-}
-
-function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/webpack/plugin'
-        : plugin.plugin === '@nx/webpack/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/webpack/plugin',
-    options: {
-      buildTargetName: 'build',
-      serveTargetName: 'serve',
-      previewTargetName: 'preview',
-    } as WebpackPluginOptions,
-  });
-  updateNxJson(tree, nxJson);
 }
 
 export default webpackInitGenerator;

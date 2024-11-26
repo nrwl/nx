@@ -18,6 +18,7 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { updateGitIgnore } from '../../utils/update-gitignore';
 import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
@@ -26,13 +27,29 @@ import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { execSync } from 'node:child_process';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'nuxt', 'application');
+
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);
 
   const projectOffsetFromRoot = offsetFromRoot(options.appProjectRoot);
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    tree,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
@@ -40,14 +57,9 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     skipFormat: true,
   });
   tasks.push(jsInitTask);
-  const nuxtInitTask = await nuxtInitGenerator(tree, {
-    ...options,
-    skipFormat: true,
-  });
-  tasks.push(nuxtInitTask);
   tasks.push(ensureDependencies(tree, options));
 
-  addProjectConfiguration(tree, options.name, {
+  addProjectConfiguration(tree, options.projectName, {
     root: options.appProjectRoot,
     projectType: 'application',
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -56,7 +68,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, './files'),
+    joinPathFragments(__dirname, './files/base'),
     options.appProjectRoot,
     {
       ...options,
@@ -66,10 +78,23 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       tmpl: '',
       style: options.style,
       projectRoot: options.appProjectRoot,
-      buildDirectory: joinPathFragments(`dist/${options.appProjectRoot}/.nuxt`),
-      nitroOutputDir: joinPathFragments(
-        `dist/${options.appProjectRoot}/.output`
-      ),
+      hasVitest: options.unitTestRunner === 'vitest',
+    }
+  );
+
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
+    options.appProjectRoot,
+    {
+      ...options,
+      connectCloudUrl,
+      offsetFromRoot: projectOffsetFromRoot,
+      title: options.projectName,
+      dot: '.',
+      tmpl: '',
+      style: options.style,
+      projectRoot: options.appProjectRoot,
       hasVitest: options.unitTestRunner === 'vitest',
     }
   );
@@ -117,11 +142,31 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     tasks.push(await addVitest(tree, options));
   }
 
+  const nuxtInitTask = await nuxtInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
+  tasks.push(nuxtInitTask);
+
   tasks.push(await addE2e(tree, options));
 
   if (options.js) toJS(tree);
 
   if (!options.skipFormat) await formatFiles(tree);
+
+  tasks.push(() => {
+    try {
+      execSync(`npx -y nuxi prepare`, {
+        cwd: options.appProjectRoot,
+
+        windowsHide: true,
+      });
+    } catch (e) {
+      console.error(
+        `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
+      );
+    }
+  });
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

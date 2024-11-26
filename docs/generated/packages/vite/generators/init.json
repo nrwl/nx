@@ -18,6 +18,11 @@
         "type": "boolean",
         "default": false
       },
+      "setupPathsPlugin": {
+        "type": "boolean",
+        "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
+        "default": false
+      },
       "keepExistingVersions": {
         "type": "boolean",
         "x-priority": "internal",

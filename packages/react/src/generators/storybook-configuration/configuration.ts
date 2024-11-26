@@ -1,32 +1,24 @@
 import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
+  type GeneratorCallback,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, reactViteVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(katerina): Nx 19 -> remove Cypress
-  ensurePackage('@nx/cypress', nxVersion);
-  const { getE2eProjectName } = await import(
-    '@nx/cypress/src/utils/project-name'
-  );
   const projectConfig = readProjectConfiguration(host, schema.project);
-  const cypressProject = getE2eProjectName(
-    schema.project,
-    projectConfig.root,
-    schema.cypressDirectory
-  );
+
   await storiesGenerator(host, {
     project: schema.project,
-    generateCypressSpecs:
-      schema.configureCypress && schema.generateCypressSpecs,
     js: schema.js,
-    cypressProject,
     ignorePaths: schema.ignorePaths,
     skipFormat: true,
     interactionTests: schema.interactionTests ?? true,
@@ -47,7 +39,12 @@ export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const tasks: GeneratorCallback[] = [];
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
@@ -58,18 +55,25 @@ export async function storybookConfigurationGeneratorInternal(
   if (
     findWebpackConfig(host, projectConfig.root) ||
     projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
-    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup' ||
     projectConfig.targets['build']?.executor === '@nx/expo:build'
   ) {
     uiFramework = '@storybook/react-webpack5';
   }
 
+  if (uiFramework === '@storybook/react-vite') {
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { '@vitejs/plugin-react': reactViteVersion }
+      )
+    );
+  }
+
   const installTask = await configurationGenerator(host, {
     project: schema.project,
-    configureCypress: schema.configureCypress,
     js: schema.js,
     linter: schema.linter,
-    cypressDirectory: schema.cypressDirectory,
     tsConfiguration: schema.tsConfiguration ?? true, // default is true
     interactionTests: schema.interactionTests ?? true, // default is true
     configureStaticServe: schema.configureStaticServe,
@@ -78,13 +82,15 @@ export async function storybookConfigurationGeneratorInternal(
     addPlugin: schema.addPlugin,
   });
 
+  tasks.push(installTask);
+
   if (schema.generateStories) {
     await generateStories(host, schema);
   }
 
   await formatFiles(host);
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default storybookConfigurationGenerator;

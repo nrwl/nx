@@ -91,7 +91,9 @@
               "stylus",
               "tailwindcss",
               // used in the CT angular plugin where Cy is already installed to use it.
-              "cypress"
+              "cypress",
+              // we have only one type import, so it's not a runtime dependency
+              "esbuild"
             ]
           }
         ]

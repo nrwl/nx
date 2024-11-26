@@ -1,1 +1,5 @@
-export { createNodes } from './src/plugins/plugin';
+export {
+  createNodes,
+  createNodesV2,
+  type WebpackPluginOptions,
+} from './src/plugins/plugin';

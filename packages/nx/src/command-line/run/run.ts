@@ -1,8 +1,6 @@
-import {
-  combineOptionsForExecutor,
-  handleErrors,
-  Schema,
-} from '../../utils/params';
+import { env as appendLocalEnv } from 'npm-run-path';
+import { combineOptionsForExecutor, Schema } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { printHelp } from '../../utils/print-help';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { relative } from 'path';
@@ -16,13 +14,16 @@ import {
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
-import { runCommand } from '../../native';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
 import { getExecutorInformation } from './executor-utils';
-import { PseudoTtyProcess } from '../../utils/child-process';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from '../../tasks-runner/pseudo-terminal';
+import { exec } from 'child_process';
 
 export interface Target {
   project: string;
@@ -66,19 +67,8 @@ async function* promiseToIterator<T extends { success: boolean }>(
 async function iteratorToProcessStatusCode(
   i: AsyncIterableIterator<{ success: boolean }>
 ): Promise<number> {
-  // This is a workaround to fix an issue that only happens with
-  // the @angular-devkit/build-angular:browser builder. Starting
-  // on version 12.0.1, a SASS compilation implementation was
-  // introduced making use of workers and it's unref()-ing the worker
-  // too early, causing the process to exit early in environments
-  // like CI or when running Docker builds.
-  const keepProcessAliveInterval = setInterval(() => {}, 1000);
-  try {
-    const { success } = await getLastValueFromAsyncIterableIterator(i);
-    return success ? 0 : 1;
-  } finally {
-    clearInterval(keepProcessAliveInterval);
-  }
+  const { success } = await getLastValueFromAsyncIterableIterator(i);
+  return success ? 0 : 1;
 }
 
 async function parseExecutorAndTarget(
@@ -127,12 +117,29 @@ async function printTargetRunHelpInternal(
     targetConfig.options.command
   ) {
     const command = targetConfig.options.command.split(' ')[0];
-    await new Promise(() => {
-      const cp = new PseudoTtyProcess(runCommand(`${command} --help`));
-      cp.onExit((code) => {
+    const helpCommand = `${command} --help`;
+    const localEnv = appendLocalEnv();
+    const env = {
+      ...process.env,
+      ...localEnv,
+    };
+    if (PseudoTerminal.isSupported()) {
+      const terminal = getPseudoTerminal();
+      await new Promise(() => {
+        const cp = terminal.runCommand(helpCommand, { jsEnv: env });
+        cp.onExit((code) => {
+          process.exit(code);
+        });
+      });
+    } else {
+      const cp = exec(helpCommand, {
+        env,
+        windowsHide: true,
+      });
+      cp.on('exit', (code) => {
         process.exit(code);
       });
-    });
+    }
   } else {
     process.exit(0);
   }
@@ -183,7 +190,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       projectsConfigurations,
       nxJsonConfiguration,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,

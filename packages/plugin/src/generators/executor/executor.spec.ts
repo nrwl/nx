@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { executorGenerator } from './executor';
@@ -16,21 +18,19 @@ describe('NxPlugin Executor Generator', () => {
     setCwd('');
 
     await pluginGenerator(tree, {
-      name: projectName,
+      directory: projectName,
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
       compiler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 
   it('should generate files', async () => {
     await executorGenerator(tree, {
       name: 'my-executor',
-      directory: 'my-plugin/src/executors/my-executor',
+      path: 'my-plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     expect(
@@ -52,29 +52,7 @@ describe('NxPlugin Executor Generator', () => {
     await executorGenerator(tree, {
       name: 'my-executor',
       unitTestRunner: 'jest',
-      includeHasher: false,
-      nameAndDirectoryFormat: 'as-provided',
-    });
-
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.json')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
-    ).toBeTruthy();
-  });
-
-  it('should generate files for derived', async () => {
-    await executorGenerator(tree, {
-      project: projectName,
-      name: 'my-executor',
-      unitTestRunner: 'jest',
+      path: 'my-plugin/src/executors/my-executor',
       includeHasher: false,
     });
 
@@ -95,29 +73,7 @@ describe('NxPlugin Executor Generator', () => {
   it('should update executors.json', async () => {
     await executorGenerator(tree, {
       name: 'my-executor',
-      directory: 'my-plugin/src/executors/my-executor',
-      unitTestRunner: 'jest',
-      includeHasher: false,
-      nameAndDirectoryFormat: 'as-provided',
-    });
-
-    const executorJson = readJson(tree, 'my-plugin/executors.json');
-
-    expect(executorJson.executors['my-executor'].implementation).toEqual(
-      './src/executors/my-executor/executor'
-    );
-    expect(executorJson.executors['my-executor'].schema).toEqual(
-      './src/executors/my-executor/schema.json'
-    );
-    expect(executorJson.executors['my-executor'].description).toEqual(
-      'my-executor executor'
-    );
-  });
-
-  it('should update executors.json for derived', async () => {
-    await executorGenerator(tree, {
-      project: projectName,
-      name: 'my-executor',
+      path: 'my-plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
     });
@@ -138,11 +94,10 @@ describe('NxPlugin Executor Generator', () => {
   it('should generate custom description', async () => {
     await executorGenerator(tree, {
       name: 'my-executor',
-      directory: 'my-plugin/src/executors/my-executor',
+      path: 'my-plugin/src/executors/my-executor',
       description: 'my-executor custom description',
       unitTestRunner: 'jest',
       includeHasher: false,
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     const executorsJson = readJson(tree, 'my-plugin/executors.json');
@@ -154,18 +109,16 @@ describe('NxPlugin Executor Generator', () => {
 
   it('should create executors.json if it is not present', async () => {
     await jsLibraryGenerator(tree, {
-      name: 'test-js-lib',
+      directory: 'test-js-lib',
       bundler: 'tsc',
-      projectNameAndRootFormat: 'as-provided',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
 
     await executorGenerator(tree, {
       name: 'test-executor',
-      directory: 'test-js-lib/src/executors/my-executor',
+      path: 'test-js-lib/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     expect(() => tree.exists(`${libConfig.root}/executors.json`)).not.toThrow();
@@ -179,10 +132,9 @@ describe('NxPlugin Executor Generator', () => {
       it('should not generate unit test files', async () => {
         await executorGenerator(tree, {
           name: 'my-executor',
-          directory: 'my-plugin/src/executors/my-executor',
+          path: 'my-plugin/src/executors/my-executor',
           unitTestRunner: 'none',
           includeHasher: false,
-          nameAndDirectoryFormat: 'as-provided',
         });
 
         expect(
@@ -199,10 +151,9 @@ describe('NxPlugin Executor Generator', () => {
     it('should generate hasher files', async () => {
       await executorGenerator(tree, {
         name: 'my-executor',
-        directory: 'my-plugin/src/executors/my-executor',
+        path: 'my-plugin/src/executors/my-executor',
         unitTestRunner: 'jest',
         includeHasher: true,
-        nameAndDirectoryFormat: 'as-provided',
       });
       expect(
         tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
@@ -229,10 +180,9 @@ describe('NxPlugin Executor Generator', () => {
     it('should update executors.json', async () => {
       await executorGenerator(tree, {
         name: 'my-executor',
-        directory: 'my-plugin/src/executors/my-executor',
+        path: 'my-plugin/src/executors/my-executor',
         unitTestRunner: 'jest',
         includeHasher: true,
-        nameAndDirectoryFormat: 'as-provided',
       });
 
       const executorsJson = readJson(tree, 'my-plugin/executors.json');

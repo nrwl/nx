@@ -19,11 +19,13 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 import { join, relative } from 'path';
 
 type NormalizedSchema = Schema & {
+  directory: string;
   fileName: string;
   className: string;
   propertyName: string;
   projectRoot: string;
   projectSourceRoot: string;
+  project: string;
 };
 
 async function normalizeOptions(
@@ -32,14 +34,9 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const { project, fileName, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactType: 'generator',
-      callingGenerator: '@nx/plugin:generator',
       name: options.name,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
-      directory: options.directory,
+      path: options.path,
       fileName: 'generator',
-      derivedDirectory: 'generators',
     });
 
   const { className, propertyName } = names(artifactName);
@@ -56,8 +53,8 @@ async function normalizeOptions(
 
   return {
     ...options,
-    project,
     directory,
+    project,
     fileName,
     className,
     propertyName,
@@ -68,20 +65,20 @@ async function normalizeOptions(
 }
 
 function addFiles(host: Tree, options: NormalizedSchema) {
-  const indexPath = join(options.directory, 'files/src/index.ts.template');
+  const indexPath = join(options.path, 'files/src/index.ts.template');
 
   if (!host.exists(indexPath)) {
     host.write(indexPath, 'const variable = "<%= name %>";');
   }
 
-  generateFiles(host, join(__dirname, './files/generator'), options.directory, {
+  generateFiles(host, join(__dirname, './files/generator'), options.path, {
     ...options,
     generatorFnName: `${options.propertyName}Generator`,
     schemaInterfaceName: `${options.className}GeneratorSchema`,
   });
 
   if (options.unitTestRunner === 'none') {
-    host.delete(join(options.directory, `generator.spec.ts`));
+    host.delete(join(options.path, `generator.spec.ts`));
   }
 }
 
@@ -156,11 +153,11 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
     generators = generators || {};
     generators[options.name] = {
       factory: `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
+        relative(options.projectRoot, options.path),
         'generator'
       )}`,
       schema: `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
+        relative(options.projectRoot, options.path),
         'schema.json'
       )}`,
       description: options.description,
@@ -174,14 +171,7 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
   });
 }
 
-export async function generatorGenerator(tree: Tree, rawOptions: Schema) {
-  await generatorGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function generatorGeneratorInternal(host: Tree, schema: Schema) {
+export async function generatorGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   if (hasGenerator(host, options.project, options.name)) {
     throw new Error(`Generator ${options.name} already exists.`);

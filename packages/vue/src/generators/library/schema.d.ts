@@ -1,19 +1,15 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
-import type { SupportedStyles } from '../../../typings/style';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
   appProject?: string;
   bundler?: 'none' | 'vite';
   component?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
   importPath?: string;
   inSourceTests?: boolean;
   js?: boolean;
-  linter: Linter;
-  name: string;
-  pascalCaseFiles?: boolean;
+  linter: Linter | LinterType;
+  name?: string;
   publishable?: boolean;
   routing?: boolean;
   setParserOptionsProject?: boolean;
@@ -31,7 +27,7 @@ export interface Schema {
 export interface NormalizedSchema extends Schema {
   js: boolean;
   name: string;
-  linter: Linter;
+  linter: Linter | LinterType;
   fileName: string;
   projectRoot: string;
   routePath: string;

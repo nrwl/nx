@@ -1,8 +1,16 @@
-const path = require('path');
-// Ignore @nx/next dependency since it is the installed version not the one in the workspace
+// @ts-check
+
+const path = require('node:path');
+const plugin = require('tailwindcss/plugin');
+const {
+  default: flattenColorPalette,
+} = require('tailwindcss/lib/util/flattenColorPalette');
+
+// Ignore these nx related dependencies since they are the installed versions not the ones in the workspace
+// nx-ignore-next-line
+const { workspaceRoot } = require('@nx/devkit');
 // nx-ignore-next-line
 const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
-const plugin = require('tailwindcss/plugin');
 
 if (!createGlobPatternsForDependencies(__dirname).length)
   throw Error('GRAPH ISSUE: No dependency found when many are expected.');
@@ -24,6 +32,18 @@ const FlipAnimation = plugin(function ({ addUtilities }) {
   });
 });
 
+// This plugin adds each Tailwind color as a global CSS variable, e.g. var(--gray-200).
+function addVariablesForColors({ addBase, theme }) {
+  let allColors = flattenColorPalette(theme('colors'));
+  let newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+  );
+
+  addBase({
+    ':root': newVars,
+  });
+}
+
 module.exports = {
   experimental: {
     optimizeUniversalDefaults: true,
@@ -31,11 +51,31 @@ module.exports = {
   mode: 'jit',
   darkMode: 'class',
   content: [
-    path.join(__dirname, 'pages/**/*.{js,ts,jsx,tsx}'),
+    path.join(__dirname, '{pages,app}/**/*.{js,ts,jsx,tsx}'),
     ...createGlobPatternsForDependencies(__dirname),
+    // Resolve the classes used in @nx/graph components
+    // TODO: make a decision on whether this is really the best approach, or if precompiling and deduplicating the classes would be better
+    path.join(
+      workspaceRoot,
+      'node_modules/@nx/graph/**/*.{js,ts,jsx,tsx,html}'
+    ),
   ],
   theme: {
     extend: {
+      animation: {
+        marquee: 'marquee var(--duration) linear infinite',
+        'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
+      },
+      keyframes: {
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(calc(-100% - var(--gap)))' },
+        },
+        'marquee-vertical': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(calc(-100% - var(--gap)))' },
+        },
+      },
       typography: {
         DEFAULT: {
           css: {
@@ -60,7 +100,7 @@ module.exports = {
     require('@tailwindcss/aspect-ratio'),
     require('@tailwindcss/typography'),
     require('@tailwindcss/forms'),
-    require('@tailwindcss/line-clamp'),
     FlipAnimation,
+    addVariablesForColors,
   ],
 };

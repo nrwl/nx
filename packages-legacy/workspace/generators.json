@@ -1,4 +1,0 @@
-{
-  "extends": ["@nx/workspace"],
-  "schematics": {}
-}

@@ -6,7 +6,7 @@ import {
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -20,7 +20,11 @@ function Hit({
   hit: InternalDocSearchHit | StoredDocSearchHit;
   children: ReactNode;
 }): JSX.Element {
-  return <Link href={hit.url}>{children}</Link>;
+  return (
+    <Link href={hit.url} prefetch={false}>
+      {children}
+    </Link>
+  );
 }
 
 export function AlgoliaSearch({
@@ -75,7 +79,7 @@ export function AlgoliaSearch({
         <link
           rel="preconnect"
           href="https://PCTGM1JTQL-dsn.algolia.net"
-          crossOrigin="true"
+          crossOrigin="anonymous"
         />
       </Head>
       {!tiny ? (
@@ -83,16 +87,15 @@ export function AlgoliaSearch({
           type="button"
           ref={searchButtonRef}
           onClick={handleOpen}
-          className="flex w-full items-center rounded-md bg-white py-1.5 px-2 text-sm leading-4 ring-1 ring-slate-300 transition dark:bg-slate-700 dark:ring-slate-900"
+          className="flex w-full items-center rounded-md bg-white px-2 py-1.5 text-sm leading-4 ring-1 ring-slate-300 transition dark:bg-slate-700 dark:ring-slate-900"
         >
           <MagnifyingGlassIcon className="h-4 w-4 flex-none" />
-          <span className="mx-3 text-xs text-slate-300 dark:text-slate-400 md:text-sm lg:inline-flex">
-            Search{' '}
-            <span className="ml-2 hidden md:inline">Documentation ...</span>
+          <span className="mx-3 inline-flex text-xs text-slate-300 md:text-sm dark:text-slate-400">
+            Search
           </span>
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
-            className="ml-auto hidden flex-none rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 md:block"
+            className="ml-auto hidden flex-none rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-xs font-semibold text-slate-500 md:block dark:border-slate-700 dark:bg-slate-800/60"
           >
             <span className="sr-only">Press </span>
             <kbd className="font-sans">
@@ -138,12 +141,12 @@ export function AlgoliaSearch({
               distinct: true,
             }}
             initialQuery={initialQuery}
-            placeholder="Search documentation"
+            placeholder="Search the docs"
             initialScrollY={window.scrollY}
             onClose={handleClose}
-            indexName="nx-production"
-            apiKey="f49a1eb671385f0472a7285556168930"
-            appId="PCTGM1JTQL"
+            indexName={`${process.env.NEXT_PUBLIC_SEARCH_INDEX}`}
+            apiKey={`${process.env.NEXT_PUBLIC_SEARCH_API_KEY}`}
+            appId={`${process.env.NEXT_PUBLIC_SEARCH_APP_ID}`}
             navigator={{
               navigate({ itemUrl }) {
                 setIsOpen(false);

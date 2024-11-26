@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -10,10 +11,7 @@ import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import init from '../../generators/init/init';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import {
-  addDependenciesToPackageJsonIfDontExist,
-  versions,
-} from '../utils/version-utils';
+import { versions } from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -32,23 +30,14 @@ import { addJest } from '../utils/add-jest';
 import { setGeneratorDefaults } from './lib/set-generator-defaults';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return await libraryGeneratorInternal(tree, {
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'library');
 
-export async function libraryGeneratorInternal(
-  tree: Tree,
-  schema: Schema
-): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
@@ -71,9 +60,16 @@ export async function libraryGeneratorInternal(
 
   const pkgVersions = versions(tree);
 
-  await jsInitGenerator(tree, { ...options, js: false, skipFormat: true });
+  await jsInitGenerator(tree, {
+    ...libraryOptions,
+    js: false,
+    skipFormat: true,
+  });
   await init(tree, { ...libraryOptions, skipFormat: true });
-  ensureAngularDependencies(tree);
+
+  if (!libraryOptions.skipPackageJson) {
+    ensureAngularDependencies(tree);
+  }
 
   const project = addProject(tree, libraryOptions);
 
@@ -96,16 +92,22 @@ export async function libraryGeneratorInternal(
     await setupTailwindGenerator(tree, {
       project: libraryOptions.name,
       skipFormat: true,
+      skipPackageJson: libraryOptions.skipPackageJson,
     });
   }
 
-  if (libraryOptions.buildable || libraryOptions.publishable) {
-    addDependenciesToPackageJsonIfDontExist(
+  if (
+    (libraryOptions.buildable || libraryOptions.publishable) &&
+    !libraryOptions.skipPackageJson
+  ) {
+    addDependenciesToPackageJson(
       tree,
       {},
       {
         'ng-packagr': pkgVersions.ngPackagrVersion,
-      }
+      },
+      undefined,
+      true
     );
     addBuildableLibrariesPostCssDependencies(tree);
   }

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application.impl';
@@ -9,6 +11,7 @@ describe('setup-tailwind generator', () => {
     const tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: 'test',
+      directory: '.',
       rootProject: true,
     });
 
@@ -32,6 +35,7 @@ describe('setup-tailwind generator', () => {
     const tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: 'test',
+      directory: '.',
       js: true,
       rootProject: true,
     });

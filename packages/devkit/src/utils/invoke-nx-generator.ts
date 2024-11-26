@@ -1,20 +1,14 @@
-import type {
-  FileChange,
-  Tree,
-  TreeWriteOptions,
-} from 'nx/src/generators/tree';
-import type {
-  Generator,
-  GeneratorCallback,
-} from 'nx/src/config/misc-interfaces';
 import { join, relative } from 'path';
 import type { Mode } from 'fs';
-import { requireNx } from '../../nx';
-
-let { logger, stripIndent } = requireNx();
-
-// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
-stripIndent = stripIndent ?? require('nx/src/utils/logger').stripIndent;
+import type { TreeWriteOptions } from 'nx/src/generators/tree';
+import {
+  FileChange,
+  Generator,
+  GeneratorCallback,
+  logger,
+  Tree,
+} from 'nx/src/devkit-exports';
+import { stripIndent } from 'nx/src/devkit-internals';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}

@@ -1,15 +1,17 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
+  GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
+  Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { EslintPluginOptions, createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
@@ -47,43 +49,40 @@ function addTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/eslint/plugin'
-        : plugin.plugin === '@nx/eslint/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/eslint/plugin',
-    options: {
-      targetName: 'lint',
-    } as EslintPluginOptions,
-  });
-  updateNxJson(tree, nxJson);
-}
-
 export async function initEsLint(
   tree: Tree,
   options: LinterInitOptions
 ): Promise<GeneratorCallback> {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 
-  if (rootEslintFile && options.addPlugin && !hasPlugin) {
-    addPlugin(tree);
+  const graph = await createProjectGraphAsync();
 
-    if (options.updatePackageScripts) {
-      await updatePackageScripts(tree, createNodes);
-    }
+  const lintTargetNames = [
+    'lint',
+    'eslint:lint',
+    'eslint-lint',
+    '_lint',
+    '_eslint:lint',
+    '_eslint-lint',
+  ];
+
+  if (rootEslintFile && options.addPlugin && !hasPlugin) {
+    await addPlugin(
+      tree,
+      graph,
+      '@nx/eslint/plugin',
+      createNodesV2,
+      {
+        targetName: lintTargetNames,
+      },
+      options.updatePackageScripts
+    );
 
     return () => {};
   }
@@ -95,7 +94,16 @@ export async function initEsLint(
   updateProductionFileset(tree);
 
   if (options.addPlugin) {
-    addPlugin(tree);
+    await addPlugin(
+      tree,
+      graph,
+      '@nx/eslint/plugin',
+      createNodesV2,
+      {
+        targetName: lintTargetNames,
+      },
+      options.updatePackageScripts
+    );
   } else {
     addTargetDefaults(tree);
   }
@@ -115,10 +123,6 @@ export async function initEsLint(
         options.keepExistingVersions
       )
     );
-  }
-
-  if (options.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
   }
 
   return runTasksInSerial(...tasks);

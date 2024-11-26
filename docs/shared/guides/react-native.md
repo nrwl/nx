@@ -118,15 +118,43 @@ npx nx build-ios mobile
 
 **Android:**
 
+{% tabs %}
+{% tab label="Using inferred tasks" %}
+
+{% callout type="note" title="Inferred Tasks" %}
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+{% /callout %}
+
+```shell
+npx nx test mobile-e2e -- --configuration="android.emu.debug"
+```
+
+{% /tab %}
+{% tab label="Using explicit targets with executors" %}
+
 ```shell
 npx nx test-android mobile-e2e
 ```
 
+{% /tab %}
+
 **iOS:** (Mac only)
+
+{% tabs %}
+{% tab label="Using inferred tasks" %}
+
+```shell
+npx nx test mobile-e2e -- --configuration="ios.sim.debug"
+```
+
+{% /tab %}
+{% tab label="Using explicit targets with executors" %}
 
 ```shell
 npx nx test-ios mobile-e2e
 ```
+
+{% /tab %}
 
 When using React Native in Nx, you get the out-of-the-box support for TypeScript, Detox, and Jest.
 
@@ -134,7 +162,7 @@ When using React Native in Nx, you get the out-of-the-box support for TypeScript
 
 For existing Nx workspaces, install the `@nx/react-native` package to add React Native capabilities to it.
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/react-native
 ```
 
@@ -143,7 +171,7 @@ nx add @nx/react-native
 To create additional React Native apps run:
 
 ```shell
-npx nx g @nx/react-native:app mobile --directory=apps/mobile
+npx nx g @nx/react-native:app apps/mobile
 ```
 
 ## Generating a Library
@@ -154,13 +182,10 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 - Publish a package to be used outside the monorepo
 - Better visualize the architecture using `npx nx graph`
 
-For more information on Nx libraries, see our documentation on [Creating Libraries](/concepts/more-concepts/creating-libraries)
-and [Library Types](/concepts/more-concepts/library-types).
-
 To generate a new library run:
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout
+npx nx g @nx/react-native:lib libs/shared-ui-layout
 ```
 
 And you will see the following:
@@ -200,7 +225,7 @@ Run:
 To generate a new component inside `shared-ui-layout` run:
 
 ```shell
-npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
+npx nx g @nx/react-native:component libs/shared-ui-layout/src/lib/layout/layout --export
 ```
 
 And you will see the following updated for `shared-ui-layout`:
@@ -245,8 +270,8 @@ That's it! There is no need to build the library prior to using it. When you upd
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
-npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
+npx nx g @nx/react-native:lib libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
+npx nx g @nx/react-native:component libs/shared-ui-layout/src/lib/layout/layout --export
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:

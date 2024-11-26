@@ -14,7 +14,7 @@ export function createTsConfig(
   const json = {
     compilerOptions: {},
     files: [],
-    include: [],
+    include: ['.nuxt/nuxt.d.ts'],
     references: [
       {
         path: './tsconfig.app.json',
@@ -49,6 +49,7 @@ function createAppTsConfig(host: Tree, options: { projectRoot: string }) {
     compilerOptions: {
       composite: true,
     },
+    include: ['.nuxt/nuxt.d.ts', 'src/**/*'],
     exclude: [],
   };
 

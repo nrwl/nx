@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxNextjsConvertToInferred",
+  "description": "Convert existing Next.js project(s) using `@nx/next:build` executor to use `@nx/next/plugin`.",
+  "title": "Convert a Nextjs project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/next:build` executor to use `@nx/next/plugin`. If not provided, all projects using the `@nx/next:build` executor will be converted.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files.",
+      "default": false
+    }
+  }
+}

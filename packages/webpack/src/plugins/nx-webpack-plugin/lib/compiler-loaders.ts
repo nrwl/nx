@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { readTsConfig } from '@nx/js';
 
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 
 export function createLoaderFromCompiler(
-  options: NormalizedNxWebpackPluginOptions
+  options: NormalizedNxAppWebpackPluginOptions
 ) {
   switch (options.compiler) {
     case 'swc':
@@ -54,7 +54,9 @@ export function createLoaderFromCompiler(
         },
       };
     case 'babel':
-      const tsConfig = readTsConfig(path.join(options.root, options.tsConfig));
+      const tsConfig = options.tsConfig
+        ? readTsConfig(path.join(options.root, options.tsConfig))
+        : undefined;
 
       const babelConfig = {
         test: /\.([jt])sx?$/,
@@ -62,7 +64,9 @@ export function createLoaderFromCompiler(
         exclude: /node_modules/,
         options: {
           cwd: path.join(options.root, options.sourceRoot),
-          emitDecoratorMetadata: tsConfig.options.emitDecoratorMetadata,
+          emitDecoratorMetadata: tsConfig
+            ? tsConfig.options.emitDecoratorMetadata
+            : false,
           isModern: true,
           isTest: process.env.NX_CYPRESS_COMPONENT_TEST === 'true',
           envName: process.env.BABEL_ENV ?? process.env.NODE_ENV,

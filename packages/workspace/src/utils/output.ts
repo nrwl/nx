@@ -30,9 +30,7 @@ if (process.env.CI === 'true') {
 }
 
 class CLIOutput {
-  private readonly NX_PREFIX = `${chalk.cyan(
-    '>'
-  )} ${chalk.reset.inverse.bold.cyan(' NX ')}`;
+  private readonly NX_PREFIX = chalk.reset.inverse.bold.cyan(' NX ');
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character

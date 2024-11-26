@@ -43,8 +43,7 @@ describe('pipe generator', () => {
   it('should not generate test file when skipTests=true', async () => {
     // ACT
     await generatePipeWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-pipes',
+      path: 'test/src/app/my-pipes/test',
       skipTests: true,
     });
 
@@ -78,12 +77,12 @@ describe('pipe generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the pipe correctly when flat=false', async () => {
+    it('should import the pipe correctly when files are flat', async () => {
       // ARRANGE
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        flat: false,
+        path: 'test/src/app/test/test',
         standalone: false,
       });
 
@@ -99,13 +98,12 @@ describe('pipe generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should import the pipe correctly when flat=false and path is nested deeper', async () => {
+    it('should import the pipe correctly when files are flat but deeply nested', async () => {
       // ARRANGE
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-pipes',
+        path: 'test/src/app/my-pipes/test/test',
         standalone: false,
       });
 
@@ -121,13 +119,12 @@ describe('pipe generator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should export the pipe correctly when flat=false and path is nested deeper', async () => {
+    it('should export the pipe correctly when directory is nested deeper', async () => {
       // ARRANGE
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-pipes',
+        path: 'test/src/app/my-pipes/test/test',
         export: true,
         standalone: false,
       });
@@ -143,8 +140,7 @@ describe('pipe generator', () => {
 
       // ACT
       await generatePipeWithDefaultOptions(tree, {
-        flat: false,
-        path: 'test/src/app/my-pipes',
+        path: 'test/src/app/my-pipes/test/test',
         skipImport: true,
         standalone: false,
       });
@@ -177,8 +173,7 @@ async function generatePipeWithDefaultOptions(
 ) {
   await pipeGenerator(tree, {
     name: 'test',
-    project: 'test',
-    flat: true,
+    path: 'test/src/app/test',
     skipFormat: true,
     ...overrides,
   });

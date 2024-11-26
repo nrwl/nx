@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/jest",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["jest"]
+  "implicitDependencies": ["jest"],
+  "// targets": "to see all targets run: nx show project e2e-jest --web",
+  "targets": {}
 }

@@ -29,7 +29,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/node` plugin.",
+  "description": "Initialize the `@nx/node` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/node/src/generators/init/init.ts",

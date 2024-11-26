@@ -66,17 +66,11 @@ describe(AnotherCmp.name, () => {
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 1`] = `
 "import * as React from 'react';
-import SomeLib, { SomeLibProps } from './some-lib';
+import SomeLib from './some-lib';
 
 describe(SomeLib.name, () => {
-  let props: SomeLibProps;
-
-  beforeEach(() => {
-    props = {};
-  });
-
   it('renders', () => {
-    cy.mount(<SomeLib {...props} />);
+    cy.mount(<SomeLib />);
   });
 });
 "
@@ -84,17 +78,11 @@ describe(SomeLib.name, () => {
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 2`] = `
 "import * as React from 'react';
-import AnotherCmp, { AnotherCmpProps } from './another-cmp';
+import AnotherCmp from './another-cmp';
 
 describe(AnotherCmp.name, () => {
-  let props: AnotherCmpProps;
-
-  beforeEach(() => {
-    props = {};
-  });
-
   it('renders', () => {
-    cy.mount(<AnotherCmp {...props} />);
+    cy.mount(<AnotherCmp />);
   });
 });
 "

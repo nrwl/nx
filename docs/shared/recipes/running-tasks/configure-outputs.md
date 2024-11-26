@@ -31,7 +31,7 @@ These outputs files can be specified in several ways:
 ]
 ```
 
-All outputs explicitly specifying paths must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the path is resolved from. `{workspaceRoot}` should only appear in the beginning of an `output` but `{projectRoot}` and `{projectName}` can be specified later in the `output` to interpolate the root or name of the a project into the output location.
+All outputs explicitly specifying paths must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the path is resolved from. `{workspaceRoot}` should only appear in the beginning of an `output` but `{projectRoot}` and `{projectName}` can be specified later in the `output` to interpolate the root or name of the project into the output location.
 
 Outputs can also be determined from the `options` of running a task via the `{options.[propertyName]}` syntax.
 This is useful when an option for the task determines the output location and could be modified when the task is run.

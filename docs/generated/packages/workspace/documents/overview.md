@@ -2,7 +2,7 @@ The workspace plugin contains executors and generators that are useful for any N
 
 ## Creating Local Generators
 
-Codifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nx/plugin:plugin feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.
+Codifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nx/plugin:plugin packages/feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.
 
 > See more about [local generators](/extending-nx/recipes/local-generators)
 
@@ -38,11 +38,3 @@ Like when moving projects, some steps are often missed when removing projects. T
 4. The path mapping in `tsconfig.base.json` will be removed.
 
 > See more about [`@nx/workspace:remove`](/nx-api/workspace/generators/remove)
-
-## Running custom commands
-
-Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/nx-api/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
-
-Running `nx g @nx/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
-
-> See more about [`nx:run-commands`](/nx-api/nx/executors/run-commands)

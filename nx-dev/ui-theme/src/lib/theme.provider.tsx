@@ -1,3 +1,4 @@
+'use client';
 import { useMemo, useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';

@@ -1,0 +1,42 @@
+name: <%= workflowName %>
+
+on:
+  push:
+    branches:
+      - <%= mainBranch %>
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      <% if (connectedToCloud) { %>- run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
+      <% } else { %># Connect your workspace by running "nx connect" and uncomment this
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
+      <% } %>
+
+      - name: Set up JDK 17 for x64
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          architecture: x64
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - uses: nrwl/nx-set-shas@v4
+
+<% for (const command of commands) { %>
+      <% if (command.command) { %>- run: <%= command.command %><% } else if (command.comment) { %><%= command.comment %><% } else {%>- run: <%= command %><% } %><% } %>

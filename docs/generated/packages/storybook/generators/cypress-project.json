@@ -7,6 +7,7 @@
     "$id": "cypress-configure",
     "title": "Cypress Configuration",
     "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
+    "x-deprecated": "Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.",
     "type": "object",
     "properties": {
       "name": {
@@ -43,17 +44,13 @@
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       }
     },
     "required": ["name"],
     "presets": []
   },
-  "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
+  "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
+  "x-deprecated": "Deprecated: Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.",
   "hidden": false,
   "implementation": "/packages/storybook/src/generators/cypress-project/cypress-project.ts",
   "aliases": [],

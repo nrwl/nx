@@ -23,6 +23,7 @@ export function transformProjectGraphForRust(
         outputs: targetConfig.outputs,
         options: JSON.stringify(targetConfig.options),
         configurations: JSON.stringify(targetConfig.configurations),
+        parallelism: targetConfig.parallelism,
       };
     }
     nodes[projectName] = {
@@ -42,6 +43,7 @@ export function transformProjectGraphForRust(
     graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
+      packageName: externalNode.data.packageName,
       hash: externalNode.data.hash,
       version: externalNode.data.version,
     };

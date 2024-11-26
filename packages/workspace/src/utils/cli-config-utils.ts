@@ -22,6 +22,9 @@ export function editTarget(targetString: string, callback) {
   return serializeTarget(callback(parsedTarget));
 }
 
+/**
+ * @deprecated use the utility from nx/src/utils instead
+ */
 export function serializeTarget({ project, target, config }) {
   return [project, target, config].filter((part) => !!part).join(':');
 }

@@ -1,0 +1,9 @@
+{
+  "name": "e2e-gradle",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/gradle",
+  "projectType": "application",
+  "implicitDependencies": ["gradle"],
+  "// targets": "to see all targets run: nx show project e2e-gradle --web",
+  "targets": {}
+}

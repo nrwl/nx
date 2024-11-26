@@ -19,7 +19,7 @@ export async function addJest(
     project: projectName,
     supportTsx: true,
     skipSerializers: true,
-    setupFile: 'none',
+    setupFile: 'react-native',
     compiler: 'babel',
     skipPackageJson,
     skipFormat: true,
@@ -33,7 +33,7 @@ export async function addJest(
   preset: 'react-native',
   resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
-  setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
     '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock'
   },

@@ -1,13 +1,8 @@
-import {
-  ClipboardDocumentCheckIcon,
-  ClipboardDocumentIcon,
-} from '@heroicons/react/24/outline';
-// @ts-ignore
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
 import SyntaxHighlighter, { createElement } from 'react-syntax-highlighter';
-import { JSX, ReactNode, useEffect, useMemo, useState } from 'react';
+import { JSX, ReactNode, useMemo } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
 
 export function JsonCodeBlockPreTag({
   children,
@@ -30,45 +25,27 @@ export function JsonCodeBlockPreTag({
 export interface JsonCodeBlockProps {
   data: any;
   renderSource: (propertyName: string) => ReactNode;
+  copyTooltipText: string;
 }
 
 export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
-  const [copied, setCopied] = useState(false);
   const jsonString = useMemo(
     () => JSON.stringify(props.data, null, 2),
     [props.data]
   );
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => {
-      setCopied(false);
-    }, 3000);
-    return () => clearTimeout(t);
-  }, [copied]);
   return (
     <div className="code-block group relative w-full">
-      <div className="absolute top-0 right-0 z-10 flex">
-        <CopyToClipboard
+      <div className="absolute right-0 top-0 z-10 flex">
+        <CopyToClipboardButton
           text={jsonString}
-          onCopy={() => {
-            setCopied(true);
-          }}
-        >
-          <button
-            type="button"
-            className={twMerge(
-              'not-prose flex',
-              'border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60',
-              'opacity-0 transition-opacity group-hover:opacity-100'
-            )}
-          >
-            {copied ? (
-              <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
-            ) : (
-              <ClipboardDocumentIcon className="h-5 w-5" />
-            )}
-          </button>
-        </CopyToClipboard>
+          tooltipAlignment="right"
+          tooltipText={props.copyTooltipText}
+          className={twMerge(
+            'not-prose flex',
+            'border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60',
+            'opacity-0 transition-opacity group-hover:opacity-100'
+          )}
+        />
       </div>
       <SyntaxHighlighter
         language="json"
@@ -103,13 +80,10 @@ export function sourcesRenderer(
         }
       }
       return (
-        <span
-          className="flex group/line min-w-0 flex shrink-1"
-          key={`code-group${idx}`}
-        >
+        <span className="group/line flex" key={`code-group${idx}`}>
           <span>{element}</span>
           {sourceElement && (
-            <span className="opacity-0 min-w-0 flex shrink-1 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-2">
+            <span className="min-w-0 flex-1 pl-2 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
               {sourceElement}
             </span>
           )}

@@ -8,45 +8,43 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, extname, join } from 'path';
+import { dirname, join } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
+  serveStaticTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'next.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const cachePath = join(workspaceDataDirectory, 'next.hash');
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -63,24 +61,27 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
     ) {
       return {};
     }
-
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
-    const targets =
-      targetsCache[hash] ??
-      (await buildNextTargets(configFilePath, projectRoot, options, context));
-
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= await buildNextTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };
@@ -107,6 +108,9 @@ async function buildNextTargets(
   targets[options.devTargetName] = getDevTargetConfig(projectRoot);
 
   targets[options.startTargetName] = getStartTargetConfig(options, projectRoot);
+
+  targets[options.serveStaticTargetName] = getStaticServeTargetConfig(options);
+
   return targets;
 }
 
@@ -127,6 +131,11 @@ async function getBuildTargetConfig(
     inputs: getInputs(namedInputs),
     outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
   };
+
+  // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
+  // This doesn't actually need to be tty, but next.js has a bug, https://github.com/vercel/next.js/issues/62906, where it exits 0 when SIGINT is sent.
+  targetConfig.options.tty = false;
+
   return targetConfig;
 }
 
@@ -153,8 +162,24 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
   return targetConfig;
 }
 
+function getStaticServeTargetConfig(options: NextPluginOptions) {
+  const targetConfig: TargetConfiguration = {
+    executor: '@nx/web:file-server',
+    options: {
+      buildTarget: options.buildTargetName,
+      staticFilePath: '{projectRoot}/out',
+      port: 3000,
+      // Routes are found correctly with serve-static
+      spa: false,
+    },
+  };
+
+  return targetConfig;
+}
+
 async function getOutputs(projectRoot, nextConfig) {
   let dir = '.next';
+  const { PHASE_PRODUCTION_BUILD } = require('next/constants');
 
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
@@ -176,19 +201,13 @@ async function getOutputs(projectRoot, nextConfig) {
   }
 }
 
-async function getNextConfig(
+function getNextConfig(
   configFilePath: string,
   context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
-  let module;
-  if (extname(configFilePath) === '.mjs') {
-    module = await loadEsmModule(resolvedPath);
-  } else {
-    module = load(resolvedPath);
-  }
-  return module.default ?? module;
+  return loadConfigFile(resolvedPath);
 }
 
 function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
@@ -196,6 +215,7 @@ function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
   options.buildTargetName ??= 'build';
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
+  options.serveStaticTargetName ??= 'serve-static';
   return options;
 }
 
@@ -210,37 +230,4 @@ function getInputs(
       externalDependencies: ['next'],
     },
   ];
-}
-
-const packageInstallationDirectories = ['node_modules', '.yarn'];
-/**
- * Load the module after ensuring that the require cache is cleared.
- */
-function load(path: string): any {
-  // Clear cache if the path is in the cache
-  if (require.cache[path]) {
-    for (const key of Object.keys(require.cache)) {
-      if (!packageInstallationDirectories.some((dir) => key.includes(dir))) {
-        delete require.cache[key];
-      }
-    }
-  }
-
-  // Then require
-  return require(path);
-}
-
-/**
- * Lazily compiled dynamic import loader function.
- */
-let dynamicLoad: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
-
-export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
-  const modulePathWithCacheBust = `${modulePath}?version=${Date.now()}`;
-  dynamicLoad ??= new Function(
-    'modulePath',
-    `return import(modulePath);`
-  ) as Exclude<typeof dynamicLoad, undefined>;
-
-  return dynamicLoad(modulePathWithCacheBust);
 }

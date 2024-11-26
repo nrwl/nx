@@ -47,7 +47,6 @@ describe('nx release - private JS packages', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -92,7 +91,12 @@ describe('nx release - private JS packages', () => {
   });
   afterAll(() => cleanupProject());
 
-  it('should skip private packages and log a warning', async () => {
+  it('should skip private packages and log a warning when private packages are explicitly configured', async () => {
+    updateJson('nx.json', (json) => {
+      json.release.projects = [publicPkg1, publicPkg2, privatePkg];
+      return json;
+    });
+
     runCLI(`release version 999.9.9`);
 
     // This is the verdaccio instance that the e2e tests themselves are working from
@@ -104,12 +108,12 @@ describe('nx release - private JS packages', () => {
     const publicPkg1PublishOutput = runCLI(`release publish -p ${publicPkg1}`);
     expect(publicPkg1PublishOutput).toMatchInlineSnapshot(`
 
-      >  NX   Your filter "{public-project-name}" matched the following projects:
+      NX   Your filter "{public-project-name}" matched the following projects:
 
       - {public-project-name}
 
 
-      >  NX   Running target nx-release-publish for project {public-project-name}:
+      NX   Running target nx-release-publish for project {public-project-name}:
 
       - {public-project-name}
 
@@ -138,7 +142,7 @@ describe('nx release - private JS packages', () => {
 
 
 
-      >  NX   Successfully ran target nx-release-publish for project {public-project-name}
+      NX   Successfully ran target nx-release-publish for project {public-project-name}
 
 
 
@@ -148,12 +152,12 @@ describe('nx release - private JS packages', () => {
     const publicPkg2PublishOutput = runCLI(`release publish -p ${publicPkg2}`);
     expect(publicPkg2PublishOutput).toMatchInlineSnapshot(`
 
-      >  NX   Your filter "{public-project-name}" matched the following projects:
+      NX   Your filter "{public-project-name}" matched the following projects:
 
       - {public-project-name}
 
 
-      >  NX   Running target nx-release-publish for project {public-project-name}:
+      NX   Running target nx-release-publish for project {public-project-name}:
 
       - {public-project-name}
 
@@ -182,7 +186,7 @@ describe('nx release - private JS packages', () => {
 
 
 
-      >  NX   Successfully ran target nx-release-publish for project {public-project-name}
+      NX   Successfully ran target nx-release-publish for project {public-project-name}
 
 
 
@@ -193,12 +197,12 @@ describe('nx release - private JS packages', () => {
     });
     expect(privatePkgPublishOutput).toMatchInlineSnapshot(`
 
-      >  NX   Your filter "{private-project-name}" matched the following projects:
+      NX   Your filter "{private-project-name}" matched the following projects:
 
       - {private-project-name}
 
 
-      >  NX   Based on your config, the following projects were matched for publishing but do not have the "nx-release-publish" target specified:
+      NX   Based on your config, the following projects were matched for publishing but do not have the "nx-release-publish" target specified:
 
       - {private-project-name}
 
@@ -216,6 +220,94 @@ describe('nx release - private JS packages', () => {
     expect(
       execSync(`npm view @proj/${publicPkg2} version`).toString().trim()
     ).toEqual('999.9.9');
+
+    // The private package should have never been published
+    expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
+      /npm ERR! code E404/
+    );
+  }, 500000);
+
+  it('should skip private packages and not log a warning when no projects config exists', async () => {
+    updateJson('nx.json', (json) => {
+      delete json.release.projects;
+      return json;
+    });
+
+    runCLI(`release version 999.9.10`);
+
+    // This is the verdaccio instance that the e2e tests themselves are working from
+    const e2eRegistryUrl = execSync('npm config get registry')
+      .toString()
+      .trim();
+
+    // Thanks to the custom serializer above, the publish output should be deterministic
+    const publishOutput = runCLI(`release publish`);
+    expect(publishOutput).toMatchInlineSnapshot(`
+
+      NX   Running target nx-release-publish for 2 projects:
+
+      - {public-project-name}
+      - {public-project-name}
+
+
+
+      > nx run {public-project-name}:nx-release-publish
+
+
+      📦  @proj/{public-project-name}@999.9.10
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{public-project-name}
+      version:       999.9.10
+      filename:      proj-{public-project-name}-999.9.10.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to ${e2eRegistryUrl} with tag "latest"
+
+      > nx run {public-project-name}:nx-release-publish
+
+
+      📦  @proj/{public-project-name}@999.9.10
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{public-project-name}
+      version:       999.9.10
+      filename:      proj-{public-project-name}-999.9.10.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to ${e2eRegistryUrl} with tag "latest"
+
+
+
+      NX   Successfully ran target nx-release-publish for 2 projects
+
+
+
+    `);
+
+    // The two public packages should have been published
+    expect(
+      execSync(`npm view @proj/${publicPkg1} version`).toString().trim()
+    ).toEqual('999.9.10');
+    expect(
+      execSync(`npm view @proj/${publicPkg2} version`).toString().trim()
+    ).toEqual('999.9.10');
 
     // The private package should have never been published
     expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(

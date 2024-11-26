@@ -3,8 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/lerna-smoke-tests",
   "projectType": "application",
-  "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["nx", "devkit"]
+  "implicitDependencies": ["nx", "devkit"],
+  "// targets": "to see all targets run: nx show project e2e-lerna-smoke-tests --web",
+  "targets": {}
 }

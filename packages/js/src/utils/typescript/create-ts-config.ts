@@ -24,10 +24,16 @@ export function extractTsConfigBase(host: Tree) {
   const tsconfig = readJson(host, 'tsconfig.json');
   const baseCompilerOptions = {} as any;
 
-  for (let compilerOption of Object.keys(tsConfigBaseOptions)) {
-    baseCompilerOptions[compilerOption] =
-      tsconfig.compilerOptions[compilerOption];
-    delete tsconfig.compilerOptions[compilerOption];
+  if (tsconfig.compilerOptions) {
+    for (let compilerOption of Object.keys(tsConfigBaseOptions)) {
+      baseCompilerOptions[compilerOption] =
+        tsconfig.compilerOptions[compilerOption];
+      delete tsconfig.compilerOptions[compilerOption];
+    }
+  }
+  // If we don't set baseDir then builds will fail when more than one projects exist.
+  if (typeof baseCompilerOptions.baseUrl === 'undefined') {
+    baseCompilerOptions.baseUrl = '.';
   }
   writeJson(host, 'tsconfig.base.json', {
     compileOnSave: false,

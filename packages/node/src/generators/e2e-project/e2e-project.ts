@@ -7,9 +7,11 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
@@ -26,11 +28,11 @@ import {
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...options,
   });
 }
@@ -56,10 +58,39 @@ export async function e2eProjectGeneratorInternal(
           jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
           passWithNoTests: true,
         },
+        dependsOn: [`${options.project}:build`],
       },
     },
   });
+  // TODO(@nicholas): Find a better way to get build target
 
+  // We remove the 'test' target from the e2e project because it is not needed
+  // The 'e2e' target is the one that should run the tests for the e2e project
+  const nxJson = readNxJson(host);
+  const hasPlugin = nxJson.plugins?.some((p) => {
+    if (typeof p !== 'string' && p.plugin === '@nx/jest/plugin') {
+      return true;
+    }
+  });
+
+  if (hasPlugin) {
+    updateJson(host, 'nx.json', (json) => {
+      return {
+        ...json,
+        plugins: json.plugins?.map((p) => {
+          if (typeof p !== 'string' && p.plugin === '@nx/jest/plugin') {
+            return {
+              ...p,
+              exclude: [...(p.exclude || []), `${options.e2eProjectRoot}/**/*`],
+            };
+          }
+          return p;
+        }),
+      };
+    });
+  }
+
+  const jestPreset = findRootJestPreset(host) ?? 'jest.preset.js';
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -69,6 +100,7 @@ export async function e2eProjectGeneratorInternal(
         ...options,
         ...names(options.rootProject ? 'server' : options.project),
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        jestPreset,
         tmpl: '',
       }
     );
@@ -97,6 +129,7 @@ export async function e2eProjectGeneratorInternal(
         ...names(options.rootProject ? 'cli' : options.project),
         mainFile,
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        jestPreset,
         tmpl: '',
       }
     );
@@ -151,20 +184,21 @@ async function normalizeOptions(
 ): Promise<
   Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
 > {
+  options.directory = options.directory ?? `${options.project}-e2e`;
   const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
     await determineProjectNameAndRootOptions(tree, {
-      name: options.name ?? `${options.project}-e2e`,
+      name: options.name,
       projectType: 'library',
       directory: options.rootProject ? 'e2e' : options.directory,
-      projectNameAndRootFormat: options.rootProject
-        ? 'as-provided'
-        : options.projectNameAndRootFormat,
-      // this is an internal generator, don't save defaults
-      callingGenerator: null,
     });
 
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   return {
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
     ...options,
     e2eProjectRoot,
     e2eProjectName,

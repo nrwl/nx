@@ -8,7 +8,6 @@ import type { PackageJson } from '../../../../utils/package-json';
 import {
   addDepsToPackageJson,
   initCloud,
-  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from '../utils';
@@ -63,15 +62,8 @@ export async function addNxToAngularCliRepo(options: Options) {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initCloud(repoRoot, 'nx-init-angular');
+    await initCloud('nx-init-angular');
   }
-
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
-    bodyLines: [
-      '- Execute "npx nx build" twice to see the computation caching in action.',
-    ],
-  });
 }
 
 async function collectCacheableOperations(options: Options): Promise<string[]> {
@@ -98,7 +90,11 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
             'Which of the following targets are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
           // enquirer mutates the array below, create a new one to avoid it
           choices: [...workspaceTargets],
-        },
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
       ])) as any
     ).cacheableOperations;
   } else {

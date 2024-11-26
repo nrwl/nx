@@ -4,6 +4,22 @@ import { withEnvironmentVariables as withEnvironment } from '../internal-testing
 jest.mock('../project-graph/file-utils');
 
 describe('splitArgs', () => {
+  let originalBase: string;
+  let originalHead: string;
+
+  beforeEach(() => {
+    originalBase = process.env.NX_BASE;
+    originalHead = process.env.NX_HEAD;
+
+    delete process.env.NX_BASE;
+    delete process.env.NX_HEAD;
+  });
+
+  afterEach(() => {
+    process.env.NX_BASE = originalBase;
+    process.env.NX_HEAD = originalHead;
+  });
+
   it('should split nx specific arguments into nxArgs', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
@@ -241,43 +257,6 @@ describe('splitArgs', () => {
   });
 
   describe('--runner environment handling', () => {
-    it('should set runner based on environment NX_RUNNER, if it is not provided directly on the command', () => {
-      withEnvironment({ NX_RUNNER: 'some-env-runner-name' }, () => {
-        expect(
-          splitArgsIntoNxArgsAndOverrides(
-            {
-              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-              $0: '',
-            },
-            'run-one',
-            {} as any,
-            {
-              tasksRunnerOptions: {
-                'some-env-runner-name': { runner: '' },
-              },
-            }
-          ).nxArgs.runner
-        ).toEqual('some-env-runner-name');
-
-        expect(
-          splitArgsIntoNxArgsAndOverrides(
-            {
-              __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
-              $0: '',
-              runner: 'directlyOnCommand', // higher priority than $NX_RUNNER
-            },
-            'run-one',
-            {} as any,
-            {
-              tasksRunnerOptions: {
-                'some-env-runner-name': { runner: '' },
-              },
-            }
-          ).nxArgs.runner
-        ).toEqual('directlyOnCommand');
-      });
-    });
-
     it('should set runner based on environment NX_TASKS_RUNNER, if it is not provided directly on the command', () => {
       withEnvironment({ NX_TASKS_RUNNER: 'some-env-runner-name' }, () => {
         expect(
@@ -456,6 +435,45 @@ describe('splitArgs', () => {
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
+    });
+
+    it('should be able to be specified in the environment', () => {
+      const { nxArgs } = withEnvironment(
+        {
+          NX_PARALLEL: '5',
+        },
+        () =>
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              $0: '',
+              __overrides_unparsed__: [],
+            },
+            'affected',
+            {} as any,
+            {} as any
+          )
+      );
+      expect(nxArgs.parallel).toEqual(5);
+    });
+
+    it('should be able to override NX_PARALLEL with the parallel flag', () => {
+      const { nxArgs } = withEnvironment(
+        {
+          NX_PARALLEL: '5',
+        },
+        () =>
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              $0: '',
+              __overrides_unparsed__: [],
+              parallel: '3',
+            },
+            'affected',
+            {} as any,
+            {} as any
+          )
+      );
+      expect(nxArgs.parallel).toEqual(3);
     });
   });
 });

@@ -61,30 +61,3 @@ export function createVitestConfig(tree: Tree) {
 
   updateNxJson(tree, nxJson);
 }
-
-export function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/vite/plugin'
-        : plugin.plugin === '@nx/vite/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/vite/plugin',
-    options: {
-      buildTargetName: 'build',
-      previewTargetName: 'preview',
-      testTargetName: 'test',
-      serveTargetName: 'serve',
-      serveStaticTargetName: 'serve-static',
-    },
-  });
-  updateNxJson(tree, nxJson);
-}

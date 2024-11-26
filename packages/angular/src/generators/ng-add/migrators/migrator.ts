@@ -36,9 +36,9 @@ export abstract class Migrator {
 
   protected convertAsset(asset: string | any): string | any {
     if (typeof asset === 'string') {
-      return this.convertSourceRootPath(asset);
+      return this.convertRootPath(asset);
     } else {
-      return { ...asset, input: this.convertSourceRootPath(asset.input) };
+      return { ...asset, input: this.convertRootPath(asset.input) };
     }
   }
 
@@ -47,6 +47,15 @@ export abstract class Migrator {
       ? joinPathFragments(
           this.project.newRoot,
           originalPath.replace(this.project.oldRoot, '')
+        )
+      : originalPath;
+  }
+
+  protected convertSourceRootPath(originalPath: string): string {
+    return originalPath?.startsWith(this.project.oldSourceRoot)
+      ? joinPathFragments(
+          this.project.newSourceRoot,
+          originalPath.replace(this.project.oldSourceRoot, '')
         )
       : originalPath;
   }
@@ -118,15 +127,6 @@ export abstract class Migrator {
       json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
       return json;
     });
-  }
-
-  private convertSourceRootPath(originalPath: string): string {
-    return originalPath?.startsWith(this.project.oldSourceRoot)
-      ? joinPathFragments(
-          this.project.newSourceRoot,
-          originalPath.replace(this.project.oldSourceRoot, '')
-        )
-      : originalPath;
   }
 
   private getTargetValuesForOption(

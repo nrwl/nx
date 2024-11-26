@@ -116,7 +116,8 @@
         "oneOf": [
           { "type": "string", "enum": ["all", "none"] },
           { "type": "array", "items": { "type": "string" } }
-        ]
+        ],
+        "x-deprecated": "Make sure all dependencies are buildable by running `nx g @nx/js:setup-build`. This option will be removed in Nx 20."
       },
       "externalBuildTargets": {
         "type": "array",
@@ -130,6 +131,11 @@
         "default": false,
         "x-priority": "internal"
       }
+    },
+    "stripLeadingPaths": {
+      "type": "boolean",
+      "description": "Remove leading directory from output (e.g. src). See: https://swc.rs/docs/usage/cli#--strip-leading-paths",
+      "default": false
     },
     "required": ["main", "outputPath", "tsConfig"],
     "definitions": {

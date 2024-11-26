@@ -1,11 +1,10 @@
-import * as fs from 'fs';
-import type { Schema } from './schema';
 import type { ExecutorContext } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import * as fs from 'fs';
+import { resolve } from 'path';
+import type { Schema } from './schema';
 
-jest.spyOn(fs, 'mkdirSync').mockImplementation();
-jest.spyOn(fs, 'writeFileSync').mockImplementation();
-
-const formattedReports = ['formatted report 1'];
+const formattedReports = 'formatted report 1';
 const mockFormatter = {
   format: jest.fn().mockReturnValue(formattedReports),
 };
@@ -43,7 +42,6 @@ jest.mock('./utility/eslint-utils', () => {
   };
 });
 import lintExecutor from './lint.impl';
-import { resolve } from 'path';
 
 let mockChdir = jest.fn().mockImplementation(() => {});
 
@@ -86,14 +84,33 @@ function setupMocks() {
 
 describe('Linter Builder', () => {
   let mockContext: ExecutorContext;
+  let tempFs: TempFs;
+
   beforeEach(() => {
+    tempFs = new TempFs('eslint');
     MockESLint.version = VALID_ESLINT_VERSION;
     mockReports = [{ results: [], usedDeprecatedRules: [] }];
     const projectName = 'proj';
     mockContext = {
       projectName,
-      root: '/root',
-      cwd: '/root',
+      root: tempFs.tempDir,
+      cwd: tempFs.tempDir,
+      projectGraph: {
+        nodes: {
+          [projectName]: {
+            type: 'app',
+            name: projectName,
+            data: {
+              root: `apps/${projectName}`,
+              sourceRoot: `apps/${projectName}/src`,
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          [projectName]: [],
+        },
+      },
       projectsConfigurations: {
         version: 2,
         projects: {
@@ -111,6 +128,7 @@ describe('Linter Builder', () => {
   });
 
   afterAll(() => {
+    tempFs.cleanup();
     jest.restoreAllMocks();
   });
 
@@ -150,7 +168,7 @@ describe('Linter Builder', () => {
       mockContext
     );
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      resolve('/root', '.eslintrc.json'),
+      resolve(mockContext.root, '.eslintrc.json'),
       {
         lintFilePatterns: [],
         eslintConfig: './.eslintrc.json',
@@ -180,7 +198,7 @@ describe('Linter Builder', () => {
       ...mockContext,
       cwd: 'apps/project/',
     });
-    expect(mockChdir).toHaveBeenCalledWith('/root');
+    expect(mockChdir).toHaveBeenCalledWith(mockContext.root);
   });
 
   it('should throw if no reports generated', async () => {
@@ -358,12 +376,14 @@ describe('Linter Builder', () => {
       );
     });
 
-    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message', async () => {
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the project name when the eslint config is not provided and cannnot be found', async () => {
       setupMocks();
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
 
       mockLintFiles.mockImplementation(() => {
         throw new Error(
-          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.`
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
         );
       });
 
@@ -377,9 +397,159 @@ describe('Linter Builder', () => {
       );
       expect(console.error).toHaveBeenCalledWith(
         `
-Error: You have attempted to use the lint rule @typescript-eslint/await-thenable which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config \`apps/proj/.eslintrc.json\`
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config for the project "proj"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
 
-Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the provided config', async () => {
+      setupMocks();
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+          eslintConfig: './.eslintrc.json',
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config ".eslintrc.json"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found flat config', async () => {
+      setupMocks();
+      tempFs.createFileSync('apps/proj/eslint.config.js', '');
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "apps/proj/eslint.config.js"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found flat config at the workspace root', async () => {
+      setupMocks();
+      tempFs.createFileSync('eslint.config.js', '');
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "eslint.config.js"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found old config', async () => {
+      setupMocks();
+      tempFs.createFileSync('apps/proj/.eslintrc.json', '{}');
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "apps/proj/.eslintrc.json"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found old config at the workspace root', async () => {
+      setupMocks();
+      tempFs.createFileSync('.eslintrc.json', '{}');
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config ".eslintrc.json"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
 `
       );
     });
@@ -584,6 +754,38 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     expect(output.success).toBeTruthy();
   });
 
+  it('should be a failure if there are more warnings than the set maxWarnings', async () => {
+    mockReports = [
+      {
+        errorCount: 0,
+        warningCount: 4,
+        results: [],
+        usedDeprecatedRules: [],
+      },
+      {
+        errorCount: 0,
+        warningCount: 6,
+        results: [],
+        usedDeprecatedRules: [],
+      },
+    ];
+    setupMocks();
+    const output = await lintExecutor(
+      createValidRunBuilderOptions({
+        eslintConfig: './.eslintrc.json',
+        lintFilePatterns: ['includedFile1'],
+        format: 'json',
+        silent: true,
+        maxWarnings: 3,
+      }),
+      mockContext
+    );
+    expect(output.success).toBe(false);
+    expect(console.info).toHaveBeenCalledWith(
+      'ESLint found too many warnings (maximum: 3).'
+    );
+  });
+
   it('should be a success if there are errors but the force flag is true', async () => {
     mockReports = [
       {
@@ -642,8 +844,9 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     expect(output.success).toBeFalsy();
   });
 
-  it('should attempt to write the lint results to the output file, if specified', async () => {
+  it('should write the lint results to the output file, if specified', async () => {
     setupMocks();
+
     await lintExecutor(
       createValidRunBuilderOptions({
         eslintConfig: './.eslintrc.json',
@@ -655,13 +858,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       }),
       mockContext
     );
-    expect(fs.mkdirSync).toHaveBeenCalledWith('/root/a/b/c', {
-      recursive: true,
-    });
-    expect(fs.writeFileSync).toHaveBeenCalledWith(
-      '/root/a/b/c/outputFile1',
-      formattedReports
-    );
+
+    expect(
+      fs.readFileSync(`${mockContext.root}/a/b/c/outputFile1`, 'utf-8')
+    ).toEqual(formattedReports);
   });
 
   it('should not attempt to write the lint results to the output file, if not specified', async () => {
@@ -711,7 +911,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      '/root/apps/proj/eslint.config.js',
+      `${mockContext.root}/apps/proj/eslint.config.js`,
       {
         lintFilePatterns: [],
         eslintConfig: 'apps/proj/eslint.config.js',

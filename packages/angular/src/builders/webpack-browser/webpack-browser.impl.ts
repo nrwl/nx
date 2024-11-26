@@ -1,7 +1,6 @@
 import {
   joinPathFragments,
   normalizePath,
-  parseTargetString,
   ProjectGraph,
   readCachedProjectGraph,
   targetToTargetString,
@@ -9,7 +8,6 @@ import {
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
-import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
@@ -27,17 +25,19 @@ function shouldSkipInitialTargetRun(
   project: string,
   target: string
 ): boolean {
-  const nxJson = readNxJson();
-  const defaultDependencyConfigs = Object.entries(
-    nxJson.targetDefaults ?? {}
-  ).reduce((acc, [targetName, dependencyConfig]) => {
-    acc[targetName] = dependencyConfig.dependsOn;
-    return acc;
-  }, {});
+  const allTargetNames = new Set<string>();
+  for (const projectName in projectGraph.nodes) {
+    const project = projectGraph.nodes[projectName];
+    for (const targetName in project.data.targets ?? {}) {
+      allTargetNames.add(targetName);
+    }
+  }
+
   const projectDependencyConfigs = getDependencyConfigs(
     { project, target },
-    defaultDependencyConfigs,
-    projectGraph
+    {},
+    projectGraph,
+    Array.from(allTargetNames)
   );
 
   // if the task runner already ran the target, skip the initial run

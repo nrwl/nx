@@ -10,7 +10,7 @@ export function normalizeOptions(
     ...options,
     typescriptConfiguration: options.typescriptConfiguration ?? true,
     federationType: options.federationType ?? 'static',
-    prefix: options.prefix ?? getProjectPrefix(tree, options.appName),
+    prefix: options.prefix ?? getProjectPrefix(tree, options.appName) ?? 'app',
     standalone: options.standalone ?? true,
   };
 }

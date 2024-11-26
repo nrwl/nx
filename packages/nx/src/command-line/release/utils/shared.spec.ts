@@ -1,5 +1,5 @@
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { createCommitMessageValues } from './shared';
+import { createCommitMessageValues, createGitTagValues } from './shared';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -14,9 +14,12 @@ describe('shared', () => {
               conventionalCommits: false,
               generator: '@nx/js:version',
               generatorOptions: {},
+              groupPreVersionCommand: '',
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
+            versionPlans: false,
+            resolvedVersionPlans: false,
           },
           {
             name: 'two',
@@ -26,9 +29,12 @@ describe('shared', () => {
               conventionalCommits: false,
               generator: '@nx/js:version',
               generatorOptions: {},
+              groupPreVersionCommand: '',
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
+            versionPlans: false,
+            resolvedVersionPlans: false,
           },
         ];
         const releaseGroupToFilteredProjects = new Map()
@@ -68,6 +74,75 @@ describe('shared', () => {
         `);
       });
 
+      it('should not add release groups to the commit message whose projects have no changes', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'one',
+            projectsRelationship: 'independent',
+            projects: ['foo'], // single project, will get flattened in the final commit message
+            version: {
+              conventionalCommits: false,
+              generator: '@nx/js:version',
+              generatorOptions: {},
+              groupPreVersionCommand: '',
+            },
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+          {
+            name: 'two',
+            projectsRelationship: 'fixed',
+            projects: ['bar', 'baz'],
+            version: {
+              conventionalCommits: false,
+              generator: '@nx/js:version',
+              generatorOptions: {},
+              groupPreVersionCommand: '',
+            },
+            changelog: false,
+            releaseTagPattern: '{projectName}-{version}',
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        const releaseGroupToFilteredProjects = new Map()
+          .set(releaseGroups[0], new Set(['foo']))
+          .set(releaseGroups[1], new Set(['bar', 'baz']));
+        const versionData = {
+          foo: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+          },
+          bar: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null, // no changes
+          },
+          baz: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null, // no changes
+          },
+        };
+        const userCommitMessage =
+          'chore(release): publish {projectName} v{version}';
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          userCommitMessage
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: foo 1.0.1",
+          ]
+        `);
+      });
+
       it('should interpolate the {projectName} and {version} within the main commit message if a single project within a single independent release group is being committed', () => {
         const releaseGroups: ReleaseGroupWithName[] = [
           {
@@ -90,17 +165,20 @@ describe('shared', () => {
                 specifierSource: 'conventional-commits',
                 currentVersionResolver: 'git-tag',
               },
+              groupPreVersionCommand: '',
             },
             changelog: {
               createRelease: 'github',
               entryWhenNoChanges:
                 'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
               file: '{projectRoot}/CHANGELOG.md',
-              renderer: 'nx/release/changelog-renderer',
+              renderer: 'custom-changelog-renderer',
               renderOptions: { authors: true },
             },
             releaseTagPattern: '{projectName}-{version}',
             name: '__default__',
+            versionPlans: false,
+            resolvedVersionPlans: false,
           },
         ];
 
@@ -130,5 +208,74 @@ describe('shared', () => {
         `);
       });
     });
+  });
+
+  describe(`${createGitTagValues.name}()`, () => {
+    it('should tag and interpolate the {version} if fixed group is bumping', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-1.1.0']);
+    });
+
+    it('should not tag if fixed group is not bumping', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual([]);
+    });
+
+    function setUpReleaseGroup() {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'fixed',
+        releaseTagPattern: 'my-group-{version}',
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+      return { releaseGroup, releaseGroupToFilteredProjects };
+    }
   });
 });

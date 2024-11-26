@@ -21,6 +21,13 @@ import { gt, valid } from 'semver';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { ProjectGraph } from '../../config/project-graph';
+import { ProjectGraphError } from '../../project-graph/error-types';
+import {
+  getPowerpackLicenseInformation,
+  NxPowerpackNotInstalledError,
+} from '../../utils/powerpack';
+import type { PowerpackLicense } from '@nx/powerpack-license';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -37,12 +44,14 @@ export const packagesWeCareAbout = [
 
 export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
   ...packagesWeCareAbout,
+  new RegExp('@nx/powerpack*'),
   '@schematics/angular',
   new RegExp('@angular/*'),
   '@nestjs/schematics',
 ];
 
 const LINE_SEPARATOR = '---------------------------------------';
+
 /**
  * Reports relevant version numbers for adding to an Nx issue report
  *
@@ -55,27 +64,86 @@ export async function reportHandler() {
   const {
     pm,
     pmVersion,
+    powerpackLicense,
+    powerpackError,
     localPlugins,
+    powerpackPlugins,
     communityPlugins,
+    registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
+    nativeTarget,
   } = await getReportData();
 
-  const bodyLines = [
-    `Node   : ${process.versions.node}`,
-    `OS     : ${process.platform}-${process.arch}`,
-    `${pm.padEnd(7)}: ${pmVersion}`,
-    ``,
+  const fields = [
+    ['Node', process.versions.node],
+    ['OS', `${process.platform}-${process.arch}`],
+    ['Native Target', nativeTarget ?? 'Unavailable'],
+    [pm, pmVersion],
   ];
+  let padding = Math.max(...fields.map((f) => f[0].length));
+  const bodyLines = fields.map(
+    ([field, value]) => `${field.padEnd(padding)}  : ${value}`
+  );
 
-  let padding =
+  bodyLines.push('');
+
+  padding =
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
       `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
     );
   });
+
+  if (powerpackLicense) {
+    bodyLines.push('');
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(chalk.green('Nx Powerpack'));
+
+    bodyLines.push(
+      `Licensed to ${powerpackLicense.organizationName} for ${
+        powerpackLicense.seatCount
+      } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
+        powerpackLicense.workspaceCount
+      } workspace${
+        powerpackLicense.workspaceCount > 1 ? 's' : ''
+      } until ${new Date(
+        powerpackLicense.expiresAt * 1000
+      ).toLocaleDateString()}`
+    );
+    bodyLines.push('');
+
+    padding =
+      Math.max(
+        ...powerpackPlugins.map(
+          (powerpackPlugin) => powerpackPlugin.name.length
+        )
+      ) + 1;
+    for (const powerpackPlugin of powerpackPlugins) {
+      bodyLines.push(
+        `${chalk.green(powerpackPlugin.name.padEnd(padding))} : ${chalk.bold(
+          powerpackPlugin.version
+        )}`
+      );
+    }
+    bodyLines.push('');
+  } else if (powerpackError) {
+    bodyLines.push('');
+    bodyLines.push(chalk.red('Nx Powerpack'));
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(powerpackError.message);
+    bodyLines.push('');
+  }
+
+  if (registeredPlugins.length) {
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push('Registered Plugins:');
+    for (const plugin of registeredPlugins) {
+      bodyLines.push(`${chalk.green(plugin)}`);
+    }
+  }
 
   if (communityPlugins.length) {
     bodyLines.push(LINE_SEPARATOR);
@@ -128,8 +196,12 @@ export async function reportHandler() {
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
+  powerpackLicense: PowerpackLicense | null;
+  powerpackError: Error | null;
+  powerpackPlugins: PackageJson[];
   localPlugins: string[];
   communityPlugins: PackageJson[];
+  registeredPlugins: string[];
   packageVersionsWeCareAbout: {
     package: string;
     version: string;
@@ -143,23 +215,20 @@ export interface ReportData {
     migrateTarget: string;
   };
   projectGraphError?: Error | null;
+  nativeTarget: string | null;
 }
 
 export async function getReportData(): Promise<ReportData> {
   const pm = detectPackageManager();
   const pmVersion = getPackageManagerVersion(pm);
 
-  const localPlugins = await findLocalPlugins(readNxJson());
-  const communityPlugins = findInstalledCommunityPlugins();
+  const { graph, error: projectGraphError } = await tryGetProjectGraph();
 
-  let projectGraphError: Error | null = null;
-  if (isNativeAvailable()) {
-    try {
-      await createProjectGraphAsync();
-    } catch (e) {
-      projectGraphError = e;
-    }
-  }
+  const nxJson = readNxJson();
+  const localPlugins = await findLocalPlugins(graph, nxJson);
+  const powerpackPlugins = findInstalledPowerpackPlugins();
+  const communityPlugins = findInstalledCommunityPlugins();
+  const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
 
   const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
   packageVersionsWeCareAbout.unshift({
@@ -175,20 +244,55 @@ export async function getReportData(): Promise<ReportData> {
 
   const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
 
+  const native = isNativeAvailable();
+
+  let powerpackLicense = null;
+  let powerpackError = null;
+  try {
+    powerpackLicense = await getPowerpackLicenseInformation();
+  } catch (e) {
+    if (!(e instanceof NxPowerpackNotInstalledError)) {
+      powerpackError = e;
+    }
+  }
+
   return {
     pm,
+    powerpackLicense,
+    powerpackError,
+    powerpackPlugins,
     pmVersion,
     localPlugins,
     communityPlugins,
+    registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
+    nativeTarget: native ? native.getBinaryTarget() : null,
   };
 }
 
-async function findLocalPlugins(nxJson: NxJsonConfiguration) {
+async function tryGetProjectGraph() {
   try {
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    return { graph: await createProjectGraphAsync() };
+  } catch (error) {
+    if (error instanceof ProjectGraphError) {
+      return {
+        graph: error.getPartialProjectGraph(),
+        error: error,
+      };
+    }
+    return {
+      error,
+    };
+  }
+}
+
+async function findLocalPlugins(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  try {
     const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph),
       nxJson
@@ -256,6 +360,13 @@ export function findMisalignedPackagesForPackage(
     : undefined;
 }
 
+export function findInstalledPowerpackPlugins(): PackageJson[] {
+  const installedPlugins = findInstalledPlugins();
+  return installedPlugins.filter((dep) =>
+    new RegExp('@nx/powerpack*').test(dep.name)
+  );
+}
+
 export function findInstalledCommunityPlugins(): PackageJson[] {
   const installedPlugins = findInstalledPlugins();
   return installedPlugins.filter(
@@ -268,9 +379,20 @@ export function findInstalledCommunityPlugins(): PackageJson[] {
       )
   );
 }
+
+export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
+  if (!nxJson.plugins) {
+    return [];
+  }
+
+  return nxJson.plugins.map((plugin) =>
+    typeof plugin === 'object' ? plugin.plugin : plugin
+  );
+}
+
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v19): Remove workaround for hiding @nrwl packages when matching @nx package is found.
+  // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
   const packageChangeMap: Record<string, string> = {
     '@nrwl/nx-plugin': '@nx/plugin',
     '@nx/plugin': '@nrwl/nx-plugin',
@@ -313,10 +435,9 @@ export function findInstalledPackagesWeCareAbout() {
   }));
 }
 
-function isNativeAvailable() {
+function isNativeAvailable(): typeof import('../../native') | false {
   try {
-    require('../../native');
-    return true;
+    return require('../../native');
   } catch {
     return false;
   }

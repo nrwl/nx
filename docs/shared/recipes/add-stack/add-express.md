@@ -9,7 +9,7 @@ Because we are using an Nx plugin for Express, all the features of Nx are availa
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
@@ -21,7 +21,7 @@ Because we are using an Nx plugin for Express, all the features of Nx are availa
 Make sure to install the `@nx/express` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/express
 ```
 
@@ -34,7 +34,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/express:app my-express-api --directory=apps/my-express-api
+nx g @nx/express:app apps/my-express-api
 ```
 
 Serve the API by running
@@ -54,7 +54,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 {% /callout %}
 
 ```shell
-nx g @nx/js:lib my-lib --directory=libs/my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 Once the library is created, update the following files.
@@ -73,13 +73,14 @@ export function someFunction(): string {
 
 import express from 'express';
 import * as path from 'path';
+import { someFunction } from '@my-express-app/my-lib';
 
 const app = express();
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to my-express-app!' });
+  res.send({ message: `Welcome to my-express-app! ${someFunction()}` });
 });
 
 const port = process.env.PORT || 3333;

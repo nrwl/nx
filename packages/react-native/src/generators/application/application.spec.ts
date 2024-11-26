@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   Tree,
   getProjects,
@@ -18,12 +20,11 @@ describe('app', () => {
 
   it('should update configuration', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     });
@@ -34,13 +35,12 @@ describe('app', () => {
 
   it('should update nx.json', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     });
@@ -53,12 +53,11 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'jest',
       bundler: 'vite',
     });
@@ -76,7 +75,7 @@ describe('app', () => {
         preset: 'react-native',
         resolver: '@nx/jest/plugins/resolver',
         moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
-        setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+        setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
         moduleNameMapper: {
           '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
         },
@@ -99,12 +98,11 @@ describe('app', () => {
 
   it('should generate targets', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'jest',
       bundler: 'vite',
     });
@@ -116,12 +114,11 @@ describe('app', () => {
     appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
     await reactNativeApplicationGenerator(appTree, {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     });
@@ -138,7 +135,6 @@ describe('app', () => {
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'vite',
         unitTestRunner: 'none',
       });
@@ -171,14 +167,14 @@ describe('app', () => {
           binaryPath:
             '../my-dir/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../my-dir/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -186,11 +182,10 @@ describe('app', () => {
 
     it('should create e2e app without directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'vite',
         unitTestRunner: 'none',
       });
@@ -222,14 +217,14 @@ describe('app', () => {
           binaryPath:
             '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -241,13 +236,12 @@ describe('app', () => {
       const packageJsonBefore = readJson(appTree, 'package.json');
 
       await reactNativeApplicationGenerator(appTree, {
-        name: 'my-app',
+        directory: 'my-app',
         displayName: 'myApp',
         linter: Linter.EsLint,
         e2eTestRunner: 'none',
         install: false,
         skipPackageJson: true,
-        projectNameAndRootFormat: 'as-provided',
         unitTestRunner: 'none',
         bundler: 'webpack',
       });

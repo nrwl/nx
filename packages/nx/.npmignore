@@ -1,2 +1,3 @@
 native-packages/
 /*.node
+**/*.debug.wasm32-wasi.wasm

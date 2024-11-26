@@ -1,20 +1,17 @@
-use napi::bindgen_prelude::External;
-use std::collections::HashMap;
-
-use crate::native::hasher::hash;
-use crate::native::utils::{path::get_child_files, Normalize};
-use rayon::prelude::*;
+use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread;
 
+use napi::bindgen_prelude::External;
+use rayon::prelude::*;
+use tracing::{trace, warn};
+
+use crate::native::hasher::hash;
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
 use crate::native::types::FileData;
-use parking_lot::{Condvar, Mutex};
-use tracing::{trace, warn};
-
+use crate::native::utils::{path::get_child_files, Normalize, NxCondvar, NxMutex};
 use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
@@ -31,8 +28,32 @@ pub struct WorkspaceContext {
 
 type Files = Vec<(PathBuf, String)>;
 
-struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
+fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathBuf, String)> {
+    let archived_files = read_files_archive(&cache_dir);
+
+    trace!("Gathering files in {}", workspace_root.display());
+    let now = std::time::Instant::now();
+    let file_hashes = if let Some(archived_files) = archived_files {
+        selective_files_hash(workspace_root, archived_files)
+    } else {
+        full_files_hash(workspace_root)
+    };
+
+    let mut files = file_hashes
+        .iter()
+        .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
+        .collect::<Vec<_>>();
+    files.par_sort();
+    trace!("hashed and sorted files in {:?}", now.elapsed());
+
+    write_files_archive(&cache_dir, file_hashes);
+
+    files
+}
+
+struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
+    #[cfg(not(target_arch = "wasm32"))]
     fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
         if !workspace_root.exists() {
             warn!(
@@ -42,52 +63,65 @@ impl FilesWorker {
             return FilesWorker(None);
         }
 
-        let archived_files = read_files_archive(&cache_dir);
-
-        let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
+        let files_lock = Arc::new((NxMutex::new(Vec::new()), NxCondvar::new()));
         let files_lock_clone = Arc::clone(&files_lock);
         let workspace_root = workspace_root.to_owned();
 
-        thread::spawn(move || {
-            trace!("locking files");
+        std::thread::spawn(move || {
             let (lock, cvar) = &*files_lock_clone;
-            let mut workspace_files = lock.lock();
-            let now = std::time::Instant::now();
-            let file_hashes = if let Some(archived_files) = archived_files {
-                selective_files_hash(&workspace_root, archived_files)
-            } else {
-                full_files_hash(&workspace_root)
-            };
+            trace!("Initially locking files");
+            let mut workspace_files = lock.lock().expect("Should be the first time locking files");
 
-            let mut files = file_hashes
-                .iter()
-                .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
-                .collect::<Vec<_>>();
-            files.par_sort();
-            trace!("hashed and sorted files in {:?}", now.elapsed());
+            let files = gather_and_hash_files(&workspace_root, cache_dir);
 
             *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
 
+            drop(workspace_files);
             cvar.notify_all();
-
-            write_files_archive(&cache_dir, file_hashes);
         });
 
         FilesWorker(Some(files_lock))
     }
 
-    pub fn get_files(&self) -> Vec<FileData> {
+    #[cfg(target_arch = "wasm32")]
+    fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
+        if !workspace_root.exists() {
+            warn!(
+                "workspace root does not exist: {}",
+                workspace_root.display()
+            );
+            return FilesWorker(None);
+        }
+
+        let workspace_root = workspace_root.to_owned();
+
+        let files = gather_and_hash_files(&workspace_root, cache_dir);
+
+        trace!("{} files retrieved", files.len());
+
+        let files_lock = Arc::new((NxMutex::new(files), NxCondvar::new()));
+
+        FilesWorker(Some(files_lock))
+    }
+
+    fn get_files(&self) -> Vec<FileData> {
         if let Some(files_sync) = &self.0 {
             let (files_lock, cvar) = files_sync.deref();
-            trace!("locking files");
-            let mut files = files_lock.lock();
-            let files_len = files.len();
-            if files_len == 0 {
-                trace!("waiting for files");
-                cvar.wait(&mut files);
-            }
+
+            trace!("waiting for files to be available");
+            let files = files_lock.lock().expect("Should be able to lock files");
+
+            #[cfg(target_arch = "wasm32")]
+            let files = cvar
+                .wait(files, |guard| guard.len() == 0)
+                .expect("Should be able to wait for files");
+
+            #[cfg(not(target_arch = "wasm32"))]
+            let files = cvar
+                .wait(files, |guard| guard.len() == 0)
+                .expect("Should be able to wait for files");
 
             let file_data = files
                 .iter()
@@ -110,7 +144,7 @@ impl FilesWorker {
         &self,
         workspace_root_path: &Path,
         updated_files: Vec<&str>,
-        deleted_files: Vec<&str>,
+        deleted_files_and_directories: Vec<&str>,
     ) -> HashMap<String, String> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
@@ -118,11 +152,21 @@ impl FilesWorker {
         };
 
         let (files_lock, _) = &files_sync.deref();
-        let mut files = files_lock.lock();
+        let mut files = files_lock
+            .lock()
+            .expect("Should always be able to update files");
         let mut map: HashMap<PathBuf, String> = files.drain(..).collect();
 
-        for deleted_file in deleted_files {
-            map.remove(&PathBuf::from(deleted_file));
+        for deleted_path in deleted_files_and_directories {
+            // If the path is a file, this removes it.
+            let removal = map.remove(&PathBuf::from(deleted_path));
+            if removal.is_none() {
+                // If the path is a directory, this retains only files not in the directory.
+                map.retain(|path, _| {
+                    let owned_deleted_path = deleted_path.to_owned();
+                    !path.starts_with(owned_deleted_path + "/")
+                });
+            };
         }
 
         let updated_files_hashes: HashMap<String, String> = updated_files
@@ -139,7 +183,7 @@ impl FilesWorker {
 
         for (file, hash) in &updated_files_hashes {
             map.entry(file.into())
-                .and_modify(|e| *e = hash.clone())
+                .and_modify(|e| e.clone_from(hash))
                 .or_insert(hash.clone());
         }
 
@@ -161,7 +205,7 @@ impl WorkspaceContext {
         let workspace_root_path = PathBuf::from(&workspace_root);
 
         WorkspaceContext {
-            files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir),
+            files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
         }
@@ -194,7 +238,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
+        let globbed_files = config_files::glob_files(files, globs, exclude)?;
         Ok(hash(
             &globbed_files
                 .map(|file| file.hash.as_bytes())
@@ -234,11 +278,14 @@ impl WorkspaceContext {
             "adding {} updated files to project files",
             updated_files.len()
         );
+
+        let mut updated_projects = HashSet::<&str>::new();
         for updated_file in updated_files.into_iter() {
             let file = updated_file.0;
             let hash = updated_file.1;
-            if let Some(project_files) = find_project_for_path(&file, &project_root_mappings)
-                .and_then(|project| project_files_map.get_mut(project))
+            let project = find_project_for_path(&file, &project_root_mappings);
+            if let Some(project_files) =
+                project.and_then(|project| project_files_map.get_mut(project))
             {
                 trace!("{file:?} was found in a project");
                 if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
@@ -247,12 +294,13 @@ impl WorkspaceContext {
                 } else {
                     trace!("{file:?} was not part of a project, adding to project files");
                     project_files.push(FileData { file, hash });
+                    updated_projects.insert(project.expect("Project already exists"));
                 }
             } else {
                 trace!("{file:?} was not found in any project, updating global files");
                 global_files
                     .entry(file)
-                    .and_modify(|e| *e = hash.clone())
+                    .and_modify(|e| e.clone_from(&hash))
                     .or_insert(hash);
             }
         }
@@ -274,6 +322,21 @@ impl WorkspaceContext {
             if global_files.contains_key(deleted_file) {
                 trace!("removing {deleted_file:?} from global files");
                 global_files.remove(deleted_file);
+            }
+        }
+
+        // sort the updated projects after deletion
+        // projects that have deleted files were not added to `updated_projects` set because deletion doesnt change the determinism
+        // but if there were any files deleted from projects, the sort should be faster becaues there potentially could be less files to sort
+        for updated_project in updated_projects {
+            trace!(updated_project, "sorting updated project");
+            if let Some(project_files) = project_files_map.get_mut(updated_project) {
+                // if the project files are less than 500, then parallel sort has too much overhead to actually be faster
+                if cfg!(target_arch = "wasm32") || project_files.len() < 500 {
+                    project_files.sort();
+                } else {
+                    project_files.par_sort();
+                }
             }
         }
 
@@ -302,6 +365,6 @@ impl WorkspaceContext {
 
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
-        get_child_files(&directory, self.files_worker.get_files())
+        get_child_files(directory, self.files_worker.get_files())
     }
 }

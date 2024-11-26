@@ -13,5 +13,6 @@ export { jestConfigObjectAst } from './src/utils/config/functions';
 export { jestInitGenerator } from './src/generators/init/init';
 export {
   getJestProjects,
+  getJestProjectsAsync,
   getNestedJestProjects,
 } from './src/utils/config/get-jest-projects';

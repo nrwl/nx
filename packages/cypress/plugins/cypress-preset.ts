@@ -3,11 +3,12 @@ import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { NX_PLUGIN_OPTIONS } from '../src/utils/symbols';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
-import { exec } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
+import type { InlineConfig } from 'vite';
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -33,6 +34,11 @@ export interface NxComponentTestingOptions {
   bundler?: 'vite' | 'webpack';
   compiler?: 'swc' | 'babel';
 }
+
+// The bundler is only used while generating the component testing configuration
+// It cannot be changed after the configuration is generated
+export interface NxComponentTestingPresetOptions
+  extends Omit<NxComponentTestingOptions, 'bundler'> {}
 
 export function nxBaseCypressPreset(
   pathToConfig: string,
@@ -65,14 +71,32 @@ export function nxBaseCypressPreset(
 }
 
 function startWebServer(webServerCommand: string) {
-  const serverProcess = exec(webServerCommand, {
+  const serverProcess = spawn(webServerCommand, {
     cwd: workspaceRoot,
+    shell: true,
+    // Detaching the process on unix will create a process group, allowing us to kill it later
+    // Windows is fine so we leave it attached to this process
+    detached: process.platform !== 'win32',
+    stdio: 'inherit',
+    windowsHide: true,
   });
-  serverProcess.stdout.pipe(process.stdout);
-  serverProcess.stderr.pipe(process.stderr);
 
   return () => {
-    serverProcess.kill();
+    if (process.platform === 'win32') {
+      try {
+        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F', {
+          windowsHide: true,
+        });
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error(e);
+        }
+      }
+    } else {
+      // child.kill() does not work on linux
+      // process.kill will kill the whole process group on unix
+      process.kill(-serverProcess.pid, 'SIGKILL');
+    }
   };
 }
 
@@ -110,6 +134,7 @@ export function nxE2EPreset(
       webServerCommand: options?.webServerCommands?.default,
       webServerCommands: options?.webServerCommands,
       ciWebServerCommand: options?.ciWebServerCommand,
+      ciBaseUrl: options?.ciBaseUrl,
     },
 
     async setupNodeEvents(on, config) {
@@ -119,7 +144,7 @@ export function nxE2EPreset(
         config.env?.webServerCommand ?? webServerCommands?.default;
 
       if (options?.bundler === 'vite') {
-        on('file:preprocessor', vitePreprocessor());
+        on('file:preprocessor', vitePreprocessor(options?.viteConfigOverrides));
       }
 
       if (!options?.webServerCommands) {
@@ -167,7 +192,7 @@ function waitForServer(
     let pollTimeout: NodeJS.Timeout | null;
     const { protocol } = new URL(url);
 
-    const timeoutDuration = webServerConfig?.timeout ?? 10 * 1000;
+    const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
     const timeout = setTimeout(() => {
       clearTimeout(pollTimeout);
       reject(
@@ -248,7 +273,17 @@ export type NxCypressE2EPresetOptions = {
   ciWebServerCommand?: string;
 
   /**
+   * The url of the web server for ciWebServerCommand
+   */
+  ciBaseUrl?: string;
+
+  /**
    * Configures how the web server command is started and monitored.
    */
   webServerConfig?: WebServerConfig;
+
+  /**
+   * Configure override inside the vite config
+   */
+  viteConfigOverrides?: InlineConfig;
 };

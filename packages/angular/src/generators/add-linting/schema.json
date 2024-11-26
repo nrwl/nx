@@ -8,7 +8,7 @@
   "examples": [
     {
       "command": "nx g @nx/angular:add-linting --prefix=cool --projectName=cool-lib --projectRoot=libs/cool-lib",
-      "description": "Adds ESLint with Angular-specific rules for an existing project named `cool-lib` with the [prefix](https://angular.io/guide/styleguide#style-02-07) `cool`"
+      "description": "Adds ESLint with Angular-specific rules for an existing project named `cool-lib` with the [prefix](https://angular.dev/style-guide#style-02-07) `cool`"
     }
   ],
   "properties": {

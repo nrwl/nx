@@ -7,7 +7,7 @@ exports[`StorybookConfiguration generator should configure storybook to use webp
 const config: StorybookConfig = {
   stories: [
     
-    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
+    '../**/*.@(mdx|stories.@(js|jsx|ts|tsx))' ],
   addons: ['@storybook/addon-essentials' , '@storybook/addon-interactions' ],
   framework: {
     name: '@storybook/angular',

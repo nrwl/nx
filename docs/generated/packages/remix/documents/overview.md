@@ -6,7 +6,7 @@ description: The Nx Plugin for Remix contains executors, generators, and utiliti
 The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries
 within an Nx workspace. It provides:
 
-- Integration with libraries such as Storybook, Jest, Vitest and Cypress.
+- Integration with libraries such as Storybook, Jest, Vitest, Playwright and Cypress.
 - Generators to help scaffold code quickly, including:
   - Libraries, both internal to your codebase and publishable to npm
   - Routes
@@ -28,7 +28,7 @@ In any Nx workspace, you can install `@nx/remix` by running the following comman
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/remix
 ```
 
@@ -57,7 +57,7 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
       "plugin": "@nx/remix/plugin",
       "options": {
         "buildTargetName": "build",
-        "serveTargetName": "serve",
+        "devTargetName": "dev",
         "startTargetName": "start",
         "typecheckTargetName": "typecheck"
       }
@@ -66,7 +66,7 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `serveTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `serve`, `start` and `typecheck`.
+The `buildTargetName`, `devTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `dev`, `start` and `typecheck`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}
@@ -88,39 +88,36 @@ npm add -D @nx/remix
 The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
-```{% command="nx g @nx/remix:app myapp --directory=apps/myapp" path="~/acme" %}
->  NX  Generating @nx/remix:application
+```{% command="nx g @nx/remix:app apps/myapp" path="~/acme" %}
+NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
+✔ Which E2E test runner would you like to use? · playwright
 
-CREATE apps/myapp/project.json
 UPDATE package.json
+UPDATE nx.json
+CREATE apps/myapp/project.json
 CREATE apps/myapp/README.md
+CREATE apps/myapp/app/nx-welcome.tsx
 CREATE apps/myapp/app/root.tsx
 CREATE apps/myapp/app/routes/_index.tsx
 CREATE apps/myapp/public/favicon.ico
 CREATE apps/myapp/remix.config.js
 CREATE apps/myapp/remix.env.d.ts
+CREATE apps/myapp/tests/routes/_index.spec.tsx
+CREATE apps/myapp/tsconfig.app.json
 CREATE apps/myapp/tsconfig.json
 CREATE apps/myapp/.gitignore
 CREATE apps/myapp/package.json
-UPDATE nx.json
-CREATE tsconfig.base.json
-CREATE .prettierrc
-CREATE .prettierignore
-UPDATE .vscode/extensions.json
-CREATE apps/myapp/vite.config.ts
 CREATE apps/myapp/tsconfig.spec.json
+CREATE apps/myapp/vitest.config.ts
 CREATE apps/myapp/test-setup.ts
-CREATE apps/myapp-e2e/cypress.config.ts
-CREATE apps/myapp-e2e/src/e2e/app.cy.ts
-CREATE apps/myapp-e2e/src/fixtures/example.json
-CREATE apps/myapp-e2e/src/support/commands.ts
-CREATE apps/myapp-e2e/src/support/e2e.ts
-CREATE apps/myapp-e2e/tsconfig.json
+CREATE apps/myapp/.eslintrc.json
+CREATE apps/myapp/.eslintignore
 CREATE apps/myapp-e2e/project.json
-CREATE .eslintrc.json
-CREATE .eslintignore
+CREATE apps/myapp-e2e/src/example.spec.ts
+CREATE apps/myapp-e2e/playwright.config.ts
+CREATE apps/myapp-e2e/tsconfig.json
 CREATE apps/myapp-e2e/.eslintrc.json
 ```
 
@@ -135,19 +132,23 @@ Building Remix app in production mode...
 
 Built in 857ms
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project myapp (3s)
+NX   Successfully ran target build for project myapp (3s)
 ```
 
 2. To serve your application for use during development run:
 
-```{% command="nx serve myapp" path="~/acme" %}
-> nx run myapp:serve
+```{% command="nx dev myapp" path="~/acme" %}
+> nx run myapp:dev
 
-💿 Building...
-💿 Rebuilt in 377ms
-Remix App Server started at http://localhost:3000 (http://192.168.0.14:3000)
+> remix dev --manual
+
+💿  remix dev
+
+info  building...
+info  built (388ms)
+[remix-serve] http://localhost:3000 (http://192.168.0.12:3000)
 ```
 
 3. To test the application using vitest run:
@@ -155,18 +156,23 @@ Remix App Server started at http://localhost:3000 (http://192.168.0.14:3000)
 ```{% command="nx test myapp" path="~/acme" %}
 > nx run myapp:test
 
- RUN  v0.31.4 /Users/columferry/dev/nrwl/issues/remixguide/acme/apps/myapp
-stderr | app/routes/index.spec.ts > test > should render
-Warning: Functions are not valid as a React child. This may happen if you return a Component instead of <Component /> from render. Or maybe you meant to call this function rather than return it.
- ✓ app/routes/index.spec.ts  (1 test) 10ms
+> vitest
+
+
+ RUN  v1.6.0 /Users/columferry/dev/nrwl/issues/gh_issues/nx26943/apps/myapp
+
+ ✓ tests/routes/_index.spec.tsx (1)
+   ✓ renders loader data
+
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  16:15:45
-   Duration  1.20s (transform 51ms, setup 139ms, collect 180ms, tests 10ms, environment 379ms, prepare 103ms)
+   Start at  13:22:54
+   Duration  533ms (transform 47ms, setup 68ms, collect 123ms, tests 36ms, environment 204ms, prepare 35ms)
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target test for project myapp (2s)
+———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ NX   Successfully ran target test for project myapp (950ms)
 ```
 
 ## Generating an Nx Library
@@ -175,8 +181,8 @@ When developing your application, it often makes sense to split your codebase in
 
 To generate a library to use in your Remix application run:
 
-```{% command="nx g @nx/remix:lib login --directory=libs/login" path="~/acme" %}
->  NX  Generating @nx/remix:library
+```{% command="nx g @nx/remix:lib libs/login" path="~/acme" %}
+NX  Generating @nx/remix:library
 
 ✔ What test runner should be used? · vitest
 UPDATE nx.json
@@ -222,8 +228,8 @@ You can also run test on your library:
 
 To generate a route for your application:
 
-```{% command="nx g @nx/remix:route admin --path=apps/myapp/app/routes" path="~/acme" %}
->  NX  Generating @nx/remix:route
+```{% command="nx g @nx/remix:route apps/myapp/app/routes/admin" path="~/acme" %}
+NX  Generating @nx/remix:route
 
 CREATE apps/myapp/app/routes/admin.tsx
 CREATE apps/myapp/app/styles/admin.css
@@ -235,8 +241,8 @@ To use a Route Loader where the logic lives in your library, follow the steps be
 
 1. Generate a loader for your route:
 
-```{% command="nx g @nx/remix:loader admin --path=apps/myapp/app/routes" path="~/acme" %}
->  NX  Generating @nx/remix:loader
+```{% command="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx" path="~/acme" %}
+NX  Generating @nx/remix:loader
 
 UPDATE apps/myapp/app/routes/admin.tsx
 ```

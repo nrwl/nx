@@ -1,5 +1,6 @@
 import { join } from 'path';
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -22,20 +23,45 @@ import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
 import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+import { maybeJs } from '../../utils/maybe-js';
+import { isValidVariable } from '@nx/js';
+import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function addModuleFederationFiles(
   host: Tree,
   options: NormalizedSchema<Schema>
 ) {
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectName),
     ...options,
     tmpl: '',
   };
 
+  generateFiles(
+    host,
+    join(
+      __dirname,
+      `./files/${
+        options.js
+          ? options.bundler === 'rspack'
+            ? 'rspack-common'
+            : 'common'
+          : 'common-ts'
+      }`
+    ),
+    options.appProjectRoot,
+    templateVariables
+  );
+
   const pathToModuleFederationFiles = options.typescriptConfiguration
-    ? 'module-federation-ts'
-    : 'module-federation';
+    ? `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation-ts`
+    : `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation`;
 
   generateFiles(
     host,
@@ -45,16 +71,18 @@ export function addModuleFederationFiles(
   );
 
   if (options.typescriptConfiguration) {
-    const pathToWebpackConfig = joinPathFragments(
+    const pathToBundlerConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.js'
+      options.bundler === 'rspack' ? 'rspack.config.js' : 'webpack.config.js'
     );
     const pathToWebpackProdConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.prod.js'
+      options.bundler === 'rspack'
+        ? 'rspack.config.prod.js'
+        : 'webpack.config.prod.js'
     );
-    if (host.exists(pathToWebpackConfig)) {
-      host.delete(pathToWebpackConfig);
+    if (host.exists(pathToBundlerConfig)) {
+      host.delete(pathToBundlerConfig);
     }
     if (host.exists(pathToWebpackProdConfig)) {
       host.delete(pathToWebpackProdConfig);
@@ -63,25 +91,37 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
-  return await remoteGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(host, 'react', 'remote');
 
-export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? false,
+    ...(await normalizeOptions<Schema>(host, schema)),
+    // when js is set to true, we want to use the js configuration
+    js: schema.js ?? false,
+    typescriptConfiguration: schema.js
+      ? false
+      : schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
+    bundler: schema.bundler ?? 'rspack',
   };
+
+  if (options.dynamic) {
+    // Dynamic remotes generate with library { type: 'var' } by default.
+    // We need to ensure that the remote name is a valid variable name.
+    const isValidRemote = isValidVariable(options.projectName);
+    if (!isValidRemote.isValid) {
+      throw new Error(
+        `Invalid remote name provided: ${options.projectName}. ${isValidRemote.message}`
+      );
+    }
+  }
+
+  await ensureProjectName(host, options, 'application');
   const initAppTask = await applicationGenerator(host, {
     ...options,
-    // Only webpack works with module federation for now.
-    bundler: 'webpack',
+    name: options.projectName,
     skipFormat: true,
   });
   tasks.push(initAppTask);
@@ -94,8 +134,20 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, 'src/main.tsx'),
-    join(options.appProjectRoot, 'src/bootstrap.tsx')
+    join(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/main.tsx'
+      )
+    ),
+    join(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/bootstrap.tsx'
+      )
+    )
   );
 
   addModuleFederationFiles(host, options);
@@ -107,6 +159,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
       project: options.projectName,
       serverPort: options.devServerPort,
       skipFormat: true,
+      bundler: options.bundler,
     });
     tasks.push(setupSsrTask);
 
@@ -118,10 +171,19 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(setupSsrForRemoteTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
-    projectConfig.targets.server.options.webpackConfig = joinPathFragments(
-      projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
-    );
+    if (options.bundler === 'rspack') {
+      projectConfig.targets.server.executor = '@nx/rspack:rspack';
+      projectConfig.targets.server.options.rspackConfig = joinPathFragments(
+        projectConfig.root,
+        `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+      delete projectConfig.targets.server.options.webpackConfig;
+    } else {
+      projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+        projectConfig.root,
+        `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+    }
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
   if (!options.setParserOptionsProject) {
@@ -138,13 +200,20 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     );
     addRemoteToDynamicHost(
       host,
-      options.name,
+      options.projectName,
       options.devServerPort,
       pathToMFManifest
     );
   }
 
   addMfEnvToTargetDefaultInputs(host);
+
+  const installTask = addDependenciesToPackageJson(
+    host,
+    {},
+    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+  );
+  tasks.push(installTask);
 
   if (!options.skipFormat) {
     await formatFiles(host);

@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
@@ -15,13 +16,14 @@ import {
   getGlobalFlatEslintConfiguration,
 } from './global-eslint-config';
 import { useFlatConfig } from '../../utils/flat-config';
-import { eslintVersion } from '../../utils/versions';
+import { eslintVersion, nxVersion } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
   generateSpreadElement,
   removeCompatExtends,
   removePlugin,
+  removePredefinedConfigs,
 } from '../utils/flat-config/ast-utils';
 import { hasEslintPlugin } from '../utils/plugin';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
@@ -31,7 +33,7 @@ export function migrateConfigToMonorepoStyle(
   tree: Tree,
   unitTestRunner: string,
   keepExistingVersions?: boolean
-): void {
+): GeneratorCallback {
   const rootEslintConfig = findEslintFile(tree);
   let skipCleanup = false;
   if (
@@ -58,7 +60,7 @@ export function migrateConfigToMonorepoStyle(
         tree.exists('eslint.config.js')
           ? 'eslint.base.config.js'
           : 'eslint.config.js',
-        getGlobalFlatEslintConfiguration(unitTestRunner)
+        getGlobalFlatEslintConfiguration()
       );
     } else {
       const eslintFile = findEslintFile(tree, '.');
@@ -105,6 +107,14 @@ export function migrateConfigToMonorepoStyle(
       }
     }
   });
+
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@nx/eslint-plugin': nxVersion,
+    }
+  );
 }
 
 export function findLintTarget(
@@ -143,6 +153,11 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         'plugin:@nrwl/typescript',
         'plugin:@nrwl/javascript',
       ]);
+      config = removePredefinedConfigs(config, '@nx/eslint-plugin', 'nx', [
+        'flat/base',
+        'flat/typescript',
+        'flat/javascript',
+      ]);
       tree.write(projectEslintPath, config);
     } else {
       updateJson(tree, projectEslintPath, (json) => {
@@ -159,6 +174,12 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         }
         // add extends
         json.extends = json.extends || [];
+
+        // ensure extends is an array
+        if (typeof json.extends === 'string') {
+          json.extends = [json.extends];
+        }
+
         const pathToRootConfig = `${offsetFromRoot(
           dirname(projectEslintPath)
         )}${baseFile}`;

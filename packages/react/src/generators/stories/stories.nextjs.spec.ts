@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -89,8 +91,7 @@ export async function createTestUIApp(name: string): Promise<Tree> {
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name,
-    projectNameAndRootFormat: 'as-provided',
+    directory: name,
   });
 
   return tree;

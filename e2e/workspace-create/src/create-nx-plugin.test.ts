@@ -1,11 +1,11 @@
 import {
   checkFilesExist,
+  cleanupProject,
   getSelectedPackageManager,
   packageManagerLockFile,
   runCLI,
-  uniq,
   runCreatePlugin,
-  cleanupProject,
+  uniq,
 } from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {
@@ -37,10 +37,10 @@ describe('create-nx-plugin', () => {
     );
 
     runCLI(
-      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
+      `generate @nx/plugin:generator ${pluginName}/src/generators/${generatorName} --name ${generatorName}`
     );
     runCLI(
-      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
+      `generate @nx/plugin:executor ${pluginName}/src/executors/${executorName} --name ${executorName}`
     );
 
     runCLI(`build ${pluginName}`);

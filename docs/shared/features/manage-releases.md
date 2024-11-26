@@ -2,6 +2,11 @@
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
 
+{% youtube
+src="https://youtu.be/KjZKFGu3_9I"
+title="Releasing Nx Release"
+width="100%" /%}
+
 Nx provides a set of tools to help you manage your releases called `nx release`.
 
 > We recommend always starting with --dry-run, because publishing is difficult to undo
@@ -48,6 +53,40 @@ The configuration lives in your `nx.json` file under the `"release"` section.
     // except the one called "ignore-me"
     "projects": ["*", "!ignore-me"]
     // ... nx release config
+  }
+}
+```
+
+### Customize changelog output
+
+Changelog render options can be passed as [an object](https://github.com/nrwl/nx/blob/master/packages/nx/release/changelog-renderer/index.ts) under `release.changelog.projectChangelogs.renderOptions` and `release.changelog.workspaceChangelog.renderOptions` in your `nx.json` file. Below are all options with their default values for the built-in changelog renderer.
+
+```jsonc {% fileName="nx.json" %}
+{
+  // ... more nx.json config
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        "renderOptions": {
+          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
+          "authors": true,
+          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+          "commitReferences": true,
+          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
+          "versionTitleDate": true
+        }
+      },
+      "workspaceChangelog": {
+        "renderOptions": {
+          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
+          "authors": true,
+          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+          "commitReferences": true,
+          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
+          "versionTitleDate": true
+        }
+      }
+    }
   }
 }
 ```
@@ -112,11 +151,11 @@ import * as yargs from 'yargs';
     verbose: options.verbose,
   });
 
-  await releasePublish({
+  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
+  const publishStatus = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-
-  process.exit(0);
+  process.exit(publishStatus);
 })();
 ```

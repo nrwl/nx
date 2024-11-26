@@ -5,9 +5,14 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
+import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { NormalizedJestProjectSchema } from '../schema';
 
-export function createFiles(tree: Tree, options: NormalizedJestProjectSchema) {
+export function createFiles(
+  tree: Tree,
+  options: NormalizedJestProjectSchema,
+  presetExt: JestPresetExtension
+) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const filesFolder =
@@ -42,6 +47,7 @@ export function createFiles(tree: Tree, options: NormalizedJestProjectSchema) {
     rootProject: options.rootProject,
     projectRoot: options.rootProject ? options.project : projectConfig.root,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
+    presetExt,
   });
 
   if (options.setupFile === 'none') {

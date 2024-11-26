@@ -1,20 +1,20 @@
-import { cx } from '@nx/nx-dev/ui-primitives';
 import { JSX, ReactNode } from 'react';
+import cx from 'classnames';
 
 export function CodeOutput({
   content,
   fileName,
-  isMessageBelow,
+  isWithinTab,
 }: {
   content: ReactNode;
   fileName: string;
-  isMessageBelow: boolean;
+  isWithinTab?: boolean;
 }): JSX.Element {
   return (
     <div
       className={cx(
-        'hljs not-prose w-full overflow-x-auto border border-slate-200 bg-slate-50/50 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/60',
-        isMessageBelow ? 'rounded-t-lg border-b-0' : 'rounded-lg'
+        'hljs not-prose w-full overflow-x-auto border-slate-200 bg-slate-50/50 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/60',
+        isWithinTab ? 'border-b border-t' : 'rounded-lg border'
       )}
     >
       {!!fileName && (

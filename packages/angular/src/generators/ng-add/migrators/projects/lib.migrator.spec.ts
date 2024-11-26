@@ -50,6 +50,18 @@ describe('lib migrator', () => {
     jest.clearAllMocks();
   });
 
+  it('should not migrate project when validation fails', async () => {
+    // add project with no root
+    const project = addProject('lib1', {} as any);
+    const migrator = new LibMigrator(tree, {}, project);
+
+    await migrator.migrate();
+
+    expect(tree.exists('libs/lib1/project.json')).toBe(false);
+    const { projects } = readJson(tree, 'angular.json');
+    expect(projects.lib1).toBeDefined();
+  });
+
   describe('validation', () => {
     it('should fail validation when the project root is not specified', async () => {
       const project = addProject('lib1', {} as any);

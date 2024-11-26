@@ -1,16 +1,14 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
-  name: string;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
+  name?: string;
   simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   skipFormat?: boolean;
   tags?: string;
   unitTestRunner?: 'jest' | 'none';
-  linter?: Linter;
+  linter?: Linter | LinterType;
   buildable?: boolean;
   publishable?: boolean;
   importPath?: string;
@@ -18,7 +16,6 @@ export interface Schema {
   rootDir?: string;
   babelJest?: boolean;
   js?: boolean;
-  pascalCaseFiles?: boolean;
   strict?: boolean;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;

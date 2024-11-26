@@ -1,11 +1,21 @@
-import { getProjects, logger, normalizePath, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  getProjects,
+  logger,
+  normalizePath,
+  readNxJson,
+  Tree,
+} from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -16,8 +26,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/vue:library',
   });
 
   const fileName = projectNames.projectFileName;
@@ -36,9 +44,14 @@ export async function normalizeOptions(
       bundler = 'vite';
     }
   }
+  const nxJson = readNxJson(host);
+
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   const normalized = {
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
     ...options,
     bundler,
     fileName,

@@ -2,6 +2,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
+  isWorkspacesEnabled,
   output,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
@@ -46,9 +47,19 @@ export async function updateLockFile(
     return [];
   }
 
+  const workspacesEnabled = isWorkspacesEnabled(packageManager, cwd);
+  if (!workspacesEnabled) {
+    if (verbose) {
+      console.log(
+        `\nSkipped lock file update because ${packageManager} workspaces are not enabled.`
+      );
+    }
+    return [];
+  }
+
   const isDaemonEnabled = daemonClient.enabled();
-  if (isDaemonEnabled) {
-    // temporarily stop the daemon, as it will error if the lock file is updated
+  if (!dryRun && isDaemonEnabled) {
+    // if not in dry-run temporarily stop the daemon, as it will error if the lock file is updated
     await daemonClient.stop();
   }
 
@@ -114,12 +125,15 @@ function execLockFileUpdate(
   env: object = {}
 ): void {
   try {
+    const LARGE_BUFFER = 1024 * 1000000;
     execSync(command, {
       cwd,
+      maxBuffer: LARGE_BUFFER,
       env: {
         ...process.env,
         ...env,
       },
+      windowsHide: true,
     });
   } catch (e) {
     output.error({

@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -9,17 +9,16 @@
     "description": "Create a React Component for Nx.",
     "type": "object",
     "properties": {
-      "project": {
+      "path": {
         "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+        "description": "Path where the component will be generated.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Where should the component be generated?",
+        "x-priority": "important"
       },
       "name": {
         "type": "string",
         "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the component?",
         "x-priority": "important"
       },
@@ -68,43 +67,12 @@
         "default": false,
         "x-priority": "internal"
       },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "alias": "dir",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "flat": {
-        "type": "boolean",
-        "description": "Create component at the source root rather than its own directory.",
-        "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19."
-      },
       "export": {
         "type": "boolean",
         "description": "When true, the component is exported from the project `index.ts` (if it exists).",
         "alias": "e",
         "default": false,
         "x-prompt": "Should this component be exported in the project?"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case component file name (e.g. `App.tsx`).",
-        "alias": "P",
-        "default": false,
-        "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
-      },
-      "pascalCaseDirectory": {
-        "type": "boolean",
-        "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
-        "alias": "R",
-        "default": false,
-        "x-deprecated": "Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
       },
       "classComponent": {
         "type": "boolean",
@@ -137,13 +105,13 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component` under the `libs/ui` project:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Component\" %}\n\nCreate a class component named `my-component` under the `libs/ui` project:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component --classComponent\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "description": "Create a React component.",
   "aliases": ["c"],
-  "implementation": "/packages/react/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/component/schema.json",
   "type": "generator"

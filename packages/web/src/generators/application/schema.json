@@ -6,24 +6,20 @@
   "description": "Create a web application using `swc` or `babel` as compiler.",
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the application.",
+    "directory": {
+      "description": "The directory of the new application.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z][^:]*$"
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "directory": {
-      "description": "The directory of the new application.",
-      "type": "string"
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-priority": "important"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -77,7 +73,8 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "vitest", "none"],
+      "enum": ["vitest", "jest", "none"],
+      "default": "vitest",
       "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler"
     },
     "inSourceTests": {
@@ -87,10 +84,10 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "playwright", "none"],
+      "enum": ["playwright", "cypress", "none"],
       "x-prompt": "Which E2E test runner would you like to use?",
       "description": "Test runner to use for end to end (e2e) tests",
-      "default": "cypress"
+      "default": "playwright"
     },
     "tags": {
       "type": "string",
@@ -101,6 +98,11 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
+    "strict": {
+      "type": "boolean",
+      "description": "Creates an application with strict mode and strict type checking.",
+      "default": true
+    },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json",
       "type": "boolean",
@@ -108,6 +110,6 @@
       "x-deprecated": "Nx only supports standaloneConfig"
     }
   },
-  "required": ["name"],
+  "required": ["directory"],
   "examplesFile": "../../../docs/application-examples.md"
 }

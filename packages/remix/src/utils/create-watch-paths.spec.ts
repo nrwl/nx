@@ -6,10 +6,39 @@ import {
 
 describe('createWatchPaths', () => {
   it('should list root paths of dependencies relative to project root', async () => {
-    const testDir = joinPathFragments(workspaceRoot, 'e2e/remix');
+    // This test is written based on the Nx repo's project graph.
+    jest
+      .spyOn(require('@nx/devkit'), 'createProjectGraphAsync')
+      .mockResolvedValue({
+        nodes: {
+          parent: {
+            type: 'app',
+            name: 'parent',
+            data: { root: 'apps/parent' },
+          },
+          lib: {
+            type: 'lib',
+            name: 'lib',
+            data: { root: 'packages/lib' },
+          },
+          example: {
+            type: 'app',
+            name: 'example',
+            data: { root: 'examples/example' },
+          },
+        },
+        dependencies: {
+          parent: [
+            { type: 'static', source: 'parent', target: 'lib' },
+            { type: 'static', source: 'parent', target: 'example' },
+          ],
+          example: [{ type: 'static', source: 'example', target: 'lib' }],
+        },
+      });
+    const testDir = joinPathFragments(workspaceRoot, 'apps/parent');
 
     const paths = await createWatchPaths(testDir);
-    expect(paths).toEqual(['../../packages', '../../graph', '../../e2e/utils']);
+    expect(paths).toEqual(['../../packages', '../../examples']);
   });
 });
 

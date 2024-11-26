@@ -1,5 +1,52 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Host App Generator --ssr compat should generate the correct app component spec file using RouterTestingModule 1`] = `
+"import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterTestingModule } from '@angular/router/testing';
+import { Router } from '@angular/router';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [
+        RouterTestingModule.withRoutes([
+          { path: '', component: NxWelcomeComponent },
+        ]),
+        AppComponent,
+        NxWelcomeComponent,
+      ],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it(\`should have as title 'host'\`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('host');
+  });
+
+  it('should render title', fakeAsync(() => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const router = TestBed.inject(Router);
+    fixture.ngZone?.run(() => router.navigate(['']));
+    tick();
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome host'
+    );
+  }));
+});
+"
+`;
+
 exports[`Host App Generator --ssr compat should generate the correct main.server.ts 1`] = `
 "import 'zone.js/dist/zone-node';
 
@@ -96,13 +143,15 @@ exports[`Host App Generator --ssr should generate the correct files 2`] = `
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
-  .bootstrapModule(AppModule)
+  .bootstrapModule(AppModule, {
+    ngZoneEventCoalescing: true,
+  })
   .catch((err) => console.error(err));
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 3`] = `
-"export { AppServerModule } from './app/app.server.module';
+"export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
@@ -205,7 +254,12 @@ exports[`Host App Generator --ssr should generate the correct files 6`] = `
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
 "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -230,7 +284,6 @@ exports[`Host App Generator --ssr should generate the correct files 9`] = `
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -390,7 +443,12 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
 "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -408,13 +466,17 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideClientHydration(), provideRouter(appRoutes)],
+  providers: [
+    provideClientHydration(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+  ],
 };
 "
 `;
@@ -440,7 +502,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -602,7 +663,12 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import { withModuleFederationForSSR } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -619,13 +685,17 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideClientHydration(), provideRouter(appRoutes)],
+  providers: [
+    provideClientHydration(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+  ],
 };
 "
 `;
@@ -651,7 +721,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -716,13 +785,15 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
-  .bootstrapModule(AppModule)
+  .bootstrapModule(AppModule, {
+    ngZoneEventCoalescing: true,
+  })
   .catch((err) => console.error(err));
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 3`] = `
-"export { AppServerModule } from './app/app.server.module';
+"export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
@@ -827,7 +898,12 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 "import { withModuleFederationForSSR } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -851,7 +927,6 @@ exports[`Host App Generator --ssr should generate the correct files when --types
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -893,14 +968,26 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -908,7 +995,12 @@ exports[`Host App Generator should generate a host app with a remote when --type
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -916,14 +1008,25 @@ exports[`Host App Generator should generate a host app with a remote when --type
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -931,7 +1034,12 @@ exports[`Host App Generator should generate a host app with no remotes when --ty
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -954,7 +1062,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -968,14 +1076,13 @@ exports[`Host App Generator should generate the correct app component spec file 
 "import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterTestingModule } from '@angular/router/testing';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterTestingModule.withRoutes([
+        RouterModule.forRoot([
           { path: '', component: NxWelcomeComponent },
         ]),
         AppComponent,
@@ -1015,14 +1122,13 @@ exports[`Host App Generator should generate the correct app component spec file 
 "import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterTestingModule } from '@angular/router/testing';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterTestingModule.withRoutes([
+        RouterModule.forRoot([
           { path: '', component: NxWelcomeComponent },
         ]),
         AppComponent,

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -86,14 +88,13 @@ export async function createTestApp(
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
+    directory: appName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {
     name: 'my-component',
-    project: appName,
+    path: `${appName}/src/components/my-component`,
   });
 
   return appTree;

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   getProjects,
@@ -21,7 +23,7 @@ describe('lib', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   let defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: true,
     skipTsConfig: false,
@@ -263,7 +265,8 @@ describe('lib', () => {
     it('should update tags and implicitDependencies', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        directory: 'myDir',
+        name: 'my-dir-my-lib',
+        directory: 'my-dir/my-lib',
         tags: 'one',
       });
       const myLib = readProjectConfiguration(tree, 'my-dir-my-lib');
@@ -275,8 +278,8 @@ describe('lib', () => {
 
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib2',
-        directory: 'myDir',
+        name: 'my-dir-my-lib2',
+        directory: 'my-dir/my-lib-2',
         tags: 'one,two',
       });
 
@@ -289,7 +292,12 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+        name: 'my-dir-my-lib',
+      });
+
       expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
@@ -306,7 +314,7 @@ describe('lib', () => {
     it('should update jest.config.ts for babel', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
         buildable: true,
         compiler: 'babel',
       });
@@ -316,7 +324,11 @@ describe('lib', () => {
     });
 
     it('should update project configurations', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+        name: 'my-dir-my-lib',
+      });
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
       expect(config).toMatchInlineSnapshot(`
@@ -333,18 +345,25 @@ describe('lib', () => {
     });
 
     it('should update root tsconfig.base.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+      });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['my-dir/my-lib/src/index.ts']
-      );
+
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'my-dir/my-lib/src/index.ts',
+      ]);
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
     });
 
     it('should create a local tsconfig.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-dir/my-lib',
+      });
 
       const tsconfigJson = readJson(tree, 'my-dir/my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toBe('../../tsconfig.base.json');
@@ -441,17 +460,15 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'my-app',
+        directory: 'my-app',
         routing: true,
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -470,16 +487,14 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'my-app',
+        directory: 'my-app',
         style: 'css',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         appProject: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
       });
 
       const appSource = tree.read('my-app/src/app/app.tsx', 'utf-8');
@@ -494,21 +509,89 @@ describe('lib', () => {
   });
 
   describe('--buildable', () => {
-    it('should have a builder defined', async () => {
+    it('should default to rollup bundler', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         buildable: true,
       });
 
-      const projectsConfigurations = getProjects(tree);
-      expect(projectsConfigurations.get('my-lib').targets.build).toBeDefined();
+      expect(tree.exists('my-lib/rollup.config.js')).toBeTruthy();
     });
   });
 
   describe('--publishable', () => {
-    it('should add build targets', async () => {
+    it('should fail if no importPath is provided with publishable', async () => {
+      expect.assertions(1);
+
+      try {
+        await libraryGenerator(tree, {
+          ...defaultSchema,
+          directory: 'myDir',
+          publishable: true,
+        });
+      } catch (e) {
+        expect(e.message).toContain(
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+        );
+      }
+    });
+
+    it('should add package.json and .babelrc', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        publishable: true,
+        importPath: '@proj/my-lib',
+      });
+
+      const packageJson = readJson(tree, '/my-lib/package.json');
+      expect(packageJson.name).toEqual('@proj/my-lib');
+      expect(tree.exists('/my-lib/.babelrc'));
+    });
+
+    it('should add rollup config file', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        skipFormat: false,
+        publishable: true,
+        importPath: '@proj/my-lib',
+      });
+
+      expect(tree.read('my-lib/rollup.config.js', 'utf-8'))
+        .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
+const url = require('@rollup/plugin-url');
+const svg = require('@svgr/rollup');
+
+module.exports = withNx(
+  {
+    main: './src/index.ts',
+    outputPath: '../dist/my-lib',
+    tsConfig: './tsconfig.lib.json',
+    compiler: 'babel',
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
+    format: ['esm'],
+    assets: [{ input: '.', output: '.', glob: 'README.md' }],
+  },
+  {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    plugins: [
+      svg({
+        svgo: false,
+        titleProp: true,
+        ref: true,
+      }),
+      url({
+        limit: 10000, // 10kB
+      }),
+    ],
+  }
+);
+`);
+    });
+
+    it('should add build targets (legacy)', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
       });
@@ -529,25 +612,10 @@ describe('lib', () => {
       });
     });
 
-    it('should fail if no importPath is provided with publishable', async () => {
-      expect.assertions(1);
-
-      try {
-        await libraryGenerator(tree, {
-          ...defaultSchema,
-          directory: 'myDir',
-          publishable: true,
-        });
-      } catch (e) {
-        expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
-        );
-      }
-    });
-
-    it('should support styled-components', async () => {
+    it('should support styled-components (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'styled-components',
@@ -566,9 +634,10 @@ describe('lib', () => {
       ]);
     });
 
-    it('should support @emotion/styled', async () => {
+    it('should support @emotion/styled (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: '@emotion/styled',
@@ -589,9 +658,10 @@ describe('lib', () => {
       );
     });
 
-    it('should support styled-jsx', async () => {
+    it('should support styled-jsx (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'styled-jsx',
@@ -608,9 +678,10 @@ describe('lib', () => {
       expect(babelrc.plugins).toEqual(['styled-jsx/babel']);
     });
 
-    it('should support style none', async () => {
+    it('should support style none (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'none',
@@ -623,18 +694,6 @@ describe('lib', () => {
           external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       });
-    });
-
-    it('should add package.json and .babelrc', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        publishable: true,
-        importPath: '@proj/my-lib',
-      });
-
-      const packageJson = readJson(tree, '/my-lib/package.json');
-      expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(tree.exists('/my-lib/.babelrc'));
     });
   });
 
@@ -654,7 +713,7 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
         importPath: '@myorg/lib',
       });
       const packageJson = readJson(tree, 'my-dir/my-lib/package.json');
@@ -669,7 +728,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'myLib1',
+        directory: 'my-lib-1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -677,7 +736,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'myLib2',
+          directory: 'my-lib-2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -755,7 +814,7 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         simpleName: true,
-        directory: 'myDir',
+        directory: 'my-dir/my-lib',
       });
 
       const indexFile = tree.read('my-dir/my-lib/src/index.ts', 'utf-8');
@@ -784,7 +843,7 @@ describe('lib', () => {
         ...defaultSchema,
         style,
         compiler: 'babel',
-        name: 'myLib',
+        name: 'my-lib',
       });
 
       expect(() => {
@@ -805,7 +864,7 @@ describe('lib', () => {
         style,
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        name: 'myLib',
+        name: 'my-lib',
       });
 
       expect(readJson(tree, 'package.json')).toMatchObject({

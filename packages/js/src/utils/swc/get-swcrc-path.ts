@@ -6,7 +6,19 @@ export function getSwcrcPath(
   contextRoot: string,
   projectRoot: string
 ) {
-  return options.swcrc
+  const swcrcPath = options.swcrc
     ? join(contextRoot, options.swcrc)
     : join(contextRoot, projectRoot, '.swcrc');
+
+  const tmpSwcrcPath = join(
+    contextRoot,
+    projectRoot,
+    'tmp',
+    '.generated.swcrc'
+  );
+
+  return {
+    swcrcPath,
+    tmpSwcrcPath,
+  };
 }
