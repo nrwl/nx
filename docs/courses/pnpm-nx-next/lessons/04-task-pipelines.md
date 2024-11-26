@@ -1,5 +1,5 @@
 ---
-title: 'Automate Task Pipelines to Build Before next start'
+title: 'Create a Task Pipelines to Build Your Next app Before Serving it'
 videoUrl: 'https://youtu.be/_U4hu6SuBaY'
 duration: '3:07'
 ---
