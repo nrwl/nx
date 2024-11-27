@@ -424,7 +424,7 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
       options.preset === Preset.RemixMonorepo) &&
       options.workspaces)
   ) {
-    const workspaces = options.workspaceGlobs ?? ['packages/*'];
+    const workspaces = options.workspaceGlobs ?? ['packages/**'];
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
