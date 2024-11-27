@@ -1,6 +1,6 @@
 launch-templates:
-  linux-medium:
-    resource-class: 'docker_linux_amd64/medium+'
+  linux-small:
+    resource-class: 'docker_linux_amd64/small'
     image: 'ubuntu22.04-node20.11-v10'
     env:
       GIT_AUTHOR_EMAIL: test@test.com
