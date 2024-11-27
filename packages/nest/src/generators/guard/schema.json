@@ -39,5 +39,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["path"]
 }
