@@ -1,6 +1,7 @@
 import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { ReactElement } from 'react';
 
-export function DownloadEbook(): JSX.Element {
+export function DownloadEbook(): ReactElement {
   return (
     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div className="relative isolate overflow-hidden bg-slate-50/70 px-6 pb-4 pt-16 shadow-2xl ring-1 ring-slate-200 sm:rounded-3xl sm:px-16 sm:pb-0 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0 dark:border dark:border-slate-800/60 dark:bg-slate-950 dark:ring-slate-800/60">
@@ -34,7 +35,7 @@ export function DownloadEbook(): JSX.Element {
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6 lg:justify-start">
             <ButtonLink
-              href="https://go.nx.dev/fast-CI-whitepaper?utm_source=nx-dev&utm_medium=download-whitepaper-enterprise-banner"
+              href="https://go.nx.dev/ci-ebook"
               title="Download Fast CI whitepaper"
               target="_blank"
             >

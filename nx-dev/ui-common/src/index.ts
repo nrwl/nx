@@ -23,9 +23,9 @@ export * from './lib/trusted-by';
 export * from './lib/testimonials';
 export * from './lib/square-dotted-pattern';
 export * from './lib/live-stream-notifier';
+export * from './lib/webinar-notifier';
 
 export { resourceMenuItems } from './lib/headers/menu-items';
-export { productsMenuItems as solutionsMenuItems } from './lib/headers/menu-items';
 export { eventItems } from './lib/headers/menu-items';
 export { learnItems } from './lib/headers/menu-items';
 export { companyItems } from './lib/headers/menu-items';

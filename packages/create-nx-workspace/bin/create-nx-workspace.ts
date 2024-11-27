@@ -7,7 +7,6 @@ import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
-import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
@@ -29,6 +28,7 @@ import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
+import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -234,11 +234,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
-    console.log(workspaceInfo.nxCloudInfo);
+    process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
   if (isKnownPreset(parsedArgs.preset)) {
-    pointToTutorialAndCourse(parsedArgs.preset as Preset);
+    printSocialInformation();
   } else {
     output.log({
       title: `Successfully applied preset: ${parsedArgs.preset}`,
