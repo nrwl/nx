@@ -1308,7 +1308,7 @@
       },
       "packages": {
         "jest-preset-angular": {
-          "version": "~14.4.0-rc.0",
+          "version": "~14.4.0",
           "alwaysAddToPackageJson": false
         }
       }
