@@ -7,7 +7,7 @@
   "// targets": "to see all targets run: nx show project e2e-cypress --web",
   "targets": {
     "hello": {
-      "command": "echo hello 8"
+      "command": "echo hello 9"
     }
   }
 }
