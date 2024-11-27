@@ -5,5 +5,9 @@
   "projectType": "application",
   "implicitDependencies": ["cypress", "react"],
   "// targets": "to see all targets run: nx show project e2e-cypress --web",
-  "targets": {}
+  "targets": {
+    "hello": {
+      "command": "echo hello 8"
+    }
+  }
 }
