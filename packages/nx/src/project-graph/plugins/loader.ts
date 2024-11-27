@@ -16,8 +16,8 @@ import {
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
 import {
-  ProjectRootMappings,
   findProjectForPath,
+  ProjectRootMappings,
 } from '../utils/find-project-for-path';
 import { normalizePath } from '../../utils/path';
 import { logger } from '../../utils/logger';
@@ -29,8 +29,8 @@ import { PluginConfiguration } from '../../config/nx-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
 import { LoadedNxPlugin } from './internal-api';
 import { LoadPluginError } from '../error-types';
+import { readTsConfigOptions } from '../../plugins/js/utils/typescript';
 import path = require('node:path/posix');
-import { readTsConfig } from '../../plugins/js/utils/typescript';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -92,19 +92,16 @@ export function registerPluginTSTranspiler() {
     return;
   }
 
-  const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
-    ? readTsConfig(tsConfigName)
+  const tsConfigOptions: ts.CompilerOptions = tsConfigName
+    ? readTsConfigOptions(tsConfigName)
     : {};
   const cleanupFns = [
     registerTsConfigPaths(tsConfigName),
-    registerTranspiler(
-      {
-        experimentalDecorators: true,
-        emitDecoratorMetadata: true,
-        ...tsConfig.options,
-      },
-      tsConfig.raw
-    ),
+    registerTranspiler({
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
+      ...tsConfigOptions,
+    }),
   ];
   unregisterPluginTSTranspiler = () => {
     cleanupFns.forEach((fn) => fn?.());
