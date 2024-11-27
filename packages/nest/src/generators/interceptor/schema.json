@@ -5,9 +5,15 @@
   "description": "Nest Interceptor Options Schema.",
   "cli": "nx",
   "type": "object",
+  "examples": [
+    {
+      "description": "Generate the interceptor `FooInterceptor` at `myapp/src/app/foo.interceptor.ts`",
+      "command": "nx g @nx/nest:interceptor myapp/src/app/foo"
+    }
+  ],
   "properties": {
     "path": {
-      "description": "The file path to the interceptor without the file extension and suffix (e.g. `my-app/src/app/my-interceptor/my-interceptor` generates the file `my-app/src/app/my-interceptor/my-interceptor.interceptor.ts`). Relative to the current working directory.",
+      "description": "The file path to the interceptor without the file extension and suffix. Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",

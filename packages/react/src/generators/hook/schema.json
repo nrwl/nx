@@ -7,14 +7,18 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g hook mylib/my-hook",
-      "description": "Generate a hook `my-hook` in the `mylib` library"
+      "description": "Generate a hook with the exported symbol matching the file name. It results in the hook `useFoo` at `mylib/src/lib/foo.ts`",
+      "command": "nx g @nx/react:hook mylib/src/lib/foo"
+    },
+    {
+      "description": "Generate a hook with the exported symbol different from the file name. It results in the hook `useCustom` at `mylib/src/lib/foo.ts`",
+      "command": "nx g @nx/react:hook mylib/src/lib/foo --name=useCustom"
     }
   ],
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the hook without the file extension (e.g. `my-app/src/app/my-hook/use-my-hook` generates the file `my-app/src/app/my-hook/use-my-hook.ts`). Relative to the current working directory.",
+      "description": "The file path to the hook without the file extension. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -45,5 +49,5 @@
       "x-prompt": "Should this hook be exported in the project?"
     }
   },
-  "required": ["name"]
+  "required": ["path"]
 }

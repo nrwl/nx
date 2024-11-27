@@ -5,9 +5,15 @@
   "description": "Nest Service Options Schema.",
   "cli": "nx",
   "type": "object",
+  "examples": [
+    {
+      "description": "Generate the service `FooService` at `myapp/src/app/foo.service.ts`",
+      "command": "nx g @nx/nest:service myapp/src/app/foo"
+    }
+  ],
   "properties": {
     "path": {
-      "description": "The file path to the service without the file extension and suffix (e.g. `my-app/src/app/my-service/my-service` generates the file `my-app/src/app/my-service/my-service.service.ts`). Relative to the current working directory.",
+      "description": "The file path to the service without the file extension and suffix. Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",

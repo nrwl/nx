@@ -7,14 +7,18 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g migration my-plugin/my-migration --version=1.0.0",
-      "description": "Adds a new migration inside `my-plugin`, which will be triggered when migrating to version 1.0.0 or above from a previous version."
+      "description": "Generate a migration exported with the name matching the file name, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `foo` at `mylib/src/migrations/foo.ts`",
+      "command": "nx g @nx/plugin:migration mylib/src/migrations/foo -v=1.0.0"
+    },
+    {
+      "description": "Generate a migration exported with a different name from the file name, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `custom` at `mylib/src/migrations/foo.ts`",
+      "command": "nx g @nx/plugin:migration mylib/src/migrations/foo --name=custom -v=1.0.0"
     }
   ],
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the migration without the file extension (e.g. `my-plugin/src/migrations/my-migration` generates the file `my-plugin/src/migrations/my-migration.ts`). Relative to the current working directory.",
+      "description": "The file path to the migration without the file extension. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

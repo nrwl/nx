@@ -5,9 +5,15 @@
   "description": "Nest Pipe Options Schema.",
   "cli": "nx",
   "type": "object",
+  "examples": [
+    {
+      "description": "Generate the pipe `FooPipe` at `myapp/src/app/foo.pipe.ts`",
+      "command": "nx g @nx/nest:pipe myapp/src/app/foo"
+    }
+  ],
   "properties": {
     "path": {
-      "description": "The file path to the pipe without the file extension and suffix (e.g. `my-app/src/app/my-pipe/my-pipe` generates the file `my-app/src/app/my-pipe/my-pipe.pipe.ts`). Relative to the current working directory.",
+      "description": "The file path to the pipe without the file extension and suffix. Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",

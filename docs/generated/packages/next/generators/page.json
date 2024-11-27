@@ -79,7 +79,7 @@
       }
     },
     "required": ["path"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page apps/my-app/pages/my-page\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"apps/my-app/pages/products/[id]\"\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create a Static Page\" %}\n\nGenerate a static page named `MyPage` at `apps/my-app/pages/my-page/page.tsx`:\n\n```shell\nnx g page apps/my-app/pages/my-page\n```\n\n{% /tab %}\n{% tab label=\"Create a Dynamic Page\" %}\n\nGenerate a dynamic page at `apps/my-app/pages/products/[id]/page.tsx`:\n\n```shell\nnx g page \"apps/my-app/pages/products/[id]\"\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Create a page.",

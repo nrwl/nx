@@ -5,9 +5,15 @@
   "description": "Nest Gateway Options Schema.",
   "cli": "nx",
   "type": "object",
+  "examples": [
+    {
+      "description": "Generate the gateway `FooGateway` at `myapp/src/app/foo.gateway.ts`",
+      "command": "nx g @nx/nest:gateway myapp/src/app/foo"
+    }
+  ],
   "properties": {
     "path": {
-      "description": "The file path to the gateway without the file extension and suffix (e.g. `my-app/src/app/my-gateway/my-gateway` generates the file `my-app/src/app/my-gateway/my-gateway.gateway.ts`). Relative to the current working directory.",
+      "description": "The file path to the gateway without the file extension and suffix. Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",

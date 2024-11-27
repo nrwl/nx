@@ -6,10 +6,20 @@
   "type": "object",
   "description": "Creates a new Angular directive.",
   "additionalProperties": false,
+  "examples": [
+    {
+      "description": "Generate a directive with the exported symbol matching the file name. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+      "command": "nx g @nx/angular:directive mylib/src/lib/foo"
+    },
+    {
+      "description": "Generate a directive with the exported symbol different from the file name. It results in the directive `CustomDirective` at `mylib/src/lib/foo.directive.ts`",
+      "command": "nx g @nx/angular:directive mylib/src/lib/foo --name=custom"
+    }
+  ],
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the directive without the file extension and suffix (e.g. `my-app/src/app/my-directive/my-directive` generates the file `my-app/src/app/my-directive/my-directive.directive.ts`). Relative to the current working directory.",
+      "description": "The file path to the directive without the file extension and suffix. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

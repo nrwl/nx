@@ -7,18 +7,12 @@
     "$id": "NxPluginExecutor",
     "title": "Create an Executor for an Nx Plugin",
     "description": "Create an Executor for an Nx Plugin.",
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build\n```\n\n{% /tab %}\n{% tab label=\"With different exported name\" %}\n\nCreate a new executor called `custom` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --name=custom\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "type": "object",
-    "examples": [
-      {
-        "command": "nx g executor libs/my-plugin/src/executors/my-executor",
-        "description": "Generate `libs/my-plugin/src/executors/my-executor`"
-      }
-    ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "The file path to the executor without the file extension (e.g. `my-plugin/src/executors/my-executor` generates the file `my-plugin/src/executors/my-executor.ts`). Relative to the current working directory.",
+        "description": "The file path to the executor without the file extension. Relative to the current working directory.",
         "x-prompt": "What is the executor file path?",
         "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"

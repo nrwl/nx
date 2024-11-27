@@ -8,7 +8,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the component without the file extension (e.g. `my-app/src/app/my-component/my-component` generates the file `my-app/src/app/my-component/my-component.tsx`). Relative to the current working directory.",
+      "description": "The file path to the component without the file extension. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

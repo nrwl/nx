@@ -8,9 +8,15 @@
     "description": "Nest Middleware Options Schema.",
     "cli": "nx",
     "type": "object",
+    "examples": [
+      {
+        "description": "Generate the middleware `FooMiddleware` at `myapp/src/app/foo.middleware.ts`",
+        "command": "nx g @nx/nest:middleware myapp/src/app/foo"
+      }
+    ],
     "properties": {
       "path": {
-        "description": "The file path to the middleware without the file extension and suffix (e.g. `my-app/src/app/my-middleware/my-middleware` generates the file `my-app/src/app/my-middleware/my-middleware.middleware.ts`). Relative to the current working directory.",
+        "description": "The file path to the middleware without the file extension and suffix. Relative to the current working directory.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What is the middleware file path?"

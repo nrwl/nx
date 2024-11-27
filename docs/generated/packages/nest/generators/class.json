@@ -8,9 +8,15 @@
     "description": "Nest Class Options Schema.",
     "cli": "nx",
     "type": "object",
+    "examples": [
+      {
+        "description": "Generate the class `Foo` at `myapp/src/app/foo.ts`",
+        "command": "nx g @nx/nest:class myapp/src/app/foo"
+      }
+    ],
     "properties": {
       "path": {
-        "description": "The file path to the class without the file extension (e.g. `my-app/src/app/my-class/my-class` generates the file `my-app/src/app/my-class/my-class.ts`). Relative to the current working directory.",
+        "description": "The file path to the class without the file extension. Relative to the current working directory.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What is the class file path?"
