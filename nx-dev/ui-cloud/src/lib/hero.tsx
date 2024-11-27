@@ -7,6 +7,7 @@ import { ComponentProps, Fragment, useState } from 'react';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import { MovingBorder } from '@nx/nx-dev/ui-animations';
 import Image from 'next/image';
+import { NxCloudAnimatedIcon } from '@nx/nx-dev/ui-icons';
 
 export function Hero(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +32,8 @@ export function Hero(): JSX.Element {
             variant="primary"
             size="default"
           >
-            Get started
+            <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
+            <span>Go to app</span>
           </ButtonLink>
           <ButtonLink
             href="/ci/intro/ci-with-nx"

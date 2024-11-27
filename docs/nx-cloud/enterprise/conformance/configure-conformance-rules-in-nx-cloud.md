@@ -6,7 +6,7 @@ To learn about how to create and publish custom rules to your Nx Cloud Organizat
 
 Once you have one or more rules published to your Nx Cloud Organization, you can configure your Nx Cloud Organization to use them in the Nx Cloud UI by visiting:
 
-https://nx.app/go/organization/conformance-rules
+[https://cloud.nx.app/go/organization/conformance-rules](https://cloud.nx.app/go/organization/conformance-rules)
 
 ## Choose the Scope of Configured Rules
 
@@ -31,9 +31,9 @@ The rule options will be validated against the rule's JSON schema definition bef
 Here you will choose whether or not the rule should be:
 
 - **Enabled**
-  - The rule will be executed in the chosen workspace(s) when `nx-cloud conformance`/`nx-cloud conformance:check` is run and any violations will cause the process to fail (exit with a non-zero exit code).
+  - The rule will be executed in the chosen workspace(s) when `nx-cloud conformance` or `nx-cloud conformance:check` is run and any violations will cause the process to fail (exit with a non-zero exit code).
 - **Evaluated**
-  - The rule will be executed in the chosen workspace(s) when `nx-cloud conformance`/`nx-cloud conformance:check` is run, but any violations will not cause the process to fail (i.e. the process will exit with a zero exit code).
+  - The rule will be executed in the chosen workspace(s) when `nx-cloud conformance` or `nx-cloud conformance:check` is run, but any violations will not cause the process to fail (i.e. the process will exit with a zero exit code).
   - This status is useful for exposing violations to allow them to be addressed but without blocking the CI process in the meantime.
   - You can combine this with the [Scheduled Status](#scheduled-status) feature to set a deadline for the chosen workspace(s) to become compliant with the rule.
 - **Disabled**

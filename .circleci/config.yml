@@ -114,6 +114,12 @@ jobs:
             pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
+            pnpm nx-cloud record -- nx sync:check
+            pids+=($!)
+
+            pnpm nx-cloud record -- nx-cloud conformance:check
+            pids+=($!)
+
             pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
