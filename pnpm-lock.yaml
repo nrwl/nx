@@ -335,14 +335,14 @@ importers:
         specifier: 20.2.0-beta.3
         version: 20.2.0-beta.3(@babel/traverse@7.25.9)(@playwright/test@1.47.1)(@rspack/core@1.1.3(@swc/helpers@0.5.11))(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.7)(esbuild@0.19.5)(eslint@8.57.0)(html-webpack-plugin@5.5.0(webpack@5.88.0))(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(vitest@1.3.1(@types/node@20.16.10)(jsdom@20.0.3(bufferutil@4.0.7))(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(webpack-cli@5.1.4)
       '@nx/powerpack-conformance':
-        specifier: 1.1.0-beta.5
-        version: 1.1.0-beta.5(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
+        specifier: 1.1.0-beta.6
+        version: 1.1.0-beta.6(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
       '@nx/powerpack-enterprise-cloud':
-        specifier: 1.1.0-beta.5
-        version: 1.1.0-beta.5(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+        specifier: 1.1.0-beta.6
+        version: 1.1.0-beta.6(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/powerpack-license':
-        specifier: 1.1.0-beta.5
-        version: 1.1.0-beta.5
+        specifier: 1.1.0-beta.6
+        version: 1.1.0-beta.6
       '@nx/react':
         specifier: 20.2.0-beta.3
         version: 20.2.0-beta.3(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/helpers@0.5.11)(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.7)(esbuild@0.19.5)(eslint@8.57.0)(next@14.2.16(@babel/core@7.25.2)(@playwright/test@1.47.1)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4)(webpack@5.88.0)
@@ -5675,68 +5675,68 @@ packages:
       '@playwright/test':
         optional: true
 
-  '@nx/powerpack-conformance@1.1.0-beta.5':
-    resolution: {integrity: sha512-jyBaRy18jLf7KxGg1k02b9VeWF/pvmcxrUhOZMIuGRuX0jM25fETIGeviDOohAJ8kZogA72CPPRmpBEjGZvOOA==}
+  '@nx/powerpack-conformance@1.1.0-beta.6':
+    resolution: {integrity: sha512-N7Bh+W5cCw7nyAS0p/fBrHXFcZ82vsCDY//0HIixlkJPEPLttbvAO7BFMerRx+4RlvfXIkfW4gCSRqEp/JGR1w==}
 
-  '@nx/powerpack-enterprise-cloud@1.1.0-beta.5':
-    resolution: {integrity: sha512-Tbw7Wo+DfcxWuC60WTyQet2gBFA6VWz6ACi3DO5LI+I3hDMupYaPxqZxzv9Lky8HXu1fL3Zp5t57/pRmZU02vA==}
+  '@nx/powerpack-enterprise-cloud@1.1.0-beta.6':
+    resolution: {integrity: sha512-5pwFIKw0SbA68ls5t0EInCOuzjS6pj88kEMBzIF6uEAL5lqdvlcpjP92MVQ//KiMGvDv0dBnD2Z3nPexkhAZ4g==}
 
-  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.5':
-    resolution: {integrity: sha512-0qzB+u4r2/f3dMT682bOMCGzsGCIgIY431o4xqe+ENcuOoigd8XTqwM/K5AGHxwOVjbG8O5YEhl/j2fqroPVIQ==}
+  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.6':
+    resolution: {integrity: sha512-mNkIcPqil6JRyivDOlzA+KtRcl8x5UmYIaOGC+/znvYlyJqancFuVcS3aE034dJUSkjZVE6zQkN9xCrs94Okkg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@nx/powerpack-license-darwin-x64@1.1.0-beta.5':
-    resolution: {integrity: sha512-lI8zTuqMh/oANrx/aLqybbgg8l4tds36gY6FvEz2hbxFMeUpGq4jAr66mZdHbFrBgDsekaY6AftrYoYff5FQQw==}
+  '@nx/powerpack-license-darwin-x64@1.1.0-beta.6':
+    resolution: {integrity: sha512-JtkoyggpMzotQ0DHJnn8Rmhkm+uDxRg51a9lItP+uNZdp/RqTZ+erhZ8vUcyMkMha0rVqPv34sPGgVz+t3clOQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.5':
-    resolution: {integrity: sha512-D2KMAQzQK3mxGdktuuEZo9E+wcnOpv7DYEodS60FW4cVhP6y3YSb0h5YjpVHFHVykVQ3zHcBrQjeU+rnAFVu4g==}
+  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.6':
+    resolution: {integrity: sha512-tI2i5ZNEAHUCaTC3BubTxVKHIGWx0Y67EWLcBd/bLHUMRnmMzXobqboKGxF3yw0bjB6WIL6Wts9bMDjgWzv1Tw==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
 
-  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.5':
-    resolution: {integrity: sha512-qnNxmfcmZjpWiXALc9x9a9beAzICAvK/D0KIhaJA7Xn7nOQNCgf9cYg2Kq8DonpbRQ14exXEcG2Ma0yP+dv83g==}
+  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.6':
+    resolution: {integrity: sha512-oQPGwV0qsgqltc/9zJiCoGpXhFd6Cmfc8taS35anjcj8/imSuvCQsPOXE5THhQPA7OLVZ4+cD07dhmG0hxH+qg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.5':
-    resolution: {integrity: sha512-wiA2511LNLBXrXHcuftbhtpzed0IdEu9+vWC14CSZlZsamr+RlAAVi5PmXmdan6YAoowU/OwNQ7Bx6qJk91XxQ==}
+  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.6':
+    resolution: {integrity: sha512-5FK5dOj9Sa6LDuRwoBJeXPD6xGfAhPu0IINdaAd/VrrM3WAYXqGbDsMv4MUnNZAsCPsoVmDsypXlMTVF98GUGA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.5':
-    resolution: {integrity: sha512-id9rY5RlgA1EnAdiDm2v3OETkJpsEJkBFKmqUE9ygMF/46FOh7vJ3m16z2PcoDrw/JYSD4J/IE0s0BmvjbxUPg==}
+  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.6':
+    resolution: {integrity: sha512-gtmuk7K0FPe7kNCphaOQzqKj0QvZimsUGWamHoA+oWA5Iked7Iyk9/Xch6V7D9GZyPXAOhcAKQ8232yuDsfTWA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.5':
-    resolution: {integrity: sha512-d0zt7s3xFg7mb0IMqFXEDeid40HOo34MeDQVjKeCbfG1JiU8IV3PWWEcAokyIQQ3NwZwLbDsPY+rbG2+HQa6ow==}
+  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.6':
+    resolution: {integrity: sha512-vfckNR33S3YEJ8OuU3oYCRZZ9zVtmVxo9MrKpkMZDlpHfchSTjH3W/4bNyyPq6NFfd1yOWk8NybWPDdSu0A2Bw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.5':
-    resolution: {integrity: sha512-sQeUSsvzRFvqkmbOMDPgVVhSTrMbpPksE//TaV6JSghAS+cuXstcTfx/EblVA01j68E8+AnhLVJSUsHuqZeVeQ==}
+  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.6':
+    resolution: {integrity: sha512-u1ARmgSnI19TyzAsxWdUEo55u36aL6cpDGTU6jKmlbfAakdDLQG3F7rKfIqZGuj89EmLlOmg7B5tQbFtSY9Rsg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.5':
-    resolution: {integrity: sha512-StUhwDfNkjofP+SxMlIwBp7r547jT9AdimVJLRuE7dlGXI/M9J7RMQdBjGtecvWxB46LjADQ0N5x7nOLKxerhQ==}
+  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.6':
+    resolution: {integrity: sha512-9YDad4XmsCAeaHcEOUOUlboG3NIMxd7NMm6ls0U13pA6ik/R1un+5dE07awCJ5SXCU+ivZFk5XzlgP6NNA1YGA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@nx/powerpack-license@1.1.0-beta.5':
-    resolution: {integrity: sha512-V3sLlhKmPnSAaFn0TpHWZ1aL7t0NUm7V6mLExJqmr/xgFGFMrT+xd4632rTNk7Q8hUoT+KZrSWmJr7oa+8N/aA==}
+  '@nx/powerpack-license@1.1.0-beta.6':
+    resolution: {integrity: sha512-fRi2a3Ui7q/A7IqGcc3SOaOI8dydZWago1PFK1h1tRt/h2f0mjtsfVb9nrQ2wOLNL2J8lPVVNqRYJG+fpzcvtA==}
     engines: {node: '>= 10'}
 
   '@nx/react@20.2.0-beta.3':
@@ -25821,11 +25821,11 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@nx/powerpack-conformance@1.1.0-beta.5(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))':
+  '@nx/powerpack-conformance@1.1.0-beta.6(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))':
     dependencies:
-      '@nx/devkit': 20.2.2(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/devkit': 20.4.2(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/js': 20.4.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
-      '@nx/powerpack-license': 1.1.0-beta.5
+      '@nx/powerpack-license': 1.1.0-beta.6
       ajv: 8.17.1
       esbuild: 0.21.5
     transitivePeerDependencies:
@@ -25840,53 +25840,53 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/powerpack-enterprise-cloud@1.1.0-beta.5(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+  '@nx/powerpack-enterprise-cloud@1.1.0-beta.6(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
     dependencies:
       '@nx/devkit': 20.2.2(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-      '@nx/powerpack-license': 1.1.0-beta.5
+      '@nx/powerpack-license': 1.1.0-beta.6
     transitivePeerDependencies:
       - nx
 
-  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.5':
+  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-darwin-x64@1.1.0-beta.5':
+  '@nx/powerpack-license-darwin-x64@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.5':
+  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.5':
+  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.5':
+  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.5':
+  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.5':
+  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.5':
+  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.5':
+  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license@1.1.0-beta.5':
+  '@nx/powerpack-license@1.1.0-beta.6':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.4
     optionalDependencies:
-      '@nx/powerpack-license-darwin-arm64': 1.1.0-beta.5
-      '@nx/powerpack-license-darwin-x64': 1.1.0-beta.5
-      '@nx/powerpack-license-linux-arm-gnueabihf': 1.1.0-beta.5
-      '@nx/powerpack-license-linux-arm64-gnu': 1.1.0-beta.5
-      '@nx/powerpack-license-linux-arm64-musl': 1.1.0-beta.5
-      '@nx/powerpack-license-linux-x64-gnu': 1.1.0-beta.5
-      '@nx/powerpack-license-linux-x64-musl': 1.1.0-beta.5
-      '@nx/powerpack-license-win32-arm64-msvc': 1.1.0-beta.5
-      '@nx/powerpack-license-win32-x64-msvc': 1.1.0-beta.5
+      '@nx/powerpack-license-darwin-arm64': 1.1.0-beta.6
+      '@nx/powerpack-license-darwin-x64': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-arm-gnueabihf': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-arm64-gnu': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-arm64-musl': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-x64-gnu': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-x64-musl': 1.1.0-beta.6
+      '@nx/powerpack-license-win32-arm64-msvc': 1.1.0-beta.6
+      '@nx/powerpack-license-win32-x64-msvc': 1.1.0-beta.6
 
   '@nx/react@20.2.0-beta.3(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/helpers@0.5.11)(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.7)(esbuild@0.19.5)(eslint@8.57.0)(next@14.2.16(@babel/core@7.25.2)(@playwright/test@1.47.1)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4)(webpack@5.88.0)':
     dependencies:
@@ -25897,7 +25897,7 @@ snapshots:
       '@nx/web': 20.2.0-beta.3(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.5.4)
       '@svgr/webpack': 8.1.0(typescript@5.5.4)
-      express: 4.21.2
+      express: 4.21.0
       file-loader: 6.2.0(webpack@5.88.0)
       http-proxy-middleware: 3.0.3
       minimatch: 9.0.3
@@ -25945,7 +25945,7 @@ snapshots:
       chalk: 4.1.2
       css-loader: 6.11.0(@rspack/core@1.1.3(@swc/helpers@0.5.11))(webpack@5.88.0)
       enquirer: 2.3.6
-      express: 4.21.2
+      express: 4.21.0
       fork-ts-checker-webpack-plugin: 7.2.13(typescript@5.5.4)(webpack@5.88.0)
       http-proxy-middleware: 3.0.3
       less-loader: 11.1.0(less@4.1.3)(webpack@5.88.0)
@@ -25958,7 +25958,7 @@ snapshots:
       sass-loader: 12.6.0(sass@1.55.0)(webpack@5.88.0)
       source-map-loader: 5.0.0(webpack@5.88.0)
       style-loader: 3.3.4(webpack@5.88.0)
-      tslib: 2.8.1
+      tslib: 2.7.0
       webpack: 5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4)
       webpack-node-externals: 3.0.0
     transitivePeerDependencies:
@@ -26066,7 +26066,7 @@ snapshots:
       ajv: 8.17.1
       autoprefixer: 10.4.13(postcss@8.4.38)
       babel-loader: 9.2.1(@babel/core@7.26.0)(webpack@5.88.0)
-      browserslist: 4.24.2
+      browserslist: 4.23.3
       copy-webpack-plugin: 10.2.4(webpack@5.88.0)
       css-loader: 6.11.0(@rspack/core@1.1.3(@swc/helpers@0.5.11))(webpack@5.88.0)
       css-minimizer-webpack-plugin: 5.0.1(esbuild@0.19.5)(webpack@5.88.0)
