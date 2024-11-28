@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -133,6 +134,11 @@ export async function reactNativeLibraryGeneratorInternal(
     await formatFiles(host);
   }
 
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host));
+  }
+
   tasks.push(() => {
     logShowProjectCommand(options.name);
   });
@@ -152,10 +158,17 @@ async function addProject(
     targets: {},
   };
 
-  if (isUsingTsSolutionSetup(host)) {
+  if (options.isUsingTsSolutionConfig) {
+    const sourceEntry = !options.buildable
+      ? options.js
+        ? './src/index.js'
+        : './src/index.ts'
+      : undefined;
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
       name: getImportPath(host, options.name),
       version: '0.0.1',
+      main: sourceEntry,
+      types: sourceEntry,
       nx: {
         name: options.name,
         sourceRoot: joinPathFragments(options.projectRoot, 'src'),

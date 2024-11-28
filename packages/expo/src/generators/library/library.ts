@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -35,10 +36,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import {
-  isUsingTsSolutionSetup,
-  updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function expoLibraryGenerator(
@@ -136,6 +134,11 @@ export async function expoLibraryGeneratorInternal(
     await formatFiles(host);
   }
 
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host));
+  }
+
   tasks.push(() => {
     logShowProjectCommand(options.name);
   });
@@ -155,11 +158,18 @@ async function addProject(
     targets: {},
   };
 
-  if (isUsingTsSolutionSetup(host)) {
+  if (options.isUsingTsSolutionConfig) {
     const packageName = getImportPath(host, options.name);
+    const sourceEntry = !options.buildable
+      ? options.js
+        ? './src/index.js'
+        : './src/index.ts'
+      : undefined;
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
       name: packageName,
       version: '0.0.1',
+      main: sourceEntry,
+      types: sourceEntry,
       nx: {
         name: packageName === options.name ? undefined : options.name,
         projectType: 'library',

@@ -43,6 +43,7 @@ export async function remixLibraryGeneratorInternal(
     linter: options.linter,
     component: true,
     buildable: options.buildable,
+    bundler: options.bundler,
     addPlugin: options.addPlugin,
   });
   tasks.push(libGenTask);
@@ -54,7 +55,7 @@ export async function remixLibraryGeneratorInternal(
 
   addTsconfigEntryPoints(tree, options);
 
-  if (options.buildable) {
+  if (options.bundler === 'rollup' || options.buildable) {
     updateBuildableConfig(tree, options.projectName);
   }
 

@@ -1017,5 +1017,49 @@ module.exports = withNx(
         }
       `);
     });
+
+    it('should map non-buildable libraries to source', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        directory: 'myjslib',
+        name: 'myjslib',
+        js: true,
+      });
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "main": "./src/index.ts",
+          "name": "@proj/mylib",
+          "nx": {
+            "name": "mylib",
+            "projectType": "library",
+            "sourceRoot": "mylib/src",
+          },
+          "types": "./src/index.ts",
+        }
+      `);
+      expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
+        {
+          "main": "./src/index.js",
+          "name": "@proj/myjslib",
+          "nx": {
+            "name": "myjslib",
+            "projectType": "library",
+            "sourceRoot": "myjslib/src",
+          },
+          "types": "./src/index.js",
+        }
+      `);
+    });
   });
 });

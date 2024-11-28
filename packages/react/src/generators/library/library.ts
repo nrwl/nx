@@ -4,6 +4,7 @@ import {
   ensurePackage,
   formatFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   runTasksInSerial,
   Tree,
@@ -63,8 +64,16 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.isUsingTsSolutionConfig) {
+    const sourceEntry =
+      options.bundler === 'none'
+        ? options.js
+          ? './src/index.js'
+          : './src/index.ts'
+        : undefined;
     writeJson(host, `${options.projectRoot}/package.json`, {
       name: options.importPath,
+      main: sourceEntry,
+      types: sourceEntry,
       nx: {
         name: options.importPath === options.name ? undefined : options.name,
         projectType: 'library',
@@ -264,6 +273,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host));
   }
 
   tasks.push(() => {

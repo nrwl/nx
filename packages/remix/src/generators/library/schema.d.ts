@@ -6,7 +6,9 @@ export interface NxRemixGeneratorSchema {
   style: SupportedStyles;
   tags?: string;
   importPath?: string;
+  /** @deprecated Use bundler instead. */
   buildable?: boolean;
+  bundler?: 'none' | 'vite' | 'rollup';
   linter?: 'none' | 'eslint';
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   js?: boolean;
