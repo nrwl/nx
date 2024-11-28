@@ -26,7 +26,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     originalInitCwd = process.env.INIT_CWD;
   });
 
-  it('should throw an error when the resolver directory is not under any project root', async () => {
+  it('should throw an error when the resolved directory is not under any project root', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       projectType: 'application',
@@ -44,7 +44,31 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     restoreCwd();
   });
 
-  it('should return options as provided when there is a project at the cwd', async () => {
+  it('should return the normalized options when there is a project at the cwd', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+    setCwd('apps/app1');
+
+    const result = await determineArtifactNameAndDirectoryOptions(tree, {
+      path: 'myComponent',
+    });
+
+    expect(result).toStrictEqual({
+      artifactName: 'myComponent',
+      directory: 'apps/app1',
+      fileName: 'myComponent',
+      filePath: 'apps/app1/myComponent.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
+      project: 'app1',
+    });
+
+    restoreCwd();
+  });
+
+  it('should not duplicate the cwd when the provided directory starts with the cwd', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       projectType: 'application',
@@ -60,51 +84,12 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       directory: 'apps/app1',
       fileName: 'myComponent',
       filePath: 'apps/app1/myComponent.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
       project: 'app1',
     });
 
     restoreCwd();
-  });
-
-  it('should not duplicate the cwd when the provided directory starts with the cwd and format is "as-provided"', async () => {
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      projectType: 'application',
-    });
-    setCwd('apps/app1');
-
-    const result = await determineArtifactNameAndDirectoryOptions(tree, {
-      path: 'apps/app1/myComponent',
-    });
-
-    expect(result).toStrictEqual({
-      artifactName: 'myComponent',
-      directory: 'apps/app1',
-      fileName: 'myComponent',
-      filePath: 'apps/app1/myComponent.ts',
-      project: 'app1',
-    });
-
-    restoreCwd();
-  });
-
-  it('should return the options as provided when directory is provided', async () => {
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      projectType: 'application',
-    });
-
-    const result = await determineArtifactNameAndDirectoryOptions(tree, {
-      path: 'apps/app1/myComponent',
-    });
-
-    expect(result).toStrictEqual({
-      artifactName: 'myComponent',
-      directory: 'apps/app1',
-      fileName: 'myComponent',
-      filePath: 'apps/app1/myComponent.ts',
-      project: 'app1',
-    });
   });
 
   it(`should handle window's style paths correctly`, async () => {
@@ -122,25 +107,8 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       directory: 'apps/app1',
       fileName: 'myComponent',
       filePath: 'apps/app1/myComponent.ts',
-      project: 'app1',
-    });
-  });
-
-  it('should support receiving a path as the name', async () => {
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      projectType: 'application',
-    });
-
-    const result = await determineArtifactNameAndDirectoryOptions(tree, {
-      path: 'apps/app1/foo/bar/myComponent',
-    });
-
-    expect(result).toStrictEqual({
-      artifactName: 'myComponent',
-      directory: 'apps/app1/foo/bar',
-      fileName: 'myComponent',
-      filePath: 'apps/app1/foo/bar/myComponent.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
       project: 'app1',
     });
   });
@@ -161,26 +129,51 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       directory: 'apps/app1',
       fileName: 'myComponent.component',
       filePath: 'apps/app1/myComponent.component.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
       project: 'app1',
     });
   });
 
-  it('should support receiving a fileName', async () => {
+  it('should support receiving the full file path including the file extension', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       projectType: 'application',
     });
 
     const result = await determineArtifactNameAndDirectoryOptions(tree, {
-      fileName: 'myComponent.component',
-      path: 'apps/app1/myComponent',
+      path: 'apps/app1/myComponent.ts',
     });
 
     expect(result).toStrictEqual({
       artifactName: 'myComponent',
       directory: 'apps/app1',
-      fileName: 'myComponent.component',
-      filePath: 'apps/app1/myComponent.component.ts',
+      fileName: 'myComponent',
+      filePath: 'apps/app1/myComponent.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
+      project: 'app1',
+    });
+  });
+
+  it('should ignore specified suffix when receiving the full file path including the file extension', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    const result = await determineArtifactNameAndDirectoryOptions(tree, {
+      path: 'apps/app1/myComponent.ts',
+      suffix: 'component',
+    });
+
+    expect(result).toStrictEqual({
+      artifactName: 'myComponent',
+      directory: 'apps/app1',
+      fileName: 'myComponent',
+      filePath: 'apps/app1/myComponent.ts',
+      fileExtension: 'ts',
+      fileExtensionType: 'ts',
       project: 'app1',
     });
   });
@@ -201,7 +194,80 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       directory: 'apps/app1',
       fileName: 'myComponent',
       filePath: 'apps/app1/myComponent.tsx',
+      fileExtension: 'tsx',
+      fileExtensionType: 'ts',
       project: 'app1',
     });
+  });
+
+  it('should support receiving a file path with a non-default file extension', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    const result = await determineArtifactNameAndDirectoryOptions(tree, {
+      path: 'apps/app1/myComponent.astro',
+      allowedFileExtensions: ['astro'],
+    });
+
+    expect(result).toStrictEqual({
+      artifactName: 'myComponent',
+      directory: 'apps/app1',
+      fileName: 'myComponent',
+      filePath: 'apps/app1/myComponent.astro',
+      fileExtension: 'astro',
+      fileExtensionType: 'other',
+      project: 'app1',
+    });
+  });
+
+  it('should throw an error when the file extension is not supported', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    await expect(
+      determineArtifactNameAndDirectoryOptions(tree, {
+        path: 'apps/app1/myComponent.ts',
+        allowedFileExtensions: ['jsx', 'tsx'],
+      })
+    ).rejects.toThrowErrorMatchingInlineSnapshot(`
+      "The provided file path has an extension (.ts) that is not supported by this generator.
+      The supported extensions are: .jsx, .tsx."
+    `);
+  });
+
+  it('should throw an error when having a TypeScript file extension and the --js option is used', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    await expect(
+      determineArtifactNameAndDirectoryOptions(tree, {
+        path: 'apps/app1/myComponent.tsx',
+        js: true,
+      })
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"The provided file path has an extension (.tsx) that is not allowed when the "--js" option is used."`
+    );
+  });
+
+  it('should throw an error when having a JavaScript file extension and the --js=false option is used', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    await expect(
+      determineArtifactNameAndDirectoryOptions(tree, {
+        path: 'apps/app1/myComponent.jsx',
+        js: false,
+      })
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"The provided file path has an extension (.jsx) that is not allowed when the "--js=false" option is used."`
+    );
   });
 });

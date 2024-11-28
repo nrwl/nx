@@ -15,7 +15,6 @@ import {
   joinPathFragments,
   names,
   readJson,
-  toJS,
   Tree,
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
@@ -40,17 +39,13 @@ export async function reduxGenerator(host: Tree, schema: Schema) {
 function generateReduxFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(
     host,
-    joinPathFragments(__dirname, './files'),
+    joinPathFragments(__dirname, 'files', options.fileExtensionType),
     options.projectDirectory,
     {
       ...options,
-      tmpl: '',
+      ext: options.fileExtension,
     }
   );
-
-  if (options.js) {
-    toJS(host);
-  }
 }
 
 function addReduxPackageDependencies(host: Tree) {
@@ -69,29 +64,31 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
 
-  const indexFilePath = path.join(
+  const indexFilePath = joinPathFragments(
     options.projectSourcePath,
-    options.js ? 'index.js' : 'index.ts'
+    options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
   );
 
-  const indexSource = host.read(indexFilePath, 'utf-8');
-  if (indexSource !== null) {
-    const indexSourceFile = tsModule.createSourceFile(
-      indexFilePath,
-      indexSource,
-      tsModule.ScriptTarget.Latest,
-      true
-    );
-
-    const statePath = options.path
-      ? `./lib/${options.path}/${options.fileName}`
-      : `./lib/${options.fileName}`;
-    const changes = applyChangesToString(
-      indexSource,
-      addImport(indexSourceFile, `export * from '${statePath}.slice';`)
-    );
-    host.write(indexFilePath, changes);
+  if (!host.exists(indexFilePath)) {
+    return;
   }
+
+  const indexSource = host.read(indexFilePath, 'utf-8');
+  const indexSourceFile = tsModule.createSourceFile(
+    indexFilePath,
+    indexSource,
+    tsModule.ScriptTarget.Latest,
+    true
+  );
+
+  const statePath = options.path
+    ? `./lib/${options.path}/${options.fileName}`
+    : `./lib/${options.fileName}`;
+  const changes = applyChangesToString(
+    indexSource,
+    addImport(indexSourceFile, `export * from '${statePath}.slice';`)
+  );
+  host.write(indexFilePath, changes);
 }
 
 function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
@@ -150,11 +147,15 @@ async function normalizeOptions(
     artifactName: name,
     directory,
     fileName,
+    fileExtension,
+    fileExtensionType,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     path: options.path,
     name: options.name,
-    fileExtension: 'tsx',
+    allowedFileExtensions: ['js', 'ts'],
+    fileExtension: options.js ? 'js' : 'ts',
+    js: options.js,
   });
 
   let appProjectSourcePath: string;
@@ -206,6 +207,8 @@ async function normalizeOptions(
     ...options,
     ...extraNames,
     fileName,
+    fileExtension,
+    fileExtensionType,
     constantName: names(name).constantName.toUpperCase(),
     projectDirectory: directory,
     projectType,

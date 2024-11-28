@@ -1,11 +1,4 @@
-import {
-  formatFiles,
-  joinPathFragments,
-  names,
-  readProjectConfiguration,
-  stripIndents,
-  Tree,
-} from '@nx/devkit';
+import { formatFiles, names, stripIndents, Tree } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { basename, dirname } from 'path';
 import {
@@ -19,16 +12,11 @@ import StyleGenerator from '../style/style.impl';
 import { RemixRouteSchema } from './schema';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
-  const {
-    artifactName: name,
-    directory,
-    project: projectName,
-  } = await determineArtifactNameAndDirectoryOptions(tree, {
-    path: options.path.replace(/^\//, '').replace(/\/$/, ''),
-  });
-
-  const project = readProjectConfiguration(tree, projectName);
-  if (!project) throw new Error(`Project does not exist: ${projectName}`);
+  const { artifactName: name, filePath } =
+    await determineArtifactNameAndDirectoryOptions(tree, {
+      path: options.path.replace(/^\//, '').replace(/\/$/, ''),
+      fileExtension: 'tsx',
+    });
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {
     throw new Error(
@@ -36,18 +24,10 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     );
   }
 
-  const routeFilePath = await resolveRemixRouteFile(
-    tree,
-    joinPathFragments(directory, name),
-    undefined
-  );
-
-  const nameToUseForComponent = name.replace('.tsx', '');
+  const routeFilePath = await resolveRemixRouteFile(tree, filePath);
 
   const { className: componentName } = names(
-    nameToUseForComponent === '.' || nameToUseForComponent === ''
-      ? basename(dirname(routeFilePath))
-      : nameToUseForComponent
+    name === '.' || name === '' ? basename(dirname(routeFilePath)) : name
   );
 
   if (tree.exists(routeFilePath))

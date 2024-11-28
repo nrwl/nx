@@ -20,7 +20,7 @@ describe('Remix Library Generator', () => {
     // ASSERT
     const tsconfig = readJson(tree, 'tsconfig.base.json');
     expect(tree.exists(`test/src/server.ts`));
-    expect(tree.children(`test/src/lib`)).toMatchSnapshot();
+    expect(tree.children(`test/src/lib`).sort()).toMatchSnapshot();
     expect(tsconfig.compilerOptions.paths).toMatchSnapshot();
   }, 25_000);
 

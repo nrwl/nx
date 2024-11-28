@@ -1,4 +1,4 @@
-import { formatFiles, joinPathFragments, Tree } from '@nx/devkit';
+import { formatFiles, Tree } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import {
   checkRoutePathForErrors,
@@ -9,10 +9,9 @@ import loaderGenerator from '../loader/loader.impl';
 import { RemixRouteSchema } from './schema';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
-  const { artifactName: name, directory } =
-    await determineArtifactNameAndDirectoryOptions(tree, {
-      path: options.path.replace(/^\//, '').replace(/\/$/, ''),
-    });
+  const { filePath } = await determineArtifactNameAndDirectoryOptions(tree, {
+    path: options.path.replace(/^\//, '').replace(/\/$/, ''),
+  });
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {
     throw new Error(
@@ -20,11 +19,7 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     );
   }
 
-  const routeFilePath = await resolveRemixRouteFile(
-    tree,
-    joinPathFragments(directory, name),
-    undefined
-  );
+  const routeFilePath = await resolveRemixRouteFile(tree, filePath);
 
   if (tree.exists(routeFilePath))
     throw new Error(`Path already exists: ${options.path}`);

@@ -1,0 +1,56 @@
+import { fetch<%= className %>, <%= propertyName %>Adapter, <%= propertyName %>Reducer } from './<%= fileName %>.slice';
+
+describe('<%= propertyName %> reducer', () => {
+  it('should handle initial state', () => {
+    const expected = <%= propertyName %>Adapter.getInitialState({
+      loadingStatus: 'not loaded',
+      error: null
+    });
+
+    expect(<%= propertyName %>Reducer(undefined, { type: '' })).toEqual(expected);
+  });
+
+  it('should handle fetch<%= className %>', () => {
+    let state = <%= propertyName %>Reducer(
+      undefined,
+      fetch<%= className %>.pending('')
+    );
+
+    expect(state).toEqual(
+      expect.objectContaining({
+        loadingStatus: 'loading',
+        error: null,
+        entities: {},
+        ids: []
+      })
+    );
+
+    state = <%= propertyName %>Reducer(
+      state,
+      fetch<%= className %>.fulfilled([{ id: 1 }], '')
+    );
+
+    expect(state).toEqual(
+      expect.objectContaining({
+        loadingStatus: 'loaded',
+        error: null,
+        entities: { 1: { id: 1 } },
+        ids: [1]
+      })
+    );
+
+    state = <%= propertyName %>Reducer(
+      state,
+      fetch<%= className %>.rejected(new Error('Uh oh'), '')
+    );
+
+    expect(state).toEqual(
+      expect.objectContaining({
+        loadingStatus: 'error',
+        error: 'Uh oh',
+        entities: { 1: { id: 1 } },
+        ids: [1]
+      })
+    );
+  });
+});
