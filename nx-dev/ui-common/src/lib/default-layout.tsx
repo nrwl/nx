@@ -1,21 +1,23 @@
 import { Footer } from './footer';
 import { Header } from './headers/header';
 import { PropsWithChildren } from 'react';
-import cx from 'classnames';
+import { ButtonLinkProps } from './button';
 
 export function DefaultLayout({
   isHome = false,
   children,
   hideHeader = false,
   hideFooter = false,
+  headerCTAConfig,
 }: {
   isHome?: boolean;
   hideHeader?: boolean;
   hideFooter?: boolean;
+  headerCTAConfig?: ButtonLinkProps[];
 } & PropsWithChildren): JSX.Element {
   return (
     <div className="w-full overflow-hidden dark:bg-slate-950">
-      {!hideHeader && <Header />}
+      {!hideHeader && <Header ctaButtons={headerCTAConfig} />}
       <div className="relative isolate">
         <div
           className="absolute inset-x-0 -top-40 -z-10 h-full transform-gpu overflow-hidden blur-3xl sm:-top-80"

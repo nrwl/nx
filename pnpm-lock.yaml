@@ -325,12 +325,15 @@ importers:
       '@nx/playwright':
         specifier: 20.2.0-beta.3
         version: 20.2.0-beta.3(@babel/traverse@7.25.6)(@playwright/test@1.47.1)(@rspack/core@1.1.3(@swc/helpers@0.5.11))(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(esbuild@0.19.5)(eslint@8.57.0)(html-webpack-plugin@5.5.0(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4)))(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(vitest@1.3.1(@types/node@20.16.10)(jsdom@20.0.3)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.88.0))
+      '@nx/powerpack-conformance':
+        specifier: 1.1.0-beta.6
+        version: 1.1.0-beta.6(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
       '@nx/powerpack-enterprise-cloud':
-        specifier: 1.1.0-beta.4
-        version: 1.1.0-beta.4(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+        specifier: 1.1.0-beta.6
+        version: 1.1.0-beta.6(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/powerpack-license':
-        specifier: 1.1.0-beta.4
-        version: 1.1.0-beta.4
+        specifier: 1.1.0-beta.6
+        version: 1.1.0-beta.6
       '@nx/react':
         specifier: 20.2.0-beta.3
         version: 20.2.0-beta.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/helpers@0.5.11)(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(esbuild@0.19.5)(eslint@8.57.0)(next@14.2.16(@babel/core@7.25.2)(@playwright/test@1.47.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.88.0))(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))
@@ -828,7 +831,7 @@ importers:
         version: 11.0.1
       nuxt:
         specifier: ^3.10.0
-        version: 3.13.2(@parcel/watcher@2.4.1)(@types/node@20.16.10)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.4.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.22.0)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6)(typescript@5.5.4)(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(webpack-sources@3.2.3)
+        version: 3.13.2(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(@parcel/watcher@2.4.1)(@types/node@20.16.10)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.4.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.22.0)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6)(typescript@5.5.4)(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(webpack-sources@3.2.3)
       nx:
         specifier: 20.2.0-beta.3
         version: 20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
@@ -1363,6 +1366,70 @@ packages:
 
   '@apidevtools/json-schema-ref-parser@9.0.9':
     resolution: {integrity: sha512-GBD2Le9w2+lVFoc4vswGI/TjkNIZSVp7+9xPf+X3uidBfWnAeUWmquteSyt0+VCrhNMWj/FTABISQrD3Z/YA+w==}
+
+  '@azure/abort-controller@2.1.2':
+    resolution: {integrity: sha512-nBrLsEWm4J2u5LpAPjxADTlq3trDgVZZXHNKabeXZtpq3d3AbN/KGO82R87rdDz5/lYB024rtEf10/q0urNgsA==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-auth@1.9.0':
+    resolution: {integrity: sha512-FPwHpZywuyasDSLMqJ6fhbOK3TqUdviZNF8OqRGA4W5Ewib2lEEZ+pBsYcBa88B2NGO/SEnYPGhyBqNlE8ilSw==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-client@1.9.2':
+    resolution: {integrity: sha512-kRdry/rav3fUKHl/aDLd/pDLcB+4pOFwPPTVEExuMyaI5r+JBbMWqRbCY1pn5BniDaU3lRxO9eaQ1AmSMehl/w==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-http-compat@2.1.2':
+    resolution: {integrity: sha512-5MnV1yqzZwgNLLjlizsU3QqOeQChkIXw781Fwh1xdAqJR5AA32IUaq6xv1BICJvfbHoa+JYcaij2HFkhLbNTJQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-lro@2.7.2':
+    resolution: {integrity: sha512-0YIpccoX8m/k00O7mDDMdJpbr6mf1yWo2dfmxt5A8XVZVVMz2SSKaEbMCeJRvgQ0IaSlqhjT47p4hVIRRy90xw==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-paging@1.6.2':
+    resolution: {integrity: sha512-YKWi9YuCU04B55h25cnOYZHxXYtEvQEbKST5vqRga7hWY9ydd3FZHdeQF8pyh+acWZvppw13M/LMGx0LABUVMA==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-rest-pipeline@1.18.0':
+    resolution: {integrity: sha512-QSoGUp4Eq/gohEFNJaUOwTN7BCc2nHTjjbm75JT0aD7W65PWM1H/tItz0GsABn22uaKyGxiMhWQLt2r+FGU89Q==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-tracing@1.2.0':
+    resolution: {integrity: sha512-UKTiEJPkWcESPYJz3X5uKRYyOcJD+4nYph+KpfdPRnQJVrZfk0KJgdnaAWKfhsBBtAf/D58Az4AvCJEmWgIBAg==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-util@1.11.0':
+    resolution: {integrity: sha512-DxOSLua+NdpWoSqULhjDyAZTXFdP/LKkqtYuxxz1SCN289zk3OG8UOpnCQAz/tygyACBtWp/BoO72ptK7msY8g==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/core-xml@1.4.4':
+    resolution: {integrity: sha512-J4FYAqakGXcbfeZjwjMzjNcpcH4E+JtEBv+xcV1yL0Ydn/6wbQfeFKTCHh9wttAi0lmajHw7yBbHPRG+YHckZQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/identity@4.5.0':
+    resolution: {integrity: sha512-EknvVmtBuSIic47xkOqyNabAme0RYTw52BTMz8eBgU1ysTyMrD1uOoM+JdS0J/4Yfp98IBT3osqq3BfwSaNaGQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/logger@1.1.4':
+    resolution: {integrity: sha512-4IXXzcCdLdlXuCG+8UKEwLA1T1NHqUfanhXYHiQTn+6sfWCZXduqbtXDGceg3Ce5QxTGo7EqmbV6Bi+aqKuClQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@azure/msal-browser@3.27.0':
+    resolution: {integrity: sha512-+b4ZKSD8+vslCtVRVetkegEhOFMLP3rxDWJY212ct+2r6jVg6OSQKc1Qz3kCoXo0FgwaXkb+76TMZfpHp8QtgA==}
+    engines: {node: '>=0.8.0'}
+
+  '@azure/msal-common@14.16.0':
+    resolution: {integrity: sha512-1KOZj9IpcDSwpNiQNjt0jDYZpQvNZay7QAEi/5DLubay40iGYtLzya/jbjRPLyOTZhEKyL1MzPuw2HqBCjceYA==}
+    engines: {node: '>=0.8.0'}
+
+  '@azure/msal-node@2.16.1':
+    resolution: {integrity: sha512-1NEFpTmMMT2A7RnZuvRl/hUmJU+GLPjh+ShyIqPktG2PvSd2yvPnzGd/BxIBAAvJG5nr9lH4oYcQXepDbaE7fg==}
+    engines: {node: '>=16'}
+
+  '@azure/storage-blob@12.25.0':
+    resolution: {integrity: sha512-oodouhA3nCCIh843tMMbxty3WqfNT+Vgzj3Xo5jqR9UPnzq3d7mzLjlHAYz7lW+b4km3SIgz+NAgztvhm7Z6kQ==}
+    engines: {node: '>=18.0.0'}
 
   '@babel/code-frame@7.24.7':
     resolution: {integrity: sha512-BcYH1CVJBO9tvyIZ2jVeXgSIMvGZ2FDRvDdOIVQyuklNKSsx+eppDEBq/g47Ayw+RqNFE+URvOShmf+f/qwAlA==}
@@ -4502,6 +4569,11 @@ packages:
     peerDependencies:
       nx: '>= 19 <= 21'
 
+  '@nx/devkit@20.1.3':
+    resolution: {integrity: sha512-+bNCRNSHKS7SS4Q2xI/p4hhd4mIibIbeF+hpF3TLO5wxyXbrYGSdhCVK5SwclwWUN/KhcKQjOrVGW5CKAm7HAw==}
+    peerDependencies:
+      nx: '>= 19 <= 21'
+
   '@nx/devkit@20.2.0-beta.3':
     resolution: {integrity: sha512-/Bpt8yN6eQ6nLAJoAyXQZ66Dp3D39GHlRiuY/yPw9PFj4kSjHybQYVMGMHb9upQ2gUiHoIIqezASIf/bpj8DyA==}
     peerDependencies:
@@ -4545,6 +4617,14 @@ packages:
   '@nx/jest@20.2.0-beta.3':
     resolution: {integrity: sha512-6hMeRwKOfJuCYSM7XYaz81d1OVIeIDfP405Hky2fhaDabsCS78sDfRla77Tw25VcFUsDQmbqBZLh+hnAs03xcg==}
 
+  '@nx/js@20.1.3':
+    resolution: {integrity: sha512-PS6GjPWS0u37JJ6Gh7MVq+r25p5YRHcm+FlxzIfngDesLB8rZ2GFgztsz2r21WlOncGurDmjzJ8aRKQZNWXl8Q==}
+    peerDependencies:
+      verdaccio: ^5.0.4
+    peerDependenciesMeta:
+      verdaccio:
+        optional: true
+
   '@nx/js@20.2.0-beta.3':
     resolution: {integrity: sha512-BDFK7tnYZJoXOoHYg4Sub7ATGti9cjAivwtBTdsrED1cWZg80oWfRRCu3sqqXMnGYHgzFMRBltLgOPztC6ee0Q==}
     peerDependencies:
@@ -4561,10 +4641,22 @@ packages:
     peerDependencies:
       next: '>=14.0.0'
 
+  '@nx/nx-darwin-arm64@20.1.3':
+    resolution: {integrity: sha512-m0Rwawht7Jwq6u2QPmAtsv+khFsTUIZUfiO1kXGcKOX3nQdJ7i82zLRd5yGbrDTAyRbAsgWO3v8zWQyhC1oGjw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
   '@nx/nx-darwin-arm64@20.2.0-beta.3':
     resolution: {integrity: sha512-4E8jewQV1oD+2QpWpdX92NAqpf9oWjfUpmz1G3njlEvb2h/cAYCVT+AdluWWI7WEkUT1jAbV3hY9/jVIUW7Hxw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
+    os: [darwin]
+
+  '@nx/nx-darwin-x64@20.1.3':
+    resolution: {integrity: sha512-WsQK1sxOJFzD0vOtFqSHpLzWuFO4vG7G1PUyJ1Y5mPo4vbRslqoAUTqF7n42bBRPY/lE2aT7BqAAj8hm4PgcnQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
     os: [darwin]
 
   '@nx/nx-darwin-x64@20.2.0-beta.3':
@@ -4573,11 +4665,23 @@ packages:
     cpu: [x64]
     os: [darwin]
 
+  '@nx/nx-freebsd-x64@20.1.3':
+    resolution: {integrity: sha512-HV57XMtCVPy/0LZtifcEHbOpVNKLTOBFUoUXkmGYBmAKfw7lccfF600/tunTCZ4aijsD6+opEeGHzlDUK0Ir1w==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+
   '@nx/nx-freebsd-x64@20.2.0-beta.3':
     resolution: {integrity: sha512-owPInETIkvDUUh599rkzOqHWeGJwnmhalhfzNCtIYXtU1k8sAJdLJ+D28114IkLHBZvolMj74/isiiwLDL7P3A==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [freebsd]
+
+  '@nx/nx-linux-arm-gnueabihf@20.1.3':
+    resolution: {integrity: sha512-RzP0vc4yhXktKxz7iiwVYFkgpyb5TN/lLGcKLMM4kjuyYJ0IUX58Kk5FDoqCy+HMKiMfGyTOT4fP+/UEsgW6qQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
 
   '@nx/nx-linux-arm-gnueabihf@20.2.0-beta.3':
     resolution: {integrity: sha512-tZHPug+4vcZm2+N7PlfsTIpABee7CqJOrEOBCujm24MuchCH/6U9jHxDg1A+7ySuWDLF6UdrUIGLbOBut9d8uA==}
@@ -4585,8 +4689,20 @@ packages:
     cpu: [arm]
     os: [linux]
 
+  '@nx/nx-linux-arm64-gnu@20.1.3':
+    resolution: {integrity: sha512-WCaU5AiGx21C3t3v4+d7nrA1r5Xc5Wk7yVxZFWh+mKHdcqk1JebDIr1qj/7yoKHD2R9k2Vp5x5Kd0pzAGS8AyA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
   '@nx/nx-linux-arm64-gnu@20.2.0-beta.3':
     resolution: {integrity: sha512-o98E210CYWsAMVawEowrRcyqmNrS7/DLVn4SNDjWSM1w8rUW/50NTLk/IS2caG/xxFS5kslDGXH1QDxNeth0ZQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@nx/nx-linux-arm64-musl@20.1.3':
+    resolution: {integrity: sha512-lKAvR9jNyx/qvk3UZGYNJAoK5mkZc+rDD4gA23tOGYPjNrWHJEgbWycCk5A9tQ4QX4CskCNmkgQx0lOMdLeXsw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -4597,8 +4713,20 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@nx/nx-linux-x64-gnu@20.1.3':
+    resolution: {integrity: sha512-RKNm7RnTgCSl2HstDb/qMKO9r8o81EUe+UZB5fgjNR89PB757iHUX30kM0xbkiRZui1vIkMAvWcNsidxBnGGfg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
   '@nx/nx-linux-x64-gnu@20.2.0-beta.3':
     resolution: {integrity: sha512-8wy6OX9tj5J1nRWiMUVAbXQoI4pEiR8ePy9xi1FnA1i9cD3p5oO7fNcRDyjYCneCcPzDo5A/AKaCAFsum1LpjQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@nx/nx-linux-x64-musl@20.1.3':
+    resolution: {integrity: sha512-aCXEWt1WQDPLzgp5I+NfqaP0y4ZKi2aauZMnSO6KE54MnZmvB+B4HQMZvqHM3dfU0jluvLRBmVIPLeTHiCccrw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -4609,10 +4737,22 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@nx/nx-win32-arm64-msvc@20.1.3':
+    resolution: {integrity: sha512-625rRYFfoCTu73bjDZ+jOLU0lvEN2heiiUGlErc6GchfcWuIcZy16oyYQzZX69UQqryGkkZVTaoyMXhGS5p7Tg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
   '@nx/nx-win32-arm64-msvc@20.2.0-beta.3':
     resolution: {integrity: sha512-iZNr2niozusvX97zhrvnXn5peYpJ6cbcDNCTEoNN7xOfRyMLqcpuvEHGRuzdCLRB9p7sb6CyAXpyJFx9pLT7QQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
+    os: [win32]
+
+  '@nx/nx-win32-x64-msvc@20.1.3':
+    resolution: {integrity: sha512-XUbxSB6vUWoixNyCXkaXGkeUy/syqFOBXVh5Wbi6bqwTJ5o6EFUxCnzK/JsK55dfOz+I/jMXJzDWYEDAsikTSA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
     os: [win32]
 
   '@nx/nx-win32-x64-msvc@20.2.0-beta.3':
@@ -4629,65 +4769,68 @@ packages:
       '@playwright/test':
         optional: true
 
-  '@nx/powerpack-enterprise-cloud@1.1.0-beta.4':
-    resolution: {integrity: sha512-AXaMkD2+D0QBvp7ygbhKZro+36R5MCr3Ru375B1vtYJMi6JIFYxeb0zqzFHIzq4ecY6TxeiefuMUmUXu6fVcvQ==}
+  '@nx/powerpack-conformance@1.1.0-beta.6':
+    resolution: {integrity: sha512-N7Bh+W5cCw7nyAS0p/fBrHXFcZ82vsCDY//0HIixlkJPEPLttbvAO7BFMerRx+4RlvfXIkfW4gCSRqEp/JGR1w==}
 
-  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.4':
-    resolution: {integrity: sha512-AhUy/7HxU5mIQ9ZRYHfgBdwky6RpOIvo/mCwi6UbTGeq4/hyyTXotkW9F3vdIYrmKU2lOh+sdyj4ysdgFhyC0Q==}
+  '@nx/powerpack-enterprise-cloud@1.1.0-beta.6':
+    resolution: {integrity: sha512-5pwFIKw0SbA68ls5t0EInCOuzjS6pj88kEMBzIF6uEAL5lqdvlcpjP92MVQ//KiMGvDv0dBnD2Z3nPexkhAZ4g==}
+
+  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.6':
+    resolution: {integrity: sha512-mNkIcPqil6JRyivDOlzA+KtRcl8x5UmYIaOGC+/znvYlyJqancFuVcS3aE034dJUSkjZVE6zQkN9xCrs94Okkg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@nx/powerpack-license-darwin-x64@1.1.0-beta.4':
-    resolution: {integrity: sha512-Lzzu/yrzgXpRURWQBXyhUGx1/DwklG9U7O8mRbaLsdksqh27rqNj0N48auN9LY0LZ9DOp5BBlSt5XW50XsjjEg==}
+  '@nx/powerpack-license-darwin-x64@1.1.0-beta.6':
+    resolution: {integrity: sha512-JtkoyggpMzotQ0DHJnn8Rmhkm+uDxRg51a9lItP+uNZdp/RqTZ+erhZ8vUcyMkMha0rVqPv34sPGgVz+t3clOQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.4':
-    resolution: {integrity: sha512-DoUpWi4ZprzHSWx6pMeJ6XrreL0yXtswFClg4yi58jfOE7OqI1d1VWmyvxUISdwteqqOVlo/fRMA28cZIcbteg==}
+  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.6':
+    resolution: {integrity: sha512-tI2i5ZNEAHUCaTC3BubTxVKHIGWx0Y67EWLcBd/bLHUMRnmMzXobqboKGxF3yw0bjB6WIL6Wts9bMDjgWzv1Tw==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
 
-  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.4':
-    resolution: {integrity: sha512-lVkVHXmG21QpOF5uzWZ5FKAsZAPa0zZQdE47Btds+ti7AYYUBcIUj5LZfQv6G95O4oifkOfTwfq5/45z0IqnSA==}
+  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.6':
+    resolution: {integrity: sha512-oQPGwV0qsgqltc/9zJiCoGpXhFd6Cmfc8taS35anjcj8/imSuvCQsPOXE5THhQPA7OLVZ4+cD07dhmG0hxH+qg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.4':
-    resolution: {integrity: sha512-IARArUCy2nAfYkN+xCucRX1+RwzmwKNxP9QmFref1QCRQHqRwRjbKqqGtSU0lVSxW+Uz26L4z+2IgZNqjDdKRQ==}
+  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.6':
+    resolution: {integrity: sha512-5FK5dOj9Sa6LDuRwoBJeXPD6xGfAhPu0IINdaAd/VrrM3WAYXqGbDsMv4MUnNZAsCPsoVmDsypXlMTVF98GUGA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.4':
-    resolution: {integrity: sha512-DIY9mkar59rZoEXVSTsz/RaY0KEPBAfrs537VW6E8pazVi/O2PgSkiRrfTD/BjMgjAPb/oMSFoXCCfrveZGuWg==}
+  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.6':
+    resolution: {integrity: sha512-gtmuk7K0FPe7kNCphaOQzqKj0QvZimsUGWamHoA+oWA5Iked7Iyk9/Xch6V7D9GZyPXAOhcAKQ8232yuDsfTWA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.4':
-    resolution: {integrity: sha512-4hYHk4E70NLUS6qHsk67gOxFtwmtBZlmiG2ZiHlyTO9/q6rvRLrUHQ/WuXcs+fVgqFw+j7J2pNw7dDfXAiBSGw==}
+  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.6':
+    resolution: {integrity: sha512-vfckNR33S3YEJ8OuU3oYCRZZ9zVtmVxo9MrKpkMZDlpHfchSTjH3W/4bNyyPq6NFfd1yOWk8NybWPDdSu0A2Bw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.4':
-    resolution: {integrity: sha512-Tv/6UaaMQ4YdfTw2q1lD7XatfiW5P+ZwHnA9I+QuB4GnKGuvglhs2onAvwoVlpnFiG9fqrq79E33jWu3S+l0vg==}
+  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.6':
+    resolution: {integrity: sha512-u1ARmgSnI19TyzAsxWdUEo55u36aL6cpDGTU6jKmlbfAakdDLQG3F7rKfIqZGuj89EmLlOmg7B5tQbFtSY9Rsg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.4':
-    resolution: {integrity: sha512-TG3WEBoHQ+Akm+rzGld8/S7xlNcZ7SDf64kBNr5XBYl6ZssxzsUe0qwhHkn0JbLsT2KYeXY4qLiy0iW0OFcjcg==}
+  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.6':
+    resolution: {integrity: sha512-9YDad4XmsCAeaHcEOUOUlboG3NIMxd7NMm6ls0U13pA6ik/R1un+5dE07awCJ5SXCU+ivZFk5XzlgP6NNA1YGA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@nx/powerpack-license@1.1.0-beta.4':
-    resolution: {integrity: sha512-kHxmMjtBLnYfOX42TySk5EGgCZ7GbzgMsLU818GnRldeZjezPDLfSr3BTIsr1HVyRSTsQmHYSe+wzC+wBts8kw==}
+  '@nx/powerpack-license@1.1.0-beta.6':
+    resolution: {integrity: sha512-fRi2a3Ui7q/A7IqGcc3SOaOI8dydZWago1PFK1h1tRt/h2f0mjtsfVb9nrQ2wOLNL2J8lPVVNqRYJG+fpzcvtA==}
     engines: {node: '>= 10'}
 
   '@nx/react@20.2.0-beta.3':
@@ -4713,6 +4856,9 @@ packages:
 
   '@nx/webpack@20.2.0-beta.3':
     resolution: {integrity: sha512-H2i7YKwHpAGrJz9lm6iSRhqzT3x3CRNAeYoNIuKnF9XLcBpBgRLBOkcdwcule5AAaVI6I5aL+k6TuwvHa0xgww==}
+
+  '@nx/workspace@20.1.3':
+    resolution: {integrity: sha512-YOFzkvCcREG4sYNrW3GukBiXCUjxfe4dN2qgYZJ7p4aGoStgfIntjP0REwbgdrZMPTQi9gfAQo27+wTJ6O0FwA==}
 
   '@nx/workspace@20.2.0-beta.3':
     resolution: {integrity: sha512-yyBtoCtuyZvUUzYFB5P6IXtg8irEyGb7JAnjoObtIHPcSvfUm7HTejvVgnmeX15qHxxnCvqe5BrWC8svn6+5IQ==}
@@ -11277,8 +11423,14 @@ packages:
   jwa@1.4.1:
     resolution: {integrity: sha512-qiLX/xhEEFKUAJ6FiBMbes3w9ATzyk5W7Hvzpa/SLYdxNtng+gcurvrI7TbACjIXlsJyr05/S1oUhZrc63evQA==}
 
+  jwa@2.0.0:
+    resolution: {integrity: sha512-jrZ2Qx916EA+fq9cEAeCROWPTfCwi1IVHqT2tapuqLEVVDKFDENFw1oL+MwrTvH6msKxsd1YTDVw6uKEcsrLEA==}
+
   jws@3.2.2:
     resolution: {integrity: sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==}
+
+  jws@4.0.0:
+    resolution: {integrity: sha512-KDncfTmOZoOMTFG4mBlG0qUIOlc03fmzH+ru6RgYVZhPkyiy/92Owlt/8UEN+a4TXR1FQetfIpJE8ApdvdVxTg==}
 
   karma-source-map-support@1.4.0:
     resolution: {integrity: sha512-RsBECncGO17KAoJCYXjv+ckIz+Ii9NCi+9enk+rq6XC81ezYkb4/RHE6CTXdA7IOJqoF3wcaLfVG0CPmE5ca6A==}
@@ -12478,6 +12630,18 @@ packages:
 
   nwsapi@2.2.12:
     resolution: {integrity: sha512-qXDmcVlZV4XRtKFzddidpfVP4oMSGhga+xdMc25mv8kaLUHtgzCDhUxkrN8exkGdTlLNaXj7CV3GtON7zuGZ+w==}
+
+  nx@20.1.3:
+    resolution: {integrity: sha512-mipsacEpn0gLd/4NSlOgyHW6Ozl++8ZIfuv42RtZEnS3BaGnnW+L2dkt85h4zffq+zBILoudd/VDFzaLY7Yrfw==}
+    hasBin: true
+    peerDependencies:
+      '@swc-node/register': ^1.8.0
+      '@swc/core': ^1.3.85
+    peerDependenciesMeta:
+      '@swc-node/register':
+        optional: true
+      '@swc/core':
+        optional: true
 
   nx@20.2.0-beta.3:
     resolution: {integrity: sha512-wPHZOvIaFKoxNhVfJnM3pLtL/EOtomKc0avJhyMBXlRonwF1QhRu4G+Yfj/g9iQ10KAk4FR9BB1VUrwmjxar/Q==}
@@ -14992,6 +15156,10 @@ packages:
   steno@0.4.4:
     resolution: {integrity: sha512-EEHMVYHNXFHfGtgjNITnka0aHhiAlo93F7z2/Pwd+g0teG9CnM3JIINM7hVVB5/rhw9voufD7Wukwgtw2uqh6w==}
 
+  stoppable@1.1.0:
+    resolution: {integrity: sha512-KXDYZ9dszj6bzvnEMRYvxgeTHU74QBFL54XKtP3nyMuJ81CFYtABZ3bAzL2EdFUaEwJOBOgENyFj3R7oTzDyyw==}
+    engines: {node: '>=4', npm: '>=6'}
+
   storybook-dark-mode@4.0.2:
     resolution: {integrity: sha512-zjcwwQ01R5t1VsakA6alc2JDIRVtavryW8J3E3eKLDIlAMcvsgtpxlelWkZs2cuNspk6Z10XzhQVrUWtYc3F0w==}
 
@@ -17246,6 +17414,143 @@ snapshots:
       '@types/json-schema': 7.0.15
       call-me-maybe: 1.0.2
       js-yaml: 4.1.0
+
+  '@azure/abort-controller@2.1.2':
+    dependencies:
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/core-auth@1.9.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-util': 1.11.0
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/core-client@1.9.2':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.9.0
+      '@azure/core-rest-pipeline': 1.18.0
+      '@azure/core-tracing': 1.2.0
+      '@azure/core-util': 1.11.0
+      '@azure/logger': 1.1.4
+      tslib: 2.7.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  '@azure/core-http-compat@2.1.2':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-client': 1.9.2
+      '@azure/core-rest-pipeline': 1.18.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  '@azure/core-lro@2.7.2':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-util': 1.11.0
+      '@azure/logger': 1.1.4
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/core-paging@1.6.2':
+    dependencies:
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/core-rest-pipeline@1.18.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.9.0
+      '@azure/core-tracing': 1.2.0
+      '@azure/core-util': 1.11.0
+      '@azure/logger': 1.1.4
+      http-proxy-agent: 7.0.2
+      https-proxy-agent: 7.0.5
+      tslib: 2.7.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  '@azure/core-tracing@1.2.0':
+    dependencies:
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/core-util@1.11.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/core-xml@1.4.4':
+    dependencies:
+      fast-xml-parser: 4.5.0
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/identity@4.5.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.9.0
+      '@azure/core-client': 1.9.2
+      '@azure/core-rest-pipeline': 1.18.0
+      '@azure/core-tracing': 1.2.0
+      '@azure/core-util': 1.11.0
+      '@azure/logger': 1.1.4
+      '@azure/msal-browser': 3.27.0
+      '@azure/msal-node': 2.16.1
+      events: 3.3.0
+      jws: 4.0.0
+      open: 8.4.2
+      stoppable: 1.1.0
+      tslib: 2.7.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  '@azure/logger@1.1.4':
+    dependencies:
+      tslib: 2.7.0
+    optional: true
+
+  '@azure/msal-browser@3.27.0':
+    dependencies:
+      '@azure/msal-common': 14.16.0
+    optional: true
+
+  '@azure/msal-common@14.16.0':
+    optional: true
+
+  '@azure/msal-node@2.16.1':
+    dependencies:
+      '@azure/msal-common': 14.16.0
+      jsonwebtoken: 9.0.2
+      uuid: 8.3.2
+    optional: true
+
+  '@azure/storage-blob@12.25.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.9.0
+      '@azure/core-client': 1.9.2
+      '@azure/core-http-compat': 2.1.2
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.18.0
+      '@azure/core-tracing': 1.2.0
+      '@azure/core-util': 1.11.0
+      '@azure/core-xml': 1.4.4
+      '@azure/logger': 1.1.4
+      events: 3.3.0
+      tslib: 2.7.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
 
   '@babel/code-frame@7.24.7':
     dependencies:
@@ -20580,6 +20885,30 @@ snapshots:
       tslib: 2.7.0
       yargs-parser: 21.1.1
 
+  '@nx/devkit@20.1.3(nx@20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+    dependencies:
+      ejs: 3.1.10
+      enquirer: 2.3.6
+      ignore: 5.3.2
+      minimatch: 9.0.3
+      nx: 20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
+      semver: 7.6.3
+      tmp: 0.2.3
+      tslib: 2.7.0
+      yargs-parser: 21.1.1
+
+  '@nx/devkit@20.1.3(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+    dependencies:
+      ejs: 3.1.10
+      enquirer: 2.3.6
+      ignore: 5.3.2
+      minimatch: 9.0.3
+      nx: 20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
+      semver: 7.6.3
+      tmp: 0.2.3
+      tslib: 2.7.0
+      yargs-parser: 21.1.1
+
   '@nx/devkit@20.2.0-beta.3(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
     dependencies:
       ejs: 3.1.10
@@ -20711,6 +21040,51 @@ snapshots:
       - ts-node
       - typescript
       - verdaccio
+
+  '@nx/js@20.1.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))':
+    dependencies:
+      '@babel/core': 7.25.2
+      '@babel/plugin-proposal-decorators': 7.24.7(@babel/core@7.25.2)
+      '@babel/plugin-transform-class-properties': 7.25.4(@babel/core@7.25.2)
+      '@babel/plugin-transform-runtime': 7.25.4(@babel/core@7.25.2)
+      '@babel/preset-env': 7.25.4(@babel/core@7.25.2)
+      '@babel/preset-typescript': 7.24.7(@babel/core@7.25.2)
+      '@babel/runtime': 7.25.6
+      '@nx/devkit': 20.1.3(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/workspace': 20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
+      '@zkochan/js-yaml': 0.0.7
+      babel-plugin-const-enum: 1.2.0(@babel/core@7.25.2)
+      babel-plugin-macros: 2.8.0
+      babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.25.2)(@babel/traverse@7.25.6)
+      chalk: 4.1.2
+      columnify: 1.6.0
+      detect-port: 1.6.1
+      enquirer: 2.3.6
+      fast-glob: 3.2.7
+      ignore: 5.3.2
+      js-tokens: 4.0.0
+      jsonc-parser: 3.2.0
+      minimatch: 9.0.3
+      npm-package-arg: 11.0.1
+      npm-run-path: 4.0.1
+      ora: 5.3.0
+      semver: 7.6.3
+      source-map-support: 0.5.19
+      ts-node: 10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.5.4)
+      tsconfig-paths: 4.2.0
+      tslib: 2.7.0
+    optionalDependencies:
+      verdaccio: 5.32.2(encoding@0.1.13)(typanion@3.14.0)
+    transitivePeerDependencies:
+      - '@babel/traverse'
+      - '@swc-node/register'
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - debug
+      - nx
+      - supports-color
+      - typescript
 
   '@nx/js@20.2.0-beta.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.4.5)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))':
     dependencies:
@@ -20891,31 +21265,61 @@ snapshots:
       - webpack
       - webpack-cli
 
+  '@nx/nx-darwin-arm64@20.1.3':
+    optional: true
+
   '@nx/nx-darwin-arm64@20.2.0-beta.3':
+    optional: true
+
+  '@nx/nx-darwin-x64@20.1.3':
     optional: true
 
   '@nx/nx-darwin-x64@20.2.0-beta.3':
     optional: true
 
+  '@nx/nx-freebsd-x64@20.1.3':
+    optional: true
+
   '@nx/nx-freebsd-x64@20.2.0-beta.3':
+    optional: true
+
+  '@nx/nx-linux-arm-gnueabihf@20.1.3':
     optional: true
 
   '@nx/nx-linux-arm-gnueabihf@20.2.0-beta.3':
     optional: true
 
+  '@nx/nx-linux-arm64-gnu@20.1.3':
+    optional: true
+
   '@nx/nx-linux-arm64-gnu@20.2.0-beta.3':
+    optional: true
+
+  '@nx/nx-linux-arm64-musl@20.1.3':
     optional: true
 
   '@nx/nx-linux-arm64-musl@20.2.0-beta.3':
     optional: true
 
+  '@nx/nx-linux-x64-gnu@20.1.3':
+    optional: true
+
   '@nx/nx-linux-x64-gnu@20.2.0-beta.3':
+    optional: true
+
+  '@nx/nx-linux-x64-musl@20.1.3':
     optional: true
 
   '@nx/nx-linux-x64-musl@20.2.0-beta.3':
     optional: true
 
+  '@nx/nx-win32-arm64-msvc@20.1.3':
+    optional: true
+
   '@nx/nx-win32-arm64-msvc@20.2.0-beta.3':
+    optional: true
+
+  '@nx/nx-win32-x64-msvc@20.1.3':
     optional: true
 
   '@nx/nx-win32-x64-msvc@20.2.0-beta.3':
@@ -20965,53 +21369,72 @@ snapshots:
       - vue-template-compiler
       - webpack-cli
 
-  '@nx/powerpack-enterprise-cloud@1.1.0-beta.4(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+  '@nx/powerpack-conformance@1.1.0-beta.6(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))':
     dependencies:
-      '@nx/devkit': 20.0.7(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
-      '@nx/powerpack-license': 1.1.0-beta.4
+      '@nx/devkit': 20.1.3(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/js': 20.1.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
+      '@nx/powerpack-license': 1.1.0-beta.6
+      ajv: 8.17.1
+      esbuild: 0.21.5
+    transitivePeerDependencies:
+      - '@babel/traverse'
+      - '@swc-node/register'
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - debug
+      - nx
+      - supports-color
+      - typescript
+      - verdaccio
+
+  '@nx/powerpack-enterprise-cloud@1.1.0-beta.6(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+    dependencies:
+      '@nx/devkit': 20.1.3(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      '@nx/powerpack-license': 1.1.0-beta.6
     transitivePeerDependencies:
       - nx
 
-  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.4':
+  '@nx/powerpack-license-darwin-arm64@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-darwin-x64@1.1.0-beta.4':
+  '@nx/powerpack-license-darwin-x64@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.4':
+  '@nx/powerpack-license-linux-arm-gnueabihf@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.4':
+  '@nx/powerpack-license-linux-arm64-gnu@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.4':
+  '@nx/powerpack-license-linux-arm64-musl@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.4':
+  '@nx/powerpack-license-linux-x64-gnu@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.4':
+  '@nx/powerpack-license-linux-x64-musl@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.4':
+  '@nx/powerpack-license-win32-arm64-msvc@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.4':
+  '@nx/powerpack-license-win32-x64-msvc@1.1.0-beta.6':
     optional: true
 
-  '@nx/powerpack-license@1.1.0-beta.4':
+  '@nx/powerpack-license@1.1.0-beta.6':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.4
     optionalDependencies:
-      '@nx/powerpack-license-darwin-arm64': 1.1.0-beta.4
-      '@nx/powerpack-license-darwin-x64': 1.1.0-beta.4
-      '@nx/powerpack-license-linux-arm-gnueabihf': 1.1.0-beta.4
-      '@nx/powerpack-license-linux-arm64-gnu': 1.1.0-beta.4
-      '@nx/powerpack-license-linux-arm64-musl': 1.1.0-beta.4
-      '@nx/powerpack-license-linux-x64-gnu': 1.1.0-beta.4
-      '@nx/powerpack-license-linux-x64-musl': 1.1.0-beta.4
-      '@nx/powerpack-license-win32-arm64-msvc': 1.1.0-beta.4
-      '@nx/powerpack-license-win32-x64-msvc': 1.1.0-beta.4
+      '@nx/powerpack-license-darwin-arm64': 1.1.0-beta.6
+      '@nx/powerpack-license-darwin-x64': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-arm-gnueabihf': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-arm64-gnu': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-arm64-musl': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-x64-gnu': 1.1.0-beta.6
+      '@nx/powerpack-license-linux-x64-musl': 1.1.0-beta.6
+      '@nx/powerpack-license-win32-arm64-msvc': 1.1.0-beta.6
+      '@nx/powerpack-license-win32-x64-msvc': 1.1.0-beta.6
 
   '@nx/react@20.2.0-beta.3(@babel/traverse@7.25.6)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/helpers@0.5.11)(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(esbuild@0.19.5)(eslint@8.57.0)(next@14.2.16(@babel/core@7.25.2)(@playwright/test@1.47.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.88.0))(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))':
     dependencies:
@@ -21248,6 +21671,19 @@ snapshots:
       - verdaccio
       - vue-template-compiler
       - webpack-cli
+
+  '@nx/workspace@20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))':
+    dependencies:
+      '@nx/devkit': 20.1.3(nx@20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      chalk: 4.1.2
+      enquirer: 2.3.6
+      nx: 20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))
+      tslib: 2.7.0
+      yargs-parser: 21.1.1
+    transitivePeerDependencies:
+      - '@swc-node/register'
+      - '@swc/core'
+      - debug
 
   '@nx/workspace@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11))':
     dependencies:
@@ -29441,10 +29877,23 @@ snapshots:
       ecdsa-sig-formatter: 1.0.11
       safe-buffer: 5.2.1
 
+  jwa@2.0.0:
+    dependencies:
+      buffer-equal-constant-time: 1.0.1
+      ecdsa-sig-formatter: 1.0.11
+      safe-buffer: 5.2.1
+    optional: true
+
   jws@3.2.2:
     dependencies:
       jwa: 1.4.1
       safe-buffer: 5.2.1
+
+  jws@4.0.0:
+    dependencies:
+      jwa: 2.0.0
+      safe-buffer: 5.2.1
+    optional: true
 
   karma-source-map-support@1.4.0:
     dependencies:
@@ -30825,7 +31274,7 @@ snapshots:
       node-gyp-build: 4.8.2
     optional: true
 
-  nitropack@2.9.7(encoding@0.1.13)(magicast@0.3.5)(webpack-sources@3.2.3):
+  nitropack@2.9.7(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(encoding@0.1.13)(magicast@0.3.5)(webpack-sources@3.2.3):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@netlify/functions': 2.8.1
@@ -30891,7 +31340,7 @@ snapshots:
       unctx: 2.3.1(webpack-sources@3.2.3)
       unenv: 1.10.0
       unimport: 3.12.0(rollup@4.22.0)(webpack-sources@3.2.3)
-      unstorage: 1.12.0(ioredis@5.4.1)
+      unstorage: 1.12.0(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(ioredis@5.4.1)
       unwasm: 0.3.9(webpack-sources@3.2.3)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -31122,7 +31571,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  nuxt@3.13.2(@parcel/watcher@2.4.1)(@types/node@20.16.10)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.4.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.22.0)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6)(typescript@5.5.4)(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(webpack-sources@3.2.3):
+  nuxt@3.13.2(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(@parcel/watcher@2.4.1)(@types/node@20.16.10)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.4.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.22.0)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6)(typescript@5.5.4)(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(webpack-sources@3.2.3):
     dependencies:
       '@nuxt/devalue': 2.0.2
       '@nuxt/devtools': 1.4.2(rollup@4.22.0)(vite@5.0.8(@types/node@20.16.10)(less@4.1.3)(sass@1.55.0)(stylus@0.64.0)(terser@5.31.6))(vue@3.5.6(typescript@5.5.4))(webpack-sources@3.2.3)
@@ -31159,7 +31608,7 @@ snapshots:
       magic-string: 0.30.11
       mlly: 1.7.1
       nanotar: 0.1.1
-      nitropack: 2.9.7(encoding@0.1.13)(magicast@0.3.5)(webpack-sources@3.2.3)
+      nitropack: 2.9.7(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(encoding@0.1.13)(magicast@0.3.5)(webpack-sources@3.2.3)
       nuxi: 3.13.2
       nypm: 0.3.11
       ofetch: 1.3.4
@@ -31182,7 +31631,7 @@ snapshots:
       unimport: 3.12.0(rollup@4.22.0)(webpack-sources@3.2.3)
       unplugin: 1.14.1(webpack-sources@3.2.3)
       unplugin-vue-router: 0.10.8(rollup@4.22.0)(vue-router@4.4.5(vue@3.5.6(typescript@5.5.4)))(vue@3.5.6(typescript@5.5.4))(webpack-sources@3.2.3)
-      unstorage: 1.12.0(ioredis@5.4.1)
+      unstorage: 1.12.0(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(ioredis@5.4.1)
       untyped: 1.4.2
       vue: 3.5.6(typescript@5.5.4)
       vue-bundle-renderer: 2.1.0
@@ -31236,6 +31685,56 @@ snapshots:
       - xml2js
 
   nwsapi@2.2.12: {}
+
+  nx@20.1.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)):
+    dependencies:
+      '@napi-rs/wasm-runtime': 0.2.4
+      '@yarnpkg/lockfile': 1.1.0
+      '@yarnpkg/parsers': 3.0.2
+      '@zkochan/js-yaml': 0.0.7
+      axios: 1.7.7
+      chalk: 4.1.2
+      cli-cursor: 3.1.0
+      cli-spinners: 2.6.1
+      cliui: 8.0.1
+      dotenv: 16.4.5
+      dotenv-expand: 11.0.6
+      enquirer: 2.3.6
+      figures: 3.2.0
+      flat: 5.0.2
+      front-matter: 4.0.2
+      ignore: 5.3.2
+      jest-diff: 29.7.0
+      jsonc-parser: 3.2.0
+      lines-and-columns: 2.0.3
+      minimatch: 9.0.3
+      node-machine-id: 1.1.12
+      npm-run-path: 4.0.1
+      open: 8.4.2
+      ora: 5.3.0
+      semver: 7.6.3
+      string-width: 4.2.3
+      tar-stream: 2.2.0
+      tmp: 0.2.3
+      tsconfig-paths: 4.2.0
+      tslib: 2.7.0
+      yargs: 17.6.2
+      yargs-parser: 21.1.1
+    optionalDependencies:
+      '@nx/nx-darwin-arm64': 20.1.3
+      '@nx/nx-darwin-x64': 20.1.3
+      '@nx/nx-freebsd-x64': 20.1.3
+      '@nx/nx-linux-arm-gnueabihf': 20.1.3
+      '@nx/nx-linux-arm64-gnu': 20.1.3
+      '@nx/nx-linux-arm64-musl': 20.1.3
+      '@nx/nx-linux-x64-gnu': 20.1.3
+      '@nx/nx-linux-x64-musl': 20.1.3
+      '@nx/nx-win32-arm64-msvc': 20.1.3
+      '@nx/nx-win32-x64-msvc': 20.1.3
+      '@swc-node/register': 1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4)
+      '@swc/core': 1.5.7(@swc/helpers@0.5.11)
+    transitivePeerDependencies:
+      - debug
 
   nx@20.2.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.5.4))(@swc/core@1.5.7(@swc/helpers@0.5.11)):
     dependencies:
@@ -34011,6 +34510,9 @@ snapshots:
     dependencies:
       graceful-fs: 4.2.11
 
+  stoppable@1.1.0:
+    optional: true
+
   storybook-dark-mode@4.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.3.2):
     dependencies:
       '@storybook/components': 8.3.2(storybook@8.3.2)
@@ -35096,7 +35598,7 @@ snapshots:
     optionalDependencies:
       webpack-sources: 3.2.3
 
-  unstorage@1.12.0(ioredis@5.4.1):
+  unstorage@1.12.0(@azure/identity@4.5.0)(@azure/storage-blob@12.25.0)(ioredis@5.4.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 3.6.0
@@ -35109,6 +35611,8 @@ snapshots:
       ofetch: 1.3.4
       ufo: 1.5.4
     optionalDependencies:
+      '@azure/identity': 4.5.0
+      '@azure/storage-blob': 12.25.0
       ioredis: 5.4.1
     transitivePeerDependencies:
       - uWebSockets.js

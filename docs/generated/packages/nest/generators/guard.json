@@ -39,7 +39,7 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "description": "Run the `guard` NestJS generator with Nx project support.",

@@ -4,14 +4,8 @@ import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
 import { BlurFade, usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
 import { useState } from 'react';
-import Link from 'next/link';
 import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
-import {
-  MonorepoWorldIcon,
-  RustIcon,
-  TypeScriptIcon,
-} from '@nx/nx-dev/ui-icons';
-import { motion, MotionConfig } from 'framer-motion';
+import { RustIcon, TypeScriptIcon } from '@nx/nx-dev/ui-icons';
 
 export function Hero(): JSX.Element {
   return (
@@ -76,12 +70,12 @@ export function Hero(): JSX.Element {
               Learn about Nx on CI
             </ButtonLink>
             <ButtonLink
-              href="/contact?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
-              title="Get started"
+              href="/nx-cloud"
+              title="Try Nx Cloud for free"
               variant="secondary"
               size="default"
             >
-              Contact us
+              Try Nx Cloud for free
             </ButtonLink>
           </div>
 
