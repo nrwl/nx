@@ -9,7 +9,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "g @nx/expo:lib mylib --directory=myapp",
+        "command": "nx g @nx/expo:lib mylib --directory=myapp",
         "description": "Generate libs/myapp/mylib"
       }
     ],

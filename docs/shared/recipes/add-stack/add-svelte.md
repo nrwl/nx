@@ -264,10 +264,6 @@ Navigate to `http://localhost:4200` and you should see your application.
 
 Instead of having our Counter directly defined in `App.svelte` file, let's create a library that we can import into our application.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 ```shell
 nx generate @nx/js:library libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter
 ```

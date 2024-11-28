@@ -8,11 +8,11 @@
     "description": "Create an Expo Application for Nx.",
     "examples": [
       {
-        "command": "g @nx/expo:app myapp --directory=nested",
+        "command": "nx g @nx/expo:app myapp --directory=nested",
         "description": "Generate apps/nested/myapp"
       },
       {
-        "command": "g @nx/expo:app myapp --classComponent",
+        "command": "nx g @nx/expo:app myapp --classComponent",
         "description": "Use class components instead of functional components"
       }
     ],

@@ -1,4 +1,3 @@
-import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
