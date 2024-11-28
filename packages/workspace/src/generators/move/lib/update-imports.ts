@@ -59,7 +59,7 @@ export function updateImports(
   let secondaryEntryPointImportPaths: string[] = [];
   let serverEntryPointImportPath: string | undefined;
 
-  if (tree.exists(tsConfigPath)) {
+  if (tsConfigPath !== null && tree.exists(tsConfigPath)) {
     tsConfig = readJson(tree, tsConfigPath);
     const sourceRoot =
       project.sourceRoot ?? joinPathFragments(project.root, 'src');
