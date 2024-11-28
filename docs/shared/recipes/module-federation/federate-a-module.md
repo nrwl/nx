@@ -21,7 +21,7 @@ Since we are using Nx, we will create a library for this module.
 **Create a library**
 
 ```shell
-nx generate @nx/js:library hello --unitTestRunner=jest --projectNameAndRootFormat=as-provided
+nx generate @nx/js:library hello --unitTestRunner=jest
 ```
 
 Update the `hello.ts` file with the following code:

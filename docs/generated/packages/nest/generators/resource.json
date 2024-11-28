@@ -8,17 +8,18 @@
     "description": "Nest Resource Options Schema.",
     "cli": "nx",
     "type": "object",
+    "examples": [
+      {
+        "description": "Generate `myapp/src/app/entities/foo.entity.ts`, `myapp/src/app/dto/create-foo.dto.ts`, `myapp/src/app/dto/update-foo.dto.ts`, `myapp/src/app/foo.service.ts`, `myapp/src/app/foo.controller.ts`, and `myapp/src/app/foo.module.ts`",
+        "command": "nx g @nx/nest:resource myapp/src/app/foo"
+      }
+    ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the resource will be generated.",
+        "description": "The file path to the resource without the file extension and suffix. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the resource be generated?"
-      },
-      "name": {
-        "type": "string",
-        "description": "The name of the resource.",
-        "x-prompt": "What name would you like to use for this resource (plural, e.g., `users`)?"
+        "x-prompt": "What is the resource file path?"
       },
       "skipFormat": {
         "description": "Skip formatting files.",
