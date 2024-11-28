@@ -24,12 +24,12 @@ import {
   readProjectGraphCache,
   writeCache,
 } from './nx-deps-cache';
-import { loadNxPlugins } from './plugins/internal-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
+import { getPlugins } from './plugins';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -96,7 +96,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const [plugins, cleanup] = await loadNxPlugins(nxJson.plugins);
+  const plugins = await getPlugins();
   try {
     configurationResult = await retrieveProjectConfigurations(
       plugins,
@@ -146,14 +146,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       projectGraphError = e;
     } else {
       throw e;
-    }
-  } finally {
-    // When plugins are isolated we don't clean them up during
-    // a single run of the CLI. They are cleaned up when the CLI
-    // process exits. Cleaning them here could cause issues if pending
-    // promises are not resolved.
-    if (process.env.NX_ISOLATE_PLUGINS !== 'true') {
-      cleanup();
     }
   }
 

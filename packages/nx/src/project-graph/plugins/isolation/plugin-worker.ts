@@ -1,6 +1,5 @@
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
-import { LoadedNxPlugin } from '../internal-api';
-import { loadNxPlugin } from '../loader';
+import type { LoadedNxPlugin } from '../internal-api';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 
@@ -41,6 +40,7 @@ const server = createServer((socket) => {
           if (loadTimeout) clearTimeout(loadTimeout);
           process.chdir(root);
           try {
+            const { loadNxPlugin } = await import('../loader');
             const [promise] = loadNxPlugin(pluginConfiguration, root);
             plugin = await promise;
             return {

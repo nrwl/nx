@@ -31,12 +31,12 @@ import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
 import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
 import { LoadedNxPlugin } from '../../project-graph/plugins/internal-api';
-import { getPlugins } from './plugins';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,
   isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
+import { getPlugins } from '../../project-graph/plugins';
 
 interface SerializedProjectGraph {
   error: Error | null;

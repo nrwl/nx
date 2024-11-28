@@ -37,6 +37,27 @@ export async function getPlugins() {
   return result;
 }
 
+let loadedDefaultPlugins: LoadedNxPlugin[];
+let cleanupDefaultPlugins: () => void;
+
+export async function getOnlyDefaultPlugins() {
+  // If the plugins configuration has not changed, reuse the current plugins
+  if (loadedDefaultPlugins) {
+    return loadedPlugins;
+  }
+
+  // Cleanup current plugins before loading new ones
+  if (cleanupDefaultPlugins) {
+    cleanupDefaultPlugins();
+  }
+
+  const [result, cleanupFn] = await loadNxPlugins([], workspaceRoot);
+  cleanupDefaultPlugins = cleanupFn;
+  loadedPlugins = result;
+  return result;
+}
+
 export function cleanupPlugins() {
   cleanup();
+  cleanupDefaultPlugins();
 }
