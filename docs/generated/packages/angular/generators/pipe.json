@@ -9,17 +9,26 @@
     "cli": "nx",
     "additionalProperties": false,
     "description": "Creates an Angular pipe.",
+    "examples": [
+      {
+        "description": "Generate a pipe with the exported symbol matching the file name. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a pipe with the exported symbol different from the file name. It results in the pipe `CustomPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo --name=custom"
+      }
+    ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "The path at which to create the pipe file, relative to the workspace root.",
+        "description": "The file path to the pipe without the file extension and suffix. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What is the path of the new pipe?"
+        "x-prompt": "What is the pipe file path?"
       },
       "name": {
         "type": "string",
-        "description": "The name of the pipe.",
-        "x-prompt": "What name would you like to use for the pipe?"
+        "description": "The pipe symbol name. Defaults to the last segment of the file path."
       },
       "skipTests": {
         "type": "boolean",

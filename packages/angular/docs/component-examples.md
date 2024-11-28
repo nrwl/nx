@@ -3,10 +3,20 @@
 {% tabs %}
 {% tab label="Simple Component" %}
 
-Create a component named `my-component`:
+Generate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:
 
 ```bash
 nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component
+```
+
+{% /tab %}
+
+{% tab label="With Different Symbol Name" %}
+
+Generate a component named `CustomComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:
+
+```bash
+nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --name=custom
 ```
 
 {% /tab %}
