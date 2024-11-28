@@ -149,7 +149,7 @@ export function updateImports(
       to: schema.relativeToRootDestination,
     };
 
-    if (tsConfig && paths.length > 0) {
+    if (tsConfig) {
       const path = tsConfig.compilerOptions.paths[projectRef.from];
       if (!path) {
         throw new Error(
