@@ -1,10 +1,7 @@
 import { formatFiles, names, stripIndents, Tree } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { basename, dirname } from 'path';
-import {
-  checkRoutePathForErrors,
-  resolveRemixRouteFile,
-} from '../../utils/remix-route-utils';
+import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import ActionGenerator from '../action/action.impl';
 import LoaderGenerator from '../loader/loader.impl';
 import MetaGenerator from '../meta/meta.impl';
@@ -12,9 +9,10 @@ import StyleGenerator from '../style/style.impl';
 import { RemixRouteSchema } from './schema';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
-  const { artifactName: name, filePath } =
+  const { artifactName: name, filePath: routeFilePath } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       path: options.path.replace(/^\//, '').replace(/\/$/, ''),
+      allowedFileExtensions: ['ts', 'tsx'],
       fileExtension: 'tsx',
     });
 
@@ -23,8 +21,6 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
       `Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.`
     );
   }
-
-  const routeFilePath = await resolveRemixRouteFile(tree, filePath);
 
   const { className: componentName } = names(
     name === '.' || name === '' ? basename(dirname(routeFilePath)) : name
