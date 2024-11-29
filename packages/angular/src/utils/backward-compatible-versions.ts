@@ -16,7 +16,7 @@ export type VersionMap = {
   angularV17: Record<
     Exclude<
       CompatPackageVersionNames,
-      'analogVitestAngular' | 'typescriptEslintVersion'
+     'typescriptEslintVersion'
     >,
     string
   >;
@@ -80,7 +80,6 @@ export const backwardCompatibleVersions: VersionMap = {
     jestPresetAngularVersion: '~14.1.0',
     typesNodeVersion: '18.16.9',
     jasmineMarblesVersion: '^0.9.2',
-    analogVitestAngular: '~1.9.1',
     jsoncEslintParserVersion: '^2.1.0',
   },
 };
