@@ -13,7 +13,7 @@ import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
-import { spawn, SpawnOptions } from 'child_process';
+import { fork, ForkOptions } from 'child_process';
 
 export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   const { dependencies, dev } = getPresetDependencies(options);
@@ -32,25 +32,33 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       interactive: true,
     },
   });
-  const spawnOptions: SpawnOptions = {
+
+  const newWorkspaceRoot = join(host.root, opts.directory);
+  const spawnOptions: ForkOptions = {
     stdio: 'inherit',
-    shell: true,
-    cwd: join(host.root, opts.directory),
-    windowsHide: false,
+    cwd: newWorkspaceRoot,
   };
   const pmc = getPackageManagerCommand();
-  const executable = `${pmc.exec} nx`;
+  const nxBinForNewWorkspaceRoot = require.resolve('nx/bin/nx', {
+    paths: [join(newWorkspaceRoot, 'node_modules')],
+  });
   const args = getPresetArgs(opts);
 
   return new Promise<void>((resolve, reject) => {
-    spawn(executable, args, spawnOptions).on('close', (code: number) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        const message = 'Workspace creation failed, see above.';
-        reject(new Error(message));
+    // This needs to be `fork` instead of `spawn` because `spawn` is failing on Windows with pnpm + yarn
+    // The root cause is unclear. Spawn causes the `@nx/workspace:preset` generator to be called twice
+    // and the second time it fails with `Project {projectName} already exists.`
+    fork(nxBinForNewWorkspaceRoot, args, spawnOptions).on(
+      'close',
+      (code: number) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          const message = 'Workspace creation failed, see above.';
+          reject(new Error(message));
+        }
       }
-    });
+    );
   });
 
   function getPresetArgs(options: NormalizedSchema) {
