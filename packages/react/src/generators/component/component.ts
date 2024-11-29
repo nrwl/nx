@@ -59,7 +59,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 
   if (options.skipTests || options.inSourceTests) {
     host.delete(
-      join(
+      joinPathFragments(
         options.directory,
         `${options.fileName}.spec.${options.fileExtension}`
       )

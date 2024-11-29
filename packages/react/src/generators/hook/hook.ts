@@ -49,7 +49,12 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   });
 
   if (options.skipTests) {
-    host.delete(join(options.directory, `${options.fileName}.spec.${specExt}`));
+    host.delete(
+      joinPathFragments(
+        options.directory,
+        `${options.fileName}.spec.${specExt}`
+      )
+    );
   }
 }
 

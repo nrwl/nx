@@ -36,7 +36,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 
   if (options.skipTests) {
     host.delete(
-      join(
+      joinPathFragments(
         options.directory,
         `${options.fileName}.spec.${options.fileExtension}`
       )
