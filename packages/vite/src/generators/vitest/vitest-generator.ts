@@ -27,6 +27,7 @@ import {
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
+import { detectUiFramework } from '../../utils/detect-ui-framework';
 
 /**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
@@ -59,6 +60,8 @@ export async function vitestGeneratorInternal(
     schema.project
   );
   const projectType = schema.projectType ?? _projectType;
+  const uiFramework =
+    schema.uiFramework ?? (await detectUiFramework(schema.project));
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
@@ -67,12 +70,12 @@ export async function vitestGeneratorInternal(
     addPlugin: schema.addPlugin,
   });
   tasks.push(initTask);
-  tasks.push(ensureDependencies(tree, schema));
+  tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));
 
   addOrChangeTestTarget(tree, schema, hasPlugin);
 
   if (!schema.skipViteConfig) {
-    if (schema.uiFramework === 'angular') {
+    if (uiFramework === 'angular') {
       const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
 
       const setupFile = joinPathFragments(root, relativeTestSetupPath);
@@ -109,7 +112,7 @@ getTestBed().initTestEnvironment(
         },
         true
       );
-    } else if (schema.uiFramework === 'react') {
+    } else if (uiFramework === 'react') {
       createOrEditViteConfig(
         tree,
         {
