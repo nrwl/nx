@@ -31,6 +31,10 @@ export type ArtifactGenerationOptions = {
    * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
    */
   js?: boolean;
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
+  jsOptionName?: string;
 };
 
 export type FileExtensionType = 'js' | 'ts' | 'other';
@@ -118,7 +122,12 @@ function getNameAndDirectoryOptions(
   const filePath = joinPathFragments(directory, `${fileName}.${fileExtension}`);
   const fileExtensionType = getFileExtensionType(fileExtension);
 
-  validateFileExtension(fileExtension, allowedFileExtensions, options.js);
+  validateFileExtension(
+    fileExtension,
+    allowedFileExtensions,
+    options.js,
+    options.jsOptionName
+  );
 
   return {
     artifactName: options.name ?? extractedName,
@@ -203,7 +212,8 @@ function getFileExtensionType(fileExtension: string): FileExtensionType {
 function validateFileExtension(
   fileExtension: string,
   allowedFileExtensions: string[],
-  js: boolean | undefined
+  js: boolean | undefined,
+  jsOptionName: string | undefined
 ): FileExtensionType {
   const fileExtensionType = getFileExtensionType(fileExtension);
 
@@ -217,14 +227,16 @@ The supported extensions are: ${allowedFileExtensions
   }
 
   if (js !== undefined) {
+    jsOptionName = jsOptionName ?? 'js';
+
     if (js && fileExtensionType === 'ts') {
       throw new Error(
-        `The provided file path has an extension (.${fileExtension}) that is not allowed when the "--js" option is used.`
+        `The provided file path has an extension (.${fileExtension}) that conflicts with the provided "--${jsOptionName}" option.`
       );
     }
     if (!js && fileExtensionType === 'js') {
       throw new Error(
-        `The provided file path has an extension (.${fileExtension}) that is not allowed when the "--js=false" option is used.`
+        `The provided file path has an extension (.${fileExtension}) that conflicts with the provided "--${jsOptionName}" option.`
       );
     }
   }

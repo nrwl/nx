@@ -251,7 +251,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         js: true,
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided file path has an extension (.tsx) that is not allowed when the "--js" option is used."`
+      `"The provided file path has an extension (.tsx) that conflicts with the provided "--js" option."`
     );
   });
 
@@ -267,7 +267,24 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         js: false,
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided file path has an extension (.jsx) that is not allowed when the "--js=false" option is used."`
+      `"The provided file path has an extension (.jsx) that conflicts with the provided "--js" option."`
+    );
+  });
+
+  it('should support customizing the --js option name', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    await expect(
+      determineArtifactNameAndDirectoryOptions(tree, {
+        path: 'apps/app1/myComponent.tsx',
+        js: true,
+        jsOptionName: 'language',
+      })
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"The provided file path has an extension (.tsx) that conflicts with the provided "--language" option."`
     );
   });
 });
