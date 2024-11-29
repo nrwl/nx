@@ -81,14 +81,16 @@ export class CopyAssetsHandler {
     this.assetGlobs = opts.assets.map((f) => {
       let isGlob = false;
       let pattern: string;
+      const defaultGlob = '**/*';
       // Input and output directories are normalized to be relative to root
       let input: string;
       let output: string;
       let ignore: string[] | null = null;
       if (typeof f === 'string') {
-        pattern = f;
-        input = path.relative(opts.rootDir, opts.projectDir);
-        output = path.relative(opts.rootDir, opts.outputDir);
+        // Glob patterns are needed for single string entries
+        pattern = this.isGlobPattern(f) ? f : path.join(f, defaultGlob);
+        input = f;
+        output = path.join(path.relative(opts.rootDir, opts.outputDir), f);
       } else {
         isGlob = true;
         pattern = pathPosix.join(f.input, f.glob);
@@ -108,6 +110,12 @@ export class CopyAssetsHandler {
         output,
       };
     });
+  }
+
+  private isGlobPattern(str) {
+    const globChars = ['*', '?', '[', ']', '(', ')', '{', '}', '!'];
+
+    return globChars.some((char) => str.includes(char));
   }
 
   async processAllAssetsOnce(): Promise<void> {
