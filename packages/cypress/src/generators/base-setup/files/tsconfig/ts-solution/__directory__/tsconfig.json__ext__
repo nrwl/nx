@@ -16,5 +16,6 @@
     "<%= offsetFromProjectRoot %>**/*.cy.js",
     <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.jsx",<%_ } _%>
     "<%= offsetFromProjectRoot %>**/*.d.ts"
-  ]
+  ],
+  "exclude": ["dist"<% if (linter === 'eslint') { %>, "eslint.config.js"<% } %>]
 }

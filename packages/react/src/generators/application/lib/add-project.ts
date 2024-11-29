@@ -5,10 +5,12 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
+  writeJson,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -36,9 +38,25 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-  });
+  if (options.isUsingTsSolutionConfig) {
+    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
+      name: getImportPath(host, options.name),
+      version: '0.0.1',
+      private: true,
+      nx: {
+        name: options.name,
+        projectType: 'application',
+        sourceRoot: `${options.appProjectRoot}/src`,
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  }
+
+  if (!options.isUsingTsSolutionConfig || options.alwaysGenerateProjectJson) {
+    addProjectConfiguration(host, options.projectName, {
+      ...project,
+    });
+  }
 }
 
 function createRspackBuildTarget(

@@ -8,6 +8,7 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../utils/versions';
 import { maybeJs } from '../utils/maybe-js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function updateModuleFederationProject(
   host: Tree,
@@ -124,6 +125,12 @@ export function updateModuleFederationProject(
       },
     },
   };
+
+  // Typechecks must be performed first before build and serve to generate remote d.ts files.
+  if (isUsingTsSolutionSetup(host)) {
+    projectConfig.targets.build.dependsOn = ['^build', 'typecheck'];
+    projectConfig.targets.serve.dependsOn = ['typecheck'];
+  }
 
   updateProjectConfiguration(host, options.projectName, projectConfig);
 }

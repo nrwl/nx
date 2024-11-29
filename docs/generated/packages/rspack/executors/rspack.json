@@ -119,7 +119,7 @@
       "extractLicenses": {
         "type": "boolean",
         "description": "Extract all licenses in a separate file.",
-        "default": true
+        "default": false
       },
       "fileReplacements": {
         "description": "Replace files with other files in the build.",

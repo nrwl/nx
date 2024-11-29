@@ -7,6 +7,7 @@ export interface Schema {
   style?: string;
   linter?: string;
   formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
