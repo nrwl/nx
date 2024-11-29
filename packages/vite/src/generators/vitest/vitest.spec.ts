@@ -21,14 +21,14 @@ describe('vitest generator', () => {
   };
 
   describe('test target', () => {
-    it('should remove existing test target', async () => {
-      const { runGenerator, tree } = setUpAngularWorkspace();
+    it('should fail if test target is already defined', async () => {
+      const { runGenerator } = setUpAngularWorkspace();
 
-      await runGenerator();
-
-      expect(
-        readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
-      ).toBeUndefined();
+      await expect(
+        runGenerator({
+          addPlugin: false,
+        })
+      ).rejects.toThrow('Target "test" already exists in the project.');
     });
 
     it('should not add test target to the project', async () => {
@@ -53,19 +53,6 @@ describe('vitest generator', () => {
         delete json.targets.test;
         return json;
       });
-
-      await runGenerator({
-        addPlugin: false,
-      });
-
-      expect(
-        readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
-          .executor
-      ).toBe('@nx/vite:test');
-    });
-
-    it('should replace test target if plugin is is not used', async () => {
-      const { runGenerator, tree } = setUpAngularWorkspace();
 
       await runGenerator({
         addPlugin: false,

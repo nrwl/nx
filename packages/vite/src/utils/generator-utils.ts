@@ -94,6 +94,10 @@ export function addOrChangeTestTarget(
       : p.plugin === '@nx/vite/plugin' || hasPlugin
   );
 
+  if (hasPlugin) {
+    return;
+  }
+
   const project = readProjectConfiguration(tree, options.project);
   const target = options.testTarget ?? 'test';
 
@@ -108,19 +112,14 @@ export function addOrChangeTestTarget(
 
   project.targets ??= {};
 
-  if (hasPlugin) {
-    delete project.targets[target];
+  if (project.targets[target]) {
+    throw new Error(`Target "${target}" already exists in the project.`);
   } else {
-    if (project.targets[target]) {
-      project.targets[target].executor = '@nx/vite:test';
-      delete project.targets[target].options?.jestConfig;
-    } else {
-      project.targets[target] = {
-        executor: '@nx/vite:test',
-        outputs: ['{options.reportsDirectory}'],
-        options: testOptions,
-      };
-    }
+    project.targets[target] = {
+      executor: '@nx/vite:test',
+      outputs: ['{options.reportsDirectory}'],
+      options: testOptions,
+    };
   }
 
   updateProjectConfiguration(tree, options.project, project);
