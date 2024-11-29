@@ -1,12 +1,16 @@
 import {
+  joinPathFragments,
+  offsetFromRoot,
   output,
   readJson,
   readNxJson,
-  workspaceRoot,
   type Tree,
+  updateJson,
+  workspaceRoot,
 } from '@nx/devkit';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import { relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -95,4 +99,79 @@ export function assertNotUsingTsSolutionSetup(
   });
 
   process.exit(1);
+}
+
+export function updateTsconfigFiles(
+  tree: Tree,
+  projectRoot: string,
+  runtimeTsconfigFileName: string,
+  compilerOptions: Record<string, string | boolean | string[]>,
+  exclude: string[] = [],
+  rootDir = 'src'
+) {
+  if (!isUsingTsSolutionSetup(tree)) return;
+
+  const offset = offsetFromRoot(projectRoot);
+  const tsconfig = `${projectRoot}/${runtimeTsconfigFileName}`;
+  const tsconfigSpec = `${projectRoot}/tsconfig.spec.json`;
+  const e2eRoot = `${projectRoot}-e2e`;
+  const tsconfigE2E = `${e2eRoot}/tsconfig.json`;
+
+  if (tree.exists(tsconfig)) {
+    updateJson(tree, tsconfig, (json) => {
+      json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        // Make sure d.ts files from typecheck does not conflict with bundlers.
+        // Other tooling like jest write to "out-tsc/jest" to we just default to "out-tsc/<project-name>".
+        outDir: joinPathFragments('out-tsc', projectRoot.split('/').at(-1)),
+        rootDir,
+        ...compilerOptions,
+      };
+
+      const excludeSet: Set<string> = json.exclude
+        ? new Set(['dist', ...json.exclude, ...exclude])
+        : new Set(exclude);
+      json.exclude = Array.from(excludeSet);
+
+      return json;
+    });
+  }
+
+  if (tree.exists(tsconfigSpec)) {
+    updateJson(tree, tsconfigSpec, (json) => {
+      json.extends = joinPathFragments(offset, 'tsconfig.base.json');
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        ...compilerOptions,
+      };
+      const runtimePath = `./${runtimeTsconfigFileName}`;
+      json.references ??= [];
+      if (!json.references.some((x) => x.path === runtimePath))
+        json.references.push({ path: runtimePath });
+      return json;
+    });
+  }
+
+  if (tree.exists(tsconfigE2E)) {
+    // tsconfig.json for e2e projects need to have references array
+    updateJson(tree, tsconfigE2E, (json) => {
+      json.references ??= [];
+      const projectPath = relative(e2eRoot, projectRoot);
+      if (!json.references.some((x) => x.path === projectPath))
+        json.references.push({ path: projectPath });
+      return json;
+    });
+  }
+
+  if (tree.exists('tsconfig.json')) {
+    updateJson(tree, 'tsconfig.json', (json) => {
+      const projectPath = './' + projectRoot;
+      json.references ??= [];
+      if (!json.references.some((x) => x.path === projectPath))
+        json.references.push({ path: projectPath });
+      return json;
+    });
+  }
 }

@@ -61,6 +61,7 @@ export async function normalizeOptions(
     className,
     fileName,
     filePath,
-    projectSourceRoot: projectSourceRoot ?? projectRoot,
+    projectRoot,
+    projectSourceRoot: projectSourceRoot,
   };
 }

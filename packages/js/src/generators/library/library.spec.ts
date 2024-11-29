@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
@@ -1606,6 +1607,66 @@ describe('lib', () => {
           "dependencies": {},
           "name": "@proj/my-lib",
           "private": true,
+          "version": "0.0.1",
+        }
+      `);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should map non-buildable libraries to source', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-ts-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-js-lib',
+        js: true,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "main": "./src/index.ts",
+          "name": "@proj/my-ts-lib",
+          "private": true,
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(tree, 'my-js-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "main": "./src/index.js",
+          "name": "@proj/my-js-lib",
+          "private": true,
+          "types": "./src/index.js",
           "version": "0.0.1",
         }
       `);

@@ -21,14 +21,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import {
-  babelLoaderVersion,
-  nxRspackVersion,
-  nxVersion,
-} from '../../utils/versions';
+import { babelLoaderVersion, nxVersion } from '../../utils/versions';
 import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
@@ -46,7 +41,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -114,19 +109,19 @@ export async function applicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react', 'application');
-
   const tasks = [];
-
-  const options = await normalizeOptions(host, schema);
-  showPossibleWarnings(host, options);
 
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
+  showPossibleWarnings(host, options);
 
   const initTask = await reactInitGenerator(host, {
     ...options,
@@ -165,10 +160,7 @@ export async function applicationGeneratorInternal(
       tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
     }
   } else if (options.bundler === 'rspack') {
-    const { rspackInitGenerator } = ensurePackage(
-      '@nx/rspack',
-      nxRspackVersion
-    );
+    const { rspackInitGenerator } = ensurePackage('@nx/rspack', nxVersion);
     const rspackInitTask = await rspackInitGenerator(host, {
       ...options,
       addPlugin: false,
@@ -213,6 +205,7 @@ export async function applicationGeneratorInternal(
       compiler: options.compiler,
       skipFormat: true,
       addPlugin: options.addPlugin,
+      projectType: 'application',
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -236,6 +229,26 @@ export async function applicationGeneratorInternal(
       },
       false
     );
+  } else if (options.bundler === 'rspack') {
+    const { configurationGenerator } = ensurePackage('@nx/rspack', nxVersion);
+    const rspackTask = await configurationGenerator(host, {
+      project: options.projectName,
+      main: joinPathFragments(
+        options.appProjectRoot,
+        maybeJs(
+          {
+            js: options.js,
+            useJsx: true,
+          },
+          `src/main.tsx`
+        )
+      ),
+      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      target: 'web',
+      newProject: true,
+      framework: 'react',
+    });
+    tasks.push(rspackTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
@@ -347,6 +360,12 @@ export async function applicationGeneratorInternal(
         `
     );
   }
+
+  updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.app.json', {
+    jsx: 'react-jsx',
+    module: 'esnext',
+    moduleResolution: 'bundler',
+  });
 
   if (!options.skipFormat) {
     await formatFiles(host);
