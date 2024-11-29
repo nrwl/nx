@@ -47,6 +47,14 @@ import {
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
 import { updateLockFile } from './utils/update-lock-file';
 
+function resolvePreIdSpecifier(currentSpecifier: string, preid?: string) {
+  if (!currentSpecifier.startsWith('pre') && preid) {
+    return `pre${currentSpecifier}`;
+  }
+
+  return currentSpecifier;
+}
+
 export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
@@ -89,7 +97,10 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // Set default for updateDependents
     const updateDependents = options.updateDependents ?? 'auto';
-    const updateDependentsBump = 'patch';
+    const updateDependentsBump = resolvePreIdSpecifier(
+      'patch',
+      options.preid
+    ) as ReleaseType;
 
     // Sort the projects topologically if update dependents is enabled
     // TODO: maybe move this sorting to the command level?
@@ -445,8 +456,13 @@ To fix this you will either need to add a package.json file at that location, or
               );
             } else {
               let extraText = '';
-              if (options.preid && !specifier.startsWith('pre')) {
-                specifier = `pre${specifier}`;
+              const prereleaseSpecifier = resolvePreIdSpecifier(
+                specifier,
+                options.preid
+              );
+
+              if (prereleaseSpecifier !== specifier) {
+                specifier = prereleaseSpecifier;
                 extraText = `, combined with your given preid "${options.preid}"`;
               }
               logger.buffer(
@@ -598,6 +614,7 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
+      // list of projects that depend on the current package
       const allDependentProjects = Object.values(localPackageDependencies)
         .flat()
         .filter((localPackageDependency) => {
@@ -765,7 +782,7 @@ To fix this you will either need to add a package.json file at that location, or
         dependentProject: LocalPackageDependency;
         dependencyPackageName: string;
         newDependencyVersion: string;
-        forceVersionBump: 'major' | 'minor' | 'patch' | false;
+        forceVersionBump: ReleaseType | false;
       }) => {
         const updatedFilePath = joinPathFragments(
           projectNameToPackageRootMap.get(dependentProject.source),
