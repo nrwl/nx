@@ -153,6 +153,7 @@ async function normalizeOptions(
   } = await determineArtifactNameAndDirectoryOptions(host, {
     path: options.path,
     name: options.name,
+    suffix: 'slice',
     allowedFileExtensions: ['js', 'ts'],
     fileExtension: options.js ? 'js' : 'ts',
     js: options.js,
