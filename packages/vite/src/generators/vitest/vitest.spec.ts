@@ -1,6 +1,11 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { readJson, Tree, updateJson } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import {
@@ -63,23 +68,6 @@ describe('vitest generator', () => {
           .executor
       ).toBe('@nx/vite:test');
     });
-
-    function setUpAngularWorkspace() {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      mockAngularAppGenerator(tree);
-      return {
-        async runGenerator({ addPlugin = true }: { addPlugin?: boolean } = {}) {
-          await generator(tree, {
-            project: 'my-test-angular-app',
-            uiFramework: 'angular',
-            coverageProvider: 'v8',
-            addPlugin,
-          });
-          return tree;
-        },
-        tree,
-      };
-    }
   });
 
   describe('tsconfig', () => {
@@ -206,14 +194,9 @@ describe('vitest generator', () => {
 
   describe('angular', () => {
     beforeAll(async () => {
-      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      mockAngularAppGenerator(appTree);
-      await generator(appTree, {
-        project: 'my-test-angular-app',
-        uiFramework: 'angular',
-        coverageProvider: 'v8',
-        addPlugin: true,
-      });
+      const { tree, runGenerator } = setUpAngularWorkspace();
+      appTree = tree;
+      await runGenerator();
     });
 
     it('should generate vite.config.mts', async () => {
@@ -257,3 +240,38 @@ describe('vitest generator', () => {
     });
   });
 });
+
+function setUpAngularWorkspace() {
+  const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  const project = 'my-test-angular-app';
+
+  (
+    createProjectGraphAsync as jest.MockedFn<typeof createProjectGraphAsync>
+  ).mockResolvedValue({
+    dependencies: {
+      [project]: [
+        {
+          type: 'static',
+          source: project,
+          target: 'npm:@angular/core',
+        },
+      ],
+    },
+    nodes: {},
+  });
+
+  mockAngularAppGenerator(tree);
+
+  return {
+    project,
+    async runGenerator({ addPlugin = true }: { addPlugin?: boolean } = {}) {
+      await generator(tree, {
+        project,
+        coverageProvider: 'v8',
+        addPlugin,
+      });
+      return tree;
+    },
+    tree,
+  };
+}
