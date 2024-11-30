@@ -20,7 +20,6 @@ describe('vitest generator', () => {
   let appTree: Tree;
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
-    uiFramework: 'react',
     coverageProvider: 'v8',
     addPlugin: true,
   };
@@ -72,9 +71,9 @@ describe('vitest generator', () => {
 
   describe('tsconfig', () => {
     beforeAll(async () => {
-      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      mockReactAppGenerator(appTree);
-      await generator(appTree, options);
+      const { runGenerator, tree } = setUpReactWorkspace();
+      appTree = tree;
+      await runGenerator();
     });
 
     it('should add vitest.workspace.ts at the root', async () => {
@@ -131,32 +130,13 @@ describe('vitest generator', () => {
         }
       `);
     });
-
-    it('should add vitest/importMeta when inSourceTests is true', async () => {
-      mockReactAppGenerator(appTree, 'my-test-react-app-2');
-      await generator(appTree, {
-        ...options,
-        inSourceTests: true,
-        project: 'my-test-react-app-2',
-      });
-      const tsconfig = JSON.parse(
-        appTree
-          .read('apps/my-test-react-app-2/tsconfig.app.json')
-          ?.toString() ?? '{}'
-      );
-      expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
-        [
-          "vitest/importMeta",
-        ]
-      `);
-    });
   });
 
   describe('vite.config', () => {
     beforeAll(async () => {
-      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      mockReactAppGenerator(appTree);
-      await generator(appTree, options);
+      const { runGenerator, tree } = setUpReactWorkspace();
+      appTree = tree;
+      await runGenerator();
     });
 
     it('should add @nx/vite dependency', async () => {
@@ -169,26 +149,48 @@ describe('vitest generator', () => {
         appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
+  });
 
+  describe('vite.config for libs', () => {
     it('should create correct vite.config.ts file for non buildable libs', async () => {
-      mockReactLibNonBuildableJestTestRunnerGenerator(appTree);
-      await generator(appTree, { ...options, project: 'react-lib-nonb-jest' });
+      const { runGenerator, tree } = setUpReactWorkspace();
+
+      mockReactLibNonBuildableJestTestRunnerGenerator(tree);
+      setProjectGraphDependencies('react-lib-nonb-jest', ['npm:react']);
+
+      await runGenerator({ project: 'react-lib-nonb-jest' });
+
       expect(
-        appTree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
+        tree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
 
   describe('insourceTests', () => {
-    beforeAll(async () => {
-      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      mockReactAppGenerator(appTree);
-      await generator(appTree, { ...options, inSourceTests: true });
-    });
     it('should add the insourceSource option in the vite config', async () => {
+      const { runGenerator, tree } = setUpReactWorkspace();
+
+      await runGenerator({ inSourceTests: true });
+
       expect(
-        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+
+    it('should add vitest/importMeta when inSourceTests is true', async () => {
+      const { tree, runGenerator } = setUpReactWorkspace();
+
+      await runGenerator({ inSourceTests: true });
+
+      const tsconfig = JSON.parse(
+        tree.read('apps/my-test-react-app/tsconfig.app.json')?.toString() ??
+          '{}'
+      );
+      expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
+        [
+          "vitest/importMeta",
+        ]
+      `);
     });
   });
 
@@ -263,7 +265,6 @@ function setUpAngularWorkspace() {
   mockAngularAppGenerator(tree);
 
   return {
-    project,
     async runGenerator({ addPlugin = true }: { addPlugin?: boolean } = {}) {
       await generator(tree, {
         project,
@@ -274,4 +275,50 @@ function setUpAngularWorkspace() {
     },
     tree,
   };
+}
+
+function setUpReactWorkspace() {
+  const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  const appName = 'my-test-react-app';
+
+  mockReactAppGenerator(tree);
+
+  setProjectGraphDependencies(appName, ['npm:react']);
+
+  return {
+    project: appName,
+    async runGenerator({
+      addPlugin = true,
+      inSourceTests,
+      project,
+    }: {
+      addPlugin?: boolean;
+      inSourceTests?: boolean;
+      project?: string;
+    } = {}) {
+      await generator(tree, {
+        project: project ?? appName,
+        coverageProvider: 'v8',
+        addPlugin,
+        inSourceTests,
+      });
+      return tree;
+    },
+    tree,
+  };
+}
+
+function setProjectGraphDependencies(project: string, dependencies: string[]) {
+  (
+    createProjectGraphAsync as jest.MockedFn<typeof createProjectGraphAsync>
+  ).mockResolvedValue({
+    dependencies: {
+      [project]: dependencies.map((target) => ({
+        type: 'static',
+        source: project,
+        target,
+      })),
+    },
+    nodes: {},
+  });
 }

@@ -13,6 +13,10 @@ export async function detectUiFramework(
     if (dep.target.startsWith('npm:@angular/')) {
       return 'angular';
     }
+
+    if (dep.target === 'npm:react') {
+      return 'react';
+    }
   }
 
   return 'none';
