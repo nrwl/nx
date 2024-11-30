@@ -7,6 +7,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -875,4 +876,190 @@ module.exports = withNx(
       });
     }
   );
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./mylib",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/mylib",
+            "rootDir": "src",
+            "types": [
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+              "vite/client",
+            ],
+          },
+          "exclude": [
+            "dist",
+            "**/*.spec.ts",
+            "**/*.test.ts",
+            "**/*.spec.tsx",
+            "**/*.test.tsx",
+            "**/*.spec.js",
+            "**/*.test.js",
+            "**/*.spec.jsx",
+            "**/*.test.jsx",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/vitest",
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should map non-buildable libraries to source', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        directory: 'myjslib',
+        name: 'myjslib',
+        js: true,
+      });
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "main": "./src/index.ts",
+          "name": "@proj/mylib",
+          "nx": {
+            "name": "mylib",
+            "projectType": "library",
+            "sourceRoot": "mylib/src",
+          },
+          "types": "./src/index.ts",
+        }
+      `);
+      expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
+        {
+          "main": "./src/index.js",
+          "name": "@proj/myjslib",
+          "nx": {
+            "name": "myjslib",
+            "projectType": "library",
+            "sourceRoot": "myjslib/src",
+          },
+          "types": "./src/index.js",
+        }
+      `);
+    });
+  });
 });

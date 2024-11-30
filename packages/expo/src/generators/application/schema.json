@@ -44,13 +44,15 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "none"],
-      "default": "eslint"
+      "default": "none",
+      "x-priority": "important"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "jest"
+      "default": "none",
+      "x-priority": "important"
     },
     "tags": {
       "type": "string",
@@ -71,7 +73,8 @@
       "description": "Adds the specified e2e test runner",
       "type": "string",
       "enum": ["playwright", "cypress", "detox", "none"],
-      "default": "none"
+      "default": "none",
+      "x-priority": "important"
     },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",

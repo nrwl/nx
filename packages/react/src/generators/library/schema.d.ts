@@ -39,4 +39,5 @@ export interface NormalizedSchema extends Schema {
   appMain?: string;
   appSourceRoot?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
+  isUsingTsSolutionConfig?: boolean;
 }
