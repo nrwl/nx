@@ -137,6 +137,29 @@ describe('@nx/expo', () => {
       },
     });
   });
+  
+  it('should install packages with post-installation output', async () => {
+    // run install command
+    let installResults = await runCLIAsync(
+      `install ${appName} --force --no-interactive`
+    );
+    expect(installResults.combinedOutput).toContain(
+      'Successfully ran target install'
+    );
+
+    installResults = await runCLIAsync(
+      `install ${appName} --force --packages=expo-router --no-interactive`
+    );
+    expect(installResults.combinedOutput).toContain(
+      'Successfully ran target install'
+    );
+    const packageJson = readJson(join(appName, 'package.json'));
+    expect(packageJson).toMatchObject({
+      dependencies: {
+        'expo-router': '*',
+      },
+    });
+  });
 
   it('should run e2e for cypress', async () => {
     if (runE2ETests()) {
