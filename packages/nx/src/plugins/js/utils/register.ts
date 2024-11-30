@@ -128,13 +128,21 @@ export function getSwcTranspiler(
 }
 
 export function getTsNodeTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigRaw?: unknown
 ): (...args: unknown[]) => unknown {
   const { register } = require('ts-node') as typeof import('ts-node');
+  const tsConfigRegisterOptions = filterRecognizedTsConfigTsNodeOptions(
+    tsConfigRaw?.['ts-node']
+  ).recognized;
   // ts-node doesn't provide a cleanup method
   const service = register({
+    ...tsConfigRegisterOptions,
     transpileOnly: true,
-    compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+    compilerOptions: getTsNodeCompilerOptions({
+      ...tsConfigRegisterOptions.compilerOptions,
+      ...compilerOptions,
+    }),
     // we already read and provide the compiler options, so prevent ts-node from reading them again
     skipProject: true,
   });
@@ -266,7 +274,7 @@ export function getTranspiler(
       : undefined;
 
   if (_getTranspiler) {
-    const transpilerCleanup = _getTranspiler(compilerOptions);
+    const transpilerCleanup = _getTranspiler(compilerOptions, tsConfigRaw);
     const currRegistrationEntry = {
       refCount: 1,
       cleanup: () => {
@@ -297,7 +305,7 @@ export function registerTranspiler(
   tsConfigRaw?: unknown
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions);
+  const transpiler = getTranspiler(compilerOptions, tsConfigRaw);
 
   if (!transpiler) {
     warnNoTranspiler();
