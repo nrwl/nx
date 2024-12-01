@@ -118,7 +118,8 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         '@nx/devkit': nxVersion,
       },
       {
-        '@nx/jest': nxVersion,
+        [options.unitTestRunner === 'vitest' ? '@nx/vite' : '@nx/jest']:
+          nxVersion,
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
       }
