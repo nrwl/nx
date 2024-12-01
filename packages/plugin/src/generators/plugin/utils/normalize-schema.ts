@@ -20,7 +20,7 @@ export interface NormalizedSchema extends Schema {
   npmPackageName: string;
   bundler: 'swc' | 'tsc';
   publishable: boolean;
-  unitTestRunner: 'jest' | 'none';
+  unitTestRunner: 'jest' | 'vitest' | 'none';
   linter: LinterType;
   useProjectJson: boolean;
   addPlugin: boolean;
@@ -35,7 +35,7 @@ export async function normalizeOptions(
   const unitTestRunner = await normalizeUnitTestRunnerOption(
     host,
     options.unitTestRunner,
-    ['jest']
+    ['jest', 'vitest']
   );
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
