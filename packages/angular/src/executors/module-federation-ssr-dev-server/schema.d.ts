@@ -9,3 +9,8 @@ export interface Schema extends SSRDevServerBuilderOptions {
   staticRemotesPort?: number;
   isInitialHost?: boolean;
 }
+
+export interface NormalizedSchema extends Schema {
+  devRemotes: DevRemoteDefinition[];
+  ssl: boolean;
+}

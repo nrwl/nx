@@ -1,8 +1,8 @@
 import { workspaceRoot } from '@nx/devkit';
-import type { Schema } from '../schema';
+import type { NormalizedSchema, Schema } from '../schema';
 import { join } from 'path';
 
-export function normalizeOptions(options: Schema): Schema {
+export function normalizeOptions(options: Schema): NormalizedSchema {
   const devServeRemotes = !options.devRemotes
     ? []
     : Array.isArray(options.devRemotes)

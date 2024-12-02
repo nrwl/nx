@@ -15,4 +15,11 @@ export type ModuleFederationDevServerOptions = DevServerExecutorSchema & {
   parallel?: number;
   staticRemotesPort?: number;
   pathToManifestFile?: string;
+  verbose?: boolean;
 };
+
+export type NormalizedModuleFederationDevServerOptions =
+  ModuleFederationDevServerOptions & {
+    devRemotes: DevServerExecutorSchema['devRemotes'];
+    verbose: boolean;
+  };
