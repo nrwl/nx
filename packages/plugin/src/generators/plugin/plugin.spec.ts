@@ -196,9 +196,13 @@ describe('NxPlugin Plugin Generator', () => {
           expect(tree.exists(path)).toBeTruthy()
         );
 
-        expect(
-          readProjectConfiguration(tree, 'my-plugin').targets.test
-        ).toBeDefined();
+        const projectTargets = readProjectConfiguration(
+          tree,
+          'my-plugin'
+        ).targets;
+
+        expect(projectTargets.test).toBeDefined();
+        expect(projectTargets.test?.executor).toEqual('@nx/jest:jest');
       });
     });
 
@@ -216,9 +220,13 @@ describe('NxPlugin Plugin Generator', () => {
           expect(tree.exists(path)).toBeTruthy()
         );
 
-        expect(
-          readProjectConfiguration(tree, 'my-plugin').targets.test
-        ).toBeDefined();
+        const projectTargets = readProjectConfiguration(
+          tree,
+          'my-plugin'
+        ).targets;
+
+        expect(projectTargets.test).toBeDefined();
+        expect(projectTargets.test?.executor).toEqual('@nx/vite:test');
       });
     });
   });
