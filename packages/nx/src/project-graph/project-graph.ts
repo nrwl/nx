@@ -229,6 +229,13 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
+    try {
+      return readCachedProjectGraph();
+      // If no cached graph is found, we will fall through to the normal flow
+    } catch {}
+  }
+
   const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
     opts
   );
