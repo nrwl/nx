@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import * as ora from 'ora';
+import { Spinner } from 'picospinner';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import type { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
@@ -42,7 +42,7 @@ async function installPackage(
   version: string,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const spinner = ora(`Installing ${pkgName}@${version}...`);
+  const spinner = new Spinner(`Installing ${pkgName}@${version}...`);
   spinner.start();
 
   if (existsSync('package.json')) {
@@ -126,7 +126,7 @@ async function initializePlugin(
     return;
   }
 
-  const spinner = ora(`Initializing ${pkgName}...`);
+  const spinner = new Spinner(`Initializing ${pkgName}...`);
   spinner.start();
 
   try {

@@ -1,5 +1,5 @@
 import { prompt } from 'enquirer';
-import * as ora from 'ora';
+import { Spinner } from 'picospinner';
 import { join } from 'path';
 import {
   NxJsonConfiguration,
@@ -403,7 +403,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     (await promptForApplyingSyncGeneratorChanges());
 
   if (applyChanges) {
-    const spinner = ora('Syncing the workspace...');
+    const spinner = new Spinner('Syncing the workspace...');
     spinner.start();
 
     // Flush sync generator changes to disk

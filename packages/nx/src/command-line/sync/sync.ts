@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import { Spinner } from 'picospinner';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
@@ -106,7 +106,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       bodyLines: resultBodyLines,
     });
 
-    const spinner = ora('Syncing the workspace...');
+    const spinner = new Spinner('Syncing the workspace...');
     spinner.start();
 
     try {

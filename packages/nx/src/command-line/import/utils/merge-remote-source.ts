@@ -1,5 +1,5 @@
 import { GitRepository } from '../../../utils/git-utils';
-import * as createSpinner from 'ora';
+import { Spinner } from 'picospinner';
 
 export async function mergeRemoteSource(
   destinationGitClient: GitRepository,
@@ -9,18 +9,19 @@ export async function mergeRemoteSource(
   remoteName: string,
   branchName: string
 ) {
-  const spinner = createSpinner();
-  spinner.start(
+  const spinner = new Spinner(
     `Merging ${branchName} from ${sourceRemoteUrl} into ${destination}`
   );
 
-  spinner.start(`Fetching ${tempBranch} from ${remoteName}`);
+  spinner.setText(`Fetching ${tempBranch} from ${remoteName}`);
+  spinner.start();
   await destinationGitClient.fetch(remoteName, tempBranch);
   spinner.succeed(`Fetched ${tempBranch} from ${remoteName}`);
 
-  spinner.start(
+  spinner.setText(
     `Merging files and git history from ${branchName} from ${sourceRemoteUrl} into ${destination}`
   );
+  spinner.start();
   await destinationGitClient.mergeUnrelatedHistories(
     `${remoteName}/${tempBranch}`,
     `feat(repo): merge ${branchName} from ${sourceRemoteUrl}`
