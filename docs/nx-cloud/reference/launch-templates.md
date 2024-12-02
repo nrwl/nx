@@ -91,6 +91,12 @@ Nx Cloud provides the following images:
   - added java version 17
 - `ubuntu22.04-node20.11-v9`
   - added [nvm](https://github.com/nvm-sh/nvm)
+- `ubuntu22.04-node20.11-v11`
+  - set pnpm version to v9 as default (previously v8)
+- `ubuntu22.04-node20.11-v12`
+
+  - update system dependencies for [Playwright v1.49.0](https://playwright.dev/docs/release-notes#version-149)
+
 - `windows-2022`
 
 > Note: Windows-based images can only run on Windows-based [resource classes](#launch-templatestemplate-nameresourceclass).
