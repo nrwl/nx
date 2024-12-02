@@ -1288,11 +1288,11 @@
       "version": "20.2.0-beta.4",
       "packages": {
         "@analogjs/vitest-angular": {
-          "version": "~1.10.0-beta.5",
+          "version": "~1.10.0-beta.6",
           "alwaysAddToPackageJson": false
         },
         "@analogjs/vite-plugin-angular": {
-          "version": "~1.10.0-beta.5",
+          "version": "~1.10.0-beta.6",
           "alwaysAddToPackageJson": false
         }
       }
@@ -1321,23 +1321,23 @@
       },
       "packages": {
         "angular-eslint": {
-          "version": "^19.0.0-alpha.4",
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/eslint-plugin": {
-          "version": "^19.0.0-alpha.4",
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/eslint-plugin-template": {
-          "version": "^19.0.0-alpha.4",
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/template-parser": {
-          "version": "^19.0.0-alpha.4",
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/utils": {
-          "version": "^19.0.0-alpha.4",
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -17,7 +17,7 @@ export const browserSyncVersion = '^3.0.0';
 export const moduleFederationNodeVersion = '~2.6.11';
 export const moduleFederationEnhancedVersion = '0.7.6';
 
-export const angularEslintVersion = '^19.0.0-alpha.4';
+export const angularEslintVersion = '^19.0.0';
 export const typescriptEslintVersion = '^7.16.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
@@ -28,6 +28,6 @@ export const tsNodeVersion = '10.9.1';
 export const jestPresetAngularVersion = '~14.4.0';
 export const typesNodeVersion = '18.16.9';
 export const jasmineMarblesVersion = '^0.9.2';
-export const analogVitestAngular = '~1.10.0-beta.5';
+export const analogVitestAngular = '~1.10.0-beta.6';
 
 export const jsoncEslintParserVersion = '^2.1.0';
