@@ -6,8 +6,8 @@ import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
-import * as createSpinner from 'ora';
 import { detectPlugins } from '../init/init-v2';
+import { createSpinner } from 'nanospinner';
 import { readNxJson } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -114,7 +114,8 @@ export async function importHandler(options: ImportOptions) {
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
   const spinner = createSpinner(
     `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
-  ).start();
+  );
+  spinner.start();
   try {
     await rm(tempImportDirectory, { recursive: true });
   } catch {}
@@ -131,14 +132,14 @@ export async function importHandler(options: ImportOptions) {
       }
     );
   } catch (e) {
-    spinner.fail(
+    spinner.error(
       `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
     );
     let errorMessage = `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${e.message}`;
 
     throw new Error(errorMessage);
   }
-  spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
+  spinner.success(`Cloned into ${sourceTempRepoPath}`);
 
   // Detecting the package manager before preparing the source repo for import.
   const sourcePackageManager = detectPackageManager(sourceGitClient.root);
@@ -203,7 +204,7 @@ export async function importHandler(options: ImportOptions) {
   const tempImportBranch = getTempImportBranch(ref);
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
-  spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
+  spinner.success(`Fetched ${ref} from ${sourceRepository}`);
   spinner.start(
     `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
   );
@@ -212,7 +213,7 @@ export async function importHandler(options: ImportOptions) {
     base: `${importRemoteName}/${ref}`,
   });
 
-  spinner.succeed(`Created a ${tempImportBranch} branch based on ${ref}`);
+  spinner.success(`Created a ${tempImportBranch} branch based on ${ref}`);
 
   try {
     await stat(absSource);
@@ -256,7 +257,7 @@ export async function importHandler(options: ImportOptions) {
   spinner.start('Cleaning up temporary files and remotes');
   await rm(tempImportDirectory, { recursive: true });
   await destinationGitClient.deleteGitRemote(importRemoteName);
-  spinner.succeed('Cleaned up temporary files and remotes');
+  spinner.success('Cleaned up temporary files and remotes');
 
   const pmc = getPackageManagerCommand();
   const nxJson = readNxJson(workspaceRoot);
