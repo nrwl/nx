@@ -1,17 +1,7 @@
-import {
-  ExecutorContext,
-  logger,
-  parseTargetString,
-  ProjectConfiguration,
-  readTargetOptions,
-  runExecutor,
-} from '@nx/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import {
-  ModuleFederationDevServerOptions,
-  NormalizedModuleFederationDevServerOptions,
-} from './schema';
+import { ModuleFederationDevServerOptions } from './schema';
 import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import {
   combineAsyncIterables,
@@ -20,86 +10,7 @@ import {
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
-
-function getBuildOptions(buildTarget: string, context: ExecutorContext) {
-  const target = parseTargetString(buildTarget, context);
-
-  const buildOptions = readTargetOptions(target, context);
-
-  return {
-    ...buildOptions,
-  };
-}
-
-async function startRemotes(
-  remotes: string[],
-  workspaceProjects: Record<string, ProjectConfiguration>,
-  options: Pick<
-    NormalizedModuleFederationDevServerOptions,
-    'devRemotes' | 'host' | 'ssl' | 'sslCert' | 'sslKey' | 'verbose'
-  >,
-  context: ExecutorContext,
-  target: 'serve' | 'serve-static' = 'serve'
-) {
-  const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
-
-  for (const app of remotes) {
-    const remoteProjectServeTarget = workspaceProjects[app].targets[target];
-    const isUsingModuleFederationDevServerExecutor =
-      remoteProjectServeTarget.executor.includes(
-        'module-federation-dev-server'
-      );
-
-    const configurationOverride = options.devRemotes?.find(
-      (
-        r
-      ): r is {
-        remoteName: string;
-        configuration: string;
-      } => typeof r !== 'string' && r.remoteName === app
-    )?.configuration;
-
-    const defaultOverrides = {
-      ...(options.host ? { host: options.host } : {}),
-      ...(options.ssl ? { ssl: options.ssl } : {}),
-      ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-      ...(options.sslKey ? { sslKey: options.sslKey } : {}),
-    };
-    const overrides =
-      target === 'serve'
-        ? {
-            watch: true,
-            ...(isUsingModuleFederationDevServerExecutor
-              ? { isInitialHost: false }
-              : {}),
-            ...defaultOverrides,
-          }
-        : { ...defaultOverrides };
-
-    remoteIters.push(
-      await runExecutor(
-        {
-          project: app,
-          target,
-          configuration: configurationOverride ?? context.configurationName,
-        },
-        overrides,
-        context
-      )
-    );
-  }
-  return remoteIters;
-}
-
-function normalizeOptions(
-  options: ModuleFederationDevServerOptions
-): NormalizedModuleFederationDevServerOptions {
-  return {
-    ...options,
-    devRemotes: options.devRemotes ?? [],
-    verbose: options.verbose ?? false,
-  };
-}
+import { getBuildOptions, normalizeOptions, startRemotes } from './lib';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,

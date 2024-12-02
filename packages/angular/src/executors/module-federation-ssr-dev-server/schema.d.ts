@@ -13,4 +13,5 @@ export interface Schema extends SSRDevServerBuilderOptions {
 export interface NormalizedSchema extends Schema {
   devRemotes: DevRemoteDefinition[];
   ssl: boolean;
+  verbose: boolean;
 }

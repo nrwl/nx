@@ -12,6 +12,7 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
   return {
     ...options,
     devRemotes: devServeRemotes,
+    verbose: options.verbose ?? false,
     ssl: options.ssl ?? false,
     sslCert: options.sslCert ? join(workspaceRoot, options.sslCert) : undefined,
     sslKey: options.sslKey ? join(workspaceRoot, options.sslKey) : undefined,

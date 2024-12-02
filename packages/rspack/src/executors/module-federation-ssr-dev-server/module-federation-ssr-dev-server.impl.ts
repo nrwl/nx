@@ -1,18 +1,6 @@
-import {
-  ExecutorContext,
-  logger,
-  parseTargetString,
-  ProjectConfiguration,
-  readTargetOptions,
-  runExecutor,
-  workspaceRoot,
-} from '@nx/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import { extname, join } from 'path';
-import {
-  DevRemoteDefinition,
-  startRemoteIterators,
-} from '@nx/module-federation/src/executors/utils';
-import { RspackSsrDevServerOptions } from '../ssr-dev-server/schema';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';
 import {
   combineAsyncIterables,
@@ -20,112 +8,8 @@ import {
 } from '@nx/devkit/src/utils/async-iterable';
 import { existsSync } from 'fs';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-
-type ModuleFederationSsrDevServerOptions = RspackSsrDevServerOptions & {
-  devRemotes?: (
-    | string
-    | {
-        remoteName: string;
-        configuration: string;
-      }
-  )[];
-
-  skipRemotes?: string[];
-  host: string;
-  pathToManifestFile?: string;
-  staticRemotesPort?: number;
-  parallel?: number;
-  ssl?: boolean;
-  sslKey?: string;
-  sslCert?: string;
-  isInitialHost?: boolean;
-  verbose?: boolean;
-};
-
-type NormalizedModuleFederationSsrDevServerOptions =
-  ModuleFederationSsrDevServerOptions & {
-    devRemotes: DevRemoteDefinition[];
-    verbose: boolean;
-  };
-
-function normalizeOptions(
-  options: ModuleFederationSsrDevServerOptions
-): NormalizedModuleFederationSsrDevServerOptions {
-  return {
-    ...options,
-    devRemotes: options.devRemotes ?? [],
-    verbose: options.verbose ?? false,
-    ssl: options.ssl ?? false,
-    sslCert: options.sslCert ? join(workspaceRoot, options.sslCert) : undefined,
-    sslKey: options.sslKey ? join(workspaceRoot, options.sslKey) : undefined,
-  };
-}
-
-function getBuildOptions(buildTarget: string, context: ExecutorContext) {
-  const target = parseTargetString(buildTarget, context);
-
-  const buildOptions = readTargetOptions(target, context);
-
-  return {
-    ...buildOptions,
-  };
-}
-
-async function startRemotes(
-  remotes: string[],
-  workspaceProjects: Record<string, ProjectConfiguration>,
-  options: Partial<
-    Pick<
-      ModuleFederationSsrDevServerOptions,
-      'devRemotes' | 'host' | 'ssl' | 'sslCert' | 'sslKey' | 'verbose'
-    >
-  >,
-  context: ExecutorContext
-) {
-  const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
-  const target = 'serve';
-  for (const app of remotes) {
-    const remoteProjectServeTarget = workspaceProjects[app].targets[target];
-    const isUsingModuleFederationSsrDevServerExecutor =
-      remoteProjectServeTarget.executor.includes(
-        'module-federation-ssr-dev-server'
-      );
-
-    const configurationOverride = options.devRemotes?.find(
-      (remote): remote is { remoteName: string; configuration: string } =>
-        typeof remote !== 'string' && remote.remoteName === app
-    )?.configuration;
-    {
-      const defaultOverrides = {
-        ...(options.host ? { host: options.host } : {}),
-        ...(options.ssl ? { ssl: options.ssl } : {}),
-        ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-        ...(options.sslKey ? { sslKey: options.sslKey } : {}),
-      };
-
-      const overrides = {
-        watch: true,
-        ...defaultOverrides,
-        ...(isUsingModuleFederationSsrDevServerExecutor
-          ? { isInitialHost: false }
-          : {}),
-      };
-
-      remoteIters.push(
-        await runExecutor(
-          {
-            project: app,
-            target,
-            configuration: configurationOverride ?? context.configurationName,
-          },
-          overrides,
-          context
-        )
-      );
-    }
-  }
-  return remoteIters;
-}
+import { ModuleFederationSsrDevServerOptions } from './schema';
+import { getBuildOptions, normalizeOptions, startRemotes } from './lib';
 
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
