@@ -604,7 +604,7 @@ function patchTsconfigJsonReferences(
     stringifiedJsonContents,
     ['references'],
     updatedReferences,
-    {}
+    { formattingOptions: { keepLines: false } }
   );
   const updatedJsonContents = applyEdits(stringifiedJsonContents, edits);
   // The final contents will be formatted by formatFiles() later
