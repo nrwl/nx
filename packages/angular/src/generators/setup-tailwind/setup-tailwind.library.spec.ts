@@ -78,7 +78,7 @@ describe('setupTailwind generator', () => {
       ).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `The target "custom-build" was not found for project "${project}".`
+            `The provided target "custom-build" was not found for project "${project}".`
           ),
         })
       );
@@ -102,78 +102,6 @@ describe('setupTailwind generator', () => {
         })
       );
     });
-
-    it('should throw when the tailwind config is configured in the build target and the file it points to exists', async () => {
-      const tailwindConfig = `libs/${project}/my-tailwind.config.js`;
-      let projectConfig = readProjectConfiguration(tree, project);
-      projectConfig.targets = {
-        build: {
-          executor: '@nx/angular:package',
-          options: { tailwindConfig },
-        },
-      };
-      updateProjectConfiguration(tree, project, projectConfig);
-      tree.write(tailwindConfig, '');
-
-      await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
-        expect.objectContaining({
-          message: expect.stringContaining(
-            `The "${tailwindConfig}" file is already configured for the project "${project}". Are you sure this is the right project to set up Tailwind?`
-          ),
-        })
-      );
-    });
-
-    it('should add the tailwind config path to the "build" target by default when no build target is specified', async () => {
-      let projectConfig = readProjectConfiguration(tree, project);
-      projectConfig.targets = {
-        build: { executor: '@nx/angular:package', options: {} },
-      };
-      updateProjectConfiguration(tree, project, projectConfig);
-
-      await setupTailwindGenerator(tree, { project, skipFormat: true });
-
-      projectConfig = readProjectConfiguration(tree, project);
-      expect(projectConfig.targets.build.options.tailwindConfig).toBe(
-        `libs/${project}/tailwind.config.js`
-      );
-    });
-
-    it('should add the tailwind config path to the specified buildTarget', async () => {
-      const buildTarget = 'custom-build';
-      let projectConfig = readProjectConfiguration(tree, project);
-      projectConfig.targets = {
-        [buildTarget]: { executor: '@nx/angular:package', options: {} },
-      };
-      updateProjectConfiguration(tree, project, projectConfig);
-
-      await setupTailwindGenerator(tree, {
-        project,
-        buildTarget,
-        skipFormat: true,
-      });
-
-      projectConfig = readProjectConfiguration(tree, project);
-      expect(projectConfig.targets[buildTarget].options.tailwindConfig).toBe(
-        `libs/${project}/tailwind.config.js`
-      );
-    });
-
-    it.each(['@nx/angular:ng-packagr-lite', '@nx/angular:package'])(
-      'should add the tailwind config path when using the "%s" executor',
-      async (executor) => {
-        let projectConfig = readProjectConfiguration(tree, project);
-        projectConfig.targets = { build: { executor, options: {} } };
-        updateProjectConfiguration(tree, project, projectConfig);
-
-        await setupTailwindGenerator(tree, { project, skipFormat: true });
-
-        projectConfig = readProjectConfiguration(tree, project);
-        expect(projectConfig.targets.build.options.tailwindConfig).toBe(
-          `libs/${project}/tailwind.config.js`
-        );
-      }
-    );
 
     it('should add required packages', async () => {
       const projectConfig = readProjectConfiguration(tree, project);

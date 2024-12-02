@@ -169,6 +169,10 @@
         "default": false,
         "x-priority": "important"
       },
+      "serverRouting": {
+        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "type": "boolean"
+      },
       "typescriptConfiguration": {
         "type": "boolean",
         "description": "Whether the module federation configuration and webpack configuration files should use TS.",
