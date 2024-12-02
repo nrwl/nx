@@ -43,7 +43,7 @@ export function Faq(): ReactElement {
       question:
         "I thought I was on the Pro plan, but I don't see it listed anymore. Does it still exist?",
       answer:
-        "Yes, the Pro plan still exists for existing users who were grandfathered in. If you're already on the Pro plan, you'll continue to receive support and experience no changes. However, this plan is no longer available for new users.",
+        "Yes, the Pro plan still exists for users who were grandfathered in. If you're already on the Pro plan, you will continue to receive support without any changes. However, this plan is no longer available to new users.",
     },
     {
       question:
