@@ -20,6 +20,7 @@ export interface Schema {
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
   ssr?: boolean;
+  serverRouting?: boolean;
   prefix?: string;
   nxCloudToken?: string;
 }

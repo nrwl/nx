@@ -1,7 +1,8 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 
 @Component({
-  selector: '<%= nxWelcomeSelector %>',
+  selector: '<%= nxWelcomeSelector %>',<% if (setStandaloneFalse) { %>
+  standalone: false,<% } %>
   template: `
     <!--
      * * * * * * * * * * * * * * * * * * * * * * * * * * * *

@@ -166,9 +166,10 @@
         "default": false
       },
       "bundler": {
-        "description": "Bundler to use to build the application. It defaults to `esbuild` for Angular versions >= 17.0.0. Otherwise, it defaults to `webpack`. _Note: The `esbuild` bundler is only considered stable from Angular v17._",
+        "description": "Bundler to use to build the application.",
         "type": "string",
-        "enum": ["webpack", "esbuild"],
+        "enum": ["esbuild", "webpack"],
+        "default": "esbuild",
         "x-prompt": "Which bundler do you want to use to build the application?",
         "x-priority": "important"
       },
@@ -177,6 +178,10 @@
         "type": "boolean",
         "x-prompt": "Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?",
         "default": false
+      },
+      "serverRouting": {
+        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "type": "boolean"
       }
     },
     "additionalProperties": false,

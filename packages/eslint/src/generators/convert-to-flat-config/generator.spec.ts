@@ -66,7 +66,7 @@ describe('convert-to-flat-config generator', () => {
           "@nx/eslint-plugin": "0.0.1",
           "eslint": "^9.8.0",
           "eslint-config-prettier": "^9.0.0",
-          "typescript-eslint": "^8.0.0"
+          "typescript-eslint": "^8.13.0"
         }
       }
       "

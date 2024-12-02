@@ -26,5 +26,6 @@ export interface Schema {
   skipFormat?: boolean;
   standalone?: boolean;
   ssr?: boolean;
+  serverRouting?: boolean;
   typescriptConfiguration?: boolean;
 }

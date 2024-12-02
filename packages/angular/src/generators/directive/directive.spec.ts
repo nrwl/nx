@@ -63,6 +63,12 @@ describe('directive generator', () => {
     ).toBeFalsy();
   });
 
+  it('should error when the class name is invalid', async () => {
+    await expect(
+      generateDirectiveWithDefaultOptions(tree, { name: '404' })
+    ).rejects.toThrow('Class name "404Directive" is invalid.');
+  });
+
   describe('--no-standalone', () => {
     beforeEach(() => {
       addModule(tree);
