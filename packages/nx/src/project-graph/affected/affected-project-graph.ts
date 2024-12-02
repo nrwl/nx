@@ -13,6 +13,7 @@ import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
+import { measure } from '../../utils/perf-logging-utils';
 
 export async function filterAffected(
   graph: ProjectGraph,
@@ -26,7 +27,19 @@ export async function filterAffected(
     getImplicitlyTouchedProjects,
     getTouchedProjectsFromProjectGlobChanges,
     getJSTouchedProjects,
-  ];
+  ].map((locator) => async (files, nodes, nxJson, packageJson, graph) => {
+    performance.mark(`${locator.name} - start`);
+
+    const result = await locator(files, nodes, nxJson, packageJson, graph);
+
+    performance.mark(`${locator.name} - end`);
+    performance.measure(
+      `${locator.name}-${files.length}`,
+      `${locator.name} - start`,
+      `${locator.name} - end`
+    );
+    return result;
+  });
 
   const touchedProjects = [];
   for (const locator of touchedProjectLocators) {

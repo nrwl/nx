@@ -60,7 +60,18 @@ export async function loadRemoteNxPlugin(
     return [nxPluginWorkerCache.get(cacheKey), () => {}];
   }
 
+  const pluginName = typeof plugin === 'string' ? plugin : plugin.plugin;
+
+  performance.mark(`start-plugin-worker-${pluginName} - start`);
+
   const { worker, socket } = await startPluginWorker();
+
+  performance.mark(`start-plugin-worker-${pluginName} - end`);
+  performance.measure(
+    `start-plugin-worker-${pluginName}`,
+    `start-plugin-worker-${pluginName} - start`,
+    `start-plugin-worker-${pluginName} - end`
+  );
 
   const pendingPromises = new Map<string, PendingPromise>();
 
