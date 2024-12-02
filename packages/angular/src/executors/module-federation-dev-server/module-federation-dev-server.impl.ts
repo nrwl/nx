@@ -4,7 +4,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { type Schema } from './schema';
-import { buildStaticRemotes, normalizeOptions, startRemotes } from './lib';
+import { normalizeOptions, startRemotes } from './lib';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
   combineAsyncIterables,
@@ -17,7 +17,10 @@ import {
   startRemoteProxies,
   parseStaticRemotesConfig,
 } from '@nx/module-federation/src/utils';
-import { startStaticRemotesFileServer } from '@nx/module-federation/src/executors/utils';
+import {
+  startStaticRemotesFileServer,
+  buildStaticRemotes,
+} from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';

@@ -12,7 +12,7 @@ import {
 } from '@nx/devkit/src/utils/async-iterable';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { cpSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import {
   getModuleFederationConfig,
@@ -20,8 +20,10 @@ import {
   parseStaticRemotesConfig,
   startRemoteProxies,
 } from '@nx/module-federation/src/utils';
-import { startStaticRemotesFileServer } from '@nx/module-federation/src/executors/utils';
-import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
+import {
+  startStaticRemotesFileServer,
+  buildStaticRemotes,
+} from '@nx/module-federation/src/executors/utils';
 import devServerExecutor from '../dev-server/dev-server.impl';
 import { ModuleFederationDevServerOptions } from './schema';
 

@@ -5,3 +5,7 @@ export interface StaticRemotesOptions {
   sslCert?: string;
   sslKey?: string;
 }
+
+export interface BuildStaticRemotesOptions extends StaticRemotesOptions {
+  parallel?: number;
+}

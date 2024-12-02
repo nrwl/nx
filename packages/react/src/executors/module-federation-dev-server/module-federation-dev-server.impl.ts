@@ -15,15 +15,17 @@ import {
   startRemoteProxies,
   parseStaticRemotesConfig,
 } from '@nx/module-federation/src/utils';
-import { startStaticRemotesFileServer } from '@nx/module-federation/src/executors/utils';
+import {
+  startStaticRemotesFileServer,
+  buildStaticRemotes,
+} from '@nx/module-federation/src/executors/utils';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { cpSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import { extname, join } from 'path';
-import { buildStaticRemotes } from '../../utils/build-static.remotes';
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   const target = parseTargetString(buildTarget, context);

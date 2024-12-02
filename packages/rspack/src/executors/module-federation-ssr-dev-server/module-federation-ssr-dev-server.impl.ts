@@ -14,19 +14,16 @@ import {
   type StaticRemotesConfig,
   startSsrRemoteProxies,
 } from '@nx/module-federation/src/utils';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import { RspackSsrDevServerOptions } from '../ssr-dev-server/schema';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';
-
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
-import { fork } from 'child_process';
-import { cpSync, createWriteStream, existsSync } from 'fs';
-
+import { cpSync, existsSync } from 'fs';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
 type ModuleFederationSsrDevServerOptions = RspackSsrDevServerOptions & {
   devRemotes?: (
@@ -165,85 +162,6 @@ async function startRemotes(
   return remoteIters;
 }
 
-async function buildSsrStaticRemotes(
-  staticRemotesConfig: StaticRemotesConfig,
-  nxBin,
-  context: ExecutorContext,
-  options: ModuleFederationSsrDevServerOptions
-) {
-  if (!staticRemotesConfig.remotes.length) {
-    return;
-  }
-
-  logger.info(
-    `Nx is building ${staticRemotesConfig.remotes.length} static remotes...`
-  );
-  const mapLocationOfRemotes: Record<string, string> = {};
-
-  for (const remoteApp of staticRemotesConfig.remotes) {
-    mapLocationOfRemotes[remoteApp] = `http${options.ssl ? 's' : ''}://${
-      options.host
-    }:${options.staticRemotesPort}/${
-      staticRemotesConfig.config[remoteApp].urlSegment
-    }`;
-  }
-
-  await new Promise<void>((resolve) => {
-    const childProcess = fork(
-      nxBin,
-      [
-        'run-many',
-        '--target=server',
-        '--projects',
-        staticRemotesConfig.remotes.join(','),
-        ...(context.configurationName
-          ? [`--configuration=${context.configurationName}`]
-          : []),
-        ...(options.parallel ? [`--parallel=${options.parallel}`] : []),
-      ],
-      {
-        cwd: context.root,
-        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-      }
-    );
-
-    // Add a listener to the child process to capture the build log
-    const remoteBuildLogFile = join(
-      workspaceDataDirectory,
-      // eslint-disable-next-line
-      `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
-    );
-
-    const remoteBuildLogStream = createWriteStream(remoteBuildLogFile);
-
-    childProcess.stdout.on('data', (data) => {
-      const ANSII_CODE_REGEX =
-        // eslint-disable-next-line no-control-regex
-        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
-      const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
-      remoteBuildLogStream.write(stdoutString);
-
-      // in addition to writing into the stdout stream, also show error directly in console
-      // so the error is easily discoverable. 'ERROR in' is the key word to search in webpack output.
-      if (stdoutString.includes('ERROR in')) {
-        logger.log(stdoutString);
-      }
-
-      if (stdoutString.includes('Successfully ran target server')) {
-        childProcess.stdout.removeAllListeners('data');
-        logger.info(
-          `Nx Built ${staticRemotesConfig.remotes.length} static remotes.`
-        );
-        resolve();
-      }
-    });
-
-    process.on('SIGTERM', () => childProcess.kill('SIGTERM'));
-    process.on('exit', () => childProcess.kill('SIGTERM'));
-  });
-  return mapLocationOfRemotes;
-}
-
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
   context: ExecutorContext
@@ -323,11 +241,12 @@ export default async function* moduleFederationSsrDevServer(
     context
   );
 
-  const mappedLocationsOfStaticRemotes = await buildSsrStaticRemotes(
+  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
     staticRemotesConfig,
     nxBin,
     context,
-    options
+    options,
+    'server'
   );
 
   const devRemoteIters = await startRemotes(

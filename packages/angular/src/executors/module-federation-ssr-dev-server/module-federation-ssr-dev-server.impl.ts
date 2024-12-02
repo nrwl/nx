@@ -1,31 +1,31 @@
 import { executeSSRDevServerBuilder } from '@angular-devkit/build-angular';
 import { type ExecutorContext, logger } from '@nx/devkit';
-import {
-  combineAsyncIterables,
-  createAsyncIterable,
-  mapAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
-import {
-  getModuleFederationConfig,
-  getRemotes,
-  parseStaticSsrRemotesConfig,
-  startSsrRemoteProxies,
-} from '@nx/module-federation/src/utils';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { extname, join } from 'path';
 import {
   getDynamicMfManifestFile,
   validateDevRemotes,
 } from '../../builders/utilities/module-federation';
-import { buildStaticRemotes } from './lib/build-static-remotes';
-import { normalizeOptions } from './lib/normalize-options';
+import type { Schema } from './schema';
+import {
+  getModuleFederationConfig,
+  getRemotes,
+  parseStaticSsrRemotesConfig,
+  startSsrRemoteProxies,
+} from '@nx/module-federation/src/utils';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import { startRemotes } from './lib/start-dev-remotes';
 import { startStaticRemotes } from './lib/start-static-remotes';
-import type { Schema } from './schema';
+import {
+  combineAsyncIterables,
+  createAsyncIterable,
+  mapAsyncIterable,
+} from '@nx/devkit/src/utils/async-iterable';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
+import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { normalizeOptions } from './lib/normalize-options';
+import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 export async function* moduleFederationSsrDevServerExecutor(
   schema: Schema,
@@ -113,7 +113,8 @@ export async function* moduleFederationSsrDevServerExecutor(
     staticRemotesConfig,
     nxBin,
     context,
-    options
+    options,
+    'server'
   );
 
   // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
