@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import { createSpinner } from 'nanospinner';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
@@ -103,14 +103,14 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       bodyLines: resultBodyLines,
     });
 
-    const spinner = ora('Syncing the workspace...');
+    const spinner = createSpinner('Syncing the workspace...');
     spinner.start();
 
     try {
       const flushResult = await flushSyncGeneratorChanges(results);
 
       if ('generatorFailures' in flushResult) {
-        spinner.fail();
+        spinner.error();
         output.error({
           title: 'Failed to sync the workspace',
           bodyLines: getFlushFailureMessageLines(
@@ -123,7 +123,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
         return 1;
       }
     } catch (e) {
-      spinner.fail();
+      spinner.error();
       output.error({
         title: 'Failed to sync the workspace',
         bodyLines: [
@@ -147,7 +147,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
         'The workspace was synced successfully!';
     const successSubtitle =
       'Please make sure to commit the changes to your repository.';
-    spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
+    spinner.success(`${successTitle}\n\n${successSubtitle}`);
 
     if (anySyncGeneratorsFailed) {
       output.error({

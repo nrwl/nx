@@ -877,6 +877,9 @@ importers:
       minimatch:
         specifier: 9.0.3
         version: 9.0.3
+      nanospinner:
+        specifier: 1.2.2
+        version: 1.2.2
       next-sitemap:
         specifier: ^3.1.10
         version: 3.1.55(@next/env@14.2.28)(next@14.2.28(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.1)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))
@@ -14864,6 +14867,9 @@ packages:
     resolution: {integrity: sha512-oLxFY2gd2IqnjcYyOXD8XGCftpGtZP2AbHbOkthDkvRywH5ayNtPVy9YlOPcHckXzbLTCHpkb7FB+yuxKV13pQ==}
     engines: {node: ^18 || >=20}
     hasBin: true
+
+  nanospinner@1.2.2:
+    resolution: {integrity: sha512-Zt/AmG6qRU3e+WnzGGLuMCEAO/dAu45stNbHY223tUxldaDAeE+FxSPsd9Q+j+paejmm0ZbrNVs5Sraqy3dRxA==}
 
   nanostores@0.10.3:
     resolution: {integrity: sha512-Nii8O1XqmawqSCf9o2aWqVxhKRN01+iue9/VEd1TiJCr9VT5XxgPFbF1Edl1XN6pwJcZRsl8Ki+z01yb/T/C2g==}
@@ -38699,6 +38705,10 @@ snapshots:
   nanoid@3.3.8: {}
 
   nanoid@5.0.7: {}
+
+  nanospinner@1.2.2:
+    dependencies:
+      picocolors: 1.1.1
 
   nanostores@0.10.3: {}
 

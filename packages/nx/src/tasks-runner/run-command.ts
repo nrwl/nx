@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import * as ora from 'ora';
+import { createSpinner } from 'nanospinner';
 import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
@@ -651,14 +651,14 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     (await promptForApplyingSyncGeneratorChanges());
 
   if (applyChanges) {
-    const spinner = ora('Syncing the workspace...');
+    const spinner = createSpinner('Syncing the workspace...');
     spinner.start();
 
     // Flush sync generator changes to disk
     const flushResult = await flushSyncGeneratorChanges(results);
 
     if ('generatorFailures' in flushResult) {
-      spinner.fail();
+      spinner.error();
       output.error({
         title: 'Failed to sync the workspace',
         bodyLines: [
@@ -697,7 +697,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
         : // The user was prompted and we already logged a message about erroring in CI
           // so here we just tell them to commit the changes.
           'Please make sure to commit the changes to your repository.';
-    spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
+    spinner.success(`${successTitle}\n\n${successSubtitle}`);
 
     if (anySyncGeneratorsFailed) {
       output.warn({

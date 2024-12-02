@@ -262,6 +262,7 @@
     "metro-resolver": "~0.80.4",
     "mini-css-extract-plugin": "~2.4.7",
     "minimatch": "9.0.3",
+    "nanospinner": "1.2.2",
     "next-sitemap": "^3.1.10",
     "ng-packagr": "19.2.0",
     "npm-package-arg": "11.0.1",
