@@ -1,14 +1,14 @@
 import { type ExecutorContext, workspaceRoot } from '@nx/devkit';
-import { type Schema } from '../schema';
+import { type StaticRemotesOptions } from './models';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { join } from 'path';
 import { cpSync } from 'fs';
-import type { StaticRemotesConfig } from '@nx/module-federation/src/utils';
+import type { StaticRemotesConfig } from '../../utils';
 
 export function startStaticRemotesFileServer(
   staticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
-  options: Schema
+  options: StaticRemotesOptions
 ) {
   if (
     !staticRemotesConfig.remotes ||
