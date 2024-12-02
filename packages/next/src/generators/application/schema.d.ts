@@ -17,6 +17,9 @@ export interface Schema {
   skipPackageJson?: boolean;
   appDir?: boolean;
   src?: boolean;
+  // Internal options
   rootProject?: boolean;
   addPlugin?: boolean;
+  useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
 }

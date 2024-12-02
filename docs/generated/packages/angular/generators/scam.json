@@ -9,8 +9,12 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nx/angular:scam my-lib/src/lib/my-sample/my-sample",
-        "description": "Generate a `MySampleComponent` component in the `my-lib` library."
+        "description": "Generate a component with the exported symbol matching the file name. It results in the component `FooComponent` at `mylib/src/lib/foo.component.ts`",
+        "command": "nx g @nx/angular:scam mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a component with the exported symbol different from the file name. It results in the component `CustomComponent` at `mylib/src/lib/foo.component.ts`",
+        "command": "nx g @nx/angular:scam mylib/src/lib/foo --name=custom"
       }
     ],
     "description": "Creates a new Angular SCAM.",
@@ -18,14 +22,13 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "The path at which to create the SCAM file, relative to the workspace root.",
+        "description": "The file path to the SCAM without the file extension and suffix. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What is the path of the new SCAM?"
+        "x-prompt": "What is the SCAM file path?"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "x-prompt": "What name would you like to use for the component?"
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "displayBlock": {
         "description": "Specifies if the style will contain `:host { display: block; }`.",

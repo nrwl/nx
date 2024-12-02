@@ -23,7 +23,9 @@ describe('@nx/expo', () => {
   beforeAll(() => {
     newProject();
     appName = uniq('app');
-    runCLI(`generate @nx/expo:app ${appName} --no-interactive`);
+    runCLI(
+      `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --linter=eslint`
+    );
   });
 
   afterAll(() => cleanupProject());
@@ -152,7 +154,7 @@ describe('@nx/expo', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,

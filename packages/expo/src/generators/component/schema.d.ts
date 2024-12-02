@@ -9,5 +9,4 @@ export interface Schema {
   export: boolean; // default is false
   classComponent: boolean; // default is false
   js: boolean; // default is false
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }

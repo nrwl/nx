@@ -22,6 +22,7 @@ import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
+import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const pmc = getPackageManagerCommand();
 
@@ -59,10 +60,17 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            isUsingTsSolutionSetup
+          ),
         configFilePaths,
         options,
         context
@@ -79,7 +87,13 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFilePath, options, context, {});
+    return createNodesInternal(
+      configFilePath,
+      options,
+      context,
+      {},
+      _isUsingTsSolutionSetup()
+    );
   },
 ];
 
@@ -87,7 +101,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: VitePluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, ViteTargets>
+  targetsCache: Record<string, ViteTargets>,
+  isUsingTsSolutionSetup: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -119,6 +134,7 @@ async function createNodesInternal(
     projectRoot,
     normalizedOptions,
     tsConfigFiles,
+    isUsingTsSolutionSetup,
     context
   );
   targetsCache[hash] ??= viteTargets;
@@ -148,6 +164,7 @@ async function buildViteTargets(
   projectRoot: string,
   options: VitePluginOptions,
   tsConfigFiles: string[],
+  isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext
 ): Promise<ViteTargets & { isLibrary: boolean }> {
   const absoluteConfigFilePath = joinPathFragments(
@@ -218,7 +235,9 @@ async function buildViteTargets(
           : ['default', '^default']),
         { externalDependencies: ['typescript'] },
       ],
-      command: `tsc --noEmit -p ${tsConfigToUse}`,
+      command: isUsingTsSolutionSetup
+        ? `tsc --build --emitDeclarationOnly --pretty --verbose`
+        : `tsc --noEmit -p ${tsConfigToUse}`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
         description: `Run Typechecking`,

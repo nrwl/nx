@@ -159,6 +159,46 @@ nx e2e <your-app-name> --ui
 
 You can also use `--headed` flag to run Playwright where the browser can be seen without using the [Playwright UI](https://playwright.dev/docs/test-ui-mode)
 
+### Specifying a Project/Target Browser
+
+The default generated Playwright configuration will contain a `projects` property that contains a list of browsers to run the tests against.
+
+It should look similar to this:
+
+```ts
+export default defineConfig({
+  ...,
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    }
+  ]
+});
+```
+
+By default, Playwright will run tests against all browsers in the `projects` list.
+
+You can specify a specific browser to run the tests against by passing the `--project` flag to the `nx e2e` command.
+
+```shell
+nx e2e frontend-e2e -- --project=firefox
+```
+
+{% callout type="note" title="Argument Forwarding" %}
+As Nx also has a `--project` argument, you need to use `--` to forward the argument to the Playwright configuration.
+{% /callout %}
+
 ### Specifying a Base Url
 
 The `baseURL` property within the Playwright configuration can control where the tests visit by default.

@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { NormalizedJestProjectSchema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function createFiles(
   tree: Tree,

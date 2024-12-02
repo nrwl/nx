@@ -67,9 +67,9 @@ describe('rspack e2e', () => {
     // Make sure expected files are present.
     /**
      * The files that are generated are:
-     * ["3rdpartylicenses.txt", "assets", "favicon.ico", "index.html", "main.bf7851e6.js", "runtime.e4294127.js"]
+     * ["assets", "favicon.ico", "index.html", "main.bf7851e6.js", "runtime.e4294127.js"]
      */
-    expect(listFiles(`dist/${project}`)).toHaveLength(6);
+    expect(listFiles(`dist/${project}`)).toHaveLength(5);
 
     result = runCLI(`test ${project}`);
     expect(result).toContain('Successfully ran target test');
@@ -87,7 +87,7 @@ describe('rspack e2e', () => {
       env: { NODE_ENV: 'production' },
     });
     expect(result).toContain('Successfully ran target build');
-    expect(listFiles(`dist/${project}`)).toHaveLength(6); // same length as before
+    expect(listFiles(`dist/${project}`)).toHaveLength(5); // same length as before
 
     // Generate a new app and check that the files are correct
     const app2 = uniq('app2');
@@ -120,7 +120,7 @@ describe('rspack e2e', () => {
     });
     expect(result).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${app2}`)).toHaveLength(6);
+    expect(listFiles(`dist/${app2}`)).toHaveLength(5);
 
     result = runCLI(`test ${app2}`);
     expect(result).toContain('Successfully ran target test');
@@ -139,11 +139,11 @@ describe('rspack e2e', () => {
     result = runCLI(`build ${app3}`);
     expect(result).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${app3}`)).toHaveLength(3);
+    expect(listFiles(`dist/${app3}`)).toHaveLength(2);
 
     result = runCLI(`build ${app3} --generatePackageJson=true`);
     expect(result).toContain('Successfully ran target build');
     // Make sure expected files are present.
-    expect(listFiles(`dist/${app3}`)).toHaveLength(5);
+    expect(listFiles(`dist/${app3}`)).toHaveLength(4);
   }, 200_000);
 });

@@ -50,7 +50,8 @@ export async function viteConfigurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const { targets, root: projectRoot } = projectConfig;
 
-  const projectType = projectConfig.projectType ?? 'library';
+  const projectType =
+    schema.projectType ?? projectConfig.projectType ?? 'library';
 
   schema.includeLib ??= projectType === 'library';
 
@@ -161,12 +162,13 @@ export async function viteConfigurationGeneratorInternal(
       skipFormat: true,
       addPlugin: schema.addPlugin,
       compiler: schema.compiler,
+      projectType,
     });
     tasks.push(vitestTask);
   }
 
   if (isUsingTsSolutionSetup(tree)) {
-    updatePackageJson(tree, schema);
+    updatePackageJson(tree, schema, projectType);
   }
 
   if (!schema.skipFormat) {
@@ -180,7 +182,8 @@ export default viteConfigurationGenerator;
 
 function updatePackageJson(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema
+  options: ViteConfigurationGeneratorSchema,
+  projectType: 'application' | 'library'
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
@@ -193,28 +196,33 @@ function updatePackageJson(
       name: getImportPath(tree, options.project),
       version: '0.0.1',
     };
+    if (projectType === 'application') {
+      packageJson.private = true;
+    }
   }
 
-  // we always write/override the vite and project config with some set values,
-  // so we can rely on them
-  const main = join(project.root, 'src/index.ts');
-  // we configure the dts plugin with the entryRoot set to `src`
-  const rootDir = join(project.root, 'src');
-  const outputPath = joinPathFragments(project.root, 'dist');
+  if (projectType === 'library') {
+    // we always write/override the vite and project config with some set values,
+    // so we can rely on them
+    const main = join(project.root, 'src/index.ts');
+    // we configure the dts plugin with the entryRoot set to `src`
+    const rootDir = join(project.root, 'src');
+    const outputPath = joinPathFragments(project.root, 'dist');
 
-  packageJson = getUpdatedPackageJsonContent(packageJson, {
-    main,
-    outputPath,
-    projectRoot: project.root,
-    rootDir,
-    generateExportsField: true,
-    packageJsonPath,
-    format: ['esm', 'cjs'],
-    // when building both formats, we don't set the package.json "type" field, so
-    // we need to set the esm extension to ".mjs" to match vite output
-    // see the "File Extensions" callout in https://vite.dev/guide/build.html#library-mode
-    outputFileExtensionForEsm: '.mjs',
-  });
+    packageJson = getUpdatedPackageJsonContent(packageJson, {
+      main,
+      outputPath,
+      projectRoot: project.root,
+      rootDir,
+      generateExportsField: true,
+      packageJsonPath,
+      format: ['esm', 'cjs'],
+      // when building both formats, we don't set the package.json "type" field, so
+      // we need to set the esm extension to ".mjs" to match vite output
+      // see the "File Extensions" callout in https://vite.dev/guide/build.html#library-mode
+      outputFileExtensionForEsm: '.mjs',
+    });
+  }
 
   writeJson(tree, packageJsonPath, packageJson);
 }

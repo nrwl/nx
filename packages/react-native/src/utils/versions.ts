@@ -14,6 +14,7 @@ export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';
 export const reactTestRendererVersion = '18.2.0';
 export const typesReactVersion = '~18.2.45';
+export const typesReactDomVersion = '18.3.0';
 
 export const testingLibraryReactNativeVersion = '~12.5.0';
 export const testingLibraryJestNativeVersion = '~5.4.3';

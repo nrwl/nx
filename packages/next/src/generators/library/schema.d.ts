@@ -14,7 +14,9 @@ export interface Schema {
   linter: Linter | LinterType;
   component?: boolean;
   publishable?: boolean;
+  /** @deprecated Use bundler instead. */
   buildable?: boolean;
+  bundler?: 'none' | 'vite' | 'rollup';
   importPath?: string;
   js?: boolean;
   globalCss?: boolean;

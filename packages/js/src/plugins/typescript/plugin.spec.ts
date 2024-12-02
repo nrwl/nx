@@ -268,7 +268,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
 
-    it('should not invoke tsc with `--emitDeclarationOnly` when `noEmit` is set in the tsconfig.json file', async () => {
+    it('should not invoke `tsc --build` when `noEmit` is set in the tsconfig.json file', async () => {
       // set directly in tsconfig.json file
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
@@ -285,7 +285,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --pretty --verbose",
+                  "command": "echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -345,7 +345,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --pretty --verbose",
+                  "command": "echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -387,7 +387,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
 
-    it('should not invoke tsc with `--emitDeclarationOnly` when `noEmit` is set in any of the referenced tsconfig.json files', async () => {
+    it('should not invoke `tsc --build` when `noEmit` is set in any of the referenced tsconfig.json files', async () => {
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           files: [],
@@ -407,7 +407,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --pretty --verbose",
+                  "command": "echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."",
                   "dependsOn": [
                     "^typecheck",
                   ],

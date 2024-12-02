@@ -137,6 +137,7 @@ function applyNxIndependentConfig(
       IGNORED_WEBPACK_WARNINGS.some((r) =>
         typeof x === 'string' ? r.test(x) : r.test(x.message)
       ),
+    ...(config.ignoreWarnings ?? []),
   ];
 
   config.optimization = {

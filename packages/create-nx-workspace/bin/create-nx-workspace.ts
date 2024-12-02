@@ -52,6 +52,9 @@ interface ReactArguments extends BaseArguments {
   nextAppDir: boolean;
   nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  linter?: 'none' | 'eslint';
+  formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
 }
 
 interface AngularArguments extends BaseArguments {
@@ -155,6 +158,15 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app.`,
+            type: 'string',
+          })
+          .option('workspaces', {
+            describe: chalk.dim`Use package manager workspaces.`,
+            type: 'boolean',
+            default: false,
+          })
+          .option('formatter', {
+            describe: chalk.dim`Code formatter to use.`,
             type: 'string',
           })
           .option('framework', {
@@ -440,6 +452,52 @@ async function determinePresetOptions(
   }
 }
 
+async function determineFormatterOptions(args: {
+  formatter?: 'none' | 'prettier';
+  interactive?: boolean;
+}) {
+  if (args.formatter) return args.formatter;
+  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
+    {
+      name: 'prettier',
+      message: `Would you like to use Prettier for code formatting?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+}
+
+async function determineLinterOptions(args: { interactive?: boolean }) {
+  const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
+    {
+      name: 'eslint',
+      message: `Would you like to use ESLint?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.eslint === 'Yes' ? 'eslint' : 'none';
+}
+
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
@@ -448,26 +506,9 @@ async function determineNoneOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     process.env.NX_ADD_TS_PLUGIN !== 'false'
   ) {
-    const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
-      {
-        name: 'prettier',
-        message: `Would you like to use Prettier for code formatting?`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 1,
-        skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
     return {
       preset: Preset.TS,
-      formatter: reply.prettier === 'Yes' ? 'prettier' : 'none',
+      formatter: await determineFormatterOptions(parsedArgs),
     };
   } else {
     let preset: Preset;
@@ -535,6 +576,10 @@ async function determineReactOptions(
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
   let nextSrcDir = false;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -550,27 +595,25 @@ async function determineReactOptions(
   } else {
     const framework = await determineReactFramework(parsedArgs);
 
-    // React Native and Expo only support integrated monorepos for now.
-    // TODO(jack): Add standalone support for React Native and Expo.
-    const workspaceType =
-      framework === 'react-native' || framework === 'expo'
-        ? 'integrated'
-        : await determineStandaloneOrMonorepo();
+    const isStandalone =
+      workspaces || framework === 'react-native' || framework === 'expo'
+        ? false
+        : (await determineStandaloneOrMonorepo()) === 'standalone';
 
-    if (workspaceType === 'standalone') {
+    if (isStandalone) {
       appName = parsedArgs.name;
     } else {
       appName = await determineAppName(parsedArgs);
     }
 
     if (framework === 'nextjs') {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.NextJsStandalone;
       } else {
         preset = Preset.NextJs;
       }
     } else if (framework === 'remix') {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.RemixStandalone;
       } else {
         preset = Preset.RemixMonorepo;
@@ -580,7 +623,7 @@ async function determineReactOptions(
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.ReactStandalone;
       } else {
         preset = Preset.ReactMonorepo;
@@ -657,6 +700,14 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
   return {
     preset,
     style,
@@ -665,6 +716,9 @@ async function determineReactOptions(
     nextAppDir,
     nextSrcDir,
     e2eTestRunner,
+    linter,
+    formatter,
+    workspaces,
   };
 }
 

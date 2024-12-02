@@ -19,7 +19,6 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
     defaultSchema = {
-      name: 'hello',
       path: 'my-lib/src/lib/hello/hello',
       skipTests: false,
       export: false,

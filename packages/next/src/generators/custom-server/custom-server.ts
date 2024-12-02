@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit';
+import { joinPathFragments, Tree } from '@nx/devkit';
 import {
   updateJson,
   generateFiles,
@@ -11,6 +11,7 @@ import {
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function customServerGenerator(
   host: Tree,
@@ -71,12 +72,18 @@ export async function customServerGenerator(
     project.root
   }`;
 
+  const offset = offsetFromRoot(project.root);
+  const isTsSolution = isUsingTsSolutionSetup(host);
+
   generateFiles(host, join(__dirname, 'files'), project.root, {
     ...options,
     hasPlugin,
     projectPathFromDist,
-    offsetFromRoot: offsetFromRoot(project.root),
+    offsetFromRoot: offset,
     projectRoot: project.root,
+    baseTsConfigPath: isTsSolution
+      ? joinPathFragments(offset, 'tsconfig.base.json')
+      : './tsconfig.json',
     tmpl: '',
   });
 

@@ -134,6 +134,7 @@ function applyNxIndependentConfig(
       IGNORED_RSPACK_WARNINGS.some((r) =>
         typeof x === 'string' ? r.test(x) : r.test(x.message)
       ),
+    ...(config.ignoreWarnings ?? []),
   ];
 
   config.optimization = !isProd

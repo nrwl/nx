@@ -37,7 +37,9 @@ describe('Next.js Applications', () => {
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --linter=eslint --unitTestRunner=jest`
+    );
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
@@ -52,7 +54,9 @@ describe('Next.js Applications', () => {
       `Successfully ran target test for project ${appName}`
     );
 
-    runCLI(`generate @nx/next:lib ${libName} --buildable --no-interactive`);
+    runCLI(
+      `generate @nx/next:lib ${libName} --buildable --no-interactive --linter=eslint --unitTestRunner=jest`
+    );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -67,7 +71,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesDoNotExist(`${appName}/.next/build-manifest.json`);
@@ -82,7 +86,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false --e2eTestRunner=playwright`
+      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false --e2eTestRunner=playwright --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesExist(`${appName}/src/pages/index.js`);
@@ -97,7 +101,7 @@ describe('Next.js Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
+      `generate @nx/next:lib ${libName} --no-interactive --style=none --js --linter=eslint --unitTestRunner=jest`
     );
 
     const mainPath = `${appName}/src/pages/index.js`;
@@ -133,7 +137,9 @@ describe('Next.js Applications', () => {
   it('should support --no-swc flag', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --no-swc`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --no-swc --linter=eslint --unitTestRunner=jest`
+    );
 
     // Next.js enables SWC when custom .babelrc is not provided.
     checkFilesExist(`${appName}/.babelrc`);
@@ -148,7 +154,9 @@ describe('Next.js Applications', () => {
   it('should support --custom-server flag (swc)', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --custom-server`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`
+    );
 
     checkFilesExist(`${appName}/server/main.ts`);
 
@@ -165,7 +173,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server`
+      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesExist(`${appName}/server/main.ts`);
@@ -182,7 +190,9 @@ describe('Next.js Applications', () => {
   it('should run e2e-ci test', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --linter=eslint --unitTestRunner=jest`
+    );
 
     if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
@@ -202,9 +212,11 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
     const pagesAppName = uniq('pages-app');
 
-    runCLI(`generate @nx/next:app ${appName} --style=css --no-interactive`);
     runCLI(
-      `generate @nx/next:app ${pagesAppName} --appDir=false --style=css --no-interactive`
+      `generate @nx/next:app ${appName} --style=css --no-interactive --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/next:app ${pagesAppName} --appDir=false --style=css --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     const appDirNextEnv = `${appName}/next-env.d.ts`;

@@ -17,7 +17,6 @@ import {
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname } from 'node:path';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
@@ -45,6 +44,10 @@ import {
   addViteTempFilesToGitIgnore,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
+import {
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -60,7 +63,17 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'remix', 'application');
+  const tasks: GeneratorCallback[] = [
+    await initGenerator(tree, {
+      skipFormat: true,
+      addPlugin: true,
+    }),
+    await jsInitGenerator(tree, {
+      skipFormat: true,
+      addTsPlugin: _options.useTsSolution,
+      formatter: _options.formatter,
+    }),
+  ];
 
   const options = await normalizeOptions(tree, _options);
   if (!options.addPlugin) {
@@ -69,21 +82,17 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  const tasks: GeneratorCallback[] = [
-    await initGenerator(tree, {
-      skipFormat: true,
-      addPlugin: true,
-    }),
-    await jsInitGenerator(tree, { skipFormat: true }),
-  ];
+  const isUsingTsSolution = isUsingTsSolutionSetup(tree);
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.projectRoot,
-    sourceRoot: `${options.projectRoot}`,
-    projectType: 'application',
-    tags: options.parsedTags,
-    targets: {},
-  });
+  if (!isUsingTsSolution) {
+    addProjectConfiguration(tree, options.projectName, {
+      root: options.projectRoot,
+      sourceRoot: `${options.projectRoot}`,
+      projectType: 'application',
+      tags: options.parsedTags,
+      targets: {},
+    });
+  }
 
   const installTask = updateDependencies(tree);
   tasks.push(installTask);
@@ -110,6 +119,7 @@ export async function remixApplicationGeneratorInternal(
     eslintVersion,
     typescriptVersion,
     viteVersion,
+    isUsingTsSolution,
   };
 
   generateFiles(
@@ -135,7 +145,16 @@ export async function remixApplicationGeneratorInternal(
   } else {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, 'files/integrated'),
+      joinPathFragments(__dirname, 'files/non-root'),
+      options.projectRoot,
+      vars
+    );
+  }
+
+  if (isUsingTsSolution) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, 'files/ts-solution'),
       options.projectRoot,
       vars
     );
@@ -187,7 +206,7 @@ export async function remixApplicationGeneratorInternal(
         addPlugin: true,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
-      if (projectConfig.targets['test']?.options) {
+      if (projectConfig.targets?.['test']?.options) {
         projectConfig.targets['test'].options.passWithNoTests = true;
         updateProjectConfiguration(tree, options.projectName, projectConfig);
       }
@@ -339,6 +358,21 @@ export default {...nxPreset};
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  updateTsconfigFiles(
+    tree,
+    options.projectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined,
+    '.'
+  );
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

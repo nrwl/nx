@@ -1,7 +1,6 @@
 import {
   detectPackageManager,
   getPackageManagerVersion,
-  isWorkspacesEnabled,
   output,
   readJson,
   type GeneratorCallback,
@@ -10,6 +9,7 @@ import {
 import { minimatch } from 'minimatch';
 import { join } from 'node:path/posix';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
+import { PackageJson } from 'nx/src/utils/package-json';
 import { lt } from 'semver';
 
 export type ProjectPackageManagerWorkspaceState =
@@ -37,7 +37,22 @@ export function getProjectPackageManagerWorkspaceState(
 }
 
 export function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
-  return isWorkspacesEnabled(detectPackageManager(tree.root), tree.root);
+  return isWorkspacesEnabled(tree);
+}
+
+export function isWorkspacesEnabled(
+  tree: Tree
+  // packageManager: PackageManager = detectPackageManager(),
+  // root: string = workspaceRoot
+): boolean {
+  const packageManager = detectPackageManager(tree.root);
+  if (packageManager === 'pnpm') {
+    return tree.exists('pnpm-workspace.yaml');
+  }
+
+  // yarn and npm both use the same 'workspaces' property in package.json
+  const packageJson = readJson<PackageJson>(tree, 'package.json');
+  return !!packageJson?.workspaces;
 }
 
 export function getProjectPackageManagerWorkspaceStateWarningTask(

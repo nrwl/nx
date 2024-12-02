@@ -26,7 +26,6 @@ export async function normalizeOptions(
     directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    name: options.name,
     path: options.path,
     fileExtension: 'vue',
   });

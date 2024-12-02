@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  installPackagesTask,
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
@@ -232,6 +233,11 @@ export async function libraryGeneratorInternal(
     tasks.push(() => {
       logNxReleaseDocsInfo();
     });
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(tree));
   }
 
   tasks.push(() => {
@@ -1125,6 +1131,17 @@ function determineEntryFields(
         // Safest option is to not set a type field.
         // Allow the user to decide which module format their library is using
         type: undefined,
+        // For non-buildable libraries, point to source so we can still use them in apps via bundlers like Vite.
+        main: options.isUsingTsSolutionConfig
+          ? options.js
+            ? './src/index.js'
+            : './src/index.ts'
+          : undefined,
+        types: options.isUsingTsSolutionConfig
+          ? options.js
+            ? './src/index.js'
+            : './src/index.ts'
+          : undefined,
       };
     }
   }

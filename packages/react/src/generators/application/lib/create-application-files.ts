@@ -18,10 +18,11 @@ import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
 import {
-  getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function createApplicationFiles(
   host: Tree,
@@ -67,6 +68,7 @@ export async function createApplicationFiles(
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
     style: options.style === 'tailwind' ? 'css' : options.style,
     hasStyleFile,
+    isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
 
   if (options.bundler === 'vite') {

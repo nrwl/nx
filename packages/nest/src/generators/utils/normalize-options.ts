@@ -12,7 +12,6 @@ export async function normalizeOptions(
 ): Promise<NormalizedOptions> {
   const { directory, artifactName } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      name: options.name,
       path: options.path,
     });
 

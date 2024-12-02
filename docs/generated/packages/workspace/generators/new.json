@@ -47,7 +47,7 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
+        "enum": ["eslint", "none"],
         "default": "eslint"
       },
       "packageManager": {
@@ -89,6 +89,11 @@
         "type": "string",
         "enum": ["none", "prettier"],
         "default": "none"
+      },
+      "workspaces": {
+        "description": "Whether to use package manager workspaces.",
+        "type": "boolean",
+        "default": false
       }
     },
     "additionalProperties": true,

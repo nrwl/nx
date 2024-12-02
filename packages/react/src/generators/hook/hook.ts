@@ -23,6 +23,7 @@ interface NormalizedSchema extends Schema {
   hookTypeName: string;
   fileName: string;
   projectName: string;
+  directory: string;
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
@@ -96,11 +97,10 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
-
   const {
+    artifactName,
     directory,
-    fileName: _fileName,
+    fileName: hookFilename,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     path: options.path,
@@ -108,17 +108,16 @@ async function normalizeOptions(
     fileExtension: 'tsx',
   });
 
-  const { className, fileName } = names(_fileName);
+  const { className } = names(hookFilename);
 
-  // If using `as-provided` file and directory, then don't normalize.
-  // Otherwise, support legacy behavior of prefixing filename with `use-`.
-  const hookFilename = fileName;
-  const hookName = className.toLocaleLowerCase().startsWith('use')
+  // if name is provided, use it as is for the hook name, otherwise prepend
+  // `use` to the pascal-cased file name if it doesn't already start with `use`
+  const hookName = options.name
+    ? artifactName
+    : className.toLocaleLowerCase().startsWith('use')
     ? className
-    : 'use'.concat(className);
-  const hookTypeName = className.toLocaleLowerCase().startsWith('use')
-    ? className
-    : 'Use'.concat(className);
+    : `use${className}`;
+  const hookTypeName = names(hookName).className;
   const project = getProjects(host).get(projectName);
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
@@ -138,22 +137,6 @@ async function normalizeOptions(
     projectSourceRoot,
     projectName,
   };
-}
-
-function assertValidOptions(options: Schema) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the hook name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
-      );
-    }
-  });
 }
 
 export default hookGenerator;
