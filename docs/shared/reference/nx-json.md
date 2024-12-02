@@ -329,8 +329,7 @@ Task Atomizer plugins create several targets with a similar pattern. For example
 ```
 
 {% callout type="info" title="Pattern Matching" %}
-Nx uses glob patterns for matching against the target name. This means that the `**/*` pattern above is required because the target name contains a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
-If your tests are nested within a directory, you can use the `**/**` pattern to match all directories.
+Nx uses glob patterns to match against the target name. This means that the `**/**` pattern above is required because tests can be nested within a directory which would make the target name contain a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
 {% /callout %}
 
 ## Release
