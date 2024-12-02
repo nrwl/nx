@@ -34,7 +34,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
   });
 
   const newWorkspaceRoot = join(host.root, opts.directory);
-  const spawnOptions: ForkOptions = {
+  const forkOptions: ForkOptions = {
     stdio: 'inherit',
     cwd: newWorkspaceRoot,
   };
@@ -48,7 +48,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     // This needs to be `fork` instead of `spawn` because `spawn` is failing on Windows with pnpm + yarn
     // The root cause is unclear. Spawn causes the `@nx/workspace:preset` generator to be called twice
     // and the second time it fails with `Project {projectName} already exists.`
-    fork(nxBinForNewWorkspaceRoot, args, spawnOptions).on(
+    fork(nxBinForNewWorkspaceRoot, args, forkOptions).on(
       'close',
       (code: number) => {
         if (code === 0) {
