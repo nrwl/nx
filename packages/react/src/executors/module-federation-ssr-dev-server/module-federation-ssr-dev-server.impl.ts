@@ -13,17 +13,17 @@ import {
   getModuleFederationConfig,
   getRemotes,
   parseStaticSsrRemotesConfig,
-  type StaticRemotesConfig,
   startSsrRemoteProxies,
 } from '@nx/module-federation/src/utils';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
+import {
+  buildStaticRemotes,
+  startSsrStaticRemotesFileServer,
+} from '@nx/module-federation/src/executors/utils';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
-import { cpSync, existsSync } from 'fs';
-
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
+import { existsSync } from 'fs';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 type ModuleFederationSsrDevServerOptions = WebSsrDevServerOptions & {
@@ -65,54 +65,6 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   return {
     ...buildOptions,
   };
-}
-
-async function* startSsrStaticRemotesFileServer(
-  ssrStaticRemotesConfig: StaticRemotesConfig,
-  context: ExecutorContext,
-  options: ModuleFederationSsrDevServerOptions
-):
-  | AsyncGenerator<{ success: boolean; baseUrl?: string }>
-  | AsyncIterable<{ success: boolean; baseUrl?: string }> {
-  if (ssrStaticRemotesConfig.remotes.length === 0) {
-    yield { success: true };
-    return;
-  }
-
-  // The directories are usually generated with /browser and /server suffixes so we need to copy them to a common directory
-  const commonOutputDirectory = join(workspaceRoot, 'tmp/static-remotes');
-  for (const app of ssrStaticRemotesConfig.remotes) {
-    const remoteConfig = ssrStaticRemotesConfig.config[app];
-
-    cpSync(
-      remoteConfig.outputPath,
-      join(commonOutputDirectory, remoteConfig.urlSegment),
-      {
-        force: true,
-        recursive: true,
-      }
-    );
-  }
-
-  const staticRemotesIter = fileServerExecutor(
-    {
-      cors: true,
-      watch: false,
-      staticFilePath: commonOutputDirectory,
-      parallel: false,
-      spa: false,
-      withDeps: false,
-      host: options.host,
-      port: options.staticRemotesPort,
-      ssl: options.ssl,
-      sslCert: options.sslCert,
-      sslKey: options.sslKey,
-      cacheSeconds: -1,
-    },
-    context
-  );
-
-  yield* staticRemotesIter;
 }
 
 async function startRemotes(

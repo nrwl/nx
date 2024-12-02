@@ -8,7 +8,8 @@ import type { StaticRemotesConfig } from '../../utils';
 export function startStaticRemotesFileServer(
   staticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
-  options: StaticRemotesOptions
+  options: StaticRemotesOptions,
+  forceMoveToCommonLocation = false
 ) {
   if (
     !staticRemotesConfig.remotes ||
@@ -16,15 +17,17 @@ export function startStaticRemotesFileServer(
   ) {
     return;
   }
-  let shouldMoveToCommonLocation = false;
+  let shouldMoveToCommonLocation = forceMoveToCommonLocation || false;
   let commonOutputDirectory: string;
-  for (const app of staticRemotesConfig.remotes) {
-    const remoteBasePath = staticRemotesConfig.config[app].basePath;
-    if (!commonOutputDirectory) {
-      commonOutputDirectory = remoteBasePath;
-    } else if (commonOutputDirectory !== remoteBasePath) {
-      shouldMoveToCommonLocation = true;
-      break;
+  if (!forceMoveToCommonLocation) {
+    for (const app of staticRemotesConfig.remotes) {
+      const remoteBasePath = staticRemotesConfig.config[app].basePath;
+      if (!commonOutputDirectory) {
+        commonOutputDirectory = remoteBasePath;
+      } else if (commonOutputDirectory !== remoteBasePath) {
+        shouldMoveToCommonLocation = true;
+        break;
+      }
     }
   }
 
@@ -61,4 +64,22 @@ export function startStaticRemotesFileServer(
     context
   );
   return staticRemotesIter;
+}
+
+export async function* startSsrStaticRemotesFileServer(
+  staticRemotesConfig: StaticRemotesConfig,
+  context: ExecutorContext,
+  options: StaticRemotesOptions
+) {
+  const staticRemotesIter = startStaticRemotesFileServer(
+    staticRemotesConfig,
+    context,
+    options,
+    true
+  );
+  if (!staticRemotesIter) {
+    yield { success: true };
+    return;
+  }
+  yield* staticRemotesIter;
 }

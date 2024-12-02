@@ -14,9 +14,11 @@ import {
   parseStaticSsrRemotesConfig,
   startSsrRemoteProxies,
 } from '@nx/module-federation/src/utils';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
+import {
+  buildStaticRemotes,
+  startSsrStaticRemotesFileServer,
+} from '@nx/module-federation/src/executors/utils';
 import { startRemotes } from './lib/start-dev-remotes';
-import { startStaticRemotes } from './lib/start-static-remotes';
 import {
   combineAsyncIterables,
   createAsyncIterable,
@@ -134,7 +136,7 @@ export async function* moduleFederationSsrDevServerExecutor(
     context
   );
 
-  const staticRemotes = startStaticRemotes(
+  const staticRemotes = startSsrStaticRemotesFileServer(
     staticRemotesConfig,
     context,
     options
