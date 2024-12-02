@@ -9,7 +9,7 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { removeDbConnections } from '../../utils/db-connection';
-import { cleanupPlugins } from '../../project-graph/plugins';
+import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 

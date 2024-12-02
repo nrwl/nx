@@ -36,7 +36,7 @@ import {
   ProjectConfigurationsError,
   isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
-import { getPlugins } from '../../project-graph/plugins';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
 
 interface SerializedProjectGraph {
   error: Error | null;

@@ -16,7 +16,7 @@ import {
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
-import { getOnlyDefaultPlugins, getPlugins } from '../plugins';
+import { getOnlyDefaultPlugins, getPlugins } from '../plugins/get-plugins';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`

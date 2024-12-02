@@ -1,5 +1,4 @@
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
-import type { LoadedNxPlugin } from '../internal-api';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 
@@ -13,7 +12,7 @@ if (process.env.NX_PERF_LOGGING === 'true') {
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
 let connected = false;
-let plugin: LoadedNxPlugin;
+let plugin;
 
 const socketPath = process.argv[2];
 

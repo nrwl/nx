@@ -5,7 +5,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { configurationGlobs } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
-import { getPlugins } from '../../plugins';
+import { getPlugins } from '../../plugins/get-plugins';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes): Promise<string[]> => {

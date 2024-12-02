@@ -29,7 +29,7 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import { getPlugins } from './plugins';
+import { getPlugins } from './plugins/get-plugins';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.

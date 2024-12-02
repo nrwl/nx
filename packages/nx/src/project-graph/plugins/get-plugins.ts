@@ -1,9 +1,6 @@
 import { hashObject } from '../../hasher/file-hasher';
 import { readNxJson } from '../../config/nx-json';
-import {
-  LoadedNxPlugin,
-  loadNxPlugins,
-} from '../../project-graph/plugins/internal-api';
+import { LoadedNxPlugin, loadNxPlugins } from './internal-api';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 let currentPluginsConfigurationHash: string;
