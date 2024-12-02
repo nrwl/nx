@@ -239,13 +239,13 @@ importers:
         specifier: 0.26.6
         version: 0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@jest/reporters':
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       '@jest/test-result':
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       '@jest/types':
-        specifier: ^29.4.1
+        specifier: 29.6.3
         version: 29.6.3
       '@module-federation/enhanced':
         specifier: 0.7.6
@@ -740,25 +740,25 @@ importers:
         specifier: 29.7.0
         version: 29.7.0(@types/node@20.16.10)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.5.4))
       jest-config:
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0(@types/node@20.16.10)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.5.4))
       jest-diff:
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       jest-environment-jsdom:
         specifier: 29.7.0
         version: 29.7.0
       jest-environment-node:
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       jest-resolve:
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       jest-runtime:
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       jest-util:
-        specifier: ^29.4.1
+        specifier: 29.7.0
         version: 29.7.0
       js-tokens:
         specifier: ^4.0.0

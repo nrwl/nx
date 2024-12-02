@@ -150,6 +150,9 @@
       "@nx/webpack/*": ["packages/webpack/*"],
       "@nx/workspace": ["packages/workspace"],
       "@nx/workspace-plugin": ["tools/workspace-plugin/src/index.ts"],
+      "@nx/workspace-plugin/conformance-rules/*": [
+        "tools/workspace-plugin/src/conformance-rules/*"
+      ],
       "@nx/workspace/*": ["packages/workspace/*"],
       "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
       "create-nx-workspace/*": ["packages/create-nx-workspace/*"],
