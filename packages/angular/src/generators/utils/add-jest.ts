@@ -49,25 +49,17 @@ export async function addJest(
     'src',
     'test-setup.ts'
   );
-  if (tree.exists(setupFile)) {
+  if (options.strict && tree.exists(setupFile)) {
     const contents = tree.read(setupFile, 'utf-8');
-    if (options.strict) {
-      tree.write(
-        setupFile,
-        `${contents}
-setupZoneTestEnv({
-    errorOnUnknownElements: true,
-    errorOnUnknownProperties: true
-});          
-`
-      );
-    } else {
-      tree.write(
-        setupFile,
-        `${contents}
-setupZoneTestEnv();          
-`
-      );
-    }
+    tree.write(
+      setupFile,
+      contents.replace(
+        'setupZoneTestEnv();',
+        `setupZoneTestEnv({
+  errorOnUnknownElements: true,
+  errorOnUnknownProperties: true
+});`
+      )
+    );
   }
 }
