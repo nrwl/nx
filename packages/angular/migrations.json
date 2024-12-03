@@ -292,7 +292,7 @@
       "cli": "nx",
       "version": "20.2.0-beta.5",
       "requires": {
-        "@angular/core": ">=19.0.0-rc.1"
+        "@angular/core": ">=19.0.0"
       },
       "description": "Add the '@angular/localize/init' polyfill to the 'polyfills' option of targets using esbuild-based executors.",
       "factory": "./src/migrations/update-20-2-0/add-localize-polyfill-to-targets"
@@ -301,10 +301,19 @@
       "cli": "nx",
       "version": "20.2.0-beta.5",
       "requires": {
-        "@angular/core": ">=19.0.0-rc.1"
+        "@angular/core": ">=19.0.0"
       },
       "description": "Update '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.",
       "factory": "./src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point"
+    },
+    "disable-angular-eslint-prefer-standalone": {
+      "cli": "nx",
+      "version": "20.2.0-beta.6",
+      "requires": {
+        "@angular/core": ">=19.0.0"
+      },
+      "description": "Disable the Angular ESLint prefer-standalone rule if not set.",
+      "factory": "./src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone"
     }
   },
   "packageJsonUpdates": {
