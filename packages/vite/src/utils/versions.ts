@@ -9,7 +9,7 @@ export const vitePluginDtsVersion = '~3.8.1';
 export const happyDomVersion = '~9.20.3';
 export const edgeRuntimeVmVersion = '~3.0.2';
 
-export const analogVitestAngular = '~1.9.1';
+export const analogVitestAngular = '~1.10.0-beta.8';
 
 // Coverage providers
 export const vitestCoverageV8Version = '^1.0.4';
