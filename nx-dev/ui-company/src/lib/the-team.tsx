@@ -97,11 +97,6 @@ const teamMembers = [
     imageUrl: 'joe-johnson.avif',
   },
   {
-    name: 'Johanna Pearce',
-    title: 'Architect',
-    imageUrl: 'johanna-pearce.avif',
-  },
-  {
     name: 'Jonathan Cammisuli',
     title: 'Architect',
     imageUrl: 'jonathan-cammisuli.avif',
