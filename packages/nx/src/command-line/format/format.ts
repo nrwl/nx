@@ -1,10 +1,10 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as yargs from 'yargs';
-import { FileData, calculateFileChanges } from '../../project-graph/file-utils';
+import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import {
-  NxArgs,
   getProjectRoots,
+  NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
@@ -52,7 +52,7 @@ export async function format(
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     // prettier removes one of the \
     // prettier-ignore
-    (p) => `"${p.replace(/\$/g, "\\\$")}"`
+    (p) => `"${p.replace(/\$/g, '\\\$')}"`
   );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
@@ -154,7 +154,9 @@ async function getPatternsFromApps(
   allWorkspaceFiles: FileData[],
   projectGraph: ProjectGraph
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync({ exitOnError: true });
+  const graph = await createProjectGraphAsync({
+    exitOnError: true,
+  });
   const affectedGraph = await filterAffected(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)
@@ -266,6 +268,7 @@ function sortTsConfig() {
 }
 
 let prettierPath: string;
+
 function getPrettierPath() {
   if (prettierPath) {
     return prettierPath;
