@@ -5,6 +5,9 @@ import { workspaceRoot } from '../../utils/workspace-root';
 
 let currentPluginsConfigurationHash: string;
 let loadedPlugins: LoadedNxPlugin[];
+let pendingPluginsPromise:
+  | Promise<readonly [LoadedNxPlugin[], () => void]>
+  | undefined;
 let cleanup: () => void;
 
 export async function getPlugins() {
@@ -24,11 +27,10 @@ export async function getPlugins() {
     cleanup();
   }
 
+  pendingPluginsPromise ??= loadNxPlugins(pluginsConfiguration, workspaceRoot);
+
   currentPluginsConfigurationHash = pluginsConfigurationHash;
-  const [result, cleanupFn] = await loadNxPlugins(
-    pluginsConfiguration,
-    workspaceRoot
-  );
+  const [result, cleanupFn] = await pendingPluginsPromise;
   cleanup = cleanupFn;
   loadedPlugins = result;
   return result;
@@ -36,6 +38,9 @@ export async function getPlugins() {
 
 let loadedDefaultPlugins: LoadedNxPlugin[];
 let cleanupDefaultPlugins: () => void;
+let pendingDefaultPluginPromise:
+  | Promise<readonly [LoadedNxPlugin[], () => void]>
+  | undefined;
 
 export async function getOnlyDefaultPlugins() {
   // If the plugins configuration has not changed, reuse the current plugins
@@ -48,13 +53,17 @@ export async function getOnlyDefaultPlugins() {
     cleanupDefaultPlugins();
   }
 
-  const [result, cleanupFn] = await loadNxPlugins([], workspaceRoot);
+  pendingDefaultPluginPromise ??= loadNxPlugins([], workspaceRoot);
+
+  const [result, cleanupFn] = await pendingDefaultPluginPromise;
   cleanupDefaultPlugins = cleanupFn;
   loadedPlugins = result;
   return result;
 }
 
 export function cleanupPlugins() {
+  pendingPluginsPromise = undefined;
+  pendingDefaultPluginPromise = undefined;
   cleanup();
   cleanupDefaultPlugins();
 }
