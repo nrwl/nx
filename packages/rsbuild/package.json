@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "commonjs",
   "publishConfig": {
-    "access": "public"
+    "access": "private"
   },
   "repository": {
     "type": "git",
