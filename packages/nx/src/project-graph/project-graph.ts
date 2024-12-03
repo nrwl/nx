@@ -12,7 +12,10 @@ import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
-import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
+import {
+  buildProjectGraphUsingProjectFileMap,
+  hydrateFileMap,
+} from './build-project-graph';
 import {
   AggregateProjectGraphError,
   isAggregateProjectGraphError,
@@ -30,6 +33,7 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { getPlugins } from './plugins/get-plugins';
+import { logger } from '../utils/logger';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -229,6 +233,25 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
+    try {
+      const graph = readCachedProjectGraph();
+      const projectRootMap = Object.fromEntries(
+        Object.entries(graph.nodes).map(([project, { data }]) => [
+          data.root,
+          project,
+        ])
+      );
+      const { allWorkspaceFiles, fileMap, rustReferences } =
+        await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+      hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
+      return graph;
+      // If no cached graph is found, we will fall through to the normal flow
+    } catch (e) {
+      logger.verbose('Unable to use cached project graph', e);
+    }
+  }
+
   const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
     opts
   );
