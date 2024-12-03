@@ -143,45 +143,31 @@ function isIsolationEnabled() {
   return true;
 }
 
-/**
- * Use `getPlugins` instead.
- * @deprecated Do not use this. Use `getPlugins` instead.
- */
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<readonly [LoadedNxPlugin[], () => void]> {
   performance.mark('loadNxPlugins:start');
+
   const loadingMethod = isIsolationEnabled()
     ? loadNxPluginInIsolation
     : loadNxPlugin;
 
   plugins = await normalizePlugins(plugins, root);
 
+  const result: Promise<LoadedNxPlugin>[] = new Array(plugins?.length);
+
   const cleanupFunctions: Array<() => void> = [];
+  await Promise.all(
+    plugins.map(async (plugin, idx) => {
+      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
+      result[idx] = loadedPluginPromise;
+      cleanupFunctions.push(cleanup);
+    })
+  );
+
   const ret = [
-    await Promise.all(
-      plugins.map(async (plugin) => {
-        const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
-        performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
-
-        const [loadedPluginPromise, cleanup] = await loadingMethod(
-          plugin,
-          root
-        );
-
-        cleanupFunctions.push(cleanup);
-        const res = await loadedPluginPromise;
-        performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
-        performance.measure(
-          `Load Nx Plugin: ${pluginPath}`,
-          `Load Nx Plugin: ${pluginPath} - start`,
-          `Load Nx Plugin: ${pluginPath} - end`
-        );
-
-        return res;
-      })
-    ),
+    await Promise.all(result),
     () => {
       for (const fn of cleanupFunctions) {
         fn();

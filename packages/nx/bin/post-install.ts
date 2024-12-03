@@ -17,11 +17,9 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
       assertSupportedPlatform();
       setupWorkspaceContext(workspaceRoot);
-      if (daemonClient.enabled()) {
-        try {
-          await daemonClient.stop();
-        } catch (e) {}
-      }
+      try {
+        await daemonClient.stop();
+      } catch (e) {}
       const tasks: Array<Promise<any>> = [
         buildProjectGraphAndSourceMapsWithoutDaemon(),
       ];

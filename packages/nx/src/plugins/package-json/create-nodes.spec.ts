@@ -48,7 +48,7 @@ describe('nx package.json workspaces plugin', () => {
       '/root'
     );
 
-    expect(createNodeFromPackageJson('package.json', '/root', {}))
+    expect(createNodeFromPackageJson('package.json', '/root'))
       .toMatchInlineSnapshot(`
       {
         "projects": {
@@ -90,9 +90,8 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-    expect(
-      createNodeFromPackageJson('packages/lib-a/package.json', '/root', {})
-    ).toMatchInlineSnapshot(`
+    expect(createNodeFromPackageJson('packages/lib-a/package.json', '/root'))
+      .toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-a": {
@@ -133,9 +132,8 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-    expect(
-      createNodeFromPackageJson('packages/lib-b/package.json', '/root', {})
-    ).toMatchInlineSnapshot(`
+    expect(createNodeFromPackageJson('packages/lib-b/package.json', '/root'))
+      .toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-b": {
@@ -733,12 +731,13 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson('apps/myapp/package.json', '/root', {})
-        .projects['apps/myapp'].projectType
+      createNodeFromPackageJson('apps/myapp/package.json', '/root').projects[
+        'apps/myapp'
+      ].projectType
     ).toEqual('application');
 
     expect(
-      createNodeFromPackageJson('packages/mylib/package.json', '/root', {})
+      createNodeFromPackageJson('packages/mylib/package.json', '/root')
         .projects['packages/mylib'].projectType
     ).toEqual('library');
   });
@@ -761,7 +760,7 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson('package.json', '/root', {}).projects['.']
+      createNodeFromPackageJson('package.json', '/root').projects['.']
         .projectType
     ).toEqual('library');
   });
@@ -787,11 +786,11 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson('packages/mylib/package.json', '/root', {})
+      createNodeFromPackageJson('packages/mylib/package.json', '/root')
         .projects['packages/mylib'].projectType
     ).toEqual('library');
     expect(
-      createNodeFromPackageJson('example/package.json', '/root', {}).projects[
+      createNodeFromPackageJson('example/package.json', '/root').projects[
         'example'
       ].projectType
     ).toBeUndefined();

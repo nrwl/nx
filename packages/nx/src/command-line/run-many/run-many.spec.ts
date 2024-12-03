@@ -189,8 +189,8 @@ describe('run-many', () => {
         }
       });
 
-      it('should be able to select and exclude via patterns', () => {
-        const start = performance.now();
+      it('should be able to select and exclude via patterns', async () => {
+        performance.mark('start');
         projectsToRun(
           {
             targets: ['test'],
@@ -199,8 +199,9 @@ describe('run-many', () => {
           },
           projectGraph
         );
-        const end = performance.now();
-        expect(end - start).toBeLessThan(10000);
+        performance.mark('end');
+        const measure = performance.measure('projects', 'start', 'end');
+        expect(measure.duration).toBeLessThan(10000);
       });
     });
   });

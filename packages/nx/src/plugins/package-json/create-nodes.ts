@@ -21,11 +21,6 @@ import {
   CreateNodesV2,
 } from '../../project-graph/plugins';
 import { basename } from 'path';
-import { hashObject } from '../../hasher/file-hasher';
-import {
-  PackageJsonConfigurationCache,
-  readPackageJsonConfigurationCache,
-} from '../../../plugins/package-json';
 
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(
@@ -46,8 +41,6 @@ export const createNodesV2: CreateNodesV2 = [
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
 
-    const cache = readPackageJsonConfigurationCache();
-
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
         if (
@@ -60,8 +53,7 @@ export const createNodesV2: CreateNodesV2 = [
 
         return createNodeFromPackageJson(
           packageJsonPath,
-          context.workspaceRoot,
-          cache
+          context.workspaceRoot
         );
       },
       packageJsons,
@@ -128,35 +120,15 @@ export function buildPackageJsonWorkspacesMatcher(
 
 export function createNodeFromPackageJson(
   pkgJsonPath: string,
-  workspaceRoot: string,
-  cache: PackageJsonConfigurationCache
+  workspaceRoot: string
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
-
-  const projectRoot = dirname(pkgJsonPath);
-
-  const hash = hashObject({
-    ...json,
-    root: projectRoot,
-  });
-
-  const cached = cache[hash];
-  if (cached) {
-    return {
-      projects: {
-        [cached.root]: cached,
-      },
-    };
-  }
-
   const project = buildProjectConfigurationFromPackageJson(
     json,
     workspaceRoot,
     pkgJsonPath,
     readNxJson(workspaceRoot)
   );
-
-  cache[hash] = project;
   return {
     projects: {
       [project.root]: project,

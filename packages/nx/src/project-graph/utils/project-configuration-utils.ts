@@ -28,7 +28,7 @@ import {
   isAggregateCreateNodesError,
   AggregateCreateNodesError,
 } from '../error-types';
-import { CreateNodesResult } from '../plugins/public-api';
+import { CreateNodesResult } from '../plugins';
 import { isGlobPattern } from '../../utils/globs';
 
 export type SourceInformation = [file: string | null, plugin: string];

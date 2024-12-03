@@ -4,7 +4,7 @@ import {
 } from './utils/project-configuration-utils';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraph } from '../config/project-graph';
-import { CreateNodesFunctionV2 } from './plugins/public-api';
+import { CreateNodesFunctionV2 } from './plugins';
 
 export class ProjectGraphError extends Error {
   readonly #errors: Array<

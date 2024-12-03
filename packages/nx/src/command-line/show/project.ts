@@ -6,8 +6,6 @@ import { generateGraph } from '../graph/graph';
 export async function showProjectHandler(
   args: ShowProjectOptions
 ): Promise<void> {
-  performance.mark('code-loading:end');
-  performance.measure('code-loading', 'init-local', 'code-loading:end');
   const graph = await createProjectGraphAsync();
   const node = graph.nodes[args.projectName];
   if (!node) {
@@ -72,8 +70,5 @@ export async function showProjectHandler(
       }
     }
   }
-
-  // TODO: Find a better fix for this
-  await new Promise((res) => setImmediate(res));
   await output.drain();
 }
