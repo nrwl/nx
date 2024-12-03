@@ -24,8 +24,8 @@ import { logger } from '../../utils/logger';
 
 import type * as ts from 'typescript';
 import { extname } from 'node:path';
-import { NxPlugin } from './public-api';
-import { PluginConfiguration } from '../../config/nx-json';
+import type { NxPlugin } from './public-api';
+import type { PluginConfiguration } from '../../config/nx-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
 import { LoadedNxPlugin } from './internal-api';
 import { LoadPluginError } from '../error-types';
@@ -266,8 +266,6 @@ export async function loadNxPluginAsync(
       projectsWithoutInference ??=
         await retrieveProjectConfigurationsWithoutPluginInference(root);
     }
-
-    performance.mark(`Load Nx Plugin: ${moduleName} - start`);
     const { pluginPath, name } = getPluginPathAndName(
       moduleName,
       paths,
@@ -276,12 +274,7 @@ export async function loadNxPluginAsync(
     );
     const plugin = await importPluginModule(pluginPath);
     plugin.name ??= name;
-    performance.mark(`Load Nx Plugin: ${moduleName} - end`);
-    performance.measure(
-      `Load Nx Plugin: ${moduleName}`,
-      `Load Nx Plugin: ${moduleName} - start`,
-      `Load Nx Plugin: ${moduleName} - end`
-    );
+
     return new LoadedNxPlugin(plugin, pluginConfiguration);
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
