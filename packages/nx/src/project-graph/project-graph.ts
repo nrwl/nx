@@ -12,7 +12,10 @@ import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
-import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
+import {
+  buildProjectGraphUsingProjectFileMap,
+  hydrateFileMap,
+} from './build-project-graph';
 import {
   AggregateProjectGraphError,
   isAggregateProjectGraphError,
@@ -231,7 +234,16 @@ export async function createProjectGraphAsync(
 ): Promise<ProjectGraph> {
   if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
     try {
-      return readCachedProjectGraph();
+      const graph = readCachedProjectGraph();
+      const projectRootMap = Object.fromEntries(
+        Object.entries(graph.nodes).map(([project, { data }]) => [
+          data.root,
+          project,
+        ])
+      );
+      const { allWorkspaceFiles, fileMap, rustReferences } =
+        await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+      hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
       // If no cached graph is found, we will fall through to the normal flow
     } catch {}
   }
