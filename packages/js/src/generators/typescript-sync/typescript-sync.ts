@@ -261,7 +261,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     return {
       outOfSyncMessage:
-        'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.',
+        'Some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.',
     };
   }
 }
