@@ -61,7 +61,7 @@ function findStylesEntryPoint(
 
   // then check for the specified styles in the build configuration if it exists
   const styles: Array<string | { input: string; inject: boolean }> =
-    project.targets?.[options.buildTarget].options?.styles;
+    project.targets?.[options.buildTarget]?.options?.styles;
 
   if (!styles) {
     return undefined;

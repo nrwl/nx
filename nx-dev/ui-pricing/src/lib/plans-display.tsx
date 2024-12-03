@@ -378,6 +378,12 @@ export function PlansDisplay(): ReactElement {
               pricing. Prices do not include applicable taxes.
             </p>
           </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm font-medium opacity-80">
+              Looking for the Pro plan?{' '}
+              <Link href="#faq">Checkout our FAQ ↓</Link>
+            </p>
+          </div>
         </div>
       </div>
     </section>

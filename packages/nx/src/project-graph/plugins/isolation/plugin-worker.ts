@@ -1,6 +1,4 @@
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
-import { LoadedNxPlugin } from '../internal-api';
-import { loadNxPlugin } from '../loader';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 
@@ -14,7 +12,7 @@ if (process.env.NX_PERF_LOGGING === 'true') {
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
 let connected = false;
-let plugin: LoadedNxPlugin;
+let plugin;
 
 const socketPath = process.argv[2];
 
@@ -41,6 +39,7 @@ const server = createServer((socket) => {
           if (loadTimeout) clearTimeout(loadTimeout);
           process.chdir(root);
           try {
+            const { loadNxPlugin } = await import('../loader');
             const [promise] = loadNxPlugin(pluginConfiguration, root);
             plugin = await promise;
             return {

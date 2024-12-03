@@ -1,6 +1,4 @@
 import type { NgPackagrBuilderOptions } from '@angular-devkit/build-angular';
 
 export interface BuildAngularLibraryExecutorOptions
-  extends NgPackagrBuilderOptions {
-  tailwindConfig?: string;
-}
+  extends NgPackagrBuilderOptions {}

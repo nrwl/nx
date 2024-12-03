@@ -210,8 +210,6 @@ async function buildProjectGraphUsingContext(
   plugins: LoadedNxPlugin[],
   sourceMap: ConfigurationSourceMaps
 ) {
-  performance.mark('build project graph:start');
-
   const builder = new ProjectGraphBuilder(null, ctx.fileMap.projectFileMap);
   builder.setVersion(projectGraphVersion);
   for (const node in knownExternalNodes) {
@@ -262,13 +260,6 @@ async function buildProjectGraphUsingContext(
 
   const finalGraph = updatedBuilder.getUpdatedProjectGraph();
 
-  performance.mark('build project graph:end');
-  performance.measure(
-    'build project graph',
-    'build project graph:start',
-    'build project graph:end'
-  );
-
   if (!error) {
     return finalGraph;
   } else {
@@ -311,6 +302,7 @@ async function updateProjectGraphWithPlugins(
   const createDependencyPlugins = plugins.filter(
     (plugin) => plugin.createDependencies
   );
+  performance.mark('createDependencies:start');
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
@@ -343,6 +335,12 @@ async function updateProjectGraphWithPlugins(
         `${plugin.name}:createDependencies - end`
       );
     })
+  );
+  performance.mark('createDependencies:end');
+  performance.measure(
+    `createDependencies`,
+    `createDependencies:start`,
+    `createDependencies:end`
   );
 
   const graphWithDeps = builder.getUpdatedProjectGraph();
@@ -387,6 +385,7 @@ export async function applyProjectMetadata(
   const results: { metadata: ProjectsMetadata; pluginName: string }[] = [];
   const errors: CreateMetadataError[] = [];
 
+  performance.mark('createMetadata:start');
   const promises = plugins.map(async (plugin) => {
     if (plugin.createMetadata) {
       performance.mark(`${plugin.name}:createMetadata - start`);
@@ -423,6 +422,13 @@ export async function applyProjectMetadata(
       }
     }
   }
+
+  performance.mark('createMetadata:end');
+  performance.measure(
+    `createMetadata`,
+    `createMetadata:start`,
+    `createMetadata:end`
+  );
 
   return { errors, graph };
 }

@@ -41,6 +41,12 @@ export function Faq(): ReactElement {
     },
     {
       question:
+        "I thought I was on the Pro plan, but I don't see it listed anymore. Does it still exist?",
+      answer:
+        "Yes, the Pro plan still exists for users who were grandfathered in. If you're already on the Pro plan, you will continue to receive support without any changes. However, this plan is no longer available to new users.",
+    },
+    {
+      question:
         'Is there a limit to the number of active contributors I can have on the Hobby plan?',
       answer:
         'Our free Hobby Plan is only limited by the number of credits you can use per month. This means you can use it free, forever, no matter your team size, as long as your use falls below 50,000 credits/month. This makes it ideal for small-scale projects or for larger teams looking to test out a proof of concept. For those larger teams, we offer the Team Plan which includes 5 active contributors at no cost and offers the flexibility to add even more contributors, concurrencies, and credits to fit the unique needs of each team. ',
@@ -104,7 +110,7 @@ export function Faq(): ReactElement {
   ];
 
   return (
-    <section id="faq">
+    <section id="faq" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <header>

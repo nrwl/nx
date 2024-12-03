@@ -16,7 +16,7 @@ import {
   parseStaticRemotesConfig,
   StaticRemotesConfig,
 } from '@nx/module-federation/src/utils';
-import { buildStaticRemotes } from '../../utils/build-static.remotes';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import { fork } from 'child_process';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 import * as process from 'node:process';

@@ -1,5 +1,5 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { Tree, writeJson } from '@nx/devkit';
+import { Tree, updateProjectConfiguration, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -253,6 +253,19 @@ describe('app', () => {
       ).toBe(true);
     });
 
+    it('should not set esModuleInterop when using the browser-esbuild builder', async () => {
+      await generateApp(appTree, 'my-app', { bundler: 'webpack' });
+      const project = readProjectConfiguration(appTree, 'my-app');
+      project.targets.build.executor =
+        '@angular-devkit/build-angular:browser-esbuild';
+      updateProjectConfiguration(appTree, 'my-app', project);
+
+      expect(
+        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
+          .esModuleInterop
+      ).toBeUndefined();
+    });
+
     it('should not set esModuleInterop when using the browser builder', async () => {
       await generateApp(appTree, 'my-app', { bundler: 'webpack' });
 
@@ -487,9 +500,14 @@ describe('app', () => {
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
       await generateApp(appTree, 'my-dir/my-app');
-      expect(
-        appTree.read('my-dir/my-app/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('Hello there');
+
+      const nxWelcomeComponentText = appTree.read(
+        'my-dir/my-app/src/app/nx-welcome.component.ts',
+        'utf-8'
+      );
+      expect(nxWelcomeComponentText).not.toContain('standalone: true');
+      expect(nxWelcomeComponentText).toContain('standalone: false');
+      expect(nxWelcomeComponentText).toContain('Hello there');
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {
@@ -963,9 +981,12 @@ describe('app', () => {
         appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
-      expect(
-        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('standalone: true');
+      const nxWelcomeComponentText = appTree.read(
+        'standalone/src/app/nx-welcome.component.ts',
+        'utf-8'
+      );
+      expect(nxWelcomeComponentText).not.toContain('standalone: true');
+      expect(nxWelcomeComponentText).not.toContain('standalone: false');
     });
 
     it('should generate a standalone app correctly without routing', async () => {
@@ -987,9 +1008,12 @@ describe('app', () => {
         appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
-      expect(
-        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('standalone: true');
+      const nxWelcomeComponentText = appTree.read(
+        'standalone/src/app/nx-welcome.component.ts',
+        'utf-8'
+      );
+      expect(nxWelcomeComponentText).not.toContain('standalone: true');
+      expect(nxWelcomeComponentText).not.toContain('standalone: false');
     });
 
     it('should should not use event coalescing in versions lower than v18', async () => {
@@ -1177,8 +1201,8 @@ describe('app', () => {
             "type": "initial",
           },
           {
-            "maximumError": "4kb",
-            "maximumWarning": "2kb",
+            "maximumError": "8kb",
+            "maximumWarning": "4kb",
             "type": "anyComponentStyle",
           },
         ]
@@ -1212,8 +1236,8 @@ describe('app', () => {
             "type": "initial",
           },
           {
-            "maximumError": "4kb",
-            "maximumWarning": "2kb",
+            "maximumError": "8kb",
+            "maximumWarning": "4kb",
             "type": "anyComponentStyle",
           },
         ]
@@ -1236,7 +1260,7 @@ describe('app', () => {
       await generateApp(appTree, 'app1', { ssr: true });
 
       expect(appTree.exists('app1/src/main.server.ts')).toBe(true);
-      expect(appTree.exists('app1/server.ts')).toBe(true);
+      expect(appTree.exists('app1/src/server.ts')).toBe(true);
     });
   });
 
@@ -1247,7 +1271,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~16.2.0',
+          '@angular/core': '~17.2.0',
         },
       }));
     });
@@ -1257,13 +1281,13 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV16.angularDevkitVersion
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV16.angularDevkitVersion
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV16.angularDevkitVersion
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
     });
 
@@ -1309,46 +1333,6 @@ describe('app', () => {
         });
         "
       `);
-    });
-
-    it('should use "@angular-devkit/build-angular:browser-esbuild" for --bundler=esbuild', async () => {
-      await generateApp(appTree, 'my-app', {
-        standalone: true,
-        bundler: 'esbuild',
-      });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:browser-esbuild'
-      );
-    });
-
-    it('should generate target options "main" and "browserTarget"', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.main).toBeDefined();
-      expect(
-        project.targets.serve.configurations.development.browserTarget
-      ).toBeDefined();
-    });
-
-    it('should not set esModuleInterop when using the browser-esbuild builder', async () => {
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
-    });
-
-    it('should not set esModuleInterop when using the browser builder', async () => {
-      await generateApp(appTree, 'my-app', { bundler: 'webpack' });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
     });
 
     it('should disable modern class fields behavior', async () => {

@@ -9,13 +9,14 @@ import {
   ConfigurationResult,
   createProjectConfigurations,
 } from './project-configuration-utils';
-import { LoadedNxPlugin, loadNxPlugins } from '../plugins/internal-api';
+import { LoadedNxPlugin } from '../plugins/internal-api';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
+import { getOnlyDefaultPlugins, getPlugins } from '../plugins/get-plugins';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -96,23 +97,19 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const [plugins, cleanup] = await loadNxPlugins(
-    nxJson?.plugins ?? [],
-    workspaceRoot
-  );
+  const plugins = await getPlugins();
 
   const res = await retrieveProjectConfigurations(
     plugins,
     workspaceRoot,
     nxJson
   );
-  cleanup();
   return res;
 }
 
 export function retrieveProjectConfigurationPaths(
   root: string,
-  plugins: Array<{ createNodes?: readonly [string, ...unknown[]] } & unknown>
+  plugins: Array<LoadedNxPlugin>
 ): Promise<string[]> {
   const projectGlobPatterns = configurationGlobs(plugins);
   return globWithWorkspaceContext(root, projectGlobPatterns);
@@ -128,7 +125,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   root: string
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
-  const [plugins, cleanup] = await loadNxPlugins([]); // only load default plugins
+  const plugins = await getOnlyDefaultPlugins(); // only load default plugins
   const projectGlobPatterns = await retrieveProjectConfigurationPaths(
     root,
     plugins
@@ -150,14 +147,10 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
 
   projectsWithoutPluginCache.set(cacheKey, projects);
 
-  cleanup();
-
   return projects;
 }
 
-export function configurationGlobs(
-  plugins: Array<{ createNodes?: readonly [string, ...unknown[]] }>
-): string[] {
+export function configurationGlobs(plugins: Array<LoadedNxPlugin>): string[] {
   const globPatterns = [];
   for (const plugin of plugins) {
     if ('createNodes' in plugin && plugin.createNodes) {

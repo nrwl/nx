@@ -1,13 +1,12 @@
-import { Tree } from '@nx/devkit';
-import type { NormalizedSchema } from './normalized-schema';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
+  type Tree,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function addServeStaticTarget(
   tree: Tree,
@@ -27,9 +26,7 @@ function addFileServerTarget(
     addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild';
+  const isUsingApplicationBuilder = options.bundler === 'esbuild';
 
   const projectConfig = readProjectConfiguration(tree, options.name);
   projectConfig.targets[targetName] = {
