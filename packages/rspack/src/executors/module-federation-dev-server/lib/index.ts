@@ -1,2 +1,2 @@
 export * from './normalize-options';
-export * from './start-dev-remotes';
+export * from './start-remotes';

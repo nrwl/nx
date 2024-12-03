@@ -27,6 +27,7 @@
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
+    "@nx/web": "file:../web",
     "picocolors": "^1.1.0",
     "webpack": "5.88.0",
     "@rspack/core": "1.1.3",

@@ -1,17 +1,17 @@
-import { ExecutorContext } from '@nx/devkit';
-import { createWriteStream } from 'fs';
+import { ExecutorContext, logger } from '@nx/devkit';
+import { type StaticRemotesConfig } from '../../utils';
+import { type BuildStaticRemotesOptions } from './models';
 import { fork } from 'node:child_process';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { logger } from 'nx/src/utils/logger';
 import { join } from 'path';
-import { ModuleFederationDevServerOptions } from '../../executors/module-federation-dev-server/schema';
-import type { StaticRemotesConfig } from '@nx/module-federation/src/utils';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { createWriteStream } from 'fs';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
   nxBin,
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions
+  options: BuildStaticRemotesOptions,
+  buildTarget: 'build' | 'server' = 'build'
 ) {
   if (!staticRemotesConfig.remotes.length) {
     return;
@@ -34,7 +34,7 @@ export async function buildStaticRemotes(
       nxBin,
       [
         'run-many',
-        `--target=build`,
+        `--target=${buildTarget}`,
         `--projects=${staticRemotesConfig.remotes.join(',')}`,
         ...(context.configurationName
           ? [`--configuration=${context.configurationName}`]
@@ -50,14 +50,12 @@ export async function buildStaticRemotes(
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
     const remoteBuildLogFile = join(
       workspaceDataDirectory,
-      // eslint-disable-next-line
       `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
     );
     const stdoutStream = createWriteStream(remoteBuildLogFile);
 
     staticProcess.stdout.on('data', (data) => {
       const ANSII_CODE_REGEX =
-        // eslint-disable-next-line no-control-regex
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
       stdoutStream.write(stdoutString);
@@ -68,7 +66,7 @@ export async function buildStaticRemotes(
         logger.log(stdoutString);
       }
 
-      if (stdoutString.includes('Successfully ran target build')) {
+      if (stdoutString.includes(`Successfully ran target ${buildTarget}`)) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(
           `NX Built ${staticRemotesConfig.remotes.length} static remotes`
