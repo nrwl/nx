@@ -67,25 +67,9 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E Tests
 
-The `@nx/playwright/plugin` will automatically split your e2e tasks by file if you provide a `ciTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). This will create a target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+`@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
 
-```json {% fileName="nx.json" %}
-{
-  "plugins": [
-    {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "e2e",
-        "ciTargetName": "e2e-ci"
-      }
-    }
-  ]
-}
-```
-
-### Splitting E2E tasks by file
-
-The `@nx/playwright/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
+If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}
