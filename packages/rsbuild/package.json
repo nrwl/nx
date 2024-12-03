@@ -3,6 +3,9 @@
   "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
   "version": "0.0.1",
   "type": "commonjs",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
