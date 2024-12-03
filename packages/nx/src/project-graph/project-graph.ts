@@ -33,6 +33,7 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { getPlugins } from './plugins/get-plugins';
+import { logger } from '../utils/logger';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -244,8 +245,11 @@ export async function createProjectGraphAsync(
       const { allWorkspaceFiles, fileMap, rustReferences } =
         await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
       hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
+      return graph;
       // If no cached graph is found, we will fall through to the normal flow
-    } catch {}
+    } catch (e) {
+      logger.verbose('Unable to use cached project graph', e);
+    }
   }
 
   const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
