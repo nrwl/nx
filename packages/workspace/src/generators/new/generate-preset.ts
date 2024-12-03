@@ -14,6 +14,7 @@ import { NormalizedSchema } from './new';
 import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
+import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 
 export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   const { dependencies, dev } = getPresetDependencies(options);
@@ -39,8 +40,9 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     cwd: newWorkspaceRoot,
   };
   const pmc = getPackageManagerCommand();
+  const nxInstallationPaths = getNxRequirePaths(newWorkspaceRoot);
   const nxBinForNewWorkspaceRoot = require.resolve('nx/bin/nx', {
-    paths: [join(newWorkspaceRoot, 'node_modules')],
+    paths: nxInstallationPaths,
   });
   const args = getPresetArgs(opts);
 
