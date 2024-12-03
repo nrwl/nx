@@ -26,6 +26,7 @@ performance.measure = jest.fn();
 describe('show projects', () => {
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
+    performance.mark('init-local');
   });
   afterEach(() => {
     jest.clearAllMocks();
