@@ -72,16 +72,6 @@ export function getFileMap(): {
   }
 }
 
-export function hydrateFileMap(
-  fileMap: FileMap,
-  allWorkspaceFiles: FileData[],
-  rustReferences: NxWorkspaceFilesExternals
-) {
-  storedFileMap = fileMap;
-  storedAllWorkspaceFiles = allWorkspaceFiles;
-  storedRustReferences = rustReferences;
-}
-
 export async function buildProjectGraphUsingProjectFileMap(
   projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
