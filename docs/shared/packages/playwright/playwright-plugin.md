@@ -69,6 +69,8 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 `@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
 
+If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
+
 {% /tab %}
 {% tab label="Nx < 18" %}
 
