@@ -130,16 +130,33 @@ async function setupTypeScript(options: TypeCheckOptions) {
     throw new Error(`Invalid config file due to following: ${errorMessages}`);
   }
 
+  // declarationDir logic
+  const rootDirIsWorkspaceRoot =
+    path.relative(options.workspaceRoot, options.rootDir) === '';
+
+  // IF no custom declaration root AND outDir structure mirrors {projectRoot}
+  // e.g. packages/mylib AND dist/packages/mylib
+  // THEN we adjust declarationDir to place types in outDir
+  // ELSE if we have specified a custom declarationRootDir, place declarations in outDir
+  const _projectRoot = path.normalize(projectRoot);
+  const dfltStructure =
+    options.mode === 'emitDeclarationOnly'
+      ? options.projectRoot &&
+        rootDirIsWorkspaceRoot &&
+        path.normalize(options.outDir).endsWith(_projectRoot)
+      : undefined;
+
   const emitOptions =
     options.mode === 'emitDeclarationOnly'
       ? {
           emitDeclarationOnly: true,
           declaration: true,
           outDir: options.outDir,
-          declarationDir:
-            options.projectRoot && options.outDir.indexOf(projectRoot)
-              ? options.outDir.replace(projectRoot, '')
-              : undefined,
+          declarationDir: dfltStructure
+            ? options.outDir.slice(0, -_projectRoot.length)
+            : !rootDirIsWorkspaceRoot
+            ? options.outDir
+            : undefined,
         }
       : { noEmit: true };
 
