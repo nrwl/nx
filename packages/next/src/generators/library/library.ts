@@ -17,6 +17,7 @@ import { normalizeOptions } from './lib/normalize-options';
 import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
 import {
   isUsingTsSolutionSetup,
+  addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -160,6 +161,10 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

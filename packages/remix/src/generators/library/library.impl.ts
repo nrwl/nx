@@ -9,7 +9,10 @@ import {
   updateBuildableConfig,
 } from './lib';
 import type { NxRemixGeneratorSchema } from './schema';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -72,6 +75,10 @@ export async function remixLibraryGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, `${options.projectRoot}/*`);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
