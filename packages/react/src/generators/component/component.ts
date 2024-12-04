@@ -106,10 +106,17 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     workspace.get(options.projectName).projectType === 'application';
 
   if (options.export && !isApp) {
-    const indexFilePath = joinPathFragments(
-      options.projectSourceRoot,
-      options.js ? 'index.js' : 'index.ts'
-    );
+    const indexFilePath = options.projectSourceRoot
+      ? joinPathFragments(
+          options.projectSourceRoot,
+          options.js ? 'index.js' : 'index.ts'
+        )
+      : joinPathFragments(
+          options.projectRoot,
+          'src',
+          options.js ? 'index.js' : 'index.ts'
+        );
+
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
       const indexSourceFile = tsModule.createSourceFile(

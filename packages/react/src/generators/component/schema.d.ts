@@ -1,4 +1,3 @@
-import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -20,6 +19,7 @@ export interface Schema {
 
 export interface NormalizedSchema extends Schema {
   directory: string;
+  projectRoot: string;
   projectSourceRoot: string;
   projectName: string;
   fileName: string;

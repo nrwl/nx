@@ -40,13 +40,7 @@ export async function convertToApplicationExecutor(
   tree: Tree,
   options: GeneratorOptions
 ) {
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion < 17) {
-    throw new Error(
-      `The "convert-to-application-executor" generator is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".`
-    );
-  }
+  const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
 
   let didAnySucceed = false;
   if (options.project) {

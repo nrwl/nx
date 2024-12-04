@@ -36,10 +36,19 @@ export async function withModuleFederationForSSR(
           shared: {
             ...sharedDependencies,
           },
+          remoteType: 'script',
+          library: {
+            type: 'commonjs-module',
+          },
           /**
            * Apply user-defined config overrides
            */
           ...(configOverride ? configOverride : {}),
+          experiments: {
+            federationRuntime: 'hoisted',
+            // We should allow users to override federationRuntime
+            ...(configOverride?.experiments ?? {}),
+          },
           runtimePlugins:
             process.env.NX_MF_DEV_REMOTES &&
             !options.disableNxRuntimeLibraryControlPlugin

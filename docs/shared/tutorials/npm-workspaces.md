@@ -329,10 +329,9 @@ Now if you run run the build, Nx will notice that the TypeScript project referen
 ```text {% command="nx build @tuskdesign/zoo" path="~/tuskydesigns" %}
  NX   The workspace is out of sync
 
-The @nx/js:typescript-sync sync generator identified 6 files in the workspace that are out of sync:
-Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.
+[@nx/js:typescript-sync]: Some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.
 
-Please note that having the workspace out of sync will result in an error in CI.
+This will result in an error in CI.
 
 ? Would you like to sync the identified changes to get your workspace up to date? …
 ❯ Yes, sync the changes and run the tasks

@@ -10,16 +10,17 @@ export async function normalizeOptions(
   tree: Tree,
   options: NestGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const { directory, fileName } =
+  const { directory, artifactName } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      name: options.name,
       path: options.path,
     });
+
+  options.path = undefined; // Now that we have `directory` we don't need `path`
 
   return {
     ...options,
     flat: true,
-    name: fileName,
+    name: artifactName,
     skipFormat: options.skipFormat,
     sourceRoot: directory,
   };

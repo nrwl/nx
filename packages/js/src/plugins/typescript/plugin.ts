@@ -168,12 +168,23 @@ async function createNodesInternal(
     return {};
   }
 
+  // Do not create project for Next.js projects since they are not compatible with
+  // project references and typecheck will fail.
+  if (
+    siblingFiles.includes('next.config.js') ||
+    siblingFiles.includes('next.config.cjs') ||
+    siblingFiles.includes('next.config.mjs') ||
+    siblingFiles.includes('next.config.ts')
+  ) {
+    return {};
+  }
+
   /**
    * The cache key is composed by:
    * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
    *   - current config file
    *   - config files extended by the current config file (recursively up to the root config file)
-   *   - referenced config files that are internal to the owning Nx project of the current config file
+   *   - referenced config files that are internal to the owning Nx project of the current config file, or is a shallow external reference of the owning Nx project
    *   - lock file
    * - hash of the plugin options
    * - current config file path
@@ -185,11 +196,17 @@ async function createNodesInternal(
     context.workspaceRoot,
     projectRoot
   );
+  const externalProjectReferences = resolveShallowExternalProjectReferences(
+    tsConfig,
+    context.workspaceRoot,
+    projectRoot
+  );
   const nodeHash = hashArray([
     ...[
       fullConfigPath,
       ...extendedConfigFiles.files,
       ...Object.keys(internalReferencedFiles),
+      ...Object.keys(externalProjectReferences),
       join(context.workspaceRoot, lockFileName),
     ].map(hashFile),
     hashObject(options),
@@ -239,6 +256,11 @@ function buildTscTargets(
       context.workspaceRoot,
       projectRoot
     );
+    const externalProjectReferences = resolveShallowExternalProjectReferences(
+      tsConfig,
+      context.workspaceRoot,
+      projectRoot
+    );
     const targetName = options.typecheck.targetName;
     if (!targets[targetName]) {
       let command = `tsc --build --emitDeclarationOnly --pretty --verbose`;
@@ -246,11 +268,13 @@ function buildTscTargets(
         tsConfig.options.noEmit ||
         Object.values(internalProjectReferences).some(
           (ref) => ref.options.noEmit
+        ) ||
+        Object.values(externalProjectReferences).some(
+          (ref) => ref.options.noEmit
         )
       ) {
-        // `--emitDeclarationOnly` and `--noEmit` are mutually exclusive, so
-        // we remove `--emitDeclarationOnly` if `--noEmit` is set.
-        command = `tsc --build --pretty --verbose`;
+        // `tsc --build` does not work with `noEmit: true`
+        command = `echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."`;
       }
 
       targets[targetName] = {
@@ -608,6 +632,48 @@ function resolveInternalProjectReferences(
   projectRoot: string,
   projectReferences: Record<string, ParsedCommandLine> = {}
 ): Record<string, ParsedCommandLine> {
+  walkProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    projectRoot,
+    (configPath, config) => {
+      if (isExternalProjectReference(configPath, workspaceRoot, projectRoot)) {
+        return false;
+      } else {
+        projectReferences[configPath] = config;
+      }
+    }
+  );
+  return projectReferences;
+}
+
+function resolveShallowExternalProjectReferences(
+  tsConfig: ParsedCommandLine,
+  workspaceRoot: string,
+  projectRoot: string,
+  projectReferences: Record<string, ParsedCommandLine> = {}
+): Record<string, ParsedCommandLine> {
+  walkProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    projectRoot,
+    (configPath, config) => {
+      if (isExternalProjectReference(configPath, workspaceRoot, projectRoot)) {
+        projectReferences[configPath] = config;
+      }
+      return false;
+    }
+  );
+  return projectReferences;
+}
+
+function walkProjectReferences(
+  tsConfig: ParsedCommandLine,
+  workspaceRoot: string,
+  projectRoot: string,
+  visitor: (configPath: string, config: ParsedCommandLine) => void | false, // false stops recursion
+  projectReferences: Record<string, ParsedCommandLine> = {}
+): Record<string, ParsedCommandLine> {
   if (!tsConfig.projectReferences?.length) {
     return projectReferences;
   }
@@ -624,22 +690,14 @@ function resolveInternalProjectReferences(
       continue;
     }
 
-    if (isExternalProjectReference(refConfigPath, workspaceRoot, projectRoot)) {
-      continue;
-    }
-
     if (!refConfigPath.endsWith('.json')) {
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
     const refTsConfig = readCachedTsConfig(refConfigPath);
-    projectReferences[refConfigPath] = refTsConfig;
-
-    resolveInternalProjectReferences(
-      refTsConfig,
-      workspaceRoot,
-      projectRoot,
-      projectReferences
-    );
+    const result = visitor(refConfigPath, refTsConfig);
+    if (result !== false) {
+      walkProjectReferences(refTsConfig, workspaceRoot, projectRoot, visitor);
+    }
   }
 
   return projectReferences;

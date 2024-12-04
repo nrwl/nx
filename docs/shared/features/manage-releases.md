@@ -151,11 +151,14 @@ import * as yargs from 'yargs';
     verbose: options.verbose,
   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
+  // publishResults contains a map of project names and their exit codes
+  const publishResults = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-  process.exit(publishStatus);
+
+  process.exit(
+    Object.values(publishResults).every((result) => result.code === 0) ? 0 : 1
+  );
 })();
 ```

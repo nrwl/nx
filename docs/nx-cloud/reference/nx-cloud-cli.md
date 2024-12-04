@@ -206,13 +206,6 @@ main CI jobs and the Nx Agent machines.
 If you want to pass other environment variables from the main job to Nx Agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
 This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
 
-You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to Nx Agents.
-
-{% callout type="warning" title="Use Caution With 'auto'" %}
-Using `--with-env-vars="auto"` will override any existing environment variables on the Nx Agent, some of which might be critical to the
-functionality of that machine. In case of unexpected issues on Nx Agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
-{% /callout %}
-
 Note: none of the values passed to Nx Agents are stored by Nx Cloud.
 
 ### Enabling/Disabling Distribution

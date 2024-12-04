@@ -11,16 +11,14 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the component will be generated.",
+        "description": "The file path to the component without the file extension. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the component be generated?",
+        "x-prompt": "What is the component file path?",
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "x-prompt": "What name would you like to use for the component?",
-        "x-priority": "important"
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -106,7 +104,7 @@
       }
     },
     "required": ["path"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component` under the `libs/ui` project:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Component\" %}\n\nCreate a class component named `my-component` under the `libs/ui` project:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component --classComponent\n```\n\n{% /tab %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `MyComponent` at `libs/ui/src/my-component.tsx`:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"With a Different Symbol Name\" %}\n\nCreate a component named `Custom` at `libs/ui/src/my-component.tsx`:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component --name=custom\n```\n\n{% /tab %}\n\n{% tab label=\"Class Component\" %}\n\nCreate a class component named `MyComponent` at `libs/ui/src/my-component.tsx`:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component --classComponent\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "description": "Create a React component.",

@@ -50,7 +50,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "packageManager": {
@@ -83,6 +83,10 @@
       "type": "boolean",
       "default": false
     },
+    "serverRouting": {
+      "description": "Use the Angular Server Routing and App Engine APIs (Developer Preview).",
+      "type": "boolean"
+    },
     "prefix": {
       "description": "The prefix to use for Angular component and directive selectors.",
       "type": "string"
@@ -92,6 +96,11 @@
       "type": "string",
       "enum": ["none", "prettier"],
       "default": "none"
+    },
+    "workspaces": {
+      "description": "Whether to use package manager workspaces.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": true

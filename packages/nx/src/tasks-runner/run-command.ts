@@ -304,9 +304,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const outOfSyncTitle = 'The workspace is out of sync';
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
-    'You can manually run `nx sync` to update your workspace with the identified changes or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
-  const willErrorOnCiMessage =
-    'Please note that having the workspace out of sync will result in an error in CI.';
+    'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
+  const willErrorOnCiMessage = 'This will result in an error in CI.';
 
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
