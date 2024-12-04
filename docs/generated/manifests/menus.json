@@ -9889,7 +9889,25 @@
         "id": "rsbuild",
         "path": "/nx-api/rsbuild",
         "name": "rsbuild",
-        "children": [],
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/rsbuild/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/rsbuild/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
         "isExternal": false,
         "disableCollapsible": false
       },
