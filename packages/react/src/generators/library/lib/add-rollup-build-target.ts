@@ -8,7 +8,6 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  stripIndents,
   updateProjectConfiguration,
 } from '@nx/devkit';
 
@@ -74,31 +73,37 @@ export async function addRollupBuildTarget(
 const url = require('@rollup/plugin-url');
 const svg = require('@svgr/rollup');
 
-module.exports = withNx({
-  main: '${maybeJs(options, './src/index.ts')}',
-  outputPath: '${joinPathFragments(
-    offsetFromRoot(options.projectRoot),
-    'dist',
-    options.projectRoot
-  )}',
-  tsConfig: './tsconfig.lib.json',
-  compiler: '${options.compiler ?? 'babel'}',
-  external: ${JSON.stringify(external)},
-  format: ['esm'],
-  assets:[{ input: '.', output: '.', glob: 'README.md'}],
-}, {
-  // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
-  plugins: [
-    svg({
-      svgo: false,
-      titleProp: true,
-      ref: true,
-    }),
-    url({
-      limit: 10000, // 10kB
-    }),
-  ],
-});
+module.exports = withNx(
+  {
+    main: '${maybeJs(options, './src/index.ts')}',
+    outputPath: '${
+      options.isUsingTsSolutionConfig
+        ? './dist'
+        : joinPathFragments(
+            offsetFromRoot(options.projectRoot),
+            'dist',
+            options.projectRoot
+          )
+    }',
+    tsConfig: './tsconfig.lib.json',
+    compiler: '${options.compiler ?? 'babel'}',
+    external: ${JSON.stringify(external)},
+    format: ['esm'],
+    assets:[{ input: '.', output: '.', glob: 'README.md'}],
+  }, {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    plugins: [
+      svg({
+        svgo: false,
+        titleProp: true,
+        ref: true,
+      }),
+      url({
+        limit: 10000, // 10kB
+      }),
+    ],
+  }
+);
 `
     );
   } else {
