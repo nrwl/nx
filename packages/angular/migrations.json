@@ -1293,19 +1293,6 @@
         }
       }
     },
-    "20.2.0-analog": {
-      "version": "20.2.0-beta.5",
-      "packages": {
-        "@analogjs/vitest-angular": {
-          "version": "~1.10.0-beta.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@analogjs/vite-plugin-angular": {
-          "version": "~1.10.0-beta.6",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "20.2.0-jest": {
       "version": "20.2.0-beta.5",
       "requires": {
@@ -1347,6 +1334,19 @@
         },
         "@angular-eslint/utils": {
           "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.0-analog": {
+      "version": "20.2.0-beta.7",
+      "packages": {
+        "@analogjs/vitest-angular": {
+          "version": "~1.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vite-plugin-angular": {
+          "version": "~1.10.0",
           "alwaysAddToPackageJson": false
         }
       }
