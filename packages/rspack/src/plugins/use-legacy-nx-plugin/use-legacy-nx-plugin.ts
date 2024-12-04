@@ -6,7 +6,11 @@ import {
 } from '@nx/devkit';
 import type { NxRspackExecutionContext } from '../../utils/config';
 import type { NxAppRspackPluginOptions } from '../utils/models';
-import type { Compiler, Configuration } from '@rspack/core';
+import type {
+  Compiler,
+  Configuration,
+  RspackOptionsNormalized,
+} from '@rspack/core';
 import { normalizeOptions } from '../utils/plugins/normalize-options';
 import { readNxJson } from 'nx/src/config/configuration';
 
@@ -37,9 +41,9 @@ import { readNxJson } from 'nx/src/config/configuration';
  */
 export async function useLegacyNxPlugin(
   fn: (
-    config: Configuration,
+    config: RspackOptionsNormalized,
     ctx: NxRspackExecutionContext
-  ) => Promise<Configuration>,
+  ) => Promise<RspackOptionsNormalized>,
   executorOptions: NxAppRspackPluginOptions
 ) {
   if (global.NX_GRAPH_CREATION) {
@@ -75,7 +79,7 @@ export async function useLegacyNxPlugin(
     apply(compiler: Compiler) {
       compiler.hooks.beforeCompile.tapPromise('NxLegacyAsyncPlugin', () => {
         return new Promise<void>((resolve) => {
-          fn(compiler.options as Configuration, ctx).then((updated) => {
+          fn(compiler.options, ctx).then((updated) => {
             // Merge options back shallowly since it's a fully functional configuration.
             // Most likely, the user modified the config in place, but this guarantees that updates are applied if users did something like:
             // `return { ...config, plugins: [...config.plugins, new MyPlugin()] }`
