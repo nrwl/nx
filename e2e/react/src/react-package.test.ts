@@ -95,7 +95,7 @@ describe('Build React libraries and apps', () => {
 
     // Add assets to child lib
     updateFile(
-      join('libs', childLib, 'rollup.config.js'),
+      join('libs', childLib, 'rollup.config.cjs'),
       `const { withNx } = require('@nx/rollup/with-nx');
 module.exports = withNx(
   {

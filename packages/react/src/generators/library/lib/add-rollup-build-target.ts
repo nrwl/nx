@@ -69,38 +69,38 @@ export async function addRollupBuildTarget(
   if (hasRollupPlugin) {
     // New behavior, using rollup config file and inferred target.
     host.write(
-      joinPathFragments(options.projectRoot, 'rollup.config.js'),
-      stripIndents`
-      const { withNx } = require('@nx/rollup/with-nx');
-      const url = require('@rollup/plugin-url');
-      const svg = require('@svgr/rollup');
-      
-      module.exports = withNx({
-        main: '${maybeJs(options, './src/index.ts')}',
-        outputPath: '${joinPathFragments(
-          offsetFromRoot(options.projectRoot),
-          'dist',
-          options.projectRoot
-        )}',
-        tsConfig: './tsconfig.lib.json',
-        compiler: '${options.compiler ?? 'babel'}',
-        external: ${JSON.stringify(external)},
-        format: ['esm'],
-        assets:[{ input: '.', output: '.', glob: 'README.md'}],
-      }, {
-        // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
-        plugins: [
-          svg({
-            svgo: false,
-            titleProp: true,
-            ref: true,
-          }),
-          url({
-            limit: 10000, // 10kB
-          }),
-        ],
-      });
-    `
+      joinPathFragments(options.projectRoot, 'rollup.config.cjs'),
+      `
+const { withNx } = require('@nx/rollup/with-nx');
+const url = require('@rollup/plugin-url');
+const svg = require('@svgr/rollup');
+
+module.exports = withNx({
+  main: '${maybeJs(options, './src/index.ts')}',
+  outputPath: '${joinPathFragments(
+    offsetFromRoot(options.projectRoot),
+    'dist',
+    options.projectRoot
+  )}',
+  tsConfig: './tsconfig.lib.json',
+  compiler: '${options.compiler ?? 'babel'}',
+  external: ${JSON.stringify(external)},
+  format: ['esm'],
+  assets:[{ input: '.', output: '.', glob: 'README.md'}],
+}, {
+  // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+  plugins: [
+    svg({
+      svgo: false,
+      titleProp: true,
+      ref: true,
+    }),
+    url({
+      limit: 10000, // 10kB
+    }),
+  ],
+});
+`
     );
   } else {
     // Legacy behavior, there is a target in project.json using rollup executor.
