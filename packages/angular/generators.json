@@ -73,7 +73,8 @@
       "factory": "./src/generators/remote/remote",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
-      "description": "Generate a Remote Angular Module Federation Application."
+      "description": "Generate a Remote Angular Module Federation Application.",
+      "aliases": ["producer"]
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
@@ -91,7 +92,8 @@
       "factory": "./src/generators/host/host",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
-      "description": "Generate a Host Angular Module Federation Application."
+      "description": "Generate a Host Angular Module Federation Application.",
+      "aliases": ["consumer"]
     },
     "ng-add": {
       "factory": "./src/generators/ng-add/ng-add",
