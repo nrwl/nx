@@ -519,8 +519,7 @@ describe('lib', () => {
 
       expect(tree.read('my-lib/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "
-        const { withNx } = require('@nx/rollup/with-nx');
+        "const { withNx } = require('@nx/rollup/with-nx');
         const url = require('@rollup/plugin-url');
         const svg = require('@svgr/rollup');
 
