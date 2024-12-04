@@ -76,10 +76,12 @@ export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
   packages,
+  preset = 'apps',
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
+  preset?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -93,7 +95,7 @@ export function newProject({
         'create-nx-workspace:start'
       );
       runCreateWorkspace(projScope, {
-        preset: 'apps',
+        preset,
         packageManager,
       });
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
@@ -256,6 +258,7 @@ export function runCreateWorkspace(
   const pm = getPackageManagerCommand({ packageManager });
 
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }

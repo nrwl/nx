@@ -35,7 +35,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
-  isUsingTsSolutionSetup,
+  addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
@@ -129,6 +129,10 @@ export async function reactNativeLibraryGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);
