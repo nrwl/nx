@@ -4,10 +4,12 @@ import {
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Schema {
   importPath: string;
   projectRoot: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
@@ -35,5 +37,6 @@ export async function normalizeOptions(
     ...options,
     importPath,
     projectRoot,
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
   };
 }

@@ -33,6 +33,7 @@ import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
 import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
+import { addProjectToTsSolutionWorkspace } from '../../utils/add-app-to-pnpm-workspace';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -278,6 +279,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       : undefined
   );
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+  }
   if (!options.skipFormat) {
     await formatFiles(host);
   }

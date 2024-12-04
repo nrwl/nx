@@ -76,10 +76,12 @@ export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
   packages,
+  workspaces = false,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
+  workspaces?: boolean;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -95,6 +97,7 @@ export function newProject({
       runCreateWorkspace(projScope, {
         preset: 'apps',
         packageManager,
+        workspaces,
       });
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
       createNxWorkspaceMeasure = performance.measure(
@@ -228,6 +231,7 @@ export function runCreateWorkspace(
     ssr,
     framework,
     prefix,
+    workspaces,
   }: {
     preset: string;
     appName?: string;
@@ -249,13 +253,17 @@ export function runCreateWorkspace(
     ssr?: boolean;
     framework?: string;
     prefix?: string;
+    workspaces?: boolean;
   }
 ) {
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
 
+  preset = workspaces ? 'ts' : preset;
+
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -325,6 +333,10 @@ export function runCreateWorkspace(
 
   if (prefix !== undefined) {
     command += ` --prefix=${prefix}`;
+  }
+
+  if (workspaces) {
+    command += ` --workspaces=true`;
   }
 
   try {
@@ -674,7 +686,9 @@ export function cleanupProject({
     } catch {} // ignore crashed daemon
     try {
       removeSync(tmpProjPath());
-    } catch {}
+    } catch {
+      console.error(`Failed to remove ${tmpProjPath()}`);
+    }
   }
   resetWorkspaceContext();
 }

@@ -38,6 +38,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { addProjectToTsSolutionWorkspace } from '@nx/react/src/utils/add-app-to-pnpm-workspace';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -129,6 +130,10 @@ export async function expoLibraryGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);
