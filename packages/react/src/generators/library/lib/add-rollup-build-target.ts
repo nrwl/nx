@@ -70,8 +70,7 @@ export async function addRollupBuildTarget(
     // New behavior, using rollup config file and inferred target.
     host.write(
       joinPathFragments(options.projectRoot, 'rollup.config.cjs'),
-      `
-const { withNx } = require('@nx/rollup/with-nx');
+      `const { withNx } = require('@nx/rollup/with-nx');
 const url = require('@rollup/plugin-url');
 const svg = require('@svgr/rollup');
 
