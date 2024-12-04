@@ -55,7 +55,9 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.read('libs/lib1/src/test-setup.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import 'jest-preset-angular/setup-jest';
+      "import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+
+      setupZoneTestEnv();
       "
     `);
     expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();

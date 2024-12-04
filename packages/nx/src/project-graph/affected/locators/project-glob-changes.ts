@@ -9,8 +9,20 @@ import { getPlugins } from '../../plugins/get-plugins';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes): Promise<string[]> => {
-    const plugins = await getPlugins();
-    const globPattern = combineGlobPatterns(configurationGlobs(plugins));
+    const globPattern = await (async () => {
+      // TODO: We need a quicker way to get patterns that should not
+      // require starting up plugin workers
+      if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
+        return combineGlobPatterns([
+          '**/package.json',
+          '**/project.json',
+          'project.json',
+          'package.json',
+        ]);
+      }
+      const plugins = await getPlugins();
+      return combineGlobPatterns(configurationGlobs(plugins));
+    })();
 
     const touchedProjects = new Set<string>();
     for (const touchedFile of touchedFiles) {
