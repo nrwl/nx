@@ -16,6 +16,8 @@ import {
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
+import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { resolveNxPlugin } from '../loader';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -59,6 +61,10 @@ export async function loadRemoteNxPlugin(
   if (nxPluginWorkerCache.has(cacheKey)) {
     return [nxPluginWorkerCache.get(cacheKey), () => {}];
   }
+  const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
+
+  const { name, pluginPath, shouldRegisterTSTranspiler } =
+    await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
   const { worker, socket } = await startPluginWorker();
 
@@ -77,7 +83,7 @@ export async function loadRemoteNxPlugin(
   const pluginPromise = new Promise<LoadedNxPlugin>((res, rej) => {
     sendMessageOverSocket(socket, {
       type: 'load',
-      payload: { plugin, root },
+      payload: { plugin, root, name, pluginPath, shouldRegisterTSTranspiler },
     });
     // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
