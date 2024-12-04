@@ -517,7 +517,37 @@ describe('lib', () => {
         buildable: true,
       });
 
-      expect(tree.exists('my-lib/rollup.config.js')).toBeTruthy();
+      expect(tree.read('my-lib/rollup.config.cjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { withNx } = require('@nx/rollup/with-nx');
+        const url = require('@rollup/plugin-url');
+        const svg = require('@svgr/rollup');
+
+        module.exports = withNx(
+          {
+            main: './src/index.ts',
+            outputPath: '../dist/my-lib',
+            tsConfig: './tsconfig.lib.json',
+            compiler: 'babel',
+            external: ["react","react-dom","react/jsx-runtime"],
+            format: ['esm'],
+            assets:[{ input: '.', output: '.', glob: 'README.md'}],
+          }, {
+            // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+            plugins: [
+              svg({
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              }),
+              url({
+                limit: 10000, // 10kB
+              }),
+            ],
+          }
+        );
+        "
+      `);
     });
   });
 
@@ -558,7 +588,7 @@ describe('lib', () => {
         importPath: '@proj/my-lib',
       });
 
-      expect(tree.read('my-lib/rollup.config.js', 'utf-8'))
+      expect(tree.read('my-lib/rollup.config.cjs', 'utf-8'))
         .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
 const url = require('@rollup/plugin-url');
 const svg = require('@svgr/rollup');
@@ -906,6 +936,59 @@ module.exports = withNx(
         name: 'mylib',
       });
 
+      expect(tree.read('mylib/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import dts from 'vite-plugin-dts';
+        import * as path from 'path';
+
+        export default defineConfig({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/mylib',
+          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          // Configuration for building your library.
+          // See: https://vitejs.dev/guide/build.html#library-mode
+          build: {
+            outDir: './dist',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'mylib',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es', 'cjs']
+            },
+            rollupOptions: {
+              // External packages that should not be bundled into your library.
+              external: ['react','react-dom','react/jsx-runtime']
+            },
+          },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/mylib',
+              provider: 'v8',
+            }
+          },
+        });
+        "
+      `);
+
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
         [
           {
@@ -1059,6 +1142,48 @@ module.exports = withNx(
           },
           "types": "./src/index.js",
         }
+      `);
+    });
+
+    it('should configure rollup correctly', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      expect(tree.read('mylib/rollup.config.cjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { withNx } = require('@nx/rollup/with-nx');
+        const url = require('@rollup/plugin-url');
+        const svg = require('@svgr/rollup');
+
+        module.exports = withNx(
+          {
+            main: './src/index.ts',
+            outputPath: './dist',
+            tsConfig: './tsconfig.lib.json',
+            compiler: 'babel',
+            external: ["react","react-dom","react/jsx-runtime"],
+            format: ['esm'],
+            assets:[{ input: '.', output: '.', glob: 'README.md'}],
+          }, {
+            // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+            plugins: [
+              svg({
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              }),
+              url({
+                limit: 10000, // 10kB
+              }),
+            ],
+          }
+        );
+        "
       `);
     });
   });
