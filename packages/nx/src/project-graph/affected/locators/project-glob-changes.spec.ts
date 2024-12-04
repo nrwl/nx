@@ -1,9 +1,8 @@
-import * as nxPlugin from '../../../project-graph/plugins';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
-jest.mock('../../../project-graph/plugins', () => ({
-  ...jest.requireActual('../../../project-graph/plugins'),
+jest.mock('../../../project-graph/plugins/get-plugins', () => ({
+  ...jest.requireActual('../../../project-graph/plugins/get-plugins'),
   getPlugins: async () => {
     return [
       {
