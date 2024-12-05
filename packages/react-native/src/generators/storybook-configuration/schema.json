@@ -75,5 +75,6 @@
       ]
     }
   },
-  "required": ["project"]
+  "required": ["project"],
+  "examplesFile": "../../../docs/storybook-configuration-examples.md"
 }
