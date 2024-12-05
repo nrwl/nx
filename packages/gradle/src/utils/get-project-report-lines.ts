@@ -42,7 +42,7 @@ export async function getProjectReportLines(
         'projectReport',
       ]);
       logger.warn(
-        `Could not run 'projectReportAll' task. Ran 'projectReport' instead. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks.`
+        `Could not run 'projectReportAll' task. Ran 'projectReport' instead. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks. ${e.message}`
       );
     } catch (e) {
       throw new AggregateCreateNodesError(
@@ -50,7 +50,7 @@ export async function getProjectReportLines(
           [
             gradlewFile,
             new Error(
-              `Could not run 'projectReportAll' or 'projectReport' task. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks.`
+              `Could not run 'projectReportAll' or 'projectReport' task. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks. ${e.message}`
             ),
           ],
         ],
