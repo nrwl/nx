@@ -251,7 +251,7 @@ export function ScaleYourOrganization(): ReactElement {
                         >
                           Nx Powerpack
                         </Link>
-                        , available complimentary to all Enterprise customers.
+                        , and available complimentary to all Enterprise customers.
                       </i>
                     </p>
                   </dd>
