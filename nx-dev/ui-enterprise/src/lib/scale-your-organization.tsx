@@ -304,7 +304,7 @@ export function ScaleOrganizationIntro(): ReactElement {
       </svg>
       <div className="mx-auto max-w-5xl text-center">
         <SectionHeading as="h2" variant="title" id="scale-your-organization">
-          Don’t lose output as your organization grows{' '}
+          Don’t lose velocity as your organization grows{' '}
           <br className="xl:block" />
           <span className="line-through">10x developer</span>{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
