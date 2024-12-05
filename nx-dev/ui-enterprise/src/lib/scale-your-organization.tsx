@@ -102,7 +102,7 @@ export function ScaleYourOrganization(): ReactElement {
                         Visibility
                       </div>
                     </div>
-                    See dependencies across team and repos
+                    See dependencies across teams and repos
                   </dt>
                   <dd className="mt-1 flex flex-auto flex-col text-base leading-7">
                     <p className="flex-auto">
