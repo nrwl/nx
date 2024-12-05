@@ -234,7 +234,7 @@ export function ScaleYourOrganization(): ReactElement {
                   </dt>
                   <dd className="mt-1 flex flex-auto flex-col text-base leading-7">
                     <p className="flex-auto">
-                      Unlike the code ownership tools from VCS provides, Nx
+                      Unlike the code ownership tools from VCS providers, Nx
                       Owners is built for monorepos. Define ownership at the
                       project level. Nx will compile it back to the file-based
                       rules your VCS providers understand.
