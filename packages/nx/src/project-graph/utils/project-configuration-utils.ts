@@ -379,6 +379,7 @@ export async function createProjectConfigurations(
       }
 
       error.stack = errorBodyLines.join('\n');
+      error.pluginName = pluginName;
 
       // This represents a single plugin erroring out with a hard error.
       errors.push(error);

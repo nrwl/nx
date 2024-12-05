@@ -9,7 +9,11 @@ import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 import * as createSpinner from 'ora';
-import { detectPlugins, installPlugins } from '../init/init-v2';
+import {
+  detectPlugins,
+  installPlugins,
+  packageToPluginPath,
+} from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -29,6 +33,10 @@ import {
   needsInstall,
 } from './utils/needs-install';
 import { readPackageJson } from '../../project-graph/file-utils';
+import {
+  checkCompatibleWithPlugins,
+  updatePluginsInNxJson,
+} from '../init/implementation/check-compatible-with-plugins';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -282,6 +290,17 @@ export async function importHandler(options: ImportOptions) {
 
   // If install fails, we should continue since the errors could be resolved later.
   let installFailed = false;
+  if (nxJson.plugins?.length > 0) {
+    // Check compatibility with existing plugins for the workspace included new imported projects
+    const incompatiblePlugins = await checkCompatibleWithPlugins(
+      nxJson.plugins,
+      workspaceRoot
+    );
+    if (Object.keys(incompatiblePlugins).length > 0) {
+      updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
+      await destinationGitClient.amendCommit();
+    }
+  }
   if (plugins.length > 0) {
     try {
       output.log({ title: 'Installing Plugins' });
@@ -294,6 +313,15 @@ export async function importHandler(options: ImportOptions) {
         title: `Install failed: ${e.message || 'Unknown error'}`,
         bodyLines: [e.stack],
       });
+    }
+    // Check compatibility with new plugins for the workspace included new imported projects
+    const incompatiblePlugins = await checkCompatibleWithPlugins(
+      plugins.map((plugin) => packageToPluginPath[plugin]), // plugins contains package name, but we need plugin path
+      workspaceRoot
+    );
+    if (Object.keys(incompatiblePlugins).length > 0) {
+      updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
+      await destinationGitClient.amendCommit();
     }
   } else if (await needsInstall(packageManager, originalPackageWorkspaces)) {
     try {

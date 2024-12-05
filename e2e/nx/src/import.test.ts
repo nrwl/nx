@@ -110,9 +110,13 @@ describe('Nx Import', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: repoPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: repoPath,
-    });
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: repoPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
     mkdirSync(join(repoPath, 'packages/a'), { recursive: true });
     writeFileSync(join(repoPath, 'packages/a/README.md'), `# A`);
     execSync(`git add .`, {

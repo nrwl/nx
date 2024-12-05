@@ -28,6 +28,10 @@ import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
+import {
+  checkCompatibleWithPlugins,
+  updatePluginsInNxJson,
+} from './implementation/check-compatible-with-plugins';
 
 export interface InitArgs {
   interactive: boolean;
@@ -137,6 +141,17 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   const nxJson = readNxJson(repoRoot);
 
+  if (nxJson.plugins?.length > 0) {
+    // Check compatibility with existing plugins for the workspace included new imported projects
+    const incompatiblePlugins = await checkCompatibleWithPlugins(
+      nxJson.plugins,
+      repoRoot
+    );
+    if (Object.keys(incompatiblePlugins).length > 0) {
+      updatePluginsInNxJson(repoRoot, incompatiblePlugins);
+    }
+  }
+
   output.log({ title: '🧐 Checking dependencies' });
 
   const { plugins, updatePackageScripts } = await detectPlugins(
@@ -148,6 +163,16 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   installPlugins(repoRoot, plugins, pmc, updatePackageScripts);
 
+  if (plugins.length) {
+    const incompatiblePlugins = await checkCompatibleWithPlugins(
+      plugins.map((plugin) => packageToPluginPath[plugin]), // plugins contains package name, but we need plugin path
+      repoRoot
+    );
+    if (Object.keys(incompatiblePlugins).length > 0) {
+      updatePluginsInNxJson(repoRoot, incompatiblePlugins);
+    }
+  }
+
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init');
@@ -157,6 +182,26 @@ export async function initHandler(options: InitArgs): Promise<void> {
     learnMoreLink,
   });
 }
+
+export const packageToPluginPath: Record<`@nx/${string}`, string> = {
+  '@nx/eslint': '@nx/eslint/plugin',
+  '@nx/storybook': '@nx/storybook/plugin',
+  '@nx/vite': '@nx/vite/plugin',
+  '@nx/webpack': '@nx/webpack/plugin',
+  '@nx/rspack': '@nx/rspack/plugin',
+  '@nx/rollup': '@nx/rollup/plugin',
+  '@nx/jest': '@nx/jest/plugin',
+  '@nx/cypress': '@nx/cypress/plugin',
+  '@nx/playwright': '@nx/playwright/plugin',
+  '@nx/detox': '@nx/detox/plugin',
+  '@nx/expo': '@nx/expo/plugin',
+  '@nx/next': '@nx/next/plugin',
+  '@nx/nuxt': '@nx/nuxt/plugin',
+  '@nx/react-native': '@nx/react-native/plugin',
+  '@nx/remix': '@nx/remix/plugin',
+  '@nx/gradle': '@nx/gradle',
+  '@nx/angular': '@nx/angular/plugin',
+};
 
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
@@ -282,7 +327,7 @@ export async function detectPlugins(
       name: 'plugins',
       type: 'multiselect',
       message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
-      choices: plugins.map((p) => ({ name: p, value: p })),
+      choices: plugins.map((plugin) => ({ name: plugin, value: plugin })),
       /**
        * limit is missing from the interface but it limits the amount of options shown
        */
