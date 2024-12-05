@@ -5,6 +5,7 @@ specifiers:
   '@nrwl/workspace': 15.4.5
   nx: 15.4.5
   prettier: ^2.6.2
+  test-cdn-package: https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz
   typescript: ~4.8.2
 
 devDependencies:
@@ -12,6 +13,7 @@ devDependencies:
   '@nrwl/workspace': 15.4.5_2erew5p7leihmaki5isneqbk3u
   nx: 15.4.5
   prettier: 2.8.2
+  test-cdn-package: '@cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz'
   typescript: 4.8.4
 
 packages:
@@ -1040,4 +1042,9 @@ packages:
       y18n: 5.0.8
       yargs-parser: 21.1.1
     dev: true
+
+  '@cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz':
+    resolution: {tarball: https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz}
+    name: test-cdn-package
+    version: 0.8.6
 `;
