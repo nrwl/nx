@@ -27,6 +27,9 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['proj/build.gradle', new Map([['build', 'build']])],
       ]),
+      gradleProjectToTasksMap: new Map<string, Set<string>>([
+        ['proj', new Set(['test'])],
+      ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
         ['proj', new Map([['test', 'Verification']])],
       ]),
@@ -86,6 +89,7 @@ describe('@nx/gradle/plugin', () => {
                   ],
                 },
                 "name": "proj",
+                "projectType": "application",
                 "targets": {
                   "test": {
                     "cache": true,
