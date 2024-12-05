@@ -21,9 +21,12 @@ import {
   isIdentifier,
   isPropertyAssignment,
 } from 'typescript';
-import type { Schema } from '../schema';
+import type { NormalizedGeneratorOptions } from '../schema';
 
-export function setRouterInitialNavigation(tree: Tree, options: Schema): void {
+export function setRouterInitialNavigation(
+  tree: Tree,
+  options: NormalizedGeneratorOptions
+): void {
   const printer = createPrinter();
   const project = readProjectConfiguration(tree, options.project);
 

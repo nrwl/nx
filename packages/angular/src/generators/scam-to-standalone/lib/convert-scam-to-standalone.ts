@@ -1,7 +1,7 @@
-import type { Node, SourceFile } from 'typescript';
-import { Tree } from 'nx/src/generators/tree';
+import { joinPathFragments, type Tree } from '@nx/devkit';
 import { parse } from 'path';
-import { joinPathFragments } from 'nx/src/utils/path';
+import type { Node, SourceFile } from 'typescript';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function convertScamToStandalone(
   componentAST: SourceFile,
@@ -23,11 +23,12 @@ export function convertScamToStandalone(
     { visitAllChildren: true }
   )[0];
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
   newComponentContents = `${componentFileContents.slice(
     0,
     componentDecoratorMetadataNode.getStart() - 1
-  )}({
-    standalone: true,
+  )}({${angularMajorVersion < 19 ? `\nstandalone: true,` : ''}
     imports: [${importsArray.join(',')}],${
     providersArray.length > 0 ? `providers: [${providersArray.join(',')}],` : ''
   }${componentFileContents.slice(

@@ -32,7 +32,7 @@ describe('Next.js Styles', () => {
     const lessApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false`
+      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(lessApp, {
@@ -44,7 +44,7 @@ describe('Next.js Styles', () => {
     const scApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false`
+      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(scApp, {
@@ -56,7 +56,7 @@ describe('Next.js Styles', () => {
     const scAppWithAppRouter = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true`
+      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(scAppWithAppRouter, {
@@ -68,7 +68,7 @@ describe('Next.js Styles', () => {
     const emotionApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false`
+      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(emotionApp, {
@@ -83,7 +83,7 @@ describe('Next.js Styles', () => {
       const tailwindApp = uniq('app');
 
       runCLI(
-        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=false --src=false`
+        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=false --src=false --unitTestRunner=jest --linter=eslint`
       );
 
       await checkApp(tailwindApp, {
@@ -107,7 +107,7 @@ describe('Next.js Styles', () => {
       const tailwindApp = uniq('app');
 
       runCLI(
-        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=true --src=false`
+        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=true --src=false --unitTestRunner=jest --linter=eslint`
       );
 
       await checkApp(tailwindApp, {

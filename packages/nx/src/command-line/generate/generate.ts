@@ -22,6 +22,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
+import { getCwd } from '../../utils/path';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -300,7 +301,7 @@ export function printGenHelp(
   );
 }
 
-export async function generate(cwd: string, args: { [k: string]: any }) {
+export async function generate(args: { [k: string]: any }) {
   return handleErrors(args.verbose, async () => {
     const nxJsonConfiguration = readNxJson();
     const projectGraph = await createProjectGraphAsync();
@@ -347,6 +348,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       printGenHelp(opts, schema, normalizedGeneratorName, aliases);
       return 0;
     }
+
+    const cwd = getCwd();
 
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,

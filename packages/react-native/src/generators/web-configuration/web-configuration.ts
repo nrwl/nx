@@ -12,7 +12,11 @@ import {
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
 
-import { nxVersion, reactNativeWebVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  reactNativeWebVersion,
+  typesReactDomVersion,
+} from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
   createBuildTarget,
@@ -77,6 +81,18 @@ export async function webConfigurationGenerator(
     );
   }
 
+  if (!options.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@types/react-dom': typesReactDomVersion,
+        }
+      )
+    );
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -103,6 +119,7 @@ async function addBundlerConfiguration(
       project: normalizedSchema.project,
       newProject: true,
       includeVitest: false,
+      projectType: 'application',
       compiler: 'babel',
       skipFormat: true,
     });

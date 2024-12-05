@@ -39,14 +39,12 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
   if (options.loader) {
     await loaderGenerator(tree, {
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
   if (options.action) {
     await actionGenerator(tree, {
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 

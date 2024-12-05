@@ -55,6 +55,28 @@ describe('component Generator', () => {
     );
   });
 
+  it('should export the component as default when exportDefault is true', async () => {
+    const tree = createTreeWithEmptyWorkspace({});
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write('libs/lib1/src/index.ts', '');
+
+    await componentGenerator(tree, {
+      path: 'libs/lib1/src/lib/example/example',
+      exportDefault: true,
+    });
+
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+    ).toContain('export default class ExampleComponent {}');
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.spec.ts', 'utf-8')
+    ).toContain(`import ExampleComponent from './example.component';`);
+  });
+
   it('should not generate test file when --skip-tests=true', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -205,6 +227,7 @@ describe('component Generator', () => {
 
       @Component({
         selector: 'example',
+        standalone: false,
         templateUrl: './example.component.html'
       })
       export class ExampleComponent {}
@@ -491,6 +514,22 @@ describe('component Generator', () => {
     expect(indexSource).toBe('');
   });
 
+  it('should error when the class name is invalid', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+
+    await expect(
+      componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        name: '404',
+      })
+    ).rejects.toThrow('Class name "404Component" is invalid.');
+  });
+
   describe('--module', () => {
     it.each([
       './lib.module.ts',
@@ -731,10 +770,10 @@ export class LibModule {}
     it('should error when name starts with a digit', async () => {
       await expect(
         componentGenerator(tree, {
-          path: 'lib1/src/lib/1-one/1-one',
-          prefix: 'foo',
+          path: 'lib1/src/lib/one/one',
+          prefix: '1',
         })
-      ).rejects.toThrow('The selector "foo-1-one" is invalid.');
+      ).rejects.toThrow('The selector "1-one" is invalid.');
     });
 
     it('should allow dash in selector before a number', async () => {

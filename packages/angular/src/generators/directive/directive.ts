@@ -1,16 +1,14 @@
 import type { Tree } from '@nx/devkit';
-import {
-  formatFiles,
-  generateFiles,
-  joinPathFragments,
-  names,
-} from '@nx/devkit';
+import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
 import { addToNgModule, findModule } from '../utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function directiveGenerator(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   generateFiles(
     tree,
@@ -21,6 +19,10 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
       symbolName: options.symbolName,
       fileName: options.fileName,
       standalone: options.standalone,
+      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      setStandalone:
+        (angularMajorVersion >= 19 && !options.standalone) ||
+        (angularMajorVersion < 19 && options.standalone),
       tpl: '',
     }
   );

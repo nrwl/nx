@@ -10,4 +10,6 @@ export interface VitestGeneratorSchema {
   addPlugin?: boolean;
   runtimeTsconfigFileName?: string;
   compiler?: 'babel' | 'swc'; // default: babel
+  // internal options
+  projectType?: 'application' | 'library';
 }

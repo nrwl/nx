@@ -337,8 +337,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      join(workspaceRoot, entryPointPath.path),
-                      sourceProject.data.sourceRoot
+                      join(workspaceRoot, entryPointPath.path)
                     );
                     // we cannot remap, so leave it as is
                     if (importPath) {
@@ -444,8 +443,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      join(workspaceRoot, entryPointPath),
-                      sourceProject.data.sourceRoot
+                      join(workspaceRoot, entryPointPath)
                     );
                     if (importPath) {
                       // resolve the import path

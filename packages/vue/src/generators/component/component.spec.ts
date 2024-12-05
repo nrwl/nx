@@ -24,7 +24,6 @@ describe('component', () => {
 
   it('should generate files with vitest', async () => {
     await componentGenerator(appTree, {
-      name: 'hello',
       path: `${libName}/src/lib/hello/hello`,
     });
 
@@ -58,7 +57,6 @@ describe('component', () => {
 
   it('should have correct component name based on directory', async () => {
     await componentGenerator(appTree, {
-      name: 'hello-world',
       path: `${libName}/src/foo/bar/hello-world/hello-world`,
     });
 
@@ -72,7 +70,6 @@ describe('component', () => {
 
   it('should generate files for an app', async () => {
     await componentGenerator(appTree, {
-      name: 'hello',
       path: `${appName}/src/app/hello/hello`,
     });
 
@@ -87,7 +84,6 @@ describe('component', () => {
   describe('--export', () => {
     it('should add to index.ts barrel', async () => {
       await componentGenerator(appTree, {
-        name: 'hello',
         path: `${libName}/src/lib/hello/hello`,
         export: true,
       });
@@ -100,7 +96,6 @@ describe('component', () => {
 
     it('should not export from an app', async () => {
       await componentGenerator(appTree, {
-        name: 'hello',
         path: `${appName}/src/app/hello/hello`,
         export: true,
       });

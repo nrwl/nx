@@ -1,23 +1,33 @@
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
-import { LoadedNxPlugin } from '../internal-api';
-import { loadNxPlugin } from '../loader';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 
 import { createServer } from 'net';
 import { unlinkSync } from 'fs';
+import { registerPluginTSTranspiler } from '../loader';
 
 if (process.env.NX_PERF_LOGGING === 'true') {
   require('../../../utils/perf-logging');
 }
 
 global.NX_GRAPH_CREATION = true;
-
-let plugin: LoadedNxPlugin;
+global.NX_PLUGIN_WORKER = true;
+let connected = false;
+let plugin;
 
 const socketPath = process.argv[2];
 
 const server = createServer((socket) => {
+  connected = true;
+  // This handles cases where the host process was killed
+  // after the worker connected but before the worker was
+  // instructed to load the plugin.
+  const loadTimeout = setTimeout(() => {
+    console.error(
+      `Plugin Worker exited because no plugin was loaded within 10 seconds of starting up.`
+    );
+    process.exit(1);
+  }, 10000).unref();
   socket.on(
     'data',
     consumeMessagesFromSocket((raw) => {
@@ -26,11 +36,30 @@ const server = createServer((socket) => {
         return;
       }
       return consumeMessage(socket, message, {
-        load: async ({ plugin: pluginConfiguration, root }) => {
+        load: async ({
+          plugin: pluginConfiguration,
+          root,
+          name,
+          pluginPath,
+          shouldRegisterTSTranspiler,
+        }) => {
+          if (loadTimeout) clearTimeout(loadTimeout);
           process.chdir(root);
           try {
-            const [promise] = loadNxPlugin(pluginConfiguration, root);
-            plugin = await promise;
+            const { loadResolvedNxPluginAsync } = await import(
+              '../load-resolved-plugin'
+            );
+
+            // Register the ts-transpiler if we are pointing to a
+            // plain ts file that's not part of a plugin project
+            if (shouldRegisterTSTranspiler) {
+              registerPluginTSTranspiler();
+            }
+            plugin = await loadResolvedNxPluginAsync(
+              pluginConfiguration,
+              pluginPath,
+              name
+            );
             return {
               type: 'load-result',
               payload: {
@@ -120,6 +149,8 @@ const server = createServer((socket) => {
   // since the worker is spawned per host process. As such,
   // we can safely close the worker when the host disconnects.
   socket.on('end', () => {
+    // Destroys the socket once it's fully closed.
+    socket.destroySoon();
     // Stops accepting new connections, but existing connections are
     // not closed immediately.
     server.close(() => {
@@ -128,12 +159,19 @@ const server = createServer((socket) => {
       } catch (e) {}
       process.exit(0);
     });
-    // Destroys the socket once it's fully closed.
-    socket.destroySoon();
   });
 });
 
 server.listen(socketPath);
+
+setTimeout(() => {
+  if (!connected) {
+    console.error(
+      'The plugin worker is exiting as it was not connected to within 5 seconds.'
+    );
+    process.exit(1);
+  }
+}, 5000).unref();
 
 const exitHandler = (exitCode: number) => () => {
   server.close();

@@ -8,7 +8,7 @@ import {
 export async function startRemotes(
   remotes: string[],
   workspaceProjects: Record<string, ProjectConfiguration>,
-  options: Schema,
+  options: Pick<Schema, 'devRemotes' | 'verbose'>,
   context: ExecutorContext
 ) {
   const target = 'serve-ssr';

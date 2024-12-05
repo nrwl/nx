@@ -360,12 +360,6 @@ If you need to send environment variables to agents, you can use the [--with-env
 nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
-Or pass all the environment variables except OS-specific ones with this `--with-env-vars="auto"`:
-
-```
-nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="auto"
-```
-
 ## Pass Values Between Steps
 
 If you need to pass a value from one step to another step, such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.

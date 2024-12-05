@@ -18,7 +18,7 @@ describe('@nx/react-native', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
   });
 
@@ -115,7 +115,7 @@ describe('@nx/react-native', () => {
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {

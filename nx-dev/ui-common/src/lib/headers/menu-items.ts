@@ -16,6 +16,7 @@ import {
   MicrophoneIcon,
   VideoCameraIcon,
   CheckBadgeIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -126,11 +127,30 @@ export const featuresItems: Record<string, MenuItem[]> = {
     },
   ],
 };
-export const solutions: MenuItem[] = [
+export const ossProducts: MenuItem[] = [
+  {
+    name: 'Nx',
+    description: 'Smart Monorepos - Fast CI',
+    href: '/getting-started/intro',
+    icon: null,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Nx Console',
+    description: 'Editor integration for VSCode, Cursor and IntelliJ IDEs',
+    href: '/getting-started/editor-setup',
+    icon: null,
+    isNew: false,
+    isHighlight: false,
+  },
+];
+
+export const enterpriseProducts: MenuItem[] = [
   {
     name: 'Nx Cloud',
     description:
-      'End-to-end solution for smart, efficient and maintainable CI.',
+      'Nx Cloud is the end-to-end solution for smart, efficient and maintainable CI',
     href: '/nx-cloud',
     icon: null,
     isNew: false,
@@ -148,7 +168,7 @@ export const solutions: MenuItem[] = [
   {
     name: 'Nx Enterprise',
     description:
-      'The ultimate Nx & Nx Cloud toolchain, tailored to your needs.',
+      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
     href: '/enterprise',
     icon: null,
     isNew: false,
@@ -258,10 +278,7 @@ export const companyItems: MenuItem[] = [
     isHighlight: false,
   },
 ];
-export const solutionsMenuItems = {
-  'Helping you grow': solutions,
-  // 'Use cases': useCaseItems
-};
+
 export const resourceMenuItems = {
   Learn: learnItems,
   Events: eventItems,

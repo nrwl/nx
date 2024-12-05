@@ -12,7 +12,10 @@ import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
-import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
+import {
+  buildProjectGraphUsingProjectFileMap,
+  hydrateFileMap,
+} from './build-project-graph';
 import {
   AggregateProjectGraphError,
   isAggregateProjectGraphError,
@@ -24,12 +27,13 @@ import {
   readProjectGraphCache,
   writeCache,
 } from './nx-deps-cache';
-import { loadNxPlugins } from './plugins/internal-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
+import { getPlugins } from './plugins/get-plugins';
+import { logger } from '../utils/logger';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -96,7 +100,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const [plugins, cleanup] = await loadNxPlugins(nxJson.plugins);
+  const plugins = await getPlugins();
   try {
     configurationResult = await retrieveProjectConfigurations(
       plugins,
@@ -146,14 +150,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       projectGraphError = e;
     } else {
       throw e;
-    }
-  } finally {
-    // When plugins are isolated we don't clean them up during
-    // a single run of the CLI. They are cleaned up when the CLI
-    // process exits. Cleaning them here could cause issues if pending
-    // promises are not resolved.
-    if (process.env.NX_ISOLATE_PLUGINS !== 'true') {
-      cleanup();
     }
   }
 
@@ -237,6 +233,25 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
+    try {
+      const graph = readCachedProjectGraph();
+      const projectRootMap = Object.fromEntries(
+        Object.entries(graph.nodes).map(([project, { data }]) => [
+          data.root,
+          project,
+        ])
+      );
+      const { allWorkspaceFiles, fileMap, rustReferences } =
+        await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+      hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
+      return graph;
+      // If no cached graph is found, we will fall through to the normal flow
+    } catch (e) {
+      logger.verbose('Unable to use cached project graph', e);
+    }
+  }
+
   const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
     opts
   );

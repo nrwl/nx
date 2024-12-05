@@ -233,6 +233,8 @@ describe('lib', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
+            "moduleResolution": "node10",
+            "jsx": "react-jsx",
             "types": ["jest", "node"]
           },
           "files": ["src/test-setup.ts"],

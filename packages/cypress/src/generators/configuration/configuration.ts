@@ -20,12 +20,12 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
+import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
@@ -105,6 +105,26 @@ export async function configurationGeneratorInternal(
     addTarget(tree, opts, projectGraph);
   }
 
+  const projectTsConfigPath = joinPathFragments(
+    opts.projectRoot,
+    'tsconfig.json'
+  );
+  if (tree.exists(projectTsConfigPath)) {
+    updateJson(tree, projectTsConfigPath, (json) => {
+      // Cypress uses commonjs, unless the project is also using commonjs (or does not set "module" i.e. uses default of commonjs),
+      // then we need to set the moduleResolution to node10 or else Cypress will fail with TS5095 error.
+      // See: https://github.com/cypress-io/cypress/issues/27731
+      if (
+        (json.compilerOptions?.module ||
+          json.compilerOptions?.module !== 'commonjs') &&
+        json.compilerOptions?.moduleResolution
+      ) {
+        json.compilerOptions.moduleResolution = 'node10';
+      }
+      return json;
+    });
+  }
+
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   if (isTsSolutionSetup) {
@@ -165,28 +185,7 @@ function ensureDependencies(tree: Tree, options: NormalizedSchema) {
 }
 
 async function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-
-  let linter = options.linter;
-  if (!linter) {
-    const choices = isTsSolutionSetup
-      ? [{ name: 'none' }, { name: 'eslint' }]
-      : [{ name: 'eslint' }, { name: 'none' }];
-    const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
-
-    linter = await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices,
-        initial: 0,
-      },
-      { linter: defaultValue }
-    ).then(({ linter }) => linter);
-  }
+  const linter = await normalizeLinterOption(tree, options.linter);
 
   const projectConfig: ProjectConfiguration | undefined =
     readProjectConfiguration(tree, options.project);
@@ -222,6 +221,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',
+    projectRoot: projectConfig.root,
     rootProject: options.rootProject ?? projectConfig.root === '.',
     linter,
     devServerTarget,
@@ -429,6 +429,9 @@ function createPackageJson(tree: Tree, options: NormalizedSchema) {
     name: importPath,
     version: '0.0.1',
     private: true,
+    nx: {
+      name: options.project,
+    },
   };
   writeJson(tree, packageJsonPath, packageJson);
 }

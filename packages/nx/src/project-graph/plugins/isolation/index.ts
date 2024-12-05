@@ -7,11 +7,5 @@ export async function loadNxPluginInIsolation(
   plugin: PluginConfiguration,
   root = workspaceRoot
 ): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> {
-  const [loadingPlugin, cleanup] = await loadRemoteNxPlugin(plugin, root);
-  return [
-    loadingPlugin,
-    () => {
-      cleanup();
-    },
-  ] as const;
+  return loadRemoteNxPlugin(plugin, root);
 }

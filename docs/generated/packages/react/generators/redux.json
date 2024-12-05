@@ -8,18 +8,27 @@
     "title": "Create Redux state",
     "description": "Create a Redux state slice for a React project.",
     "type": "object",
+    "examples": [
+      {
+        "description": "Generate a Redux state slice with the exported symbol matching the file name. It results in the slice `fooSlice` at `mylib/src/lib/foo.slice.ts`",
+        "command": "nx g @nx/react:redux mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a Redux state slice with the exported symbol different from the file name. It results in the slice `customSlice` at `mylib/src/lib/foo.slice.ts`",
+        "command": "nx g @nx/react:redux mylib/src/lib/foo --name=custom"
+      }
+    ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path where the Redux slice will be generated.",
+        "description": "The file path to the Redux state slice without the file extension. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the Redux slice be generated?",
+        "x-prompt": "What is the Redux stateslice file path?",
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "Redux slice name.",
-        "x-priority": "important"
+        "description": "The Redux state slice symbol name. Defaults to the last segment of the file path."
       },
       "appProject": {
         "type": "string",

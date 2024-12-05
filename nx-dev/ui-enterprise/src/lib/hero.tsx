@@ -17,26 +17,25 @@ export function Hero(): JSX.Element {
             Accelerate your organization's journey to tighter collaboration,
             better developer experience, and speed…lots of speed.
           </SectionHeading>
-          <div className="mt-10">
+          <div className="mt-10 items-center justify-center gap-x-6">
             <ButtonLink
-              href="/contact/engineering"
-              title="Talk to the engineering team"
+              href="/contact/sales"
+              title="Request a free trial"
               variant="primary"
               size="default"
             >
-              Talk to engineering
+              Request a free trial
             </ButtonLink>
             <p className="mt-6 italic">
-              Ready to talk terms?{' '}
+              Got questions?{' '}
               <Link
-                href="/contact/sales"
+                href="/contact/engineering"
                 title="Talk to the sales team"
                 className="font-semibold underline"
                 prefetch={false}
               >
-                Speak directly to sales
+                Talk to an engineer.
               </Link>
-              .
             </p>
           </div>
         </div>

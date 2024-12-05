@@ -1,8 +1,8 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "<%= extendedConfig %>",
   "compilerOptions": {
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
-    "module": "commonjs",
+    "outDir": "<%= outDir %>",<% if (module) { %>
+    "module": "<%= module %>",<% } %>
     "target": "es2016",
     "types": ["jest", "node"]
   },<% if(setupFile !== 'none') { %>

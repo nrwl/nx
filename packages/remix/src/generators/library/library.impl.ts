@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, GeneratorCallback, runTasksInSerial } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { libraryGenerator } from '@nx/react';
 import {
   addTsconfigEntryPoints,
@@ -10,6 +9,7 @@ import {
   updateBuildableConfig,
 } from './lib';
 import type { NxRemixGeneratorSchema } from './schema';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -22,10 +22,14 @@ export async function remixLibraryGeneratorInternal(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'remix', 'library');
-
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);
+
+  const jsInitTask = await jsInitGenerator(tree, {
+    js: options.js,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const libGenTask = await libraryGenerator(tree, {
     name: options.projectName,
@@ -36,9 +40,10 @@ export async function remixLibraryGeneratorInternal(
     directory: options.projectRoot,
     skipFormat: true,
     skipTsConfig: false,
-    linter: Linter.EsLint,
+    linter: options.linter,
     component: true,
     buildable: options.buildable,
+    bundler: options.bundler,
     addPlugin: options.addPlugin,
   });
   tasks.push(libGenTask);
@@ -50,9 +55,23 @@ export async function remixLibraryGeneratorInternal(
 
   addTsconfigEntryPoints(tree, options);
 
-  if (options.buildable) {
+  if (options.bundler === 'rollup' || options.buildable) {
     updateBuildableConfig(tree, options.projectName);
   }
+
+  updateTsconfigFiles(
+    tree,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

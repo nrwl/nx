@@ -7,27 +7,19 @@
     "$id": "NxPluginExecutor",
     "title": "Create an Executor for an Nx Plugin",
     "description": "Create an Executor for an Nx Plugin.",
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` inside the plugin `my-plugin`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build\n```\n\n{% /tab %}\n{% tab label=\"With different exported name\" %}\n\nCreate a new executor called `custom` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --name=custom\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "type": "object",
-    "examples": [
-      {
-        "command": "nx g executor my-executor --project=my-plugin",
-        "description": "Generate `libs/my-plugin/src/executors/my-executor`"
-      }
-    ],
     "properties": {
       "path": {
         "type": "string",
-        "description": "Path at which to generate the executor file.",
-        "x-prompt": "What path would you like to use for the executor?",
+        "description": "The file path to the executor without the file extension. Relative to the current working directory.",
+        "x-prompt": "What is the executor file path?",
         "$default": { "$source": "argv", "index": 0 },
         "x-priority": "important"
       },
       "name": {
         "type": "string",
-        "description": "Executor name.",
-        "x-prompt": "What name would you like to use for the executor?",
-        "x-priority": "important"
+        "description": "The executor name to export in the plugin executors collection."
       },
       "description": {
         "type": "string",

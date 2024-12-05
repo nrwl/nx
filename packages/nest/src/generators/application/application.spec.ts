@@ -15,17 +15,66 @@ describe('application generator', () => {
   it('should generate project configurations', async () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
+      addPlugin: true,
     });
 
     const projectConfigurations = devkit.getProjects(tree);
+    const project = projectConfigurations.get(appDirectory);
 
-    expect(projectConfigurations.get(appDirectory)).toBeTruthy();
     expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeTruthy();
+    expect(project).toMatchInlineSnapshot(`
+      {
+        "$schema": "../node_modules/nx/schemas/project-schema.json",
+        "name": "my-node-app",
+        "projectType": "application",
+        "root": "my-node-app",
+        "sourceRoot": "my-node-app/src",
+        "tags": [],
+        "targets": {
+          "build": {
+            "configurations": {
+              "development": {
+                "args": [
+                  "node-env=development",
+                ],
+              },
+            },
+            "executor": "nx:run-commands",
+            "options": {
+              "args": [
+                "node-env=production",
+              ],
+              "command": "webpack-cli build",
+            },
+          },
+          "serve": {
+            "configurations": {
+              "development": {
+                "buildTarget": "my-node-app:build:development",
+              },
+              "production": {
+                "buildTarget": "my-node-app:build:production",
+              },
+            },
+            "defaultConfiguration": "development",
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/js:node",
+            "options": {
+              "buildTarget": "my-node-app:build",
+              "runBuildTargetDependencies": false,
+            },
+          },
+        },
+      }
+    `);
   });
 
   it('should generate files', async () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
+      addPlugin: true,
     });
 
     expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
@@ -45,6 +94,7 @@ describe('application generator', () => {
   it('should configure tsconfig correctly', async () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
+      addPlugin: true,
     });
 
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
@@ -61,6 +111,7 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
       strict: true,
+      addPlugin: true,
     });
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
 
@@ -79,6 +130,7 @@ describe('application generator', () => {
 
       await applicationGenerator(tree, {
         directory: appDirectory,
+        addPlugin: true,
       });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
@@ -90,6 +142,7 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         skipFormat: true,
+        addPlugin: true,
       });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
@@ -101,6 +154,7 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         e2eTestRunner: 'none',
+        addPlugin: true,
       });
 
       const projectConfigurations = devkit.getProjects(tree);

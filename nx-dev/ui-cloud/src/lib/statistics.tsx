@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 
@@ -71,7 +71,7 @@ const stats = [
   { id: 4, name: 'Runs daily', value: 100, suffix: 'k+' },
 ];
 
-export function Statistics(): JSX.Element {
+export function Statistics(): ReactElement {
   const shouldReduceMotion = usePrefersReducedMotion();
 
   const variants = {

@@ -19,7 +19,7 @@ However, until now, it has only supported Client-Side Rendering (CSR). Essential
 
 > [What is server-side rendering: definition, benefits and risks](https://solutionshub.epam.com/blog/post/what-is-server-side-rendering)
 
-Since [version 15.4](blog/nx-15-4-vite-4-support-a-new-nx-watch-command-and-more), Nx now offers Module Federation with support for SSR! 🎉
+Since [version 15.4](/blog/nx-15-4-vite-4-support-a-new-nx-watch-command-and-more), Nx now offers Module Federation with support for SSR! 🎉
 
 Now we can get both, the benefits of Module Federation and SSR in our Nx Workspaces!
 

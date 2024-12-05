@@ -99,8 +99,7 @@
     },
     "hmr": {
       "type": "boolean",
-      "description": "Enable hot module replacement.",
-      "default": false
+      "description": "Enable hot module replacement. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
     },
     "watch": {
       "type": "boolean",
@@ -113,7 +112,7 @@
     },
     "forceEsbuild": {
       "type": "boolean",
-      "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system. _Note: this is only supported in Angular versions >= 16.1.0_.",
+      "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system.",
       "default": false
     },
     "inspect": {
@@ -151,7 +150,7 @@
       "x-priority": "important"
     },
     "esbuildMiddleware": {
-      "description": "A list of HTTP request middleware functions. _Note: this is only supported in Angular versions >= 17.0.0_.",
+      "description": "A list of HTTP request middleware functions.",
       "type": "array",
       "items": {
         "type": "string",

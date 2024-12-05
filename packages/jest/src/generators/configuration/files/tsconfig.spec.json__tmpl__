@@ -1,9 +1,10 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "<%= extendedConfig %>",
   "compilerOptions": {
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
-    "module": "commonjs",
-    "types": ["jest", "node"]
+    "outDir": "<%= outDir %>",<% if (module) { %>
+    "module": "<%= module %>",<% } if (module === 'commonjs') { %>
+    "moduleResolution": "node10",<% } if (supportTsx) { %>
+    "jsx": "react-jsx",<% } %>"types": ["jest", "node"]
   },<% if(setupFile !== 'none') { %>
   "files": ["src/test-setup.ts"],<% } %>
   "include": [

@@ -8,17 +8,18 @@
     "description": "Nest Filter Options Schema.",
     "cli": "nx",
     "type": "object",
+    "examples": [
+      {
+        "description": "Generate the filter `FooFilter` at `myapp/src/app/foo.filter.ts`",
+        "command": "nx g @nx/nest:filter myapp/src/app/foo"
+      }
+    ],
     "properties": {
       "path": {
-        "description": "Path where the filter will be generated.",
+        "description": "The file path to the filter without the file extension and suffix. Relative to the current working directory.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Where should the filter be generated?"
-      },
-      "name": {
-        "description": "The name of the filter.",
-        "type": "string",
-        "x-prompt": "What name would you like to use?"
+        "x-prompt": "What is the filter file path?"
       },
       "skipFormat": {
         "type": "boolean",

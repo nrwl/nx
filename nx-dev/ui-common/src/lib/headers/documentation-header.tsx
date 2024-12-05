@@ -1,5 +1,7 @@
 'use client';
 import { Fragment, type JSX } from 'react';
+
+import { GitHubIcon } from '@nx/nx-dev/ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
@@ -13,9 +15,13 @@ import { ButtonLink } from '../button';
 import { Popover, Transition } from '@headlessui/react';
 import { TwoColumnsMenu } from './two-columns-menu';
 import {
+  companyItems,
+  eventItems,
   featuresItems,
+  learnItems,
+  ossProducts,
   resourceMenuItems,
-  solutionsMenuItems,
+  productsMenuItems,
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
@@ -224,103 +230,6 @@ export function DocumentationHeader({
             className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
-            {/*FEATURES*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    >
-                      Features
-                    </span>
-                    <ChevronDownIcon
-                      aria-hidden="true"
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    />
-                  </Popover.Button>
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute z-30 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <SectionsMenu sections={featuresItems} />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-            {/*SOLUTIONS*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    >
-                      Solutions
-                    </span>
-                    <ChevronDownIcon
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                      aria-hidden="true"
-                    />
-                  </Popover.Button>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute z-30 mt-3 w-max max-w-2xl">
-                      <SectionsMenu sections={solutionsMenuItems} />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-            <Link
-              href="/getting-started/intro"
-              title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Docs
-            </Link>
             <Link
               href="/blog"
               title="Blog"
@@ -328,14 +237,6 @@ export function DocumentationHeader({
               prefetch={false}
             >
               Blog
-            </Link>
-            <Link
-              href="/pricing"
-              title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              CI Pricing
             </Link>
             {/*RESOURCES*/}
             <Popover className="relative">
@@ -377,6 +278,40 @@ export function DocumentationHeader({
                 </>
               )}
             </Popover>
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <Link
+              href="/nx-cloud"
+              title="Nx Cloud"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Nx Cloud
+            </Link>
+            <Link
+              href="/pricing"
+              title="Pricing"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Pricing
+            </Link>
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <Link
+              href="/powerpack"
+              title="Nx Powerpack"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Powerpack
+            </Link>
+            <Link
+              href="/enterprise"
+              title="Nx Enterprise"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Enterprise
+            </Link>
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
@@ -385,22 +320,14 @@ export function DocumentationHeader({
             role="menu"
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
-            <Link
-              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              title="Contact Us"
-              href="/contact"
-              prefetch={false}
-            >
-              Contact
-            </Link>
             <ButtonLink
-              href="https://nx.app/?utm_source=nx.dev&utm_medium=header-menu"
-              title="Go to app"
-              variant="secondary"
+              href="/nx-cloud"
+              title="Try Nx Cloud for free"
+              variant="primary"
               size="small"
             >
               <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
-              <span>Go to app</span>
+              <span>Try Nx Cloud for free</span>
             </ButtonLink>
           </nav>
         </div>

@@ -1138,6 +1138,7 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 Connect with the rest of the Nx community with these resources:
 
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)

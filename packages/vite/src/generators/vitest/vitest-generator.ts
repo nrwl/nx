@@ -13,21 +13,20 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
-import { VitestGeneratorSchema } from './schema';
-
-import initGenerator from '../init/init';
 import {
   vitestCoverageIstanbulVersion,
   vitestCoverageV8Version,
 } from '../../utils/versions';
-
-import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
-import { join } from 'path';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
+import initGenerator from '../init/init';
+import { VitestGeneratorSchema } from './schema';
 
 export function vitestGenerator(
   tree: Tree,
@@ -52,7 +51,11 @@ export async function vitestGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const { root, projectType: _projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  const projectType = schema.projectType ?? _projectType;
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
@@ -270,11 +273,19 @@ function createFiles(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  const rootOffset = offsetFromRoot(projectRoot);
+
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     ...options,
     projectRoot,
-    offsetFromRoot: offsetFromRoot(projectRoot),
+    extendedConfig: isTsSolutionSetup
+      ? `${rootOffset}tsconfig.base.json`
+      : './tsconfig.json',
+    outDir: isTsSolutionSetup
+      ? `./out-tsc/vitest`
+      : `${rootOffset}dist/out-tsc`,
   });
 }
 

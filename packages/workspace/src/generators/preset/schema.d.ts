@@ -7,6 +7,7 @@ export interface Schema {
   style?: string;
   linter?: string;
   formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
@@ -19,6 +20,7 @@ export interface Schema {
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
   ssr?: boolean;
+  serverRouting?: boolean;
   prefix?: string;
   nxCloudToken?: string;
 }

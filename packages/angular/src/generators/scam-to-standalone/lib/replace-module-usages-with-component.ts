@@ -13,7 +13,9 @@ export function replaceModuleUsagesWithComponent(
     }
     const fileContents = tree.read(path, 'utf-8');
     if (fileContents.includes(moduleName)) {
-      const moduleNameRegex = new RegExp(moduleName, 'g');
+      // Word boundary \b ensures that other modules won't be affected.
+      // E.g. "MapIconModule" would not be affected when "IconModule" is being migrated.
+      const moduleNameRegex = new RegExp(`\\b${moduleName}\\b`, 'g');
       const newFileContents = fileContents.replace(
         moduleNameRegex,
         componentName

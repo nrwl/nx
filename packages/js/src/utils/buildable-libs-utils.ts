@@ -16,7 +16,7 @@ import { unlinkSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
 import { output } from 'nx/src/utils/output';
-import { dirname, join, relative, isAbsolute, extname } from 'path';
+import { dirname, join, relative, extname, resolve } from 'path';
 import type * as ts from 'typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
 
@@ -194,18 +194,23 @@ function collectDependencies(
 }
 
 function readTsConfigWithRemappedPaths(
-  tsConfig: string,
-  generatedTsConfigPath: string,
-  dependencies: DependentBuildableProjectNode[]
+  originalTsconfigPath: string,
+  generatedTsconfigPath: string,
+  dependencies: DependentBuildableProjectNode[],
+  workspaceRoot: string
 ) {
   const generatedTsConfig: any = { compilerOptions: {} };
-  const dirnameTsConfig = dirname(generatedTsConfigPath);
-  const relativeTsconfig = isAbsolute(dirnameTsConfig)
-    ? relative(workspaceRoot, dirnameTsConfig)
-    : dirnameTsConfig;
-  generatedTsConfig.extends = relative(relativeTsconfig, tsConfig);
+  const normalizedTsConfig = resolve(workspaceRoot, originalTsconfigPath);
+  const normalizedGeneratedTsConfigDir = resolve(
+    workspaceRoot,
+    dirname(generatedTsconfigPath)
+  );
+  generatedTsConfig.extends = relative(
+    normalizedGeneratedTsConfigDir,
+    normalizedTsConfig
+  );
   generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
-    tsConfig,
+    originalTsconfigPath,
     dependencies
   );
 
@@ -443,7 +448,8 @@ export function createTmpTsConfig(
   const parsedTSConfig = readTsConfigWithRemappedPaths(
     tsconfigPath,
     tmpTsConfigPath,
-    dependencies
+    dependencies,
+    workspaceRoot
   );
   process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
 

@@ -1,6 +1,5 @@
 export interface ComponentGeneratorSchema {
   path: string;
-  name?: string;
   skipTests?: boolean;
   export?: boolean;
   routing?: boolean;

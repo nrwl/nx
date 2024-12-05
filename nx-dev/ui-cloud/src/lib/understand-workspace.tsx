@@ -13,15 +13,15 @@ import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { BentoGrid, BentoGridItem } from './elements/bento-grid';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
-import { useEffect } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
 
-export function UnderstandWorkspace(): JSX.Element {
+export function UnderstandWorkspace(): ReactElement {
   return (
-    <section>
+    <section id="deep-understanding" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionHeading as="h2" variant="title" id="deep-understanding">
+          <SectionHeading as="h2" variant="title">
             Deep understanding of your workspace
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="mt-6">

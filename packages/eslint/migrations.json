@@ -19,6 +19,11 @@
       "version": "17.2.9",
       "description": "Move executor options to target defaults",
       "implementation": "./src/migrations/update-17-2-9/move-options-to-target-defaults"
+    },
+    "update-typescript-eslint-v8.13.0": {
+      "version": "20.2.0-beta.5",
+      "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
+      "implementation": "./src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0"
     }
   },
   "packageJsonUpdates": {

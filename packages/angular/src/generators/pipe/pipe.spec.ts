@@ -53,6 +53,12 @@ describe('pipe generator', () => {
     ).toBeFalsy();
   });
 
+  it('should error when the class name is invalid', async () => {
+    await expect(
+      generatePipeWithDefaultOptions(tree, { name: '404' })
+    ).rejects.toThrow('Class name "404Pipe" is invalid.');
+  });
+
   describe('--no-standalone', () => {
     beforeEach(() => {
       addModule(tree);

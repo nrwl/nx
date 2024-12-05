@@ -98,6 +98,7 @@ export async function applicationGenerator(
       project: options.name,
       standalone: options.standalone,
       skipPackageJson: options.skipPackageJson,
+      serverRouting: options.serverRouting,
     });
   }
 

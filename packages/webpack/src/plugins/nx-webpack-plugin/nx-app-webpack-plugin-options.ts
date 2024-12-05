@@ -182,7 +182,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Generate source maps.
    */
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */

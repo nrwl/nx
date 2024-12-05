@@ -403,7 +403,7 @@ export default class DefaultChangelogRenderer {
     if (authors.length > 0) {
       markdownLines.push(
         '',
-        '### ' + '❤️  Thank You',
+        '### ' + '❤️ Thank You',
         '',
         ...authors
           .sort((a, b) => a.name.localeCompare(b.name))

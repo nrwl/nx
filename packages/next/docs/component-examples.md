@@ -1,28 +1,21 @@
 ## Examples
 
 {% tabs %}
-{% tab label="Create an app component" %}
+{% tab label="Create a Component" %}
+
+Generate a component named `MyComponent` at `apps/my-app/src/app/my-component/my-component.tsx`:
 
 ```shell
-nx g component apps/my-app/src/lib/my-cmp/my-cmp
+nx g component apps/my-app/src/app/my-component/my-component
 ```
 
 {% /tab %}
-{% tab label="Create a component without its own folder" %}
+{% tab label="Create a Component with a Different Symbol Name" %}
 
-Running the following will create a component under `apps/my-app/components/my-cmp.tsx` rather than `apps/my-app/components/my-cmp/my-cmp.tsx`.
-
-```shell
-nx g component apps/my-app/src/lib/my-cmp
-```
-
-{% /tab %}
-{% tab label="Create component in a custom directory" %}
-
-Running the following will create a component under `apps/my-app/foo/my-cmp.tsx` rather than `apps/my-app/my-cmp/my-cmp.tsx`.
+Generate a component named `Custom` at `apps/my-app/src/app/my-component/my-component.tsx`:
 
 ```shell
-nx g component apps/my-app/foo/my-cmp
+nx g component apps/my-app/src/app/my-component/my-component --name=custom
 ```
 
 {% /tab %}

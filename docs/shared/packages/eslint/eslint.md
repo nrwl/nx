@@ -30,6 +30,7 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 - `.eslintrc.yml`
 - `.eslintrc.json`
 - `eslint.config.js`
+- `eslint.config.cjs`
 
 Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
 

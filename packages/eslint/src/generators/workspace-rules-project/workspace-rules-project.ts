@@ -90,6 +90,7 @@ export async function lintWorkspaceRulesProjectGenerator(
     join(workspaceLintPluginDir, 'tsconfig.spec.json'),
     (json) => {
       delete json.compilerOptions?.module;
+      delete json.compilerOptions?.moduleResolution;
 
       if (json.include) {
         json.include = json.include.map((v) => {

@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
 import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
-import { readFileSync } from 'fs';
+import { readFileSync, lstatSync } from 'fs';
 import { Course, Lesson } from './course.types';
 import { calculateTotalDuration } from './duration.utils';
 
@@ -22,7 +22,12 @@ export class CoursesApi {
   async getAllCourses(): Promise<Course[]> {
     const courseFolders = await readdir(this.options.coursesRoot);
     const courses = await Promise.all(
-      courseFolders.map((folder) => this.getCourse(folder))
+      courseFolders
+        .filter((directory) => {
+          const stat = lstatSync(join(this.options.coursesRoot, directory));
+          return stat.isDirectory();
+        })
+        .map((folder) => this.getCourse(folder))
     );
     return courses;
   }
@@ -40,7 +45,10 @@ export class CoursesApi {
     const lessonFolders = await readdir(coursePath);
     const lessons = await Promise.all(
       lessonFolders
-        .filter((folder) => folder !== 'course.md')
+        .filter((folder) => {
+          const stat = lstatSync(join(coursePath, folder));
+          return stat.isDirectory();
+        })
         .map((folder) => this.getLessons(folderName, folder))
     );
     const flattenedLessons = lessons.flat();

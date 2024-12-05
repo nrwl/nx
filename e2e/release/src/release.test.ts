@@ -133,7 +133,7 @@ describe('nx release', () => {
       +
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
       +
-      + ### ❤️  Thank You
+      + ### ❤️ Thank You
       +
       + - Test @{COMMIT_AUTHOR}
 
@@ -153,7 +153,7 @@ describe('nx release', () => {
 
       - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
-      ### ❤️  Thank You
+      ### ❤️ Thank You
 
       - Test @{COMMIT_AUTHOR}
     `);

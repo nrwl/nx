@@ -2,12 +2,15 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments } from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import type { Schema } from '../schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function addRemoteEntry(
   tree: Tree,
   { appName, routing, prefix, standalone }: Schema,
   appRoot: string
 ) {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
   generateFiles(
     tree,
     standalone
@@ -22,6 +25,9 @@ export function addRemoteEntry(
       appName,
       routing,
       prefix,
+      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      setStandaloneFalse: angularMajorVersion >= 19,
+      setStandaloneTrue: angularMajorVersion < 19,
     }
   );
 
