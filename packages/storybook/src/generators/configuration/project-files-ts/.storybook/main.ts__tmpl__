@@ -25,7 +25,7 @@ const config: StorybookConfig = {
       <% } %>
     },
   },
-  <% if (useReactNative && uiFramework === '@storybook/react-webpack5') { %>webpackFinal: async (config) => {
+  <% if (usesReactNative && uiFramework === '@storybook/react-webpack5') { %>webpackFinal: async (config) => {
     if (config.resolve) {
       config.resolve.alias = {
         ...config.resolve.alias,
