@@ -156,7 +156,6 @@ export async function viteConfigurationGeneratorInternal(
       project: schema.project,
       uiFramework: schema.uiFramework,
       inSourceTests: schema.inSourceTests,
-      coverageProvider: 'v8',
       skipViteConfig: true,
       testTarget: 'test',
       skipFormat: true,

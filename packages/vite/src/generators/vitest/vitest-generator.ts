@@ -78,6 +78,9 @@ export async function vitestGeneratorInternal(
     addOrChangeTestTarget(tree, schema, testTarget);
   }
 
+  schema.coverageProvider ??=
+    nxJson.generators?.['@nx/vite']?.['vitest']?.['coverageProvider'] ?? 'v8';
+
   if (!schema.skipViteConfig) {
     if (schema.uiFramework === 'react') {
       createOrEditViteConfig(
