@@ -79,7 +79,7 @@ export function MakeYourCiFast(): ReactElement {
                 <p className="mt-2 max-w-lg text-sm/6">
                   <span className="font-semibold">Atomizer</span> automatically
                   splits large e2e tests into smaller, atomized tasks, enabling
-                  lightening fast testing. Parallelize your tests to reduce
+                  lightning fast testing. Parallelize your tests to reduce
                   bottlenecks and keep your pipelines fast.
                 </p>
               </div>
