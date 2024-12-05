@@ -17,7 +17,8 @@ use crate::native::workspace::files_hashing::{full_files_hash, selective_files_h
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{config_files, types::NxWorkspaceFiles, workspace_files};
+use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
+use crate::native::glob::glob_files::glob_files;
 
 #[napi]
 pub struct WorkspaceContext {
@@ -227,7 +228,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
         let file_data = self.all_file_data();
-        let globbed_files = config_files::glob_files(&file_data, globs, exclude)?;
+        let globbed_files = glob_files(&file_data, globs, exclude)?;
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
@@ -238,7 +239,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(files, globs, exclude)?;
+        let globbed_files = glob_files(files, globs, exclude)?;
         Ok(hash(
             &globbed_files
                 .map(|file| file.hash.as_bytes())

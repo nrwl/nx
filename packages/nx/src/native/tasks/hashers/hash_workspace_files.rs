@@ -1,18 +1,16 @@
+use rayon::prelude::*;
 use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
 use tracing::{trace, warn};
 
+use crate::native::glob::glob_files::glob_files;
+use crate::native::hasher::hash;
 use crate::native::types::FileData;
-use crate::native::{glob::build_glob_set, hasher::hash};
 
-pub fn hash_workspace_files(
-    workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
-    cache: Arc<DashMap<String, String>>,
-) -> Result<String> {
-    let globs: Vec<String> = workspace_file_sets
+fn globs_from_workspace_inputs(workspace_file_sets: &[String]) -> Vec<String> {
+    workspace_file_sets
         .iter()
         .inspect(|&x| trace!("Workspace file set: {}", x))
         .filter_map(|x| {
@@ -33,7 +31,23 @@ pub fn hash_workspace_files(
                 None
             }
         })
-        .collect();
+        .collect()
+}
+
+pub fn get_workspace_files<'a, 'b>(
+    workspace_file_sets: &'a [String],
+    all_workspace_files: &'b [FileData],
+) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
+    let globs = globs_from_workspace_inputs(workspace_file_sets);
+    glob_files(all_workspace_files, globs, None)
+}
+
+pub fn hash_workspace_files(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+    cache: Arc<DashMap<String, String>>,
+) -> Result<String> {
+    let globs = globs_from_workspace_inputs(workspace_file_sets);
 
     if globs.is_empty() {
         return Ok(hash(b""));
@@ -44,18 +58,12 @@ pub fn hash_workspace_files(
         return Ok(cache_results.clone());
     }
 
-    let glob = build_glob_set(&globs)?;
-
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    let mut hashes: Vec<String> = Vec::new();
-    for file in all_workspace_files
-        .iter()
-        .filter(|file| glob.is_match(&file.file))
-    {
-        trace!("{:?} was found with glob {:?}", file.file, globs);
-        hashes.push(file.hash.clone());
-        hashes.push(file.file.clone());
-    }
+
+    let files = glob_files(all_workspace_files, globs, None)?;
+    let hashes = files
+        .flat_map_iter(|x| [x.hash.clone(), x.file.clone()])
+        .collect::<Vec<String>>();
     hasher.update(hashes.join(",").as_bytes());
     let hashed_value = hasher.digest().to_string();
 
@@ -111,9 +119,13 @@ mod test {
             Arc::new(DashMap::new()),
         )
         .unwrap();
-        assert_eq!(result, hash([
-            gitignore_file.hash,
-            gitignore_file.file
-        ].join(",").as_bytes()));
+        assert_eq!(
+            result,
+            hash(
+                [gitignore_file.hash, gitignore_file.file]
+                    .join(",")
+                    .as_bytes()
+            )
+        );
     }
 }

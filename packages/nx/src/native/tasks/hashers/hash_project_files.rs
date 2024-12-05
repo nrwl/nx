@@ -13,7 +13,7 @@ pub fn hash_project_files(
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let _span = trace_span!("hash_project_files", project_name).entered();
-    let collected_files = collect_files(project_name, project_root, file_sets, project_file_map)?;
+    let collected_files = collect_project_files(project_name, project_root, file_sets, project_file_map)?;
     trace!("collected_files: {:?}", collected_files.len());
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in collected_files {
@@ -24,7 +24,7 @@ pub fn hash_project_files(
 }
 
 /// base function that should be testable (to make sure that we're getting the proper files back)
-fn collect_files<'a>(
+pub fn collect_project_files<'a>(
     project_name: &str,
     project_root: &str,
     file_sets: &[String],
@@ -100,11 +100,11 @@ mod tests {
             ],
         );
 
-        let result = collect_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let result = collect_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
 
         assert_eq!(result, vec![&tsfile_1, &tsfile_2]);
 
-        let result = collect_files(
+        let result = collect_project_files(
             proj_name,
             proj_root,
             &["!{projectRoot}/**/*.spec.ts".into()],

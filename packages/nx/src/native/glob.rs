@@ -1,6 +1,7 @@
 mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
+pub mod glob_files;
 
 use crate::native::glob::glob_transform::convert_glob;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
