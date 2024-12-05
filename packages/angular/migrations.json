@@ -314,6 +314,15 @@
       },
       "description": "Disable the Angular ESLint prefer-standalone rule if not set.",
       "factory": "./src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone"
+    },
+    "remove-angular-eslint-rules": {
+      "cli": "nx",
+      "version": "20.2.0-beta.8",
+      "requires": {
+        "@angular/core": ">=19.0.0"
+      },
+      "description": "Remove Angular ESLint rules that were removed in v19.0.0.",
+      "factory": "./src/migrations/update-20-2-0/remove-angular-eslint-rules"
     }
   },
   "packageJsonUpdates": {
