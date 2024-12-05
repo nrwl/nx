@@ -130,32 +130,41 @@ function findNxProjectForImportPath(
   root = workspaceRoot
 ): ProjectConfiguration | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
-  const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
-    normalizePath(path.relative(root, path.join(root, p)))
-  );
-  if (possiblePaths?.length) {
-    const projectRootMappings: ProjectRootMappings = new Map();
+  const possibleTsPaths =
+    tsConfigPaths[importPath]?.map((p) =>
+      normalizePath(path.relative(root, path.join(root, p)))
+    ) ?? [];
+
+  const projectRootMappings: ProjectRootMappings = new Map();
+  if (possibleTsPaths.length) {
     const projectNameMap = new Map<string, ProjectConfiguration>();
     for (const projectRoot in projects) {
       const project = projects[projectRoot];
       projectRootMappings.set(project.root, project.name);
       projectNameMap.set(project.name, project);
     }
-    for (const tsConfigPath of possiblePaths) {
+    for (const tsConfigPath of possibleTsPaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
         return projectNameMap.get(nxProject);
       }
     }
-    logger.verbose(
-      'Unable to find local plugin',
-      possiblePaths,
-      projectRootMappings
-    );
-    throw new Error(
-      'Unable to resolve local plugin with import path ' + importPath
-    );
   }
+
+  // try to resolve from the projects' package.json names
+  const projectName = getNameFromPackageJson(importPath, root, projects);
+  if (projectName) {
+    return projects[projectName];
+  }
+
+  logger.verbose(
+    'Unable to find local plugin',
+    possibleTsPaths,
+    projectRootMappings
+  );
+  throw new Error(
+    'Unable to resolve local plugin with import path ' + importPath
+  );
 }
 
 let tsconfigPaths: Record<string, string[]>;
@@ -172,6 +181,72 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     tsconfigPaths = compilerOptions?.paths;
   }
   return tsconfigPaths ?? {};
+}
+
+let packageJsonMap: Record<string, string>;
+let seenProjects: Set<string>;
+
+/**
+ * Locate the project name from the package.json files in the provided projects.
+ * Progressively build up a map of package names to project names to avoid
+ * reading the same package.json multiple times and reading unnecessary ones.
+ */
+function getNameFromPackageJson(
+  importPath: string,
+  root: string = workspaceRoot,
+  projects: Record<string, ProjectConfiguration>
+): string | null {
+  packageJsonMap ??= {};
+  seenProjects ??= new Set();
+
+  const resolveFromPackageJson = (projectName: string) => {
+    try {
+      const packageJson = readJsonFile(
+        path.join(root, projects[projectName].root, 'package.json')
+      );
+      packageJsonMap[packageJson.name ?? projectName] = projectName;
+
+      if (packageJsonMap[importPath]) {
+        // we found the importPath, we progressively build up packageJsonMap
+        // so we can return early
+        return projectName;
+      }
+    } catch {}
+
+    return null;
+  };
+
+  if (packageJsonMap[importPath]) {
+    if (!!projects[packageJsonMap[importPath]]) {
+      return packageJsonMap[importPath];
+    } else {
+      // the previously resolved project might have been resolved with the
+      // project root as the name, so we need to resolve it again to get
+      // the actual project name
+      const projectName = Object.keys(projects).find(
+        (p) => projects[p].root === packageJsonMap[importPath]
+      );
+      const resolvedProject = resolveFromPackageJson(projectName);
+      if (resolvedProject) {
+        return resolvedProject;
+      }
+    }
+  }
+
+  for (const projectName of Object.keys(projects)) {
+    if (seenProjects.has(projectName)) {
+      // we already parsed this project
+      continue;
+    }
+    seenProjects.add(projectName);
+
+    const resolvedProject = resolveFromPackageJson(projectName);
+    if (resolvedProject) {
+      return resolvedProject;
+    }
+  }
+
+  return null;
 }
 
 function readPluginMainFromProjectConfiguration(
