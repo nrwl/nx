@@ -168,7 +168,8 @@ export function ScaleYourOrganization(): ReactElement {
                         >
                           Nx Powerpack
                         </Link>
-                        , and available complimentary to all Enterprise customers.
+                        , and available complimentary to all Enterprise
+                        customers.
                       </i>
                     </p>
                     <ul className="mt-6 space-y-2 pl-4">
@@ -251,7 +252,8 @@ export function ScaleYourOrganization(): ReactElement {
                         >
                           Nx Powerpack
                         </Link>
-                        , and available complimentary to all Enterprise customers.
+                        , and available complimentary to all Enterprise
+                        customers.
                       </i>
                     </p>
                   </dd>
