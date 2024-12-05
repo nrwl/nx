@@ -245,15 +245,14 @@ function getOutputs(
   projectRoot: string,
   workspaceRoot: string
 ): { buildOutputs: string[] } {
-  const { output, dev } = rsbuildConfig;
   const buildOutputPath = normalizeOutputPath(
-    output?.distPath?.root ? dirname(output.distPath.root) : undefined,
+    rsbuildConfig?.output?.distPath?.root
+      ? dirname(rsbuildConfig?.output.distPath.root)
+      : undefined,
     projectRoot,
     workspaceRoot,
     'dist'
   );
-
-  const hasServeConfig = Boolean(dev);
 
   return {
     buildOutputs: [buildOutputPath],
