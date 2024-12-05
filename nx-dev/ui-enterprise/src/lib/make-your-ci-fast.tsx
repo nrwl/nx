@@ -54,7 +54,7 @@ export function MakeYourCiFast(): ReactElement {
                 </h3>
                 <p className="mt-2 max-w-lg text-sm/6">
                   Automatically detect and re-run flaky tasks, enhancing the
-                  reliability of your CI processes and minimize time spent
+                  reliability of your CI processes and minimizing time spent
                   debugging.
                 </p>
               </div>
