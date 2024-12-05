@@ -38,7 +38,9 @@ export interface VitePluginOptions {
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : {};
 }
 
 function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
@@ -208,17 +210,24 @@ async function buildViteTargets(
       options.buildTargetName,
       namedInputs,
       buildOutputs,
-      projectRoot
+      projectRoot,
+      isUsingTsSolutionSetup
     );
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      targets[options.serveTargetName] = serveTarget(projectRoot);
+      targets[options.serveTargetName] = serveTarget(
+        projectRoot,
+        isUsingTsSolutionSetup
+      );
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
         options.buildTargetName
       );
-      targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+      targets[options.serveStaticTargetName] = serveStaticTarget(
+        options,
+        isUsingTsSolutionSetup
+      );
     }
   }
 
@@ -251,6 +260,12 @@ async function buildViteTargets(
         },
       },
     };
+
+    if (isUsingTsSolutionSetup) {
+      targets[options.typecheckTargetName].syncGenerators = [
+        '@nx/js:typescript-sync',
+      ];
+    }
   }
 
   // if file is vitest.config or vite.config has definition for test, create target for test
@@ -272,9 +287,10 @@ async function buildTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  isUsingTsSolutionSetup: boolean
 ) {
-  return {
+  const buildTarget: TargetConfiguration = {
     command: `vite build`,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
@@ -302,9 +318,15 @@ async function buildTarget(
       },
     },
   };
+
+  if (isUsingTsSolutionSetup) {
+    buildTarget.syncGenerators = ['@nx/js:typescript-sync'];
+  }
+
+  return buildTarget;
 }
 
-function serveTarget(projectRoot: string) {
+function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
     command: `vite serve`,
     options: {
@@ -323,6 +345,10 @@ function serveTarget(projectRoot: string) {
       },
     },
   };
+
+  if (isUsingTsSolutionSetup) {
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+  }
 
   return targetConfig;
 }
@@ -388,7 +414,10 @@ async function testTarget(
   };
 }
 
-function serveStaticTarget(options: VitePluginOptions) {
+function serveStaticTarget(
+  options: VitePluginOptions,
+  isUsingTsSolutionSetup: boolean
+) {
   const targetConfig: TargetConfiguration = {
     executor: '@nx/web:file-server',
     options: {
@@ -396,6 +425,10 @@ function serveStaticTarget(options: VitePluginOptions) {
       spa: true,
     },
   };
+
+  if (isUsingTsSolutionSetup) {
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+  }
 
   return targetConfig;
 }

@@ -17,7 +17,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { ensureProjectIsIncludedInPluginRegistrations } from '../..//utils/typescript/plugin';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { getImportPath } from '../../utils/get-import-path';
 import {
   getUpdatedPackageJsonContent,
