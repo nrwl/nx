@@ -63,7 +63,9 @@ function findAllBlocks(source: ts.SourceFile): ts.NodeArray<ts.Node> {
 function isOverride(node: ts.Node): boolean {
   return (
     (ts.isObjectLiteralExpression(node) &&
-      node.properties.some((p) => p.name.getText() === 'files')) ||
+      node.properties.some(
+        (p) => p.name.getText() === 'files' || p.name.getText() === '"files"'
+      )) ||
     // detect ...compat.config(...).map(...)
     (ts.isSpreadElement(node) &&
       ts.isCallExpression(node.expression) &&
