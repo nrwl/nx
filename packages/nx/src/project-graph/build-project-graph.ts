@@ -338,7 +338,7 @@ async function updateProjectGraphWithPlugins(
             ? `${inProgressPlugins.size} plugins`
             : inProgressPlugins.keys()[0]);
       }, 50);
-    }, 300);
+    }, 500).unref();
   }
 
   await Promise.all(
@@ -459,7 +459,7 @@ export async function applyProjectMetadata(
             ? `${inProgressPlugins.size} plugins`
             : inProgressPlugins.keys()[0]);
       }, 50);
-    }, 300);
+    }, 500).unref();
   }
 
   const promises = plugins.map(async (plugin) => {

@@ -348,7 +348,7 @@ export async function createProjectConfigurations(
             ? `${inProgressPlugins.size} plugins`
             : inProgressPlugins.values().next().value);
       }, 50);
-    }, 300);
+    }, 500).unref();
   }
 
   const results: Array<ReturnType<LoadedNxPlugin['createNodes'][1]>> = [];

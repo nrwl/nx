@@ -200,7 +200,7 @@ export class DaemonClient {
       // If the graph takes a while to load, we want to show a spinner.
       timeout = setTimeout(() => {
         spinner = ora('Getting project graph from the Nx Daemon').start();
-      }, 300);
+      }, 500).unref();
     }
     try {
       const response = await this.sendToDaemonViaQueue({
