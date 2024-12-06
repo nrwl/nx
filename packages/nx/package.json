@@ -68,7 +68,7 @@
     "yargs": "^17.6.2",
     "yargs-parser": "21.1.1",
     "node-machine-id": "1.1.12",
-    "ora": "5.3.0"
+    "picospinner": "2.0.0"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.8.0",

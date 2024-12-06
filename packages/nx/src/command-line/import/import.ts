@@ -8,7 +8,7 @@ import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
-import * as createSpinner from 'ora';
+import { Spinner } from 'picospinner';
 import { detectPlugins, installPlugins } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -108,9 +108,10 @@ export async function importHandler(options: ImportOptions) {
   }
 
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
-  const spinner = createSpinner(
+  const spinner = new Spinner(
     `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
-  ).start();
+  );
+  spinner.start();
   try {
     await rm(tempImportDirectory, { recursive: true });
   } catch {}
@@ -200,9 +201,10 @@ export async function importHandler(options: ImportOptions) {
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
   spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
-  spinner.start(
+  spinner.setText(
     `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
   );
+  spinner.start();
   await sourceGitClient.checkout(tempImportBranch, {
     new: true,
     base: `${importRemoteName}/${ref}`,
@@ -254,7 +256,8 @@ export async function importHandler(options: ImportOptions) {
     ref
   );
 
-  spinner.start('Cleaning up temporary files and remotes');
+  spinner.setText('Cleaning up temporary files and remotes');
+  spinner.start();
   await rm(tempImportDirectory, { recursive: true });
   await destinationGitClient.deleteGitRemote(importRemoteName);
   spinner.succeed('Cleaned up temporary files and remotes');

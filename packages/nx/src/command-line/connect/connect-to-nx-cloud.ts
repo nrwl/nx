@@ -19,7 +19,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import chalk = require('chalk');
-import * as ora from 'ora';
+import { Spinner } from 'picospinner';
 import * as open from 'open';
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
@@ -116,9 +116,10 @@ export async function connectToNxCloudCommand(
     options?.generateToken !== true
   );
   try {
-    const cloudConnectSpinner = ora(
+    const cloudConnectSpinner = new Spinner(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
-    ).start();
+    );
+    cloudConnectSpinner.start();
     await sleep(2000);
     await open(connectCloudUrl);
     cloudConnectSpinner.succeed();
