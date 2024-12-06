@@ -30,18 +30,15 @@ function checkDependenciesInstalled(
     '@nx/web': nxVersion,
   };
 
-  if (schema.addPlugin) {
-    let storybookVersionToInstall = storybookVersion;
-    if (
-      storybookMajorVersion() >= 7 &&
-      getInstalledStorybookVersion() &&
-      gte(getInstalledStorybookVersion(), '7.0.0')
-    ) {
-      storybookVersionToInstall = getInstalledStorybookVersion();
-    }
-
-    devDependencies['storybook'] = storybookVersionToInstall;
+  let storybookVersionToInstall = storybookVersion;
+  if (
+    storybookMajorVersion() >= 7 &&
+    getInstalledStorybookVersion() &&
+    gte(getInstalledStorybookVersion(), '7.0.0')
+  ) {
+    storybookVersionToInstall = getInstalledStorybookVersion();
   }
+  devDependencies['storybook'] = storybookVersionToInstall;
 
   return addDependenciesToPackageJson(
     host,
