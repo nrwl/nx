@@ -84,6 +84,47 @@ describe('SCAM Generator', () => {
     `);
   });
 
+  it('should handle path with file extension', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await scamGenerator(tree, {
+      name: 'example',
+      path: 'apps/app1/src/app/example/example.component.ts',
+      inlineScam: true,
+      skipFormat: true,
+    });
+
+    const componentSource = tree.read(
+      'apps/app1/src/app/example/example.component.ts',
+      'utf-8'
+    );
+    expect(componentSource).toMatchInlineSnapshot(`
+      "import { Component, NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Component({
+        selector: 'example',
+        standalone: false,
+        templateUrl: './example.component.html',
+        styleUrl: './example.component.css'
+      })
+      export class ExampleComponent {}
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleComponent],
+        exports: [ExampleComponent],
+      })
+      export class ExampleComponentModule {}
+      "
+    `);
+  });
+
   it('should create the scam correctly and export it for a secondary entrypoint', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

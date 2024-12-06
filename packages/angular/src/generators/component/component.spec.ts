@@ -77,6 +77,35 @@ describe('component Generator', () => {
     ).toContain(`import ExampleComponent from './example.component';`);
   });
 
+  it('should handle path with file extension', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'lib1/src',
+      root: 'lib1',
+    });
+
+    await componentGenerator(tree, {
+      path: 'lib1/src/lib/example/example.component.ts',
+    });
+
+    expect(
+      tree.read('lib1/src/lib/example/example.component.ts', 'utf-8')
+    ).toMatchSnapshot('component');
+    expect(
+      tree.read('lib1/src/lib/example/example.component.html', 'utf-8')
+    ).toMatchSnapshot('template');
+    expect(
+      tree.read('lib1/src/lib/example/example.component.css', 'utf-8')
+    ).toMatchSnapshot('stylesheet');
+    expect(
+      tree.read('lib1/src/lib/example/example.component.spec.ts', 'utf-8')
+    ).toMatchSnapshot('component test file');
+    expect(tree.read('lib1/src/index.ts', 'utf-8')).toMatchSnapshot(
+      'entry point file'
+    );
+  });
+
   it('should not generate test file when --skip-tests=true', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

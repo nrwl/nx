@@ -6,6 +6,16 @@
 Generate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:
 
 ```bash
+nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component.ts
+```
+
+{% /tab %}
+
+{% tab label="Without Providing the File Extension" %}
+
+Generate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:
+
+```bash
 nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component
 ```
 

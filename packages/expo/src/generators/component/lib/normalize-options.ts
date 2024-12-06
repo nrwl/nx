@@ -1,11 +1,16 @@
 import { getProjects, logger, names, Tree } from '@nx/devkit';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type FileExtensionType,
+} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { Schema } from '../schema';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'js'> {
   directory: string;
   projectSourceRoot: string;
   fileName: string;
+  fileExtension: string;
+  fileExtensionType: FileExtensionType;
   className: string;
   filePath: string;
   projectName: string;
@@ -18,19 +23,21 @@ export async function normalizeOptions(
   const {
     artifactName: name,
     fileName,
+    fileExtension,
+    fileExtensionType,
     filePath,
     directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     name: options.name,
     path: options.path,
-    fileExtension: 'tsx',
+    allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
+    fileExtension: options.js ? 'js' : 'tsx',
+    js: options.js,
   });
 
-  const project = getProjects(host).get(projectName);
-
   const { className } = names(name);
-
+  const project = getProjects(host).get(projectName);
   const { sourceRoot: projectSourceRoot, projectType } = project;
 
   if (options.export && projectType === 'application') {
@@ -47,6 +54,8 @@ export async function normalizeOptions(
     directory,
     className,
     fileName,
+    fileExtension,
+    fileExtensionType,
     filePath,
     projectSourceRoot,
     projectName,

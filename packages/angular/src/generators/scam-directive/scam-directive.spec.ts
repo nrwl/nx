@@ -84,6 +84,47 @@ describe('SCAM Directive Generator', () => {
     `);
   });
 
+  it('should handle path with file extension', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await scamDirectiveGenerator(tree, {
+      name: 'example',
+      path: 'apps/app1/src/app/example.directive.ts',
+      inlineScam: true,
+      skipFormat: true,
+    });
+
+    const directiveSource = tree.read(
+      'apps/app1/src/app/example.directive.ts',
+      'utf-8'
+    );
+    expect(directiveSource).toMatchInlineSnapshot(`
+      "import { Directive, NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Directive({
+        selector: '[example]',
+        standalone: false
+      })
+      export class ExampleDirective {
+        constructor() {}
+      }
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleDirective],
+        exports: [ExampleDirective],
+      })
+      export class ExampleDirectiveModule {}
+      "
+    `);
+  });
+
   it('should create the scam directive correctly and export it for a secondary entrypoint', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

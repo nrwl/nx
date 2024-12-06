@@ -55,6 +55,39 @@ describe('component', () => {
     `);
   });
 
+  it('should handle path with file extension', async () => {
+    await componentGenerator(appTree, {
+      path: `${libName}/src/lib/hello/hello.vue`,
+    });
+
+    expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "<script setup lang="ts">
+      // defineProps<{}>()
+      </script>
+
+      <template>
+        <p>Welcome to Hello!</p>
+      </template>
+
+      <style scoped></style>
+      "
+    `);
+    expect(appTree.read(`${libName}/src/lib/hello/hello.spec.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from '@vue/test-utils';
+      import Hello from './hello.vue';
+
+      describe('Hello', () => {
+        it('renders properly', () => {
+          const wrapper = mount(Hello, {});
+          expect(wrapper.text()).toContain('Welcome to Hello');
+        });
+      });
+      "
+    `);
+  });
+
   it('should have correct component name based on directory', async () => {
     await componentGenerator(appTree, {
       path: `${libName}/src/foo/bar/hello-world/hello-world`,

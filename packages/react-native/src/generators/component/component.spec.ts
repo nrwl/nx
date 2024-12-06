@@ -33,6 +33,15 @@ describe('component', () => {
     expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
   });
 
+  it('should handle path with file extension', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      path: `${projectName}/src/lib/hello/hello.tsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+  });
+
   it('should generate files for an app', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',

@@ -7,6 +7,10 @@
   "examples": [
     {
       "description": "Generate a directive with the exported symbol matching the file name. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+      "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo.directive.ts"
+    },
+    {
+      "description": "Generate a directive without providing the file extension. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
       "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo"
     },
     {
@@ -19,7 +23,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the SCAM directive without the file extension and suffix. Relative to the current working directory.",
+      "description": "The file path to the SCAM directive. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

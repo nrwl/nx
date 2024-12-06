@@ -125,3 +125,27 @@ describe('TestDirective', () => {
 });
 "
 `;
+
+exports[`directive generator should handle path with file extension 1`] = `
+"import { Directive } from '@angular/core';
+
+@Directive({
+  selector: '[test]',
+})
+export class TestDirective {
+  constructor() {}
+}
+"
+`;
+
+exports[`directive generator should handle path with file extension 2`] = `
+"import { TestDirective } from './test.directive';
+
+describe('TestDirective', () => {
+  it('should create an instance', () => {
+    const directive = new TestDirective();
+    expect(directive).toBeTruthy();
+  });
+});
+"
+`;

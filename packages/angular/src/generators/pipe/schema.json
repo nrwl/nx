@@ -9,6 +9,10 @@
   "examples": [
     {
       "description": "Generate a pipe with the exported symbol matching the file name. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+      "command": "nx g @nx/angular:pipe mylib/src/lib/foo.pipe.ts"
+    },
+    {
+      "description": "Generate a pipe without providing the file extension. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
       "command": "nx g @nx/angular:pipe mylib/src/lib/foo"
     },
     {
@@ -19,7 +23,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the pipe without the file extension and suffix. Relative to the current working directory.",
+      "description": "The file path to the pipe. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

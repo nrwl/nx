@@ -14,7 +14,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the resource without the file extension and suffix. Relative to the current working directory.",
+      "description": "The file path to the resource. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -32,11 +32,6 @@
       "type": "string",
       "enum": ["jest", "none"],
       "default": "jest"
-    },
-    "language": {
-      "description": "Nest class language.",
-      "type": "string",
-      "enum": ["js", "ts"]
     },
     "type": {
       "type": "string",

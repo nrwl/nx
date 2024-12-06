@@ -11,12 +11,16 @@
     "examples": [
       {
         "description": "Generate the resolver `FooResolver` at `myapp/src/app/foo.resolver.ts`",
+        "command": "nx g @nx/nest:resolver myapp/src/app/foo.resolver.ts"
+      },
+      {
+        "description": "Generate the resolver without providing the file extension. It results in the resolver `FooResolver` at `myapp/src/app/foo.resolver.ts`",
         "command": "nx g @nx/nest:resolver myapp/src/app/foo"
       }
     ],
     "properties": {
       "path": {
-        "description": "The file path to the resolver without the file extension and suffix. Relative to the current working directory.",
+        "description": "The file path to the resolver. Relative to the current working directory.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What is the resolver file path?"

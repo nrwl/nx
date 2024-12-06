@@ -8,12 +8,16 @@
   "examples": [
     {
       "description": "Generate the filter `FooFilter` at `myapp/src/app/foo.filter.ts`",
+      "command": "nx g @nx/nest:filter myapp/src/app/foo.filter.ts"
+    },
+    {
+      "description": "Generate the filter without providing the file extension. It results in the filter `FooFilter` at `myapp/src/app/foo.filter.ts`",
       "command": "nx g @nx/nest:filter myapp/src/app/foo"
     }
   ],
   "properties": {
     "path": {
-      "description": "The file path to the filter without the file extension and suffix. Relative to the current working directory.",
+      "description": "The file path to the filter. Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",

@@ -19,6 +19,8 @@ export async function normalizeOptions(
     name: options.name,
     path: options.path,
     suffix: options.type ?? 'component',
+    allowedFileExtensions: ['ts'],
+    fileExtension: 'ts',
   });
 
   const { className } = names(name);

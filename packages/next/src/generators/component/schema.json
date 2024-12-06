@@ -8,7 +8,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the component without the file extension. Relative to the current working directory.",
+      "description": "The file path to the component. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -75,7 +75,7 @@
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
+      "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
     },
     "skipFormat": {
       "description": "Skip formatting files.",
