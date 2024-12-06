@@ -474,9 +474,10 @@ function mapSnapshots(
       const packageName = key.slice(0, key.indexOf('@', 1));
       let normalizedKey = key;
       if (isBerry && key.includes('@patch:') && key.includes('#')) {
+        const regEx = new RegExp(`@patch:${packageName}@(npm%3A)?(.*)$`);
         normalizedKey = key
           .slice(0, key.indexOf('#'))
-          .replace(`@patch:${packageName}@`, '@npm:');
+          .replace(regEx, '@npm:$2');
       }
       if (
         !existingKeys.get(packageName) ||
