@@ -71,8 +71,16 @@
       "rules": {
         "@nx/workspace/ensure-pnpm-lock-version": [
           "error",
-          { "version": "9.0" }
+          {
+            "version": "9.0"
+          }
         ]
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "@angular-eslint/prefer-standalone": "off"
       }
     }
   ]

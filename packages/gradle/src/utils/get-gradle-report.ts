@@ -21,6 +21,7 @@ export interface GradleReport {
   buildFileToDepsMap: Map<string, string>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
+  gradleProjectToTasksMap: Map<string, Set<String>>;
   gradleProjectToProjectName: Map<string, string>;
   gradleProjectNameToProjectRootMap: Map<string, string>;
   gradleProjectToChildProjects: Map<string, string[]>;
@@ -105,6 +106,7 @@ export function processProjectReports(
    * Map of Gradle Build File to tasks type map
    */
   const gradleProjectToTasksTypeMap = new Map<string, Map<string, string>>();
+  const gradleProjectToTasksMap = new Map<string, Set<String>>();
   const gradleProjectToProjectName = new Map<string, string>();
   const gradleProjectNameToProjectRootMap = new Map<string, string>();
   /**
@@ -159,6 +161,7 @@ export function processProjectReports(
           absBuildFilePath: string,
           absBuildDirPath: string;
         const outputDirMap = new Map<string, string>();
+        const tasks = new Set<string>();
         for (const line of propertyReportLines) {
           if (line.startsWith('name: ')) {
             projectName = line.substring('name: '.length);
@@ -190,6 +193,10 @@ export function processProjectReports(
               `{workspaceRoot}/${relative(workspaceRoot, dirPath)}`
             );
           }
+          if (line.includes(': task ')) {
+            const [task] = line.split(': task ');
+            tasks.add(task);
+          }
         }
 
         if (!projectName || !absBuildFilePath || !absBuildDirPath) {
@@ -217,6 +224,7 @@ export function processProjectReports(
           gradleProject,
           dirname(buildFile)
         );
+        gradleProjectToTasksMap.set(gradleProject, tasks);
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
@@ -267,6 +275,7 @@ export function processProjectReports(
     buildFileToDepsMap,
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
+    gradleProjectToTasksMap,
     gradleProjectToProjectName,
     gradleProjectNameToProjectRootMap,
     gradleProjectToChildProjects,

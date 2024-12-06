@@ -112,7 +112,7 @@ async function buildHost(
 
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
-        logger.info(`NX Built host`);
+        logger.info(`NX Built Consumer (host)`);
         res();
       }
     });
@@ -121,7 +121,7 @@ async function buildHost(
       staticProcess.stdout.removeAllListeners('data');
       staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
-        rej(`Host failed to build. See above for details.`);
+        rej(`Consumer (host) failed to build. See above for details.`);
       } else {
         res();
       }
@@ -213,8 +213,8 @@ export function startProxies(
     process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
   }
-  logger.info(`NX Static remotes proxies started successfully`);
-  logger.info(`NX Starting static host proxy...`);
+  logger.info(`NX Static Producers (remotes) proxies started successfully`);
+  logger.info(`NX Starting static Consumer (host) proxy...`);
   const expressProxy: Express = express();
   expressProxy.use(
     createProxyMiddleware({
@@ -238,7 +238,7 @@ export function startProxies(
     .listen(hostServeOptions.port);
   process.on('SIGTERM', () => proxyServer.close());
   process.on('exit', () => proxyServer.close());
-  logger.info('NX Static host proxy started successfully');
+  logger.info('NX Static Consumer (host) proxy started successfully');
 }
 
 export default async function* moduleFederationStaticServer(

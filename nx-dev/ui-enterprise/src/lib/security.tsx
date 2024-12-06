@@ -1,10 +1,16 @@
+import {
+  GlobeAmericasIcon,
+  ServerStackIcon,
+  ShieldCheckIcon,
+} from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { ReactElement } from 'react';
 
-export function Security(): JSX.Element {
+export function Security(): ReactElement {
   return (
     <section id="nx-enterprise-security" className="relative isolate">
-      <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-2xl flex-col gap-16 bg-white/70 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:flex-row lg:items-center lg:py-20 xl:gap-x-20 xl:px-20 dark:bg-white/5 dark:ring-white/10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-16 lg:flex-row lg:gap-20">
           <div className="max-w-md">
             <SectionHeading as="h2" variant="title">
               Security
@@ -62,35 +68,49 @@ export function Security(): JSX.Element {
             </div>
           </div>
           <div className="w-full flex-auto">
-            <div className="mt-6">
-              <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                Dedicated infrastructure
-              </h4>
-              <p className="mt-2">
-                We can support you to self-host Nx Cloud within your own
-                infrastructure or, depending on your needs, run Nx Cloud on
-                managed hosts within our cloud.
-              </p>
+            <div className="mt-8 flex gap-4">
+              <ServerStackIcon aria-hidden="true" className="size-6 shrink-0" />
+              <div>
+                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                  Dedicated infrastructure
+                </h4>
+                <p className="mt-2">
+                  We can support you to self-host Nx Cloud within your own
+                  infrastructure or, depending on your needs, run Nx Cloud on
+                  managed hosts within our cloud.
+                </p>
+              </div>
             </div>
-            <div className="mt-6">
-              <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                Application security
-              </h4>
-              <p className="mt-2">
-                We consistently review our security policies and collaborate
-                with third parties for penetration testing to promptly identify
-                and mitigate potential risks.
-              </p>
+
+            <div className="mt-8 flex gap-4">
+              <ShieldCheckIcon aria-hidden="true" className="size-6 shrink-0" />
+              <div>
+                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                  Application security
+                </h4>
+                <p className="mt-2">
+                  We consistently review our security policies and collaborate
+                  with third parties for penetration testing to promptly
+                  identify and mitigate potential risks.
+                </p>
+              </div>
             </div>
-            <div className="mt-6">
-              <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                US & EU instances available
-              </h4>
-              <p className="mt-2">
-                We support region specific hosting of Nx Cloud in the event IT
-                security or data protection policies restrict international
-                transfers.
-              </p>
+
+            <div className="mt-8 flex gap-4">
+              <GlobeAmericasIcon
+                aria-hidden="true"
+                className="size-6 shrink-0"
+              />
+              <div>
+                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                  US & EU instances available
+                </h4>
+                <p className="mt-2">
+                  We support region specific hosting of Nx Cloud in the event IT
+                  security or data protection policies restrict international
+                  transfers.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -100,7 +120,7 @@ export function Security(): JSX.Element {
         aria-hidden="true"
       >
         <div
-          className="aspect-[1318/752] w-[82.375rem] flex-none bg-gradient-to-r from-[#80caff] to-[#4f46e5] opacity-25"
+          className="aspect-[1318/752] w-[82.375rem] flex-none bg-gradient-to-r from-[#80caff] to-[#4f46e5] opacity-5"
           style={{
             clipPath:
               'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)',

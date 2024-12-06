@@ -4,6 +4,7 @@ import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-
 
 import { createServer } from 'net';
 import { unlinkSync } from 'fs';
+import { registerPluginTSTranspiler } from '../loader';
 
 if (process.env.NX_PERF_LOGGING === 'true') {
   require('../../../utils/perf-logging');
@@ -35,13 +36,30 @@ const server = createServer((socket) => {
         return;
       }
       return consumeMessage(socket, message, {
-        load: async ({ plugin: pluginConfiguration, root }) => {
+        load: async ({
+          plugin: pluginConfiguration,
+          root,
+          name,
+          pluginPath,
+          shouldRegisterTSTranspiler,
+        }) => {
           if (loadTimeout) clearTimeout(loadTimeout);
           process.chdir(root);
           try {
-            const { loadNxPlugin } = await import('../loader');
-            const [promise] = loadNxPlugin(pluginConfiguration, root);
-            plugin = await promise;
+            const { loadResolvedNxPluginAsync } = await import(
+              '../load-resolved-plugin'
+            );
+
+            // Register the ts-transpiler if we are pointing to a
+            // plain ts file that's not part of a plugin project
+            if (shouldRegisterTSTranspiler) {
+              registerPluginTSTranspiler();
+            }
+            plugin = await loadResolvedNxPluginAsync(
+              pluginConfiguration,
+              pluginPath,
+              name
+            );
             return {
               type: 'load-result',
               payload: {

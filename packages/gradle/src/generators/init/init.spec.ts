@@ -24,6 +24,7 @@ describe('@nx/gradle:init', () => {
             "options": {
               "buildTargetName": "build",
               "classesTargetName": "classes",
+              "includeSubprojectsTasks": false,
               "testTargetName": "test",
             },
             "plugin": "@nx/gradle",
@@ -48,6 +49,7 @@ describe('@nx/gradle:init', () => {
             "options": {
               "buildTargetName": "build",
               "classesTargetName": "classes",
+              "includeSubprojectsTasks": false,
               "testTargetName": "test",
             },
             "plugin": "@nx/gradle",

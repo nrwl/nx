@@ -101,6 +101,17 @@ export function assertNotUsingTsSolutionSetup(
   process.exit(1);
 }
 
+export function findRuntimeTsConfigName(
+  tree: Tree,
+  projectRoot: string
+): string | null {
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
+    return 'tsconfig.app.json';
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
+    return 'tsconfig.lib.json';
+  return null;
+}
+
 export function updateTsconfigFiles(
   tree: Tree,
   projectRoot: string,

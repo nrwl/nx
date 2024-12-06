@@ -37,44 +37,54 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
 }
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let mut c = open_database_connection(db_path)?;
+    match open_database_connection(db_path) {
+        Ok(mut c) => {
+            trace!(
+                "Checking if current existing database is compatible with Nx {}",
+                nx_version
+            );
+            let db_version = c.query_row(
+                "SELECT value FROM metadata WHERE key='NX_VERSION'",
+                [],
+                |row| {
+                    let r: String = row.get(0)?;
+                    Ok(r)
+                },
+            );
+            let c = match db_version {
+                Ok(Some(version)) if version == nx_version => {
+                    trace!("Database is compatible with Nx {}", nx_version);
+                    c
+                }
+                // If there is no metadata, it means that this database is new
+                Err(s) if s.to_string().contains("metadata") => {
+                    configure_database(&c)?;
+                    create_metadata_table(&mut c, &nx_version)?;
+                    c
+                }
+                reason => {
+                    trace!("Incompatible database because: {:?}", reason);
+                    trace!("Disconnecting from existing incompatible database");
+                    c.close()?;
+                    trace!("Removing existing incompatible database");
+                    remove_file(db_path)?;
 
-    trace!(
-        "Checking if current existing database is compatible with Nx {}",
-        nx_version
-    );
-    let db_version = c.query_row(
-        "SELECT value FROM metadata WHERE key='NX_VERSION'",
-        [],
-        |row| {
-            let r: String = row.get(0)?;
-            Ok(r)
-        },
-    );
-    let c = match db_version {
-        Ok(Some(version)) if version == nx_version => {
-            trace!("Database is compatible with Nx {}", nx_version);
-            c
+                    trace!("Initializing a new database");
+                    initialize_db(nx_version, db_path)?
+                }
+            };
+
+            Ok(c)
         }
-        // If there is no metadata, it means that this database is new
-        Err(s) if s.to_string().contains("metadata") => {
-            configure_database(&c)?;
-            create_metadata_table(&mut c, &nx_version)?;
-            c
-        }
-        reason => {
-            trace!("Incompatible database because: {:?}", reason);
-            trace!("Disconnecting from existing incompatible database");
-            c.close()?;
+        Err(reason) => {
+            trace!("Unable to connect to existing database because: {:?}", reason);
             trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 
             trace!("Initializing a new database");
-            initialize_db(nx_version, db_path)?
+            initialize_db(nx_version, db_path)
         }
-    };
-
-    Ok(c)
+    }
 }
 
 fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Result<()> {

@@ -1,4 +1,5 @@
 import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { ReactElement } from 'react';
 
 export interface DownloadCaseStudyProps {
   title: string;
@@ -12,7 +13,7 @@ export function DownloadCaseStudy({
   description,
   buttonHref,
   buttonText = 'Download (pdf)',
-}: DownloadCaseStudyProps): JSX.Element {
+}: DownloadCaseStudyProps): ReactElement {
   return (
     <div className="border border-slate-100 bg-white shadow-lg sm:rounded-lg dark:border-slate-800/60 dark:bg-slate-950">
       <div className="px-4 py-5 sm:p-6">

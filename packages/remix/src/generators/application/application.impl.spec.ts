@@ -316,8 +316,10 @@ describe('Remix Application', () => {
   });
 
   describe('TS solution setup', () => {
-    it('should add project references when using TS solution', async () => {
-      const tree = createTreeWithEmptyWorkspace();
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
@@ -333,7 +335,9 @@ describe('Remix Application', () => {
         files: [],
         references: [],
       });
+    });
 
+    it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
         e2eTestRunner: 'playwright',
@@ -522,6 +526,20 @@ describe('Remix Application', () => {
           ],
         }
       `);
+    });
+
+    it('should generate valid package.json without formatting', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(() =>
+        JSON.parse(tree.read('myapp/package.json', 'utf-8'))
+      ).not.toThrow();
     });
   });
 });

@@ -32,12 +32,12 @@ export async function remixLibraryGeneratorInternal(
   tasks.push(jsInitTask);
 
   const libGenTask = await libraryGenerator(tree, {
-    name: options.projectName,
+    directory: options.directory,
+    name: options.name,
     style: options.style,
     unitTestRunner: options.unitTestRunner,
     tags: options.tags,
     importPath: options.importPath,
-    directory: options.projectRoot,
     skipFormat: true,
     skipTsConfig: false,
     linter: options.linter,

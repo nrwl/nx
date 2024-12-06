@@ -3,7 +3,6 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import type { NxRemixGeneratorSchema } from '../schema';
 
 export interface RemixLibraryOptions extends NxRemixGeneratorSchema {
@@ -31,12 +30,9 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const importPath = options.importPath ?? getImportPath(tree, projectRoot);
-
   return {
     ...options,
     unitTestRunner: options.unitTestRunner ?? 'vitest',
-    importPath,
     projectName,
     projectRoot,
   };
