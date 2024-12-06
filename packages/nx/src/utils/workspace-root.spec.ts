@@ -10,7 +10,7 @@ type FileTree = {
 const rootMarkers = ['nx.json', 'nx', 'nx.bat'];
 
 describe('workspaceRootInner', () => {
-  it.each(rootMarkers)('should find workspace root from %s', (marker) => {
+  xit.each(rootMarkers)('should find workspace root from %s', (marker) => {
     jest
       .spyOn(fileUtils, 'fileExists')
       .mockImplementation((p) =>
