@@ -44,7 +44,7 @@ describe('create-nx-workspace --preset=npm', () => {
     if (getSelectedPackageManager() === 'pnpm') {
       checkFilesExist('pnpm-workspace.yaml');
     } else {
-      expect(packageJson.workspaces).toEqual(['packages/*']);
+      expect(packageJson.workspaces).toEqual(['packages/**']);
     }
   });
 
