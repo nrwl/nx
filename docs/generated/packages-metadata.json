@@ -2866,6 +2866,17 @@
     "source": "/packages/rollup/src"
   },
   {
+    "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "rsbuild",
+    "packageName": "@nx/rsbuild",
+    "root": "/packages/rsbuild",
+    "source": "/packages/rsbuild/src"
+  },
+  {
     "description": "The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.",
     "documents": [
       {

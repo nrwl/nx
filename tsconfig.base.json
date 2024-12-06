@@ -132,6 +132,8 @@
       "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
+      "@nx/rsbuild": ["packages/rsbuild/src"],
+      "@nx/rsbuild/*": ["packages/rsbuild/src/*"],
       "@nx/rspack": ["packages/rspack/src"],
       "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],

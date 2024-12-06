@@ -97,6 +97,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /e2e/webpack/** @nrwl/nx-js-reviewers
 /packages/rspack/** @nrwl/nx-js-reviewers
 /e2e/rspack/** @nrwl/nx-js-reviewers
+/packages/rsbuild/** @nrwl/nx-js-reviewers
 /packages/esbuild/** @nrwl/nx-js-reviewers
 /e2e/esbuild/** @nrwl/nx-js-reviewers
 /packages/rollup/** @nrwl/nx-js-reviewers
