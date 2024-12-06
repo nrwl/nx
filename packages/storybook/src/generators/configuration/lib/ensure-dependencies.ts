@@ -4,7 +4,7 @@ import {
   readJson,
   type Tree,
 } from '@nx/devkit';
-import { gte } from 'semver';
+import { coerce, gte } from 'semver';
 import {
   getInstalledStorybookVersion,
   storybookMajorVersion,
@@ -44,19 +44,21 @@ export function ensureDependencies(
   packageJson.dependencies ??= {};
   packageJson.devDependencies ??= {};
 
-  // Needed for Storybook 7
-  // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
-  if (
-    !packageJson.dependencies['react'] &&
-    !packageJson.devDependencies['react']
-  ) {
-    dependencies['react'] = reactVersion;
-  }
-  if (
-    !packageJson.dependencies['react-dom'] &&
-    !packageJson.devDependencies['react-dom']
-  ) {
-    dependencies['react-dom'] = reactVersion;
+  if (!gte(coerce(storybook7VersionToInstall), '8.0.0')) {
+    // Needed for Storybook 7
+    // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
+    if (
+      !packageJson.dependencies['react'] &&
+      !packageJson.devDependencies['react']
+    ) {
+      dependencies['react'] = reactVersion;
+    }
+    if (
+      !packageJson.dependencies['react-dom'] &&
+      !packageJson.devDependencies['react-dom']
+    ) {
+      dependencies['react-dom'] = reactVersion;
+    }
   }
 
   if (options.uiFramework) {
