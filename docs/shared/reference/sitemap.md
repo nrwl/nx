@@ -685,6 +685,7 @@
       - [init](/nx-api/rollup/generators/init)
       - [configuration](/nx-api/rollup/generators/configuration)
       - [convert-to-inferred](/nx-api/rollup/generators/convert-to-inferred)
+  - [rsbuild](/nx-api/rsbuild)
   - [rspack](/nx-api/rspack)
     - [documents](/nx-api/rspack/documents)
       - [Overview](/nx-api/rspack/documents/overview)

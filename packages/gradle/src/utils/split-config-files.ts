@@ -15,6 +15,8 @@ export const gradleConfigGlob = combineGlobPatterns(
 );
 
 export const gradleConfigAndTestGlob = combineGlobPatterns(
+  ...Array.from(GRADLE_BUILD_FILES),
+  ...Array.from(GRALDEW_FILES),
   ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
   ...Array.from(GRALDEW_FILES).map((file) => `**/${file}`),
   ...GRADLE_TEST_FILES

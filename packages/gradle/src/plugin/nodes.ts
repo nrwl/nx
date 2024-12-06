@@ -31,7 +31,7 @@ import { getGradleExecFile, findGraldewFile } from '../utils/exec-gradle';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
-  build: ['^build', 'classes'],
+  build: ['^build', 'classes', 'test'],
   testClasses: ['classes'],
   test: ['testClasses'],
   classes: ['^classes'],
@@ -43,11 +43,12 @@ interface GradleTask {
 }
 
 export interface GradlePluginOptions {
+  includeSubprojectsTasks?: boolean; // default is false, show all gradle tasks in the project
   ciTargetName?: string;
   testTargetName?: string;
   classesTargetName?: string;
   buildTargetName?: string;
-  [taskTargetName: string]: string | undefined;
+  [taskTargetName: string]: string | undefined | boolean;
 }
 
 function normalizeOptions(options: GradlePluginOptions): GradlePluginOptions {
@@ -58,14 +59,7 @@ function normalizeOptions(options: GradlePluginOptions): GradlePluginOptions {
   return options;
 }
 
-type GradleTargets = Record<
-  string,
-  {
-    name: string;
-    targets: Record<string, TargetConfiguration>;
-    metadata: ProjectConfiguration['metadata'];
-  }
->;
+type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
 
 function readTargetsCache(cachePath: string): GradleTargets {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
@@ -180,6 +174,7 @@ async function createGradleProject(
   try {
     const {
       gradleProjectToTasksTypeMap,
+      gradleProjectToTasksMap,
       gradleFileToOutputDirsMap,
       gradleFileToGradleProjectMap,
       gradleProjectToProjectName,
@@ -193,15 +188,25 @@ async function createGradleProject(
       return;
     }
 
-    const tasksTypeMap = gradleProjectToTasksTypeMap.get(gradleProject) as Map<
-      string,
-      string
-    >;
+    const tasksTypeMap: Map<string, string> = gradleProjectToTasksTypeMap.get(
+      gradleProject
+    ) as Map<string, string>;
+    const tasksSet = gradleProjectToTasksMap.get(gradleProject) as Set<string>;
     let tasks: GradleTask[] = [];
-    for (let [taskName, taskType] of tasksTypeMap.entries()) {
+    tasksSet.forEach((taskName) => {
       tasks.push({
-        type: taskType,
+        type: tasksTypeMap.get(taskName) as string,
         name: taskName,
+      });
+    });
+    if (options.includeSubprojectsTasks) {
+      tasksTypeMap.forEach((taskType, taskName) => {
+        if (!tasksSet.has(taskName)) {
+          tasks.push({
+            type: taskType,
+            name: taskName,
+          });
+        }
       });
     }
 
@@ -219,8 +224,9 @@ async function createGradleProject(
       gradleFilePath,
       testFiles
     );
-    const project = {
+    const project: Partial<ProjectConfiguration> = {
       name: projectName,
+      projectType: 'application',
       targets,
       metadata: {
         targetGroups,
@@ -266,7 +272,7 @@ async function createGradleTargets(
       getTestCiTargets(
         testFiles,
         gradleProject,
-        targetName,
+        targetName as string,
         options.ciTargetName,
         inputsMap['test'],
         outputs,
@@ -281,7 +287,7 @@ async function createGradleTargets(
       task.name
     }`;
 
-    targets[targetName] = {
+    targets[targetName as string] = {
       command: `${getGradleExecFile()} ${taskCommandToRun}`,
       options: {
         cwd: gradlewFileDirectory,
@@ -303,10 +309,12 @@ async function createGradleTargets(
       ...(outputs && outputs.length ? { outputs } : {}),
     };
 
-    if (!targetGroups[task.type]) {
-      targetGroups[task.type] = [];
+    if (task.type) {
+      if (!targetGroups[task.type]) {
+        targetGroups[task.type] = [];
+      }
+      targetGroups[task.type].push(targetName as string);
     }
-    targetGroups[task.type].push(targetName);
   }
   return { targetGroups, targets };
 }

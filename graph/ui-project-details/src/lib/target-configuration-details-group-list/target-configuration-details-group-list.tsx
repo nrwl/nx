@@ -44,8 +44,11 @@ export function TargetConfigurationGroupList({
   if (hasGroups) {
     return (
       <>
-        {Object.entries(targetsGroup.groups).map(
-          ([targetGroupName, targets]) => {
+        {Object.entries(targetsGroup.groups)
+          .sort(([targetGroupName1], [targetGroupName2]) =>
+            targetGroupName1.localeCompare(targetGroupName2)
+          )
+          .map(([targetGroupName, targets]) => {
             return (
               <TargetConfigurationGroupContainer
                 targetGroupName={targetGroupName}
@@ -71,8 +74,7 @@ export function TargetConfigurationGroupList({
                 </ul>
               </TargetConfigurationGroupContainer>
             );
-          }
-        )}
+          })}
         <TargetConfigurationGroupContainer
           targetGroupName="Others"
           targetsNumber={targetsGroup.targets.length}
