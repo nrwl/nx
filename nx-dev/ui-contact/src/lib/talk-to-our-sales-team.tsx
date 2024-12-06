@@ -41,10 +41,10 @@ export function TalkToOurSalesTeam(): ReactElement {
             <figure className="mt-12 border-l border-slate-200 pl-8 dark:border-slate-800">
               <blockquote className="text-base/7">
                 <p>
-                  “The decision to jump to Nx Cloud, was really something we
-                  wanted from the beginning, there's nothing but benefits from
+                  “The decision to jump to Nx Cloud was really something we
+                  wanted from the beginning. There's nothing but benefits from
                   it. Nx means tooling and efficiency around our software
-                  development lifecycle that empowers up to move a lot faster,
+                  development lifecycle that empowers us to move a lot faster,
                   ship code faster and more reliably.”
                 </p>
               </blockquote>
