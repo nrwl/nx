@@ -120,6 +120,7 @@ export async function libraryGeneratorInternal(
       project: options.name,
       compiler: 'swc',
       format: ['cjs', 'esm'],
+      skipFormat: true,
     });
   }
 
