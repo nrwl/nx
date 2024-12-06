@@ -60,7 +60,7 @@ export function ScaleYourOrganization(): ReactElement {
                   <div>
                     <div className="font-semibold">Justin Schwartzenberger</div>
                     <div className="text-slate-500">
-                      Principle Software Engineer, SiriusXM
+                      Principal Software Engineer, SiriusXM
                     </div>
                   </div>
                 </figcaption>
