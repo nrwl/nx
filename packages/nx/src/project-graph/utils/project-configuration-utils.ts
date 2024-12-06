@@ -13,8 +13,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import * as ora from 'ora';
-import type { Ora } from 'ora';
 
 import { LoadedNxPlugin } from '../plugins/internal-api';
 import {
@@ -34,6 +32,7 @@ import {
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -328,27 +327,31 @@ export async function createProjectConfigurations(
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
 
-  let spinner: Ora,
-    timeout: NodeJS.Timeout,
-    spinnerUpdateInterval: NodeJS.Timeout;
+  let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>();
-  if (!isOnDaemon() && process.stdout.isTTY) {
-    timeout = setTimeout(() => {
-      spinner = ora(
-        'Waiting on project information from ' +
-          (inProgressPlugins.size > 1
-            ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.values().next().value)
-      ).start();
 
-      spinnerUpdateInterval = setInterval(() => {
-        spinner.text =
-          'Waiting on project information from ' +
-          (inProgressPlugins.size > 1
-            ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.values().next().value);
-      }, 50);
-    }, 500).unref();
+  function updateSpinner() {
+    if (!spinner) {
+      return;
+    }
+
+    if (inProgressPlugins.size === 1) {
+      return `Creating project graph nodes with ${inProgressPlugins.keys()[0]}`;
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      return [
+        `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
+        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+      ].join('\n');
+    } else {
+      return `Creating project graph nodes with ${inProgressPlugins.size} plugins`;
+    }
+  }
+
+  if (!isOnDaemon() && process.stdout.isTTY) {
+    spinner = new DelayedSpinner(
+      `Creating project graph nodes with ${plugins.length} plugins`,
+      500
+    );
   }
 
   const results: Array<ReturnType<LoadedNxPlugin['createNodes'][1]>> = [];
@@ -419,20 +422,15 @@ export async function createProjectConfigurations(
       })
       .finally(() => {
         inProgressPlugins.delete(pluginName);
+        updateSpinner();
       });
 
     results.push(r);
   }
 
   return Promise.all(results).then((results) => {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
     if (spinner) {
-      spinner.stop();
-    }
-    if (spinnerUpdateInterval) {
-      clearInterval(spinnerUpdateInterval);
+      spinner.cleanup();
     }
 
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =

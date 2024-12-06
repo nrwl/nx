@@ -33,7 +33,6 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import * as ora from 'ora';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
@@ -78,6 +77,7 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { DelayedSpinner } from 'nx/src/utils/delayed-spinner';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -195,12 +195,16 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
-    let spinner: ReturnType<typeof ora>, timeout: NodeJS.Timeout;
+    let spinner: DelayedSpinner;
     if (process.stdout.isTTY) {
       // If the graph takes a while to load, we want to show a spinner.
-      timeout = setTimeout(() => {
-        spinner = ora('Getting project graph from the Nx Daemon').start();
-      }, 500).unref();
+      spinner = new DelayedSpinner(
+        'Calculating the project graph on the Nx Daemon',
+        500
+      ).scheduleMessageUpdate(
+        'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
+        30_000
+      );
     }
     try {
       const response = await this.sendToDaemonViaQueue({
@@ -217,12 +221,7 @@ export class DaemonClient {
         throw e;
       }
     } finally {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      if (spinner) {
-        spinner.stop();
-      }
+      spinner.cleanup();
     }
   }
 
