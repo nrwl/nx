@@ -1,8 +1,6 @@
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import * as ora from 'ora';
-import type { Ora } from 'ora';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { FileData } from './file-utils';
 import {
@@ -46,7 +44,7 @@ import {
   ConfigurationSourceMaps,
   mergeMetadata,
 } from './utils/project-configuration-utils';
-import { isOnDaemon } from '../daemon/is-on-daemon';
+import { DelayedSpinner, SHOULD_SHOW_SPINNERS } from '../utils/delayed-spinner';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -317,28 +315,31 @@ async function updateProjectGraphWithPlugins(
   );
   performance.mark('createDependencies:start');
 
-  let spinner: Ora,
-    timeout: NodeJS.Timeout,
-    spinnerUpdateInterval: NodeJS.Timeout;
+  let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>();
 
-  if (!isOnDaemon() && process.stdout.isTTY) {
-    timeout = setTimeout(() => {
-      spinner = ora(
-        'Waiting on dependency information from ' +
-          (inProgressPlugins.size > 1
-            ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.keys()[0])
-      ).start();
+  function updateSpinner() {
+    if (!spinner) {
+      return;
+    }
+    if (inProgressPlugins.size === 1) {
+      return `Creating project graph dependencies with ${
+        inProgressPlugins.keys()[0]
+      }`;
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      return [
+        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
+        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+      ].join('\n');
+    } else {
+      return `Creating project graph dependencies with ${inProgressPlugins.size} plugins`;
+    }
+  }
 
-      spinnerUpdateInterval = setInterval(() => {
-        spinner.text =
-          'Waiting on dependency information from ' +
-          (inProgressPlugins.size > 1
-            ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.keys()[0]);
-      }, 50);
-    }, 500).unref();
+  if (SHOULD_SHOW_SPINNERS) {
+    spinner = new DelayedSpinner(
+      `Creating project graph dependencies with ${plugins.length} plugins`
+    );
   }
 
   await Promise.all(
@@ -352,6 +353,7 @@ async function updateProjectGraphWithPlugins(
           })
           .finally(() => {
             inProgressPlugins.delete(plugin.name);
+            updateSpinner();
           });
 
         for (const dep of dependencies) {
@@ -384,16 +386,7 @@ async function updateProjectGraphWithPlugins(
     `createDependencies:start`,
     `createDependencies:end`
   );
-
-  if (timeout) {
-    clearTimeout(timeout);
-  }
-  if (spinnerUpdateInterval) {
-    clearInterval(spinnerUpdateInterval);
-  }
-  if (spinner) {
-    spinner.stop();
-  }
+  spinner?.cleanup();
 
   const graphWithDeps = builder.getUpdatedProjectGraph();
 
@@ -438,28 +431,29 @@ export async function applyProjectMetadata(
   const errors: CreateMetadataError[] = [];
 
   performance.mark('createMetadata:start');
-  let timeout: NodeJS.Timeout,
-    spinner: Ora,
-    spinnerUpdateInterval: NodeJS.Timeout;
+  let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>();
 
-  if (!isOnDaemon() && process.stdout.isTTY) {
-    timeout = setTimeout(() => {
-      spinner = ora(
-        'Waiting on project metadata from ' +
-          (inProgressPlugins.size > 1
-            ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.keys()[0])
-      ).start();
+  function updateSpinner() {
+    if (!spinner) {
+      return;
+    }
+    if (inProgressPlugins.size === 1) {
+      return `Creating project metadata with ${inProgressPlugins.keys()[0]}`;
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      return [
+        `Creating project metadata with ${inProgressPlugins.size} plugins`,
+        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+      ].join('\n');
+    } else {
+      return `Creating project metadata with ${inProgressPlugins.size} plugins`;
+    }
+  }
 
-      spinnerUpdateInterval = setInterval(() => {
-        spinner.text =
-          'Waiting on project metadata from ' +
-          (inProgressPlugins.size > 1
-            ? `${inProgressPlugins.size} plugins`
-            : inProgressPlugins.keys()[0]);
-      }, 50);
-    }, 500).unref();
+  if (SHOULD_SHOW_SPINNERS) {
+    spinner = new DelayedSpinner(
+      `Creating project metadata with ${plugins.length} plugins`
+    );
   }
 
   const promises = plugins.map(async (plugin) => {
@@ -473,6 +467,7 @@ export async function applyProjectMetadata(
         errors.push(new CreateMetadataError(e, plugin.name));
       } finally {
         inProgressPlugins.delete(plugin.name);
+        updateSpinner();
         performance.mark(`${plugin.name}:createMetadata - end`);
         performance.measure(
           `${plugin.name}:createMetadata`,
@@ -485,15 +480,7 @@ export async function applyProjectMetadata(
 
   await Promise.all(promises);
 
-  if (timeout) {
-    clearTimeout(timeout);
-  }
-  if (spinnerUpdateInterval) {
-    clearInterval(spinnerUpdateInterval);
-  }
-  if (spinner) {
-    spinner.stop();
-  }
+  spinner?.cleanup();
 
   for (const { metadata: projectsMetadata, pluginName } of results) {
     for (const project in projectsMetadata) {
