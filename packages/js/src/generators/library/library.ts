@@ -297,7 +297,10 @@ async function configureProject(
       projectConfiguration.targets.build.options.format = ['cjs'];
     }
 
-    if (options.bundler === 'swc' && options.skipTypeCheck) {
+    if (
+      options.bundler === 'swc' &&
+      (options.skipTypeCheck || options.isUsingTsSolutionConfig)
+    ) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
 
@@ -783,7 +786,7 @@ async function normalizeOptions(
 
   if (
     (options.bundler === 'swc' || options.bundler === 'rollup') &&
-    options.skipTypeCheck == null
+    (options.skipTypeCheck == null || !isUsingTsSolutionConfig)
   ) {
     options.skipTypeCheck = false;
   }

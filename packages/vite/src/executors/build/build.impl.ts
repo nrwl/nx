@@ -27,6 +27,7 @@ import {
   validateTypes,
 } from '../../utils/executor-utils';
 import { type Plugin } from 'vite';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
@@ -85,8 +86,8 @@ export async function* viteBuildExecutor(
       ...otherOptions,
     }
   );
-
-  if (!options.skipTypeCheck) {
+  // New TS Solution already has a typecheck target
+  if (!options.skipTypeCheck && !isUsingTsSolutionSetup()) {
     await validateTypes({
       workspaceRoot: context.root,
       tsconfig: tsConfigForBuild,
