@@ -248,4 +248,9 @@ export { cacheDir } from './utils/cache-directory';
  */
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
+/**
+ * @category Utils
+ */
+export { findMatchingProjects } from './utils/find-matching-projects';
+
 export { isDaemonEnabled } from './daemon/client/client';
