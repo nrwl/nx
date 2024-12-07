@@ -321,43 +321,31 @@ export async function applicationGeneratorInternal(
   tasks.push(routingTask);
   setDefaults(host, options);
 
-  if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
-    logger.warn(
-      `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
-        'Rspack'
-      )}. We've added ${pc.bold(
-        'babel-loader'
-      )} to your project, but using babel will slow down your build.`
-    );
+  if (options.bundler === 'rspack') {
+    if (options.style === 'styled-jsx') {
+      logger.warn(
+        `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
+          'Rspack'
+        )}. We've added ${pc.bold(
+          'babel-loader'
+        )} to your project, but using babel will slow down your build.`
+      );
 
-    tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        {},
-        { 'babel-loader': babelLoaderVersion }
-      )
-    );
-
-    host.write(
-      joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
-      stripIndents`
-        const { composePlugins, withNx, withReact } = require('@nx/rspack');
-        module.exports = composePlugins(withNx(), withReact(), (config) => {
-          config.module.rules.push({
-            test: /\\.[jt]sx$/i,
-            use: [
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: ['@babel/preset-typescript'],
-                  plugins: ['styled-jsx/babel'],
-                },
-              },
-            ],
-          });
-          return config;
-        });
-        `
+      tasks.push(
+        addDependenciesToPackageJson(
+          host,
+          {},
+          { 'babel-loader': babelLoaderVersion }
+        )
+      );
+    }
+    /**
+     * override the default config
+     */
+    host.delete(joinPathFragments(options.appProjectRoot, 'rspack.config.js'));
+    host.rename(
+      joinPathFragments(options.appProjectRoot, 'tmp-rspack.config.js'),
+      joinPathFragments(options.appProjectRoot, 'rspack.config.js')
     );
   }
 

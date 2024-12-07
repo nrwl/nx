@@ -47,6 +47,18 @@ module.exports = composePlugins(
   (config) => {
     // Update the rspack config as needed here.
     // e.g. `config.plugins.push(new MyPlugin())`
+    <%_ if (style === 'styled-jsx') { _%>config.module.rules.push({
+      test: /\.[jt]sx$/i,
+      use: [
+        {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-typescript'],
+            plugins: ['styled-jsx/babel'],
+          },
+        },
+      ],
+    });<%_ } _%>
     return config;
   }
 );
