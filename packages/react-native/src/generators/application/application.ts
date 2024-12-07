@@ -26,6 +26,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addProjectToTsSolutionWorkspace } from '@nx/react/src/utils/add-app-to-pnpm-workspace';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -142,6 +143,12 @@ export async function reactNativeApplicationGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

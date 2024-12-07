@@ -429,7 +429,7 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
         `packages: 
-  - ${workspaces.join('\n  - ')}
+  ${workspaces.map((workspace) => `- "${workspace}"`).join('\n  ')}
 `
       );
     } else {

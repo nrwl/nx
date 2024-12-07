@@ -48,6 +48,7 @@ import {
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addProjectToTsSolutionWorkspace } from '@nx/react/src/utils/add-app-to-pnpm-workspace';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -373,6 +374,12 @@ export default {...nxPreset};
       : undefined,
     '.'
   );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
