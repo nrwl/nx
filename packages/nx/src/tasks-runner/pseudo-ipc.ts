@@ -18,7 +18,7 @@
  */
 
 import { connect, Server, Socket } from 'net';
-import { consumeMessagesFromSocket } from '../utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../utils/messaging';
 import { Serializable } from 'child_process';
 
 export interface PseudoIPCMessage {

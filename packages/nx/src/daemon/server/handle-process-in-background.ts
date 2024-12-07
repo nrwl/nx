@@ -1,12 +1,11 @@
 import { HandlerResult } from './server';
 import { serverLogger } from './logger';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { HandleProcessInBackgroundMessage } from '../message-types/process-in-background';
 
-export async function handleProcessInBackground(payload: {
-  type: string;
-  requirePath: string;
-  data: any;
-}): Promise<HandlerResult> {
+export async function handleProcessInBackground(
+  payload: HandleProcessInBackgroundMessage
+): Promise<HandlerResult> {
   let fn;
   try {
     fn = require(require.resolve(payload.requirePath, {

@@ -1,7 +1,9 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const GET_REGISTERED_SYNC_GENERATORS =
   'GET_REGISTERED_SYNC_GENERATORS' as const;
 
-export type HandleGetRegisteredSyncGeneratorsMessage = {
+export type HandleGetRegisteredSyncGeneratorsMessage = Message & {
   type: typeof GET_REGISTERED_SYNC_GENERATORS;
 };
 

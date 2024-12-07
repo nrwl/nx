@@ -1,10 +1,11 @@
 import { HandlerResult } from './server';
 import { outputsHashesMatch, recordOutputsHash } from './outputs-tracking';
+import { HandleRecordOutputsHashMessage } from '../message-types/record-outputs-hash';
+import { HandleOutputHashesMatchMessage } from '../message-types/output-hashes-match';
 
-export async function handleRecordOutputsHash(payload: {
-  type: string;
-  data: { outputs: string[]; hash: string };
-}): Promise<HandlerResult> {
+export async function handleRecordOutputsHash(
+  payload: HandleRecordOutputsHashMessage
+): Promise<HandlerResult> {
   try {
     await recordOutputsHash(payload.data.outputs, payload.data.hash);
     return {
@@ -21,10 +22,9 @@ export async function handleRecordOutputsHash(payload: {
   }
 }
 
-export async function handleOutputsHashesMatch(payload: {
-  type: string;
-  data: { outputs: string[]; hash: string };
-}): Promise<HandlerResult> {
+export async function handleOutputsHashesMatch(
+  payload: HandleOutputHashesMatchMessage
+): Promise<HandlerResult> {
   try {
     const res = await outputsHashesMatch(
       payload.data.outputs,
