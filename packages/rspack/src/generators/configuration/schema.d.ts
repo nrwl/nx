@@ -9,4 +9,5 @@ export interface ConfigurationSchema extends InitGeneratorSchema {
   newProject?: boolean;
   buildTarget?: string;
   serveTarget?: string;
+  overwriteConfig?: boolean;
 }
