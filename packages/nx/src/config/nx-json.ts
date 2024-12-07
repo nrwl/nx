@@ -576,6 +576,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   cli?: {
     packageManager?: PackageManager;
+    packageManagerVersion?: string;
 
     defaultProjectName?: string;
   };

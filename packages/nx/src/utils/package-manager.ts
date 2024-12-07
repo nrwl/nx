@@ -213,29 +213,34 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
+  const nxJson = readNxJson();
+  if (nxJson.cli.packageManagerVersion) {
+    return nxJson.cli.packageManagerVersion;
+  }
   let version;
-  try {
-    version = execSync(`${packageManager} --version`, {
-      cwd,
-      encoding: 'utf-8',
-      windowsHide: true,
-    }).trim();
-  } catch {
-    if (existsSync(join(cwd, 'package.json'))) {
-      const packageVersion = readJsonFile<PackageJson>(
-        join(cwd, 'package.json')
-      )?.packageManager;
-      if (packageVersion) {
-        const [packageManagerFromPackageJson, versionFromPackageJson] =
-          packageVersion.split('@');
-        if (
-          packageManagerFromPackageJson === packageManager &&
-          versionFromPackageJson
-        ) {
-          version = versionFromPackageJson;
-        }
+  if (existsSync(join(cwd, 'package.json'))) {
+    const packageVersion = readJsonFile<PackageJson>(
+      join(cwd, 'package.json')
+    )?.packageManager;
+    if (packageVersion) {
+      const [packageManagerFromPackageJson, versionFromPackageJson] =
+        packageVersion.split('@');
+      if (
+        packageManagerFromPackageJson === packageManager &&
+        versionFromPackageJson
+      ) {
+        version = versionFromPackageJson;
       }
     }
+  }
+  if (!version) {
+    try {
+      version = execSync(`${packageManager} --version`, {
+        cwd,
+        encoding: 'utf-8',
+        windowsHide: true,
+      }).trim();
+    } catch {}
   }
   if (!version) {
     throw new Error(`Cannot determine the version of ${packageManager}.`);

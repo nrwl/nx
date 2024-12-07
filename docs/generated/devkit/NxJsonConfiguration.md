@@ -83,10 +83,11 @@ Default generator collection. It is used when no collection is provided.
 
 #### Type declaration
 
-| Name                  | Type                                                      |
-| :-------------------- | :-------------------------------------------------------- |
-| `defaultProjectName?` | `string`                                                  |
-| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
+| Name                     | Type                                                      |
+| :----------------------- | :-------------------------------------------------------- |
+| `defaultProjectName?`    | `string`                                                  |
+| `packageManager?`        | [`PackageManager`](../../devkit/documents/PackageManager) |
+| `packageManagerVersion?` | `string`                                                  |
 
 ---
 

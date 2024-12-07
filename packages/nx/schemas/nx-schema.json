@@ -458,6 +458,10 @@
           "type": "string",
           "description": "The default package manager to use.",
           "enum": ["yarn", "pnpm", "npm", "bun"]
+        },
+        "packageManagerVersion": {
+          "type": "string",
+          "description": "Specific version of package manager in use."
         }
       }
     },
