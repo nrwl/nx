@@ -223,7 +223,7 @@ describe('nx release - private JS packages', () => {
 
     // The private package should have never been published
     expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
-      /npm ERR! code E404/
+      /code E404/
     );
   }, 500000);
 
@@ -311,7 +311,7 @@ describe('nx release - private JS packages', () => {
 
     // The private package should have never been published
     expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
-      /npm ERR! code E404/
+      /code E404/
     );
   }, 500000);
 });
