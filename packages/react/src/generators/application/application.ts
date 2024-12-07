@@ -240,7 +240,7 @@ export async function applicationGeneratorInternal(
       target: 'web',
       newProject: true,
       framework: 'react',
-      overwriteConfig: false
+      overwriteConfig: false,
     });
     tasks.push(rspackTask);
   }
