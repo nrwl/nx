@@ -98,7 +98,9 @@ export function assertNotUsingTsSolutionSetup(
     ],
   });
 
-  process.exit(1);
+  throw new Error(
+    `The ${artifactString} doesn't yet support the existing TypeScript setup. See the error above.`
+  );
 }
 
 export function findRuntimeTsConfigName(
