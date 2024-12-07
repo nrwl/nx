@@ -239,6 +239,13 @@ export function writeRspackConfigFile(
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
+  if (
+    tree.exists(joinPathFragments(project.root, 'rspack.config.js')) &&
+    !options.overwriteConfig
+  ) {
+    return;
+  }
+
   tree.write(
     joinPathFragments(project.root, 'rspack.config.js'),
     createConfig(tree, { ...options, stylePreprocessorOptions })

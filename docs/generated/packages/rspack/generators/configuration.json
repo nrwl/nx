@@ -45,6 +45,11 @@
         "description": "Add a serve target to run a local rspack dev-server",
         "default": false
       },
+      "overwriteConfig": {
+        "type": "boolean",
+        "description": "Whether to overwrite the existing rspack.config.js file",
+        "default": true
+      },
       "style": {
         "type": "string",
         "description": "The style solution to use.",
