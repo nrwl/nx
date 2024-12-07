@@ -159,14 +159,6 @@ export async function applicationGeneratorInternal(
       );
       tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
     }
-  } else if (options.bundler === 'rspack') {
-    const { rspackInitGenerator } = ensurePackage('@nx/rspack', nxVersion);
-    const rspackInitTask = await rspackInitGenerator(host, {
-      ...options,
-      addPlugin: false,
-      skipFormat: true,
-    });
-    tasks.push(rspackInitTask);
   }
 
   if (!options.rootProject) {
@@ -230,6 +222,7 @@ export async function applicationGeneratorInternal(
       false
     );
   } else if (options.bundler === 'rspack') {
+    /* 'rspackInitGenerator' is being called inside 'configurationGenerator' */
     const { configurationGenerator } = ensurePackage('@nx/rspack', nxVersion);
     const rspackTask = await configurationGenerator(host, {
       project: options.projectName,
@@ -247,6 +240,7 @@ export async function applicationGeneratorInternal(
       target: 'web',
       newProject: true,
       framework: 'react',
+      overwriteConfig: false
     });
     tasks.push(rspackTask);
   }
@@ -339,14 +333,6 @@ export async function applicationGeneratorInternal(
         )
       );
     }
-    /**
-     * override the default config
-     */
-    host.delete(joinPathFragments(options.appProjectRoot, 'rspack.config.js'));
-    host.rename(
-      joinPathFragments(options.appProjectRoot, 'tmp-rspack.config.js'),
-      joinPathFragments(options.appProjectRoot, 'rspack.config.js')
-    );
   }
 
   updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.app.json', {
