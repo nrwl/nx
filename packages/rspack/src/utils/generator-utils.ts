@@ -241,7 +241,7 @@ export function writeRspackConfigFile(
 
   if (
     tree.exists(joinPathFragments(project.root, 'rspack.config.js')) &&
-    !options.overwriteConfig
+    options.overwriteConfig === false
   ) {
     return;
   }
