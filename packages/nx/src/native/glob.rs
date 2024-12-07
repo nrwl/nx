@@ -59,6 +59,7 @@ impl NxGlobSetBuilder {
     }
 }
 
+#[derive(Debug)]
 pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,
