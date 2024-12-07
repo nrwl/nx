@@ -116,9 +116,10 @@ export class CopyAssetsHandler {
         const pattern = this.normalizeAssetPattern(ag);
 
         // globbing only supports Unix paths
-        const files = await fg(pattern.replace(/\\/g, '/'), {
+        const files = await globSync(pattern.replace(/\\/g, '/'), {
           cwd: this.rootDir,
           dot: true, // enable hidden files
+          expandDirectories: false,
         });
 
         this.callback(this.filesToEvent(files, ag));
