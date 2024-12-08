@@ -1,7 +1,12 @@
 <% if (flatConfig) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
+import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './my-custom-rule';
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: require('@typescript-eslint/parser'),
+  },
+} as RuleTesterConfig);
 <% } else { %>import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './<%= name %>';
 
