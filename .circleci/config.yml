@@ -93,7 +93,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on="3 linux-medium" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on="1 linux-medium"
       - run:
           command: |
             sudo apt-get update
@@ -107,12 +107,19 @@ jobs:
           command: |
             pids=()
 
+            pnpm nx-cloud record -- nx sync:check
+            pids+=($!)
+
             pnpm nx affected --targets=lint,test,build-base --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
+      - run:
+          name: Sleep
+          command: |
+            sleep 1800
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
