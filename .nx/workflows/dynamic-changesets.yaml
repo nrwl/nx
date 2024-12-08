@@ -1,10 +1,2 @@
 distribute-on:
-  default: auto linux-medium, 1 linux-large
-assignment-rules:
-  - project: nx-dev
-    target: build-base
-    runs-on:
-      - linux-large
-  - target: test
-    runs-on:
-      - linux-medium
+  default: auto linux-medium
