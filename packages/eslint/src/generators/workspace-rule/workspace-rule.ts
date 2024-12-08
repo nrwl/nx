@@ -1,11 +1,14 @@
 import {
+  addDependenciesToPackageJson,
   applyChangesToString,
   ChangeType,
   formatFiles,
   generateFiles,
+  GeneratorCallback,
   joinPathFragments,
   logger,
   readNxJson,
+  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 import { camelize } from '@nx/devkit/src/utils/string-utils';
@@ -13,6 +16,8 @@ import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
+import { useFlatConfig } from '../../utils/flat-config';
+import { eslint9__typescriptESLintVersion } from '../../utils/versions';
 
 export interface LintWorkspaceRuleGeneratorOptions {
   name: string;
@@ -23,17 +28,30 @@ export async function lintWorkspaceRuleGenerator(
   tree: Tree,
   options: LintWorkspaceRuleGeneratorOptions
 ) {
+  const tasks: GeneratorCallback[] = [];
+
+  const flatConfig = useFlatConfig(tree);
+
   const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
-  const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
-    tree,
-    {
+  tasks.push(
+    await lintWorkspaceRulesProjectGenerator(tree, {
       skipFormat: true,
       addPlugin:
         process.env.NX_ADD_PLUGINS !== 'false' &&
         nxJson.useInferencePlugins !== false,
-    }
+    })
   );
+
+  if (flatConfig) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@typescript-eslint/rule-tester': eslint9__typescriptESLintVersion }
+      )
+    );
+  }
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,
@@ -44,6 +62,7 @@ export async function lintWorkspaceRuleGenerator(
   generateFiles(tree, join(__dirname, 'files'), ruleDir, {
     tmpl: '',
     name: options.name,
+    flatConfig,
   });
 
   const nameCamelCase = camelize(options.name);
@@ -119,5 +138,5 @@ export async function lintWorkspaceRuleGenerator(
        }
 `);
 
-  return projectGeneratorCallback;
+  return runTasksInSerial(...tasks);
 }

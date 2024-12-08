@@ -82,6 +82,7 @@ export async function lintWorkspaceRulesProjectGenerator(
       setupFile: 'none',
       compiler: 'tsc',
       skipFormat: true,
+      testEnvironment: 'node',
     })
   );
 
