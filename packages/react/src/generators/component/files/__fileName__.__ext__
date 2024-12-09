@@ -29,8 +29,8 @@ const Styled<%= className %> = styled.div`
 <%_ } _%>
 <%_ if(!isNextPage) { _%>
   <%_ if (classComponent) { _%>
-export class <%= className %> extends Component<{}> {
-  override render() {
+export class <%= className %> extends Component<% if (isTs) { %><{}><% } %> {
+  <% if (isTs) { %>override<% } %> render() {
     return (
       <<%= wrapper %><%- extras %>>
         <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>

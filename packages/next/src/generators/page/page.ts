@@ -80,20 +80,17 @@ async function normalizeOptions(host: Tree, options: Schema) {
     }
   }
 
-  // the helper below expects a path to a file, but the `path` option here
-  // represents a directory, so we artificially add the symbol name to it
-  options.path = joinPathFragments(options.path, pageSymbolName);
-
-  const { project: projectName, fileName } =
+  const { project: projectName, filePath } =
     await determineArtifactNameAndDirectoryOptions(host, {
       name: pageSymbolName,
-      fileName: isAppRouter ? 'page' : 'index',
-      path: options.path,
-      fileExtension: 'tsx',
+      path: joinPathFragments(
+        options.path,
+        isAppRouter ? 'page.tsx' : 'index.tsx'
+      ),
     });
   return {
     ...options,
-    fileName,
+    path: filePath,
     projectName,
   };
 }
