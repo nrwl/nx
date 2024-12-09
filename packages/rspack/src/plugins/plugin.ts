@@ -135,7 +135,7 @@ async function createRspackTargets(
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const rspackConfig = resolveUserDefinedRspackConfig(
+  const rspackConfig = await resolveUserDefinedRspackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
