@@ -105,7 +105,7 @@ jobs:
           name: Run Checks/Lint/Test
           no_output_timeout: 60m
           command: |
-            pnpm nx affected --targets=lint,test --base=$NX_BASE --head=$NX_HEAD --parallel=3
+            pnpm nx run-many --targets=lint,test --projects=nx-dev --base=$NX_BASE --head=$NX_HEAD --parallel=3
       - run:
           name: build-base
           command: |
