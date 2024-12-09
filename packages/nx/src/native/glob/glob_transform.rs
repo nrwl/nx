@@ -1,9 +1,9 @@
+use super::contains_glob_pattern;
 use crate::native::glob::glob_group::GlobGroup;
 use crate::native::glob::glob_parser::parse_glob;
+use itertools::Either::{Left, Right};
 use itertools::Itertools;
 use std::collections::HashSet;
-use itertools::Either::{Left, Right};
-use super::contains_glob_pattern;
 
 #[derive(Debug)]
 enum GlobType {
@@ -120,15 +120,13 @@ pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
     let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
         .into_iter()
         .filter(|group| !group.is_empty())
-        .partition_map(|group| {
-            match &group[0] {
-                GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
-                    Left(value.to_string())
-                }
-                _ => {
-                    has_patterns = true;
-                    Right(group)
-                }
+        .partition_map(|group| match &group[0] {
+            GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
+                Left(value.to_string())
+            }
+            _ => {
+                has_patterns = true;
+                Right(group)
             }
         });
 
@@ -161,26 +159,26 @@ mod test {
         let no_dirs = convert_glob("dist/**/!(README|LICENSE).(js|ts)").unwrap();
         assert_eq!(
             no_dirs,
-            ["!dist/**/{README,LICENSE}.{js,ts}", "dist/**/*.{js,ts}",]
+            ["!dist/**/{README,LICENSE}.{js,ts}", "dist/**/*.{js,ts}", ]
         );
     }
 
     #[test]
     fn convert_globs_no_files() {
         let no_files = convert_glob("dist/!(cache|cache2)/**/*.(js|ts)").unwrap();
-        assert_eq!(no_files, ["!dist/{cache,cache2}/", "dist/*/**/*.{js,ts}",]);
+        assert_eq!(no_files, ["!dist/{cache,cache2}/", "dist/*/**/*.{js,ts}", ]);
     }
 
     #[test]
     fn convert_globs_no_extensions() {
         let no_extensions = convert_glob("dist/!(cache|cache2)/**/*.js").unwrap();
-        assert_eq!(no_extensions, ["!dist/{cache,cache2}/", "dist/*/**/*.js",]);
+        assert_eq!(no_extensions, ["!dist/{cache,cache2}/", "dist/*/**/*.js", ]);
     }
 
     #[test]
     fn convert_globs_no_patterns() {
         let no_patterns = convert_glob("dist/**/*.js").unwrap();
-        assert_eq!(no_patterns, ["dist/**/*.js",]);
+        assert_eq!(no_patterns, ["dist/**/*.js", ]);
     }
 
     #[test]
@@ -267,9 +265,10 @@ mod test {
 
     #[test]
     fn should_partition_glob_with_leading_dirs() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
+        let (leading_dirs, globs) =
+            super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}",]);
+        assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}", ]);
     }
 
     #[test]

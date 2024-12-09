@@ -3,7 +3,6 @@ use crate::native::workspace::types::NxWorkspaceFilesExternals;
 use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
-pub mod config_files;
 pub mod context;
 mod errors;
 mod files_archive;
