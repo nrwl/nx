@@ -617,6 +617,7 @@ export class DaemonClient {
         await this.startInBackground();
       }
       this.setUpConnection();
+      socket ??= this.socketMessenger;
       this._daemonStatus = DaemonStatus.CONNECTED;
       this._daemonReady();
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {

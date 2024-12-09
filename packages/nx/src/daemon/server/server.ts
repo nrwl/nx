@@ -407,7 +407,7 @@ export async function handleResult(
   }
   const endMark = new Date();
   serverLogger.log(
-    `Handled ${type}. Handling time: ${
+    `Handled ${type}${tx ? ` (${tx})` : ''}. Handling time: ${
       doneHandlingMark.getTime() - startMark.getTime()
     }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
   );
