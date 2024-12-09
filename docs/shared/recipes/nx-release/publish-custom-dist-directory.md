@@ -54,7 +54,7 @@ and the dist package.json file, which will actually be published in the publish 
 }
 ```
 
-Note that the version number is not present in the source package.json file. This is because the source package.json file is never updated in the versioning process; its data is instead written to the dist package.json file. To ensure the correct version number is used in the dist package.json file, `"release.version.generatorOptions.currentVersionResolver"` should be set to something other than the default value of `"disk"`. To pick the current version from git tags, set it to `"git-tag"`. To look up the current version from the remote registry, set it to `"registry"`.
+Note that the version number is not present in the source package.json file. This is because the source package.json file is never updated in the versioning process; its data is instead written to the dist package.json file. To ensure the correct version number is used in the dist package.json file, `release.version.generatorOptions.currentVersionResolver` should be set to something other than the default value of `"disk"`. To pick the current version from git tags, set it to `"git-tag"`. To look up the current version from the remote registry, set it to `"registry"`.
 
 Configure this behavior by adding the following configuration to the `nx.json` file, or the `project.json` file of relevant projects:
 

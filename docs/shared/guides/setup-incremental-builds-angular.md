@@ -192,7 +192,7 @@ serve" target executor to `@nx/angular:dev-server` as shown below.
 ### Add Executor to Target Defaults
 
 If you'd like to avoid adding `"dependsOn": ["^build"]` to every application in your workspace that uses one of the
-required executors you can add it to the `"targetDefaults"` section of the `nx.json`:
+required executors you can add it to the `targetDefaults` section of the `nx.json`:
 
 {% tabs %}
 {% tab label="@nx/angular:application" %}
