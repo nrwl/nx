@@ -56,7 +56,7 @@ function normalizeOptions(
 
   const outputPath = join(root, options.outputPath);
 
-  if (options.skipTypeCheck == null) {
+  if (options.skipTypeCheck == null && !isTsSolutionSetup) {
     options.skipTypeCheck = false;
   }
 

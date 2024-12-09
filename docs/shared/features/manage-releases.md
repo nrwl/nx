@@ -43,7 +43,7 @@ If you are working with a brand new workspace, or one that has never been releas
 
 The `nx release` command is highly customizable. You can customize the versioning, changelog, and publishing phases of the release process independently through a mixture of configuration and CLI arguments.
 
-The configuration lives in your `nx.json` file under the `"release"` section.
+The configuration lives in your `nx.json` file under the `release` section.
 
 ```jsonc {% fileName="nx.json" %}
 {

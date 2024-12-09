@@ -25,7 +25,9 @@ async function normalizeModuleOptions(
   tree: Tree,
   options: ModuleGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOption = await normalizeOptions(tree, options);
+  const normalizedOption = await normalizeOptions(tree, options, {
+    suffix: 'module',
+  });
   return {
     ...normalizedOption,
     language: options.language,

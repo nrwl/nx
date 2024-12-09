@@ -154,3 +154,29 @@ describe('TestPipe', () => {
 });
 "
 `;
+
+exports[`pipe generator should handle path with file extension 1`] = `
+"import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'test',
+})
+export class TestPipe implements PipeTransform {
+  transform(value: unknown, ...args: unknown[]): unknown {
+    return null;
+  }
+}
+"
+`;
+
+exports[`pipe generator should handle path with file extension 2`] = `
+"import { TestPipe } from './test.pipe';
+
+describe('TestPipe', () => {
+  it('create an instance', () => {
+    const pipe = new TestPipe();
+    expect(pipe).toBeTruthy();
+  });
+});
+"
+`;
