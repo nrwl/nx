@@ -144,7 +144,7 @@ In the `options` you will see `"compodoc": false`. Change that to `true`.
 
 Storybook has [preconfigured `compodoc`](https://github.com/storybookjs/storybook/blob/next/code/frameworks/angular/src/builders/utils/run-compodoc.ts#L25) to generate a `documentation.json` file at the root of your workspace by default. We want to change that, and keep the documentation file project-specific. Of course, you can change that later, or as you see fit for your use case. But let's keep it project-specific for now.
 
-In your project's `project.json` file (eg. `apps/my-app/project.json`), find the `storybook` and the `build-storybook` targets. Below the `"compodoc"` option, create a new option called `"compodocArgs` which contains the following: `["-e", "json", "-d", "apps/my-app"]`. This means that the `exportFormat` (`-e`) will be `json` and the `output` directory (`-d`) will be `apps/my-app` (change that, of course, to the directory of your project).
+In your project's `project.json` file (eg. `apps/my-app/project.json`), find the `storybook` and the `build-storybook` targets. Below the `compodoc` option, create a new option called `"compodocArgs` which contains the following: `["-e", "json", "-d", "apps/my-app"]`. This means that the `exportFormat` (`-e`) will be `json` and the `output` directory (`-d`) will be `apps/my-app` (change that, of course, to the directory of your project).
 
 Let's see the result for our `my-app` app `storybook` target, for example (in `apps/my-app/project.json`):
 
