@@ -1,11 +1,12 @@
 import { randomUUID } from 'crypto';
 import { Socket } from 'net';
 import { performance } from 'perf_hooks';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../../utils/messaging';
 
 export interface Message extends Record<string, any> {
   type: string;
   data?: any;
+  tx?: string;
 }
 
 export class DaemonSocketMessenger {

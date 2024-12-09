@@ -1,6 +1,8 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const GLOB = 'GLOB' as const;
 
-export type HandleGlobMessage = {
+export type HandleGlobMessage = Message & {
   type: typeof GLOB;
   globs: string[];
   exclude?: string[];
