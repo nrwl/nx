@@ -51,8 +51,11 @@ export function isWorkspacesEnabled(
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json
-  const packageJson = readJson<PackageJson>(tree, 'package.json');
-  return !!packageJson?.workspaces;
+  if (tree.exists('package.json')) {
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    return !!packageJson?.workspaces;
+  }
+  return false;
 }
 
 export function getProjectPackageManagerWorkspaceStateWarningTask(
