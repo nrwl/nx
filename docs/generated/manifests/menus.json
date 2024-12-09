@@ -9886,6 +9886,14 @@
         "disableCollapsible": false
       },
       {
+        "id": "rsbuild",
+        "path": "/nx-api/rsbuild",
+        "name": "rsbuild",
+        "children": [],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "rspack",
         "path": "/nx-api/rspack",
         "name": "rspack",

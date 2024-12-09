@@ -162,7 +162,7 @@ describe('component', () => {
 
       const indexContent = appTree.read('my-lib/src/index.ts', 'utf-8');
 
-      expect(indexContent).not.toMatch(/lib\/hello/);
+      expect(indexContent).toMatch(/lib\/hello/);
     });
   });
 

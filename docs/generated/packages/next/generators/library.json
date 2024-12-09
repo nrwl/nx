@@ -56,17 +56,29 @@
           ]
         }
       },
+      "bundler": {
+        "type": "string",
+        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+        "enum": ["none", "vite", "rollup"],
+        "default": "none",
+        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
+        "x-priority": "important"
+      },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
-        "default": "eslint"
+        "enum": ["eslint", "none"],
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
       },
       "unitTestRunner": {
         "type": "string",
         "enum": ["vitest", "jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "vitest"
+        "default": "none",
+        "x-prompt": "What unit test runner should be used?",
+        "x-priority": "important"
       },
       "tags": {
         "type": "string",
@@ -99,7 +111,8 @@
       "buildable": {
         "type": "boolean",
         "default": false,
-        "description": "Generate a buildable library."
+        "description": "Generate a buildable library that uses rollup to bundle.",
+        "x-deprecated": "Use the `bundler` option for greater control (none, vite, rollup)."
       },
       "importPath": {
         "type": "string",

@@ -222,6 +222,8 @@ export function runCreateWorkspace(
     docker,
     nextAppDir,
     nextSrcDir,
+    linter = 'eslint',
+    formatter = 'prettier',
     e2eTestRunner,
     ssr,
     framework,
@@ -241,7 +243,9 @@ export function runCreateWorkspace(
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
+    linter?: 'none' | 'eslint';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+    formatter?: 'prettier' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
@@ -289,6 +293,14 @@ export function runCreateWorkspace(
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (linter) {
+    command += ` --linter=${linter}`;
+  }
+
+  if (formatter) {
+    command += ` --formatter=${formatter}`;
   }
 
   if (e2eTestRunner) {
@@ -360,7 +372,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip`;
+  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip --no-interactive`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;

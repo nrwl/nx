@@ -108,7 +108,7 @@
         "type": "executor"
       },
       "/nx-api/angular/executors/application": {
-        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.",
         "file": "generated/packages/angular/executors/application.json",
         "hidden": false,
         "name": "application",
@@ -200,7 +200,7 @@
         "type": "generator"
       },
       "/nx-api/angular/generators/convert-to-application-executor": {
-        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder.",
         "file": "generated/packages/angular/generators/convert-to-application-executor.json",
         "hidden": false,
         "name": "convert-to-application-executor",
@@ -2890,6 +2890,18 @@
       }
     },
     "path": "/nx-api/rollup"
+  },
+  "rsbuild": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "rsbuild",
+    "packageName": "@nx/rsbuild",
+    "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
+    "documents": {},
+    "root": "/packages/rsbuild",
+    "source": "/packages/rsbuild/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/rsbuild"
   },
   "rspack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

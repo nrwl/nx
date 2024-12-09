@@ -168,7 +168,6 @@ export async function createTestAppLib(
   });
 
   await componentGenerator(appTree, {
-    name: 'my-component',
     path: `${libName}/src/app/my-component/my-component`,
   });
 

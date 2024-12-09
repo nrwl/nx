@@ -51,7 +51,11 @@ export async function vitestGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const { root, projectType: _projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  const projectType = schema.projectType ?? _projectType;
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
@@ -279,7 +283,9 @@ function createFiles(
     extendedConfig: isTsSolutionSetup
       ? `${rootOffset}tsconfig.base.json`
       : './tsconfig.json',
-    outDir: isTsSolutionSetup ? `./out-tsc/jest` : `${rootOffset}dist/out-tsc`,
+    outDir: isTsSolutionSetup
+      ? `./out-tsc/vitest`
+      : `${rootOffset}dist/out-tsc`,
   });
 }
 

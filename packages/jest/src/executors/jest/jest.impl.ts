@@ -21,6 +21,10 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
+  // We want to support of ESM via 'module':'nodenext', we need to override the resolution until Jest supports it.
+  process.env.TS_NODE_COMPILER_OPTIONS ??= '{"moduleResolution":"node10"}';
+
   const config = await jestConfigParser(options, context);
 
   const { results } = await runCLI(config, [options.jestConfig]);

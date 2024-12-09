@@ -8,7 +8,6 @@ import {
   createProjectGraphAsync,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nextVersion, nxVersion } from '../../utils/versions';
@@ -46,8 +45,6 @@ export async function nextInitGeneratorInternal(
   host: Tree,
   schema: InitSchema
 ) {
-  assertNotUsingTsSolutionSetup(host, 'next', 'init');
-
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

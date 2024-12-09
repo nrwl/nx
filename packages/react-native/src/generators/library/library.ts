@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -13,6 +14,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import {
@@ -32,7 +34,11 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -48,7 +54,13 @@ export async function reactNativeLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'library');
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -57,13 +69,6 @@ export async function reactNativeLibraryGeneratorInternal(
     );
   }
 
-  const tasks: GeneratorCallback[] = [];
-
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
@@ -111,9 +116,27 @@ export async function reactNativeLibraryGeneratorInternal(
       ),
     ]);
   }
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host));
   }
 
   tasks.push(() => {
@@ -135,7 +158,27 @@ async function addProject(
     targets: {},
   };
 
-  addProjectConfiguration(host, options.name, project);
+  if (options.isUsingTsSolutionConfig) {
+    const sourceEntry = !options.buildable
+      ? options.js
+        ? './src/index.js'
+        : './src/index.ts'
+      : undefined;
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: getImportPath(host, options.name),
+      version: '0.0.1',
+      main: sourceEntry,
+      types: sourceEntry,
+      nx: {
+        name: options.name,
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        projectType: 'library',
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.name, project);
+  }
 
   if (!options.publishable && !options.buildable) {
     return () => {};

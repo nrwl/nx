@@ -12,6 +12,7 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -54,10 +55,17 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
       `rspack-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            isTsSolutionSetup
+          ),
         configFilePaths,
         options,
         context
@@ -72,7 +80,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, RspackTargets>
+  targetsCache: Record<string, RspackTargets>,
+  isTsSolutionSetup: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -100,7 +109,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     normalizedOptions,
-    context
+    context,
+    isTsSolutionSetup
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -120,7 +130,8 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  isTsSolutionSetup: boolean
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -186,6 +197,21 @@ async function createRspackTargets(
       spa: true,
     },
   };
+
+  if (isTsSolutionSetup) {
+    targets[options.buildTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.serveTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.previewTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.serveStaticTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+  }
 
   return { targets, metadata: {} };
 }

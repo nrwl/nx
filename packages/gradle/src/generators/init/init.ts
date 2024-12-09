@@ -52,6 +52,7 @@ function addPlugin(tree: Tree) {
         testTargetName: 'test',
         classesTargetName: 'classes',
         buildTargetName: 'build',
+        includeSubprojectsTasks: false,
       },
     });
     updateNxJson(tree, nxJson);
