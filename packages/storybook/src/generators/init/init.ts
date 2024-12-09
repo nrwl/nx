@@ -10,9 +10,9 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { gte } from 'semver';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import {
   getInstalledStorybookVersion,
   storybookMajorVersion,
@@ -99,11 +99,11 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       await createProjectGraphAsync(),
       '@nx/storybook/plugin',
-      createNodes,
+      createNodesV2,
       {
         serveStorybookTargetName: [
           'storybook',
