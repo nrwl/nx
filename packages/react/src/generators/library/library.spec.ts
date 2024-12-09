@@ -967,7 +967,7 @@ module.exports = withNx(
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -1129,6 +1129,7 @@ module.exports = withNx(
             "sourceRoot": "mylib/src",
           },
           "types": "./src/index.ts",
+          "version": "0.0.1",
         }
       `);
       expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
@@ -1141,6 +1142,7 @@ module.exports = withNx(
             "sourceRoot": "myjslib/src",
           },
           "types": "./src/index.js",
+          "version": "0.0.1",
         }
       `);
     });

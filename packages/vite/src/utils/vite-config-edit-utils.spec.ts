@@ -66,7 +66,7 @@ describe('ensureViteConfigIsCorrect', () => {
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -126,7 +126,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
             build: {
           'my': 'option',
-          'lib': {"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es","cjs"]},
+          'lib': {"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es"]},
           'rollupOptions': {"external":["react","react-dom","react/jsx-runtime"]},
         }
 
@@ -176,7 +176,7 @@ describe('ensureViteConfigIsCorrect', () => {
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -254,7 +254,7 @@ describe('ensureViteConfigIsCorrect', () => {
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -326,7 +326,7 @@ describe('ensureViteConfigIsCorrect', () => {
                 fileName: 'index',
                 // Change this to the formats you want to support.
                 // Don't forget to update your package.json as well.
-                formats: ['es', 'cjs'],
+                formats: ['es'],
               },
               rollupOptions: {
                 // External packages that should not be bundled into your library.
@@ -379,7 +379,7 @@ describe('ensureViteConfigIsCorrect', () => {
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -433,7 +433,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
             build: {
           'my': 'option',
-          'lib': {"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es","cjs"]},
+          'lib': {"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es"]},
           'rollupOptions': {"external":["react","react-dom","react/jsx-runtime"]},
         }
 
