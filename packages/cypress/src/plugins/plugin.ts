@@ -326,6 +326,11 @@ async function buildCypressTargets(
       metadata = { targetGroups: { [groupName]: [] } };
       const ciTargetGroup = metadata.targetGroups[groupName];
 
+      const rootTargetOptions = readAtomizerRootTargetOptions(
+        join(context.workspaceRoot, projectRoot),
+        options.ciTargetName
+      );
+
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
@@ -344,6 +349,7 @@ async function buildCypressTargets(
             ciBaseUrl
           )}`,
           options: {
+            ...rootTargetOptions,
             cwd: projectRoot,
           },
           parallelism: false,
@@ -448,4 +454,30 @@ function getInputs(
       externalDependencies: ['cypress'],
     },
   ];
+}
+
+function readAtomizerRootTargetOptions(
+  projectRoot: string,
+  ciTargetName: string
+) {
+  const projectJsonPath = join(projectRoot, 'project.json');
+  console.log('projectJsonPath', projectJsonPath);
+  if (existsSync(projectJsonPath)) {
+    const projectJson = readJsonFile(projectJsonPath);
+    const projectJsonTargetOptions =
+      projectJson?.targets?.[ciTargetName]?.options;
+    if (projectJsonTargetOptions) {
+      return projectJsonTargetOptions;
+    }
+  }
+
+  const packageJsonPath = join(projectRoot, 'package.json');
+  if (existsSync(packageJsonPath)) {
+    const packageJson = readJsonFile(packageJsonPath);
+    const packageJsonTargetOptions =
+      packageJson?.nx?.targets?.[ciTargetName]?.options;
+    if (packageJsonTargetOptions) {
+      return packageJsonTargetOptions;
+    }
+  }
 }
