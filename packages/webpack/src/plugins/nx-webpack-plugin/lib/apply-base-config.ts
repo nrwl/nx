@@ -19,6 +19,7 @@ import { createLoaderFromCompiler } from './compiler-loaders';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -232,7 +233,8 @@ function applyNxDependentConfig(
 
   plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
 
-  if (!options?.skipTypeChecking) {
+  // New TS Solution already has a typecheck target
+  if (!options?.skipTypeChecking && !isUsingTsSolutionSetup()) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
