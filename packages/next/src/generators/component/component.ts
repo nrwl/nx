@@ -1,16 +1,14 @@
 import {
   formatFiles,
-  getProjects,
   joinPathFragments,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import type { SupportedStyles } from '@nx/react';
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
-
 import { addStyleDependencies } from '../../utils/styles';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 interface Schema {
   path: string;
@@ -24,19 +22,15 @@ interface Schema {
  * extra dependencies for css, sass, less style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
-  const {
-    artifactName: name,
-    directory,
-    project: projectName,
-  } = await determineArtifactNameAndDirectoryOptions(host, {
-    name: options.name,
-    path: options.path,
-    fileExtension: 'tsx',
-  });
+  // we only need to provide the path to get the project, we let the react
+  // generator handle the rest
+  const { project: projectName } =
+    await determineArtifactNameAndDirectoryOptions(host, {
+      path: options.path,
+    });
 
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
-    name,
     classComponent: false,
     routing: false,
     skipFormat: true,

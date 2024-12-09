@@ -1,4 +1,4 @@
-import { fetch<%= className %>, <%= propertyName %>Adapter, <%= propertyName %>Reducer } from './<%= fileName %>.slice';
+import { fetch<%= className %>, <%= propertyName %>Adapter, <%= propertyName %>Reducer } from './<%= fileName %>';
 
 describe('<%= propertyName %> reducer', () => {
   it('should handle initial state', () => {

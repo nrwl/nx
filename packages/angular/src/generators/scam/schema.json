@@ -7,6 +7,10 @@
   "examples": [
     {
       "description": "Generate a component with the exported symbol matching the file name. It results in the component `FooComponent` at `mylib/src/lib/foo.component.ts`",
+      "command": "nx g @nx/angular:scam mylib/src/lib/foo.component.ts"
+    },
+    {
+      "description": "Generate a component without providing the file extension. It results in the component `FooComponent` at `mylib/src/lib/foo.component.ts`",
       "command": "nx g @nx/angular:scam mylib/src/lib/foo"
     },
     {
@@ -19,7 +23,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the SCAM without the file extension and suffix. Relative to the current working directory.",
+      "description": "The file path to the SCAM. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

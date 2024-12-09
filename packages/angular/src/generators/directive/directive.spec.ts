@@ -35,6 +35,20 @@ describe('directive generator', () => {
     ).toMatchSnapshot();
   });
 
+  it('should handle path with file extension', async () => {
+    await generateDirectiveWithDefaultOptions(tree, {
+      path: 'test/src/app/test.directive.ts',
+      skipFormat: false,
+    });
+
+    expect(
+      tree.read('test/src/app/test.directive.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
   it('should not import the directive into an existing module', async () => {
     // ARRANGE
     addModule(tree);

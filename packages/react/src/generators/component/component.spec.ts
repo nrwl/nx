@@ -57,6 +57,26 @@ describe('component', () => {
     );
   });
 
+  it('should handle path with file extension', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      path: `${projectName}/src/lib/hello/hello.tsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('my-lib/src/lib/hello/hello.module.css')
+    ).toBeTruthy();
+    expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
+      /import styles from '.\/hello.module.css'/
+    );
+    expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
+      /<div className={styles\['container']}>/
+    );
+  });
+
   it('should generate files with global CSS', async () => {
     await componentGenerator(appTree, {
       name: 'hello',
