@@ -246,6 +246,6 @@
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
-  "bust": 4,
+  "bust": 5,
   "defaultBase": "master"
 }

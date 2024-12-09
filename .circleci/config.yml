@@ -102,24 +102,14 @@ jobs:
       - run-pnpm-install:
           os: linux
       - run:
-          name: Run Checks/Lint/Test/Build
+          name: Run Checks/Lint/Test
           no_output_timeout: 60m
           command: |
-            pids=()
-
-            pnpm nx-cloud record -- nx sync:check
-            pids+=($!)
-
-            pnpm nx affected --targets=lint,test,build-base --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+            pnpm nx affected --targets=lint,test --base=$NX_BASE --head=$NX_HEAD --parallel=3
       - run:
-          name: Sleep
+          name: build-base
           command: |
-            sleep 1800
+            NODE_OPTIONS=--inspect pnpm nx run-many --targets=build-base --projects=nx-dev --base=$NX_BASE --head=$NX_HEAD --parallel=3
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
