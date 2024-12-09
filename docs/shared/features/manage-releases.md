@@ -20,7 +20,7 @@ nx release --dry-run
 A release can be thought about in three main phases:
 
 1. **Versioning** - The process of determining the next version of your projects, and updating any projects that depend on them to use the new version.
-2. **Changelog** - The process of deriving a changelog from your commit messages, which can be used to communicate the changes to your users.
+2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/recipes/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
 3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries.
 
 ## Running releases

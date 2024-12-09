@@ -383,6 +383,9 @@ const recipesUrls = {
   '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
   '/recipes/nx-console/console-add-dependency-command':
     '/getting-started/editor-setup',
+  // This one was folded into a more holistic recipe around managing version reference updates
+  '/recipes/nx-release/publish-custom-dist-directory':
+    '/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files',
 };
 
 /**
