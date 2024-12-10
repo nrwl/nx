@@ -1223,6 +1223,7 @@ module.exports = withNx(
           },
           "type": "module",
           "types": "./dist/index.esm.d.ts",
+          "version": "0.0.1",
         }
       `);
     });
