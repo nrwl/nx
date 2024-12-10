@@ -151,7 +151,7 @@ export async function applicationGeneratorInternal(
 
   // Handle tsconfig.spec.json for jest or vitest
   updateSpecConfig(tree, options);
-  const stylePreprocessorTask = installCommonDependencies(tree, options);
+  const stylePreprocessorTask = await installCommonDependencies(tree, options);
   tasks.push(stylePreprocessorTask);
   const styledTask = addStyledModuleDependencies(tree, options);
   tasks.push(styledTask);
