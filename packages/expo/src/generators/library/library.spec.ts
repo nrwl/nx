@@ -87,14 +87,64 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toEqual(true);
-      expect(tsconfigJson.compilerOptions.strict).toEqual(true);
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toEqual(true);
-      expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toEqual(
-        true
-      );
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "allowSyntheticDefaultImports": true,
+            "esModuleInterop": true,
+            "forceConsistentCasingInFileNames": true,
+            "jsx": "react-jsx",
+            "noFallthroughCasesInSwitch": true,
+            "noImplicitReturns": true,
+            "strict": true,
+          },
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+
+      expect(readJson(appTree, 'my-lib/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "**/*.test.ts",
+            "**/*.spec.ts",
+            "**/*.test.tsx",
+            "**/*.spec.tsx",
+            "**/*.test.js",
+            "**/*.spec.js",
+            "**/*.test.jsx",
+            "**/*.spec.jsx",
+            "src/test-setup.ts",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+          ],
+          "extends": "./tsconfig.json",
+          "include": [
+            "**/*.js",
+            "**/*.jsx",
+            "**/*.ts",
+            "**/*.tsx",
+          ],
+        }
+      `);
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
