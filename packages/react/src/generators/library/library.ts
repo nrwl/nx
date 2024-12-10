@@ -84,6 +84,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         sourceRoot: `${options.projectRoot}/src`,
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   } else {
     addProjectConfiguration(host, options.name, {
