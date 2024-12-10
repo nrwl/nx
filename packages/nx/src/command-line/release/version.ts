@@ -40,7 +40,7 @@ import {
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
-import { gitAdd, gitTag } from './utils/git';
+import { gitAdd, gitPush, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
@@ -368,6 +368,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             verbose: args.verbose,
           });
         }
+      }
+
+      if (args.gitPush ?? nxReleaseConfig.version.git.push) {
+        output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+        await gitPush({
+          gitRemote: args.gitRemote,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
       }
 
       return {

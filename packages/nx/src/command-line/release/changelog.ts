@@ -394,21 +394,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         args.createRelease
       )
     ) {
-      let hasPushed = false;
-
       postGitTasks.push(async (latestCommit) => {
-        if (!hasPushed) {
-          output.logSingleLine(`Pushing to git remote`);
-
-          // Before we can create/update the release we need to ensure the commit exists on the remote
-          await gitPush({
-            gitRemote: args.gitRemote,
-            dryRun: args.dryRun,
-            verbose: args.verbose,
-          });
-          hasPushed = true;
-        }
-
         output.logSingleLine(`Creating GitHub Release`);
 
         await createOrUpdateGithubRelease(
@@ -617,7 +603,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             projectToAdditionalDependencyBumps,
           });
 
-          let hasPushed = false;
           for (const [projectName, projectChangelog] of Object.entries(
             projectChangelogs
           )) {
@@ -629,18 +614,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               )
             ) {
               postGitTasks.push(async (latestCommit) => {
-                if (!hasPushed) {
-                  output.logSingleLine(`Pushing to git remote`);
-
-                  // Before we can create/update the release we need to ensure the commit exists on the remote
-                  await gitPush({
-                    gitRemote: args.gitRemote,
-                    dryRun: args.dryRun,
-                    verbose: args.verbose,
-                  });
-                  hasPushed = true;
-                }
-
                 output.logSingleLine(`Creating GitHub Release`);
 
                 await createOrUpdateGithubRelease(
@@ -770,7 +743,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           projectToAdditionalDependencyBumps,
         });
 
-        let hasPushed = false;
         for (const [projectName, projectChangelog] of Object.entries(
           projectChangelogs
         )) {
@@ -782,18 +754,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             )
           ) {
             postGitTasks.push(async (latestCommit) => {
-              if (!hasPushed) {
-                output.logSingleLine(`Pushing to git remote`);
-
-                // Before we can create/update the release we need to ensure the commit exists on the remote
-                await gitPush({
-                  gitRemote: args.gitRemote,
-                  dryRun: args.dryRun,
-                  verbose: args.verbose,
-                });
-                hasPushed = true;
-              }
-
               output.logSingleLine(`Creating GitHub Release`);
 
               await createOrUpdateGithubRelease(
@@ -1012,6 +972,15 @@ async function applyChangesAndExit(
         verbose: args.verbose,
       });
     }
+  }
+
+  if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
+    output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+    await gitPush({
+      gitRemote: args.gitRemote,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
   }
 
   // Run any post-git tasks in series

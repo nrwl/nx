@@ -110,7 +110,8 @@ export interface CreateNxReleaseConfigError {
     | 'CANNOT_RESOLVE_CHANGELOG_RENDERER'
     | 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER'
     | 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME'
-    | 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL';
+    | 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL'
+    | 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE';
   data: Record<string, string | string[]>;
 }
 
@@ -161,20 +162,66 @@ export async function createNxReleaseConfig(
     tagMessage: '',
     tagArgs: '',
     stageChanges: false,
+    push: false,
   };
   const versionGitDefaults = {
     ...gitDefaults,
     stageChanges: true,
   };
+
+  const isObjectWithCreateReleaseEnabled = (data: unknown) =>
+    typeof data === 'object' &&
+    data !== null &&
+    'createRelease' in data &&
+    (typeof data.createRelease === 'string' ||
+      (typeof data.createRelease === 'object' && data.createRelease !== null));
+
+  const isCreateReleaseEnabledAtTheRoot = isObjectWithCreateReleaseEnabled(
+    userConfig.changelog?.workspaceChangelog
+  );
+
+  const isCreateReleaseEnabledForProjectChangelogs =
+    // At the root
+    isObjectWithCreateReleaseEnabled(userConfig.changelog?.projectChangelogs) ||
+    // Or any release group
+    Object.values(userConfig.groups ?? {}).some((group) =>
+      isObjectWithCreateReleaseEnabled(group.changelog)
+    );
+
+  const isGitPushExplicitlyDisabled =
+    userConfig.git?.push === false ||
+    userConfig.changelog?.git?.push === false ||
+    userConfig.version?.git?.push === false;
+
+  if (
+    isGitPushExplicitlyDisabled &&
+    (isCreateReleaseEnabledAtTheRoot ||
+      isCreateReleaseEnabledForProjectChangelogs)
+  ) {
+    return {
+      error: {
+        code: 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE',
+        data: {},
+      },
+      nxReleaseConfig: null,
+    };
+  }
+
   const changelogGitDefaults = {
     ...gitDefaults,
     commit: true,
     tag: true,
+    push:
+      // We have to perform a git push in order to create a release
+      isCreateReleaseEnabledAtTheRoot ||
+      isCreateReleaseEnabledForProjectChangelogs
+        ? true
+        : false,
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
   /**
-   * TODO: in v20, make it so that this pattern is used by default when any custom groups are used
+   * TODO(v21): in v21, make it so that this pattern is used by default when any custom groups are used
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
@@ -816,6 +863,19 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Your "changelog.createRelease" config specifies an invalid apiBaseUrl "${error.data.apiBaseUrl}". Please ensure you provide a valid URL value, such as "https://example.com"`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
+    case 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+          'changelog',
+          'git',
+        ]);
+        output.error({
+          title: `The git configuration for createRelease is invalid. Please ensure that git.push is enabled when createRelease is configured:`,
           bodyLines: [nxJsonMessage],
         });
       }
