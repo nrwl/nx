@@ -112,6 +112,7 @@
       "@nx/expo",
       "@nx/express",
       "@nx/gradle",
+      "@nx/module-federation",
       "@nx/nest",
       "@nx/next",
       "@nx/node",
