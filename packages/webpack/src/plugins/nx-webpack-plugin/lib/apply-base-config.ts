@@ -231,7 +231,9 @@ function applyNxDependentConfig(
     root: options.root,
   };
 
-  plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
+  if (options.useTsconfigPaths) {
+    plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
+  }
 
   // New TS Solution already has a typecheck target
   if (!options?.skipTypeChecking && !isUsingTsSolutionSetup()) {
