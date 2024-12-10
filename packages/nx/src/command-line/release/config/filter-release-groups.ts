@@ -16,9 +16,14 @@ export function filterReleaseGroups(
   groupsFilter?: string[]
 ): {
   error: null | { title: string; bodyLines?: string[] };
+  filterLog: {
+    title: string;
+    bodyLines: string[];
+  } | null;
   releaseGroups: ReleaseGroupWithName[];
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>;
 } {
+  let filterLog = null;
   let releaseGroups: ReleaseGroupWithName[] = Object.entries(
     nxReleaseConfig.groups
   ).map(([name, group]) => {
@@ -60,6 +65,7 @@ export function filterReleaseGroups(
         error: {
           title: `Your --projects filter "${projectsFilter}" did not match any projects in the workspace`,
         },
+        filterLog: null,
         releaseGroups: [],
         releaseGroupToFilteredProjects,
       };
@@ -95,6 +101,7 @@ export function filterReleaseGroups(
             title: `The following projects which match your projects filter "${projectsFilter}" did not match any configured release groups:`,
             bodyLines: unmatchedProjects.map((p) => `- ${p}`),
           },
+          filterLog: null,
           releaseGroups: [],
           releaseGroupToFilteredProjects,
         };
@@ -126,6 +133,7 @@ export function filterReleaseGroups(
             title: `In order to release specific projects independently with --projects those projects must be configured appropriately. For example, by setting \`"projectsRelationship": "independent"\` in your nx.json config.`,
             bodyLines: [],
           },
+          filterLog: null,
           releaseGroups: [],
           releaseGroupToFilteredProjects,
         };
@@ -138,12 +146,13 @@ export function filterReleaseGroups(
             (rg) => `- ${rg.name}`
           ),
         },
+        filterLog: null,
         releaseGroups: [],
         releaseGroupToFilteredProjects,
       };
     }
 
-    output.note({
+    filterLog = {
       title: `Your filter "${projectsFilter}" matched the following projects:`,
       bodyLines: matchingProjectsForFilter.map((p) => {
         const releaseGroupForProject = filteredProjectToReleaseGroup.get(p);
@@ -152,7 +161,7 @@ export function filterReleaseGroups(
         }
         return `- ${p} (release group "${releaseGroupForProject.name}")`;
       }),
-    });
+    };
 
     // Filter the releaseGroups collection appropriately
     for (const [
@@ -169,6 +178,7 @@ export function filterReleaseGroups(
 
     return {
       error: null,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     };
@@ -192,6 +202,7 @@ export function filterReleaseGroups(
           : // Getting to this point should be impossible, as we should have explicitly handled any errors/invalid config by now
             `No projects could be matched for versioning, please report this case and include your nx.json config and command line arguments`,
       },
+      filterLog: null,
       releaseGroups: [],
       releaseGroupToFilteredProjects,
     };
@@ -199,6 +210,7 @@ export function filterReleaseGroups(
 
   return {
     error: null,
+    filterLog,
     releaseGroups,
     releaseGroupToFilteredProjects,
   };

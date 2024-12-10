@@ -697,7 +697,7 @@ describe('nx release', () => {
       NX   Tagging commit with git
 
 
-      NX   Pushing to git remote
+      NX   Pushing to git remote "origin"
 
 
       NX   Creating GitHub Release

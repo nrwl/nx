@@ -1020,7 +1020,7 @@ describe('nx release - independent projects', () => {
 
       expect(
         releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
-      ).toEqual(2);
+      ).toEqual(3);
 
       expect(
         releaseOutput.match(
