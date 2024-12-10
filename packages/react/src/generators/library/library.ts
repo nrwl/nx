@@ -31,7 +31,10 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
@@ -280,6 +283,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       : undefined
   );
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+  }
   if (!options.skipFormat) {
     await formatFiles(host);
   }

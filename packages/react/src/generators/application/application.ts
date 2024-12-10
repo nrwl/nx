@@ -10,6 +10,7 @@ import { setDefaults } from './lib/set-defaults';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -41,7 +42,11 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -115,7 +120,7 @@ export async function applicationGeneratorInternal(
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin: schema.useTsSolution ?? isUsingTsSolutionSetup(host),
     formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
@@ -366,6 +371,12 @@ export async function applicationGeneratorInternal(
     module: 'esnext',
     moduleResolution: 'bundler',
   });
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);
