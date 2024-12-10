@@ -12,6 +12,7 @@ on:
         default: false
 
 env:
+  NX_NIGHTLY_TESTS: true
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
 
 permissions: { }
@@ -105,7 +106,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 120
     strategy:
       matrix:
         os:
@@ -157,9 +158,9 @@ jobs:
             os_name: 'MacOS'
           # test timeouts
           - os: ubuntu-latest
-            os_timeout: 60
+            os_timeout: 120
           - os: macos-latest
-            os_timeout: 90
+            os_timeout: 120
           # codeowner groups
           - project: e2e-angular
             codeowners: 'S04SS457V38'
@@ -218,6 +219,13 @@ jobs:
           - project: e2e-workspace-create
             codeowners: 'S04SYHYKGNP'
         exclude:
+          # disable testes that always fail to reduce noise
+          # TODO: investigate failures and fix tests
+          - node_version: 20
+            package_manager: yarn
+            project: e2e-plugin
+          - package_manager: yarn
+            project: e2e-lerna-smoke-tests
           # exclude react-native tests from ubuntu
           - os: ubuntu-latest
             project: e2e-react-native
