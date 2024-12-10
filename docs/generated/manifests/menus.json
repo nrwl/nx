@@ -1269,7 +1269,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Updating version references in manifest files (e.g. package.json)",
+                "name": "Updating Version References in Manifest Files (e.g. package.json)",
                 "path": "/recipes/nx-release/updating-version-references",
                 "id": "updating-version-references",
                 "isExternal": false,
@@ -2418,7 +2418,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Updating version references in manifest files (e.g. package.json)",
+            "name": "Updating Version References in Manifest Files (e.g. package.json)",
             "path": "/recipes/nx-release/updating-version-references",
             "id": "updating-version-references",
             "isExternal": false,
@@ -2533,7 +2533,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Updating version references in manifest files (e.g. package.json)",
+        "name": "Updating Version References in Manifest Files (e.g. package.json)",
         "path": "/recipes/nx-release/updating-version-references",
         "id": "updating-version-references",
         "isExternal": false,

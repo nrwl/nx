@@ -1739,7 +1739,7 @@
           },
           {
             "id": "updating-version-references",
-            "name": "Updating version references in manifest files (e.g. package.json)",
+            "name": "Updating Version References in Manifest Files (e.g. package.json)",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/nx-release/updating-version-references",
@@ -3313,7 +3313,7 @@
       },
       {
         "id": "updating-version-references",
-        "name": "Updating version references in manifest files (e.g. package.json)",
+        "name": "Updating Version References in Manifest Files (e.g. package.json)",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/nx-release/updating-version-references",
@@ -3472,7 +3472,7 @@
   },
   "/recipes/nx-release/updating-version-references": {
     "id": "updating-version-references",
-    "name": "Updating version references in manifest files (e.g. package.json)",
+    "name": "Updating Version References in Manifest Files (e.g. package.json)",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/nx-release/updating-version-references",

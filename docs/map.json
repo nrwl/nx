@@ -500,7 +500,7 @@
                   "file": "shared/recipes/nx-release/release-projects-independently"
                 },
                 {
-                  "name": "Updating version references in manifest files (e.g. package.json)",
+                  "name": "Updating Version References in Manifest Files (e.g. package.json)",
                   "id": "updating-version-references",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/updating-version-references"

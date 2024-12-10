@@ -75,7 +75,7 @@
     - [Nx Release](/recipes/nx-release)
       - [Get Started with Nx Release](/recipes/nx-release/get-started-with-nx-release)
       - [Release Projects Independently](/recipes/nx-release/release-projects-independently)
-      - [Updating version references in manifest files (e.g. package.json)](/recipes/nx-release/updating-version-references)
+      - [Updating Version References in Manifest Files (e.g. package.json)](/recipes/nx-release/updating-version-references)
       - [Automatically Version with Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)
       - [Customize Conventional Commit Types](/recipes/nx-release/customize-conventional-commit-types)
       - [File Based Versioning (Version Plans)](/recipes/nx-release/file-based-versioning-version-plans)
