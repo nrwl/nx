@@ -503,6 +503,12 @@ function processEnv(
   return res;
 }
 
+function isArrayOfStrings(arg: unknown): arg is Array<string> {
+  if (Array.isArray(arg)) {
+    return arg.every((item) => typeof item === 'string');
+  }
+}
+
 export function interpolateArgsIntoCommand(
   command: string,
   opts: Pick<
@@ -526,7 +532,8 @@ export function interpolateArgsIntoCommand(
       const unknownOptionsArgs = Object.keys(opts.unknownOptions)
         .filter(
           (k) =>
-            typeof opts.unknownOptions[k] !== 'object' &&
+            (typeof opts.unknownOptions[k] !== 'object' ||
+              isArrayOfStrings(opts.unknownOptions[k])) &&
             opts.parsedArgs[k] === opts.unknownOptions[k]
         )
         .map((k) => `--${k}=${opts.unknownOptions[k]}`)
