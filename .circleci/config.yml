@@ -107,6 +107,10 @@ jobs:
           command: |
             pnpm nx run-many --targets=test --projects=nx-dev --base=$NX_BASE --head=$NX_HEAD --parallel=3
       - run:
+          name: Nx Chillax
+          command: |
+            pnpm nx run-many --targets=nx-chillax
+      - run:
           name: build-base
           command: |
             NODE_OPTIONS=--inspect pnpm nx run-many --targets=build-base --projects=nx-dev --base=$NX_BASE --head=$NX_HEAD --parallel=3
