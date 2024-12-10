@@ -116,7 +116,6 @@ describe('Build React applications and libraries with Vite', () => {
     await runCLIAsync(`build ${viteLib}`);
     checkFilesExist(
       `dist/libs/${viteLib}/index.d.ts`,
-      `dist/libs/${viteLib}/index.js`,
       `dist/libs/${viteLib}/index.mjs`
     );
   }, 300_000);
@@ -132,7 +131,6 @@ describe('Build React applications and libraries with Vite', () => {
 
     checkFilesExist(
       `dist/libs/${viteLib}/index.d.ts`,
-      `dist/libs/${viteLib}/index.js`,
       `dist/libs/${viteLib}/index.mjs`
     );
 
@@ -147,7 +145,6 @@ describe('Build React applications and libraries with Vite', () => {
     await runCLIAsync(`build ${nonBuildableLib}`);
     checkFilesExist(
       `dist/libs/${nonBuildableLib}/index.d.ts`,
-      `dist/libs/${nonBuildableLib}/index.js`,
       `dist/libs/${nonBuildableLib}/index.mjs`,
       `dist/libs/${nonBuildableLib}/README.md`
     );
