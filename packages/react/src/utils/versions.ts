@@ -1,13 +1,19 @@
 export const nxVersion = require('../../package.json').version;
 
-export const reactVersion = '18.3.1';
-export const reactDomVersion = '18.3.1';
-export const reactIsVersion = '18.3.1';
+export const reactVersion = '19.0.0';
+export const reactV18Version = '18.3.1';
+export const reactDomVersion = '19.0.0';
+export const reactDomV18Version = '18.3.1';
+export const reactIsVersion = '19.0.0';
+export const reactIsV18Version = '18.3.1';
 export const swcLoaderVersion = '0.1.15';
 export const babelLoaderVersion = '^9.1.2';
-export const typesReactVersion = '18.3.1';
-export const typesReactDomVersion = '18.3.0';
-export const typesReactIsVersion = '18.3.0';
+export const typesReactV18Version = '18.3.1';
+export const typesReactVersion = '19.0.0';
+export const typesReactDomV18Version = '18.3.0';
+export const typesReactDomVersion = '19.0.0';
+export const typesReactIsV18Version = '18.3.0';
+export const typesReactIsVersion = '19.0.0';
 export const reactViteVersion = '^4.2.0';
 
 export const typesNodeVersion = '18.16.9';
@@ -27,7 +33,7 @@ export const styledJsxVersion = '5.1.2';
 
 export const reactRouterDomVersion = '6.11.2';
 
-export const testingLibraryReactVersion = '15.0.6';
+export const testingLibraryReactVersion = '16.1.0';
 
 export const reduxjsToolkitVersion = '1.9.3';
 export const reactReduxVersion = '8.0.5';

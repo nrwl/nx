@@ -15,6 +15,10 @@ jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
   return {
     ...original,
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      dependencies: {},
+      nodes: {},
+    }),
     readCachedProjectGraph: jest.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
