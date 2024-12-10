@@ -38,6 +38,8 @@ export function normalizeOptions(
 
   const projectNode = projectGraph.nodes[projectName];
   const targetConfig = projectNode.data.targets[targetName];
+
+  // If the project is using ts solutions setup, the paths are not in tsconfig and we should not use the plugin's paths.
   options.useTsconfigPaths =
     options.useTsconfigPaths ?? !isUsingTsSolutionSetup();
 
