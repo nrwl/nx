@@ -33,7 +33,7 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["none", "jest"],
+      "enum": ["none", "jest", "vitest"],
       "description": "Test runner to use for unit tests."
     },
     "linter": {
