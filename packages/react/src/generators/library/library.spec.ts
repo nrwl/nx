@@ -1188,5 +1188,43 @@ module.exports = withNx(
         "
       `);
     });
+
+    it('should configure files for publishable library', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        publishable: true,
+        importPath: '@acme/mylib',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "import": "./dist/index.esm.js",
+              "types": "./dist/index.esm.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "files": [
+            "dist",
+            "!**/*.tsbuildinfo",
+          ],
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "name": "@acme/mylib",
+          "nx": {
+            "name": "mylib",
+            "projectType": "library",
+            "sourceRoot": "mylib/src",
+          },
+          "type": "module",
+          "types": "./dist/index.esm.d.ts",
+        }
+      `);
+    });
   });
 });
