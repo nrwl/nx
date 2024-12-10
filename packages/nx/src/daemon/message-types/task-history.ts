@@ -1,20 +1,21 @@
 import type { TaskRun, TaskTarget } from '../../native';
+import { Message } from '../client/daemon-socket-messenger';
 
 export const GET_FLAKY_TASKS = 'GET_FLAKY_TASKS' as const;
 export const GET_ESTIMATED_TASK_TIMINGS = 'GET_ESTIMATED_TASK_TIMINGS' as const;
 export const RECORD_TASK_RUNS = 'RECORD_TASK_RUNS' as const;
 
-export type HandleGetFlakyTasks = {
+export type HandleGetFlakyTasks = Message & {
   type: typeof GET_FLAKY_TASKS;
   hashes: string[];
 };
 
-export type HandleGetEstimatedTaskTimings = {
+export type HandleGetEstimatedTaskTimings = Message & {
   type: typeof GET_ESTIMATED_TASK_TIMINGS;
   targets: TaskTarget[];
 };
 
-export type HandleRecordTaskRunsMessage = {
+export type HandleRecordTaskRunsMessage = Message & {
   type: typeof RECORD_TASK_RUNS;
   taskRuns: TaskRun[];
 };

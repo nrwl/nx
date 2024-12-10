@@ -1,4 +1,8 @@
-import { consumeMessagesFromSocket } from './consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  PendingPromise,
+  registerPendingPromise,
+} from './messaging';
 
 describe('consumeMessagesFromSocket', () => {
   it('should handle messages where every messages is in its own chunk', () => {
@@ -43,4 +47,29 @@ describe('consumeMessagesFromSocket', () => {
   //
   //   expect(messages).toEqual([{ one: 1 }, { two: 2 }, { three: 3 }]);
   // });
+});
+
+describe('registerPendingPromise', () => {
+  it('should store a pending promise', async () => {
+    const pending = new Map<string, PendingPromise>();
+    const p = registerPendingPromise('1', pending, jest.fn(), () => 'foo', 25);
+    setTimeout(() => pending.get('1')!.resolver('bar'), 15);
+    expect(await p).toEqual('bar');
+    expect(pending.size).toBe(0);
+  });
+
+  it('should reject the promise if the callback takes too long', async () => {
+    const pending = new Map<string, PendingPromise>();
+    const p = registerPendingPromise('1', pending, jest.fn(), () => 'foo', 10);
+    await expect(p).rejects.toThrow('foo');
+    expect(pending.size).toBe(0);
+  });
+
+  it('should call the callback', async () => {
+    const pending = new Map<string, PendingPromise>();
+    const callback = jest.fn();
+    registerPendingPromise('1', pending, callback, () => 'foo', 10);
+    pending.get('1')!.resolver('bar');
+    expect(callback).toHaveBeenCalled();
+  });
 });

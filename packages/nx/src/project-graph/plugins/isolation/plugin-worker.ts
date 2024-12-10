@@ -1,6 +1,6 @@
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { createSerializableError } from '../../../utils/serializable-error';
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../../../utils/messaging';
 
 import { createServer } from 'net';
 import { unlinkSync } from 'fs';

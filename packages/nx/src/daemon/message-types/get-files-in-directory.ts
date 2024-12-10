@@ -1,6 +1,8 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const GET_FILES_IN_DIRECTORY = 'GET_FILES_IN_DIRECTORY' as const;
 
-export type HandleGetFilesInDirectoryMessage = {
+export type HandleGetFilesInDirectoryMessage = Message & {
   type: typeof GET_FILES_IN_DIRECTORY;
   dir: string;
 };
