@@ -60,7 +60,7 @@
     },
     "declarationRootDir": {
       "type": "string",
-      "description": "Sets the rootDir for the declaration (*.d.ts) files."
+      "description": "Sets the rootDir for the declaration (*.d.ts) files. If not specified, the generator will attempt to determine the the correct location. Declarations files will be output to `outputPath`."
     },
     "watch": {
       "type": "boolean",
