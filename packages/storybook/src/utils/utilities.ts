@@ -1,9 +1,4 @@
-import {
-  TargetConfiguration,
-  Tree,
-  readNxJson,
-  updateNxJson,
-} from '@nx/devkit';
+import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
