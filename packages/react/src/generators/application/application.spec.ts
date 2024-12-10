@@ -15,6 +15,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -1247,6 +1248,7 @@ describe('app', () => {
   describe('TS solution setup', () => {
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace();
+      appTree.write('pnpm-workspace.yaml', `packages:`);
       updateJson(appTree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
@@ -1417,6 +1419,23 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should add project to workspaces when using TS solution', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+
+      const pnpmContent = appTree.read('pnpm-workspace.yaml', 'utf-8');
+      const pnpmWorkspaceFile = load(pnpmContent);
+
+      expect(pnpmWorkspaceFile.packages).toEqual(['myapp']);
     });
   });
 });

@@ -6,7 +6,10 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -94,6 +97,12 @@ export async function expoApplicationGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

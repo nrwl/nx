@@ -15,6 +15,7 @@ import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
+const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -910,6 +911,7 @@ module.exports = withNx(
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
+      tree.write('pnpm-workspace.yaml', `packages:`);
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
@@ -1185,6 +1187,21 @@ module.exports = withNx(
         );
         "
       `);
+    });
+
+    it('should add project to workspaces when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      const pnpmContent = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const pnpmWorkspaceFile = load(pnpmContent);
+
+      expect(pnpmWorkspaceFile.packages).toEqual(['mylib/*']);
     });
   });
 });
