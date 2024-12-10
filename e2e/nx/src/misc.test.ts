@@ -40,7 +40,9 @@ describe('Nx Commands', () => {
       const app1 = uniq('myapp');
       const app2 = uniq('myapp');
       expect(
-        runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
+        runCLI('show projects', {
+          verbose: false,
+        }).replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
       runCLI(`generate @nx/web:app apps/${app1} --tags e2etag`);
@@ -70,7 +72,9 @@ describe('Nx Commands', () => {
       const app = uniq('myapp');
       runCLI(`generate @nx/web:app apps/${app}`);
       const project: ProjectConfiguration = JSON.parse(
-        runCLI(`show project ${app}`)
+        runCLI(`show project ${app}`, {
+          verbose: false,
+        })
       );
       expect(project.targets.build).toBeDefined();
       expect(project.targets.lint).toBeDefined();

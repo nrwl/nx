@@ -63,13 +63,19 @@ describe('Nx Affected and Graph Tests', () => {
       );
 
       const affectedProjects = runCLI(
-        `show projects --affected --files="libs/${mylib}/src/index.ts"`
+        `show projects --affected --files="libs/${mylib}/src/index.ts"`,
+        {
+          verbose: false,
+        }
       );
       expect(affectedProjects).toContain(myapp);
       expect(affectedProjects).not.toContain(myapp2);
 
       let affectedLibs = runCLI(
-        `show projects --affected --files="libs/${mylib}/src/index.ts" --type lib`
+        `show projects --affected --files="libs/${mylib}/src/index.ts" --type lib`,
+        {
+          verbose: false,
+        }
       );
       // type lib shows no apps
       expect(affectedLibs).not.toContain(myapp);
@@ -77,40 +83,58 @@ describe('Nx Affected and Graph Tests', () => {
       expect(affectedLibs).toContain(mylib);
 
       const implicitlyAffectedApps = runCLI(
-        'show projects --affected --files="tsconfig.base.json"'
+        'show projects --affected --files="tsconfig.base.json"',
+        {
+          verbose: false,
+        }
       );
       expect(implicitlyAffectedApps).toContain(myapp);
       expect(implicitlyAffectedApps).toContain(myapp2);
 
       const noAffectedApps = runCLI(
-        'show projects --affected projects --files="README.md"'
+        'show projects --affected projects --files="README.md"',
+        {
+          verbose: false,
+        }
       );
       expect(noAffectedApps).not.toContain(myapp);
       expect(noAffectedApps).not.toContain(myapp2);
 
       affectedLibs = runCLI(
-        `show projects --affected --files="libs/${mylib}/src/index.ts"`
+        `show projects --affected --files="libs/${mylib}/src/index.ts"`,
+        {
+          verbose: false,
+        }
       );
       expect(affectedLibs).toContain(mypublishablelib);
       expect(affectedLibs).toContain(mylib);
       expect(affectedLibs).not.toContain(mylib2);
 
       const implicitlyAffectedLibs = runCLI(
-        'show projects --affected --files="tsconfig.base.json"'
+        'show projects --affected --files="tsconfig.base.json"',
+        {
+          verbose: false,
+        }
       );
       expect(implicitlyAffectedLibs).toContain(mypublishablelib);
       expect(implicitlyAffectedLibs).toContain(mylib);
       expect(implicitlyAffectedLibs).toContain(mylib2);
 
       const noAffectedLibsNonExistentFile = runCLI(
-        'show projects --affected --files="tsconfig.json"'
+        'show projects --affected --files="tsconfig.json"',
+        {
+          verbose: false,
+        }
       );
       expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib2);
 
       const noAffectedLibs = runCLI(
-        'show projects --affected --files="README.md"'
+        'show projects --affected --files="README.md"',
+        {
+          verbose: false,
+        }
       );
       expect(noAffectedLibs).not.toContain(mypublishablelib);
       expect(noAffectedLibs).not.toContain(mylib);
@@ -118,7 +142,10 @@ describe('Nx Affected and Graph Tests', () => {
 
       // build
       const build = runCLI(
-        `affected:build --files="libs/${mylib}/src/index.ts" --parallel`
+        `affected:build --files="libs/${mylib}/src/index.ts" --parallel`,
+        {
+          verbose: false,
+        }
       );
       expect(build).toContain(`Running target build for 3 projects:`);
       expect(build).toContain(`- ${myapp}`);
@@ -127,13 +154,19 @@ describe('Nx Affected and Graph Tests', () => {
       expect(build).toContain('Successfully ran target build');
 
       const buildExcluded = runCLI(
-        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=${myapp}`
+        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=${myapp}`,
+        {
+          verbose: false,
+        }
       );
       expect(buildExcluded).toContain(`Running target build for 2 projects:`);
       expect(buildExcluded).toContain(`- ${mypublishablelib}`);
 
       const buildExcludedByTag = runCLI(
-        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=tag:ui`
+        `affected:build --files="libs/${mylib}/src/index.ts" --exclude=tag:ui`,
+        {
+          verbose: false,
+        }
       );
       expect(buildExcludedByTag).toContain(
         `Running target build for 2 projects:`
@@ -151,7 +184,10 @@ describe('Nx Affected and Graph Tests', () => {
 
       const failedTests = runCLI(
         `affected:test --files="libs/${mylib}/src/index.ts"`,
-        { silenceError: true }
+        {
+          verbose: false,
+          silenceError: true,
+        }
       );
       expect(failedTests).toContain(mylib);
       expect(failedTests).toContain(myapp);
