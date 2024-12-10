@@ -97,7 +97,12 @@ export async function configurationGeneratorInternal(
     if (isTsSolutionSetup) {
       // skip eslint from typechecking since it extends from root file that is outside rootDir
       if (options.linter === 'eslint') {
-        tsconfig.exclude = ['dist', 'eslint.config.js'];
+        tsconfig.exclude = [
+          'dist',
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs',
+        ];
       }
 
       tsconfig.compilerOptions.outDir = 'dist';

@@ -18,6 +18,7 @@ export interface Schema {
   rootProject?: boolean;
   addPlugin?: boolean;
   nxCloudToken?: string;
+  useTsSolution?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -27,4 +28,5 @@ export interface NormalizedSchema extends Schema {
   e2eProjectRoot: string;
   parsedTags: string[];
   devServerPort?: number;
+  isUsingTsSolutionConfig: boolean;
 }

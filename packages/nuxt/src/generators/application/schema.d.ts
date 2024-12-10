@@ -14,6 +14,7 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   style?: 'css' | 'scss' | 'less' | 'none';
   nxCloudToken?: string;
+  useTsSolution?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -22,4 +23,5 @@ export interface NormalizedSchema extends Schema {
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
+  isUsingTsSolutionConfig: boolean;
 }
