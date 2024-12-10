@@ -1,6 +1,6 @@
 import { Champion } from '@nx/nx-dev/ui-common';
 
-export const champions1: Champion[] = [
+export const champions: Champion[] = [
   {
     name: 'Santosh Yadav',
     expertise:
@@ -109,8 +109,71 @@ export const champions1: Champion[] = [
     ],
     location: 'Belgium',
   },
-];
-export const champions2: Champion[] = [
+  {
+    name: 'Bob Strecansky',
+    expertise:
+      'Community Evangelist, Enterprise Ideology, Performance Optimization',
+    imageUrl: '/images/champions/bob-strecansky.webp',
+    contact: [
+      {
+        label: '@bobstrecansky',
+        link: 'https://twitter.com/bobstrecansky',
+      },
+    ],
+    location: 'Atlanta, GA, USA',
+  },
+  {
+    name: 'Joshua VanAllen',
+    expertise:
+      'App migrations, large scale repository structures, Angular, Vue, Spring, onboarding, educating the masses',
+    imageUrl: '/images/champions/josh-vanallen.webp',
+    contact: [
+      {
+        label: '@joshvanallen.dev',
+        link: 'https://bsky.app/profile/joshvanallen.dev',
+      },
+    ],
+    location: 'Pennsylvania, USA',
+  },
+  {
+    name: 'Thomas Laforge',
+    expertise:
+      'Teach users how to create a better developer experience (DX) with Nx and Angular through github challenges, blog posts, and conference talks',
+    imageUrl: '/images/champions/thomas-laforge.webp',
+    contact: [
+      {
+        label: '@laforge_toma',
+        link: 'https://twitter.com/laforge_toma',
+      },
+    ],
+    location: 'France',
+  },
+  {
+    name: 'Fabian Gosebrink',
+    expertise:
+      'Angular, Blogs, Conferences & Talks, Enterprise Architecture with Nx, Onboarding new Devs, Repository Structure, State Management',
+    imageUrl: '/images/champions/fabian-gosebrink.webp',
+    contact: [
+      {
+        label: 'fabian.gosebrink@offering.solutions',
+        link: 'mailto:fabian.gosebrink@offering.solutions',
+      },
+    ],
+    location: 'Switzerland',
+  },
+  {
+    name: 'Brecht Billiet',
+    expertise:
+      "Large-scale architecture, GenAI automation, Angular, Scaling monorepo's",
+    imageUrl: '/images/champions/brecht-billiet.webp',
+    contact: [
+      {
+        label: 'brecht@simplified.courses',
+        link: 'mailto:brecht@simplified.courses',
+      },
+    ],
+    location: 'Belgium',
+  },
   {
     name: 'Dominik Pieper',
     expertise:
@@ -239,8 +302,6 @@ export const champions2: Champion[] = [
     ],
     location: 'Czechia',
   },
-];
-export const champions3: Champion[] = [
   {
     name: 'Lara Newsom',
     expertise:
@@ -290,18 +351,6 @@ export const champions3: Champion[] = [
       },
     ],
     location: 'France',
-  },
-  {
-    name: 'Devin Shoemaker',
-    expertise: 'Writing plugins and being the resident Nx enthusiast at Ionic',
-    imageUrl: '/images/champions/devin-shoemaker.webp',
-    contact: [
-      {
-        label: '@ParanoidCoder',
-        link: 'https://twitter.com/ParanoidCoder',
-      },
-    ],
-    location: 'Missouri, USA',
   },
   {
     name: 'Preston Lamb',
