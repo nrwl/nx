@@ -92,6 +92,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -104,6 +105,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
+    if (filterLog) {
+      output.note(filterLog);
+    }
+    // Do not repeat the filter log in the release subcommands
+    process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
 
     const rawVersionPlans = await readRawVersionPlans();
 

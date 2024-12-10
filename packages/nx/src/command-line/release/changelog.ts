@@ -163,6 +163,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -175,6 +176,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
+    if (
+      filterLog &&
+      process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
+    ) {
+      output.note(filterLog);
+    }
+
     const rawVersionPlans = await readRawVersionPlans();
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
@@ -1370,14 +1378,19 @@ function filterHiddenCommits(
 }
 
 export function shouldCreateGitHubRelease(
-  changelogConfig: NxReleaseChangelogConfiguration | false | undefined,
+  changelogConfig:
+    | NxReleaseConfig['changelog']['workspaceChangelog']
+    | NxReleaseConfig['changelog']['projectChangelogs']
+    | NxReleaseConfig['groups'][number]['changelog'],
   createReleaseArg: ChangelogOptions['createRelease'] | undefined = undefined
 ): boolean {
   if (createReleaseArg !== undefined) {
     return createReleaseArg === 'github';
   }
-
-  return (changelogConfig || {}).createRelease !== false;
+  if (changelogConfig === false) {
+    return false;
+  }
+  return changelogConfig.createRelease !== false;
 }
 
 async function promptForGitHubRelease(): Promise<boolean> {
