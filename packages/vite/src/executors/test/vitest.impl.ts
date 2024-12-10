@@ -34,11 +34,17 @@ export async function* vitestExecutor(
 
   const cliFilters = options.testFiles ?? [];
 
+  const checkExitCode = process.exitCode === undefined;
+
   const ctx = await startVitest(
     resolvedOptions['mode'] ?? 'test',
     cliFilters,
     resolvedOptions
   );
+
+  if(checkExitCode && process.exitCode) {
+    process.exit();
+  }
 
   let hasErrors = false;
 
