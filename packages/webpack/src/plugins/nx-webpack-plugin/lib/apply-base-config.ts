@@ -231,12 +231,16 @@ function applyNxDependentConfig(
     root: options.root,
   };
 
+  const isUsingTsSolution = isUsingTsSolutionSetup();
+  options.useTsconfigPaths ??= !isUsingTsSolution;
+
+  // If the project is using ts solutions setup, the paths are not in tsconfig and we should not use the plugin's paths.
   if (options.useTsconfigPaths) {
     plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
   }
 
   // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolutionSetup()) {
+  if (!options?.skipTypeChecking && !isUsingTsSolution) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({

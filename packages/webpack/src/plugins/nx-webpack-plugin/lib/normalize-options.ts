@@ -12,7 +12,6 @@ import {
   NormalizedNxAppWebpackPluginOptions,
   NxAppWebpackPluginOptions,
 } from '../nx-app-webpack-plugin-options';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function normalizeOptions(
   options: NxAppWebpackPluginOptions
@@ -38,8 +37,6 @@ export function normalizeOptions(
 
   const projectNode = projectGraph.nodes[projectName];
   const targetConfig = projectNode.data.targets[targetName];
-  options.useTsconfigPaths =
-    options.useTsconfigPaths ?? !isUsingTsSolutionSetup();
 
   normalizeRelativePaths(projectNode.data.root, options);
 
