@@ -32,6 +32,9 @@ import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
+  linter?: 'none' | 'eslint';
+  formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
 }
 
 interface NoneArguments extends BaseArguments {
@@ -39,7 +42,6 @@ interface NoneArguments extends BaseArguments {
   workspaceType?: 'package-based' | 'integrated' | 'standalone';
   js?: boolean;
   appName?: string | undefined;
-  formatter?: 'none' | 'prettier';
 }
 
 interface ReactArguments extends BaseArguments {
@@ -52,9 +54,6 @@ interface ReactArguments extends BaseArguments {
   nextAppDir: boolean;
   nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  linter?: 'none' | 'eslint';
-  formatter?: 'none' | 'prettier';
-  workspaces?: boolean;
 }
 
 interface AngularArguments extends BaseArguments {
@@ -730,6 +729,10 @@ async function determineVueOptions(
   let style: undefined | string = undefined;
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
@@ -741,7 +744,9 @@ async function determineVueOptions(
   } else {
     const framework = await determineVueFramework(parsedArgs);
 
-    const workspaceType = await determineStandaloneOrMonorepo();
+    const workspaceType = workspaces
+      ? 'monorepo'
+      : await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -798,7 +803,23 @@ async function determineVueOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, e2eTestRunner };
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
+  return {
+    preset,
+    style,
+    appName,
+    e2eTestRunner,
+    linter,
+    formatter,
+    workspaces,
+  };
 }
 
 async function determineAngularOptions(

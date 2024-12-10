@@ -1401,6 +1401,8 @@ describe('app', () => {
           "exclude": [
             "dist",
             "eslint.config.js",
+            "eslint.config.mjs",
+            "eslint.config.cjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [

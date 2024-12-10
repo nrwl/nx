@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -436,6 +437,211 @@ module.exports = [
         'my-lib/tsconfig.*?.json',
       ]);
       expect(eslintConfig.overrides[0].files).toContain('*.vue');
+    });
+  });
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+      });
+
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import vue from '@vitejs/plugin-vue';
+        import { defineConfig } from 'vite';
+
+        export default defineConfig({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/my-lib',
+          plugins: [vue()],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: { reportsDirectory: '../coverage/my-lib', provider: 'v8' },
+          },
+        });
+        "
+      `);
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-lib",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-lib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "jsxImportSource": "vue",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/my-lib",
+            "resolveJsonModule": true,
+            "rootDir": "src",
+            "types": [
+              "vite/client",
+            ],
+          },
+          "exclude": [
+            "dist",
+            "src/**/__tests__/*",
+            "src/**/*.spec.vue",
+            "src/**/*.test.vue",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.vue",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-lib/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "jsxImportSource": "vue",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/vitest",
+            "resolveJsonModule": true,
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should exclude non-buildable libraries from TS plugin registration', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins = ['@nx/js/typescript'];
+        return json;
+      });
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        addPlugin: true,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+        bundler: 'none',
+      });
+
+      const nxJson = readJson(tree, 'nx.json');
+      expect(nxJson.plugins).toMatchInlineSnapshot(`
+        [
+          {
+            "exclude": [
+              "my-lib/*",
+            ],
+            "plugin": "@nx/js/typescript",
+          },
+          {
+            "options": {
+              "targetName": "lint",
+            },
+            "plugin": "@nx/eslint/plugin",
+          },
+          {
+            "options": {
+              "buildTargetName": "build",
+              "previewTargetName": "preview",
+              "serveStaticTargetName": "serve-static",
+              "serveTargetName": "serve",
+              "testTargetName": "test",
+              "typecheckTargetName": "typecheck",
+            },
+            "plugin": "@nx/vite/plugin",
+          },
+        ]
+      `);
     });
   });
 });
