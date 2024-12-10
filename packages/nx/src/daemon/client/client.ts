@@ -147,10 +147,8 @@ export class DaemonClient {
         ((isCI() || isDocker()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
-        (useDaemonProcessOption === undefined && env === 'false') ||
-        (useDaemonProcessOption === true && env === 'false') ||
-        (useDaemonProcessOption === false && env === undefined) ||
-        (useDaemonProcessOption === false && env === 'false')
+        env === 'false' ||
+        (useDaemonProcessOption === false && env !== 'true')
       ) {
         this._enabled = false;
       } else if (IS_WASM) {
@@ -513,7 +511,11 @@ export class DaemonClient {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       if (!(await this.isServerAvailable())) {
-        await this.startInBackground();
+        if (this.enabled()) {
+          await this.startInBackground();
+        } else {
+          throw new Error("Attempted to connect to daemon when it's disabled");
+        }
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
