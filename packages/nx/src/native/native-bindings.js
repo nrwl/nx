@@ -362,6 +362,7 @@ if (!nativeBinding) {
 }
 
 module.exports.ChildProcess = nativeBinding.ChildProcess
+module.exports.HashPlanInspector = nativeBinding.HashPlanInspector
 module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache

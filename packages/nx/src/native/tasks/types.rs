@@ -30,7 +30,7 @@ pub struct TaskGraph {
     pub dependencies: HashMap<String, Vec<String>>,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
     Runtime(String),
