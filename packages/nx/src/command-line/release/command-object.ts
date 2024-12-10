@@ -1,6 +1,4 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
-import { readNxJson } from '../../config/nx-json';
-import { readParallelFromArgsAndEnv } from '../../utils/command-line-utils';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
@@ -11,6 +9,7 @@ import {
   withOverrides,
   withRunManyOptions,
   withVerbose,
+  readParallelFromArgsAndEnv,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
 
@@ -151,13 +150,13 @@ export const yargsReleaseCommand: CommandModule<
           return val;
         },
       })
-      .check((argv) => {
+      .check(async (argv) => {
         if (argv.groups && argv.projects) {
           throw new Error(
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
-        const nxJson = readNxJson();
+        const nxJson = (await import('../../config/nx-json')).readNxJson();
         if (argv.groups?.length) {
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {

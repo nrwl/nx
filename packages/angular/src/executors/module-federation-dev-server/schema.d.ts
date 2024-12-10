@@ -43,4 +43,5 @@ export type NormalizedSchema = SchemaWithBuildTarget & {
   liveReload: boolean;
   open: boolean;
   ssl: boolean;
+  verbose: boolean;
 };

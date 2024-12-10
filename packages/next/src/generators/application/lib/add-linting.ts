@@ -22,6 +22,8 @@ export async function addLinting(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  if (options.linter !== 'eslint') return () => {};
+
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(

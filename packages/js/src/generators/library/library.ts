@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  installPackagesTask,
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
@@ -33,6 +34,7 @@ import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { normalizeLinterOption } from '../../utils/generator-prompts';
 import {
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
@@ -41,6 +43,10 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import {
+  ensureProjectIsExcludedFromPluginRegistrations,
+  ensureProjectIsIncludedInPluginRegistrations,
+} from '../../utils/typescript/plugin';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
@@ -64,10 +70,6 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import {
-  ensureProjectIsExcludedFromPluginRegistrations,
-  ensureProjectIsIncludedInPluginRegistrations,
-} from '../../utils/typescript/plugin';
 
 const defaultOutputDirectory = 'dist';
 
@@ -203,16 +205,6 @@ export async function libraryGeneratorInternal(
       tree,
       joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
       (json) => {
-        const rootOffset = offsetFromRoot(options.projectRoot);
-        // ensure it extends from the root tsconfig.base.json
-        json.extends = joinPathFragments(rootOffset, 'tsconfig.base.json');
-        // ensure outDir is set to the correct value
-        json.compilerOptions ??= {};
-        json.compilerOptions.outDir = joinPathFragments(
-          rootOffset,
-          'dist/out-tsc',
-          options.projectRoot
-        );
         // add project reference to the runtime tsconfig.lib.json file
         json.references ??= [];
         json.references.push({ path: './tsconfig.lib.json' });
@@ -226,6 +218,7 @@ export async function libraryGeneratorInternal(
   }
 
   if (
+    !options.skipWorkspacesWarning &&
     options.isUsingTsSolutionConfig &&
     options.projectPackageManagerWorkspaceState !== 'included'
   ) {
@@ -241,6 +234,11 @@ export async function libraryGeneratorInternal(
     tasks.push(() => {
       logNxReleaseDocsInfo();
     });
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(tree));
   }
 
   tasks.push(() => {
@@ -279,7 +277,8 @@ async function configureProject(
     options.config !== 'npm-scripts' &&
     (options.bundler === 'swc' ||
       options.bundler === 'esbuild' ||
-      (!options.isUsingTsSolutionConfig && options.bundler === 'tsc'))
+      ((!options.isUsingTsSolutionConfig || options.useTscExecutor) &&
+        options.bundler === 'tsc'))
   ) {
     const outputPath = getOutputPath(options);
     const executor = getBuildExecutor(options.bundler);
@@ -299,13 +298,18 @@ async function configureProject(
       projectConfiguration.targets.build.options.format = ['cjs'];
     }
 
-    if (options.bundler === 'swc' && options.skipTypeCheck) {
+    if (
+      options.bundler === 'swc' &&
+      (options.skipTypeCheck || options.isUsingTsSolutionConfig)
+    ) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
 
     if (options.isUsingTsSolutionConfig) {
       if (options.bundler === 'esbuild') {
         projectConfiguration.targets.build.options.declarationRootDir = `${options.projectRoot}/src`;
+      } else if (options.bundler === 'swc') {
+        projectConfiguration.targets.build.options.stripLeadingPaths = true;
       }
     } else {
       projectConfiguration.targets.build.options.assets = [];
@@ -357,8 +361,6 @@ async function configureProject(
     if (!projectConfiguration.tags?.length) {
       delete projectConfiguration.tags;
     }
-    // automatically inferred as `library`
-    delete projectConfiguration.projectType;
 
     // empty targets are cleaned up automatically by `updateProjectConfiguration`
     updateProjectConfiguration(tree, options.name, projectConfiguration);
@@ -691,28 +693,17 @@ async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  options.linter = await normalizeLinterOption(tree, options.linter);
+
   const hasPlugin = isUsingTypeScriptPlugin(tree);
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   if (isUsingTsSolutionConfig) {
-    options.linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'eslint' }],
-        initial: 0,
-      },
-      { linter: 'none' }
-    ).then(({ linter }) => linter);
-
     options.unitTestRunner ??= await promptWhenInteractive<{
       unitTestRunner: 'none' | 'jest' | 'vitest';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'unitTestRunner',
         message: `Which unit test runner would you like to use?`,
         choices: [{ name: 'none' }, { name: 'vitest' }, { name: 'jest' }],
@@ -721,24 +712,11 @@ async function normalizeOptions(
       { unitTestRunner: 'none' }
     ).then(({ unitTestRunner }) => unitTestRunner);
   } else {
-    options.linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'eslint' }, { name: 'none' }],
-        initial: 0,
-      },
-      { linter: 'eslint' }
-    ).then(({ linter }) => linter);
-
     options.unitTestRunner ??= await promptWhenInteractive<{
       unitTestRunner: 'none' | 'jest' | 'vitest';
     }>(
       {
-        type: 'select',
+        type: 'autocomplete',
         name: 'unitTestRunner',
         message: `Which unit test runner would you like to use?`,
         choices: [{ name: 'jest' }, { name: 'vitest' }, { name: 'none' }],
@@ -809,7 +787,7 @@ async function normalizeOptions(
 
   if (
     (options.bundler === 'swc' || options.bundler === 'rollup') &&
-    options.skipTypeCheck == null
+    (options.skipTypeCheck == null || !isUsingTsSolutionConfig)
   ) {
     options.skipTypeCheck = false;
   }
@@ -1110,10 +1088,10 @@ function determineEntryFields(
       return {
         type: 'commonjs',
         main: options.isUsingTsSolutionConfig
-          ? './dist/src/index.js'
+          ? './dist/index.js'
           : './src/index.js',
         typings: options.isUsingTsSolutionConfig
-          ? './dist/src/index.d.ts'
+          ? './dist/index.d.ts'
           : './src/index.d.ts',
       };
     case 'rollup':
@@ -1157,6 +1135,17 @@ function determineEntryFields(
         // Safest option is to not set a type field.
         // Allow the user to decide which module format their library is using
         type: undefined,
+        // For non-buildable libraries, point to source so we can still use them in apps via bundlers like Vite.
+        main: options.isUsingTsSolutionConfig
+          ? options.js
+            ? './src/index.js'
+            : './src/index.ts'
+          : undefined,
+        types: options.isUsingTsSolutionConfig
+          ? options.js
+            ? './src/index.js'
+            : './src/index.ts'
+          : undefined,
       };
     }
   }

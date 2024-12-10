@@ -28,7 +28,9 @@ async function normalizeServiceOptions(
   tree: Tree,
   options: ServiceGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'service',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

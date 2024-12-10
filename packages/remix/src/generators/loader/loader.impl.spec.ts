@@ -70,24 +70,4 @@ describe('loader', () => {
       });
     });
   });
-
-  describe('--nameAndDirectoryFormat=as-provided', () => {
-    it('should add imports', async () => {
-      // ACT
-      await loaderGenerator(tree, {
-        path: 'apps/demo/app/routes/example.tsx',
-        nameAndDirectoryFormat: 'as-provided',
-      });
-
-      // ASSERT
-      const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-      expect(content).toMatch(`import { json } from '@remix-run/node';`);
-      expect(content).toMatch(
-        `import type { LoaderFunctionArgs } from '@remix-run/node';`
-      );
-      expect(content).toMatch(
-        `import { useLoaderData } from '@remix-run/react';`
-      );
-    });
-  });
 });

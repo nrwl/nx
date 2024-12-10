@@ -1230,7 +1230,10 @@ async function generateChangelogForProjects({
      * newVersion will be null in the case that no changes were detected (e.g. in conventional commits mode),
      * no changelog entry is relevant in that case.
      */
-    if (projectsVersionData[project.name].newVersion === null) {
+    if (
+      !projectsVersionData[project.name] ||
+      projectsVersionData[project.name].newVersion === null
+    ) {
       continue;
     }
 

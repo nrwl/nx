@@ -49,22 +49,16 @@ export async function updateSsrSetup(
   );
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  generateFiles(
-    tree,
-    join(
-      __dirname,
-      '../files/common',
-      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
-    ),
-    project.root,
-    {
-      appName,
-      browserBundleOutput,
-      serverBundleOutput,
-      standalone,
-      tmpl: '',
-    }
-  );
+
+  generateFiles(tree, join(__dirname, '../files/common'), project.root, {
+    appName,
+    browserBundleOutput,
+    serverBundleOutput,
+    standalone,
+    commonEngineEntryPoint:
+      angularMajorVersion >= 19 ? '@angular/ssr/node' : '@angular/ssr',
+    tmpl: '',
+  });
 
   const pathToTemplateFiles = typescriptConfiguration ? 'base-ts' : 'base';
 

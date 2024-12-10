@@ -42,6 +42,8 @@ export interface PackageJson {
   type?: 'module' | 'commonjs';
   main?: string;
   types?: string;
+  // interchangeable with `types`: https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#including-declarations-in-your-npm-package
+  typings?: string;
   module?: string;
   exports?:
     | string
@@ -175,8 +177,8 @@ export function readTargetsFromPackageJson(
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
+    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {

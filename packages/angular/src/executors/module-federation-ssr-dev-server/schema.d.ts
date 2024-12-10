@@ -1,23 +1,17 @@
 import { type DevRemoteDefinition } from '../../builders/utilities/module-federation';
+import type { SSRDevServerBuilderOptions } from '@angular-devkit/build-angular';
 
-export interface Schema {
-  browserTarget: string;
-  serverTarget: string;
-  host?: string;
-  port?: number;
-  progress: boolean;
-  open?: boolean;
-  publicHost?: string;
-  ssl?: boolean;
-  sslKey?: string;
-  sslCert?: string;
-  proxyConfig?: string;
+export interface Schema extends SSRDevServerBuilderOptions {
   devRemotes?: DevRemoteDefinition[];
   skipRemotes?: string[];
-  verbose: boolean;
   pathToManifestFile?: string;
   parallel?: number;
   staticRemotesPort?: number;
-  parallel?: number;
   isInitialHost?: boolean;
+}
+
+export interface NormalizedSchema extends Schema {
+  devRemotes: DevRemoteDefinition[];
+  ssl: boolean;
+  verbose: boolean;
 }

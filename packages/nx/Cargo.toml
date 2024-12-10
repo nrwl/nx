@@ -13,7 +13,6 @@ strip = "none"
 
 [dependencies]
 anyhow = "1.0.71"
-ci_info = "0.14.14"
 colored = "2"
 crossbeam-channel = '0.5'
 dashmap = { version = "5.5.3", features = ["rayon"] }

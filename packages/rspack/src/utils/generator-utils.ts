@@ -1,20 +1,26 @@
 import {
   joinPathFragments,
   logger,
+  offsetFromRoot,
+  type ProjectConfiguration,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { RspackExecutorSchema } from '../executors/rspack/schema';
-import { ConfigurationSchema } from '../generators/configuration/schema';
-import { Framework } from '../generators/init/schema';
+import { type RspackExecutorSchema } from '../executors/rspack/schema';
+import { type ConfigurationSchema } from '../generators/configuration/schema';
+import { type Framework } from '../generators/init/schema';
+import { hasPlugin } from './has-plugin';
 
 export type Target = 'build' | 'serve';
 export type TargetFlags = Partial<Record<Target, boolean>>;
 export type UserProvidedTargetName = Partial<Record<Target, string>>;
 export type ValidFoundTargetName = Partial<Record<Target, string>>;
+type ConfigurationWithStylePreprocessorOptions = ConfigurationSchema & {
+  stylePreprocessorOptions?: { includePaths?: string[] };
+};
 
 export function findExistingTargetsInProject(
   targets: {
@@ -235,92 +241,201 @@ export function writeRspackConfigFile(
 
   tree.write(
     joinPathFragments(project.root, 'rspack.config.js'),
-    createConfig(options, stylePreprocessorOptions)
+    createConfig(tree, { ...options, stylePreprocessorOptions })
   );
 }
 
 function createConfig(
-  options: ConfigurationSchema,
-  stylePreprocessorOptions?: { includePaths?: string[] }
+  tree: Tree,
+  options: ConfigurationWithStylePreprocessorOptions
 ) {
-  if (options.framework === 'react') {
-    return `
-      const { composePlugins, withNx, withReact } = require('@nx/rspack');
+  const project = readProjectConfiguration(tree, options.project);
+  const buildOptions = createBuildOptions(tree, options, project);
 
-      module.exports = composePlugins(withNx(), withReact(${
-        stylePreprocessorOptions
-          ? `
-        {
-          stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
-        }
-        `
-          : ''
-      }), (config) => {
-        return config;
-      });
-    `;
-  } else if (options.framework === 'web' || options.target === 'web') {
-    return `
-      const { composePlugins, withNx, withWeb } = require('@nx/rspack');
+  const defaultConfig = generateDefaultConfig(project, buildOptions);
 
-      module.exports = composePlugins(withNx(), withWeb(${
-        stylePreprocessorOptions
-          ? `
-        {
-          stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
-        }
-        `
-          : ''
-      }), (config) => {
-        return config;
-      });
-    `;
+  if (isWebFramework(options)) {
+    return generateWebConfig(tree, options, defaultConfig);
   } else if (options.framework === 'nest') {
-    return `
-    const { composePlugins, withNx } = require('@nx/rspack');
-    const rspack = require('@rspack/core');
-
-    module.exports = composePlugins(withNx(), (config) => {
-      config.optimization = {
-        minimizer: [
-          new rspack.SwcJsMinimizerRspackPlugin({
-            minimizerOptions: {
-              // We need to disable mangling and compression for class names and function names for Nest.js to work properly
-              // The execution context class returns a reference to the class/handler function, which is for example used for applying metadata using decorators
-              // https://docs.nestjs.com/fundamentals/execution-context#executioncontext-class
-              compress: {
-                keep_classnames: true,
-                keep_fnames: true,
-              },
-              mangle: {
-                keep_classnames: true,
-                keep_fnames: true,
-              },
-            },
-          }),
-        ],
-      };
-      return config;
-    });
-    `;
+    return generateNestConfig(tree, options, project, buildOptions);
   } else {
-    return `
-      const { composePlugins, withNx${
-        stylePreprocessorOptions ? ', withWeb' : ''
-      } } = require('@nx/rspack');
-
-      module.exports = composePlugins(withNx()${
-        stylePreprocessorOptions
-          ? `,
-        withWeb({
-          stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
-        })`
-          : ''
-      }, (config) => {
-        return config;
-      });
-    `;
+    return generateGenericConfig(tree, options, defaultConfig);
   }
+}
+
+function createBuildOptions(
+  tree: Tree,
+  options: ConfigurationWithStylePreprocessorOptions,
+  project: ProjectConfiguration
+): RspackExecutorSchema {
+  return {
+    target: options.target ?? 'web',
+    outputPath: joinPathFragments(
+      'dist',
+      project.root === '.' ? project.name : project.root
+    ),
+    main: determineMain(tree, options),
+    tsConfig: determineTsConfig(tree, options),
+    rspackConfig: joinPathFragments(project.root, 'rspack.config.js'),
+  };
+}
+
+function generateDefaultConfig(
+  project: ProjectConfiguration,
+  buildOptions: RspackExecutorSchema
+): string {
+  return `
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+    buildOptions.outputPath
+  }'),
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      target: '${buildOptions.target}',
+      tsConfig: '${buildOptions.tsConfig}',
+      main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
+    })
+  ]
+}`;
+}
+
+function isWebFramework(
+  options: ConfigurationWithStylePreprocessorOptions
+): boolean {
+  return options.framework === 'web' || options.target === 'web';
+}
+
+function generateWebConfig(
+  tree: Tree,
+  options: ConfigurationWithStylePreprocessorOptions,
+  defaultConfig: string
+): string {
+  if (hasPlugin(tree)) {
+    return defaultConfig;
+  }
+
+  return `
+const { composePlugins, withNx, withWeb } = require('@nx/rspack');
+module.exports = composePlugins(withNx(), withWeb(${
+    options.stylePreprocessorOptions
+      ? `
+  {
+    stylePreprocessorOptions: ${JSON.stringify(
+      options.stylePreprocessorOptions
+    )},
+  }
+  `
+      : ''
+  }), (config) => {
+    return config;
+  });
+`;
+}
+
+function generateNestConfig(
+  tree: Tree,
+  options: ConfigurationSchema,
+  project: ProjectConfiguration,
+  buildOptions: RspackExecutorSchema
+): string {
+  if (hasPlugin(tree)) {
+    return `
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const rspack = require('@rspack/core');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+      buildOptions.outputPath
+    }'),
+  },
+  optimization: {
+    minimizer: [
+      new rspack.SwcJsMinimizerRspackPlugin({
+        minimizerOptions: {
+          compress: {
+            keep_classnames: true,
+            keep_fnames: true,
+          },
+          mangle: {
+            keep_classnames: true,
+            keep_fnames: true,
+          },
+        },
+      }),
+    ],
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      target: '${buildOptions.target}',
+      tsConfig: '${buildOptions.tsConfig}',
+      main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
+    })
+  ]
+}`;
+  }
+
+  return `
+const { composePlugins, withNx } = require('@nx/rspack');
+const rspack = require('@rspack/core');
+
+module.exports = composePlugins(withNx(), (config) => {
+  config.optimization = {
+    minimizer: [
+      new rspack.SwcJsMinimizerRspackPlugin({
+        minimizerOptions: {
+          compress: {
+            keep_classnames: true,
+            keep_fnames: true,
+          },
+          mangle: {
+            keep_classnames: true,
+            keep_fnames: true,
+          },
+        },
+      }),
+    ],
+  };
+  return config;
+});
+`;
+}
+
+function generateGenericConfig(
+  tree: Tree,
+  options: ConfigurationWithStylePreprocessorOptions,
+  defaultConfig: string
+): string {
+  if (hasPlugin(tree)) {
+    return defaultConfig;
+  }
+
+  return `
+const { composePlugins, withNx${
+    options.stylePreprocessorOptions ? ', withWeb' : ''
+  } } = require('@nx/rspack');
+
+module.exports = composePlugins(withNx()${
+    options.stylePreprocessorOptions
+      ? `,
+    withWeb({
+      stylePreprocessorOptions: ${JSON.stringify(
+        options.stylePreprocessorOptions
+      )},
+    })`
+      : ''
+  }, (config) => {
+    return config;
+  });
+`;
 }
 
 export function deleteWebpackConfig(

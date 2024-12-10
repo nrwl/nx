@@ -178,7 +178,7 @@ Here is another line in the message.
 +
 + - Update the fixed packages with a minor release.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -192,7 +192,7 @@ Here is another line in the message.
 +
 + - Update the fixed packages with a minor release.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -208,7 +208,7 @@ Here is another line in the message.
 +
 +   Here is another line in the message.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -225,7 +225,7 @@ Here is another line in the message.
 +
 +   Here is another line in the message.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -242,7 +242,7 @@ Here is another line in the message.
 +
 +   Here is another line in the message.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -321,7 +321,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -336,7 +336,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test
 `
@@ -352,7 +352,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #1
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -368,7 +368,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -384,7 +384,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -549,7 +549,7 @@ const yargs = require('yargs');
 +
 + - Update the fixed packages with a minor release.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -563,7 +563,7 @@ const yargs = require('yargs');
 +
 + - Update the fixed packages with a minor release.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -577,7 +577,7 @@ const yargs = require('yargs');
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -592,7 +592,7 @@ const yargs = require('yargs');
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -607,7 +607,7 @@ const yargs = require('yargs');
 +
 + - Update the independent packages with a patch, preminor, and prerelease.
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -689,7 +689,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -704,7 +704,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test
 `
@@ -720,7 +720,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #1
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -736,7 +736,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );
@@ -752,7 +752,7 @@ Update packages in both groups with a mix #2
 +
 + - Update packages in both groups with a mix #2
 +
-+ ### ❤️  Thank You
++ ### ❤️ Thank You
 +
 + - Test`
     );

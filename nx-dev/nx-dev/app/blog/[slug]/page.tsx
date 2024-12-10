@@ -2,6 +2,7 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { blogApi } from '../../../lib/blog.api';
 import { BlogDetails } from '@nx/nx-dev/ui-blog';
 import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { tryNxCloudForFree } from '../../../lib/components/headerCtaConfigs';
 
 interface BlogPostDetailProps {
   params: { slug: string };
@@ -44,12 +45,13 @@ export async function generateStaticParams() {
 export default async function BlogPostDetail({
   params: { slug },
 }: BlogPostDetailProps) {
+  const ctaHeaderConfig = [tryNxCloudForFree];
   const blog = await blogApi.getBlogPostBySlug(slug);
   return blog ? (
     <>
       {/* This empty div is necessary as app router does not automatically scroll on route changes */}
       <div></div>
-      <DefaultLayout>
+      <DefaultLayout headerCTAConfig={ctaHeaderConfig}>
         <BlogDetails post={blog} />
       </DefaultLayout>
     </>

@@ -27,7 +27,7 @@ describe('NxPlugin migration generator', () => {
 
   it('should update the workspace.json file', async () => {
     await migrationGenerator(tree, {
-      path: `packages/my-plugin/${projectName}`,
+      path: `packages/my-plugin/${projectName}/update-1.0.0`,
       packageVersion: '1.0.0',
     });
 
@@ -43,7 +43,35 @@ describe('NxPlugin migration generator', () => {
   it('should generate files', async () => {
     await migrationGenerator(tree, {
       name: 'my-migration',
-      path: 'packages/my-plugin/migrations/1.0.0',
+      path: 'packages/my-plugin/migrations/1.0.0/my-migration',
+      packageVersion: '1.0.0',
+    });
+
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
+    const packageJson = readJson(tree, 'packages/my-plugin/package.json');
+
+    expect(
+      tree.exists('packages/my-plugin/migrations/1.0.0/my-migration.ts')
+    ).toBeTruthy();
+
+    expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
+    expect(migrationsJson.generators['my-migration'].description).toEqual(
+      'Migration for v1.0.0'
+    );
+    expect(migrationsJson.generators['my-migration'].implementation).toEqual(
+      './migrations/1.0.0/my-migration'
+    );
+    expect(migrationsJson.packageJsonUpdates).toBeFalsy();
+
+    expect(packageJson['nx-migrations'].migrations).toEqual(
+      './migrations.json'
+    );
+  });
+
+  it('should handle path with file extension', async () => {
+    await migrationGenerator(tree, {
+      name: 'my-migration',
+      path: 'packages/my-plugin/migrations/1.0.0/my-migration.ts',
       packageVersion: '1.0.0',
     });
 
@@ -71,7 +99,7 @@ describe('NxPlugin migration generator', () => {
   it('should generate files with default name', async () => {
     await migrationGenerator(tree, {
       description: 'my-migration description',
-      path: 'packages/my-plugin/src/migrations/update-1.0.0',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0',
       packageVersion: '1.0.0',
     });
 
@@ -91,7 +119,7 @@ describe('NxPlugin migration generator', () => {
   it('should generate files with default description', async () => {
     await migrationGenerator(tree, {
       name: 'my-migration',
-      path: 'packages/my-plugin/src/migrations/update-1.0.0',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0',
       packageVersion: '1.0.0',
     });
 
@@ -105,7 +133,7 @@ describe('NxPlugin migration generator', () => {
   it('should generate files with package.json updates', async () => {
     await migrationGenerator(tree, {
       name: 'my-migration',
-      path: 'packages/my-plugin/src/migrations/update-1.0.0',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0',
       packageVersion: '1.0.0',
       packageJsonUpdates: true,
     });

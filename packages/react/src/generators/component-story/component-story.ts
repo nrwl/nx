@@ -31,9 +31,11 @@ export function createComponentStoriesFile(
     tsModule = ensureTypescript();
   }
   const proj = getProjects(host).get(project);
-  const sourceRoot = proj.sourceRoot;
 
-  const componentFilePath = joinPathFragments(sourceRoot, componentPath);
+  const componentFilePath = joinPathFragments(
+    proj.sourceRoot ?? proj.root,
+    componentPath
+  );
 
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),

@@ -6,12 +6,14 @@ import {
   names,
 } from '@nx/devkit';
 import { addToNgModule, findModule } from '../utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
   const options = await normalizeOptions(tree, rawOptions);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const pipeNames = names(options.name);
 
   generateFiles(
@@ -23,6 +25,10 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
       fileName: options.fileName,
       selector: pipeNames.propertyName,
       standalone: options.standalone,
+      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      setStandalone:
+        (angularMajorVersion >= 19 && !options.standalone) ||
+        (angularMajorVersion < 19 && options.standalone),
       tpl: '',
     }
   );

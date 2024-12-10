@@ -1,10 +1,14 @@
 import { DependencyType, ProjectGraph, TaskGraph } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { readFileSync } from 'fs';
 import {
-  calculateProjectDependencies,
   calculateDependenciesFromTaskGraph,
+  calculateProjectDependencies,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
   updatePaths,
 } from './buildable-libs-utils';
+import { join } from 'path';
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
@@ -766,5 +770,47 @@ describe('missingDependencies', () => {
     expect(() =>
       calculateProjectDependencies(graph, 'root', 'example', 'build', undefined)
     ).toThrow();
+  });
+});
+
+describe('createTmpTsConfig', () => {
+  it('should create a temporary tsconfig file extending the provided tsconfig', () => {
+    const fs = new TempFs('buildable-libs-utils#createTmpTsConfig');
+    const tsconfigPath = 'packages/foo/tsconfig.json';
+    fs.createFileSync(tsconfigPath, '{}');
+
+    const tmpTsConfigPath = createTmpTsConfig(
+      tsconfigPath,
+      fs.tempDir,
+      'packages/foo',
+      []
+    );
+
+    const tmpTsConfig = readFileSync(tmpTsConfigPath, 'utf8');
+    // would be generated at <workspaceRoot>/tmp/packages/foo/build/tsconfig.generated.json
+    // while the extended tsconfig path is <workspaceRoot>/packages/foo/tsconfig.json
+    expect(JSON.parse(tmpTsConfig).extends).toBe(
+      '../../../../packages/foo/tsconfig.json'
+    );
+  });
+
+  it('should also work when the provided tsconfig is an absolute path', () => {
+    const fs = new TempFs('buildable-libs-utils#createTmpTsConfig');
+    const tsconfigPath = join(fs.tempDir, 'packages/foo/tsconfig.json');
+    fs.createFileSync(tsconfigPath, '{}');
+
+    const tmpTsConfigPath = createTmpTsConfig(
+      tsconfigPath,
+      fs.tempDir,
+      'packages/foo',
+      []
+    );
+
+    const tmpTsConfig = readFileSync(tmpTsConfigPath, 'utf8');
+    // would be generated at <workspaceRoot>/tmp/packages/foo/build/tsconfig.generated.json
+    // while the extended tsconfig path is <workspaceRoot>/packages/foo/tsconfig.json
+    expect(JSON.parse(tmpTsConfig).extends).toBe(
+      '../../../../packages/foo/tsconfig.json'
+    );
   });
 });

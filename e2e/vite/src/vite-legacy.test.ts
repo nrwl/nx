@@ -48,7 +48,9 @@ describe('Vite Plugin', () => {
 
       beforeAll(() => {
         myApp = uniq('my-app');
-        runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
+        runCLI(
+          `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+        );
       });
 
       afterEach(() => {
@@ -95,7 +97,7 @@ describe('Vite Plugin', () => {
       beforeEach(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp}`
+          `generate @nx/web:app ${myApp} --bundler=vite --unitTestRunner=vitest --directory=${myApp}`
         );
       });
       it('should build application', async () => {
@@ -187,7 +189,7 @@ describe('Vite Plugin', () => {
         packages: ['@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app}`
+        `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=vitest --no-interactive  --directory=${app}`
       );
 
       // only this project will be directly used from dist

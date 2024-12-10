@@ -22,6 +22,7 @@ import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
+import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const pmc = getPackageManagerCommand();
 
@@ -37,7 +38,9 @@ export interface VitePluginOptions {
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : {};
 }
 
 function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
@@ -59,10 +62,17 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            isUsingTsSolutionSetup
+          ),
         configFilePaths,
         options,
         context
@@ -79,7 +89,13 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFilePath, options, context, {});
+    return createNodesInternal(
+      configFilePath,
+      options,
+      context,
+      {},
+      _isUsingTsSolutionSetup()
+    );
   },
 ];
 
@@ -87,7 +103,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: VitePluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, ViteTargets>
+  targetsCache: Record<string, ViteTargets>,
+  isUsingTsSolutionSetup: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -119,6 +136,7 @@ async function createNodesInternal(
     projectRoot,
     normalizedOptions,
     tsConfigFiles,
+    isUsingTsSolutionSetup,
     context
   );
   targetsCache[hash] ??= viteTargets;
@@ -148,6 +166,7 @@ async function buildViteTargets(
   projectRoot: string,
   options: VitePluginOptions,
   tsConfigFiles: string[],
+  isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext
 ): Promise<ViteTargets & { isLibrary: boolean }> {
   const absoluteConfigFilePath = joinPathFragments(
@@ -191,17 +210,24 @@ async function buildViteTargets(
       options.buildTargetName,
       namedInputs,
       buildOutputs,
-      projectRoot
+      projectRoot,
+      isUsingTsSolutionSetup
     );
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      targets[options.serveTargetName] = serveTarget(projectRoot);
+      targets[options.serveTargetName] = serveTarget(
+        projectRoot,
+        isUsingTsSolutionSetup
+      );
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
         options.buildTargetName
       );
-      targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+      targets[options.serveStaticTargetName] = serveStaticTarget(
+        options,
+        isUsingTsSolutionSetup
+      );
     }
   }
 
@@ -218,7 +244,9 @@ async function buildViteTargets(
           : ['default', '^default']),
         { externalDependencies: ['typescript'] },
       ],
-      command: `tsc --noEmit -p ${tsConfigToUse}`,
+      command: isUsingTsSolutionSetup
+        ? `tsc --build --emitDeclarationOnly --pretty --verbose`
+        : `tsc --noEmit -p ${tsConfigToUse}`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
         description: `Run Typechecking`,
@@ -232,6 +260,12 @@ async function buildViteTargets(
         },
       },
     };
+
+    if (isUsingTsSolutionSetup) {
+      targets[options.typecheckTargetName].syncGenerators = [
+        '@nx/js:typescript-sync',
+      ];
+    }
   }
 
   // if file is vitest.config or vite.config has definition for test, create target for test
@@ -253,9 +287,10 @@ async function buildTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  isUsingTsSolutionSetup: boolean
 ) {
-  return {
+  const buildTarget: TargetConfiguration = {
     command: `vite build`,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
@@ -283,9 +318,15 @@ async function buildTarget(
       },
     },
   };
+
+  if (isUsingTsSolutionSetup) {
+    buildTarget.syncGenerators = ['@nx/js:typescript-sync'];
+  }
+
+  return buildTarget;
 }
 
-function serveTarget(projectRoot: string) {
+function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
     command: `vite serve`,
     options: {
@@ -304,6 +345,10 @@ function serveTarget(projectRoot: string) {
       },
     },
   };
+
+  if (isUsingTsSolutionSetup) {
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+  }
 
   return targetConfig;
 }
@@ -369,7 +414,10 @@ async function testTarget(
   };
 }
 
-function serveStaticTarget(options: VitePluginOptions) {
+function serveStaticTarget(
+  options: VitePluginOptions,
+  isUsingTsSolutionSetup: boolean
+) {
   const targetConfig: TargetConfiguration = {
     executor: '@nx/web:file-server',
     options: {
@@ -377,6 +425,10 @@ function serveStaticTarget(options: VitePluginOptions) {
       spa: true,
     },
   };
+
+  if (isUsingTsSolutionSetup) {
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+  }
 
   return targetConfig;
 }

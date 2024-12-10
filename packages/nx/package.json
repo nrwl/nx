@@ -57,18 +57,19 @@
     "jsonc-parser": "3.2.0",
     "lines-and-columns": "2.0.3",
     "minimatch": "9.0.3",
+    "node-machine-id": "1.1.12",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
+    "ora": "5.3.0",
     "semver": "^7.5.3",
     "string-width": "^4.2.3",
     "tar-stream": "~2.2.0",
     "tmp": "~0.2.1",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
+    "yaml": "^2.6.0",
     "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1",
-    "node-machine-id": "1.1.12",
-    "ora": "5.3.0"
+    "yargs-parser": "21.1.1"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.8.0",
@@ -83,16 +84,16 @@
     }
   },
   "optionalDependencies": {
-    "@nx/nx-darwin-x64": "*",
     "@nx/nx-darwin-arm64": "*",
-    "@nx/nx-linux-x64-gnu": "*",
-    "@nx/nx-linux-x64-musl": "*",
-    "@nx/nx-win32-x64-msvc": "*",
+    "@nx/nx-darwin-x64": "*",
+    "@nx/nx-freebsd-x64": "*",
+    "@nx/nx-linux-arm-gnueabihf": "*",
     "@nx/nx-linux-arm64-gnu": "*",
     "@nx/nx-linux-arm64-musl": "*",
-    "@nx/nx-linux-arm-gnueabihf": "*",
+    "@nx/nx-linux-x64-gnu": "*",
+    "@nx/nx-linux-x64-musl": "*",
     "@nx/nx-win32-arm64-msvc": "*",
-    "@nx/nx-freebsd-x64": "*"
+    "@nx/nx-win32-x64-msvc": "*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json",

@@ -1,5 +1,5 @@
 const {composePlugins, withNx, withReact} = require('@nx/rspack');
-const {withModuleFederationForSSR} = require('@nx/rspack/module-federation');
+const {withModuleFederationForSSR} = require('@nx/module-federation/rspack');
 
 const baseConfig = require('./module-federation.config');
 

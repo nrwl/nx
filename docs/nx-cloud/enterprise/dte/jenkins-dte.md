@@ -11,7 +11,6 @@ pipeline {
     agent none
     environment {
         NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
-        NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT = 3
     }
     stages {
         stage('Pipeline') {

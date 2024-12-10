@@ -19,12 +19,14 @@ export interface ExecutorOptions {
   externalBuildTargets?: string[];
   generateLockfile?: boolean;
   stripLeadingPaths?: boolean;
+  generatePackageJson?: boolean;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
   rootDir: string;
   projectRoot: string;
   mainOutputPath: string;
+  generatePackageJson: boolean;
   files: Array<FileInputOutput>;
   root?: string;
   sourceRoot?: string;

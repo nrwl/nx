@@ -22,6 +22,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       name: options.name,
       fileName: options.fileName,
       symbolName: options.symbolName,
+      exportDefault: options.exportDefault,
       style: options.style,
       inlineStyle: options.inlineStyle,
       inlineTemplate: options.inlineTemplate,
@@ -31,6 +32,10 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       viewEncapsulation: options.viewEncapsulation,
       displayBlock: options.displayBlock,
       selector: options.selector,
+      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      setStandalone:
+        (angularMajorVersion >= 19 && !options.standalone) ||
+        (angularMajorVersion < 19 && options.standalone),
       angularMajorVersion,
       tpl: '',
     }

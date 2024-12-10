@@ -116,6 +116,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
 
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - Join our [Discord Community](https://go.nx.dev/community)
 - Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
 - Follow us on [Twitter](https://twitter.com/nxdevtools)

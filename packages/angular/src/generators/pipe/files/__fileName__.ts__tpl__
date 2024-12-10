@@ -1,8 +1,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: '<%= selector %>'<% if(standalone) {%>,
-  standalone: true<%}%>
+  name: '<%= selector %>'<% if (setStandalone) { %>,
+  standalone: <%= standalone %><% } %>
 })
 export class <%= symbolName %> implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {

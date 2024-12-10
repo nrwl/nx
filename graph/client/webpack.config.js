@@ -33,6 +33,7 @@ module.exports = {
       assets: getAssets(process.env.NX_TASK_TARGET_CONFIGURATION),
       webpackConfig: './webpack.config.js',
       outputHashing: 'none',
+      deleteOutputPath: false,
     }),
     new NxReactWebpackPlugin({
       svgr: false,

@@ -42,10 +42,6 @@ nx add @nx/node
 
 Use the `app` generator to create a new Fastify app.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 ```shell
 nx g @nx/node:app apps/fastify-api
 ```
@@ -61,10 +57,6 @@ This starts the application on localhost:3000/api by default.
 ## Create a Library
 
 To create a new library, run:
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g @nx/node:lib libs/my-lib

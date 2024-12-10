@@ -101,7 +101,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 
 Next, you should update your root lint configuration:
 
-- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
+- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `@nx/enforce-module-boundaries` and you should update the `depConstraints`:
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {

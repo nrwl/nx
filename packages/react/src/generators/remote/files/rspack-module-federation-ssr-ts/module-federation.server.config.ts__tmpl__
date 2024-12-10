@@ -1,4 +1,4 @@
-import {ModuleFederationConfig} from '@nx/rspack/module-federation';
+import {ModuleFederationConfig} from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: '<%= projectName %>',

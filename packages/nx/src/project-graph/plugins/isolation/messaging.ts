@@ -14,6 +14,9 @@ export interface PluginWorkerLoadMessage {
   payload: {
     plugin: PluginConfiguration;
     root: string;
+    name: string;
+    pluginPath: string;
+    shouldRegisterTSTranspiler: boolean;
   };
 }
 
@@ -107,14 +110,8 @@ export interface PluginCreateMetadataResult {
       };
 }
 
-export interface PluginWorkerShutdownMessage {
-  type: 'shutdown';
-  payload: {};
-}
-
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
-  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginCreateMetadataMessage;

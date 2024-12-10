@@ -1,14 +1,21 @@
 import * as fs from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import * as childProcess from 'child_process';
+import { tmpdir } from 'os';
+
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
 import {
+  addPackagePathToWorkspaces,
   detectPackageManager,
   getPackageManagerVersion,
+  getPackageWorkspaces,
   isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  PackageManager,
 } from './package-manager';
 
 describe('package-manager', () => {
@@ -258,6 +265,223 @@ describe('package-manager', () => {
           ['yarn-path ./bin/yarn.js', 'enableProgressBars false'].join('\n')
         )
       ).toEqual('enableProgressBars false');
+    });
+  });
+
+  describe('getPackageWorkspaces', () => {
+    const tempWorkspace = join(tmpdir(), 'addPackagePathToWorkspaces');
+
+    beforeAll(() => {
+      if (!existsSync(tempWorkspace)) {
+        mkdirSync(tempWorkspace, { recursive: true });
+      }
+    });
+    describe.each(['npm', 'yarn', 'bun'])('%s workspaces', (packageManager) => {
+      it('should return workspaces from package.json', () => {
+        writeFileSync(
+          join(tempWorkspace, 'package.json'),
+          '{"workspaces": ["packages/*"]}'
+        );
+        const workspaces = getPackageWorkspaces(
+          packageManager as PackageManager,
+          tempWorkspace
+        );
+        expect(workspaces).toEqual(['packages/*']);
+      });
+
+      it('should return empty array if workspaces does not exist', () => {
+        writeFileSync(join(tempWorkspace, 'package.json'), '{}');
+        const workspaces = getPackageWorkspaces(
+          packageManager as PackageManager,
+          tempWorkspace
+        );
+        expect(workspaces).toEqual([]);
+      });
+    });
+
+    describe('pnpm workspaces', () => {
+      beforeEach(() => {
+        if (existsSync(join(tempWorkspace, 'pnpm-workspace.yaml'))) {
+          rmSync(join(tempWorkspace, 'pnpm-workspace.yaml'));
+        }
+      });
+
+      it('should return workspaces from package.json', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/*`
+        );
+        const workspaces = getPackageWorkspaces('pnpm', tempWorkspace);
+        expect(workspaces).toEqual(['apps/*']);
+      });
+
+      it('should return empty array if workspaces is empty', () => {
+        writeFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), '');
+        const workspaces = getPackageWorkspaces('pnpm', tempWorkspace);
+        expect(workspaces).toEqual([]);
+      });
+    });
+  });
+
+  describe('addPackagePathToWorkspaces', () => {
+    const tempWorkspace = join(tmpdir(), 'addPackagePathToWorkspaces');
+
+    beforeAll(() => {
+      if (!existsSync(tempWorkspace)) {
+        mkdirSync(tempWorkspace, { recursive: true });
+      }
+    });
+
+    describe.each(['npm', 'yarn', 'bun'])('%s workspaces', (packageManager) => {
+      it('should add to workspaces if it is empty', () => {
+        writeFileSync(join(tempWorkspace, 'package.json'), '{}');
+        addPackagePathToWorkspaces(
+          'packages/app',
+          packageManager as PackageManager,
+          [],
+          tempWorkspace
+        );
+        expect(readFileSync(join(tempWorkspace, 'package.json'), 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "{
+            "workspaces": [
+              "packages/app"
+            ]
+          }"
+        `);
+      });
+
+      it('should add to workspaces if it is defined', () => {
+        writeFileSync(
+          join(tempWorkspace, 'package.json'),
+          '{"workspaces": ["test"]}'
+        );
+        addPackagePathToWorkspaces(
+          'packages/app',
+          packageManager as PackageManager,
+          ['test'],
+          tempWorkspace
+        );
+        expect(readFileSync(join(tempWorkspace, 'package.json'), 'utf-8'))
+          .toMatchInlineSnapshot(`
+            "{
+              "workspaces": [
+                "test",
+                "packages/app"
+              ]
+            }"
+          `);
+      });
+
+      it('should not add if package path is already in existing workspaces', () => {
+        writeFileSync(
+          join(tempWorkspace, 'package.json'),
+          '{"workspaces": ["packages/*"]}'
+        );
+        addPackagePathToWorkspaces(
+          'packages/app',
+          packageManager as PackageManager,
+          ['packages/*'],
+          tempWorkspace
+        );
+      });
+    });
+
+    describe('pnpm workspaces', () => {
+      beforeEach(() => {
+        if (existsSync(join(tempWorkspace, 'pnpm-workspace.yaml'))) {
+          rmSync(join(tempWorkspace, 'pnpm-workspace.yaml'));
+        }
+      });
+
+      it('should create pnpm-workspace.yaml if it does not exist', () => {
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(
+          readFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'utf-8')
+        ).toMatchInlineSnapshot(`
+          "packages:
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add to packages if pnpm-workspace.yaml is empty', () => {
+        writeFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), '');
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(
+          readFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'utf-8')
+        ).toMatchInlineSnapshot(`
+          "packages:
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add to packages if packages is empty', () => {
+        writeFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'packages:');
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(
+          readFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'utf-8')
+        ).toMatchInlineSnapshot(`
+          "packages:
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add to pnpm workspace if there are packages defined', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/*`
+        );
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(readFileSync(`${tempWorkspace}/pnpm-workspace.yaml`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "packages:
+            - apps/*
+            - packages/app
+          "
+        `);
+      });
+
+      it('should not add to pnpm workspace if package path is already in', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/*`
+        );
+        addPackagePathToWorkspaces('apps/app1', 'pnpm', [], tempWorkspace);
+      });
+
+      it('should preserve comments', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/* # comment`
+        );
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(readFileSync(`${tempWorkspace}/pnpm-workspace.yaml`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "packages:
+            - apps/* # comment
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add packages key if it is not defined', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `something:\n  - random/* # comment`
+        );
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(readFileSync(`${tempWorkspace}/pnpm-workspace.yaml`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "something:
+            - random/* # comment
+          packages:
+            - packages/app
+          "
+        `);
+      });
     });
   });
 });

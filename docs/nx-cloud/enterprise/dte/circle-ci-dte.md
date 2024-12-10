@@ -14,8 +14,6 @@ jobs:
   main:
     docker:
       - image: cimg/node:lts-browsers
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
     steps:
       - checkout
       - run: npm ci

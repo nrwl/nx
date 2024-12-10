@@ -10,7 +10,7 @@ describe('<%= pluginName %>', () => {
 
     // The plugin has been built and published to a local registry in the jest globalSetup
     // Install the plugin built with the latest source code into the test repo
-    execSync(`<%= packageManagerCommands.install %> <%= pluginPackageName %>@e2e`, {
+    execSync(`<%= packageManagerCommands.addDev %> <%= pluginPackageName %>@e2e`, {
       cwd: projectDirectory,
       stdio: 'inherit',
       env: process.env,
@@ -18,11 +18,13 @@ describe('<%= pluginName %>', () => {
   });
 
   afterAll(() => {
-    // Cleanup the test project
-    rmSync(projectDirectory, {
-      recursive: true,
-      force: true,
-    });
+    if (projectDirectory) {
+      // Cleanup the test project
+      rmSync(projectDirectory, {
+        recursive: true,
+        force: true,
+      });
+    }
   });
 
 
@@ -53,7 +55,7 @@ function createTestProject() {
   });
 
   execSync(
-    `<%= packageManagerCommands.exec %> --yes create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive`,
+    `<%= packageManagerCommands.dlx %> create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',

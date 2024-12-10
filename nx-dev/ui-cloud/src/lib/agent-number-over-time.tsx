@@ -86,7 +86,10 @@ export function AgentNumberOverTime(): JSX.Element {
   };
 
   return (
-    <section id="agent-number-over-time" className="overflow-hidden">
+    <section
+      id="agent-number-over-time"
+      className="scroll-mt-24 overflow-hidden"
+    >
       <div className="mx-auto max-w-7xl md:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <SectionHeading

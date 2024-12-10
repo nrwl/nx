@@ -9,7 +9,11 @@ import {
   Statistics,
 } from '@nx/nx-dev/ui-cloud';
 
-import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+import {
+  ButtonLinkProps,
+  CallToAction,
+  DefaultLayout,
+} from '@nx/nx-dev/ui-common';
 
 import type { Metadata } from 'next';
 
@@ -37,8 +41,18 @@ export const metadata: Metadata = {
 };
 
 export default function NxCloudPage(): JSX.Element {
+  const headerCTAConfig: ButtonLinkProps[] = [
+    {
+      href: '/pricing',
+      variant: 'primary',
+      size: 'small',
+      title: 'Get started for free',
+      children: 'Get started for free',
+    },
+  ];
+
   return (
-    <DefaultLayout>
+    <DefaultLayout headerCTAConfig={headerCTAConfig}>
       <Hero />
       <TrustedBy />
 

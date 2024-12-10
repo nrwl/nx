@@ -94,3 +94,25 @@ export const TwoTargets: Story = {
     collapseAllTargets: () => {},
   } as TargetConfigurationGroupListProps,
 };
+
+export const NoTargets: Story = {
+  args: {
+    project: {
+      name: 'react',
+      type: 'lib',
+      data: {
+        root: 'libs/react',
+        targets: {},
+      },
+    },
+    sourceMap: {
+      react: ['react'],
+    },
+    variant: 'default',
+    onRunTarget: () => {},
+    onViewInTaskGraph: () => {},
+    selectedTargetGroup: 'build',
+    setExpandTargets: () => {},
+    collapseAllTargets: () => {},
+  } as TargetConfigurationGroupListProps,
+};

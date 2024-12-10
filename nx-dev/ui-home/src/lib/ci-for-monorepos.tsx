@@ -315,7 +315,7 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
         <div className="flex flex-col justify-between text-center drop-shadow">
           <div>
             <span className="text-9xl font-bold text-slate-950 dark:text-white">
-              <AnimateValue num={10} suffix="k" once />
+              <AnimateValue num={20} suffix="k" once />
             </span>
             <br />
             <span className="text-4xl font-semibold text-slate-950 dark:text-white">

@@ -6,7 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -36,15 +36,15 @@ export async function expoApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'expo', 'application');
-
-  const options = await normalizeOptions(host, schema);
-
   const tasks: GeneratorCallback[] = [];
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
+
+  const options = await normalizeOptions(host, schema);
 
   tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
@@ -79,6 +79,21 @@ export async function expoApplicationGeneratorInternal(
   const e2eTask = await addE2e(host, options);
   tasks.push(e2eTask);
   addEasScripts(host);
+
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      noUnusedLocals: false,
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
 
   if (!options.skipFormat) {
     await formatFiles(host);

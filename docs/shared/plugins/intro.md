@@ -37,8 +37,8 @@ You can follow along with one of the step by step tutorials below that is focuse
 
 {% cards cols="2" %}
 
-{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="office" /%}
-{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="tool" /%}
+{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="BuildingOfficeIcon" /%}
+{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="WrenchScrewdriverIcon" /%}
 
 {% /cards %}
 

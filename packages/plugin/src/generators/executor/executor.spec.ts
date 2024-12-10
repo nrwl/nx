@@ -28,7 +28,29 @@ describe('NxPlugin Executor Generator', () => {
   it('should generate files', async () => {
     await executorGenerator(tree, {
       name: 'my-executor',
-      path: 'my-plugin/src/executors/my-executor',
+      path: 'my-plugin/src/executors/my-executor/executor',
+      unitTestRunner: 'jest',
+      includeHasher: false,
+    });
+
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
+    ).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await executorGenerator(tree, {
+      name: 'my-executor',
+      path: 'my-plugin/src/executors/my-executor/executor.ts',
       unitTestRunner: 'jest',
       includeHasher: false,
     });
@@ -52,7 +74,7 @@ describe('NxPlugin Executor Generator', () => {
     await executorGenerator(tree, {
       name: 'my-executor',
       unitTestRunner: 'jest',
-      path: 'my-plugin/src/executors/my-executor',
+      path: 'my-plugin/src/executors/my-executor/executor',
       includeHasher: false,
     });
 
@@ -73,7 +95,7 @@ describe('NxPlugin Executor Generator', () => {
   it('should update executors.json', async () => {
     await executorGenerator(tree, {
       name: 'my-executor',
-      path: 'my-plugin/src/executors/my-executor',
+      path: 'my-plugin/src/executors/my-executor/executor',
       unitTestRunner: 'jest',
       includeHasher: false,
     });
@@ -94,7 +116,7 @@ describe('NxPlugin Executor Generator', () => {
   it('should generate custom description', async () => {
     await executorGenerator(tree, {
       name: 'my-executor',
-      path: 'my-plugin/src/executors/my-executor',
+      path: 'my-plugin/src/executors/my-executor/executor',
       description: 'my-executor custom description',
       unitTestRunner: 'jest',
       includeHasher: false,
@@ -116,7 +138,7 @@ describe('NxPlugin Executor Generator', () => {
 
     await executorGenerator(tree, {
       name: 'test-executor',
-      path: 'test-js-lib/src/executors/my-executor',
+      path: 'test-js-lib/src/executors/my-executor/executor',
       unitTestRunner: 'jest',
       includeHasher: false,
     });
@@ -127,12 +149,56 @@ describe('NxPlugin Executor Generator', () => {
     );
   });
 
+  it('should support custom executor file name', async () => {
+    await executorGenerator(tree, {
+      name: 'my-executor',
+      path: 'my-plugin/src/executors/my-executor/my-custom-executor',
+      unitTestRunner: 'jest',
+      includeHasher: true,
+    });
+
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/my-custom-executor.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        'my-plugin/src/executors/my-executor/my-custom-executor.spec.ts'
+      )
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/hasher.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
+    ).toBeTruthy();
+    expect(tree.read('my-plugin/executors.json', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "{
+        "executors": {
+          "my-executor": {
+            "implementation": "./src/executors/my-executor/my-custom-executor",
+            "schema": "./src/executors/my-executor/schema.json",
+            "description": "my-executor executor",
+            "hasher": "./src/executors/my-executor/hasher"
+          }
+        }
+      }
+      "
+    `);
+  });
+
   describe('--unitTestRunner', () => {
     describe('none', () => {
       it('should not generate unit test files', async () => {
         await executorGenerator(tree, {
           name: 'my-executor',
-          path: 'my-plugin/src/executors/my-executor',
+          path: 'my-plugin/src/executors/my-executor/executor',
           unitTestRunner: 'none',
           includeHasher: false,
         });
@@ -151,7 +217,7 @@ describe('NxPlugin Executor Generator', () => {
     it('should generate hasher files', async () => {
       await executorGenerator(tree, {
         name: 'my-executor',
-        path: 'my-plugin/src/executors/my-executor',
+        path: 'my-plugin/src/executors/my-executor/executor',
         unitTestRunner: 'jest',
         includeHasher: true,
       });
@@ -180,7 +246,7 @@ describe('NxPlugin Executor Generator', () => {
     it('should update executors.json', async () => {
       await executorGenerator(tree, {
         name: 'my-executor',
-        path: 'my-plugin/src/executors/my-executor',
+        path: 'my-plugin/src/executors/my-executor/executor',
         unitTestRunner: 'jest',
         includeHasher: true,
       });

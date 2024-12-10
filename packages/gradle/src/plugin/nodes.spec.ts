@@ -30,8 +30,17 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['proj/build.gradle', new Map([['build', 'build']])],
       ]),
+      gradleProjectToTasksMap: new Map<string, Set<string>>([
+        ['proj', new Set(['test'])],
+      ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        ['proj', new Map([['test', 'Verification']])],
+        [
+          'proj',
+          new Map([
+            ['test', 'Verification'],
+            ['build', 'Build'],
+          ]),
+        ],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
       gradleProjectNameToProjectRootMap: new Map<string, string>([
@@ -90,7 +99,113 @@ describe('@nx/gradle/plugin', () => {
                   ],
                 },
                 "name": "proj",
+                "projectType": "application",
                 "targets": {
+                  "test": {
+                    "cache": true,
+                    "command": "./gradlew proj:test",
+                    "dependsOn": [
+                      "testClasses",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "help": {
+                        "command": "./gradlew help --task proj:test",
+                        "example": {
+                          "options": {
+                            "args": [
+                              "--rerun",
+                            ],
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                    "options": {
+                      "cwd": ".",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('should create nodes include subprojects tasks', async () => {
+    const results = await createNodesFunction(
+      ['proj/build.gradle'],
+      {
+        buildTargetName: 'build',
+        includeSubprojectsTasks: true,
+      },
+      context
+    );
+
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "proj/build.gradle",
+          {
+            "projects": {
+              "proj": {
+                "metadata": {
+                  "targetGroups": {
+                    "Build": [
+                      "build",
+                    ],
+                    "Verification": [
+                      "test",
+                    ],
+                  },
+                  "technologies": [
+                    "gradle",
+                  ],
+                },
+                "name": "proj",
+                "projectType": "application",
+                "targets": {
+                  "build": {
+                    "cache": true,
+                    "command": "./gradlew proj:build",
+                    "dependsOn": [
+                      "^build",
+                      "classes",
+                      "test",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "help": {
+                        "command": "./gradlew help --task proj:build",
+                        "example": {
+                          "options": {
+                            "args": [
+                              "--rerun",
+                            ],
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                    "options": {
+                      "cwd": ".",
+                    },
+                    "outputs": [
+                      "build",
+                    ],
+                  },
                   "test": {
                     "cache": true,
                     "command": "./gradlew proj:test",
@@ -138,6 +253,9 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
       ]),
+      gradleProjectToTasksMap: new Map<string, Set<string>>([
+        ['proj', new Set(['test'])],
+      ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
         ['proj', new Map([['test', 'Verification']])],
       ]),
@@ -177,6 +295,7 @@ describe('@nx/gradle/plugin', () => {
                   ],
                 },
                 "name": "proj",
+                "projectType": "application",
                 "targets": {
                   "test": {
                     "cache": true,
@@ -225,6 +344,9 @@ describe('@nx/gradle/plugin', () => {
         buildFileToDepsMap: new Map<string, string>(),
         gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
           ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
+        ]),
+        gradleProjectToTasksMap: new Map<string, Set<string>>([
+          ['proj', new Set(['test'])],
         ]),
         gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
           ['proj', new Map([['test', 'Test']])],
@@ -290,6 +412,7 @@ describe('@nx/gradle/plugin', () => {
                     ],
                   },
                   "name": "proj",
+                  "projectType": "application",
                   "targets": {
                     "test": {
                       "cache": false,

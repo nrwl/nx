@@ -49,7 +49,8 @@ export function findMatchingProjects(
   }
 
   for (const stringPattern of patterns) {
-    if (!stringPattern.length) {
+    // Do not waste time attempting to look up cross-workspace references which will never match
+    if (!stringPattern.length || stringPattern.startsWith('nx-cloud:')) {
       continue;
     }
 

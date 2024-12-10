@@ -32,7 +32,28 @@ describe('NxPlugin Generator Generator', () => {
   it('should generate files', async () => {
     await generatorGenerator(tree, {
       name: 'my-generator',
-      path: 'my-plugin/src/generators/my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator',
+      unitTestRunner: 'jest',
+    });
+
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/generator.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
+    ).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await generatorGenerator(tree, {
+      name: 'my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator.ts',
       unitTestRunner: 'jest',
     });
 
@@ -54,7 +75,7 @@ describe('NxPlugin Generator Generator', () => {
     setCwd('my-plugin/src/nx-integrations/generators/my-generator');
     await generatorGenerator(tree, {
       name: 'my-generator',
-      path: 'my-plugin/src/nx-integrations/generators/my-generator',
+      path: 'my-plugin/src/nx-integrations/generators/my-generator/generator',
       unitTestRunner: 'jest',
     });
 
@@ -82,7 +103,7 @@ describe('NxPlugin Generator Generator', () => {
 
   it('should generate files for derived', async () => {
     await generatorGenerator(tree, {
-      path: `${projectName}/src/generators/my-generator`,
+      path: `${projectName}/src/generators/my-generator/generator`,
       name: 'my-generator',
       unitTestRunner: 'jest',
     });
@@ -104,7 +125,7 @@ describe('NxPlugin Generator Generator', () => {
   it('should update generators.json', async () => {
     await generatorGenerator(tree, {
       name: 'my-generator',
-      path: 'my-plugin/src/generators/my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator',
       unitTestRunner: 'jest',
     });
 
@@ -123,7 +144,7 @@ describe('NxPlugin Generator Generator', () => {
 
   it('should update generators.json for derived', async () => {
     await generatorGenerator(tree, {
-      path: 'my-plugin/src/generators/my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator',
       name: 'my-generator',
       unitTestRunner: 'jest',
     });
@@ -144,12 +165,12 @@ describe('NxPlugin Generator Generator', () => {
   it('should throw if recreating an existing generator', async () => {
     await generatorGenerator(tree, {
       name: 'my-generator',
-      path: 'my-plugin/src/generators/my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator',
       unitTestRunner: 'jest',
     });
     expect(
       generatorGenerator(tree, {
-        path: 'my-plugin/src/generators/my-generator',
+        path: 'my-plugin/src/generators/my-generator/generator',
         name: 'my-generator',
         unitTestRunner: 'jest',
       })
@@ -162,7 +183,7 @@ describe('NxPlugin Generator Generator', () => {
 
     await generatorGenerator(tree, {
       name: generatorName,
-      path: 'my-plugin/src/generators/my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator',
       unitTestRunner: 'jest',
       description: 'my-generator description',
     });
@@ -192,7 +213,7 @@ describe('NxPlugin Generator Generator', () => {
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
     await generatorGenerator(tree, {
       name: 'test-generator',
-      path: 'test-js-lib/src/generators/test-generator',
+      path: 'test-js-lib/src/generators/test-generator/generator',
       unitTestRunner: 'jest',
     });
 
@@ -207,7 +228,7 @@ describe('NxPlugin Generator Generator', () => {
   it('should generate custom description', async () => {
     await generatorGenerator(tree, {
       name: 'my-generator',
-      path: 'my-plugin/src/generators/my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator',
       description: 'my-generator custom description',
       unitTestRunner: 'jest',
     });
@@ -219,12 +240,50 @@ describe('NxPlugin Generator Generator', () => {
     );
   });
 
+  it('should support custom generator file name', async () => {
+    await generatorGenerator(tree, {
+      name: 'my-generator',
+      path: 'my-plugin/src/generators/my-generator/my-custom-generator',
+      unitTestRunner: 'jest',
+    });
+
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        'my-plugin/src/generators/my-generator/my-custom-generator.ts'
+      )
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        'my-plugin/src/generators/my-generator/my-custom-generator.spec.ts'
+      )
+    ).toBeTruthy();
+    expect(tree.read('my-plugin/generators.json', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "{
+        "generators": {
+          "my-generator": {
+            "factory": "./src/generators/my-generator/my-custom-generator",
+            "schema": "./src/generators/my-generator/schema.json",
+            "description": "my-generator generator"
+          }
+        }
+      }
+      "
+    `);
+  });
+
   describe('--unitTestRunner', () => {
     describe('none', () => {
       it('should not generate files', async () => {
         await generatorGenerator(tree, {
           name: 'my-generator',
-          path: 'my-plugin/src/generators/my-generator',
+          path: 'my-plugin/src/generators/my-generator/generator',
           unitTestRunner: 'none',
         });
 
@@ -241,7 +300,7 @@ describe('NxPlugin Generator Generator', () => {
   describe('preset generator', () => {
     it('should default to standalone layout: true', async () => {
       await generatorGenerator(tree, {
-        path: 'my-plugin/src/generators/preset',
+        path: 'my-plugin/src/generators/preset/generator',
         name: 'preset',
         unitTestRunner: 'none',
       });

@@ -1,34 +1,42 @@
 import {
   formatFiles,
-  GeneratorCallback,
   names,
+  readNxJson,
   runTasksInSerial,
-  Tree,
   updateJson,
+  type GeneratorCallback,
+  type Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { createPackageGenerator } from '../create-package/create-package';
 import { pluginGenerator } from '../plugin/plugin';
-import { PresetGeneratorSchema } from './schema';
-import createPackageGenerator from '../create-package/create-package';
+import type {
+  NormalizedPresetGeneratorOptions,
+  PresetGeneratorSchema,
+} from './schema';
 
-export default async function (tree: Tree, options: PresetGeneratorSchema) {
-  assertNotUsingTsSolutionSetup(tree, 'plugin', 'preset');
+export async function presetGenerator(
+  tree: Tree,
+  rawOptions: PresetGeneratorSchema
+) {
+  return await presetGeneratorInternal(tree, {
+    addPlugin: false,
+    useProjectJson: true,
+    ...rawOptions,
+  });
+}
 
+export async function presetGeneratorInternal(
+  tree: Tree,
+  rawOptions: PresetGeneratorSchema
+) {
   const tasks: GeneratorCallback[] = [];
-  const pluginProjectName = names(
-    options.pluginName.includes('/')
-      ? options.pluginName.split('/')[1]
-      : options.pluginName
-  ).fileName;
-  options.createPackageName =
-    options.createPackageName === 'false' // for command line in e2e, it is passed as a string
-      ? undefined
-      : options.createPackageName;
+  const options = normalizeOptions(tree, rawOptions);
+
   const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     unitTestRunner: 'jest',
     importPath: options.pluginName,
@@ -37,9 +45,11 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     // when creating a CLI package, the plugin will be in the packages folder
     directory:
       options.createPackageName && options.createPackageName !== 'false'
-        ? `packages/${pluginProjectName}`
-        : pluginProjectName,
+        ? `packages/${options.pluginName}`
+        : options.pluginName,
     rootProject: options.createPackageName ? false : true,
+    useProjectJson: options.useProjectJson,
+    addPlugin: options.addPlugin,
   });
   tasks.push(pluginTask);
 
@@ -54,8 +64,10 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
       project: options.pluginName,
       skipFormat: true,
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       compiler: 'tsc',
+      useProjectJson: options.useProjectJson,
+      addPlugin: options.addPlugin,
     });
     tasks.push(cliTask);
   }
@@ -67,9 +79,42 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
-    const nxPluginEntry = json.dependencies['@nx/plugin'];
-    delete json.dependencies['@nx/plugin'];
-    json.devDependencies['@nx/plugin'] = nxPluginEntry;
+    if (json.dependencies['@nx/plugin']) {
+      const nxPluginEntry = json.dependencies['@nx/plugin'];
+      delete json.dependencies['@nx/plugin'];
+      json.devDependencies['@nx/plugin'] = nxPluginEntry;
+    }
     return json;
   });
 }
+
+function normalizeOptions(
+  tree: Tree,
+  options: PresetGeneratorSchema
+): NormalizedPresetGeneratorOptions {
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    options.addPlugin ??
+    (isTsSolutionSetup &&
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false);
+
+  return {
+    ...options,
+    pluginName: names(
+      options.pluginName.includes('/')
+        ? options.pluginName.split('/')[1]
+        : options.pluginName
+    ).fileName,
+    createPackageName:
+      options.createPackageName === 'false' // for command line in e2e, it is passed as a string
+        ? undefined
+        : options.createPackageName,
+    addPlugin,
+    useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
+  };
+}
+
+export default presetGenerator;

@@ -166,6 +166,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   vite: '@nx/vite',
   vitest: '@nx/vite',
   webpack: '@nx/webpack',
+  '@rspack/core': '@nx/rspack',
   rollup: '@nx/rollup',
   // Testing tools
   jest: '@nx/jest',

@@ -105,7 +105,7 @@ function postcssOptionsCreator(
   }
 ) {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
-  // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
+  // PostCSS options depend on the rspack loader, but we need to set the `config` path as a string due to this check:
   // https://github.com/webpack-contrib/postcss-loader/blob/0d342b1/src/utils.js#L36
 
   const postcssOptions: PostcssOptions = (loader) => ({

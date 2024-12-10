@@ -19,7 +19,6 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
     defaultSchema = {
-      name: 'hello',
       path: 'my-lib/src/lib/hello/hello',
       skipTests: false,
       export: false,
@@ -55,6 +54,16 @@ describe('component', () => {
 
   it('should generate files', async () => {
     await expoComponentGenerator(appTree, defaultSchema);
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await expoComponentGenerator(appTree, {
+      ...defaultSchema,
+      path: 'my-lib/src/lib/hello/hello.tsx',
+    });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
     expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();

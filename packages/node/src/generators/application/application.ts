@@ -159,6 +159,21 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   };
 }
 
+function getNestWebpackBuildConfig(): TargetConfiguration {
+  return {
+    executor: 'nx:run-commands',
+    options: {
+      command: 'webpack-cli build',
+      args: ['node-env=production'],
+    },
+    configurations: {
+      development: {
+        args: ['node-env=development'],
+      },
+    },
+  };
+}
+
 function addProject(tree: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
@@ -175,6 +190,10 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     if (!hasWebpackPlugin(tree)) {
       addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
       project.targets.build = getWebpackBuildConfig(project, options);
+    } else if (options.isNest) {
+      // If we are using Nest that has the webpack plugin we need to override the
+      // build target so that node-env can be set to production or development so the serve target can be run in development mode
+      project.targets.build = getNestWebpackBuildConfig();
     }
   }
   project.targets.serve = getServeConfig(options);

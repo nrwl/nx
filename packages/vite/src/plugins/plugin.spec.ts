@@ -2,6 +2,7 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -9,9 +10,18 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+  isUsingTsSolutionSetup: jest.fn(),
+}));
+
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
+
+  beforeEach(() => {
+    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+  });
 
   describe('root project', () => {
     let tempFs: TempFs;
@@ -36,12 +46,11 @@ describe('@nx/vite/plugin', () => {
       };
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
-      tempFs.createFileSync('package.json', '');
+      tempFs.createFileSync('package.json', '{}');
     });
 
     afterEach(() => {
       jest.resetModules();
-      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -86,6 +95,51 @@ describe('@nx/vite/plugin', () => {
       const targets = nodes[0]?.[1]?.projects?.['.']?.targets;
       expect(targets?.['build-input']?.command).toMatch(/vite/);
       expect(targets?.['serve-input'].command).toMatch(/vite/);
+    });
+
+    it('should infer typecheck with --build flag when using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
+        `tsc --build --emitDeclarationOnly --pretty --verbose`
+      );
+    });
+
+    it('should infer the sync generator when using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects['.'].targets.build.syncGenerators).toEqual([
+        '@nx/js:typescript-sync',
+      ]);
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
+      ).toEqual(['@nx/js:typescript-sync']);
     });
   });
 

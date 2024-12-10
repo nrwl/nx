@@ -25,7 +25,6 @@ import {
   isAggregateCreateNodesError,
 } from '../error-types';
 import { IS_WASM } from '../../native';
-import { output } from '../../utils/output';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -127,15 +126,6 @@ export type CreateNodesResultWithContext = CreateNodesResult & {
   pluginName: string;
 };
 
-// Short lived cache (cleared between cmd runs)
-// holding resolved nx plugin objects.
-// Allows loaded plugins to not be reloaded when
-// referenced multiple times.
-export const nxPluginCache: Map<
-  unknown,
-  [Promise<LoadedNxPlugin>, () => void]
-> = new Map();
-
 function isIsolationEnabled() {
   // Explicitly enabled, regardless of further conditions
   if (process.env.NX_ISOLATE_PLUGINS === 'true') {
@@ -153,31 +143,45 @@ function isIsolationEnabled() {
   return true;
 }
 
+/**
+ * Use `getPlugins` instead.
+ * @deprecated Do not use this. Use `getPlugins` instead.
+ */
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<readonly [LoadedNxPlugin[], () => void]> {
   performance.mark('loadNxPlugins:start');
-
   const loadingMethod = isIsolationEnabled()
     ? loadNxPluginInIsolation
     : loadNxPlugin;
 
   plugins = await normalizePlugins(plugins, root);
 
-  const result: Promise<LoadedNxPlugin>[] = new Array(plugins?.length);
-
   const cleanupFunctions: Array<() => void> = [];
-  await Promise.all(
-    plugins.map(async (plugin, idx) => {
-      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
-      result[idx] = loadedPluginPromise;
-      cleanupFunctions.push(cleanup);
-    })
-  );
-
   const ret = [
-    await Promise.all(result),
+    await Promise.all(
+      plugins.map(async (plugin) => {
+        const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
+        performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
+
+        const [loadedPluginPromise, cleanup] = await loadingMethod(
+          plugin,
+          root
+        );
+
+        cleanupFunctions.push(cleanup);
+        const res = await loadedPluginPromise;
+        performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
+        performance.measure(
+          `Load Nx Plugin: ${pluginPath}`,
+          `Load Nx Plugin: ${pluginPath} - start`,
+          `Load Nx Plugin: ${pluginPath} - end`
+        );
+
+        return res;
+      })
+    ),
     () => {
       for (const fn of cleanupFunctions) {
         fn();

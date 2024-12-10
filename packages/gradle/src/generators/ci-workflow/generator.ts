@@ -19,7 +19,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
           comment: `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
         },
         {
-          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build`,
+          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t build`,
         },
       ];
     }
@@ -28,7 +28,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
         {
           comment: `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
         },
-        { command: `./nx affected -t test build` },
+        { command: `./nx affected -t build` },
       ];
     }
   }

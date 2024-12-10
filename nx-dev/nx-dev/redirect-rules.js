@@ -66,8 +66,6 @@ const schemaUrls = {
     '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
-  '/react/component-cypress-spec':
-    '/packages/react/generators/component-cypress-spec',
   '/react/component-story': '/packages/react/generators/component-story',
   '/react/library': '/packages/react/generators/library',
   '/react/redux': '/packages/react/generators/redux',
@@ -385,6 +383,9 @@ const recipesUrls = {
   '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
   '/recipes/nx-console/console-add-dependency-command':
     '/getting-started/editor-setup',
+  // This one was folded into a more holistic recipe around managing version reference updates
+  '/recipes/nx-release/publish-custom-dist-directory':
+    '/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files',
 };
 
 /**
@@ -1101,6 +1102,7 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
   '/deprecated/storybook/upgrade-storybook-v6-react':
     '/recipes/storybook/overview-react', // 80 views
+  '/deprecated/custom-task-runners': '/deprecated/legacy-cache',
 };
 
 const decisionsSection = {

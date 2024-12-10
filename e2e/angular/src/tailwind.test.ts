@@ -137,6 +137,7 @@ describe('Tailwind support', () => {
   
         @Component({
           selector: '${project}-foo',
+          standalone: false,
           template: '<button class="custom-btn text-white ${buttonBgColor}">Click me!</button>',
           styles: [\`
             .custom-btn {
@@ -176,7 +177,7 @@ describe('Tailwind support', () => {
       libSpacing: (typeof spacing)['root']
     ) => {
       const builtComponentContent = readFile(
-        `dist/${lib}/esm2022/lib/foo.component.mjs`
+        `dist/${lib}/fesm2022/${project}-${lib}.mjs`
       );
       let expectedStylesRegex = new RegExp(
         `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`

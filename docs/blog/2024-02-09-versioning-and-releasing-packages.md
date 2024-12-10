@@ -188,7 +188,7 @@ It also generates a nice `CHANGELOG.md` for us:
 
 - **buttons:** add new background shadow
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - Juri
 

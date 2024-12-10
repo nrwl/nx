@@ -18,6 +18,7 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { Plugin } from 'vite';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface nxViteTsPathsOptions {
   /**
@@ -188,6 +189,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       return resolvedFile || null;
     },
     async writeBundle(options) {
+      if (isUsingTsSolutionSetup()) return;
       const outDir = options.dir || 'dist';
       const src = resolve(projectRoot, 'package.json');
       if (existsSync(src)) {
