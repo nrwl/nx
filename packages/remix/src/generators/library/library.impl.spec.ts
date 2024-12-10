@@ -175,6 +175,7 @@ describe('Remix Library Generator', () => {
             "sourceRoot": "packages/foo/src",
           },
           "types": "./src/index.ts",
+          "version": "0.0.1",
         }
       `);
     });
