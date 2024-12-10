@@ -38,10 +38,11 @@ nx build <app-name> # defaults to es# defaults to esm
 "build": {
   "executor": "@nx/esbuild:esbuild",
   "options": {
-  "main": "<app-root>",
-  "tsConfig": "<app-root>/tsconfig.app.json",
-  "outputPath": "dist/<app-root>",
-    "format": ["esm", "cjs"]
+    "main": "<app-root>",
+    "tsConfig": "<app-root>/tsconfig.app.json",
+    "outputPath": "dist/<app-root>",
+      "format": ["esm", "cjs"]
+  }
 }
 ```
 
@@ -56,10 +57,11 @@ You can also use `*` wildcard to match assets.
 "build": {
   "executor": "@nx/esbuild:esbuild",
   "options": {
-  "main": "<app-root>",
-  "tsConfig": "<app-root>/tsconfig.app.json",
-  "outputPath": "dist/<app-root>",
-  "external": ["lodash", "*.png"]
+    "main": "<app-root>",
+    "tsConfig": "<app-root>/tsconfig.app.json",
+    "outputPath": "dist/<app-root>",
+    "external": ["lodash", "*.png"]
+  }
 }
 ```
 
@@ -72,10 +74,11 @@ Type checking is the slowest part of the build. You may want to skip type checki
 "build": {
   "executor": "@nx/esbuild:esbuild",
   "options": {
-  "main": "<app-root>",
-  "tsConfig": "<app-root>/tsconfig.app.json",
-  "outputPath": "dist/<app-root>",
-  "skipTypeCheck": true
+    "main": "<app-root>",
+    "tsConfig": "<app-root>/tsconfig.app.json",
+    "outputPath": "dist/<app-root>",
+    "skipTypeCheck": true
+  }
 }
 ```
 
@@ -88,16 +91,17 @@ Additional [esbuild options](https://esbuild.github.io/api/) can be passed using
 "build": {
   "executor": "@nx/esbuild:esbuild",
   "options": {
-  "main": "<app-root>",
-  "tsConfig": "<app-root>/tsconfig.app.json",
-  "outputPath": "dist/<app-root>",
-  "esbuildOptions": {
-    "legalComments": "inline"
-    "banner": {
-      ".js": "// banner"
-    },
-    "footer": {
-      ".js": "// footer"
+    "main": "<app-root>",
+    "tsConfig": "<app-root>/tsconfig.app.json",
+    "outputPath": "dist/<app-root>",
+    "esbuildOptions": {
+      "legalComments": "inline"
+      "banner": {
+        ".js": "// banner"
+      },
+      "footer": {
+        ".js": "// footer"
+      }
     }
   }
 }
