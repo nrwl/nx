@@ -1,10 +1,18 @@
 import { offsetFromRoot, Tree, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import type { Node, SyntaxKind } from 'typescript';
+import type { CompilerOptions, Node, SyntaxKind } from 'typescript';
 import { ensureTypescript } from './typescript';
 
 let tsModule: typeof import('typescript');
+
+const TSCONFIG_FILE_NAMES = ['tsconfig.base.json', 'tsconfig.json'] as const;
+export type TSConfigFileName = (typeof TSCONFIG_FILE_NAMES)[number];
+
+export type TSConfig = {
+  compilerOptions: CompilerOptions;
+  [string: string]: unknown;
+};
 
 export function readTsConfig(tsConfigPath: string) {
   if (!tsModule) {
@@ -20,15 +28,14 @@ export function readTsConfig(tsConfigPath: string) {
     dirname(tsConfigPath)
   );
 }
-
-export function getRootTsConfigPathInTree(tree: Tree): string | null {
-  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
+export function getRootTsConfigPathInTree(tree: Tree): TSConfigFileName | null {
+  for (const path of TSCONFIG_FILE_NAMES) {
     if (tree.exists(path)) {
       return path;
     }
   }
 
-  return 'tsconfig.base.json';
+  return null;
 }
 
 export function getRelativePathToRootTsConfig(
@@ -38,8 +45,8 @@ export function getRelativePathToRootTsConfig(
   return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
 }
 
-export function getRootTsConfigFileName(): string | null {
-  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+export function getRootTsConfigFileName(): TSConfigFileName | null {
+  for (const tsConfigName of TSCONFIG_FILE_NAMES) {
     const tsConfigPath = join(workspaceRoot, tsConfigName);
     if (existsSync(tsConfigPath)) {
       return tsConfigName;
