@@ -48,15 +48,15 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com                    ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ https://lesscss.org                       ]"
+              "label": "LESS              [ https://lesscss.org                      ]"
             },
             {
               "value": "tailwind",
-              "label": "tailwind [ https://tailwindcss.com/            ]"
+              "label": "tailwind          [ https://tailwindcss.com/                 ]"
             },
             {
               "value": "styled-components",
