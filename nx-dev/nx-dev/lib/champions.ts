@@ -330,7 +330,8 @@ export const champions: Champion[] = [
   },
   {
     name: 'Edouard Maleix',
-    expertise: 'Setting up workspace for startups and enterprises. Improving workspace and CI pipeline performance. Creating plugins for Node.js applications and deployments. Sharing knowledge. Caching nerd.',
+    expertise:
+      'Setting up workspace for startups and enterprises. Improving workspace and CI pipeline performance. Creating plugins for Node.js applications and deployments. Sharing knowledge. Caching nerd.',
     imageUrl: '/images/champions/edouard-maleix.webp',
     contact: [
       {
