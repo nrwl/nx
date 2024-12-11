@@ -124,6 +124,7 @@
       "@nx/rollup",
       "@nx/remix",
       "@nx/rspack",
+      "@nx/rsbuild",
       "@nx/storybook",
       "@nx/vite",
       "@nx/vue",
