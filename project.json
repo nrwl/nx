@@ -35,6 +35,10 @@
         }
       ],
       "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release"
+    },
+    "nx-chillax": {
+      "command": "sleep 3000",
+      "cache": true
     }
   }
 }

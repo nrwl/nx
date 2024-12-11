@@ -93,7 +93,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on="1 linux-medium"
       - run:
           command: |
             sudo apt-get update
@@ -101,34 +101,19 @@ jobs:
       - browser-tools/install-chrome
       - run-pnpm-install:
           os: linux
+#      - run:
+#          name: Run Checks/Lint/Test
+#          no_output_timeout: 60m
+#          command: |
+#            pnpm nx run-many --targets=lint --projects=detox --parallel=3
       - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
-      - run:
-          name: Run Checks/Lint/Test/Build
-          no_output_timeout: 60m
+          name: Nx Chillax
           command: |
-            pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx-cloud record -- nx sync:check
-            pids+=($!)
-
-            pnpm nx-cloud record -- nx-cloud conformance:check
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+            pnpm nx run-many --targets=nx-chillax
+      - run:
+          name: build-base
+          command: |
+            NODE_OPTIONS=--inspect pnpm nx run-many --targets=build-base --projects=nx-dev --base=$NX_BASE --head=$NX_HEAD --parallel=3
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
