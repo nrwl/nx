@@ -99,6 +99,7 @@ function ensureNxRspackExecutionContext(ctx: NxRspackExecutionContext): void {
     outputFileName: undefined,
     outputPath: undefined,
     rspackConfig: undefined,
+    useTsconfigPaths: undefined,
   };
   ctx.context ??= {
     projectName,
