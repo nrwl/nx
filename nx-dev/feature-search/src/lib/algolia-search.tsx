@@ -153,6 +153,7 @@ export function AlgoliaSearch({
                 router.push(itemUrl);
               },
             }}
+            insights={true}
             hitComponent={Hit}
             transformItems={(items) => {
               return items.map((item, index) => {
