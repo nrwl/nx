@@ -133,7 +133,10 @@ export async function* esbuildExecutor(
                       name: 'nx-watch-plugin',
                       setup(build: esbuild.PluginBuild) {
                         build.onEnd(async (result: esbuild.BuildResult) => {
-                          if (!options.skipTypeCheck) {
+                          if (
+                            !options.skipTypeCheck &&
+                            !options.isTsSolutionSetup
+                          ) {
                             const { errors } = await runTypeCheck(
                               options,
                               context
@@ -180,7 +183,7 @@ export async function* esbuildExecutor(
     );
   } else {
     // Run type-checks first and bail if they don't pass.
-    if (!options.skipTypeCheck) {
+    if (!options.skipTypeCheck && !options.isTsSolutionSetup) {
       const { errors } = await runTypeCheck(options, context);
       if (errors.length > 0) {
         yield { success: false };

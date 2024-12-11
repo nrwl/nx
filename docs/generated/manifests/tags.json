@@ -499,6 +499,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/updating-version-references",
+      "id": "updating-version-references",
+      "name": "Updating Version References in Manifest Files (e.g. package.json)",
+      "path": "/recipes/nx-release/updating-version-references"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
@@ -559,13 +566,6 @@
       "id": "configure-changelog-format",
       "name": "Configure Changelog Format",
       "path": "/recipes/nx-release/configure-changelog-format"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-      "id": "publish-custom-dist-directory",
-      "name": "Publish a Custom Dist Directory",
-      "path": "/recipes/nx-release/publish-custom-dist-directory"
     },
     {
       "description": "",

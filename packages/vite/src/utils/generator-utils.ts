@@ -3,6 +3,7 @@ import {
   logger,
   offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
@@ -16,6 +17,7 @@ import { VitePreviewServerExecutorOptions } from '../executors/preview-server/sc
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { VitestGeneratorSchema } from '../generators/vitest/schema';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -81,10 +83,23 @@ export function findExistingJsBuildTargetInProject(targets: {
 
 export function addOrChangeTestTarget(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
-  target: string
+  options: VitestGeneratorSchema,
+  hasPlugin: boolean
 ) {
+  const nxJson = readNxJson(tree);
+
+  hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin' || hasPlugin
+  );
+
+  if (hasPlugin) {
+    return;
+  }
+
   const project = readProjectConfiguration(tree, options.project);
+  const target = options.testTarget ?? 'test';
 
   const reportsDirectory = joinPathFragments(
     offsetFromRoot(project.root),
@@ -98,8 +113,7 @@ export function addOrChangeTestTarget(
   project.targets ??= {};
 
   if (project.targets[target]) {
-    project.targets[target].executor = '@nx/vite:test';
-    delete project.targets[target].options?.jestConfig;
+    throw new Error(`Target "${target}" already exists in the project.`);
   } else {
     project.targets[target] = {
       executor: '@nx/vite:test',
@@ -373,10 +387,7 @@ export function createOrEditViteConfig(
   projectAlreadyHasViteTargets?: TargetFlags,
   vitestFileName?: boolean
 ) {
-  const { root: projectRoot, projectType } = readProjectConfiguration(
-    tree,
-    options.project
-  );
+  const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
   const extension = options.useEsmExtension ? 'mts' : 'ts';
   const viteConfigPath = vitestFileName
@@ -409,7 +420,7 @@ export function createOrEditViteConfig(
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs']
+      formats: ['es']
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -723,7 +734,7 @@ function handleViteConfigFileExists(
           entry: 'src/index.ts',
           name: options.project,
           fileName: 'index',
-          formats: ['es', 'cjs'],
+          formats: ['es'],
         },
         rollupOptions: {
           external: options.rollupOptionsExternal ?? [],

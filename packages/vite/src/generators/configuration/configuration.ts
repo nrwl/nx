@@ -216,11 +216,7 @@ function updatePackageJson(
       rootDir,
       generateExportsField: true,
       packageJsonPath,
-      format: ['esm', 'cjs'],
-      // when building both formats, we don't set the package.json "type" field, so
-      // we need to set the esm extension to ".mjs" to match vite output
-      // see the "File Extensions" callout in https://vite.dev/guide/build.html#library-mode
-      outputFileExtensionForEsm: '.mjs',
+      format: ['esm'],
     });
   }
 

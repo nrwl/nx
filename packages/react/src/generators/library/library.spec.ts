@@ -967,7 +967,7 @@ module.exports = withNx(
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -1129,6 +1129,7 @@ module.exports = withNx(
             "sourceRoot": "mylib/src",
           },
           "types": "./src/index.ts",
+          "version": "0.0.1",
         }
       `);
       expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
@@ -1141,6 +1142,7 @@ module.exports = withNx(
             "sourceRoot": "myjslib/src",
           },
           "types": "./src/index.js",
+          "version": "0.0.1",
         }
       `);
     });
@@ -1184,6 +1186,45 @@ module.exports = withNx(
           }
         );
         "
+      `);
+    });
+
+    it('should configure files for publishable library', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        publishable: true,
+        importPath: '@acme/mylib',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "import": "./dist/index.esm.js",
+              "types": "./dist/index.esm.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "files": [
+            "dist",
+            "!**/*.tsbuildinfo",
+          ],
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "name": "@acme/mylib",
+          "nx": {
+            "name": "mylib",
+            "projectType": "library",
+            "sourceRoot": "mylib/src",
+          },
+          "type": "module",
+          "types": "./dist/index.esm.d.ts",
+          "version": "0.0.1",
+        }
       `);
     });
   });

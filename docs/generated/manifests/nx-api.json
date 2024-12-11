@@ -2900,7 +2900,17 @@
     "root": "/packages/rsbuild",
     "source": "/packages/rsbuild/src",
     "executors": {},
-    "generators": {},
+    "generators": {
+      "/nx-api/rsbuild/generators/init": {
+        "description": "Initialize the `@nx/rsbuild` plugin.",
+        "file": "generated/packages/rsbuild/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
+        "path": "/nx-api/rsbuild/generators/init",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/rsbuild"
   },
   "rspack": {
