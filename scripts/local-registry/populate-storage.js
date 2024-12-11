@@ -9,7 +9,7 @@ const {
 async function populateLocalRegistryStorage() {
   let registryTeardown;
   try {
-    const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
+    const publishVersion = process.env.PUBLISHED_VERSION ?? '20.99.0';
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     registryTeardown = await startLocalRegistry({
       localRegistryTarget: '@nx/nx-source:local-registry',
