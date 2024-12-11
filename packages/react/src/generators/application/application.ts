@@ -159,14 +159,6 @@ export async function applicationGeneratorInternal(
       );
       tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
     }
-  } else if (options.bundler === 'rspack') {
-    const { rspackInitGenerator } = ensurePackage('@nx/rspack', nxVersion);
-    const rspackInitTask = await rspackInitGenerator(host, {
-      ...options,
-      addPlugin: false,
-      skipFormat: true,
-    });
-    tasks.push(rspackInitTask);
   }
 
   if (!options.rootProject) {
@@ -230,6 +222,7 @@ export async function applicationGeneratorInternal(
       false
     );
   } else if (options.bundler === 'rspack') {
+    /* 'rspackInitGenerator' is being called inside 'configurationGenerator' */
     const { configurationGenerator } = ensurePackage('@nx/rspack', nxVersion);
     const rspackTask = await configurationGenerator(host, {
       project: options.projectName,
@@ -247,6 +240,7 @@ export async function applicationGeneratorInternal(
       target: 'web',
       newProject: true,
       framework: 'react',
+      overwriteConfig: false,
     });
     tasks.push(rspackTask);
   }
@@ -321,44 +315,24 @@ export async function applicationGeneratorInternal(
   tasks.push(routingTask);
   setDefaults(host, options);
 
-  if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
-    logger.warn(
-      `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
-        'Rspack'
-      )}. We've added ${pc.bold(
-        'babel-loader'
-      )} to your project, but using babel will slow down your build.`
-    );
+  if (options.bundler === 'rspack') {
+    if (options.style === 'styled-jsx') {
+      logger.warn(
+        `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
+          'Rspack'
+        )}. We've added ${pc.bold(
+          'babel-loader'
+        )} to your project, but using babel will slow down your build.`
+      );
 
-    tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        {},
-        { 'babel-loader': babelLoaderVersion }
-      )
-    );
-
-    host.write(
-      joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
-      stripIndents`
-        const { composePlugins, withNx, withReact } = require('@nx/rspack');
-        module.exports = composePlugins(withNx(), withReact(), (config) => {
-          config.module.rules.push({
-            test: /\\.[jt]sx$/i,
-            use: [
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: ['@babel/preset-typescript'],
-                  plugins: ['styled-jsx/babel'],
-                },
-              },
-            ],
-          });
-          return config;
-        });
-        `
-    );
+      tasks.push(
+        addDependenciesToPackageJson(
+          host,
+          {},
+          { 'babel-loader': babelLoaderVersion }
+        )
+      );
+    }
   }
 
   updateTsconfigFiles(host, options.appProjectRoot, 'tsconfig.app.json', {
