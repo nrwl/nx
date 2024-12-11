@@ -329,16 +329,16 @@ export const champions: Champion[] = [
     location: 'USA',
   },
   {
-    name: 'Shai Reznik',
-    expertise: 'Writing plugins, Qwik, testing',
-    imageUrl: '/images/champions/shai-reznik.webp',
+    name: 'Edouard Maleix',
+    expertise: 'Setting up workspace for startups and enterprises. Improving workspace and CI pipeline performance. Creating plugins for Node.js applications and deployments. Sharing knowledge. Caching nerd.',
+    imageUrl: '/images/champions/edouard-maleix.webp',
     contact: [
       {
-        label: '@shai_reznik',
-        link: 'https://twitter.com/shai_reznik',
+        label: 'LinkedIn: edouard-maleix',
+        link: 'https://www.linkedin.com/in/edouard-maleix',
       },
     ],
-    location: 'Israel',
+    location: 'Austria',
   },
   {
     name: 'Issam GUISSOUMA',
