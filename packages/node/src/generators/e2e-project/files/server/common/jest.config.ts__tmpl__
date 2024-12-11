@@ -7,7 +7,7 @@ export default {
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
+      tsconfig: '<rootDir>/<%= tsConfigFile %>',
     }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],

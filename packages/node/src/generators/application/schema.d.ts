@@ -23,6 +23,7 @@ export interface Schema {
   docker?: boolean;
   isNest?: boolean;
   addPlugin?: boolean;
+  useTsSolution?: boolean;
 }
 
 export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

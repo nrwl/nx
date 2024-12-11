@@ -1,0 +1,16 @@
+{
+  "extends": "<%= offsetFromRoot %><% if (rootProject) { %>tsconfig.json<% } else { %>tsconfig.base.json<% } %>",
+  "compilerOptions": {
+    "outDir": "out-tsc/<%= e2eProjectName %>",
+    "esModuleInterop": true,
+    "noUnusedLocals": false,
+    "noImplicitAny": false
+  },
+  "include": [
+    "jest.config.ts",
+    "src/**/*.ts"
+  ],
+  "references": [
+   { "path": "<%= relativeProjectReferencePath %>" }
+  ]
+}

@@ -988,6 +988,10 @@ async function determineNodeOptions(
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset) {
     preset = parsedArgs.preset;
@@ -1010,7 +1014,9 @@ async function determineNodeOptions(
   } else {
     framework = await determineNodeFramework(parsedArgs);
 
-    const workspaceType = await determineStandaloneOrMonorepo();
+    const workspaceType = workspaces
+      ? 'monorepo'
+      : await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       preset = Preset.NodeStandalone;
       appName = parsedArgs.name;
@@ -1045,11 +1051,22 @@ async function determineNodeOptions(
     docker = reply.docker === 'Yes';
   }
 
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
   return {
     preset,
     appName,
     framework,
     docker,
+    linter,
+    formatter,
+    workspaces,
   };
 }
 

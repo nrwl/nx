@@ -423,7 +423,9 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
       options.preset === Preset.ReactNative ||
       options.preset === Preset.RemixMonorepo ||
       options.preset === Preset.VueMonorepo ||
-      options.preset === Preset.Nuxt) &&
+      options.preset === Preset.Nuxt ||
+      options.preset === Preset.NodeMonorepo ||
+      options.preset === Preset.Express) &&
       options.workspaces)
   ) {
     const workspaces = options.workspaceGlobs ?? ['packages/**'];

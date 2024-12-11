@@ -236,6 +236,8 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Express) {
     const {
@@ -247,6 +249,8 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nx' +
@@ -324,6 +328,8 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: false,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
