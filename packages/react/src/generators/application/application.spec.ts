@@ -1335,6 +1335,9 @@ describe('app', () => {
             "vite.config.mts",
             "vitest.config.ts",
             "vitest.config.mts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [

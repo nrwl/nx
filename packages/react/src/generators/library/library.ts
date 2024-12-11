@@ -286,7 +286,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host));
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {
