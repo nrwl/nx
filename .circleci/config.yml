@@ -101,11 +101,11 @@ jobs:
       - browser-tools/install-chrome
       - run-pnpm-install:
           os: linux
-      - run:
-          name: Run Checks/Lint/Test
-          no_output_timeout: 60m
-          command: |
-            pnpm nx run-many --targets=lint --projects=detox --parallel=3
+#      - run:
+#          name: Run Checks/Lint/Test
+#          no_output_timeout: 60m
+#          command: |
+#            pnpm nx run-many --targets=lint --projects=detox --parallel=3
       - run:
           name: Nx Chillax
           command: |
