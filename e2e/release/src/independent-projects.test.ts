@@ -11,8 +11,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
-import { execSync } from 'node:child_process';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {

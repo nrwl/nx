@@ -871,11 +871,9 @@ export async function handleNxReleaseConfigError(
       {
         const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
           'release',
-          'changelog',
-          'git',
         ]);
         output.error({
-          title: `The git configuration for createRelease is invalid. Please ensure that git.push is enabled when createRelease is configured:`,
+          title: `The createRelease option for changelogs cannot be enabled when git push is explicitly disabled because the commit needs to be pushed to the remote in order to tie the release to it`,
           bodyLines: [nxJsonMessage],
         });
       }
