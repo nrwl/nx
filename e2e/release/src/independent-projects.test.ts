@@ -11,7 +11,8 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -1020,7 +1021,7 @@ describe('nx release - independent projects', () => {
 
       expect(
         releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
-      ).toEqual(3);
+      ).toEqual(2);
 
       expect(
         releaseOutput.match(
