@@ -47,7 +47,7 @@ function removeSvgLoaderIfPresent(
   config: Partial<RspackOptionsNormalized | Configuration>
 ) {
   const svgLoaderIdx = config.module.rules.findIndex(
-    (rule) => typeof rule === 'object' && rule.test.toString().includes('svg')
+    (rule) => typeof rule === 'object' && rule.test?.toString().includes('svg')
   );
   if (svgLoaderIdx === -1) return;
   config.module.rules.splice(svgLoaderIdx, 1);
