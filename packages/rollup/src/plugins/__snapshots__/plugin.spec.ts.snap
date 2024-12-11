@@ -55,6 +55,61 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
 ]
 `;
 
+exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
+[
+  [
+    "mylib/rollup.config.cts",
+    {
+      "projects": {
+        "mylib": {
+          "root": "mylib",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "rollup -c rollup.config.cts --configPlugin @rollup/plugin-typescript",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "rollup",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Rollup",
+                "help": {
+                  "command": "npx rollup --help",
+                  "example": {
+                    "options": {
+                      "sourcemap": true,
+                      "watch": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "rollup",
+                ],
+              },
+              "options": {
+                "cwd": "mylib",
+              },
+              "outputs": [
+                "{workspaceRoot}/mylib/build",
+                "{workspaceRoot}/mylib/dist",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
 exports[`@nx/rollup/plugin root project should create nodes 1`] = `
 [
   [
@@ -67,6 +122,60 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
             "build": {
               "cache": true,
               "command": "rollup -c rollup.config.cjs --configPlugin @rollup/plugin-typescript",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "rollup",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Rollup",
+                "help": {
+                  "command": "npx rollup --help",
+                  "example": {
+                    "options": {
+                      "sourcemap": true,
+                      "watch": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "rollup",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/dist",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/rollup/plugin root project should create nodes 2`] = `
+[
+  [
+    "rollup.config.cts",
+    {
+      "projects": {
+        ".": {
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "rollup -c rollup.config.cts --configPlugin @rollup/plugin-typescript",
               "dependsOn": [
                 "^build",
               ],
