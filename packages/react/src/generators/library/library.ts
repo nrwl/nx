@@ -75,6 +75,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         : undefined;
     writeJson(host, `${options.projectRoot}/package.json`, {
       name: options.importPath,
+      version: '0.0.1',
       main: sourceEntry,
       types: sourceEntry,
       nx: {
@@ -83,6 +84,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         sourceRoot: `${options.projectRoot}/src`,
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   } else {
     addProjectConfiguration(host, options.name, {

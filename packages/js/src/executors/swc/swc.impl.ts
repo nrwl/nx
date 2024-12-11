@@ -1,5 +1,5 @@
 import { ExecutorContext, output, readJsonFile } from '@nx/devkit';
-import { sync as globSync } from 'fast-glob';
+import { globSync } from 'tinyglobby';
 import { rmSync } from 'node:fs';
 import { dirname, join, normalize, relative, resolve } from 'path';
 import { copyAssets } from '../../utils/assets';
@@ -56,7 +56,7 @@ function normalizeOptions(
 
   const outputPath = join(root, options.outputPath);
 
-  if (options.skipTypeCheck == null) {
+  if (options.skipTypeCheck == null && !isTsSolutionSetup) {
     options.skipTypeCheck = false;
   }
 
@@ -254,6 +254,7 @@ function createEntryPoints(
   if (!options.additionalEntryPoints?.length) return [];
   return globSync(options.additionalEntryPoints, {
     cwd: context.root,
+    expandDirectories: false,
   });
 }
 

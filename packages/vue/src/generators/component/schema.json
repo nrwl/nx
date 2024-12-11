@@ -7,6 +7,14 @@
   "type": "object",
   "examples": [
     {
+      "description": "Generate a component at `mylib/src/lib/foo.vue`",
+      "command": "nx g @nx/vue:component mylib/src/lib/foo.vue"
+    },
+    {
+      "description": "Generate a component without providing the file extension at `mylib/src/lib/foo.vue`",
+      "command": "nx g @nx/vue:component mylib/src/lib/foo"
+    },
+    {
       "description": "Generate a component at `mylib/src/lib/foo.vue` with `vitest` as the unit test runner",
       "command": "nx g @nx/vue:component mylib/src/lib/foo --unitTestRunner=vitest"
     }
@@ -14,7 +22,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the component without the file extension. Relative to the current working directory.",
+      "description": "The file path to the component. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0

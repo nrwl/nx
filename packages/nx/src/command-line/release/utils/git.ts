@@ -123,14 +123,15 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
-  // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
-  const separator = '§§§';
+  // Use unique enough separators that we can be relatively certain will not occur within the commit message itself
+  const commitMetadataSeparator = '§§§';
+  const commitsSeparator = '|@-------@|';
   // https://git-scm.com/docs/pretty-formats
   const args = [
     '--no-pager',
     'log',
     range,
-    `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
+    `--pretty="${commitsSeparator}%n%s${commitMetadataSeparator}%h${commitMetadataSeparator}%an${commitMetadataSeparator}%ae%n%b"`,
     '--name-status',
   ];
   // Support cases where the nx workspace root is located at a nested path within the git repo
@@ -142,12 +143,13 @@ export async function getGitDiff(
   const r = await execCommand('git', args);
 
   return r
-    .split('----\n')
+    .split(`${commitsSeparator}\n`)
     .splice(1)
     .map((line) => {
       const [firstLine, ..._body] = line.split('\n');
-      const [message, shortHash, authorName, authorEmail] =
-        firstLine.split(separator);
+      const [message, shortHash, authorName, authorEmail] = firstLine.split(
+        commitMetadataSeparator
+      );
       const r: RawGitCommit = {
         message,
         shortHash,

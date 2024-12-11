@@ -6,6 +6,15 @@
 Create a new executor called `build` at `tools/my-plugin/src/executors/build.ts`:
 
 ```bash
+nx g @nx/plugin:executor tools/my-plugin/src/executors/build.ts
+```
+
+{% /tab %}
+{% tab label="Without providing the file extension" %}
+
+Create a new executor called `build` at `tools/my-plugin/src/executors/build.ts`:
+
+```bash
 nx g @nx/plugin:executor tools/my-plugin/src/executors/build
 ```
 
@@ -15,7 +24,7 @@ nx g @nx/plugin:executor tools/my-plugin/src/executors/build
 Create a new executor called `custom` at `tools/my-plugin/src/executors/build.ts`:
 
 ```bash
-nx g @nx/plugin:executor tools/my-plugin/src/executors/build --name=custom
+nx g @nx/plugin:executor tools/my-plugin/src/executors/build.ts --name=custom
 ```
 
 {% /tab %}

@@ -18,6 +18,7 @@ import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -226,7 +227,8 @@ function applyNxDependentConfig(
 
   plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
 
-  if (!options?.skipTypeChecking) {
+  // New TS Solution already has a typecheck target
+  if (!options?.skipTypeChecking && !isUsingTsSolutionSetup()) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({

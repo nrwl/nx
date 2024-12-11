@@ -187,6 +187,37 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
+
+      expect(readJson(appTree, 'my-dir/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/test-setup.ts",
+            "jest.config.ts",
+          ],
+          "extends": "./tsconfig.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {

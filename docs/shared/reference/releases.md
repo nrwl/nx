@@ -1,4 +1,10 @@
-# Releases
+# Releases of the nx and @nx/\* packages
+
+{% callout type="info" title="Looking for guidance on releasing your projects with Nx Release?" %}
+This page covers the releases of the Nx tooling itself. If you are looking for guidance on releasing your project with Nx Release, [see the documentation on managing releases](/features/manage-releases).
+{% /callout %}
+
+The `nx` package, and all packages under the `@nx` namespace which live alongside each other in the [https://github.com/nrwl/nx](https://github.com/nrwl/nx) repository, are released together in lockstep. You should always use matching versions of the `nx` package and the `@nx` packages, e.g. `nx@19.2.0` and `@nx/js@20.2.0` should be used together.
 
 Major Nx versions are released as the _latest_ every six months, typically around April and October.
 After each major version release, the _previous_ major version moves to long-term support (LTS) for 12 months, after
