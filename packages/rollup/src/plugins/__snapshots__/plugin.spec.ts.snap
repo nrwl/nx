@@ -11,7 +11,7 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
           "targets": {
             "build": {
               "cache": true,
-              "command": "rollup -c rollup.config.cjs --configPlugin @rollup/plugin-typescript",
+              "command": "rollup -c rollup.config.cjs",
               "dependsOn": [
                 "^build",
               ],
@@ -121,7 +121,7 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
           "targets": {
             "build": {
               "cache": true,
-              "command": "rollup -c rollup.config.cjs --configPlugin @rollup/plugin-typescript",
+              "command": "rollup -c rollup.config.cjs",
               "dependsOn": [
                 "^build",
               ],
