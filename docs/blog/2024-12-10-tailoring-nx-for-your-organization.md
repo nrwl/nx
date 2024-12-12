@@ -6,11 +6,15 @@ tags: [nx]
 cover_image: /blog/images/2024-12-10/header.avif
 ---
 
-# Tailoring Nx for your organization
-
-Monorepos enable consistent use of tooling across your organization's many projects. Nx provides an array of plugins with generators and task inference that simplify tool use and configuration. But these plugins are general-use by design: we can’t foresee your exact use case, but we _do_ provide the materials to tailor Nx for your organization.
+Nx enables consistent tooling across the many projects in your monorepo by providing plugins. Nx has [a wide array of plugins](/plugin-registry) that simplify code generation and task execution. But these plugins are general-use by design: we can’t foresee your exact use case, but we _do_ provide the materials to tailor Nx for your organization.
 
 [Custom plugins](/extending-nx/intro/getting-started) allow you to provide tools, configurations, and utilities to craft Nx for your organization’s specific needs.
+
+## Why do I need custom plugins?
+
+Nx provides consistent ways to manage code generation, workspace structure, and task execution in a monorepo. A monorepo without this kind of tooling becomes hard to scale very quickly. You're responsible for providing your configuration and standards. Without tooling to help keep those things consistent, you quickly hit problems when bringing in more projects and teams. You can define these standards and build automation to maintain them yourself, but that's the advantage of Nx: most of the work has already been done for you. You only need to provide some options specific to your organization's needs.
+
+Writing your own plugin sounds intimidating, but it doesn't need to be. Nx provides numerous utilities from the `@nx/devkit` package to help you build functionality just like the Nx plugins built by the core team. You won't be building from scratch, you'll be building on top of an existing API.
 
 ## Getting started with custom plugins
 
@@ -20,7 +24,7 @@ Creating a custom plugin couldn’t be easier. [@nx/plugin](/nx-api/plugin) is o
 nx g plugin nx-plugin --directory=plugins --importPath=@org/nx-plugin
 ```
 
-We have an [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/nx-api/plugin).
+We have [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/nx-api/plugin).
 
 ## Setting up custom generators
 
@@ -45,7 +49,7 @@ This is a lot to remember! Even the most diligent engineer will forget one of th
 nx generate @org/plugin:library --name util --scope shared --type util
 ```
 
-This custom generator takes well-defined options for your org and translates them into the options needed for the underlying generator. A snippet of that would look something like this:
+This command runs our hypothetical custom generator and provides it with a scope and type for the library. This custom generator takes well-defined options for your org and translates them into the options needed for the underlying generator. A snippet of that would look something like this:
 
 ```typescript
 import { Tree } from '@nx/devkit';
@@ -88,17 +92,19 @@ This example of a generator doesn’t do much but pass in options to an existing
 - Add the proper tags to the project
 - Select the correct set of tools
 
-All of that without having to refer to your documentation on how to run the generator the right way. And most of the functionality is provided by Nx! You just need to provide some logic specific to your organization.
+All of that without having to refer to your documentation on how to run the generator the right way. And most of the functionality is provided by Nx! You only need to provide some logic specific to your organization.
 
 These generators will also show up in [Nx Console](/getting-started/editor-setup) alongside the other generators from Nx plugins, so engineers will have quick access.
 
 {% youtube src="https://www.youtube.com/watch?v=myqfGDWC2go" /%}
 
-## Configure your tools in one place with custom inferred tasks
+## Execute any task consistently
 
-[Inferred tasks](/concepts/inferred-tasks) are a powerful option for reducing the configuration of tasks in your monorepo. Each plugin with inferred tasks offers some configuration, but what if you need to adjust something that’s not configurable out of the box? What if there’s a tool that we don’t have a plugin for?
+Earlier this year, [Project Crystal](/blog/what-if-nx-plugins-were-more-like-vscode-extensions) introduced [inferred tasks](/concepts/inferred-tasks) to Nx. Inferred tasks are a powerful option for reducing the configuration of tasks in your monorepo. Each plugin with inferred tasks offers some configuration, but what if you need to adjust something that’s not configurable out of the box? What if there’s a tool that we don’t have a plugin for?
 
-Writing your own task inference plugin allows you handle these situations. Let’s say the hottest, coolest new tool hits the ecosystem, and you need to use it today. You could drop an issue in GitHub asking for the core team to support it. Or you could write it yourself and use it today. Imagine this new tool is named `zebra` and has a config file `zebra.json` for each project. The inferred task function for this could look something like this:
+Writing your own task inference plugin allows you to handle these situations. Let’s say the hottest, coolest new tool hits the ecosystem, and you need to use it today. You could start using this immediately by adding it to `scripts` in the `package.json`, or you could set a new target on projects that uses the [`run-commands`](/nx-api/nx/executors/run-commands) executor. But this is hard to scale: each new project that you need to use the tool with needs that target added. If you need to provide configuration to that tool, how do you add it consistently? Task inference can automate this for you so that you can consistently configure how the task is run across your workspace.
+
+Imagine this new tool is named `zebra` and has a config file `zebra.json` for each project. The inferred task function for this could look something like this:
 
 ```typescript
 export const createNodes: CreateNodes = [
@@ -113,7 +119,7 @@ export const createNodes: CreateNodes = [
         [root]: {
           targets: {
             zebra: {
-              command: `zebra .`,
+              command: `zebra --some-option .`,
             },
           },
         },
@@ -123,11 +129,11 @@ export const createNodes: CreateNodes = [
 ];
 ```
 
-This is a very naive implementation, but it gives you an idea of what implementing these task inference plugins looks like. [Check out this much more developed example.](/extending-nx/tutorials/tooling-plugin)
+Now every project that has a `zebra.json` gets a target called `zebra` with the correct options set. This is a very naive implementation, but it gives you an idea of what implementing these task inference plugins looks like. [Check out this much more developed example.](/extending-nx/tutorials/tooling-plugin)
 
 ## Publish to your org with `nx release`
 
-Plugins can also be bundled and published for your organization. Since we’re the monorepo people, it might seem wild to suggest that you would have multiple monorepos in your organization; but this is a common scenario, and we whole-heartedly support it.
+Within your Nx workspace, custom plugins work without a need to build, bundle, or package. They just work and respond to changes just as quickly as any other project in your workspace. Plugins can also be bundled and published for your organization. Since we’re the monorepo people, it might seem wild to suggest that you would have multiple monorepos in your organization; but this is a common scenario, and we whole-heartedly support it.
 
 To support consistency across your org, you can publish this plugin so that all of your Nx workspaces share the same generators and inferred tasks you just created. This makes onboarding any new Nx workspace easier and more consistent. The generator for your plugin will include configuration for [`nx release`](/features/manage-releases) so that you’re ready to publish immediately.
 
@@ -139,7 +145,7 @@ If you’re publishing a plugin for multiple workspaces in your organization, yo
 npx create-nx-workspace@latest react-monorepo --preset=react-monorepo
 ```
 
-You can [create this same type of preset for your org](/extending-nx/recipes/create-preset), so that new workspaces are setup the same way each time:
+You can [create this same type of preset for your org](/extending-nx/recipes/create-preset), so that new workspaces are set up the same way each time:
 
 ```bash
 npx create-nx-workspace@latest react-monorepo --preset=org-react
