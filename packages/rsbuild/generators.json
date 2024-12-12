@@ -8,6 +8,11 @@
       "description": "Initialize the `@nx/rsbuild` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add an Rsbuild configuration for the provided project."
     }
   }
 }
