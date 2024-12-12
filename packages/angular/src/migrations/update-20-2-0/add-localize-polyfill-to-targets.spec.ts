@@ -80,6 +80,30 @@ describe('add-localize-polyfill-to-targets migration', () => {
   );
 
   test.each(executorsToAddPolyfillTo)(
+    'should add the "@angular/localize/init" polyfill when target is a string when using the "%s" executor',
+    async (executor) => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor,
+            options: { localize: true, polyfills: 'some-other-polyfill' },
+          },
+        },
+      });
+
+      await migration(tree);
+
+      const project = readProjectConfiguration(tree, 'app1');
+      expect(project.targets.build.options.polyfills).toStrictEqual([
+        'some-other-polyfill',
+        '@angular/localize/init',
+      ]);
+    }
+  );
+
+  test.each(executorsToAddPolyfillTo)(
     'should not add the "@angular/localize/init" polyfill when using the "%s" executor and the "localize" option is disabled',
     async (executor) => {
       addProjectConfiguration(tree, 'app1', {
