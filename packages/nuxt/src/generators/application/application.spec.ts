@@ -246,9 +246,6 @@ describe('app', () => {
         {
           "extends": "../tsconfig.base.json",
           "files": [],
-          "include": [
-            ".nuxt/nuxt.d.ts",
-          ],
           "references": [
             {
               "path": "./tsconfig.app.json",

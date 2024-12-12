@@ -214,7 +214,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
         projectType: 'application',
         sourceRoot: project.sourceRoot,
         targets: project.targets,
-        tags: project.tags,
+        tags: project.tags?.length ? project.tags : undefined,
       },
     });
   } else {

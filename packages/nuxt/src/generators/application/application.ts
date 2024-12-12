@@ -128,6 +128,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       projectRoot: options.appProjectRoot,
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
+      isUsingTsSolutionConfig: options.isUsingTsSolutionConfig,
     },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
