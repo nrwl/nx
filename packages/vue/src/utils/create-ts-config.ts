@@ -47,6 +47,7 @@ export function createTsConfigForTsSolution(
   relativePathToRootTsConfig: string
 ) {
   const json = {
+    extends: relativePathToRootTsConfig,
     files: [],
     include: [],
     references: [
@@ -55,18 +56,6 @@ export function createTsConfigForTsSolution(
       },
     ],
   } as any;
-
-  // inline tsconfig.base.json into the project
-  if (options.rootProject) {
-    json.compileOnSave = false;
-    json.compilerOptions = {
-      ...shared.tsConfigBaseOptions,
-      ...json.compilerOptions,
-    };
-    json.exclude = ['node_modules', 'tmp'];
-  } else {
-    json.extends = relativePathToRootTsConfig;
-  }
 
   writeJson(host, `${projectRoot}/tsconfig.json`, json);
 
@@ -82,7 +71,6 @@ export function createTsConfigForTsSolution(
 
       return json;
     });
-  } else {
   }
 }
 

@@ -633,5 +633,49 @@ describe('lib', () => {
         }
       `);
     });
+
+    it('should set correct options for swc', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        buildable: true,
+        compiler: 'swc',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "tslib": "^2.3.0",
+          },
+          "main": "./dist/index.js",
+          "name": "@proj/mylib",
+          "nx": {
+            "name": "mylib",
+            "projectType": "library",
+            "sourceRoot": "mylib/src",
+            "targets": {
+              "build": {
+                "executor": "@nx/js:swc",
+                "options": {
+                  "main": "mylib/src/index.ts",
+                  "outputPath": "mylib/dist",
+                  "packageJson": "mylib/package.json",
+                  "stripLeadingPaths": true,
+                  "tsConfig": "mylib/tsconfig.lib.json",
+                },
+                "outputs": [
+                  "{options.outputPath}",
+                ],
+              },
+            },
+          },
+          "private": true,
+          "type": "commonjs",
+          "typings": "./dist/index.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
   });
 });

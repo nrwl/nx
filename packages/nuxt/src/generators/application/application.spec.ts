@@ -244,7 +244,6 @@ describe('app', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {},
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [

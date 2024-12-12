@@ -44,6 +44,7 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
         '.': {
           import: './index.mjs',
           require: './index.js',
+          types: './index.d.ts',
         },
       },
     });

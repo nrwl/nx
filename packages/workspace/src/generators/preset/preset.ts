@@ -136,6 +136,7 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
       nxCloudToken: options.nxCloudToken,
       useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.VueStandalone) {
     const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
@@ -165,6 +166,7 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
       nxCloudToken: options.nxCloudToken,
       useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NuxtStandalone) {
     const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +

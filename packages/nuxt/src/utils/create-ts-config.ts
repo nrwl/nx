@@ -12,7 +12,6 @@ export function createTsConfig(
 ) {
   createAppTsConfig(host, options);
   const json = {
-    compilerOptions: {},
     files: [],
     include: ['.nuxt/nuxt.d.ts'],
     references: [

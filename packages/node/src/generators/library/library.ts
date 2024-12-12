@@ -198,14 +198,19 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
       executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: joinPathFragments(
-          'dist',
-          rootProject ? options.projectName : options.projectRoot
-        ),
+        outputPath: options.isUsingTsSolutionConfig
+          ? joinPathFragments(options.projectRoot, 'dist')
+          : joinPathFragments(
+              'dist',
+              rootProject ? options.projectName : options.projectRoot
+            ),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         packageJson: `${options.projectRoot}/package.json`,
         main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
-        assets: [`${options.projectRoot}/*.md`],
+        assets: options.isUsingTsSolutionConfig
+          ? undefined
+          : [`${options.projectRoot}/*.md`],
+        stripLeadingPaths: options.isUsingTsSolutionConfig ? true : undefined,
       },
     };
   }
