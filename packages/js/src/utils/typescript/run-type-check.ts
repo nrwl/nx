@@ -142,6 +142,7 @@ async function setupTypeScript(options: TypeCheckOptions) {
   const dfltStructure =
     options.mode === 'emitDeclarationOnly'
       ? options.projectRoot &&
+        options.outDir &&
         rootDirIsWorkspaceRoot &&
         path.normalize(options.outDir).endsWith(_projectRoot)
       : undefined;
