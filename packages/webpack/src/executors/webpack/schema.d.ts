@@ -95,4 +95,5 @@ export interface NormalizedWebpackExecutorOptions
   root: string;
   projectRoot: string;
   sourceRoot: string;
+  useTsconfigPaths: boolean;
 }

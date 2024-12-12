@@ -56,8 +56,8 @@ launch-templates:
 
       - name: Install zip and unzip
         script: sudo apt-get -yqq install zip unzip
-  linux-large:
-    resource-class: 'docker_linux_amd64/large'
+  linux-extra-large:
+    resource-class: 'docker_linux_amd64/extra_large'
     image: 'ubuntu22.04-node20.11-v10'
     env:
       GIT_AUTHOR_EMAIL: test@test.com

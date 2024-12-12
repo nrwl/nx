@@ -2869,7 +2869,26 @@
     "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
     "documents": [],
     "executors": [],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/rsbuild` plugin.",
+        "file": "generated/packages/rsbuild/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
+        "path": "rsbuild/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Add an Rsbuild configuration for the provided project.",
+        "file": "generated/packages/rsbuild/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/rsbuild/src/generators/configuration/schema.json",
+        "path": "rsbuild/generators/configuration",
+        "type": "generator"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "rsbuild",
     "packageName": "@nx/rsbuild",

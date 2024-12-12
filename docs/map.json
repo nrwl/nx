@@ -500,6 +500,12 @@
                   "file": "shared/recipes/nx-release/release-projects-independently"
                 },
                 {
+                  "name": "Updating Version References in Manifest Files (e.g. package.json)",
+                  "id": "updating-version-references",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/updating-version-references"
+                },
+                {
                   "name": "Automatically Version with Conventional Commits",
                   "id": "automatically-version-with-conventional-commits",
                   "tags": ["nx-release"],
@@ -552,12 +558,6 @@
                   "id": "configure-changelog-format",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/configure-changelog-format"
-                },
-                {
-                  "name": "Publish a Custom Dist Directory",
-                  "id": "publish-custom-dist-directory",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
                 },
                 {
                   "name": "Build Before Versioning",

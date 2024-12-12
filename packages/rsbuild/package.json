@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "commonjs",
   "publishConfig": {
-    "access": "private"
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -26,9 +26,14 @@
   "license": "MIT",
   "homepage": "https://nx.dev",
   "main": "index.js",
+  "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@rsbuild/core": "1.1.8",
+    "minimatch": "9.0.3"
   },
   "peerDependencies": {},
   "nx-migrations": {
