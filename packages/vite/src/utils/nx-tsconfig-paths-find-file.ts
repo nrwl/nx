@@ -11,6 +11,7 @@ export function findFile(
   for (const ext of extensions) {
     const dir = dirname(path);
     // Support file extensions such as .css and .js in the import path.
+    // While still allowing for '.suffix'
     const name = basename(queryLessPath, ext);
 
     const resolvedPath = resolve(dir, name + ext);
