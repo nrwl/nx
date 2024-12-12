@@ -138,6 +138,7 @@ export function createNodeFromPackageJson(
   const hash = hashObject({
     ...json,
     root: projectRoot,
+    bust: 1,
   });
 
   const cached = cache[hash];

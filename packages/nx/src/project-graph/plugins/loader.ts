@@ -31,6 +31,7 @@ import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
 import { readTsConfig } from '../../plugins/js/utils/typescript';
 import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
+import { getPackageEntryPointsToProjectMap } from '../../plugins/js/utils/packages';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -124,6 +125,7 @@ function lookupLocalPlugin(
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
+let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
@@ -151,10 +153,10 @@ function findNxProjectForImportPath(
     }
   }
 
-  // try to resolve from the projects' package.json names
-  const projectName = getNameFromPackageJson(importPath, root, projects);
-  if (projectName) {
-    return projects[projectName];
+  packageEntryPointsToProjectMap ??=
+    getPackageEntryPointsToProjectMap(projects);
+  if (packageEntryPointsToProjectMap[importPath]) {
+    return packageEntryPointsToProjectMap[importPath];
   }
 
   logger.verbose(
@@ -181,72 +183,6 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     tsconfigPaths = compilerOptions?.paths;
   }
   return tsconfigPaths ?? {};
-}
-
-let packageJsonMap: Record<string, string>;
-let seenProjects: Set<string>;
-
-/**
- * Locate the project name from the package.json files in the provided projects.
- * Progressively build up a map of package names to project names to avoid
- * reading the same package.json multiple times and reading unnecessary ones.
- */
-function getNameFromPackageJson(
-  importPath: string,
-  root: string = workspaceRoot,
-  projects: Record<string, ProjectConfiguration>
-): string | null {
-  packageJsonMap ??= {};
-  seenProjects ??= new Set();
-
-  const resolveFromPackageJson = (projectName: string) => {
-    try {
-      const packageJson = readJsonFile(
-        path.join(root, projects[projectName].root, 'package.json')
-      );
-      packageJsonMap[packageJson.name ?? projectName] = projectName;
-
-      if (packageJsonMap[importPath]) {
-        // we found the importPath, we progressively build up packageJsonMap
-        // so we can return early
-        return projectName;
-      }
-    } catch {}
-
-    return null;
-  };
-
-  if (packageJsonMap[importPath]) {
-    if (!!projects[packageJsonMap[importPath]]) {
-      return packageJsonMap[importPath];
-    } else {
-      // the previously resolved project might have been resolved with the
-      // project root as the name, so we need to resolve it again to get
-      // the actual project name
-      const projectName = Object.keys(projects).find(
-        (p) => projects[p].root === packageJsonMap[importPath]
-      );
-      const resolvedProject = resolveFromPackageJson(projectName);
-      if (resolvedProject) {
-        return resolvedProject;
-      }
-    }
-  }
-
-  for (const projectName of Object.keys(projects)) {
-    if (seenProjects.has(projectName)) {
-      // we already parsed this project
-      continue;
-    }
-    seenProjects.add(projectName);
-
-    const resolvedProject = resolveFromPackageJson(projectName);
-    if (resolvedProject) {
-      return resolvedProject;
-    }
-  }
-
-  return null;
 }
 
 function readPluginMainFromProjectConfiguration(

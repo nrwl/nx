@@ -272,7 +272,7 @@
     "react-router-dom": "^6.23.1",
     "react-textarea-autosize": "^8.5.3",
     "regenerator-runtime": "0.13.7",
-    "resolve.exports": "1.1.0",
+    "resolve.exports": "2.0.3",
     "rollup": "^4.14.0",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-postcss": "^4.0.2",
