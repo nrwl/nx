@@ -48,7 +48,7 @@ export interface RollupPluginOptions {
   buildTargetName?: string;
 }
 
-const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs}';
+const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
 export const createNodes: CreateNodes<RollupPluginOptions> = [
   rollupConfigGlob,
@@ -182,7 +182,11 @@ async function buildRollupTarget(
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
-    command: `rollup -c ${basename(configFilePath)}`,
+    command: `rollup -c ${basename(configFilePath)}${
+      configFilePath.endsWith('ts')
+        ? ' --configPlugin @rollup/plugin-typescript'
+        : ''
+    }`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
