@@ -1,30 +1,52 @@
 ---
-title: Tailoring Nx for your organization
+title: Tailoring Nx for Your Organization
 slug: tailoring-nx-for-your-organization
 authors: ['Philip Fulcher']
 tags: [nx]
 cover_image: /blog/images/2024-12-10/header.avif
 ---
 
-Nx enables consistent tooling across the many projects in your monorepo by providing plugins. Nx has [a wide array of plugins](/plugin-registry) that simplify code generation and task execution. But these plugins are general-use by design: we can’t foresee your exact use case, but we _do_ provide the materials to tailor Nx for your organization.
+Maintaining a scalable and maintainable monorepo is one of the biggest challenges for growing teams. Standards are essential for keeping code consistent, but relying on documentation and human diligence often falls short. The real challenge is _how_ to enforce those standards effectively and sustainably.
 
-[Custom plugins](/extending-nx/intro/getting-started) allow you to provide tools, configurations, and utilities to craft Nx for your organization’s specific needs.
+This is where Nx comes in. Nx provides ["drop-in" plugins](/plugin-registry) that enhance the developer experience in monorepos, offering solutions for everything from code generation to automating caching and task execution. One of the biggest benefits is how easily you can **create [custom plugins](/extending-nx/intro/getting-started)** which allow you to **automate your standards based on your organization's needs**.
 
-## Why do I need custom plugins?
+In this article, we’ll explore how Nx plugins, including custom ones, can help you maintain scalable monorepos while simplifying workflows for your team.
 
-Nx provides consistent ways to manage code generation, workspace structure, and task execution in a monorepo. A monorepo without this kind of tooling becomes hard to scale very quickly. You're responsible for providing your configuration and standards. Without tooling to help keep those things consistent, you quickly hit problems when bringing in more projects and teams. You can define these standards and build automation to maintain them yourself, but that's the advantage of Nx: most of the work has already been done for you. You only need to provide some options specific to your organization's needs.
+## What are Nx Plugins and why do you need them?
 
-Writing your own plugin sounds intimidating, but it doesn't need to be. Nx provides numerous utilities from the `@nx/devkit` package to help you build functionality just like the Nx plugins built by the core team. You won't be building from scratch, you'll be building on top of an existing API.
+Nx plugins reduce the overhead of using specific tools or frameworks in a monorepo by automating common workflows. They are essentially NPM packages with a structure and metadata that Nx can interpret. A plugin may include:
+
+- **Generators**: For scaffolding code.
+- **Executors**: For automating tasks like building, testing, or deploying.
+- **Migrations**: For updating codebases, similar to codemods.
+
+You’re not required to use Nx plugins, but they can significantly simplify your workflows. For example, they automate repetitive tasks and enforce consistency across your projects. You can explore the [Nx Plugin Registry](/plugin-registry) to see the available plugins, including those built by the Nx core team and contributions from the community.
+
+Installing a plugin is straightforward. Use the `nx add` command to integrate a plugin into your workspace. For example:
+
+```shell
+nx add @nx/playwright
+```
+
+The plugins provided by the Nx team are usually designed to cover general use cases, like setting up popular frameworks or tools. However, the real power of lies in **creating your own plugins—or extending existing ones—to** automate your organization’s specific workflows.
+
+Creating a custom plugin might sound intimidating, but it’s simpler than you think. The `@nx/devkit` package provides utilities to help you build functionality just like the Nx core team. You’re not starting from scratch; you’re leveraging an established API designed to make the process accessible and efficient.
 
 ## Getting started with custom plugins
 
-Creating a custom plugin couldn’t be easier. [@nx/plugin](/nx-api/plugin) is our plugin for creating new Nx plugins, and it provides a generator for getting started:
+First install the `@nx/plugin` package which provides useful code scaffolding features for creating a new custom plugin.
 
-```bash
+```shell
+nx add @nx/plugin
+```
+
+Once installed, run the following generator that ships with the `@nx/plugin` package:
+
+```shell
 nx g plugin nx-plugin --directory=plugins --importPath=@org/nx-plugin
 ```
 
-We have [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/nx-api/plugin).
+Also make sure to check out our [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/nx-api/plugin).
 
 ## Setting up custom generators
 
@@ -32,7 +54,7 @@ Creating custom generators is the biggest bang-for-your-buck change you can make
 
 Custom generators are an easy way to enforce how generators from Nx plugins are used. For example:
 
-```bash
+```shell
 nx generate @nx/react:library --name shared-util --directory libs/shared/util --importPath="@org/shared/util" --tags=type:util,scope:shared
 ```
 
@@ -43,9 +65,10 @@ To understand the right options for this generator, the engineer needs to rememb
 - the import naming convention
 - tag name convention based on type and scope
 
-This is a lot to remember! Even the most diligent engineer will forget one of these or miss a typo. **A custom generator** can solve this problem. Consider a custom generator for your organization that accepts options like this:
+This is a lot to remember! Even the most diligent engineer will forget one of these or miss a typo. **A custom generator** can solve this problem.
+Consider a custom generator for your organization that accepts options like this:
 
-```bash
+```shell
 nx generate @org/plugin:library --name util --scope shared --type util
 ```
 
@@ -63,10 +86,13 @@ export async function libraryGenerator(
 ) {
   // create project name based on submitted name and type
   const projectName = `${options.type}-${options.name}`;
-  //determine directory based on scope and project name
+
+  // determine directory based on scope and project name
   const directory = joinPathFragments('libs', options.scope, projectName);
+
   // determine import path based on scope and project name
   const importPath = `@org/${scope}/${projectName}`;
+
   // run the @nx/react library generator with options set
   const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     name: projectName,
@@ -84,13 +110,13 @@ export async function libraryGenerator(
 export default libraryGenerator;
 ```
 
-This example of a generator doesn’t do much but pass in options to an existing generator. However, it will consistently:
+This example of a generator doesn’t do much on its own, but it pre-populates options for the underlying generator. This can already be a huge gain in terms of ensuring consistency as it:
 
-- Name the project appropriately
-- Create the correct import path
-- Place new projects in the correct directory
-- Add the proper tags to the project
-- Select the correct set of tools
+- Names the project appropriately
+- Creates the correct import path
+- Places new projects in the correct directory
+- Adds the proper tags to the project
+- Selects the correct set of tools
 
 All of that without having to refer to your documentation on how to run the generator the right way. And most of the functionality is provided by Nx! You only need to provide some logic specific to your organization.
 
@@ -133,7 +159,9 @@ Now every project that has a `zebra.json` gets a target called `zebra` with the 
 
 ## Publish to your org with `nx release`
 
-Within your Nx workspace, custom plugins work without a need to build, bundle, or package. They just work and respond to changes just as quickly as any other project in your workspace. Plugins can also be bundled and published for your organization. Since we’re the monorepo people, it might seem wild to suggest that you would have multiple monorepos in your organization; but this is a common scenario, and we whole-heartedly support it.
+Nx plugins that are located within an existing Nx workspace can be run directly, without the need to build, bundle, or package. They just work and respond to changes just as quickly as any other project in your workspace.
+
+Since we’re the monorepo people, it might seem wild to suggest that you would have multiple monorepos in your organization; but this is a common scenario, and we whole-heartedly support it.
 
 To support consistency across your org, you can publish this plugin so that all of your Nx workspaces share the same generators and inferred tasks you just created. This makes onboarding any new Nx workspace easier and more consistent. The generator for your plugin will include configuration for [`nx release`](/features/manage-releases) so that you’re ready to publish immediately.
 
@@ -141,19 +169,19 @@ To support consistency across your org, you can publish this plugin so that all 
 
 If you’re publishing a plugin for multiple workspaces in your organization, you’ll want those new workspaces to be created as consistently as your projects. When you create an Nx workspace, you might use a preset like so:
 
-```bash
+```shell
 npx create-nx-workspace@latest react-monorepo --preset=react-monorepo
 ```
 
 You can [create this same type of preset for your org](/extending-nx/recipes/create-preset), so that new workspaces are set up the same way each time:
 
-```bash
+```shell
 npx create-nx-workspace@latest react-monorepo --preset=org-react
 ```
 
 Better yet, you can [create your own install package](/extending-nx/recipes/create-install-package), so calling `create-org-workspace` becomes your new standard instead of calling `create-nx-workspace:`
 
-```bash
+```shell
 npx create-org-workspace@latest react-monorepo --framework=react
 ```
 
@@ -178,6 +206,9 @@ Small changes to how Nx is used in your organization can make a big difference. 
 
 - [Enforce Organizational Best Practices with a Local Plugin](/extending-nx/tutorials/organization-specific-plugin)
 - [Create a Tooling Plugin](/extending-nx/tutorials/tooling-plugin)
+
+Also make sure to check out:
+
 - [Nx Docs](https://www.notion.so/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools)
 - [LinkedIn](https://www.linkedin.com/company/nrwl/)
@@ -185,4 +216,4 @@ Small changes to how Nx is used in your organization can make a big difference. 
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://www.notion.so/nx-cloud)
+- [Speed up your CI](/nx-cloud)
