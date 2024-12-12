@@ -361,6 +361,7 @@ exports[`application generator should set up project correctly with given option
   "test/src/app/NxWelcome.vue",
   "test/src/main.ts",
   "test/src/styles.css",
+  "test/src/vue-shims.d.ts",
   "test/tsconfig.app.json",
   "test/tsconfig.json",
   "test/tsconfig.spec.json",

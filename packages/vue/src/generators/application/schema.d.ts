@@ -10,6 +10,7 @@ export interface Schema {
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   linter: Linter | LinterType;
+  formatter?: 'none' | 'prettier';
   routing?: boolean;
   js?: boolean;
   strict?: boolean;
@@ -18,6 +19,7 @@ export interface Schema {
   rootProject?: boolean;
   addPlugin?: boolean;
   nxCloudToken?: string;
+  useTsSolution?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -27,4 +29,5 @@ export interface NormalizedSchema extends Schema {
   e2eProjectRoot: string;
   parsedTags: string[];
   devServerPort?: number;
+  isUsingTsSolutionConfig: boolean;
 }

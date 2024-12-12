@@ -1001,7 +1001,7 @@ module.exports = withNx(
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
-              reportsDirectory: '../coverage/mylib',
+              reportsDirectory: './test-output/vitest/coverage',
               provider: 'v8',
             }
           },
