@@ -9902,6 +9902,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "configuration",
+                "path": "/nx-api/rsbuild/generators/configuration",
+                "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
