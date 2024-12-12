@@ -108,7 +108,6 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure tsconfig and project.json correctly 2`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [
@@ -190,7 +189,6 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure vitest correctly 3`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [
@@ -469,7 +467,6 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure tsconfig and project.json correctly 2`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [
@@ -551,7 +548,6 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure vitest correctly 3`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [

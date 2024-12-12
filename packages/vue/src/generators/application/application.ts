@@ -2,14 +2,15 @@ import {
   addProjectConfiguration,
   formatFiles,
   GeneratorCallback,
+  joinPathFragments,
   readNxJson,
   runTasksInSerial,
   toJS,
   Tree,
+  writeJson,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -20,6 +21,8 @@ import { addVite } from './lib/add-vite';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
@@ -29,7 +32,18 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   _options: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'vue', 'application');
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ..._options,
+      tsConfigName: _options.rootProject
+        ? 'tsconfig.json'
+        : 'tsconfig.base.json',
+      skipFormat: true,
+      addTsPlugin: _options.useTsSolution,
+      formatter: _options.formatter,
+    })
+  );
 
   const options = await normalizeOptions(tree, _options);
   const nxJson = readNxJson(tree);
@@ -38,24 +52,28 @@ export async function applicationGeneratorInternal(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  const tasks: GeneratorCallback[] = [];
+  if (options.isUsingTsSolutionConfig) {
+    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
+      name: getImportPath(tree, options.name),
+      version: '0.0.1',
+      private: true,
+      nx: {
+        name: options.name,
+        projectType: 'application',
+        sourceRoot: `${options.appProjectRoot}/src`,
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  } else {
+    addProjectConfiguration(tree, options.projectName, {
+      root: options.appProjectRoot,
+      projectType: 'application',
+      sourceRoot: `${options.appProjectRoot}/src`,
+      tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      targets: {},
+    });
+  }
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.appProjectRoot,
-    projectType: 'application',
-    sourceRoot: `${options.appProjectRoot}/src`,
-    targets: {},
-  });
-
-  tasks.push(
-    await jsInitGenerator(tree, {
-      ...options,
-      tsConfigName: options.rootProject
-        ? 'tsconfig.json'
-        : 'tsconfig.base.json',
-      skipFormat: true,
-    })
-  );
   tasks.push(
     await vueInitGenerator(tree, {
       ...options,
@@ -96,6 +114,24 @@ export async function applicationGeneratorInternal(
   if (options.js) toJS(tree);
 
   if (!options.skipFormat) await formatFiles(tree);
+
+  if (options.isUsingTsSolutionConfig) {
+    updateTsconfigFiles(
+      tree,
+      options.appProjectRoot,
+      'tsconfig.app.json',
+      {
+        jsx: 'preserve',
+        jsxImportSource: 'vue',
+        module: 'esnext',
+        moduleResolution: 'bundler',
+        resolveJsonModule: true,
+      },
+      options.linter === 'eslint'
+        ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+        : undefined
+    );
+  }
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

@@ -589,7 +589,7 @@ describe('Nx Running Tests', () => {
         `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared --directory=libs/${libC}`
       );
       runCLI(
-        `generate @nx/node:lib ${libD} --defaults --tags=api --directory=libs/${libD}`
+        `generate @nx/node:lib ${libD} --defaults --tags=api --directory=libs/${libD} --buildable=false`
       );
 
       // libA depends on libC

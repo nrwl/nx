@@ -4,6 +4,7 @@ import {
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   host: Tree,
@@ -35,6 +36,7 @@ export async function normalizeOptions(
     e2eProjectRoot,
     parsedTags,
     style: options.style ?? 'none',
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
   } as NormalizedSchema;
 
   normalized.unitTestRunner ??= 'vitest';
