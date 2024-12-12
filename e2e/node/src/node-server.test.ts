@@ -81,22 +81,22 @@ describe('Node Applications + webpack', () => {
 
     beforeAll(() => {
       runCLI(
-        `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest --buildable=false`
       );
       runCLI(
-        `generate @nx/node:lib libs/${testLib2} --importPath=@acme/test2 --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:lib libs/${testLib2} --importPath=@acme/test2 --linter=eslint --unitTestRunner=jest --buildable=false`
       );
       runCLI(
-        `generate @nx/node:app apps/${expressApp} --framework=express --port=7000 --no-interactive --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${expressApp} --framework=express --port=7000 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=7001 --no-interactive --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=7001 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${koaApp} --framework=koa --port=7002 --no-interactive --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${koaApp} --framework=koa --port=7002 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
 
       addLibImport(expressApp, testLib1);
