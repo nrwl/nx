@@ -211,7 +211,10 @@ function addProject(tree: Tree, options: NormalizedSchema) {
       private: true,
       nx: {
         name: options.name,
-        ...project,
+        projectType: 'application',
+        sourceRoot: project.sourceRoot,
+        targets: project.targets,
+        tags: project.tags,
       },
     });
   } else {
