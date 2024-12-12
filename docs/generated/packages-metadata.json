@@ -2878,6 +2878,15 @@
         "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
         "path": "rsbuild/generators/init",
         "type": "generator"
+      },
+      {
+        "description": "Add an Rsbuild configuration for the provided project.",
+        "file": "generated/packages/rsbuild/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/rsbuild/src/generators/configuration/schema.json",
+        "path": "rsbuild/generators/configuration",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

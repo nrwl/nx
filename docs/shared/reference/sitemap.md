@@ -688,6 +688,7 @@
   - [rsbuild](/nx-api/rsbuild)
     - [generators](/nx-api/rsbuild/generators)
       - [init](/nx-api/rsbuild/generators/init)
+      - [configuration](/nx-api/rsbuild/generators/configuration)
   - [rspack](/nx-api/rspack)
     - [documents](/nx-api/rspack/documents)
       - [Overview](/nx-api/rspack/documents/overview)
