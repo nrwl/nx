@@ -27,6 +27,61 @@ export default defineConfig({
 "
 `;
 
+exports[`lib --style none should not use styles when style none 1`] = `
+"
+
+export function MyLib() {
+  return (
+    <div>
+      <h1>Welcome to MyLib!</h1>
+    </div>
+  );
+}
+
+export default MyLib;
+
+
+
+"
+`;
+
+exports[`lib --style scss should use scss for styles 1`] = `
+"
+import styles from './my-lib.module.scss';
+
+export function MyLib() {
+  return (
+    <div className={styles['container']}>
+      <h1>Welcome to MyLib!</h1>
+    </div>
+  );
+}
+
+export default MyLib;
+
+
+
+"
+`;
+
+exports[`lib --style tailwind should not generate any styles file when style is tailwind 1`] = `
+"
+
+export function MyLib() {
+  return (
+    <div>
+      <h1>Welcome to MyLib!</h1>
+    </div>
+  );
+}
+
+export default MyLib;
+
+
+
+"
+`;
+
 exports[`lib should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

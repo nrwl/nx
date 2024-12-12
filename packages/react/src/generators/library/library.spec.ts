@@ -385,6 +385,8 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, style: 'scss' });
 
       expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeTruthy();
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -410,6 +412,24 @@ describe('lib', () => {
       expect(content).not.toContain('app.scss');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
+
+      expect(content).toMatchSnapshot();
+    });
+  });
+
+  describe('--style tailwind', () => {
+    it('should not generate any styles file when style is tailwind', async () => {
+      await libraryGenerator(tree, { ...defaultSchema, style: 'none' });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
+
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toMatchSnapshot();
     });
   });
 
