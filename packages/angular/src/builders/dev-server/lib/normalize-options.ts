@@ -21,7 +21,7 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
     host: schema.host ?? 'localhost',
     port: schema.port ?? 4200,
     liveReload: schema.liveReload ?? true,
-    hmr: angularMajorVersion < 19 ? schema.hmr ?? false : undefined,
+    hmr: schema.hmr ?? (angularMajorVersion < 19 ? false : undefined),
     open: schema.open ?? false,
     ssl: schema.ssl ?? false,
   };
