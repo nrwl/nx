@@ -606,7 +606,6 @@ describe('app', () => {
             "name": "myapp",
             "projectType": "application",
             "sourceRoot": "myapp/src",
-            "tags": [],
             "targets": {
               "serve": {
                 "configurations": {

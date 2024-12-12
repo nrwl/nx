@@ -130,7 +130,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  if (options.bundler === 'none' && options.addPlugin) {
+  if (options.bundler === 'none') {
     const nxJson = readNxJson(tree);
     ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
     updateNxJson(tree, nxJson);

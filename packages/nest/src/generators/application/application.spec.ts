@@ -212,7 +212,6 @@ describe('application generator', () => {
             "name": "myapp",
             "projectType": "application",
             "sourceRoot": "myapp/src",
-            "tags": [],
             "targets": {
               "build": {
                 "configurations": {

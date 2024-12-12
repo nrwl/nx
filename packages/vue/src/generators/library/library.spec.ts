@@ -485,7 +485,10 @@ module.exports = [
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
-            coverage: { reportsDirectory: '../coverage/my-lib', provider: 'v8' },
+            coverage: {
+              reportsDirectory: './test-output/vitest/coverage',
+              provider: 'v8',
+            },
           },
         });
         "

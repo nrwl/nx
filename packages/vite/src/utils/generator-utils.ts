@@ -460,10 +460,11 @@ export function createOrEditViteConfig(
     );
   }
 
-  const reportsDirectory =
-    projectRoot === '.'
-      ? `./coverage/${options.project}`
-      : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
+  const reportsDirectory = isUsingTsPlugin
+    ? './test-output/vitest/coverage'
+    : projectRoot === '.'
+    ? `./coverage/${options.project}`
+    : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
   const testOption = options.includeVitest
     ? `  test: {

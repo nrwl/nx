@@ -163,7 +163,7 @@ describe('application generator', () => {
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
-              reportsDirectory: '../coverage/test',
+              reportsDirectory: './test-output/vitest/coverage',
               provider: 'v8',
             },
           },
