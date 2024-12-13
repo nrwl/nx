@@ -67,7 +67,7 @@ function getPublishedVersion(): Promise<string | undefined> {
       {
         windowsHide: false,
       },
-      (error, stdout, stderr) => {
+      (error, stdout) => {
         if (error) {
           return resolve(undefined);
         }

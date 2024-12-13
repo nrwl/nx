@@ -52,6 +52,7 @@
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "jsonc-parser": "3.2.0",
+    "kill-port": "^2.0.1",
     "minimatch": "9.0.3",
     "npm-package-arg": "11.0.1",
     "npm-run-path": "^4.0.1",

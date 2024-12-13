@@ -1,4 +1,5 @@
 import { execSync, fork } from 'child_process';
+export const kill = require('kill-port');
 
 /**
  * This function is used to start a local registry for testing purposes.
@@ -20,12 +21,12 @@ export function startLocalRegistry({
   verbose?: boolean;
   clearStorage?: boolean;
   listenAddress?: string;
-}) {
-  listenAddress ??= 'localhost';
+}): Promise<() => Promise<void>> {
   if (!localRegistryTarget) {
     throw new Error(`localRegistryTarget is required`);
   }
-  return new Promise<() => void>((resolve, reject) => {
+  let port: number | undefined;
+  return new Promise<() => Promise<void>>((resolve, reject) => {
     const childProcess = fork(
       require.resolve('nx'),
       [
@@ -33,17 +34,20 @@ export function startLocalRegistry({
           clearStorage ?? true
         }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
+        ...(verbose ? ['--verbose'] : []),
+        ...(listenAddress ? ['--listenAddress', listenAddress] : []),
       ],
       { stdio: 'pipe' }
     );
 
+    listenAddress ??= 'localhost';
     const listener = (data) => {
       if (verbose) {
         process.stdout.write(data);
         console.log('Waiting for local registry to start...');
       }
       if (data.toString().includes(`http://${listenAddress}:`)) {
-        const port = parseInt(
+        port = parseInt(
           data.toString().match(new RegExp(`${listenAddress}:(?<port>\\d+)`))
             ?.groups?.port
         );
@@ -68,8 +72,9 @@ export function startLocalRegistry({
 
         console.log('Set npm and yarn config registry to ' + registry);
 
-        resolve(() => {
-          childProcess.kill();
+        resolve(async () => {
+          childProcess?.kill();
+          await kill(port);
           execSync(`npm config delete //${listenAddress}:${port}/:_authToken`, {
             windowsHide: false,
           });
@@ -93,6 +98,24 @@ export function startLocalRegistry({
         resolve(() => {});
       }
     });
+    const killChildProcess = async (signal?: number | NodeJS.Signals) => {
+      childProcess?.kill(signal);
+      if (port) {
+        await kill(port);
+        execSync(
+          `npm config delete //${
+            listenAddress ?? 'localhost'
+          }:${port}/:_authToken`,
+          {
+            windowsHide: false,
+          }
+        );
+      }
+    };
+    process.on('exit', killChildProcess);
+    process.on('SIGTERM', killChildProcess);
+    process.on('SIGINT', killChildProcess);
+    process.on('SIGHUP', killChildProcess);
   });
 }
 
