@@ -138,6 +138,11 @@ export function createNodeFromPackageJson(
   const hash = hashObject({
     ...json,
     root: projectRoot,
+    /**
+     * Increment this number to force processing the package.json again. Do it
+     * when the implementation of this plugin is changed and results in different
+     * results for the same package.json contents.
+     */
     bust: 1,
   });
 
