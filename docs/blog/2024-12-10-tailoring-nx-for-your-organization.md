@@ -43,7 +43,7 @@ nx add @nx/plugin
 Once installed, run the following generator that ships with the `@nx/plugin` package:
 
 ```shell
-nx g plugin nx-plugin --directory=plugins --importPath=@org/nx-plugin
+nx g plugin packages/nx-plugin --importPath=@org/nx-plugin
 ```
 
 Also, make sure to check out our [extensive instructions in our docs for building plugins](/extending-nx/intro/getting-started), or you can jump right to the API for [@nx/plugin](/nx-api/plugin).
