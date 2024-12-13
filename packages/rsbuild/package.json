@@ -33,7 +33,8 @@
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@rsbuild/core": "1.1.8",
-    "minimatch": "9.0.3"
+    "minimatch": "9.0.3",
+    "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "peerDependencies": {},
   "nx-migrations": {
