@@ -1,5 +1,5 @@
 # Contributor Code of Conduct
-
+[Erick Ibarra heredia]✓
 As contributors and maintainers of the Nx project, we pledge to respect everyone who contributes by posting issues, updating documentation, submitting pull requests, providing feedback in comments, and any other activities.
 
 Communication through any of Nx's channels (GitHub, Gitter, Discord, IRC, mailing lists, Twitter, etc.) must be constructive and never resort to personal attacks, trolling, public or private harassment, insults, or other unprofessional conduct.
