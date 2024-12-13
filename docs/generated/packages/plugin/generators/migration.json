@@ -11,6 +11,10 @@
     "examples": [
       {
         "description": "Generate a migration exported with the name matching the file name, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `foo` at `mylib/src/migrations/foo.ts`",
+        "command": "nx g @nx/plugin:migration mylib/src/migrations/foo.ts -v=1.0.0"
+      },
+      {
+        "description": "Generate a migration without providing the file extension, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `foo` at `mylib/src/migrations/foo.ts`",
         "command": "nx g @nx/plugin:migration mylib/src/migrations/foo -v=1.0.0"
       },
       {

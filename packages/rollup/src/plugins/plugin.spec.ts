@@ -15,7 +15,7 @@ describe('@nx/rollup/plugin', () => {
   let context: CreateNodesContext;
   let cwd = process.cwd();
 
-  describe('root project', () => {
+  describe.each(['js', 'ts'])('root project', (extname) => {
     const tempFs = new TempFs('test');
 
     beforeEach(() => {
@@ -51,7 +51,7 @@ describe('@nx/rollup/plugin', () => {
       // is that the hash is different after updating the
       // config file. The actual config read is mocked below.
       tempFs.createFileSync(
-        'rollup.config.cjs',
+        `rollup.config.c${extname}`,
         JSON.stringify(rollupConfigOptions)
       );
       tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
@@ -77,7 +77,7 @@ describe('@nx/rollup/plugin', () => {
     it('should create nodes', async () => {
       // ACT
       const nodes = await createNodesFunction(
-        ['rollup.config.cjs'],
+        [`rollup.config.c${extname}`],
         {
           buildTargetName: 'build',
         },
@@ -89,7 +89,7 @@ describe('@nx/rollup/plugin', () => {
     });
   });
 
-  describe('non-root project', () => {
+  describe.each(['js', 'ts'])('non-root project', (extname) => {
     const tempFs = new TempFs('test');
 
     beforeEach(() => {
@@ -125,7 +125,7 @@ describe('@nx/rollup/plugin', () => {
       // is that the hash is different after updating the
       // config file. The actual config read is mocked below.
       tempFs.createFileSync(
-        'mylib/rollup.config.cjs',
+        `mylib/rollup.config.c${extname}`,
         JSON.stringify(rollupConfigOptions)
       );
       tempFs.createFileSync(
@@ -154,7 +154,7 @@ describe('@nx/rollup/plugin', () => {
     it('should create nodes', async () => {
       // ACT
       const nodes = await createNodesFunction(
-        ['mylib/rollup.config.cjs'],
+        [`mylib/rollup.config.c${extname}`],
         {
           buildTargetName: 'build',
         },

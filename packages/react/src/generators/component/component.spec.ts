@@ -57,6 +57,26 @@ describe('component', () => {
     );
   });
 
+  it('should handle path with file extension', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      path: `${projectName}/src/lib/hello/hello.tsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('my-lib/src/lib/hello/hello.module.css')
+    ).toBeTruthy();
+    expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
+      /import styles from '.\/hello.module.css'/
+    );
+    expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
+      /<div className={styles\['container']}>/
+    );
+  });
+
   it('should generate files with global CSS', async () => {
     await componentGenerator(appTree, {
       name: 'hello',
@@ -197,6 +217,7 @@ describe('component', () => {
       expect(content).not.toContain('hello.scss');
       expect(content).not.toContain('hello.module.css');
       expect(content).not.toContain('hello.module.scss');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -216,6 +237,7 @@ describe('component', () => {
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
       expect(content).toContain('styled-components');
       expect(content).toContain('<StyledHello>');
+      expect(content).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -246,6 +268,7 @@ describe('component', () => {
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
       expect(content).toContain('@emotion/styled');
       expect(content).toContain('<StyledHello>');
+      expect(content).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -277,6 +300,7 @@ describe('component', () => {
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
       expect(content).toContain('<style jsx>');
       expect(content).not.toContain("styles['container']");
+      expect(content).toMatchSnapshot();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -288,6 +312,24 @@ describe('component', () => {
 
       const packageJSON = readJson(appTree, 'package.json');
       expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
+    });
+  });
+
+  describe('--style tailwind', () => {
+    it('should not generate any style in component', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello',
+        path: `${projectName}/src/lib/hello/hello`,
+        style: 'tailwind',
+      });
+
+      expect(
+        appTree.exists('my-lib/src/lib/hello/hello.styled-components')
+      ).toBeFalsy();
+      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+
+      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
+      expect(content).toMatchSnapshot();
     });
   });
 

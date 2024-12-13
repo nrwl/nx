@@ -24,6 +24,7 @@ export async function getPlugins() {
 
   // Cleanup current plugins before loading new ones
   if (cleanup) {
+    pendingPluginsPromise = undefined;
     cleanup();
   }
 
@@ -50,6 +51,7 @@ export async function getOnlyDefaultPlugins() {
 
   // Cleanup current plugins before loading new ones
   if (cleanupDefaultPlugins) {
+    pendingDefaultPluginPromise = undefined;
     cleanupDefaultPlugins();
   }
 

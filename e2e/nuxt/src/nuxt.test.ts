@@ -16,7 +16,7 @@ describe('Nuxt Plugin', () => {
       packages: ['@nx/nuxt'],
     });
     runCLI(
-      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress`
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress --linter=eslint`
     );
     runCLI(
       `generate @nx/nuxt:component ${app}/src/components/one/one --name=one --unitTestRunner=vitest`

@@ -8,6 +8,7 @@ import type {
   RspackExecutorSchema,
   NormalizedRspackExecutorSchema,
 } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function normalizeOptions(
   options: RspackExecutorSchema,
@@ -17,6 +18,7 @@ export function normalizeOptions(
 ): NormalizedRspackExecutorSchema {
   const normalizedOptions = {
     ...options,
+    useTsconfigPaths: !isUsingTsSolutionSetup(),
     root,
     projectRoot,
     sourceRoot,

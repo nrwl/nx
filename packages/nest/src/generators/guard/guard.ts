@@ -28,7 +28,9 @@ async function normalizeGuardOptions(
   tree: Tree,
   options: GuardGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'guard',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

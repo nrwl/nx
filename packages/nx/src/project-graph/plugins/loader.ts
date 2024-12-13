@@ -31,6 +31,7 @@ import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
 import { readTsConfig } from '../../plugins/js/utils/typescript';
 import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
+import { getPackageEntryPointsToProjectMap } from '../../plugins/js/utils/packages';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -124,38 +125,48 @@ function lookupLocalPlugin(
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
+let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ): ProjectConfiguration | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
-  const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
-    normalizePath(path.relative(root, path.join(root, p)))
-  );
-  if (possiblePaths?.length) {
-    const projectRootMappings: ProjectRootMappings = new Map();
+  const possibleTsPaths =
+    tsConfigPaths[importPath]?.map((p) =>
+      normalizePath(path.relative(root, path.join(root, p)))
+    ) ?? [];
+
+  const projectRootMappings: ProjectRootMappings = new Map();
+  if (possibleTsPaths.length) {
     const projectNameMap = new Map<string, ProjectConfiguration>();
     for (const projectRoot in projects) {
       const project = projects[projectRoot];
       projectRootMappings.set(project.root, project.name);
       projectNameMap.set(project.name, project);
     }
-    for (const tsConfigPath of possiblePaths) {
+    for (const tsConfigPath of possibleTsPaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
         return projectNameMap.get(nxProject);
       }
     }
-    logger.verbose(
-      'Unable to find local plugin',
-      possiblePaths,
-      projectRootMappings
-    );
-    throw new Error(
-      'Unable to resolve local plugin with import path ' + importPath
-    );
   }
+
+  packageEntryPointsToProjectMap ??=
+    getPackageEntryPointsToProjectMap(projects);
+  if (packageEntryPointsToProjectMap[importPath]) {
+    return packageEntryPointsToProjectMap[importPath];
+  }
+
+  logger.verbose(
+    'Unable to find local plugin',
+    possibleTsPaths,
+    projectRootMappings
+  );
+  throw new Error(
+    'Unable to resolve local plugin with import path ' + importPath
+  );
 }
 
 let tsconfigPaths: Record<string, string[]>;

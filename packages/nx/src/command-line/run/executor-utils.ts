@@ -55,25 +55,36 @@ export function getExecutorInformation(
       projects
     );
     const executorsDir = dirname(executorsFilePath);
-    const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
+    const schemaPath = resolveSchema(
+      executorConfig.schema,
+      executorsDir,
+      nodeModule,
+      projects
+    );
     const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 
     const implementationFactory = getImplementationFactory<Executor>(
       executorConfig.implementation,
-      executorsDir
+      executorsDir,
+      nodeModule,
+      projects
     );
 
     const batchImplementationFactory = executorConfig.batchImplementation
       ? getImplementationFactory<TaskGraphExecutor>(
           executorConfig.batchImplementation,
-          executorsDir
+          executorsDir,
+          nodeModule,
+          projects
         )
       : null;
 
     const hasherFactory = executorConfig.hasher
       ? getImplementationFactory<CustomHasher>(
           executorConfig.hasher,
-          executorsDir
+          executorsDir,
+          nodeModule,
+          projects
         )
       : null;
 

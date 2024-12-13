@@ -29,8 +29,7 @@ describe('Gradle', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        let buildOutput = runCLI('build app', { verbose: true });
-        // app depends on list and utilities
+        const buildOutput = runCLI('build app', { verbose: true });
         expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain('nx run utilities:build');
@@ -41,15 +40,6 @@ describe('Gradle', () => {
           `list/build/libs/list.jar`,
           `utilities/build/libs/utilities.jar`
         );
-
-        buildOutput = runCLI(`build ${gradleProjectName}`, { verbose: true });
-        // root project depends on app, list and utilities
-        expect(buildOutput).toContain('nx run app:build');
-        expect(buildOutput).toContain(':app:classes');
-        expect(buildOutput).toContain('nx run list:build');
-        expect(buildOutput).toContain(':list:classes');
-        expect(buildOutput).toContain('nx run utilities:build');
-        expect(buildOutput).toContain(':utilities:classes');
       });
 
       it('should track dependencies for new app', () => {

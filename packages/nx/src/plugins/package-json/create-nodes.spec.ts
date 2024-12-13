@@ -55,6 +55,10 @@ describe('nx package.json workspaces plugin', () => {
           ".": {
             "metadata": {
               "description": undefined,
+              "js": {
+                "packageExports": undefined,
+                "packageName": "root",
+              },
               "targetGroups": {
                 "NPM Scripts": [
                   "echo",
@@ -98,6 +102,10 @@ describe('nx package.json workspaces plugin', () => {
           "packages/lib-a": {
             "metadata": {
               "description": "lib-a description",
+              "js": {
+                "packageExports": undefined,
+                "packageName": "lib-a",
+              },
               "targetGroups": {
                 "NPM Scripts": [
                   "test",
@@ -148,6 +156,10 @@ describe('nx package.json workspaces plugin', () => {
             ],
             "metadata": {
               "description": "lib-b description",
+              "js": {
+                "packageExports": undefined,
+                "packageName": "lib-b",
+              },
               "targetGroups": {
                 "NPM Scripts": [
                   "build",
@@ -252,6 +264,10 @@ describe('nx package.json workspaces plugin', () => {
                 "packages/vite": {
                   "metadata": {
                     "description": undefined,
+                    "js": {
+                      "packageExports": undefined,
+                      "packageName": "vite",
+                    },
                     "targetGroups": {},
                   },
                   "name": "vite",
@@ -350,6 +366,10 @@ describe('nx package.json workspaces plugin', () => {
                 "packages/vite": {
                   "metadata": {
                     "description": undefined,
+                    "js": {
+                      "packageExports": undefined,
+                      "packageName": "vite",
+                    },
                     "targetGroups": {},
                   },
                   "name": "vite",
@@ -444,6 +464,10 @@ describe('nx package.json workspaces plugin', () => {
                 "packages/vite": {
                   "metadata": {
                     "description": undefined,
+                    "js": {
+                      "packageExports": undefined,
+                      "packageName": "vite",
+                    },
                     "targetGroups": {},
                   },
                   "name": "vite",
@@ -522,6 +546,10 @@ describe('nx package.json workspaces plugin', () => {
                 "packages/a": {
                   "metadata": {
                     "description": undefined,
+                    "js": {
+                      "packageExports": undefined,
+                      "packageName": "root",
+                    },
                     "targetGroups": {
                       "NPM Scripts": [
                         "build",
@@ -600,6 +628,10 @@ describe('nx package.json workspaces plugin', () => {
                 "packages/a": {
                   "metadata": {
                     "description": undefined,
+                    "js": {
+                      "packageExports": undefined,
+                      "packageName": "root",
+                    },
                     "targetGroups": {
                       "NPM Scripts": [
                         "build",
@@ -685,6 +717,10 @@ describe('nx package.json workspaces plugin', () => {
                 "packages/a": {
                   "metadata": {
                     "description": undefined,
+                    "js": {
+                      "packageExports": undefined,
+                      "packageName": "root",
+                    },
                     "targetGroups": {},
                   },
                   "name": "root",
@@ -795,5 +831,73 @@ describe('nx package.json workspaces plugin', () => {
         'example'
       ].projectType
     ).toBeUndefined();
+  });
+
+  it('should store package name and exports in the project metadata', () => {
+    vol.fromJSON(
+      {
+        'packages/lib-a/package.json': JSON.stringify({
+          name: 'lib-a',
+          description: 'lib-a description',
+          scripts: { test: 'jest' },
+          exports: {
+            './package.json': './package.json',
+            '.': './dist/index.js',
+          },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodeFromPackageJson('packages/lib-a/package.json', '/root', {})
+    ).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          "packages/lib-a": {
+            "metadata": {
+              "description": "lib-a description",
+              "js": {
+                "packageExports": {
+                  ".": "./dist/index.js",
+                  "./package.json": "./package.json",
+                },
+                "packageName": "lib-a",
+              },
+              "targetGroups": {
+                "NPM Scripts": [
+                  "test",
+                ],
+              },
+            },
+            "name": "lib-a",
+            "root": "packages/lib-a",
+            "sourceRoot": "packages/lib-a",
+            "tags": [
+              "npm:public",
+            ],
+            "targets": {
+              "nx-release-publish": {
+                "dependsOn": [
+                  "^nx-release-publish",
+                ],
+                "executor": "@nx/js:release-publish",
+                "options": {},
+              },
+              "test": {
+                "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run test",
+                  "scriptContent": "jest",
+                },
+                "options": {
+                  "script": "test",
+                },
+              },
+            },
+          },
+        },
+      }
+    `);
   });
 });

@@ -229,7 +229,7 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     {
       pluginName: options.project,
       cliName: options.name,
-      packageManagerCommands: getPackageManagerCommand('npm'),
+      packageManagerCommands: getPackageManagerCommand(),
       pluginPackageName,
       tmpl: '',
     }

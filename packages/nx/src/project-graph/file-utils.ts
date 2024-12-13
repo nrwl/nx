@@ -168,9 +168,9 @@ export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(workspaceRoot, filePath), 'utf-8');
 }
 
-export function readPackageJson(): any {
+export function readPackageJson(root: string = workspaceRoot): any {
   try {
-    return readJsonFile(`${workspaceRoot}/package.json`);
+    return readJsonFile(`${root}/package.json`);
   } catch {
     return {}; // if package.json doesn't exist
   }
