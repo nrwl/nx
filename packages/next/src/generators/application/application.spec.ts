@@ -949,6 +949,7 @@ describe('app (legacy)', () => {
             "resolveJsonModule": true,
             "rootDir": "src",
             "strict": true,
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.tsbuildinfo",
             "types": [
               "jest",
               "node",

@@ -330,6 +330,7 @@ describe('app', () => {
             "noUnusedLocals": false,
             "outDir": "out-tsc/my-app",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-app/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
