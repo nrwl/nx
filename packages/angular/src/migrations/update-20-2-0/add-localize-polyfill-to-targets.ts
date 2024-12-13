@@ -45,7 +45,13 @@ export default async function (tree: Tree) {
       for (const [, options] of allTargetOptions(target)) {
         if (options['localize']) {
           target.options ??= {};
-          target.options['polyfills'] ??= [];
+          const polyfills = target.options['polyfills'];
+          // Ensure polyfills is an array before pushing
+          if (typeof polyfills === 'string') {
+            target.options['polyfills'] = [polyfills];
+          } else if (!Array.isArray(polyfills)) {
+            target.options['polyfills'] = [];
+          }
           target.options['polyfills'].push('@angular/localize/init');
           isUpdated = true;
           break;
