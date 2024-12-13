@@ -20,8 +20,7 @@ export function startLocalRegistry({
   verbose?: boolean;
   clearStorage?: boolean;
   listenAddress?: string;
-}) {
-  listenAddress ??= 'localhost';
+}): Promise<() => void> {
   if (!localRegistryTarget) {
     throw new Error(`localRegistryTarget is required`);
   }
@@ -33,10 +32,13 @@ export function startLocalRegistry({
           clearStorage ?? true
         }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
+        ...(verbose ? ['--verbose'] : []),
+        ...(listenAddress ? ['--listenAddress', listenAddress] : []),
       ],
       { stdio: 'pipe' }
     );
 
+    listenAddress ??= 'localhost';
     const listener = (data) => {
       if (verbose) {
         process.stdout.write(data);

@@ -4,6 +4,7 @@ import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
+import * as detectPort from 'detect-port';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
@@ -19,11 +20,13 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     const requiresLocalRelease =
       !process.env.NX_TASK_TARGET_TARGET?.startsWith('e2e-ci');
 
-    global.e2eTeardown = await startLocalRegistry({
+    console.log('detectPort', await detectPort(4873));
+
+    global.e2eTeardown = (await startLocalRegistry({
       localRegistryTarget: '@nx/nx-source:local-registry',
       verbose: isVerbose,
       clearStorage: requiresLocalRelease,
-    });
+    })) as () => void;
 
     /**
      * Set the published version based on what has previously been loaded into the
@@ -52,7 +55,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
   } catch (err) {
     // Clean up registry if possible after setup related errors
     if (typeof global.e2eTeardown === 'function') {
+      console.log('detectPort', await detectPort(4873));
       global.e2eTeardown();
+      console.log('detectPort', await detectPort(4873));
       console.log('Killed local registry process due to an error during setup');
     }
     throw err;

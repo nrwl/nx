@@ -32,6 +32,7 @@ expect.addSnapshotSerializer({
         // Normalize package manager specific logs
         .replaceAll(/p?npm workspaces/g, '{PACKAGE_MANAGER_WORKSPACES}')
         // We trim each line to reduce the chances of snapshot flakiness
+        .replaceAll(/http:\/\/localhost:\d+/g, '{registry}')
         .split('\n')
         .map((r) => r.trim())
         .join('\n')
@@ -244,7 +245,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -266,7 +267,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
 
 
@@ -429,7 +430,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -451,7 +452,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
 
 
@@ -613,7 +614,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -635,7 +636,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
 
 
@@ -772,7 +773,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
 
 
@@ -934,7 +935,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -956,7 +957,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
 
 
@@ -1121,7 +1122,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to {registry} with tag "latest", but [dry-run] was set
 
 
 
