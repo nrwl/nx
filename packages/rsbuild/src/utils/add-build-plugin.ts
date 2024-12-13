@@ -1,16 +1,17 @@
 import { type Tree } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
-const PLUGINS_ARRAY_SELECTOR =
-  'CallExpression:has(Identifier[name=defineConfig]) PropertyAssignment:has(Identifier[name=plugins]) > ArrayLiteralExpression';
 const DEFINE_CONFIG_SELECTOR =
   'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression';
+const PLUGINS_ARRAY_SELECTOR =
+  'CallExpression:has(Identifier[name=defineConfig]) PropertyAssignment:has(Identifier[name=plugins]) > ArrayLiteralExpression';
 
 export function addBuildPlugin(
   tree: Tree,
   pathToConfigFile: string,
   importPath: string,
-  pluginName: string
+  pluginName: string,
+  options?: string
 ) {
   let configContents = tree.read(pathToConfigFile, 'utf-8');
   configContents = `import { ${pluginName} } from '${importPath}';
@@ -29,7 +30,7 @@ export function addBuildPlugin(
       0,
       defineConfigNode.getStart() + 1
     )}
-    plugins: [${pluginName}()],${configContents.slice(
+    plugins: [${pluginName}(${options ?? ''})],${configContents.slice(
       defineConfigNode.getStart() + 1
     )}`;
   } else {
@@ -42,7 +43,7 @@ export function addBuildPlugin(
             pluginsArrayContents.length - 1
           )},${pluginName}`
         : pluginName
-    }()]`;
+    }(${options ?? ''})]`;
     configContents = `${configContents.slice(
       0,
       pluginsArrayNode.getStart()

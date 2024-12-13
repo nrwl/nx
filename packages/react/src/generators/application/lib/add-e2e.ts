@@ -14,6 +14,7 @@ import { nxVersion } from '../../../utils/versions';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
@@ -26,6 +27,7 @@ export async function addE2e(
   const hasNxBuildPlugin =
     (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
     (options.bundler === 'rspack' && hasRspackPlugin(tree)) ||
+    (options.bundler === 'rsbuild' && hasRsbuildPlugin(tree)) ||
     (options.bundler === 'vite' && hasVitePlugin(tree));
 
   let e2eWebServerInfo: E2EWebServerDetails = {
@@ -67,6 +69,21 @@ export async function addE2e(
       ),
       options.addPlugin,
       options.devServerPort ?? 4200
+    );
+  } else if (options.bundler === 'rsbuild') {
+    const { getRsbuildE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/rsbuild')
+    >('@nx/rsbuild', nxVersion);
+
+    e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `rsbuild.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 3000
     );
   }
 
@@ -114,7 +131,12 @@ export async function addE2e(
         project: options.e2eProjectName,
         directory: 'src',
         // the name and root are already normalized, instruct the generator to use them as is
-        bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
+        bundler:
+          options.bundler === 'rspack'
+            ? 'webpack'
+            : options.bundler === 'rsbuild'
+            ? 'none'
+            : options.bundler,
         skipFormat: true,
         devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,

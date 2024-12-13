@@ -193,6 +193,7 @@ async function createRsbuildTargets(
 
   targets[options.previewTargetName] = {
     command: `rsbuild preview`,
+    dependsOn: [`^${options.buildTargetName}`],
     options: {
       cwd: projectRoot,
       args: ['--mode=production'],

@@ -32,6 +32,10 @@ import {
   setupRspackConfiguration,
 } from './lib/bundlers/add-rspack';
 import {
+  initRsbuild,
+  setupRsbuildConfiguration,
+} from './lib/bundlers/add-rsbuild';
+import {
   setupViteConfiguration,
   setupVitestConfiguration,
 } from './lib/bundlers/add-vite';
@@ -89,6 +93,8 @@ export async function applicationGeneratorInternal(
     await initWebpack(tree, options, tasks);
   } else if (options.bundler === 'rspack') {
     await initRspack(tree, options, tasks);
+  } else if (options.bundler === 'rsbuild') {
+    await initRsbuild(tree, options, tasks);
   }
 
   if (!options.rootProject) {
@@ -109,6 +115,8 @@ export async function applicationGeneratorInternal(
     await setupViteConfiguration(tree, options, tasks);
   } else if (options.bundler === 'rspack') {
     await setupRspackConfiguration(tree, options, tasks);
+  } else if (options.bundler === 'rsbuild') {
+    await setupRsbuildConfiguration(tree, options, tasks);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {

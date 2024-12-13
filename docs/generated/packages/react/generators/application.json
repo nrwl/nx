@@ -95,7 +95,7 @@
       "bundler": {
         "description": "The bundler to use.",
         "type": "string",
-        "enum": ["vite", "webpack", "rspack"],
+        "enum": ["vite", "webpack", "rspack", "rsbuild"],
         "x-prompt": "Which bundler do you want to use to build the application?",
         "default": "vite",
         "x-priority": "important"
