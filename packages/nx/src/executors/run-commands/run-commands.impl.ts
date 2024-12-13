@@ -43,6 +43,7 @@ export interface RunCommandsOptions extends Json {
          */
         description?: string;
         prefix?: string;
+        prefixColor?: string;
         color?: string;
         bgColor?: string;
       }
@@ -117,11 +118,11 @@ export default async function (
   }
 
   if (
-    options.commands.find((c: any) => c.prefix || c.color || c.bgColor) &&
+    options.commands.find((c: any) => c.prefix || c.prefixColor || c.color || c.bgColor) &&
     !options.parallel
   ) {
     throw new Error(
-      'ERROR: Bad executor config for run-commands - "prefix", "color" and "bgColor" can only be set when "parallel=true".'
+      'ERROR: Bad executor config for run-commands - "prefix", "prefixColor", "color" and "bgColor" can only be set when "parallel=true".'
     );
   }
 
@@ -317,6 +318,7 @@ async function createProcess(
     color?: string;
     bgColor?: string;
     prefix?: string;
+    prefixColor?: string;
   },
   readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
   color: boolean,
@@ -377,6 +379,7 @@ function nodeProcess(
     color?: string;
     bgColor?: string;
     prefix?: string;
+    prefixColor?: string;
   },
   cwd: string,
   env: Record<string, string>,
@@ -438,6 +441,7 @@ function addColorAndPrefix(
   out: string,
   config: {
     prefix?: string;
+    prefixColor?: string;
     color?: string;
     bgColor?: string;
   }
@@ -445,9 +449,14 @@ function addColorAndPrefix(
   if (config.prefix) {
     out = out
       .split('\n')
-      .map((l) =>
-        l.trim().length > 0 ? `${chalk.bold(config.prefix)} ${l}` : l
-      )
+      .map((l) => {
+        let prefixText = config.prefix;
+        if (config.prefixColor && chalk[config.prefixColor]) {
+          prefixText = chalk[config.prefixColor](prefixText);
+        }
+        prefixText = chalk.bold(prefixText);
+        return l.trim().length > 0 ? `${prefixText} ${l}` : l;
+      })
       .join('\n');
   }
   if (config.color && chalk[config.color]) {
