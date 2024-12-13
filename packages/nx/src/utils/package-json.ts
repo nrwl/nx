@@ -49,7 +49,13 @@ export interface PackageJson {
     | string
     | Record<
         string,
-        string | { types?: string; require?: string; import?: string }
+        | string
+        | {
+            types?: string;
+            require?: string;
+            import?: string;
+            development?: string;
+          }
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -149,13 +155,17 @@ let packageManagerCommand: PackageManagerCommands | undefined;
 export function getMetadataFromPackageJson(
   packageJson: PackageJson
 ): ProjectMetadata {
-  const { scripts, nx, description } = packageJson ?? {};
+  const { scripts, nx, description, name, exports } = packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
       ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
     },
     description,
+    js: {
+      packageName: name,
+      packageExports: exports,
+    },
   };
 }
 
