@@ -73,17 +73,30 @@ describe('explicit package json dependencies', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
+          metadata: {
+            js: { packageName: 'proj', packageExports: undefined },
+          },
         },
       },
       proj2: {
         name: 'proj2',
         type: 'lib',
-        data: { root: 'libs/proj2' },
+        data: {
+          root: 'libs/proj2',
+          metadata: {
+            js: { packageName: 'proj2', packageExports: undefined },
+          },
+        },
       },
       proj3: {
         name: 'proj3',
         type: 'lib',
-        data: { root: 'libs/proj4' },
+        data: {
+          root: 'libs/proj4',
+          metadata: {
+            js: { packageName: 'proj3', packageExports: undefined },
+          },
+        },
       },
     };
 
@@ -130,7 +143,7 @@ describe('explicit package json dependencies', () => {
   it(`should add dependencies with mixed versions for projects based on deps in package.json and populate the cache`, async () => {
     const npmResolutionCache = new Map();
     const targetProjectLocator = new TargetProjectLocator(
-      {},
+      projects,
       ctx.externalNodes,
       npmResolutionCache
     );
@@ -173,7 +186,7 @@ describe('explicit package json dependencies', () => {
   it(`should preferentially resolve external projects found in the npmResolutionCache`, async () => {
     const npmResolutionCache = new Map();
     const targetProjectLocator = new TargetProjectLocator(
-      {},
+      projects,
       ctx.externalNodes,
       npmResolutionCache
     );
