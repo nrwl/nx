@@ -58,7 +58,7 @@ for workspace-specific settings (like the [Nx Cloud token](/ci/recipes/security/
 Nx will only load environment variable files for a particular configuration if that configuration is defined for a task, even if you specify that configuration name from the command line. So if there is no `development` configuration defined for the `app`'s `build` task, the following command will use `.env.build` instead of `.env.build.development`:
 
 ```shell
-nx build app --development
+nx build app --configuration development
 ```
 
 In order to have Nx actually use the `.env.build.development` environment variables, the `development` configuration needs to be set for the task (even if it is empty).
