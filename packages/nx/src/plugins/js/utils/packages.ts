@@ -1,16 +1,20 @@
 import { join } from 'node:path/posix';
+import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 
-export function getPackageEntryPointsToProjectMap(
-  projects: Record<string, ProjectConfiguration>
-): Record<string, ProjectConfiguration> {
-  const result: Record<string, ProjectConfiguration> = {};
+export function getPackageEntryPointsToProjectMap<
+  T extends ProjectGraphProjectNode | ProjectConfiguration
+>(projects: Record<string, T>): Record<string, T> {
+  const result: Record<string, T> = {};
   for (const project of Object.values(projects)) {
-    if (!project.metadata?.js) {
+    const metadata =
+      'data' in project ? project.data.metadata : project.metadata;
+
+    if (!metadata?.js) {
       continue;
     }
 
-    const { packageName, packageExports } = project.metadata.js;
+    const { packageName, packageExports } = metadata.js;
     if (!packageExports || typeof packageExports === 'string') {
       // no `exports` or it points to a file, which would be the equivalent of
       // an '.' export, in which case the package name is the entry point
