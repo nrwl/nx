@@ -902,8 +902,8 @@ importers:
         specifier: ^8.5.3
         version: 8.5.3(@types/react@18.3.1)(react@18.3.1)
       resolve.exports:
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 2.0.3
+        version: 2.0.3
       rollup:
         specifier: ^4.14.0
         version: 4.22.0
@@ -15058,8 +15058,8 @@ packages:
     resolution: {integrity: sha512-J1l+Zxxp4XK3LUDZ9m60LRJF/mAe4z6a4xyabPHk7pvK5t35dACV32iIjJDFeWZFfZlO29w6SZ67knR0tHzJtQ==}
     engines: {node: '>=10'}
 
-  resolve.exports@2.0.2:
-    resolution: {integrity: sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==}
+  resolve.exports@2.0.3:
+    resolution: {integrity: sha512-OcXjMsGdhL4XnbShKpAcSqPMzQoYkYyhbEaeSko47MjRP9NfEQMhZkXL1DoFlt9LWQn4YttrdnV6X2OiyzBi+A==}
     engines: {node: '>=10'}
 
   resolve@1.22.8:
@@ -28326,7 +28326,7 @@ snapshots:
       '@jspm/core': 2.0.1
       esbuild: 0.17.6
       local-pkg: 0.5.0
-      resolve.exports: 2.0.2
+      resolve.exports: 2.0.3
 
   esbuild-register@3.6.0(esbuild@0.19.5):
     dependencies:
@@ -30895,7 +30895,7 @@ snapshots:
       jest-util: 29.7.0
       jest-validate: 29.7.0
       resolve: 1.22.8
-      resolve.exports: 2.0.2
+      resolve.exports: 2.0.3
       slash: 3.0.0
 
   jest-runner@29.7.0:
@@ -35074,7 +35074,7 @@ snapshots:
 
   resolve.exports@1.1.0: {}
 
-  resolve.exports@2.0.2: {}
+  resolve.exports@2.0.3: {}
 
   resolve@1.22.8:
     dependencies:
