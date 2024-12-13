@@ -30,7 +30,7 @@ export async function updateTsconfig(tree: Tree, schema: Schema) {
             normalizePath(path),
             projectMapping
           );
-          if (project === schema.projectName) {
+          if (schema.projectName === project) {
             delete json.compilerOptions.paths[importPath];
             break;
           }

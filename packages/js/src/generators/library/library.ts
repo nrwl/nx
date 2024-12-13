@@ -199,7 +199,7 @@ export async function libraryGeneratorInternal(
     ]);
   }
 
-  if (options.isUsingTsSolutionConfig && options.unitTestRunner !== 'none') {
+  if (options.unitTestRunner !== 'none' && options.isUsingTsSolutionConfig) {
     updateJson(
       tree,
       joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
