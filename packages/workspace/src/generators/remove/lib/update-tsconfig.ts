@@ -30,7 +30,18 @@ export async function updateTsconfig(tree: Tree, schema: Schema) {
     const graph: ProjectGraph = await createProjectGraphAsync();
     const projectMapping = createProjectRootMappings(graph.nodes);
     updateJson(tree, tsConfigPath, (json) => {
-      if (!isUsingTsSolution) {
+      if (isUsingTsSolution) {
+        const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+        const project = projectConfigs.projects[schema.projectName];
+        if (!project) {
+          throw new Error(
+            `Could not find project '${schema.project}'. Please choose a project that exists in the Nx Workspace.`
+          );
+        }
+        json.references = json.references.filter(
+          (ref) => relative(ref.path, project.root) !== ''
+        );
+      } else {
         for (const importPath in json.compilerOptions.paths) {
           for (const path of json.compilerOptions.paths[importPath]) {
             const project = findProjectForPath(
@@ -43,21 +54,8 @@ export async function updateTsconfig(tree: Tree, schema: Schema) {
             }
           }
         }
-        return json;
-      } else {
-        const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
-        const project = projectConfigs.projects[schema.projectName];
-        if (!project) {
-          throw new Error(
-            `Could not find project '${schema.project}'. Please choose a project that exists in the Nx Workspace.`
-          );
-        }
-
-        json.references = json.references.filter(
-          (ref) => relative(ref.path, project.root) !== ''
-        );
-        return json;
       }
+      return json;
     });
   }
 }

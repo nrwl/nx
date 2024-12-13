@@ -11,11 +11,7 @@ function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
   return isWorkspacesEnabled(tree);
 }
 
-function isWorkspacesEnabled(
-  tree: Tree
-  // packageManager: PackageManager = detectPackageManager(),
-  // root: string = workspaceRoot
-): boolean {
+function isWorkspacesEnabled(tree: Tree): boolean {
   const packageManager = detectPackageManager(tree.root);
   if (packageManager === 'pnpm') {
     return tree.exists('pnpm-workspace.yaml');

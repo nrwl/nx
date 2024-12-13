@@ -222,8 +222,10 @@ describe('updateTsconfig', () => {
     });
 
     const tsconfigContent = {
-      ...readJson(tree, 'tsconfig.base.json'),
       extends: './tsconfig.base.json',
+      compilerOptions: {},
+      files: [],
+      include: [],
       references: [
         {
           path: './my-lib',
