@@ -1,7 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { dirname } from 'path';
-import type { CompilerOptions, System } from 'typescript';
+import type { CompilerOptions, ParsedCommandLine, System } from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
+import { readTsConfig } from './ts-config';
 
 type CompilerOptionsEnumProps = Pick<
   CompilerOptions,

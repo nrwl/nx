@@ -142,7 +142,7 @@ export function updateTsconfigFiles(
       };
 
       const excludeSet: Set<string> = json.exclude
-        ? new Set(['dist', ...json.exclude, ...exclude])
+        ? new Set(['out-tsc', 'dist', ...json.exclude, ...exclude])
         : new Set(exclude);
       json.exclude = Array.from(excludeSet);
 

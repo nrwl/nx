@@ -516,6 +516,7 @@ describe('hostGenerator', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",

@@ -57,7 +57,6 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -116,7 +115,6 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -176,7 +174,6 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -207,7 +204,6 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -450,14 +446,15 @@ export default defineConfig({
       expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
         import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
         export default defineConfig({
           component: nxComponentTestingPreset(__filename),
           e2e: {
-            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+            }),
             baseUrl: 'http://localhost:4200',
           },
         });
@@ -513,12 +510,13 @@ export default defineConfig({
       expect(tree.read('libs/my-lib/cypress.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
-
         const { defineConfig } = require('cypress');
 
         module.exports = defineConfig({
           e2e: {
-            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+            }),
             baseUrl: 'http://localhost:4200',
           },
         });
@@ -544,12 +542,13 @@ export default defineConfig({
       expect(tree.read('libs/my-lib/cypress.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
           e2e: {
-            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+            }),
             baseUrl: 'http://localhost:4200',
           },
         });

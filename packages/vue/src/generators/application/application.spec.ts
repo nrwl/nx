@@ -211,6 +211,7 @@ describe('application generator', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
