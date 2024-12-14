@@ -118,7 +118,9 @@ export default async function (
   }
 
   if (
-    options.commands.find((c: any) => c.prefix || c.prefixColor || c.color || c.bgColor) &&
+    options.commands.find(
+      (c: any) => c.prefix || c.prefixColor || c.color || c.bgColor
+    ) &&
     !options.parallel
   ) {
     throw new Error(
