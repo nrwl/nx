@@ -143,19 +143,20 @@ nx release plan [bump]
 
 ## Options
 
-| Option          | Type                                                                        | Description                                                                                                                             |
-| --------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `--base`        | string                                                                      | Base of the current branch (usually main).                                                                                              |
-| `--bump`        | `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` | Semver keyword to use for the selected release group.                                                                                   |
-| `--exclude`     | string                                                                      | Exclude certain projects from being processed.                                                                                          |
-| `--files`       | string                                                                      | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces. |
-| `--head`        | string                                                                      | Latest commit of the current branch (usually HEAD).                                                                                     |
-| `--help`        | boolean                                                                     | Show help.                                                                                                                              |
-| `--message`     | string                                                                      | Custom message to use for the changelog entry.                                                                                          |
-| `--onlyTouched` | boolean                                                                     | Only include projects that have been affected by the current changes. (Default: `true`)                                                 |
-| `--uncommitted` | boolean                                                                     | Uncommitted changes.                                                                                                                    |
-| `--untracked`   | boolean                                                                     | Untracked changes.                                                                                                                      |
-| `--version`     | boolean                                                                     | Show version number.                                                                                                                    |
+| Option          | Type                                                                        | Description                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `--base`        | string                                                                      | Base of the current branch (usually main).                                                                                               |
+| `--bump`        | `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` | Semver keyword to use for the selected release group.                                                                                    |
+| `--exclude`     | string                                                                      | Exclude certain projects from being processed.                                                                                           |
+| `--files`       | string                                                                      | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces.  |
+| `--head`        | string                                                                      | Latest commit of the current branch (usually HEAD).                                                                                      |
+| `--help`        | boolean                                                                     | Show help.                                                                                                                               |
+| `--message`     | string                                                                      | Custom message to use for the changelog entry.                                                                                           |
+| `--onlyTouched` | boolean                                                                     | Only include projects that have been affected by the current changes. (Default: `true`)                                                  |
+| `--stdin`       | boolean                                                                     | Change the way Nx is calculating the affected command by providing directly changed files from stdin, list of files delimited by commas. |
+| `--uncommitted` | boolean                                                                     | Uncommitted changes.                                                                                                                     |
+| `--untracked`   | boolean                                                                     | Untracked changes.                                                                                                                       |
+| `--version`     | boolean                                                                     | Show version number.                                                                                                                     |
 
 ### plan:check
 
@@ -167,13 +168,14 @@ nx release plan:check
 
 ## Options
 
-| Option          | Type    | Description                                                                                                                             |
-| --------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `--base`        | string  | Base of the current branch (usually main).                                                                                              |
-| `--exclude`     | string  | Exclude certain projects from being processed.                                                                                          |
-| `--files`       | string  | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces. |
-| `--head`        | string  | Latest commit of the current branch (usually HEAD).                                                                                     |
-| `--help`        | boolean | Show help.                                                                                                                              |
-| `--uncommitted` | boolean | Uncommitted changes.                                                                                                                    |
-| `--untracked`   | boolean | Untracked changes.                                                                                                                      |
-| `--version`     | boolean | Show version number.                                                                                                                    |
+| Option          | Type    | Description                                                                                                                              |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `--base`        | string  | Base of the current branch (usually main).                                                                                               |
+| `--exclude`     | string  | Exclude certain projects from being processed.                                                                                           |
+| `--files`       | string  | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces.  |
+| `--head`        | string  | Latest commit of the current branch (usually HEAD).                                                                                      |
+| `--help`        | boolean | Show help.                                                                                                                               |
+| `--stdin`       | boolean | Change the way Nx is calculating the affected command by providing directly changed files from stdin, list of files delimited by commas. |
+| `--uncommitted` | boolean | Uncommitted changes.                                                                                                                     |
+| `--untracked`   | boolean | Untracked changes.                                                                                                                       |
+| `--version`     | boolean | Show version number.                                                                                                                     |
