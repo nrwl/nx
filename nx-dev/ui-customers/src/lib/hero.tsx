@@ -1,3 +1,4 @@
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function Hero(): JSX.Element {
@@ -17,12 +18,15 @@ export function Hero(): JSX.Element {
           </SectionHeading>
           <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
-              href="/contact"
-              variant="contrast"
+              href="/pricing"
+              title="Try Nx Cloud for free"
+              variant="primary"
               size="default"
-              title="Contact us"
+              onClick={() =>
+                sendCustomEvent('try-nx-cloud', 'customers-hero', 'customers')
+              }
             >
-              Contact us
+              Try Nx Cloud for free
             </ButtonLink>
 
             <a
