@@ -523,6 +523,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       tsConfig.options.moduleResolution === ts.ModuleResolutionKind.Node16 ||
       tsConfig.options.moduleResolution === ts.ModuleResolutionKind.NodeNext
     ) {
+      // Node16 and NodeNext require explicit file extensions for relative
+      // import paths. Since we generate the file with the `.ts` extension,
+      // we import it from the same file with the `.js` extension.
+      // https://www.typescriptlang.org/docs/handbook/modules/reference.html#file-extension-substitution
       fileNameImport = `${options.fileName}.js`;
     }
   }
