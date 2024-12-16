@@ -465,19 +465,10 @@ function collectProjectDependencies(
 
   collectedDependencies.set(projectName, []);
 
-  const implicitDependencies = new Set(
-    projectGraph.nodes[projectName].data.implicitDependencies ?? []
-  );
-
   for (const dep of projectGraph.dependencies[projectName]) {
     const targetProjectNode = projectGraph.nodes[dep.target];
-    if (!targetProjectNode) {
-      // It's an npm dependency
-      continue;
-    }
-
-    if (implicitDependencies.has(targetProjectNode.name)) {
-      // It's an implicit dependency and therefore not explicitly referenced in code
+    if (!targetProjectNode || dep.type === 'implicit') {
+      // It's an npm or an implicit dependency
       continue;
     }
 
