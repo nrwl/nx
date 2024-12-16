@@ -28,7 +28,9 @@ async function normalizeMiddlewareOptions(
   tree: Tree,
   options: MiddlewareGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'middleware',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

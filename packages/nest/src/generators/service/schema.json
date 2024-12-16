@@ -8,12 +8,16 @@
   "examples": [
     {
       "description": "Generate the service `FooService` at `myapp/src/app/foo.service.ts`",
+      "command": "nx g @nx/nest:service myapp/src/app/foo.service.ts"
+    },
+    {
+      "description": "Generate the service without providing the file extension. It results in the service `FooService` at `myapp/src/app/foo.service.ts`",
       "command": "nx g @nx/nest:service myapp/src/app/foo"
     }
   ],
   "properties": {
     "path": {
-      "description": "The file path to the service without the file extension and suffix. Relative to the current working directory.",
+      "description": "The file path to the service. Relative to the current working directory.",
       "type": "string",
       "$default": {
         "$source": "argv",

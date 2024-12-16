@@ -59,7 +59,10 @@ export const createNodesV2: CreateNodesV2<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `react-native-${optionsHash}.hash`
+    );
     const targetsCache = readTargetsCache(cachePath);
 
     try {

@@ -8,7 +8,7 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "The file path to the component without the file extension. Relative to the current working directory.",
+      "description": "The file path to the component. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -42,6 +42,10 @@
             "label": "LESS              [ https://lesscss.org            ]"
           },
           {
+            "value": "tailwind",
+            "label": "tailwind          [ https://tailwindcss.com/       ]"
+          },
+          {
             "value": "styled-components",
             "label": "styled-components [ https://styled-components.com ]"
           },
@@ -63,7 +67,7 @@
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
+      "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
     },
     "skipTests": {
       "type": "boolean",
@@ -92,10 +96,6 @@
       "type": "boolean",
       "description": "Default is `false`. When `true`, the component is generated with `*.css`/`*.scss` instead of `*.module.css`/`*.module.scss`.",
       "default": false
-    },
-    "fileName": {
-      "type": "string",
-      "description": "Create a component with this file name."
     },
     "inSourceTests": {
       "type": "boolean",

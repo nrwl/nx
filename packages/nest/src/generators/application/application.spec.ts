@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit';
+import { readJson, updateJson, writeJson, type Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
@@ -64,6 +64,11 @@ describe('application generator', () => {
             "options": {
               "buildTarget": "my-node-app:build",
               "runBuildTargetDependencies": false,
+            },
+          },
+          "test": {
+            "options": {
+              "passWithNoTests": true,
             },
           },
         },
@@ -160,6 +165,171 @@ describe('application generator', () => {
       const projectConfigurations = devkit.getProjects(tree);
 
       expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeUndefined();
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "@proj/myapp",
+          "nx": {
+            "name": "myapp",
+            "projectType": "application",
+            "sourceRoot": "myapp/src",
+            "targets": {
+              "build": {
+                "configurations": {
+                  "development": {
+                    "args": [
+                      "node-env=development",
+                    ],
+                  },
+                },
+                "executor": "nx:run-commands",
+                "options": {
+                  "args": [
+                    "node-env=production",
+                  ],
+                  "command": "webpack-cli build",
+                },
+              },
+              "serve": {
+                "configurations": {
+                  "development": {
+                    "buildTarget": "myapp:build:development",
+                  },
+                  "production": {
+                    "buildTarget": "myapp:build:production",
+                  },
+                },
+                "defaultConfiguration": "development",
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:node",
+                "options": {
+                  "buildTarget": "myapp:build",
+                  "runBuildTargetDependencies": false,
+                },
+              },
+              "test": {
+                "options": {
+                  "passWithNoTests": true,
+                },
+              },
+            },
+          },
+          "private": true,
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "esModuleInterop": true,
+          },
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "emitDecoratorMetadata": true,
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "out-tsc/myapp",
+            "rootDir": "src",
+            "target": "es2021",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "dist",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });

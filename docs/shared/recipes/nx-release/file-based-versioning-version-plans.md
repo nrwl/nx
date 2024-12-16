@@ -151,7 +151,7 @@ You can read more about these utilities and why they are needed on their respect
 
 Nx release will compare the touched projects to the projects and release groups that are specified in the version plan files in the `.nx/version-plans/` directory. If a version plan file does not exist, the command will print an error message and return a non-zero exit code, which can be used to fail CI builds or other automation.
 
-By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `"ignorePatternsForPlanCheck"` property to an array of glob patterns that should be ignored when checking for version plans. For example:
+By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `ignorePatternsForPlanCheck` property to an array of glob patterns that should be ignored when checking for version plans. For example:
 
 ```jsonc
 {

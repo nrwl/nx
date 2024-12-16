@@ -31,6 +31,7 @@ export async function readRspackOptions(
           tsConfig: '',
           outputPath: '',
           rspackConfig: '',
+          useTsconfigPaths: undefined,
         },
         context: {
           root: workspaceRoot,

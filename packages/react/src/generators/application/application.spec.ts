@@ -486,6 +486,8 @@ describe('app', () => {
       expect(() => {
         readJson(appTree, `my-app/.babelrc`);
       }).not.toThrow();
+      const content = appTree.read('my-app/src/app/app.tsx').toString();
+      expect(content).toMatchSnapshot();
     }
   );
 
@@ -493,6 +495,8 @@ describe('app', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.module.scss')).toEqual(true);
+      const content = appTree.read('my-app/src/app/app.tsx').toString();
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -508,6 +512,20 @@ describe('app', () => {
         /* You can add global styles to this file, and also import other style files */
         "
       `);
+    });
+
+    it('should not generate any styles files', async () => {
+      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
+
+      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
+      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
+      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
+
+      const content = appTree.read('my-app/src/app/app.tsx').toString();
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -1335,6 +1353,9 @@ describe('app', () => {
             "vite.config.mts",
             "vitest.config.ts",
             "vitest.config.mts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -1398,6 +1419,8 @@ describe('app', () => {
           "exclude": [
             "dist",
             "eslint.config.js",
+            "eslint.config.mjs",
+            "eslint.config.cjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [

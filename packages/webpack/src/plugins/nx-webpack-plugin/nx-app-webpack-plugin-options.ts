@@ -212,6 +212,10 @@ export interface NxAppWebpackPluginOptions {
    */
   transformers?: TransformerEntry[];
   /**
+   * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
+   */
+  useTsconfigPaths?: boolean;
+  /**
    * Generate a separate vendor chunk for 3rd party packages.
    */
   vendorChunk?: boolean;

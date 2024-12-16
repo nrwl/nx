@@ -6,7 +6,7 @@ import { Route, Link } from 'react-router-dom';
 <%_ } _%>
 
 <%_ if (hasStyles) {
-   if (styledModule && styledModule !== 'styled-jsx') {
+   if (styledModule && styledModule !== 'styled-jsx' && styledModule !== 'tailwind') {
     var wrapper = 'Styled' + className;
     var extras = '';
   _%>
@@ -15,22 +15,22 @@ import styled from '<%= styledModule %>';
     var wrapper = 'div';
     var extras = globalCss || styledModule === 'styled-jsx' ? '' : " className={styles['container']}";
   _%>
-<%- style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import styles from './${fileName}.module.${style}';`: '' %>
+<%- style !== 'styled-jsx' && style!== 'tailwind' ? globalCss ? `import './${fileName}.${style}';` : `import styles from './${fileName}.module.${style}';`: '' %>
   <%_ }
 } else {
     var wrapper = 'div';
     var extras = '';
 } _%>
 
-<%_ if (styledModule && styledModule !== 'styled-jsx') { _%>
+<%_ if (styledModule && styledModule !== 'styled-jsx' && styledModule !== 'tailwind') { _%>
 const Styled<%= className %> = styled.div`
   color: pink;
 `;
 <%_ } _%>
 <%_ if(!isNextPage) { _%>
   <%_ if (classComponent) { _%>
-export class <%= className %> extends Component<{}> {
-  override render() {
+export class <%= className %> extends Component<% if (isTs) { %><{}><% } %> {
+  <% if (isTs) { %>override<% } %> render() {
     return (
       <<%= wrapper %><%- extras %>>
         <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>
