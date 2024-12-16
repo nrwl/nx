@@ -15,6 +15,7 @@ import {
   CreateNodesContextV2,
   CreateNodesResult,
   NxPluginV2,
+  ProjectsMetadata,
 } from './public-api';
 import { ProjectGraph } from '../../config/project-graph';
 import { loadNxPluginInIsolation } from './isolation';
@@ -25,6 +26,7 @@ import {
   isAggregateCreateNodesError,
 } from '../error-types';
 import { IS_WASM } from '../../native';
+import { RawProjectGraphDependency } from '../project-graph-builder';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -41,11 +43,11 @@ export class LoadedNxPlugin {
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
-  ) => ReturnType<CreateDependencies>;
+  ) => Promise<RawProjectGraphDependency[]>;
   readonly createMetadata?: (
     graph: ProjectGraph,
     context: CreateMetadataContext
-  ) => ReturnType<CreateMetadata>;
+  ) => Promise<ProjectsMetadata>;
 
   readonly options?: unknown;
   readonly include?: string[];
@@ -110,12 +112,12 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.createDependencies) {
-      this.createDependencies = (context) =>
+      this.createDependencies = async (context) =>
         plugin.createDependencies(this.options, context);
     }
 
     if (plugin.createMetadata) {
-      this.createMetadata = (graph, context) =>
+      this.createMetadata = async (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
     }
   }
