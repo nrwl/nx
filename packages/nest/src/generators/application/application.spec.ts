@@ -286,6 +286,7 @@ describe('application generator', () => {
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
             "target": "es2021",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
