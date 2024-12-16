@@ -1,15 +1,11 @@
 import { ComponentProps, Fragment, ReactElement, useState } from 'react';
-import { Button, ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { MovingBorder } from '@nx/nx-dev/ui-animations';
 import { motion } from 'framer-motion';
-import {
-  ArrowDownTrayIcon,
-  PlayIcon,
-  VideoCameraIcon,
-} from '@heroicons/react/24/outline';
+import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { Dialog, Transition } from '@headlessui/react';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
@@ -93,7 +89,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             speeds build and test times
           </span>{' '}
-          <br />
+          <br className="hidden md:block" />
           as Hetzner Cloud{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             scales up
@@ -101,7 +97,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           product offering
         </SectionHeading>
         <div className="mt-8 md:grid md:grid-cols-2 md:items-center md:gap-10 lg:gap-12">
-          <div className="mb-24 hidden sm:px-6 md:mb-0 md:block">
+          <div className="mb-24 block sm:px-6 md:mb-0">
             <div className="relative">
               <div className="absolute bottom-0 start-0 -translate-x-14 translate-y-10">
                 <svg
@@ -296,8 +292,8 @@ export function HetznerCloudTestimonial(): ReactElement {
                 >
                   <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-950 bg-black text-left align-middle shadow-xl transition-all focus:outline-none">
                     <iframe
-                      width="812"
-                      height="468"
+                      width="808"
+                      height="454"
                       src="https://www.youtube.com/embed/2BLqiNnBPuU?si=752RGHhozOMzbWlx"
                       title="YouTube video player"
                       frameBorder="0"
