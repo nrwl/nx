@@ -1048,6 +1048,7 @@ module.exports = withNx(
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "**/*.spec.ts",
             "**/*.test.ts",

@@ -236,9 +236,6 @@ describe('app', () => {
       `);
       expect(readJson(appTree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "esModuleInterop": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -267,6 +264,7 @@ describe('app', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "jest.config.ts",
             "src/**/*.spec.ts",

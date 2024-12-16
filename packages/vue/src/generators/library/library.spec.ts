@@ -532,6 +532,7 @@ module.exports = [
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/__tests__/*",
             "src/**/*.spec.vue",

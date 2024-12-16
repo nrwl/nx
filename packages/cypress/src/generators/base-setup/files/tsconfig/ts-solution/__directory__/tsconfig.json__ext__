@@ -1,8 +1,7 @@
 {
   "extends": "<%= tsConfigPath %>",
   "compilerOptions": {
-    "outDir": "dist",
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "outDir": "out-tsc/cypress",
     "allowJs": true,
     "types": ["cypress", "node"],
     "sourceMap": false
@@ -17,5 +16,5 @@
     <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.jsx",<%_ } _%>
     "<%= offsetFromProjectRoot %>**/*.d.ts"
   ],
-  "exclude": ["dist"<% if (linter === 'eslint') { %>, "eslint.config.js"<% } %>]
+  "exclude": ["out-tsc", "test-output"<% if (linter === 'eslint') { %>, "eslint.config.js"<% } %>]
 }
