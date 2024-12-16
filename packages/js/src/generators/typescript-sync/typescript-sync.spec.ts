@@ -14,6 +14,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: jest.fn(() => Promise.resolve()),
 }));
 
 describe('syncGenerator()', () => {
@@ -570,11 +571,11 @@ describe('syncGenerator()', () => {
   "compilerOptions": {
     "composite": true,
     // This is a nested comment
-    "target": "es5",
+    "target": "es5"
   },
   "references": []
 }
-      `
+`
       );
 
       await syncGenerator(tree);

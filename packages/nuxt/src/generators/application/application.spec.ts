@@ -267,6 +267,7 @@ describe('app', () => {
             "outDir": "out-tsc/myapp",
             "resolveJsonModule": true,
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
           },
           "exclude": [
             "dist",

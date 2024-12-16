@@ -662,6 +662,7 @@ describe('app', () => {
             "moduleResolution": "nodenext",
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
