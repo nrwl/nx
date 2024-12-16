@@ -206,6 +206,7 @@ describe('application generator', () => {
             "outDir": "out-tsc/test",
             "resolveJsonModule": true,
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/test/tsconfig.app.tsbuildinfo",
             "types": [
               "vite/client",
             ],

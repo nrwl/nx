@@ -1039,6 +1039,7 @@ module.exports = withNx(
             "moduleResolution": "bundler",
             "outDir": "out-tsc/mylib",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
