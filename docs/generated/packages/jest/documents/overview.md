@@ -91,6 +91,29 @@ target with that name which can be used in CI to run the tests for each file in 
 }
 ```
 
+### Customizing atomized unit/e2e tasks group name
+
+By default, atomized tasks group name is derived from the `ciTargetName`. For example, atomized tasks for `e2e-ci` target, will be grouped under the name "E2E (CI) when displayed in Nx Cloud or `nx show project <project> --web` UI.
+You can customize that name, by explicitly providing the optional `ciGroupName` in the plugin option, as such:
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+        "ciGroupname": "My E2E tests (CI)
+      }
+    }
+  ]
+}
+```
+
+if you don't provide that option, the plugin will try to deduct the group name as described above, and will fallback to "E2E (CI)" if it can't.
+
 ### How @nx/jest Infers Tasks
 
 {% callout type="note" title="Inferred Tasks" %}
