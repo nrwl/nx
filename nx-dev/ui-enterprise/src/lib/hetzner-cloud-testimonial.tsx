@@ -10,6 +10,8 @@ import {
   PlayIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment, useState } from 'react';
 
 function PlayButton({
   className,
@@ -67,9 +69,11 @@ function PlayButton({
         className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-slate-100 bg-white/10 p-6 text-sm text-white antialiased backdrop-blur-xl"
       >
         <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
-        <motion.div variants={child} className="absolute left-20 top-4 w-48">
+        <motion.div
+          variants={child}
+          className="absolute left-20 flex h-full w-48 items-center"
+        >
           <p className="text-base font-medium">Watch the interview</p>
-          <p># customer story</p>
         </motion.div>
       </motion.div>
     </div>
@@ -77,6 +81,8 @@ function PlayButton({
 }
 
 export function HetznerCloudTestimonial(): ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
       <section
@@ -166,9 +172,7 @@ export function HetznerCloudTestimonial(): ReactElement {
               />
 
               <div className="absolute inset-0 grid h-full w-full items-center justify-center">
-                {/*<PlayButton*/}
-                {/*onClick={() => setIsOpen(true)}*/}
-                {/*/>*/}
+                <PlayButton onClick={() => setIsOpen(true)} />
               </div>
             </div>
           </div>
@@ -241,6 +245,55 @@ export function HetznerCloudTestimonial(): ReactElement {
           </figure>
         </div>
       </section>
+
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+          className="relative z-10"
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
+                  <div className="bg-black">
+                    <iframe
+                      width="809"
+                      height="455"
+                      src="https://www.youtube.com/embed/2BLqiNnBPuU"
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="aspect-video max-w-full"
+                    />
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   );
 }
