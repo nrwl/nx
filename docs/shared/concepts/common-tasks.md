@@ -83,12 +83,10 @@ You can also [override the inferred task configuration](/concepts/inferred-tasks
 
 You can define your own `build` task in your project configuration. Here is an example that uses `ts-node` to run a node script.
 
-```json {% fileName="packages/my-project/project.json" %}
+```json {% fileName="packages/my-project/package.json" %}
 {
-  "targets": {
-    "build": {
-      "command": "ts-node build-script.ts"
-    }
+  "scripts": {
+    "build": "ts-node build-script.ts"
   }
 }
 ```
@@ -165,12 +163,10 @@ You can also [override the inferred task configuration](/concepts/inferred-tasks
 
 You can define your own `serve` task in your project configuration. Here is an example that uses `ts-node` to run the entry point of your project.
 
-```json {% fileName="packages/my-project/project.json" %}
+```json {% fileName="packages/my-project/package.json" %}
 {
-  "targets": {
-    "serve": {
-      "command": "ts-node main.ts"
-    }
+  "scripts": {
+    "serve": "ts-node main.ts"
   }
 }
 ```
@@ -227,12 +223,10 @@ You can also [override the inferred task configuration](/concepts/inferred-tasks
 
 You can define your own `test` task in your project configuration. Here is an example that runs the `ava` test tool.
 
-```json {% fileName="packages/my-project/project.json" %}
+```json {% fileName="packages/my-project/package.json" %}
 {
-  "targets": {
-    "test": {
-      "command": "ava"
-    }
+  "scripts": {
+    "test": "ava"
   }
 }
 ```
@@ -269,12 +263,10 @@ You can also [override the inferred task configuration](/concepts/inferred-tasks
 
 You can define your own `lint` task in your project configuration. Here is an example that runs the `sonarts` lint tool.
 
-```json {% fileName="packages/my-project/project.json" %}
+```json {% fileName="packages/my-project/package.json" %}
 {
-  "targets": {
-    "lint": {
-      "command": "sonarts"
-    }
+  "scripts": {
+    "lint": "sonarts"
   }
 }
 ```
