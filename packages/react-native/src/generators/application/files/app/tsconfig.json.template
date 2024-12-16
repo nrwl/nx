@@ -1,5 +1,6 @@
 {
   "extends": "<%= rootTsConfigPath %>",
+  <%_ if (!isTsSolutionSetup) { _%>
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
@@ -9,6 +10,7 @@
     "resolveJsonModule": true,
     "declaration": true
   },
+  <%_ } _%>
   "files": [],
   "include": [],
   "references": [

@@ -123,7 +123,6 @@ describe('App', () => {
 
 exports[`application generator should set up project correctly for cypress 5`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
 import { defineConfig } from 'cypress';
 
 export default defineConfig({

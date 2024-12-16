@@ -261,9 +261,6 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "esModuleInterop": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -292,6 +289,7 @@ describe('application generator', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "jest.config.ts",
             "src/**/*.spec.ts",

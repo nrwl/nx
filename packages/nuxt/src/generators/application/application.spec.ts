@@ -270,6 +270,7 @@ describe('app', () => {
             "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "vite.config.ts",
             "vite.config.mts",
@@ -340,12 +341,12 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "outDir": "dist",
+            "outDir": "out-tsc/playwright",
             "sourceMap": false,
-            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
           },
           "exclude": [
-            "dist",
+            "out-tsc",
+            "test-output",
             "eslint.config.js",
             "eslint.config.mjs",
             "eslint.config.cjs",
