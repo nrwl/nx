@@ -650,6 +650,7 @@
     },
     "NxReleaseVersionConfiguration": {
       "type": "object",
+      "description": "Configuration for the versioning phase of releases.",
       "properties": {
         "conventionalCommits": {
           "type": "boolean",
@@ -661,6 +662,7 @@
         },
         "generatorOptions": {
           "type": "object",
+          "description": "These options will be passed to the configured \"release.version.generator\" (which will be \"@nx/js:release-version\" if not set explicitly).",
           "additionalProperties": true
         },
         "git": {
@@ -669,6 +671,36 @@
         "preVersionCommand": {
           "type": "string",
           "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+        }
+      },
+      "if": {
+        "$comment": "The generatorOptions are generic and dictated by the generator being used. Because usage with JS is so common, we default to the JS release version generator, so we correspondingly default to a schema for the JS release version generator options to provide the best DX.",
+        "properties": {
+          "generator": {
+            "anyOf": [
+              {
+                "const": "@nx/js:release-version"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "generatorOptions": {
+            "$ref": "#/definitions/NxJsReleaseVersionGeneratorOptions"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "generatorOptions": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       },
       "additionalProperties": false
@@ -825,6 +857,66 @@
           }
         }
       }
+    },
+    "NxJsReleaseVersionGeneratorOptions": {
+      "type": "object",
+      "properties": {
+        "specifier": {
+          "type": "string"
+        },
+        "specifierSource": {
+          "type": "string",
+          "enum": ["prompt", "conventional-commits", "version-plans"]
+        },
+        "preid": {
+          "type": "string"
+        },
+        "packageRoot": {
+          "type": "string"
+        },
+        "currentVersionResolver": {
+          "type": "string",
+          "enum": ["registry", "disk", "git-tag"]
+        },
+        "currentVersionResolverMetadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "fallbackCurrentVersionResolver": {
+          "type": "string",
+          "enum": ["disk"]
+        },
+        "firstRelease": {
+          "type": "boolean"
+        },
+        "versionPrefix": {
+          "type": "string",
+          "enum": ["auto", "", "~", "^", "="]
+        },
+        "skipLockFileUpdate": {
+          "type": "boolean"
+        },
+        "installArgs": {
+          "type": "string"
+        },
+        "installIgnoreScripts": {
+          "type": "boolean"
+        },
+        "deleteVersionPlans": {
+          "type": "boolean"
+        },
+        "updateDependents": {
+          "type": "string",
+          "enum": ["never", "auto"]
+        },
+        "logUnchangedProjects": {
+          "type": "boolean"
+        },
+        "preserveLocalDependencyProtocols": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
