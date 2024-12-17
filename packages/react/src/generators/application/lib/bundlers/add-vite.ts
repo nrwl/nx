@@ -84,4 +84,10 @@ export async function setupVitestConfiguration(
     },
     true
   );
+  if (options.bundler === 'rsbuild') {
+    tree.rename(
+      joinPathFragments(options.appProjectRoot, 'vite.config.ts'),
+      joinPathFragments(options.appProjectRoot, 'vitest.config.ts')
+    );
+  }
 }
