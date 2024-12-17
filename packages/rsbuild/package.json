@@ -39,5 +39,26 @@
   "peerDependencies": {},
   "nx-migrations": {
     "migrations": "./migrations.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    },
+    "./generators": {
+      "types": "./generators.d.ts",
+      "default": "./generators.js"
+    },
+    "./config-utils": {
+      "types": "./config-utils.d.ts",
+      "default": "./config-utils.js"
+    },
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "default": "./plugin.js"
+    }
   }
 }
