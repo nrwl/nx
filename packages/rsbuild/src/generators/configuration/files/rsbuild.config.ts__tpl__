@@ -1,0 +1,16 @@
+import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+    source: {
+        entry: {
+            index: '<%= entry %>'
+        },<% if (tsConfig) { %>
+        tsconfigPath: '<%= tsConfig %>',<% } %>
+    },
+    output: {
+        target: '<%= target %>',
+        distPath: {
+            root: 'dist',
+        },
+    }
+});

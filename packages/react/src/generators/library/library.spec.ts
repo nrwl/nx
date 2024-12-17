@@ -385,6 +385,8 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, style: 'scss' });
 
       expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeTruthy();
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -410,6 +412,24 @@ describe('lib', () => {
       expect(content).not.toContain('app.scss');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
+
+      expect(content).toMatchSnapshot();
+    });
+  });
+
+  describe('--style tailwind', () => {
+    it('should not generate any styles file when style is tailwind', async () => {
+      await libraryGenerator(tree, { ...defaultSchema, style: 'none' });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
+
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -967,7 +987,7 @@ module.exports = withNx(
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es', 'cjs']
+              formats: ['es']
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -981,7 +1001,7 @@ module.exports = withNx(
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
-              reportsDirectory: '../coverage/mylib',
+              reportsDirectory: './test-output/vitest/coverage',
               provider: 'v8',
             }
           },
@@ -1019,6 +1039,7 @@ module.exports = withNx(
             "moduleResolution": "bundler",
             "outDir": "out-tsc/mylib",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1027,6 +1048,7 @@ module.exports = withNx(
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "**/*.spec.ts",
             "**/*.test.ts",
@@ -1129,6 +1151,7 @@ module.exports = withNx(
             "sourceRoot": "mylib/src",
           },
           "types": "./src/index.ts",
+          "version": "0.0.1",
         }
       `);
       expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
@@ -1141,6 +1164,7 @@ module.exports = withNx(
             "sourceRoot": "myjslib/src",
           },
           "types": "./src/index.js",
+          "version": "0.0.1",
         }
       `);
     });
@@ -1184,6 +1208,45 @@ module.exports = withNx(
           }
         );
         "
+      `);
+    });
+
+    it('should configure files for publishable library', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        publishable: true,
+        importPath: '@acme/mylib',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "import": "./dist/index.esm.js",
+              "types": "./dist/index.esm.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "files": [
+            "dist",
+            "!**/*.tsbuildinfo",
+          ],
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "name": "@acme/mylib",
+          "nx": {
+            "name": "mylib",
+            "projectType": "library",
+            "sourceRoot": "mylib/src",
+          },
+          "type": "module",
+          "types": "./dist/index.esm.d.ts",
+          "version": "0.0.1",
+        }
       `);
     });
   });

@@ -135,6 +135,8 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.VueStandalone) {
     const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
@@ -163,6 +165,8 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NuxtStandalone) {
     const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
@@ -234,6 +238,8 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Express) {
     const {
@@ -245,6 +251,8 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nx' +
@@ -322,6 +330,8 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: false,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       addPlugin,
+      useTsSolution: options.workspaces,
+      formatter: options.formatter,
     });
   } else {
     throw new Error(`Invalid preset ${options.preset}`);

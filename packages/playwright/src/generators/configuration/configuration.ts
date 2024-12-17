@@ -95,13 +95,17 @@ export async function configurationGeneratorInternal(
     };
 
     if (isTsSolutionSetup) {
+      tsconfig.exclude = ['out-tsc', 'test-output'];
       // skip eslint from typechecking since it extends from root file that is outside rootDir
       if (options.linter === 'eslint') {
-        tsconfig.exclude = ['dist', 'eslint.config.js'];
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
       }
 
-      tsconfig.compilerOptions.outDir = 'dist';
-      tsconfig.compilerOptions.tsBuildInfoFile = 'dist/tsconfig.tsbuildinfo';
+      tsconfig.compilerOptions.outDir = 'out-tsc/playwright';
 
       if (!options.rootProject) {
         updateJson(tree, 'tsconfig.json', (json) => {

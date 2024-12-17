@@ -36,14 +36,26 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
-      "default": "eslint"
+      "enum": ["eslint", "none"],
+      "default": "none",
+      "x-prompt": "Which linter would you like to use?",
+      "x-priority": "important"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
-      "default": "jest"
+      "default": "none",
+      "x-priority": "important",
+      "x-prompt": "Which unit test runner would you like to use?"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "enum": ["jest", "none"],
+      "description": "Test runner to use for end-to-end tests",
+      "default": "none",
+      "x-priority": "important",
+      "x-prompt": "Which end-to-end test runner would you like to use?"
     },
     "tags": {
       "type": "string",
@@ -108,12 +120,6 @@
       "default": false,
       "hidden": true,
       "x-priority": "internal"
-    },
-    "e2eTestRunner": {
-      "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for end to end (e2e) tests",
-      "default": "jest"
     },
     "docker": {
       "type": "boolean",

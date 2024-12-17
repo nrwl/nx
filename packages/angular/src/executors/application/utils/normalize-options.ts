@@ -28,11 +28,12 @@ export function normalizeOptions(
     }
   }
 
-  return {
-    ...options,
-    appShell: angularMajorVersion < 19 ? options.appShell ?? false : undefined,
-    prerender:
-      angularMajorVersion < 19 ? options.prerender ?? false : undefined,
-    security,
-  };
+  let appShell = options.appShell;
+  let prerender = options.prerender;
+  if (angularMajorVersion < 19) {
+    appShell ??= false;
+    prerender ??= false;
+  }
+
+  return { ...options, appShell, prerender, security };
 }

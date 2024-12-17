@@ -370,19 +370,6 @@ describe('app', () => {
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "allowSyntheticDefaultImports": true,
-            "declaration": true,
-            "jsx": "react-native",
-            "lib": [
-              "dom",
-              "esnext",
-            ],
-            "moduleResolution": "node",
-            "resolveJsonModule": true,
-            "skipLibCheck": true,
-            "strict": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -405,16 +392,24 @@ describe('app', () => {
             "noUnusedLocals": false,
             "outDir": "out-tsc/my-app",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-app/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
-            "jest.config.ts",
+            "**/*.test.ts",
             "**/*.spec.ts",
+            "**/*.test.tsx",
             "**/*.spec.tsx",
+            "**/*.test.js",
+            "**/*.spec.js",
+            "**/*.test.jsx",
+            "**/*.spec.jsx",
             "src/test-setup.ts",
+            "jest.config.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",

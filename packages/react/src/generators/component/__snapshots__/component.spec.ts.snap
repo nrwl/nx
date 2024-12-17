@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`component --style @emotion/styled should use @emotion/styled as the styled API library 1`] = `
+"import styled from '@emotion/styled';
+
+const StyledHello = styled.div\`
+  color: pink;
+\`;
+export function Hello() {
+  return (
+    <StyledHello>
+      <h1>Welcome to Hello!</h1>
+    </StyledHello>
+  );
+}
+
+export default Hello;
+"
+`;
+
+exports[`component --style none should generate component files without styles 1`] = `
+"export function Hello() {
+  return (
+    <div>
+      <h1>Welcome to Hello!</h1>
+    </div>
+  );
+}
+
+export default Hello;
+"
+`;
+
+exports[`component --style styled-components should use styled-components as the styled API library 1`] = `
+"import styled from 'styled-components';
+
+const StyledHello = styled.div\`
+  color: pink;
+\`;
+export function Hello() {
+  return (
+    <StyledHello>
+      <h1>Welcome to Hello!</h1>
+    </StyledHello>
+  );
+}
+
+export default Hello;
+"
+`;
+
+exports[`component --style styled-jsx should use styled-jsx as the styled API library 1`] = `
+"export function Hello() {
+  return (
+    <div>
+      <style jsx>{\`
+        div {
+          color: pink;
+        }
+      \`}</style>{' '}
+      <h1>Welcome to Hello!</h1>
+    </div>
+  );
+}
+
+export default Hello;
+"
+`;
+
+exports[`component --style tailwind should not generate any style in component 1`] = `
+"export function Hello() {
+  return (
+    <div className={styles['container']}>
+      <h1>Welcome to Hello!</h1>
+    </div>
+  );
+}
+
+export default Hello;
+"
+`;

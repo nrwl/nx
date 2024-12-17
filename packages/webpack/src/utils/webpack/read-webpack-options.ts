@@ -28,6 +28,7 @@ export async function readWebpackOptions(
           outputFileName: undefined,
           outputPath: undefined,
           assets: undefined,
+          useTsconfigPaths: undefined,
         },
         context: {
           root: workspaceRoot,

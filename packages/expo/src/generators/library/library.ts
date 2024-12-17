@@ -106,7 +106,7 @@ export async function expoLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -136,7 +136,7 @@ export async function expoLibraryGeneratorInternal(
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host));
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {

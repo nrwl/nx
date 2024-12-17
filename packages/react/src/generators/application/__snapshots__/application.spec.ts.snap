@@ -192,6 +192,40 @@ export default defineConfig({
 "
 `;
 
+exports[`app --style scss should generate scss styles 1`] = `
+"// Uncomment this line to use CSS modules
+// import styles from './app.module.scss';
+import NxWelcome from "./nx-welcome";
+
+export function App() {
+  return (
+    <div>
+      <NxWelcome title="my-app"/>
+    </div>
+  );
+}
+
+export default App;
+
+
+"
+`;
+
+exports[`app --style tailwind should not generate any styles files 1`] = `
+"import NxWelcome from './nx-welcome';
+
+export function App() {
+  return (
+    <div>
+      <NxWelcome title="my-app" />
+    </div>
+  );
+}
+
+export default App;
+"
+`;
+
 exports[`app not nested should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -357,6 +391,66 @@ export function App() {
 
 export default App;
 
+
+"
+`;
+
+exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 1`] = `
+"import styled from 'styled-components';
+import NxWelcome from "./nx-welcome";
+
+const StyledApp = styled.div\`
+    // Your style here
+\`;
+
+export function App() {
+  return (
+    <StyledApp>
+      <NxWelcome title="my-app"/>
+    </StyledApp>
+  );
+}
+
+export default App;
+
+"
+`;
+
+exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 2`] = `
+"import NxWelcome from "./nx-welcome";
+
+export function App() {
+  return (
+    <div>
+      <style jsx>{\`/** your style here **/\`}</style>
+      <NxWelcome title="my-app"/>
+    </div>
+  );
+}
+
+export default App;
+
+
+"
+`;
+
+exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 3`] = `
+"import styled from '@emotion/styled';
+import NxWelcome from "./nx-welcome";
+
+const StyledApp = styled.div\`
+    // Your style here
+\`;
+
+export function App() {
+  return (
+    <StyledApp>
+      <NxWelcome title="my-app"/>
+    </StyledApp>
+  );
+}
+
+export default App;
 
 "
 `;

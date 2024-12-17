@@ -15,6 +15,7 @@ import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
 import {
   nxVersion,
   reactNativeWebVersion,
+  reacttNativeSvgWebVersion,
   typesReactDomVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
@@ -49,6 +50,7 @@ export async function webConfigurationGenerator(
       {},
       {
         'react-native-web': reactNativeWebVersion,
+        'react-native-svg-web': reacttNativeSvgWebVersion,
       }
     );
     tasks.push(installTask);

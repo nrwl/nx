@@ -1738,6 +1738,17 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "updating-version-references",
+            "name": "Updating Version References in Manifest Files (e.g. package.json)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/updating-version-references",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/updating-version-references",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "automatically-version-with-conventional-commits",
             "name": "Automatically Version with Conventional Commits",
             "description": "",
@@ -1834,17 +1845,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/configure-changelog-format",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "publish-custom-dist-directory",
-            "name": "Publish a Custom Dist Directory",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/publish-custom-dist-directory",
             "tags": ["nx-release"]
           },
           {
@@ -3312,6 +3312,17 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "updating-version-references",
+        "name": "Updating Version References in Manifest Files (e.g. package.json)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/updating-version-references",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/updating-version-references",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "automatically-version-with-conventional-commits",
         "name": "Automatically Version with Conventional Commits",
         "description": "",
@@ -3411,17 +3422,6 @@
         "tags": ["nx-release"]
       },
       {
-        "id": "publish-custom-dist-directory",
-        "name": "Publish a Custom Dist Directory",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/publish-custom-dist-directory",
-        "tags": ["nx-release"]
-      },
-      {
         "id": "build-before-versioning",
         "name": "Build Before Versioning",
         "description": "",
@@ -3468,6 +3468,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/release-projects-independently",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/updating-version-references": {
+    "id": "updating-version-references",
+    "name": "Updating Version References in Manifest Files (e.g. package.json)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/updating-version-references",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/updating-version-references",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/automatically-version-with-conventional-commits": {
@@ -3567,17 +3578,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/configure-changelog-format",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/publish-custom-dist-directory": {
-    "id": "publish-custom-dist-directory",
-    "name": "Publish a Custom Dist Directory",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/publish-custom-dist-directory",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/build-before-versioning": {
