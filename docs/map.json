@@ -237,6 +237,12 @@
               "file": "shared/concepts/executors-and-configurations"
             },
             {
+              "name": "Common Tasks",
+              "id": "common-tasks",
+              "tags": ["run-tasks"],
+              "file": "shared/concepts/common-tasks"
+            },
+            {
               "name": "Nx Daemon",
               "id": "nx-daemon",
               "tags": ["daemon"],
