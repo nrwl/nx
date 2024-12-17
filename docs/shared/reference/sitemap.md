@@ -30,6 +30,7 @@
     - [Inferred Tasks](/concepts/inferred-tasks)
     - [Types of Configuration](/concepts/types-of-configuration)
     - [Executors and Configurations](/concepts/executors-and-configurations)
+    - [Common Tasks](/concepts/common-tasks)
     - [Nx Daemon](/concepts/nx-daemon)
     - [Sync Generators](/concepts/sync-generators)
     - [Nx and Turborepo](/concepts/turbo-and-nx)
