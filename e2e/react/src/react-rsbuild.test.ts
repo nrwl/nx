@@ -36,7 +36,7 @@ describe('Build React applications and libraries with Rsbuild', () => {
     );
 
     await runCLIAsync(`build ${rsbuildApp}`);
-    checkFilesExist(`dist/apps/${rsbuildApp}/index.html`);
+    checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
   }, 300_000);
 
   it('should test and lint app with bundler=rsbuild', async () => {
@@ -57,7 +57,7 @@ describe('Build React applications and libraries with Rsbuild', () => {
     );
 
     await runCLIAsync(`build ${rsbuildApp}`);
-    checkFilesExist(`dist/apps/${rsbuildApp}/index.html`);
+    checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
   }, 300_000);
 
   it('should test and lint app with bundler=rsbuild and inSourceTests', async () => {
@@ -81,7 +81,7 @@ describe('Build React applications and libraries with Rsbuild', () => {
     );
 
     await runCLIAsync(`build ${rsbuildApp}`);
-    checkFilesExist(`dist/apps/${rsbuildApp}/index.html`);
+    checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
   }, 300_000);
 
   it('should support bundling with Rsbuild and Jest', async () => {
@@ -97,6 +97,6 @@ describe('Build React applications and libraries with Rsbuild', () => {
     );
 
     await runCLIAsync(`build ${rsbuildApp}`);
-    checkFilesExist(`dist/apps/${rsbuildApp}/index.html`);
+    checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
   }, 300_000);
 });
