@@ -323,24 +323,29 @@ async function updateProjectGraphWithPlugins(
       return;
     }
     if (inProgressPlugins.size === 1) {
-      return `Creating project graph dependencies with ${
-        inProgressPlugins.keys()[0]
-      }`;
+      spinner.setMessage(
+        `Creating project graph dependencies with ${
+          inProgressPlugins.keys()[0]
+        }`
+      );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      return [
-        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
+      spinner.setMessage(
+        [
+          `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
     } else {
-      return `Creating project graph dependencies with ${inProgressPlugins.size} plugins`;
+      spinner.setMessage(
+        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`
+      );
     }
   }
 
-  if (SHOULD_SHOW_SPINNERS) {
-    spinner = new DelayedSpinner(
-      `Creating project graph dependencies with ${plugins.length} plugins`
-    );
-  }
+  spinner = new DelayedSpinner({
+    message: `Creating project graph dependencies with ${plugins.length} plugins`,
+    ciDelay: 10_000,
+  });
 
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
@@ -439,21 +444,28 @@ export async function applyProjectMetadata(
       return;
     }
     if (inProgressPlugins.size === 1) {
-      return `Creating project metadata with ${inProgressPlugins.keys()[0]}`;
+      spinner.setMessage(
+        `Creating project metadata with ${inProgressPlugins.keys()[0]}`
+      );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      return [
-        `Creating project metadata with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
+      spinner.setMessage(
+        [
+          `Creating project metadata with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
     } else {
-      return `Creating project metadata with ${inProgressPlugins.size} plugins`;
+      spinner.setMessage(
+        `Creating project metadata with ${inProgressPlugins.size} plugins`
+      );
     }
   }
 
   if (SHOULD_SHOW_SPINNERS) {
-    spinner = new DelayedSpinner(
-      `Creating project metadata with ${plugins.length} plugins`
-    );
+    spinner = new DelayedSpinner({
+      message: `Creating project metadata with ${plugins.length} plugins`,
+      ciDelay: 10_000,
+    });
   }
 
   const promises = plugins.map(async (plugin) => {

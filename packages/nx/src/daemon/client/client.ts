@@ -199,16 +199,16 @@ export class DaemonClient {
     sourceMaps: ConfigurationSourceMaps;
   }> {
     let spinner: DelayedSpinner;
-    if (SHOULD_SHOW_SPINNERS) {
-      // If the graph takes a while to load, we want to show a spinner.
-      spinner = new DelayedSpinner(
-        'Calculating the project graph on the Nx Daemon',
-        500
-      ).scheduleMessageUpdate(
+    // If the graph takes a while to load, we want to show a spinner.
+    spinner = new DelayedSpinner({
+      message: 'Calculating the project graph on the Nx Daemon',
+      ciDelay: 10_000,
+    }).scheduleMessageUpdate({
+      message:
         'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
-        30_000
-      );
-    }
+      ciDelay: 60_000,
+      delay: 30_000,
+    });
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',

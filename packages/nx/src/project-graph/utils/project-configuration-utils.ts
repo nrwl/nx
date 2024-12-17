@@ -339,22 +339,26 @@ export async function createProjectConfigurations(
     }
 
     if (inProgressPlugins.size === 1) {
-      return `Creating project graph nodes with ${inProgressPlugins.keys()[0]}`;
+      spinner.setMessage(
+        `Creating project graph nodes with ${inProgressPlugins.keys()[0]}`
+      );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      return [
-        `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
+      spinner.setMessage(
+        [
+          `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
     } else {
-      return `Creating project graph nodes with ${inProgressPlugins.size} plugins`;
+      spinner.setMessage(
+        `Creating project graph nodes with ${inProgressPlugins.size} plugins`
+      );
     }
   }
 
-  if (SHOULD_SHOW_SPINNERS) {
-    spinner = new DelayedSpinner(
-      `Creating project graph nodes with ${plugins.length} plugins`
-    );
-  }
+  spinner = new DelayedSpinner(
+    `Creating project graph nodes with ${plugins.length} plugins`
+  );
 
   const results: Array<ReturnType<LoadedNxPlugin['createNodes'][1]>> = [];
   const errors: Array<
