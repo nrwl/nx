@@ -125,6 +125,8 @@ describe('ast-utils', () => {
         }).map(config => ({
             ...config,
             files: [
+                "**/*.ts",
+                "**/*.tsx",
                 "**/*.cts",
                 "**/*.mts"
             ],

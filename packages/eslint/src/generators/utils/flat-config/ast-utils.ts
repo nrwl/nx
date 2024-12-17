@@ -1016,6 +1016,8 @@ export function generateFlatOverride(
     rest.extends === 'plugin:@nx/javascript'
   ) {
     const newFiles = new Set(files);
+    newFiles.add('**/*.js');
+    newFiles.add('**/*.jsx');
     newFiles.add('**/*.cjs');
     newFiles.add('**/*.mjs');
     files = Array.from(newFiles);
@@ -1027,6 +1029,8 @@ export function generateFlatOverride(
     rest.extends === 'plugin:@nx/typescript'
   ) {
     const newFiles = new Set(files);
+    newFiles.add('**/*.ts');
+    newFiles.add('**/*.tsx');
     newFiles.add('**/*.cts');
     newFiles.add('**/*.mts');
     files = Array.from(newFiles);
