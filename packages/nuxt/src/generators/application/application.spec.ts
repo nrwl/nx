@@ -66,7 +66,7 @@ describe('app', () => {
         });
 
         it('should configure eslint correctly (flat config)', async () => {
-          tree.write('eslint.config.js', '');
+          tree.write('eslint.config.cjs', '');
 
           await applicationGenerator(tree, {
             directory: name,
@@ -74,7 +74,7 @@ describe('app', () => {
           });
 
           expect(
-            tree.read(`${name}/eslint.config.js`, 'utf-8')
+            tree.read(`${name}/eslint.config.cjs`, 'utf-8')
           ).toMatchSnapshot();
         });
 

@@ -124,6 +124,10 @@ describe('ast-utils', () => {
             ]
         }).map(config => ({
             ...config,
+            files: [
+                "**/*.cts",
+                "**/*.mts"
+            ],
             rules: {
                 ...config.rules
             }
@@ -182,7 +186,7 @@ describe('ast-utils', () => {
 
   describe('addBlockToFlatConfigExport', () => {
     it('should inject block to the end of the file', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -204,7 +208,7 @@ describe('ast-utils', () => {
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
             module.exports = [
                 ...baseConfig,
                 {
@@ -228,7 +232,7 @@ describe('ast-utils', () => {
     });
 
     it('should inject spread to the beginning of the file', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -246,7 +250,7 @@ describe('ast-utils', () => {
         { insertAtTheEnd: false }
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
             module.exports = [
             ...config,
 
@@ -266,7 +270,7 @@ describe('ast-utils', () => {
 
   describe('addImportToFlatConfig', () => {
     it('should inject import if not found', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -285,7 +289,7 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
               "const varName = require("@myorg/awesome-config");
-              const baseConfig = require("../../eslint.config.js");
+              const baseConfig = require("../../eslint.config.cjs");
                   module.exports = [
                       ...baseConfig,
                       {
@@ -302,7 +306,7 @@ describe('ast-utils', () => {
 
     it('should update import if already found', () => {
       const content = `const { varName } = require("@myorg/awesome-config");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -321,7 +325,7 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
               "const { varName, otherName, someName  } = require("@myorg/awesome-config");
-                  const baseConfig = require("../../eslint.config.js");
+                  const baseConfig = require("../../eslint.config.cjs");
                   module.exports = [
                       ...baseConfig,
                       {
@@ -338,7 +342,7 @@ describe('ast-utils', () => {
 
     it('should not inject import if already exists', () => {
       const content = `const { varName, otherName } = require("@myorg/awesome-config");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -360,7 +364,7 @@ describe('ast-utils', () => {
 
     it('should not update import if already exists', () => {
       const content = `const varName = require("@myorg/awesome-config");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -409,7 +413,7 @@ describe('ast-utils', () => {
 
   describe('addCompatToFlatConfig', () => {
     it('should add compat to config', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
       ...baseConfig,
       {
@@ -425,7 +429,7 @@ describe('ast-utils', () => {
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
            
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -446,7 +450,7 @@ describe('ast-utils', () => {
     });
 
     it('should add only partially compat to config if parts exist', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     const js = require("@eslint/js");
     module.exports = [
       ...baseConfig,
@@ -462,7 +466,7 @@ describe('ast-utils', () => {
       const result = addFlatCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
             const js = require("@eslint/js");
            
         const compat = new FlatCompat({
@@ -485,7 +489,7 @@ describe('ast-utils', () => {
 
     it('should not add compat to config if exist', () => {
       const content = `const FlatCompat = require("@eslint/eslintrc");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     const js = require("@eslint/js");
 
     const compat = new FlatCompat({
@@ -512,7 +516,7 @@ describe('ast-utils', () => {
   describe('removeOverridesFromLintConfig', () => {
     it('should remove all rules from config', () => {
       const content = `const FlatCompat = require("@eslint/eslintrc");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     const js = require("@eslint/js");
 
     const compat = new FlatCompat({
@@ -552,7 +556,7 @@ describe('ast-utils', () => {
       const result = removeOverridesFromLintConfig(content);
       expect(result).toMatchInlineSnapshot(`
               "const FlatCompat = require("@eslint/eslintrc");
-                  const baseConfig = require("../../eslint.config.js");
+                  const baseConfig = require("../../eslint.config.cjs");
                   const js = require("@eslint/js");
 
                   const compat = new FlatCompat({
@@ -568,7 +572,7 @@ describe('ast-utils', () => {
     });
 
     it('should remove all rules from starting with first', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
     module.exports = [
       {
@@ -599,7 +603,7 @@ describe('ast-utils', () => {
     ];`;
       const result = removeOverridesFromLintConfig(content);
       expect(result).toMatchInlineSnapshot(`
-              "const baseConfig = require("../../eslint.config.js");
+              "const baseConfig = require("../../eslint.config.cjs");
 
                   module.exports = [
                   ];"
@@ -609,7 +613,7 @@ describe('ast-utils', () => {
 
   describe('replaceOverride', () => {
     it('should find and replace rules in override', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
     {
@@ -651,7 +655,7 @@ module.exports = [
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
 
         module.exports = [
             {
@@ -686,7 +690,7 @@ module.exports = [
     });
 
     it('should append rules in override', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
     {
@@ -722,7 +726,7 @@ module.exports = [
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
 
         module.exports = [
             {
@@ -749,7 +753,7 @@ module.exports = [
     });
 
     it('should work for compat overrides', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
     ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
@@ -777,7 +781,7 @@ module.exports = [
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
 
         module.exports = [
             ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({

@@ -151,7 +151,7 @@ describe('library', () => {
 
   it('should support eslint flat config', async () => {
     tree.write(
-      'eslint.config.js',
+      'eslint.config.cjs',
       `const { FlatCompat } = require('@eslint/eslintrc');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
@@ -208,10 +208,10 @@ module.exports = [
 
     await libraryGenerator(tree, defaultSchema);
 
-    const eslintJson = tree.read('my-lib/eslint.config.js', 'utf-8');
+    const eslintJson = tree.read('my-lib/eslint.config.cjs', 'utf-8');
     expect(eslintJson).toMatchSnapshot();
     // assert **/*.vue was added to override in base eslint config
-    const eslintBaseJson = tree.read('eslint.config.js', 'utf-8');
+    const eslintBaseJson = tree.read('eslint.config.cjs', 'utf-8');
     expect(eslintBaseJson).toContain(
       `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
     );
