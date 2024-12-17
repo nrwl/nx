@@ -772,7 +772,7 @@ describe('Linter', () => {
       const mylib = uniq('mylib');
 
       runCLI(
-        `generate @nx/node:app --name=${myapp} --linter=eslint --directory="." --e2eTestRunner=jest --no-interactive`
+        `generate @nx/node:app --name=${myapp} --linter=eslint --directory="." --unitTestRunner=jest --e2eTestRunner=jest --no-interactive`
       );
       runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);

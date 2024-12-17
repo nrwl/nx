@@ -526,11 +526,13 @@ module.exports = [
             "outDir": "out-tsc/my-lib",
             "resolveJsonModule": true,
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
             "types": [
               "vite/client",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/__tests__/*",
             "src/**/*.spec.vue",

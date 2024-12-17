@@ -15,8 +15,9 @@ import {
   writeJson,
 } from 'nx/src/devkit-exports';
 import {
+  isProjectConfigurationsError,
+  isProjectsWithNoNameError,
   LoadedNxPlugin,
-  ProjectConfigurationsError,
   retrieveProjectConfigurations,
 } from 'nx/src/devkit-internals';
 
@@ -130,8 +131,12 @@ async function _addPluginInternal<PluginOptions>(
         );
       } catch (e) {
         // Errors are okay for this because we're only running 1 plugin
-        if (e instanceof ProjectConfigurationsError) {
+        if (isProjectConfigurationsError(e)) {
           projConfigs = e.partialProjectConfigurationsResult;
+          // ignore errors from projects with no name
+          if (!e.errors.every(isProjectsWithNoNameError)) {
+            throw e;
+          }
         } else {
           throw e;
         }
@@ -171,8 +176,12 @@ async function _addPluginInternal<PluginOptions>(
       );
     } catch (e) {
       // Errors are okay for this because we're only running 1 plugin
-      if (e instanceof ProjectConfigurationsError) {
+      if (isProjectConfigurationsError(e)) {
         projConfigs = e.partialProjectConfigurationsResult;
+        // ignore errors from projects with no name
+        if (!e.errors.every(isProjectsWithNoNameError)) {
+          throw e;
+        }
       } else {
         throw e;
       }
