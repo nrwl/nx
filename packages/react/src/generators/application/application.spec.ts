@@ -1442,4 +1442,30 @@ describe('app', () => {
       `);
     });
   });
+
+  // TODO(Colum): Enable when rsbuild is published to npm and Nx Repo is updated with the ast utils
+  xdescribe('--bundler=rsbuild', () => {
+    it.each`
+      style
+      ${'styled-components'}
+      ${'styled-jsx'}
+      ${'@emotion/styled'}
+    `(
+      `should generate valid rsbuild config files for %s`,
+      async ({ style }) => {
+        await applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'rsbuild',
+          style,
+        });
+
+        const content = appTree.read('my-app/src/app/app.tsx').toString();
+        expect(content).toMatchSnapshot();
+        const configContents = appTree
+          .read('my-app/rsbuild.config.ts')
+          .toString();
+        expect(configContents).toMatchSnapshot();
+      }
+    );
+  });
 });

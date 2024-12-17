@@ -122,4 +122,52 @@ describe('addBuildPlugin', () => {
             });"
     `);
   });
+  it('should add the plugin to the config file when plugins doesnt not exist and its being added with options', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/rsbuild.config.ts',
+      `import { defineConfig } from '@rsbuild/core';
+      export default defineConfig({
+        plugins: [],
+        source: {
+          entry: {
+            index: './src/index.ts'
+          },
+        }
+      });`
+    );
+
+    // ACT
+    addBuildPlugin(
+      tree,
+      'apps/my-app/rsbuild.config.ts',
+      '@rsbuild/plugin-react',
+      'pluginReact',
+      `{
+        swcReactOptions: {
+          importSource: '@emotion/react',
+        }
+      }`
+    );
+
+    // ASSERT
+    expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { pluginReact } from '@rsbuild/plugin-react';
+        import { defineConfig } from '@rsbuild/core';
+            export default defineConfig({
+              plugins: [pluginReact({
+              swcReactOptions: {
+                importSource: '@emotion/react',
+              }
+            })],
+              source: {
+                entry: {
+                  index: './src/index.ts'
+                },
+              }
+            });"
+    `);
+  });
 });

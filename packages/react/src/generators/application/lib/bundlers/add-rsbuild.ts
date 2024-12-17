@@ -34,7 +34,7 @@ export async function setupRsbuildConfiguration(
     addHtmlTemplatePath,
     addExperimentalSwcPlugin,
     versions,
-  } = ensurePackage<typeof import('@nx/rsbuild')>('@nx/rsbuild', nxVersion);
+  } = ensurePackage('@nx/rsbuild', nxVersion);
   const rsbuildTask = await configurationGenerator(tree, {
     project: options.projectName,
     entry: maybeJs(
