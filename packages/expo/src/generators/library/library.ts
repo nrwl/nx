@@ -106,7 +106,7 @@ export async function expoLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,

@@ -398,6 +398,10 @@ function addProjectDependencies(
 }
 
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
+  if (options.isUsingTsSolutionConfig) {
+    return;
+  }
+
   updateJson(tree, `${options.appProjectRoot}/tsconfig.json`, (json) => {
     if (options.rootProject) {
       return {

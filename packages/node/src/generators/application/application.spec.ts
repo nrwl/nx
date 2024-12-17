@@ -639,9 +639,6 @@ describe('app', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "esModuleInterop": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -662,11 +659,13 @@ describe('app', () => {
             "moduleResolution": "nodenext",
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "jest.config.ts",
             "src/**/*.spec.ts",

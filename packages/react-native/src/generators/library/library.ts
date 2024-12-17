@@ -34,10 +34,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import {
-  isUsingTsSolutionSetup,
-  updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function reactNativeLibraryGenerator(
@@ -107,7 +104,7 @@ export async function reactNativeLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -222,6 +219,10 @@ async function addProject(
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  if (options.isUsingTsSolutionConfig) {
+    return;
+  }
+
   updateJson(
     tree,
     joinPathFragments(options.projectRoot, 'tsconfig.json'),

@@ -922,6 +922,7 @@ describe('app (legacy)', () => {
           "compilerOptions": {
             "allowJs": true,
             "allowSyntheticDefaultImports": true,
+            "emitDeclarationOnly": false,
             "esModuleInterop": true,
             "forceConsistentCasingInFileNames": true,
             "incremental": true,
@@ -949,12 +950,14 @@ describe('app (legacy)', () => {
             "resolveJsonModule": true,
             "rootDir": "src",
             "strict": true,
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.tsbuildinfo",
             "types": [
               "jest",
               "node",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "node_modules",
             "jest.config.ts",
@@ -1013,16 +1016,16 @@ describe('app (legacy)', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "outDir": "dist",
+            "outDir": "out-tsc/cypress",
             "sourceMap": false,
-            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
             "types": [
               "cypress",
               "node",
             ],
           },
           "exclude": [
-            "dist",
+            "out-tsc",
+            "test-output",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
