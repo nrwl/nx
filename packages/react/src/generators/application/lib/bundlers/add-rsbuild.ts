@@ -13,7 +13,8 @@ export async function initRsbuild(
   options: NormalizedSchema<Schema>,
   tasks: any[]
 ) {
-  const { initGenerator } = ensurePackage('@nx/rsbuild', nxVersion);
+  ensurePackage('@nx/rsbuild', nxVersion);
+  const { initGenerator } = await import('@nx/rsbuild/generators');
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     addPlugin: true,
@@ -27,14 +28,15 @@ export async function setupRsbuildConfiguration(
   options: NormalizedSchema<Schema>,
   tasks: any[]
 ) {
+  ensurePackage('@nx/rsbuild', nxVersion);
+  const { configurationGenerator } = await import('@nx/rsbuild/generators');
   const {
-    configurationGenerator,
     addBuildPlugin,
     addCopyAssets,
     addHtmlTemplatePath,
     addExperimentalSwcPlugin,
     versions,
-  } = ensurePackage('@nx/rsbuild', nxVersion);
+  } = await import('@nx/rsbuild/config-utils');
   const rsbuildTask = await configurationGenerator(tree, {
     project: options.projectName,
     entry: maybeJs(

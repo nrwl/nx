@@ -71,9 +71,9 @@ export async function addE2e(
       options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'rsbuild') {
-    const { getRsbuildE2EWebServerInfo } = ensurePackage(
-      '@nx/rsbuild',
-      nxVersion
+    ensurePackage('@nx/rsbuild', nxVersion);
+    const { getRsbuildE2EWebServerInfo } = await import(
+      '@nx/rsbuild/config-utils'
     );
 
     e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
