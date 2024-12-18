@@ -295,7 +295,7 @@ Breaking down this example, we can see that it follows this flow:
 
 ## Accepting Plugin Options
 
-When looking at `createNodes`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.
+When looking at `createNodesV2`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.
 
 By default, its typed as unknown. This is because it belongs to the plugin author. The `CreateNodes`, `CreateDependencies`, and `NxPluginV2` types all accept a generic parameter that allows you to specify the type of the options.
 
@@ -319,20 +319,29 @@ As an example, the below `nx.json` file specifies a plugin called `my-plugin` an
 `my-plugin` could then consume these options to add a tag to each project it detected:
 
 ```typescript
+import { createNodesFromFiles } from '@nx/devkit';
+import { dirname } from 'path';
+
 type MyPluginOptions = { tagName: string };
 
-export const createNodes: CreateNodes<MyPluginOptions> = [
-  '**/project.json',
-  (fileName, opts, ctx) => {
-    const root = dirname(fileName);
+export const createNodesV2: CreateNodesV2<MyPluginOptions> = [
+  '**/tsconfig.json',
+  async (configFiles, options, context) => {
+    return await createNodesFromFiles(
+      (configFile, options, context) =>
+        const root = dirname(configFile);
 
-    return {
-      projects: {
-        [root]: {
-          tags: opts.tagName ? [opts.tagName] : [],
-        },
-      },
-    };
+        return {
+          projects: {
+            [root]: {
+              tags: options.tagName ? [options.tagName] : [],
+            },
+          },
+        };
+      configFiles,
+      options,
+      context
+    );
   },
 ];
 ```
