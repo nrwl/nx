@@ -99,6 +99,9 @@ describe('application generator', () => {
           },
           tsconfigPath: './tsconfig.app.json',
         },
+        server: {
+          port: 4200,
+        },
         output: {
           target: 'web',
           distPath: {

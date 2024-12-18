@@ -50,6 +50,9 @@ export default defineConfig({
         },
         tsconfigPath: './tsconfig.app.json',
     },
+    server: {
+        port: 4200
+    },
     output: {
 		copy: [
 		{ from: './src/favicon.ico' },
@@ -104,6 +107,9 @@ export default defineConfig({
             index: './src/main.tsx'
         },
         tsconfigPath: './tsconfig.app.json',
+    },
+    server: {
+        port: 4200
     },
     output: {
 		copy: [
@@ -163,6 +169,9 @@ export default defineConfig({
             index: './src/main.tsx'
         },
         tsconfigPath: './tsconfig.app.json',
+    },
+    server: {
+        port: 4200
     },
     output: {
 		copy: [

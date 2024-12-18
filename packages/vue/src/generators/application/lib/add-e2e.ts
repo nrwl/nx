@@ -58,7 +58,7 @@ export async function addE2e(
         `rsbuild.config.${options.js ? 'js' : 'ts'}`
       ),
       options.addPlugin,
-      options.devServerPort ?? 3000
+      options.devServerPort ?? 4200
     );
   }
 

@@ -26,6 +26,7 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
     entry: `./src/main.ts`,
     tsConfig: './tsconfig.app.json',
     target: 'web',
+    devServerPort: options.devServerPort ?? 4200,
   });
   tasks.push(rsbuildTask);
 

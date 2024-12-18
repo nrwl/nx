@@ -48,6 +48,7 @@ export async function setupRsbuildConfiguration(
     ),
     tsConfig: './tsconfig.app.json',
     target: 'web',
+    devServerPort: options.devServerPort ?? 4200,
   });
   tasks.push(rsbuildTask);
 

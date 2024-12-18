@@ -9,7 +9,7 @@ export async function getRsbuildE2EWebServerInfo(
   e2ePortOverride?: number
 ) {
   const nxJson = readNxJson(tree);
-  let e2ePort = e2ePortOverride ?? 3000;
+  let e2ePort = e2ePortOverride ?? 4200;
 
   if (
     nxJson.targetDefaults?.['dev'] &&
@@ -31,7 +31,7 @@ export async function getRsbuildE2EWebServerInfo(
       defaultServeTargetName: 'dev',
       defaultServeStaticTargetName: 'preview',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
-      defaultE2ECiBaseUrl: 'http://localhost:3000',
+      defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded
