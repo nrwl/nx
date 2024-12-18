@@ -8,13 +8,13 @@ describe('addBuildPlugin', () => {
     tree.write(
       'apps/my-app/rsbuild.config.ts',
       `import { defineConfig } from '@rsbuild/core';
-      export default defineConfig({
-        source: {
-          entry: {
-            index: './src/index.ts'
-          },
-        }
-      });`
+export default defineConfig({
+  source: {
+    entry: {
+      index: './src/index.ts'
+    },
+  }
+});`
     );
 
     // ACT
@@ -30,14 +30,15 @@ describe('addBuildPlugin', () => {
       .toMatchInlineSnapshot(`
       "import { less } from '@rsbuild/plugin-less';
         import { defineConfig } from '@rsbuild/core';
-            export default defineConfig({
-          plugins: [less()],
-              source: {
-                entry: {
-                  index: './src/index.ts'
-                },
-              }
-            });"
+      export default defineConfig({
+      	plugins: [less()],
+      	
+        source: {
+          entry: {
+            index: './src/index.ts'
+          },
+        }
+      });"
     `);
   });
 
@@ -48,14 +49,14 @@ describe('addBuildPlugin', () => {
       'apps/my-app/rsbuild.config.ts',
       `import { defineConfig } from '@rsbuild/core';
       import { less } from '@rsbuild/plugin-less';
-      export default defineConfig({
-        plugins: [less()],
-        source: {
-          entry: {
-            index: './src/index.ts'
-          },
-        }
-      });`
+export default defineConfig({
+  plugins: [less()],
+  source: {
+    entry: {
+      index: './src/index.ts'
+    },
+  }
+});`
     );
 
     // ACT
@@ -72,14 +73,17 @@ describe('addBuildPlugin', () => {
       "import { pluginReact } from '@rsbuild/plugin-react';
         import { defineConfig } from '@rsbuild/core';
             import { less } from '@rsbuild/plugin-less';
-            export default defineConfig({
-              plugins: [less(),pluginReact()],
-              source: {
-                entry: {
-                  index: './src/index.ts'
-                },
-              }
-            });"
+      export default defineConfig({
+        plugins: [
+      		less(),
+      		pluginReact()
+      	],
+        source: {
+          entry: {
+            index: './src/index.ts'
+          },
+        }
+      });"
     `);
   });
 
@@ -89,14 +93,14 @@ describe('addBuildPlugin', () => {
     tree.write(
       'apps/my-app/rsbuild.config.ts',
       `import { defineConfig } from '@rsbuild/core';
-      export default defineConfig({
-        plugins: [],
-        source: {
-          entry: {
-            index: './src/index.ts'
-          },
-        }
-      });`
+export default defineConfig({
+  plugins: [],
+  source: {
+    entry: {
+      index: './src/index.ts'
+    },
+  }
+});`
     );
 
     // ACT
@@ -112,14 +116,16 @@ describe('addBuildPlugin', () => {
       .toMatchInlineSnapshot(`
       "import { pluginReact } from '@rsbuild/plugin-react';
         import { defineConfig } from '@rsbuild/core';
-            export default defineConfig({
-              plugins: [pluginReact()],
-              source: {
-                entry: {
-                  index: './src/index.ts'
-                },
-              }
-            });"
+      export default defineConfig({
+        plugins: [
+      		pluginReact()
+      	],
+        source: {
+          entry: {
+            index: './src/index.ts'
+          },
+        }
+      });"
     `);
   });
   it('should add the plugin to the config file when plugins doesnt not exist and its being added with options', () => {
@@ -128,14 +134,14 @@ describe('addBuildPlugin', () => {
     tree.write(
       'apps/my-app/rsbuild.config.ts',
       `import { defineConfig } from '@rsbuild/core';
-      export default defineConfig({
-        plugins: [],
-        source: {
-          entry: {
-            index: './src/index.ts'
-          },
-        }
-      });`
+export default defineConfig({
+  plugins: [],
+  source: {
+    entry: {
+      index: './src/index.ts'
+    },
+  }
+});`
     );
 
     // ACT
@@ -144,11 +150,7 @@ describe('addBuildPlugin', () => {
       'apps/my-app/rsbuild.config.ts',
       '@rsbuild/plugin-react',
       'pluginReact',
-      `{
-        swcReactOptions: {
-          importSource: '@emotion/react',
-        }
-      }`
+      `swcReactOptions: {\n\timportSource: '@emotion/react',\n}`
     );
 
     // ASSERT
@@ -156,18 +158,20 @@ describe('addBuildPlugin', () => {
       .toMatchInlineSnapshot(`
       "import { pluginReact } from '@rsbuild/plugin-react';
         import { defineConfig } from '@rsbuild/core';
-            export default defineConfig({
-              plugins: [pluginReact({
-              swcReactOptions: {
-                importSource: '@emotion/react',
-              }
-            })],
-              source: {
-                entry: {
-                  index: './src/index.ts'
-                },
-              }
-            });"
+      export default defineConfig({
+        plugins: [
+      		pluginReact({
+      			swcReactOptions: {
+      				importSource: '@emotion/react',
+      			}
+      		})
+      	],
+        source: {
+          entry: {
+            index: './src/index.ts'
+          },
+        }
+      });"
     `);
   });
 });

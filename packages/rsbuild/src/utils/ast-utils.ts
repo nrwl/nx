@@ -1,4 +1,5 @@
 import { type Tree } from '@nx/devkit';
+import { indentBy } from './indent-by';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 const DEFINE_CONFIG_SELECTOR =
@@ -21,16 +22,17 @@ export function addHtmlTemplatePath(
   if (htmlConfigNodes.length === 0) {
     const defineConfigNodes = tsquery(ast, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
-      throw new Error('Could not find defineConfig in the config file');
+      throw new Error(
+        `Could not find 'defineConfig' in the config file at ${configFilePath}.`
+      );
     }
     const defineConfigNode = defineConfigNodes[0];
     configContents = `${configContents.slice(
       0,
       defineConfigNode.getStart() + 1
-    )}
-    html: {
-      template: '${templatePath}'
-    },${configContents.slice(defineConfigNode.getStart() + 1)}`;
+    )}\n${indentBy(1)(
+      `html: {\n${indentBy(1)(`template: '${templatePath}'`)}\n},`
+    )}\t${configContents.slice(defineConfigNode.getStart() + 1)}`;
   } else {
     const htmlConfigNode = htmlConfigNodes[0];
     const templateStringNodes = tsquery(
@@ -41,9 +43,9 @@ export function addHtmlTemplatePath(
       configContents = `${configContents.slice(
         0,
         htmlConfigNode.getStart() + 1
-      )}template: '${templatePath}',${configContents.slice(
-        htmlConfigNode.getStart() + 1
-      )}`;
+      )}\n${indentBy(2)(
+        `template: '${templatePath}',`
+      )}\n\t\t${configContents.slice(htmlConfigNode.getStart() + 1)}`;
     } else {
       const templateStringNode = templateStringNodes[0];
       configContents = `${configContents.slice(
@@ -74,16 +76,17 @@ export function addCopyAssets(
   if (outputConfigNodes.length === 0) {
     const defineConfigNodes = tsquery(ast, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
-      throw new Error('Could not find defineConfig in the config file');
+      throw new Error(
+        `Could not find 'defineConfig' in the config file at ${configFilePath}.`
+      );
     }
     const defineConfigNode = defineConfigNodes[0];
     configContents = `${configContents.slice(
       0,
       defineConfigNode.getStart() + 1
-    )}
-    output: {
-      copy: [${copyAssetArrayElement}],
-    },${configContents.slice(defineConfigNode.getStart() + 1)}`;
+    )}\n${indentBy(1)(
+      `output: {\n${indentBy(2)(`copy: [${copyAssetArrayElement}]`)},\n}`
+    )},${configContents.slice(defineConfigNode.getStart() + 1)}`;
   } else {
     const outputConfigNode = outputConfigNodes[0];
     const copyAssetsArrayNodes = tsquery(outputConfigNode, COPY_ARRAY_SELECTOR);
@@ -91,15 +94,15 @@ export function addCopyAssets(
       configContents = `${configContents.slice(
         0,
         outputConfigNode.getStart() + 1
-      )}copy: [${copyAssetArrayElement}],${configContents.slice(
-        outputConfigNode.getStart() + 1
-      )}`;
+      )}\n${indentBy(2)(
+        `copy: [${copyAssetArrayElement}],`
+      )}\n\t${configContents.slice(outputConfigNode.getStart() + 1)}`;
     } else {
       const copyAssetsArrayNode = copyAssetsArrayNodes[0];
       configContents = `${configContents.slice(
         0,
         copyAssetsArrayNode.getStart() + 1
-      )}${copyAssetArrayElement},${configContents.slice(
+      )}\n${indentBy(3)(copyAssetArrayElement)},\t\t${configContents.slice(
         copyAssetsArrayNode.getStart() + 1
       )}`;
     }
@@ -127,24 +130,28 @@ export function addExperimentalSwcPlugin(
   let configContents = tree.read(configFilePath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const pluginToAdd = `['${pluginName}', {}],`;
-  const pluginsArrayToAdd = `plugins: [${pluginToAdd}],`;
-  const experimentalObjectToAdd = `experimental: { ${pluginsArrayToAdd} },`;
-  const jscObjectToAdd = `jsc: { ${experimentalObjectToAdd} },`;
-  const swcObjectToAdd = `swc: { ${jscObjectToAdd} },`;
-  const toolsObjectToAdd = `tools: { ${swcObjectToAdd} },`;
+  const pluginToAdd = indentBy(1)(`['${pluginName}', {}],`);
+  const pluginsArrayToAdd = indentBy(1)(`plugins: [\n${pluginToAdd}\n],`);
+  const experimentalObjectToAdd = indentBy(1)(
+    `experimental: {\n${pluginsArrayToAdd} \n},`
+  );
+  const jscObjectToAdd = indentBy(1)(`jsc: {\n${experimentalObjectToAdd}\n},`);
+  const swcObjectToAdd = indentBy(1)(`swc: {\n${jscObjectToAdd}\n},`);
+  const toolsObjectToAdd = indentBy(1)(`tools: {\n${swcObjectToAdd}\n},`);
 
   const toolsNodes = tsquery(ast, TOOLS_SELECTOR);
   if (toolsNodes.length === 0) {
     const defineConfigNodes = tsquery(ast, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
-      throw new Error('Could not find defineConfig in the config file');
+      throw new Error(
+        `Could not find 'defineConfig' in the config file at ${configFilePath}.`
+      );
     }
     const defineConfigNode = defineConfigNodes[0];
     configContents = `${configContents.slice(
       0,
       defineConfigNode.getStart() + 1
-    )}${toolsObjectToAdd}${configContents.slice(
+    )}\n${toolsObjectToAdd}${configContents.slice(
       defineConfigNode.getStart() + 1
     )}`;
   } else {
@@ -154,7 +161,9 @@ export function addExperimentalSwcPlugin(
       configContents = `${configContents.slice(
         0,
         toolsNode.getStart() + 1
-      )}${swcObjectToAdd}${configContents.slice(toolsNode.getStart() + 1)}`;
+      )}\n${indentBy(1)(swcObjectToAdd)}\n\t${configContents.slice(
+        toolsNode.getStart() + 1
+      )}`;
     } else {
       const jscNodes = tsquery(ast, SWC_JSC_SELECTOR);
       if (jscNodes.length === 0) {
@@ -162,7 +171,9 @@ export function addExperimentalSwcPlugin(
         configContents = `${configContents.slice(
           0,
           swcNode.getStart() + 1
-        )}${jscObjectToAdd}${configContents.slice(swcNode.getStart() + 1)}`;
+        )}\n${indentBy(2)(jscObjectToAdd)}\n\t\t${configContents.slice(
+          swcNode.getStart() + 1
+        )}`;
       } else {
         const experimentalNodes = tsquery(ast, SWC_JSC_EXPERIMENTAL_SELECTOR);
         if (experimentalNodes.length === 0) {
@@ -170,9 +181,9 @@ export function addExperimentalSwcPlugin(
           configContents = `${configContents.slice(
             0,
             jscNode.getStart() + 1
-          )}${experimentalObjectToAdd}${configContents.slice(
-            jscNode.getStart() + 1
-          )}`;
+          )}\n${indentBy(3)(
+            experimentalObjectToAdd
+          )}\n\t\t\t${configContents.slice(jscNode.getStart() + 1)}`;
         } else {
           const pluginsArrayNodes = tsquery(
             ast,
@@ -183,7 +194,9 @@ export function addExperimentalSwcPlugin(
             configContents = `${configContents.slice(
               0,
               experimentalNode.getStart() + 1
-            )}${pluginsArrayToAdd}${configContents.slice(
+            )}\n${indentBy(4)(
+              pluginsArrayToAdd
+            )}\n\t\t\t\t${configContents.slice(
               experimentalNode.getStart() + 1
             )}`;
           } else {
@@ -191,7 +204,7 @@ export function addExperimentalSwcPlugin(
             configContents = `${configContents.slice(
               0,
               pluginsArrayNode.getStart() + 1
-            )}${pluginToAdd}${configContents.slice(
+            )}\n${indentBy(4)(pluginToAdd)}\n\t\t\t\t\t${configContents.slice(
               pluginsArrayNode.getStart() + 1
             )}`;
           }

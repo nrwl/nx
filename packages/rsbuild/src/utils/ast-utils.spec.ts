@@ -13,8 +13,8 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-      });`
+export default defineConfig({
+});`
       );
 
       // ACT
@@ -28,11 +28,11 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-            html: {
-              template: './src/index.html'
-            },
-              });"
+        export default defineConfig({
+        	html: {
+        		template: './src/index.html'
+        	},	
+        });"
       `);
     });
 
@@ -42,11 +42,11 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        html: {
-          otherValue: true
-        }
-      });`
+export default defineConfig({
+  html: {
+    otherValue: true
+  }
+});`
       );
 
       // ACT
@@ -60,11 +60,13 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                html: {template: './src/index.html',
-                  otherValue: true
-                }
-              });"
+        export default defineConfig({
+          html: {
+        		template: './src/index.html',
+        		
+            otherValue: true
+          }
+        });"
       `);
     });
 
@@ -74,11 +76,11 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        html: {
-          template: 'my.html'
-        }
-      });`
+export default defineConfig({
+  html: {
+    template: 'my.html'
+  }
+});`
       );
 
       // ACT
@@ -92,11 +94,11 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                html: {
-                  template: './src/index.html',
-                }
-              });"
+        export default defineConfig({
+          html: {
+            template: './src/index.html',
+          }
+        });"
       `);
     });
   });
@@ -107,8 +109,8 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-      });`
+export default defineConfig({
+});`
       );
 
       // ACT
@@ -118,11 +120,11 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-            output: {
-              copy: [{ from: './src/assets' }],
-            },
-              });"
+        export default defineConfig({
+        	output: {
+        			copy: [{ from: './src/assets' }],
+        	},
+        });"
       `);
     });
 
@@ -132,13 +134,13 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        output: {
-          distPath: {
+export default defineConfig({
+  output: {
+    distPath: {
       root: 'dist',
     }
-        }
-      });`
+  }
+});`
       );
 
       // ACT
@@ -148,13 +150,15 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                output: {copy: [{ from: './src/assets' }],
-                  distPath: {
+        export default defineConfig({
+          output: {
+        		copy: [{ from: './src/assets' }],
+        	
+            distPath: {
               root: 'dist',
             }
-                }
-              });"
+          }
+        });"
       `);
     });
 
@@ -164,13 +168,13 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        output: {
-          copy: [
-            { from: './src/assets' }
-          ]
-        }
-      });`
+export default defineConfig({
+  output: {
+    copy: [
+      { from: './src/assets' }
+    ]
+  }
+});`
       );
 
       // ACT
@@ -180,13 +184,14 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                output: {
-                  copy: [{ from: './src/favicon.ico' },
-                    { from: './src/assets' }
-                  ]
-                }
-              });"
+        export default defineConfig({
+          output: {
+            copy: [
+        			{ from: './src/favicon.ico' },		
+              { from: './src/assets' }
+            ]
+          }
+        });"
       `);
     });
   });
@@ -196,9 +201,7 @@ describe('ast-utils', () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'apps/my-app/rsbuild.config.ts',
-        `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-      });`
+        `import {defineConfig} from '@rsbuild/core';\nexport default defineConfig({\n});`
       );
 
       // ACT
@@ -212,8 +215,19 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({tools: { swc: { jsc: { experimental: { plugins: [['@swc/plugin-emotion', {}],], }, }, }, },
-              });"
+        export default defineConfig({
+        	tools: {
+        		swc: {
+        			jsc: {
+        				experimental: {
+        					plugins: [
+        						['@swc/plugin-emotion', {}],
+        					], 
+        				},
+        			},
+        		},
+        	},
+        });"
       `);
     });
 
@@ -222,10 +236,7 @@ describe('ast-utils', () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'apps/my-app/rsbuild.config.ts',
-        `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        tools: {}
-      });`
+        `import {defineConfig} from '@rsbuild/core';\nexport default defineConfig({\n\ttools: {}\n});`
       );
 
       // ACT
@@ -239,9 +250,19 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                tools: {swc: { jsc: { experimental: { plugins: [['@swc/plugin-emotion', {}],], }, }, },}
-              });"
+        export default defineConfig({
+        	tools: {
+        		swc: {
+        			jsc: {
+        				experimental: {
+        					plugins: [
+        						['@swc/plugin-emotion', {}],
+        					], 
+        				},
+        			},
+        		},
+        	}
+        });"
       `);
     });
 
@@ -250,12 +271,7 @@ describe('ast-utils', () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'apps/my-app/rsbuild.config.ts',
-        `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        tools: {
-          swc: {}
-        }
-      });`
+        `import {defineConfig} from '@rsbuild/core';\nexport default defineConfig({\n\ttools: {\n\t\tswc: {}\n\t}\n});`
       );
 
       // ACT
@@ -269,11 +285,19 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                tools: {
-                  swc: {jsc: { experimental: { plugins: [['@swc/plugin-emotion', {}],], }, },}
-                }
-              });"
+        export default defineConfig({
+        	tools: {
+        		swc: {
+        			jsc: {
+        				experimental: {
+        					plugins: [
+        						['@swc/plugin-emotion', {}],
+        					], 
+        				},
+        			},
+        		}
+        	}
+        });"
       `);
     });
 
@@ -283,13 +307,13 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        tools: {
-          swc: {
-            jsc: {}
-          }
-        }
-      });`
+export default defineConfig({
+  tools: {
+    swc: {
+      jsc: {}
+    }
+  }
+});`
       );
 
       // ACT
@@ -303,13 +327,19 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                tools: {
-                  swc: {
-                    jsc: {experimental: { plugins: [['@swc/plugin-emotion', {}],], },}
-                  }
-                }
-              });"
+        export default defineConfig({
+          tools: {
+            swc: {
+              jsc: {
+        				experimental: {
+        					plugins: [
+        						['@swc/plugin-emotion', {}],
+        					], 
+        				},
+        			}
+            }
+          }
+        });"
       `);
     });
 
@@ -319,15 +349,15 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        tools: {
-          swc: {
-            jsc: {
-              experimental: {}
-            }
-          }
-        }
-      });`
+export default defineConfig({
+  tools: {
+    swc: {
+      jsc: {
+        experimental: {}
+      }
+    }
+  }
+});`
       );
 
       // ACT
@@ -341,15 +371,19 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                tools: {
-                  swc: {
-                    jsc: {
-                      experimental: {plugins: [['@swc/plugin-emotion', {}],],}
-                    }
-                  }
-                }
-              });"
+        export default defineConfig({
+          tools: {
+            swc: {
+              jsc: {
+                experimental: {
+        					plugins: [
+        						['@swc/plugin-emotion', {}],
+        					],
+        				}
+              }
+            }
+          }
+        });"
       `);
     });
 
@@ -359,17 +393,17 @@ describe('ast-utils', () => {
       tree.write(
         'apps/my-app/rsbuild.config.ts',
         `import {defineConfig} from '@rsbuild/core';
-      export default defineConfig({
-        tools: {
-          swc: {
-            jsc: {
-              experimental: {
-                plugins: [['@swc/plugin-styled-jsx', {}]]
-              }
-            }
-          }
+export default defineConfig({
+  tools: {
+    swc: {
+      jsc: {
+        experimental: {
+          plugins: [['@swc/plugin-styled-jsx', {}]]
         }
-      });`
+      }
+    }
+  }
+});`
       );
 
       // ACT
@@ -383,17 +417,19 @@ describe('ast-utils', () => {
       expect(tree.read('apps/my-app/rsbuild.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import {defineConfig} from '@rsbuild/core';
-              export default defineConfig({
-                tools: {
-                  swc: {
-                    jsc: {
-                      experimental: {
-                        plugins: [['@swc/plugin-emotion', {}],['@swc/plugin-styled-jsx', {}]]
-                      }
-                    }
-                  }
+        export default defineConfig({
+          tools: {
+            swc: {
+              jsc: {
+                experimental: {
+                  plugins: [
+        					['@swc/plugin-emotion', {}],
+        					['@swc/plugin-styled-jsx', {}]]
                 }
-              });"
+              }
+            }
+          }
+        });"
       `);
     });
   });
