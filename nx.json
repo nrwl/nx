@@ -250,7 +250,38 @@
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json"
+        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
+        "projects": [
+          "!.",
+          "!create-nx-*",
+          "!cypress",
+          "!detox",
+          "!devkit",
+          "!esbuild",
+          "!eslint-plugin",
+          "!eslint",
+          "!expo",
+          "!express",
+          "!jest",
+          "!js",
+          "!module-federation",
+          "!nest",
+          "!next",
+          "!node",
+          "!nuxt",
+          "!packages/nx/**",
+          "!plugin",
+          "!react-native",
+          "!react",
+          "!rollup",
+          "!rsbuild",
+          "!rspack",
+          "!storybook",
+          "!vue",
+          "!web",
+          "!webpack",
+          "!workspace"
+        ]
       }
     ]
   }

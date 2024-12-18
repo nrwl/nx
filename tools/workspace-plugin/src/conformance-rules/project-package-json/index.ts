@@ -51,6 +51,11 @@ export function validateProjectPackageJson(
 ): ProjectFilesViolation[] {
   const violations: ProjectFilesViolation[] = [];
 
+  // Private packages are exempt from this rule
+  if (projectPackageJson.private === true) {
+    return [];
+  }
+
   if (typeof projectPackageJson.name !== 'string') {
     violations.push({
       message: 'The project package.json should have a "name" field',
@@ -71,16 +76,14 @@ export function validateProjectPackageJson(
     }
   }
 
-  // Public packages
-  if (!projectPackageJson.private) {
-    if ((projectPackageJson.publishConfig as any)?.access !== 'public') {
-      violations.push({
-        message:
-          'Public packages should have "publishConfig": { "access": "public" } set in their package.json',
-        sourceProject,
-        file: projectPackageJsonPath,
-      });
-    }
+  // Publish config
+  if ((projectPackageJson.publishConfig as any)?.access !== 'public') {
+    violations.push({
+      message:
+        'Public packages should have "publishConfig": { "access": "public" } set in their package.json',
+      sourceProject,
+      file: projectPackageJsonPath,
+    });
   }
 
   // Nx config properties
@@ -103,6 +106,19 @@ export function validateProjectPackageJson(
         file: projectPackageJsonPath,
       });
     }
+  }
+
+  const hasExportsEntries =
+    typeof projectPackageJson.exports === 'object' &&
+    Object.keys(projectPackageJson.exports ?? {}).length > 0;
+
+  if (!hasExportsEntries) {
+    violations.push({
+      message:
+        'The project package.json should have an "exports" object specified',
+      sourceProject,
+      file: projectPackageJsonPath,
+    });
   }
 
   return violations;

@@ -13,6 +13,9 @@ const VALID_PACKAGE_JSON_BASE = {
   publishConfig: {
     access: 'public',
   },
+  exports: {
+    './package.json': './package.json',
+  },
 };
 
 describe('project-package-json', () => {
@@ -253,6 +256,31 @@ describe('project-package-json', () => {
             "file": "/path/to/some-project-name/package.json",
             "message": "The project has an generators.json, but does not reference "./generators.json" in the "generators" field of its package.json",
             "sourceProject": "some-project-name",
+          },
+        ]
+      `);
+    });
+
+    it('should return a violation if the project does not specify an exports object in the package.json', () => {
+      const sourceProject = 'test-project';
+      const sourceProjectRoot = '/path/to/test-project';
+
+      expect(
+        validateProjectPackageJson(
+          {
+            ...VALID_PACKAGE_JSON_BASE,
+            exports: undefined,
+          },
+          sourceProject,
+          sourceProjectRoot,
+          `${sourceProjectRoot}/package.json`
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "file": "/path/to/test-project/package.json",
+            "message": "The project package.json should have an "exports" object specified",
+            "sourceProject": "test-project",
           },
         ]
       `);
