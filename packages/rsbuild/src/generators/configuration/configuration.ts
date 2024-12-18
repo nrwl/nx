@@ -18,11 +18,14 @@ import { join } from 'path';
 export async function configurationGenerator(tree: Tree, schema: Schema) {
   const projectGraph = await createProjectGraphAsync();
   const projects = readProjectsConfigurationFromProjectGraph(projectGraph);
-  const project = projects.projects[schema.project];
+  let project = projects.projects[schema.project];
   if (!project) {
-    throw new Error(
-      `Could not find project '${schema.project}'. Please choose a project that exists in the Nx Workspace.`
-    );
+    project = readProjectConfiguration(tree, schema.project);
+    if (!project) {
+      throw new Error(
+        `Could not find project '${schema.project}'. Please choose a project that exists in the Nx Workspace.`
+      );
+    }
   }
 
   const options = await normalizeOptions(tree, schema, project);

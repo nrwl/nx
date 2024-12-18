@@ -4,6 +4,7 @@ export interface Schema {
   directory: string;
   name?: string;
   style: 'none' | 'css' | 'scss' | 'less';
+  bundler?: 'vite' | 'rsbuild';
   skipFormat?: boolean;
   tags?: string;
   unitTestRunner?: 'vitest' | 'none';

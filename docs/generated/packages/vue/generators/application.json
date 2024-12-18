@@ -54,6 +54,14 @@
           ]
         }
       },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["vite", "rsbuild"],
+        "x-prompt": "Which bundler do you want to use to build the application?",
+        "default": "vite",
+        "x-priority": "important"
+      },
       "routing": {
         "type": "boolean",
         "description": "Generate application with routes.",
