@@ -931,7 +931,6 @@ module.exports = withNx(
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
-      tree.write('pnpm-workspace.yaml', `packages:`);
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
@@ -1252,6 +1251,8 @@ module.exports = withNx(
     });
 
     it('should add project to workspaces when using TS solution', async () => {
+      tree.write('pnpm-workspace.yaml', `packages:`);
+
       await libraryGenerator(tree, {
         ...defaultSchema,
         bundler: 'rollup',
@@ -1262,7 +1263,7 @@ module.exports = withNx(
       const pnpmContent = tree.read('pnpm-workspace.yaml', 'utf-8');
       const pnpmWorkspaceFile = load(pnpmContent);
 
-      expect(pnpmWorkspaceFile.packages).toEqual(['mylib/*']);
+      expect(pnpmWorkspaceFile.packages).toEqual(['mylib']);
     });
   });
 });

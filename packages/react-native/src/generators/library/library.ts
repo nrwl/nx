@@ -131,7 +131,7 @@ export async function reactNativeLibraryGeneratorInternal(
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   if (!options.skipFormat) {

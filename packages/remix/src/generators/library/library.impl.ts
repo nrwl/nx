@@ -77,7 +77,7 @@ export async function remixLibraryGeneratorInternal(
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, `${options.projectRoot}/*`);
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   if (!options.skipFormat) {

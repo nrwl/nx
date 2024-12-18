@@ -134,7 +134,7 @@ export async function expoLibraryGeneratorInternal(
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   if (!options.skipFormat) {

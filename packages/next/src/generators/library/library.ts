@@ -163,7 +163,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   if (!options.skipFormat) {

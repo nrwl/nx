@@ -1,5 +1,4 @@
 import {
-  detectPackageManager,
   joinPathFragments,
   offsetFromRoot,
   output,
@@ -11,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
-import { basename, join, relative } from 'node:path/posix';
+import { basename, dirname, join, relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -210,23 +209,25 @@ export function addProjectToTsSolutionWorkspace(
   tree: Tree,
   projectDir: string
 ) {
-  if (detectPackageManager() === 'pnpm') {
+  // If dir is "libs/foo" then use "libs/**" so we don't need so many entries in the workspace file.
+  // If the dir is just "foo" then we have to add it as is.
+  const baseDir = dirname(projectDir);
+  const pattern = baseDir === '.' ? projectDir : `${baseDir}/**`;
+  if (tree.exists('pnpm-workspace.yaml')) {
     const { load, dump } = require('@zkochan/js-yaml');
-    if (tree.exists('pnpm-workspace.yaml')) {
-      const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
-      const yamlData = load(workspaceFile);
+    const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
+    const yamlData = load(workspaceFile);
 
-      if (!yamlData?.packages) {
-        yamlData.packages = [];
-      }
+    if (!yamlData?.packages) {
+      yamlData.packages = [];
+    }
 
-      if (!yamlData.packages.includes(projectDir)) {
-        yamlData.packages.push(projectDir);
-        tree.write(
-          'pnpm-workspace.yaml',
-          dump(yamlData, { indent: 2, quotingType: '"', forceQuotes: true })
-        );
-      }
+    if (!yamlData.packages.includes(pattern)) {
+      yamlData.packages.push(pattern);
+      tree.write(
+        'pnpm-workspace.yaml',
+        dump(yamlData, { indent: 2, quotingType: '"', forceQuotes: true })
+      );
     }
   } else {
     // Update package.json
@@ -235,8 +236,8 @@ export function addProjectToTsSolutionWorkspace(
       packageJson.workspaces = [];
     }
 
-    if (!packageJson.workspaces.includes(projectDir)) {
-      packageJson.workspaces.push(projectDir);
+    if (!packageJson.workspaces.includes(pattern)) {
+      packageJson.workspaces.push(pattern);
       tree.write('package.json', JSON.stringify(packageJson, null, 2));
     }
   }

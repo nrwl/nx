@@ -284,7 +284,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, `${options.projectRoot}/*`);
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
   if (!options.skipFormat) {
     await formatFiles(host);
