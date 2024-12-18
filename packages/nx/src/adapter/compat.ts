@@ -87,6 +87,7 @@ export const allowedWorkspaceExtensions = [
   'maxCacheSize',
   'tui',
   'owners',
+  'additionalProjectDirectories',
 ] as const;
 
 if (!patched) {

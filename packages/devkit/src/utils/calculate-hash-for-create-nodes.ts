@@ -14,10 +14,11 @@ export async function calculateHashForCreateNodes(
   additionalGlobs: string[] = []
 ): Promise<string> {
   return hashArray([
-    await hashWithWorkspaceContext(context.workspaceRoot, [
-      join(projectRoot, '**/*'),
-      ...additionalGlobs,
-    ]),
+    await hashWithWorkspaceContext(
+      context.workspaceRoot,
+      context.nxJsonConfiguration.additionalProjectDirectories ?? [],
+      [join(projectRoot, '**/*'), ...additionalGlobs]
+    ),
     hashObject(options),
   ]);
 }

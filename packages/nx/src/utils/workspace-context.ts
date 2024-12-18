@@ -3,15 +3,21 @@ import { performance } from 'perf_hooks';
 import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
+import { readNxJson } from '../config/configuration';
+import { resolve } from 'path';
 
 let workspaceContext: WorkspaceContext | undefined;
 
-export function setupWorkspaceContext(workspaceRoot: string) {
+export function setupWorkspaceContext(
+  workspaceRoot: string,
+  additionalProjectDirectories: string[]
+) {
   const { WorkspaceContext } =
     require('../native') as typeof import('../native');
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
+    additionalProjectDirectories.map((p) => resolve(workspaceRoot, p)),
     workspaceDataDirectoryForWorkspace(workspaceRoot)
   );
   performance.mark('workspace-context:end');
@@ -27,8 +33,10 @@ export async function getNxWorkspaceFilesFromContext(
   projectRootMap: Record<string, string>,
   useDaemonProcess: boolean = true
 ) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.getWorkspaceFiles(projectRootMap);
   }
   return daemonClient.getWorkspaceFiles(projectRootMap);
@@ -46,7 +54,9 @@ export function globWithWorkspaceContextSync(
   globs: string[],
   exclude?: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
+  ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
   return workspaceContext.glob(globs, exclude);
 }
 
@@ -55,8 +65,10 @@ export async function globWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.glob(globs, exclude);
   } else {
     return daemonClient.glob(globs, exclude);
@@ -68,8 +80,10 @@ export async function multiGlobWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.multiGlob(globs, exclude);
   }
   return daemonClient.multiGlob(globs, exclude);
@@ -80,8 +94,10 @@ export async function hashWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.hashFilesMatchingGlob(globs, exclude);
   }
   return daemonClient.hashGlob(globs, exclude);
@@ -91,8 +107,10 @@ export async function hashMultiGlobWithWorkspaceContext(
   workspaceRoot: string,
   globGroups: string[][]
 ) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.hashFilesMatchingGlobs(globGroups);
   }
   return daemonClient.hashMultiGlob(globGroups);
@@ -132,13 +150,17 @@ export function updateFilesInContext(
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
+  ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
 
 export async function getAllFileDataInContext(workspaceRoot: string) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.allFileData();
   }
   return daemonClient.getWorkspaceContextFileData();
@@ -148,8 +170,10 @@ export async function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
   dir: string
 ) {
+  const additionalProjectDirectories =
+    readNxJson(workspaceRoot).additionalProjectDirectories ?? [];
   if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
+    ensureContextAvailable(workspaceRoot, additionalProjectDirectories);
     return workspaceContext.getFilesInDirectory(dir);
   }
   return daemonClient.getFilesInDirectory(dir);
@@ -170,9 +194,12 @@ export function updateProjectFiles(
   );
 }
 
-function ensureContextAvailable(workspaceRoot: string) {
+function ensureContextAvailable(
+  workspaceRoot: string,
+  additionalProjectDirectories: string[]
+) {
   if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
-    setupWorkspaceContext(workspaceRoot);
+    setupWorkspaceContext(workspaceRoot, additionalProjectDirectories);
   }
 }
 
