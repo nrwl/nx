@@ -62,27 +62,6 @@ describe('React Applications', () => {
       }
     }, 250_000);
 
-    it('None buildable libs using (useTsSolution = true) should be excluded from js/ts plugin', async () => {
-      const appName = uniq('app');
-      const libName = uniq('lib');
-
-      runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --useTsSolution=true --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
-      );
-      runCLI(
-        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
-      );
-
-      const nxJson = readJson('nx.json');
-
-      const jsTypescriptPlugin = nxJson.plugins.find(
-        (plugin) => plugin.plugin === '@nx/js/typescript'
-      );
-      expect(jsTypescriptPlugin).toBeDefined();
-
-      expect(jsTypescriptPlugin.exclude.includes(`${libName}/*`)).toBeTruthy();
-    }, 250_000);
-
     it('should be able to use Rspack to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');

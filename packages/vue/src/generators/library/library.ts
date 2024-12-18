@@ -27,7 +27,6 @@ import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-dire
 import { relative } from 'path';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -128,12 +127,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       json.name = options.importPath;
       return json;
     });
-  }
-
-  if (options.bundler === 'none') {
-    const nxJson = readNxJson(tree);
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
-    updateNxJson(tree, nxJson);
   }
 
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
