@@ -43,10 +43,7 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import {
-  ensureProjectIsExcludedFromPluginRegistrations,
-  ensureProjectIsIncludedInPluginRegistrations,
-} from '../../utils/typescript/plugin';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
@@ -255,14 +252,7 @@ async function configureProject(
 ) {
   if (options.hasPlugin) {
     const nxJson = readNxJson(tree);
-    if (options.bundler === 'none') {
-      ensureProjectIsExcludedFromPluginRegistrations(
-        nxJson,
-        options.projectRoot
-      );
-    } else {
-      ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
-    }
+    ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
     updateNxJson(tree, nxJson);
   }
 

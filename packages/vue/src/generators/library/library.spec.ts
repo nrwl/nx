@@ -605,48 +605,5 @@ module.exports = [
         }
       `);
     });
-
-    it('should exclude non-buildable libraries from TS plugin registration', async () => {
-      updateJson(tree, 'nx.json', (json) => {
-        json.plugins = ['@nx/js/typescript'];
-        return json;
-      });
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        addPlugin: true,
-        setParserOptionsProject: true,
-        linter: 'eslint',
-        bundler: 'none',
-      });
-
-      const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.plugins).toMatchInlineSnapshot(`
-        [
-          {
-            "exclude": [
-              "my-lib/*",
-            ],
-            "plugin": "@nx/js/typescript",
-          },
-          {
-            "options": {
-              "targetName": "lint",
-            },
-            "plugin": "@nx/eslint/plugin",
-          },
-          {
-            "options": {
-              "buildTargetName": "build",
-              "previewTargetName": "preview",
-              "serveStaticTargetName": "serve-static",
-              "serveTargetName": "serve",
-              "testTargetName": "test",
-              "typecheckTargetName": "typecheck",
-            },
-            "plugin": "@nx/vite/plugin",
-          },
-        ]
-      `);
-    });
   });
 });
