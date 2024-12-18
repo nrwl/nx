@@ -45,7 +45,7 @@ export function BlogDetails({ post }: BlogDetailsProps) {
 
   return (
     <main id="main" role="main" className="w-full py-8">
-      <div className="mx-auto mb-8 flex max-w-screen-xl justify-between px-4 lg:px-8">
+      <div className="mx-auto flex max-w-3xl justify-between px-4 lg:px-0">
         <Link
           href="/blog"
           className="flex w-20 shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
