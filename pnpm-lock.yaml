@@ -293,11 +293,11 @@ importers:
         specifier: ^9.0.0
         version: 9.4.3(@nestjs/common@9.4.3(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@9.4.3(@nestjs/common@9.4.3(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@9.4.3)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@9.4.3(@nestjs/common@9.4.3(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@9.4.3))
       '@ngrx/router-store':
-        specifier: 18.0.2
-        version: 18.0.2(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(@angular/router@19.0.7(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.5(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))(@ngrx/store@18.0.2(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(rxjs@7.8.1)
+        specifier: 19.0.0
+        version: 19.0.0(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(@angular/router@19.0.1(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.5(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))(@ngrx/store@19.0.0(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(rxjs@7.8.1)
       '@ngrx/store':
-        specifier: 18.0.2
-        version: 18.0.2(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
+        specifier: 19.0.0
+        version: 19.0.0(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@nuxt/kit':
         specifier: ^3.10.0
         version: 3.13.2(magicast@0.3.5)(rollup@4.22.0)(webpack-sources@3.2.3)
@@ -5523,19 +5523,19 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@ngrx/router-store@18.0.2':
-    resolution: {integrity: sha512-jUrQ/uJJ53x8O1XbN2YxH2GpRREZlwS5gRxlCoc4fWL4Us/uS1/K6+QfRmKBPtpTKBIixqsOb+dIUV5iwBrivA==}
+  '@ngrx/router-store@19.0.0':
+    resolution: {integrity: sha512-kkgxXPK2xYEh5HRk323dFbsF0LSAsNiEWUg0oH5WLwy2cgnlmyoJ1QRToTgH+B76Bbd1NRMTITZJtNIOakj1Pg==}
     peerDependencies:
-      '@angular/common': ^18.0.0
-      '@angular/core': ^18.0.0
-      '@angular/router': ^18.0.0
-      '@ngrx/store': 18.0.2
+      '@angular/common': ^19.0.0
+      '@angular/core': ^19.0.0
+      '@angular/router': ^19.0.0
+      '@ngrx/store': 19.0.0
       rxjs: ^6.5.3 || ^7.5.0
 
-  '@ngrx/store@18.0.2':
-    resolution: {integrity: sha512-ajwv0+njsO4vzArp9esnFvs1wyUb1U1W8E8LSCKrcW2hWWo9o1Pezj+JRsdQwatxHfrrPFuTDyajsl6GQM/JSA==}
+  '@ngrx/store@19.0.0':
+    resolution: {integrity: sha512-AaryTJF1DsXUVWFhCl833LhvjyPjDOAMX9tqGBDfYGhaNOWWX3q/3z5HQ0XCrJ8kDJN3EHiNQa3XHxFaFQUo9A==}
     peerDependencies:
-      '@angular/core': ^18.0.0
+      '@angular/core': ^19.0.0
       rxjs: ^6.5.3 || ^7.5.0
 
   '@ngtools/webpack@19.0.7':
@@ -24734,16 +24734,16 @@ snapshots:
   '@next/swc-win32-x64-msvc@14.2.16':
     optional: true
 
-  '@ngrx/router-store@18.0.2(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(@angular/router@19.0.7(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.5(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))(@ngrx/store@18.0.2(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(rxjs@7.8.1)':
+  '@ngrx/router-store@19.0.0(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(@angular/router@19.0.1(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.5(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))(@ngrx/store@19.0.0(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(rxjs@7.8.1)':
     dependencies:
-      '@angular/common': 19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
-      '@angular/core': 19.0.7(rxjs@7.8.1)(zone.js@0.14.10)
-      '@angular/router': 19.0.7(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.5(@angular/common@19.0.7(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
-      '@ngrx/store': 18.0.2(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
+      '@angular/common': 19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
+      '@angular/core': 19.0.1(rxjs@7.8.1)(zone.js@0.14.10)
+      '@angular/router': 19.0.1(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.5(@angular/common@19.0.1(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
+      '@ngrx/store': 19.0.0(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       rxjs: 7.8.1
       tslib: 2.8.1
 
-  '@ngrx/store@18.0.2(@angular/core@19.0.7(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)':
+  '@ngrx/store@19.0.0(@angular/core@19.0.1(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)':
     dependencies:
       '@angular/core': 19.0.7(rxjs@7.8.1)(zone.js@0.14.10)
       rxjs: 7.8.1
