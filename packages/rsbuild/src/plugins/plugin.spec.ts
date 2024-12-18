@@ -125,6 +125,7 @@ describe('@nx/rsbuild/plugin', () => {
                   "preview-serve": {
                     "command": "rsbuild preview",
                     "dependsOn": [
+                      "build-something",
                       "^build-something",
                     ],
                     "options": {
