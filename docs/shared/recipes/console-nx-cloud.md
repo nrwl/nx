@@ -16,7 +16,7 @@ In addition to the view, you will receive notifications when a pipeline complete
 
 ![Nx Console Nx Cloud Notifications](/shared/images/nx-console/cloud-notification.png)
 
-You can click on the buttons view the results directly in Nx Cloud or open the Pull Request in the browser.
+You can click on the buttons to view the results directly in Nx Cloud or open the Pull Request in the browser.
 
 To only be notified on failure or turn off notifications altogether, you can change the `nxConsole.nxCloudNotifications` setting.
 
