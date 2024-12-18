@@ -35,7 +35,7 @@ exports[`app generated files content - as-provided - my-app general application 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -394,7 +394,7 @@ exports[`app generated files content - as-provided - myApp general application s
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,

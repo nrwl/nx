@@ -10,12 +10,12 @@ See below a direct comparison between `JSON`, `JS` and `Flat` config:
 {% tabs %}
 {% tab label="Flat" %}
 
-```js {% fileName="eslint.config.js" %}
+```js {% fileName="eslint.config.cjs" %}
 // the older versions were magically interpreting all the imports
 // in flat config we do it explicitly
 const nxPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
-const baseConfig = require('./eslint.base.config.js');
+const baseConfig = require('./eslint.base.config.cjs');
 const globals = require('globals');
 const jsoncParser = require('jsonc-eslint-parser');
 const tsParser = require('@typescript-eslint/parser');

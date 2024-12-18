@@ -16,5 +16,5 @@
     <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.jsx",<%_ } _%>
     "<%= offsetFromProjectRoot %>**/*.d.ts"
   ],
-  "exclude": ["out-tsc", "test-output"<% if (linter === 'eslint') { %>, "eslint.config.js"<% } %>]
+  "exclude": ["out-tsc", "test-output"<% if (linter === 'eslint') { %>, "eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"<% } %>]
 }

@@ -279,7 +279,7 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 
 exports[`library should support eslint flat config 1`] = `
 "const vue = require('eslint-plugin-vue');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 module.exports = [
   ...baseConfig,
