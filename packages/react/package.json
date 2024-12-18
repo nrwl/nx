@@ -44,7 +44,8 @@
     "@nx/web": "file:../web",
     "@nx/module-federation": "file:../module-federation",
     "express": "^4.19.2",
-    "http-proxy-middleware": "^3.0.3"
+    "http-proxy-middleware": "^3.0.3",
+    "semver": "^7.6.3"
   },
   "publishConfig": {
     "access": "public"

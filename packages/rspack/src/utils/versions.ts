@@ -6,11 +6,7 @@ export const rspackPluginMinifyVersion = '^0.7.5';
 export const rspackPluginReactRefreshVersion = '^1.0.0';
 export const lessLoaderVersion = '~11.1.3';
 
-export const reactVersion = '~18.2.0';
 export const reactRefreshVersion = '~0.14.0';
-export const reactDomVersion = '~18.2.0';
-export const typesReactVersion = '~18.0.28';
-export const typesReactDomVersion = '~18.0.10';
 
 export const nestjsCommonVersion = '~9.0.0';
 export const nestjsCoreVersion = '~9.0.0';
