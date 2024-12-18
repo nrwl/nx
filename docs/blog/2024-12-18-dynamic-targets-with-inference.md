@@ -3,7 +3,7 @@ title: 'Avoiding Port Conflicts with Multiple Storybook Instances'
 slug: dynamic-targets-with-inference-tasks
 authors: ['Nicolas Beaussart', 'Juri Strumpflohner']
 tags: [nx]
-cover_image: /blog/images/articles/heroimg-nx-dynamic-targets.avif
+cover_image: /blog/images/articles/heroimg-nx-dynamic-targets.jpg
 youtubeUrl: https://www.youtube.com/embed/v0lSEYPjgOs
 ---
 
