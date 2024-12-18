@@ -6,7 +6,7 @@ One of the best features of Nx the ability to construct the project graph automa
 
 Project graph plugins are able to add new nodes or dependencies to the project graph. This allows you to extend the project graph with new projects and dependencies. The API is defined by two exported members, which are described below:
 
-- [createNodes](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
+- [createNodesV2](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
 - [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
 
 ## Adding Plugins to Workspace
