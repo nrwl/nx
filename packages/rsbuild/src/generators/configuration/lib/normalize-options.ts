@@ -9,6 +9,7 @@ import { relative } from 'path';
 export interface NormalizedOptions extends Schema {
   entry: string;
   target: 'node' | 'web' | 'web-worker';
+  devServerPort: number;
   tsConfig: string;
   projectRoot: string;
 }
@@ -30,6 +31,7 @@ export async function normalizeOptions(
       schema.tsConfig ?? './tsconfig.json',
       project.root
     ),
+    devServerPort: schema.devServerPort ?? 4200,
     projectRoot: project.root,
     skipFormat: schema.skipFormat ?? false,
     skipValidation: schema.skipValidation ?? false,

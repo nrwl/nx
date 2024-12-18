@@ -69,6 +69,67 @@ describe('application generator', () => {
     `);
   });
 
+  it('should set up project correctly for rsbuild', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+
+    updateNxJson(tree, nxJson);
+    await applicationGenerator(tree, {
+      ...options,
+      bundler: 'rsbuild',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      addPlugin: true,
+    });
+
+    expect(tree.read('test/vitest.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/rsbuild.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { pluginVue } from '@rsbuild/plugin-vue';
+      import { defineConfig } from '@rsbuild/core';
+
+      export default defineConfig({
+        html: {
+          template: './index.html',
+        },
+        plugins: [pluginVue()],
+
+        source: {
+          entry: {
+            index: './src/main.ts',
+          },
+          tsconfigPath: './tsconfig.app.json',
+        },
+        server: {
+          port: 4200,
+        },
+        output: {
+          target: 'web',
+          distPath: {
+            root: 'dist',
+          },
+        },
+      });
+      "
+    `);
+    expect(listFiles(tree)).toMatchSnapshot();
+    expect(
+      readNxJson(tree).plugins.find(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/rsbuild/plugin'
+      )
+    ).toMatchInlineSnapshot(`
+      {
+        "options": {
+          "buildTargetName": "build",
+          "devTargetName": "dev",
+          "inspectTargetName": "inspect",
+          "previewTargetName": "preview",
+          "typecheckTargetName": "typecheck",
+        },
+        "plugin": "@nx/rsbuild/plugin",
+      }
+    `);
+  });
+
   it('should set up project correctly for cypress', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];

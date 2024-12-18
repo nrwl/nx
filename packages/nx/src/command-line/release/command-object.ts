@@ -25,7 +25,7 @@ export interface NxReleaseArgs extends BaseNxReleaseArgs {
   dryRun?: boolean;
 }
 
-interface GitCommitAndTagOptions {
+interface GitOptions {
   stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
@@ -33,10 +33,12 @@ interface GitCommitAndTagOptions {
   gitTag?: boolean;
   gitTagMessage?: string;
   gitTagArgs?: string | string[];
+  gitPush?: boolean;
+  gitRemote?: string;
 }
 
 export type VersionOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     specifier?: string;
@@ -46,7 +48,7 @@ export type VersionOptions = NxReleaseArgs &
   };
 
 export type ChangelogOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     // version and/or versionData must be set
@@ -55,7 +57,6 @@ export type ChangelogOptions = NxReleaseArgs &
     to?: string;
     from?: string;
     interactive?: string;
-    gitRemote?: string;
     createRelease?: false | 'github';
   };
 
@@ -222,7 +223,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
     'Create a version and release for one or more applications and libraries.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           .positional('specifier', {
             type: 'string',
@@ -260,7 +261,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
     'Generate a changelog for one or more projects, and optionally push to Github.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           // Disable default meaning of yargs version for this command
           .version(false)
@@ -286,12 +287,6 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             description:
               'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level.',
             choices: ['all', 'workspace', 'projects'],
-          })
-          .option('git-remote', {
-            type: 'string',
-            description:
-              'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing).',
-            default: 'origin',
           })
           .check((argv) => {
             if (!argv.version) {
@@ -415,9 +410,7 @@ function coerceParallelOption(args: any) {
   };
 }
 
-function withGitCommitAndGitTagOptions<T>(
-  yargs: Argv<T>
-): Argv<T & GitCommitAndTagOptions> {
+function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
   return yargs
     .option('git-commit', {
       describe:
@@ -453,6 +446,17 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
       type: 'boolean',
+    })
+    .option('git-push', {
+      describe:
+        'Whether or not to automatically push the changes made by this command to the remote git repository.',
+      type: 'boolean',
+    })
+    .option('git-remote', {
+      type: 'string',
+      description:
+        'Alternate git remote to push commits and tags to (can be useful for testing).',
+      default: 'origin',
     });
 }
 

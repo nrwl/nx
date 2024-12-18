@@ -33,10 +33,32 @@
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@rsbuild/core": "1.1.8",
-    "minimatch": "9.0.3"
+    "minimatch": "9.0.3",
+    "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "peerDependencies": {},
   "nx-migrations": {
     "migrations": "./migrations.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    },
+    "./generators": {
+      "types": "./generators.d.ts",
+      "default": "./generators.js"
+    },
+    "./config-utils": {
+      "types": "./config-utils.d.ts",
+      "default": "./config-utils.js"
+    },
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "default": "./plugin.js"
+    }
   }
 }

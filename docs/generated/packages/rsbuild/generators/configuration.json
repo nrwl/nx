@@ -26,6 +26,11 @@
         "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'.",
         "x-priority": "important"
       },
+      "devServerPort": {
+        "type": "number",
+        "description": "The port for the dev server to listen on.",
+        "default": 4200
+      },
       "target": {
         "type": "string",
         "description": "Target platform for the build, same as the Rsbuild output.target config option.",

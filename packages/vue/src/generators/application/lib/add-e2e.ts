@@ -2,7 +2,6 @@ import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   ensurePackage,
-  getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
 } from '@nx/devkit';
@@ -12,31 +11,56 @@ import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.find((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
-  );
-  const { getViteE2EWebServerInfo } = ensurePackage<typeof import('@nx/vite')>(
-    '@nx/vite',
-    nxVersion
-  );
-  const e2eWebServerInfo = await getViteE2EWebServerInfo(
-    tree,
-    options.projectName,
-    joinPathFragments(
-      options.appProjectRoot,
-      `vite.config.${options.js ? 'js' : 'ts'}`
-    ),
-    options.addPlugin,
-    options.devServerPort ?? 4200
-  );
+  const hasPlugin =
+    options.bundler === 'rsbuild'
+      ? nxJson.plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/rsbuild/plugin'
+            : p.plugin === '@nx/rsbuild/plugin'
+        )
+      : nxJson.plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/vite/plugin'
+            : p.plugin === '@nx/vite/plugin'
+        );
+  let e2eWebServerInfo: E2EWebServerDetails;
+  if (options.bundler === 'vite') {
+    const { getViteE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
+    e2eWebServerInfo = await getViteE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `vite.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
+  } else if (options.bundler === 'rsbuild') {
+    ensurePackage('@nx/rsbuild', nxVersion);
+    const { getRsbuildE2EWebServerInfo } = await import(
+      '@nx/rsbuild/config-utils'
+    );
+    e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `rsbuild.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
+  }
 
   switch (options.e2eTestRunner) {
     case 'cypress': {

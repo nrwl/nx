@@ -58,6 +58,7 @@
               "@nx/playwright",
               "@nx/jest",
               "@nx/rollup",
+              "@nx/rsbuild",
               "@nx/storybook",
               "@nx/vite",
               "@nx/webpack",

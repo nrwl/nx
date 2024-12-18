@@ -258,6 +258,7 @@ export function runCreateWorkspace(
   const pm = getPackageManagerCommand({ packageManager });
 
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }

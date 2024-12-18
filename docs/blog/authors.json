@@ -135,5 +135,11 @@
     "image": "/blog/images/Nx.jpeg",
     "twitter": "NxDevTools",
     "github": "nrwl"
+  },
+  {
+    "name": "Nicolas Beaussart",
+    "image": "/blog/images/Nicolas Beaussart.jpeg",
+    "twitter": "beaussan",
+    "github": "beaussan"
   }
 ]

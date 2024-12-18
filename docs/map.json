@@ -634,6 +634,12 @@
                   "file": "shared/recipes/console-run-command"
                 },
                 {
+                  "name": "Nx Cloud Integration",
+                  "id": "console-nx-cloud",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-nx-cloud"
+                },
+                {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
                   "tags": ["editor-setup"],

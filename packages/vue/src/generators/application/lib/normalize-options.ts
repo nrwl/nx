@@ -41,6 +41,7 @@ export async function normalizeOptions(
   normalized.unitTestRunner ??= 'vitest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
   normalized.isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  normalized.bundler = normalized.bundler ?? 'vite';
 
   return normalized;
 }

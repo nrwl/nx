@@ -114,7 +114,8 @@ describe('nx release create github release', () => {
     const result = runCLI('release patch -d --first-release --verbose');
 
     expect(
-      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length
+      result.match(new RegExp(`NX   Pushing to git remote "origin"`, 'g'))
+        .length
     ).toEqual(1);
     expect(
       result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
@@ -148,7 +149,8 @@ describe('nx release create github release', () => {
     const result = runCLI('release -d --first-release --verbose');
 
     expect(
-      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length
+      result.match(new RegExp(`NX   Pushing to git remote "origin"`, 'g'))
+        .length
     ).toEqual(1);
     expect(
       result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length

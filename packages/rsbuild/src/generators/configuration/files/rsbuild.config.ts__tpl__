@@ -7,6 +7,9 @@ export default defineConfig({
         },<% if (tsConfig) { %>
         tsconfigPath: '<%= tsConfig %>',<% } %>
     },
+    server: {
+        port: <%= devServerPort %>
+    },
     output: {
         target: '<%= target %>',
         distPath: {

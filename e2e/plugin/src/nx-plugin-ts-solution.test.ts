@@ -69,7 +69,7 @@ describe('Nx Plugin (TS solution)', () => {
     const executor = uniq('executor');
     const generatedProject = uniq('project');
 
-    runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+    runCLI(`generate @nx/plugin:plugin packages/${plugin} --linter eslint`);
 
     runCLI(
       `generate @nx/plugin:generator --name ${generator} --path packages/${plugin}/src/generators/${generator}/generator`
@@ -97,6 +97,7 @@ describe('Nx Plugin (TS solution)', () => {
 
     expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
     expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
+    expect(() => runCLI(`lint ${generatedProject}`)).not.toThrow();
   });
 
   it('should be able to resolve local generators and executors using package.json development condition export', async () => {

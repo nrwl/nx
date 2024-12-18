@@ -15,6 +15,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+
+const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -1277,7 +1279,7 @@ describe('app', () => {
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'package.json', (json) => {
-        json.workspaces = ['packages/*', 'apps/*'];
+        json.workspaces = ['packages/**', 'apps/**'];
         return json;
       });
       writeJson(appTree, 'tsconfig.base.json', {
@@ -1453,5 +1455,104 @@ describe('app', () => {
         }
       `);
     });
+
+    it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'libs/nested1',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'libs/nested2',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.workspaces).toEqual([
+        'packages/**',
+        'apps/**',
+        'myapp',
+        'libs/**',
+      ]);
+    });
+
+    it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      appTree.write('pnpm-workspace.yaml', `packages:`);
+
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'apps/nested1',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'apps/nested2',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+
+      const pnpmContent = appTree.read('pnpm-workspace.yaml', 'utf-8');
+      const pnpmWorkspaceFile = load(pnpmContent);
+
+      expect(pnpmWorkspaceFile.packages).toEqual(['myapp', 'apps/**']);
+    });
+  });
+
+  describe('--bundler=rsbuild', () => {
+    it.each([
+      { style: 'styled-components' },
+      { style: 'styled-jsx' },
+      { style: '@emotion/styled' },
+    ])(
+      `should generate valid rsbuild config files for $style`,
+      async ({ style }) => {
+        await applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'rsbuild',
+          style: style as any,
+        });
+
+        const content = appTree.read('my-app/src/app/app.tsx').toString();
+        expect(content).toMatchSnapshot();
+        const configContents = appTree
+          .read('my-app/rsbuild.config.ts')
+          .toString();
+        expect(configContents).toMatchSnapshot();
+      }
+    );
   });
 });

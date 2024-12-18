@@ -149,9 +149,13 @@ export interface NxReleaseGitConfiguration {
    */
   tagMessage?: string;
   /**
-   * Additional arguments to pass to the `git tag` command invoked behind the scenes. . May be a string or array of strings.
+   * Additional arguments to pass to the `git tag` command invoked behind the scenes. May be a string or array of strings.
    */
   tagArgs?: string | string[];
+  /**
+   * Whether or not to automatically push the changes made by this command to the remote git repository.
+   */
+  push?: boolean;
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
