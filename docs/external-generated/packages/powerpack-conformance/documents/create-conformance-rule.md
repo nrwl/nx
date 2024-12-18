@@ -6,7 +6,7 @@ Therefore, in practice, writing your local conformance rules in an Nx generated 
 
 To write your own conformance rule, run the `@nx/powerpack-conformance:create-rule` generator and answer the prompts.
 
-```text {% command="nx g @nx/powerpack-conformance:create-rule" path="/" %}
+```text {% command="nx g @nx/powerpack-conformance:create-rule" %}
  NX  Generating @nx/powerpack-conformance:create-rule
 
 ✔ What is the name of the rule? · local-conformance-rule-example
@@ -51,7 +51,7 @@ To enable the rule, you need to register it in the `nx.json` file.
   "conformance": {
     "rules": [
       {
-        "rule": "./packages/my-plugin/local-conformance-rule.ts"
+        "rule": "./packages/my-plugin/local-conformance-rule/index.ts"
       }
     ]
   }
