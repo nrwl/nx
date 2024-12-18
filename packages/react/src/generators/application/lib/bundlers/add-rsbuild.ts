@@ -64,11 +64,7 @@ export async function setupRsbuildConfiguration(
     '@rsbuild/plugin-react',
     'pluginReact',
     options.style === '@emotion/styled'
-      ? `{
-        swcReactOptions: {
-          importSource: '@emotion/react',
-        }
-      }`
+      ? `swcReactOptions: {\n\timportSource: '@emotion/react',\n}`
       : undefined
   );
 

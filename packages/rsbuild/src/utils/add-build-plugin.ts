@@ -7,6 +7,14 @@ const DEFINE_CONFIG_SELECTOR =
 const PLUGINS_ARRAY_SELECTOR =
   'CallExpression:has(Identifier[name=defineConfig]) PropertyAssignment:has(Identifier[name=plugins]) > ArrayLiteralExpression';
 
+/**
+ * Adds a plugin to the build configuration.
+ * @param tree - Nx Devkit Tree
+ * @param pathToConfigFile - Path to the build configuration file
+ * @param importPath - Path to the plugin
+ * @param pluginName - Name of the plugin
+ * @param options - Optional but should be defined as a string such as `property: {foo: 'bar'}`
+ */
 export function addBuildPlugin(
   tree: Tree,
   pathToConfigFile: string,
