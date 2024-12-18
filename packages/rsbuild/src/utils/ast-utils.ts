@@ -102,7 +102,7 @@ export function addCopyAssets(
       configContents = `${configContents.slice(
         0,
         copyAssetsArrayNode.getStart() + 1
-      )}\n${indentBy(3)(copyAssetArrayElement)},\t\t${configContents.slice(
+      )}\n${indentBy(2)(copyAssetArrayElement)},\n\t\t${configContents.slice(
         copyAssetsArrayNode.getStart() + 1
       )}`;
     }

@@ -26,21 +26,35 @@ exports[`app --bundler=rsbuild should generate valid rsbuild config files for @e
   import { defineConfig } from '@rsbuild/core';
 
 export default defineConfig({
-    html: {
-      template: './src/index.html'
-    },tools: { swc: { jsc: { experimental: { plugins: [['@swc/plugin-emotion', {}],], }, }, }, },
-    plugins: [pluginReact({
-        swcReactOptions: {
-          importSource: '@emotion/react',
-        }
-      })],
+	html: {
+		template: './src/index.html'
+	},	
+	tools: {
+		swc: {
+			jsc: {
+				experimental: {
+					plugins: [
+						['@swc/plugin-emotion', {}],
+					], 
+				},
+			},
+		},
+	},
+	plugins: [pluginReact(swcReactOptions: {
+		importSource: '@emotion/react',
+	})],
+	
     source: {
         entry: {
             index: './src/main.tsx'
         },
         tsconfigPath: './tsconfig.app.json',
     },
-    output: {copy: [{ from: './src/favicon.ico' },{ from: './src/assets' }],
+    output: {
+		copy: [
+		{ from: './src/favicon.ico' },
+		{ from: './src/assets' }],
+	
         target: 'web',
         distPath: {
             root: 'dist',
@@ -77,17 +91,25 @@ exports[`app --bundler=rsbuild should generate valid rsbuild config files for st
   import { defineConfig } from '@rsbuild/core';
 
 export default defineConfig({
-    html: {
-      template: './src/index.html'
-    },
-    plugins: [pluginReact(),pluginStyledComponents()],
+	html: {
+		template: './src/index.html'
+	},	
+	plugins: [
+		pluginReact(),
+		pluginStyledComponents()
+	],
+	
     source: {
         entry: {
             index: './src/main.tsx'
         },
         tsconfigPath: './tsconfig.app.json',
     },
-    output: {copy: [{ from: './src/favicon.ico' },{ from: './src/assets' }],
+    output: {
+		copy: [
+		{ from: './src/favicon.ico' },
+		{ from: './src/assets' }],
+	
         target: 'web',
         distPath: {
             root: 'dist',
@@ -120,17 +142,33 @@ exports[`app --bundler=rsbuild should generate valid rsbuild config files for st
   import { defineConfig } from '@rsbuild/core';
 
 export default defineConfig({
-    html: {
-      template: './src/index.html'
-    },tools: { swc: { jsc: { experimental: { plugins: [['@swc/plugin-styled-jsx', {}],], }, }, }, },
-    plugins: [pluginReact()],
+	html: {
+		template: './src/index.html'
+	},	
+	tools: {
+		swc: {
+			jsc: {
+				experimental: {
+					plugins: [
+						['@swc/plugin-styled-jsx', {}],
+					], 
+				},
+			},
+		},
+	},
+	plugins: [pluginReact()],
+	
     source: {
         entry: {
             index: './src/main.tsx'
         },
         tsconfigPath: './tsconfig.app.json',
     },
-    output: {copy: [{ from: './src/favicon.ico' },{ from: './src/assets' }],
+    output: {
+		copy: [
+		{ from: './src/favicon.ico' },
+		{ from: './src/assets' }],
+	
         target: 'web',
         distPath: {
             root: 'dist',

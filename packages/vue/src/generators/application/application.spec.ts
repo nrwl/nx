@@ -92,6 +92,7 @@ describe('application generator', () => {
           template: './index.html',
         },
         plugins: [pluginVue()],
+
         source: {
           entry: {
             index: './src/main.ts',

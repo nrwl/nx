@@ -187,7 +187,8 @@ export default defineConfig({
         export default defineConfig({
           output: {
             copy: [
-        			{ from: './src/favicon.ico' },		
+        		{ from: './src/favicon.ico' },
+        		
               { from: './src/assets' }
             ]
           }
