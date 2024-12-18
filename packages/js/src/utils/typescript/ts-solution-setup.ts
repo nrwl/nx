@@ -98,7 +98,9 @@ export function assertNotUsingTsSolutionSetup(
     ],
   });
 
-  process.exit(1);
+  throw new Error(
+    `The ${artifactString} doesn't yet support the existing TypeScript setup. See the error above.`
+  );
 }
 
 export function findRuntimeTsConfigName(
@@ -158,7 +160,7 @@ export function updateTsconfigFiles(
       }
 
       const excludeSet: Set<string> = json.exclude
-        ? new Set(['dist', ...json.exclude, ...exclude])
+        ? new Set(['out-tsc', 'dist', ...json.exclude, ...exclude])
         : new Set(exclude);
       json.exclude = Array.from(excludeSet);
 

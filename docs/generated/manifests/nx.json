@@ -832,6 +832,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "common-tasks",
+        "name": "Common Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/common-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/common-tasks",
+        "tags": ["run-tasks"]
+      },
+      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -1111,6 +1122,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/executors-and-configurations",
+    "tags": ["run-tasks"]
+  },
+  "/concepts/common-tasks": {
+    "id": "common-tasks",
+    "name": "Common Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/common-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/common-tasks",
     "tags": ["run-tasks"]
   },
   "/concepts/nx-daemon": {

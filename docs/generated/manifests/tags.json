@@ -60,6 +60,13 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/common-tasks",
+      "id": "common-tasks",
+      "name": "Common Tasks",
+      "path": "/concepts/common-tasks"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/configure-inputs",
       "id": "configure-inputs",
       "name": "Configure Inputs for Task Caching",
