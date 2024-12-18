@@ -1,6 +1,8 @@
 import { readJsonFile, workspaceRoot } from '@nx/devkit';
-import { createConformanceRule } from '@nx/powerpack-conformance';
-import type { Violation } from '@nx/powerpack-conformance/src/reporters/project-files-reporter';
+import {
+  createConformanceRule,
+  type ProjectFilesViolation,
+} from '@nx/powerpack-conformance';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -11,7 +13,7 @@ export default createConformanceRule<object>({
     'Ensures consistency across our project package.json files within the Nx repo',
   reporter: 'project-files-reporter',
   implementation: async ({ projectGraph }) => {
-    const violations: Violation[] = [];
+    const violations: ProjectFilesViolation[] = [];
 
     for (const project of Object.values(projectGraph.nodes)) {
       const projectPackageJsonPath = join(
@@ -46,8 +48,8 @@ export function validateProjectPackageJson(
   sourceProject: string,
   sourceProjectRoot: string,
   projectPackageJsonPath: string
-): Violation[] {
-  const violations: Violation[] = [];
+): ProjectFilesViolation[] {
+  const violations: ProjectFilesViolation[] = [];
 
   if (typeof projectPackageJson.name !== 'string') {
     violations.push({
