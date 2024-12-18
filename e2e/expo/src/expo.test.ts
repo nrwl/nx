@@ -55,12 +55,12 @@ describe('@nx/expo', () => {
 
   it('should start the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8088;
 
     try {
       process = await runCommandUntil(
         `start ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`)
+        (output) => output.includes(`http://localhost:8088`)
       );
     } catch (err) {
       console.error(err);
@@ -74,12 +74,12 @@ describe('@nx/expo', () => {
 
   it('should serve the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8071;
 
     try {
       process = await runCommandUntil(
         `serve ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`)
+        (output) => output.includes(`http://localhost:8071`)
       );
     } catch (err) {
       console.error(err);

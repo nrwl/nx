@@ -45,6 +45,7 @@ import {
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
 import {
+  addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -373,6 +374,12 @@ export default {...nxPreset};
       : undefined,
     '.'
   );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

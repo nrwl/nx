@@ -8,6 +8,7 @@ import {
   listFiles,
   newProject,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
   runE2ETests,
@@ -20,7 +21,6 @@ import { join } from 'path';
 
 describe('React Applications', () => {
   let proj: string;
-
   describe('Crystal Supported Tests', () => {
     beforeAll(() => {
       proj = newProject({ packages: ['@nx/react'] });
@@ -28,7 +28,6 @@ describe('React Applications', () => {
     });
 
     afterAll(() => cleanupProject());
-
     it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -68,13 +67,13 @@ describe('React Applications', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --useTsSolution true --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
+        `generate @nx/react:app apps/${appName} --name=${appName} --useTsSolution=true --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
       );
       runCLI(
         `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
       );
 
-      const nxJson = JSON.parse(readFile('nx.json'));
+      const nxJson = readJson('nx.json');
 
       const jsTypescriptPlugin = nxJson.plugins.find(
         (plugin) => plugin.plugin === '@nx/js/typescript'
