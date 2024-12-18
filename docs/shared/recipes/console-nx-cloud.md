@@ -4,7 +4,7 @@ Nx Console for VSCode is integrated with Nx Cloud to help you stay on top of you
 
 If your workspace is connected to Nx Cloud, you will have access to a new view in the Nx Console sidebar that provides at-a-glance information about your running and recent CI pipeline executions.
 
-![Nx Console Nx Cloud View](../images/nx-console/cloud-view.png)
+![Nx Console Nx Cloud View](/shared/images/nx-console/cloud-view.png)
 
 {% callout type="note" %}
 Nx Console will only show information about CI Pipelines from the last hour and triggered from branches that you have modified locally. If you want to see information about other pipelines, use the Nx Cloud application at [cloud.nx.app](https://cloud.nx.app).
@@ -14,7 +14,7 @@ Nx Console will only show information about CI Pipelines from the last hour and 
 
 In addition to the view, you will receive notifications when a pipeline completes or a task in it fails.
 
-![Nx Console Nx Cloud Notifications](../images/nx-console/cloud-notification.png)
+![Nx Console Nx Cloud Notifications](/shared/images/nx-console/cloud-notification.png)
 
 You can click on the buttons view the results directly in Nx Cloud or open the Pull Request in the browser.
 
