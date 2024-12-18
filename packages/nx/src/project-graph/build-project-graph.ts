@@ -44,7 +44,7 @@ import {
   ConfigurationSourceMaps,
   mergeMetadata,
 } from './utils/project-configuration-utils';
-import { DelayedSpinner, SHOULD_SHOW_SPINNERS } from '../utils/delayed-spinner';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -342,10 +342,9 @@ async function updateProjectGraphWithPlugins(
     }
   }
 
-  spinner = new DelayedSpinner({
-    message: `Creating project graph dependencies with ${plugins.length} plugins`,
-    ciDelay: 10_000,
-  });
+  spinner = new DelayedSpinner(
+    `Creating project graph dependencies with ${plugins.length} plugins`
+  );
 
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
@@ -461,12 +460,9 @@ export async function applyProjectMetadata(
     }
   }
 
-  if (SHOULD_SHOW_SPINNERS) {
-    spinner = new DelayedSpinner({
-      message: `Creating project metadata with ${plugins.length} plugins`,
-      ciDelay: 10_000,
-    });
-  }
+  spinner = new DelayedSpinner(
+    `Creating project metadata with ${plugins.length} plugins`
+  );
 
   const promises = plugins.map(async (plugin) => {
     if (plugin.createMetadata) {

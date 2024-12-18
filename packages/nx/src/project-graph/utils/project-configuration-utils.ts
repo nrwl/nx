@@ -31,11 +31,7 @@ import {
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
-import { isOnDaemon } from '../../daemon/is-on-daemon';
-import {
-  DelayedSpinner,
-  SHOULD_SHOW_SPINNERS,
-} from '../../utils/delayed-spinner';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
