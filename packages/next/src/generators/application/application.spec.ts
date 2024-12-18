@@ -624,7 +624,7 @@ describe('app', () => {
   describe('--linter', () => {
     describe('default (eslint)', () => {
       it('should add flat config as needed', async () => {
-        tree.write('eslint.config.js', '');
+        tree.write('eslint.config.cjs', '');
         const name = uniq();
 
         await applicationGenerator(tree, {
@@ -632,12 +632,12 @@ describe('app', () => {
           style: 'css',
         });
 
-        expect(tree.read(`${name}/eslint.config.js`, 'utf-8'))
+        expect(tree.read(`${name}/eslint.config.cjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
           "const { FlatCompat } = require('@eslint/eslintrc');
           const js = require('@eslint/js');
           const nx = require('@nx/eslint-plugin');
-          const baseConfig = require('../eslint.config.js');
+          const baseConfig = require('../eslint.config.cjs');
 
           const compat = new FlatCompat({
             baseDirectory: __dirname,

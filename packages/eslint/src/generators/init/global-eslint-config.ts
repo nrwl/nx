@@ -114,7 +114,9 @@ export const getGlobalFlatEslintConfiguration = (
 
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatOverride({ ignores: ['**/dist'] })
+    generateFlatOverride({
+      ignores: ['**/dist'],
+    })
   );
 
   if (!rootProject) {
@@ -145,7 +147,14 @@ export const getGlobalFlatEslintConfiguration = (
   content = addBlockToFlatConfigExport(
     content,
     generateFlatOverride({
-      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+      files: [
+        '**/*.ts',
+        '**/*.tsx',
+        '**/*.js',
+        '**/*.jsx',
+        '**/*.cjs',
+        '**/*.mjs',
+      ],
       rules: {},
     })
   );
