@@ -210,6 +210,11 @@ async function createNodesInternal(
     projectRoot
   );
 
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  const packageJson = existsSync(packageJsonPath)
+    ? readJsonFile(packageJsonPath)
+    : null;
+
   const nodeHash = hashArray([
     ...[
       fullConfigPath,
@@ -219,6 +224,7 @@ async function createNodesInternal(
       join(context.workspaceRoot, lockFileName),
     ].map(hashFile),
     hashObject(options),
+    ...(packageJson ? [hashObject(packageJson)] : []),
   ]);
   const cacheKey = `${nodeHash}_${configFilePath}`;
 
@@ -325,12 +331,7 @@ function buildTscTargets(
   if (
     options.build &&
     basename(configFilePath) === options.build.configName &&
-    isValidPackageJsonBuildConfig(
-      tsConfig,
-      context.workspaceRoot,
-      projectRoot,
-      configFilePath
-    )
+    isValidPackageJsonBuildConfig(tsConfig, context.workspaceRoot, projectRoot)
   ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
@@ -610,8 +611,7 @@ function getOutputs(
 function isValidPackageJsonBuildConfig(
   tsConfig,
   workspaceRoot: string,
-  projectRoot: string,
-  tsConfigPath: string
+  projectRoot: string
 ): boolean {
   if (!existsSync(joinPathFragments(projectRoot, 'package.json'))) {
     // If the package.json file does not exist.
@@ -622,30 +622,37 @@ function isValidPackageJsonBuildConfig(
     joinPathFragments(projectRoot, 'package.json')
   );
 
-  const rootDir = tsConfig.options.rootDir ?? 'src/';
-  if (!tsConfig.options.rootDir) {
-    console.warn(
-      `The 'rootDir' option is not set in the tsconfig file at ${tsConfigPath}. Assuming 'src/' as the root directory.`
-    );
-  }
+  const outDir = tsConfig.options.outDir
+    ? tsConfig.options.outDir
+    : tsConfig.options.outFile
+    ? dirname(tsConfig.options.outFile)
+    : false;
 
-  const isPathWithinSrc = (path: string): boolean => {
-    const resolvedRootDir = resolve(workspaceRoot, projectRoot, rootDir);
+  const isPathSourceFile = (path: string): boolean => {
+    if (!outDir) {
+      // If `outDir` is not defined either from tsconfig.json or outFile the transpiled files will be in the same directory as the source files.
+      // In this case, we assume that the source files are `.ts`, `.cts`, or `.mts`.
+      return (
+        path.endsWith('.ts') || path.endsWith('.cts') || path.endsWith('.mts')
+      );
+    }
+
+    const resolvedOutDir = resolve(workspaceRoot, projectRoot, outDir);
     const pathToCheck = resolve(workspaceRoot, projectRoot, path);
 
-    return pathToCheck.startsWith(resolvedRootDir);
+    return !pathToCheck.startsWith(resolvedOutDir);
   };
 
   // If `outFile` is defined, check the validity of the path.
   if (tsConfig.options.outFile) {
-    if (isPathWithinSrc(tsConfig.options.outFile)) {
+    if (isPathSourceFile(tsConfig.options.outFile)) {
       return false;
     }
   }
 
   const buildPaths = ['main', 'module'];
   for (const field of buildPaths) {
-    if (packageJson[field] && isPathWithinSrc(packageJson[field])) {
+    if (packageJson[field] && isPathSourceFile(packageJson[field])) {
       return false;
     }
   }
@@ -657,7 +664,7 @@ function isValidPackageJsonBuildConfig(
     value: string | Record<string, string>
   ): boolean => {
     if (typeof value === 'string') {
-      return isPathWithinSrc(value);
+      return isPathSourceFile(value);
     } else if (typeof value === 'object') {
       return Object.entries(value).some(([currentKey, subValue]) => {
         // Skip types field
@@ -665,7 +672,7 @@ function isValidPackageJsonBuildConfig(
           return false;
         }
         if (typeof subValue === 'string') {
-          return isPathWithinSrc(subValue);
+          return isPathSourceFile(subValue);
         }
         return false;
       });
@@ -673,7 +680,7 @@ function isValidPackageJsonBuildConfig(
     return false;
   };
 
-  if (typeof exports === 'string' && isPathWithinSrc(exports)) {
+  if (typeof exports === 'string' && isPathSourceFile(exports)) {
     return false;
   }
 
