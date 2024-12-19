@@ -58,6 +58,14 @@ describe('syncGenerator()', () => {
     });
   }
 
+  function addProjectWithImplicitDependencies(
+    name: string,
+    implicitDependencies: string[]
+  ) {
+    addProject(name);
+    projectGraph.nodes[name].data.implicitDependencies = implicitDependencies;
+  }
+
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
     projectGraph = {
@@ -622,6 +630,23 @@ describe('syncGenerator()', () => {
         }
         "
       `);
+
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if dependent project is an implicit dependency', async () => {
+      addProject('implicit-dep');
+      addProjectWithImplicitDependencies('foo', ['implicit-dep']);
+
+      await syncGenerator(tree);
 
       expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
         .toMatchInlineSnapshot(`
