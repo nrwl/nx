@@ -86,6 +86,7 @@ export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
     specifier?: string;
     yes?: boolean;
+    preid?: VersionOptions['preid'];
     skipPublish?: boolean;
   };
 
@@ -185,6 +186,12 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         type: 'string',
         describe:
           'Exact version or semver keyword to apply to the selected release group.',
+      })
+      .option('preid', {
+        type: 'string',
+        describe:
+          'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+        default: '',
       })
       .option('yes', {
         type: 'boolean',
