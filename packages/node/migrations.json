@@ -18,6 +18,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.2.3": {
+      "version": "20.2.3-beta.0",
+      "packages": {
+        "express": {
+          "version": "^4.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "^4.17.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

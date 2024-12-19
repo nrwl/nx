@@ -36,7 +36,7 @@
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "express": "^4.18.1"
+    "express": "^4.21.2"
   },
   "peerDependenciesMeta": {
     "express": {
