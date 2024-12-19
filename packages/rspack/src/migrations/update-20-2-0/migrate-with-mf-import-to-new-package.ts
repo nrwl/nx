@@ -3,9 +3,11 @@ import {
   formatFiles,
   readProjectConfiguration,
   visitNotIgnoredFiles,
+  addDependenciesToPackageJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { nxVersion } from '../../utils/versions';
 
 const NX_RSPACK_MODULE_FEDERATION_IMPORT_SELECTOR =
   'ImportDeclaration > StringLiteral[value=@nx/rspack/module-federation], VariableStatement CallExpression:has(Identifier[name=require]) > StringLiteral[value=@nx/rspack/module-federation]';
@@ -51,6 +53,16 @@ export default async function migrateWithMfImport(tree: Tree) {
 
       tree.write(filePath, contents);
     });
+  }
+
+  if (projects.size !== 0) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@nx/module-federation': nxVersion,
+      }
+    );
   }
 
   await formatFiles(tree);

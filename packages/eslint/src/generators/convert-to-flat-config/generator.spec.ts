@@ -82,19 +82,19 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')
     ).toMatchSnapshot();
     // check nx.json changes
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.targetDefaults.lint.inputs).toContain(
-      '{workspaceRoot}/eslint.config.js'
+      '{workspaceRoot}/eslint.config.cjs'
     );
     expect(nxJson.namedInputs.production).toContain(
-      '!{projectRoot}/eslint.config.js'
+      '!{projectRoot}/eslint.config.cjs'
     );
   });
 
@@ -112,19 +112,19 @@ describe('convert-to-flat-config generator', () => {
 
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')
     ).toMatchSnapshot();
     // check nx.json changes
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.targetDefaults.lint.inputs).toContain(
-      '{workspaceRoot}/eslint.config.js'
+      '{workspaceRoot}/eslint.config.cjs'
     );
     expect(nxJson.namedInputs.production).toContain(
-      '!{projectRoot}/eslint.config.js'
+      '!{projectRoot}/eslint.config.cjs'
     );
   });
 
@@ -142,19 +142,19 @@ describe('convert-to-flat-config generator', () => {
 
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')
     ).toMatchSnapshot();
     // check nx.json changes
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.targetDefaults.lint.inputs).toContain(
-      '{workspaceRoot}/eslint.config.js'
+      '{workspaceRoot}/eslint.config.cjs'
     );
     expect(nxJson.namedInputs.production).toContain(
-      '!{projectRoot}/eslint.config.js'
+      '!{projectRoot}/eslint.config.cjs'
     );
   });
 
@@ -171,7 +171,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
       "const { FlatCompat } = require('@eslint/eslintrc');
       const js = require('@eslint/js');
       const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -182,6 +182,9 @@ describe('convert-to-flat-config generator', () => {
       });
 
       module.exports = [
+        {
+          ignores: ['**/dist'],
+        },
         ...compat.extends('plugin:storybook/recommended'),
         { plugins: { '@nx': nxEslintPlugin } },
         {
@@ -208,7 +211,7 @@ describe('convert-to-flat-config generator', () => {
           })
           .map((config) => ({
             ...config,
-            files: ['**/*.ts', '**/*.tsx'],
+            files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
             rules: {
               ...config.rules,
             },
@@ -219,7 +222,7 @@ describe('convert-to-flat-config generator', () => {
           })
           .map((config) => ({
             ...config,
-            files: ['**/*.js', '**/*.jsx'],
+            files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
             rules: {
               ...config.rules,
             },
@@ -227,11 +230,14 @@ describe('convert-to-flat-config generator', () => {
       ];
       "
     `);
-    expect(tree.read('libs/test-lib/eslint.config.js', 'utf-8'))
+    expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const baseConfig = require('../../eslint.config.js');
+      "const baseConfig = require('../../eslint.config.cjs');
 
       module.exports = [
+        {
+          ignores: ['**/dist'],
+        },
         ...baseConfig,
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -266,7 +272,7 @@ describe('convert-to-flat-config generator', () => {
     tree.write('.eslintignore', 'ignore/me');
     await convertToFlatConfigGenerator(tree, options);
 
-    const config = tree.read('eslint.config.js', 'utf-8');
+    const config = tree.read('eslint.config.cjs', 'utf-8');
     expect(config).toContain('ignore/me');
     expect(config).toMatchSnapshot();
     expect(tree.exists('.eslintignore')).toBeFalsy();
@@ -290,7 +296,7 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')
     ).toMatchSnapshot();
     expect(tree.exists('another-folder/.myeslintignore')).toBeFalsy();
     expect(tree.exists('libs/test-lib/.eslintignore')).toBeFalsy();
@@ -316,7 +322,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add env configuration', async () => {
@@ -335,7 +341,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add global configuration', async () => {
@@ -353,7 +359,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add global and env configuration', async () => {
@@ -374,7 +380,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add plugins', async () => {
@@ -395,7 +401,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add parser', async () => {
@@ -411,7 +417,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchSnapshot();
   });
 
   it('should add linter options', async () => {
@@ -427,7 +433,7 @@ describe('convert-to-flat-config generator', () => {
     });
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
       "const { FlatCompat } = require('@eslint/eslintrc');
       const js = require('@eslint/js');
       const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -438,6 +444,9 @@ describe('convert-to-flat-config generator', () => {
       });
 
       module.exports = [
+        {
+          ignores: ['**/dist'],
+        },
         { plugins: { '@nx': nxEslintPlugin } },
         {
           linterOptions: {
@@ -468,7 +477,7 @@ describe('convert-to-flat-config generator', () => {
           })
           .map((config) => ({
             ...config,
-            files: ['**/*.ts', '**/*.tsx'],
+            files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
             rules: {
               ...config.rules,
             },
@@ -479,7 +488,7 @@ describe('convert-to-flat-config generator', () => {
           })
           .map((config) => ({
             ...config,
-            files: ['**/*.js', '**/*.jsx'],
+            files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
             rules: {
               ...config.rules,
             },
@@ -510,11 +519,11 @@ describe('convert-to-flat-config generator', () => {
       }
     );
 
-    expect(tree.exists('eslint.config.js')).toBeFalsy();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
+    expect(tree.exists('eslint.config.cjs')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeFalsy();
     await convertToFlatConfigGenerator(tree, options);
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
   });
 
   it('should convert project if target is defined via plugin as object', async () => {
@@ -545,11 +554,11 @@ describe('convert-to-flat-config generator', () => {
       }
     );
 
-    expect(tree.exists('eslint.config.js')).toBeFalsy();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
+    expect(tree.exists('eslint.config.cjs')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeFalsy();
     await convertToFlatConfigGenerator(tree, options);
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
-    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+    expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
   });
 
   it('should handle parser options even if parser is extended', async () => {
@@ -589,13 +598,16 @@ describe('convert-to-flat-config generator', () => {
     });
 
     await convertToFlatConfigGenerator(tree, options);
-    expect(tree.exists('apps/dx-assets-ui/eslint.config.js')).toBeTruthy();
-    expect(tree.exists('eslint.config.js')).toBeTruthy();
-    expect(tree.read('apps/dx-assets-ui/eslint.config.js', 'utf-8'))
+    expect(tree.exists('apps/dx-assets-ui/eslint.config.cjs')).toBeTruthy();
+    expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+    expect(tree.read('apps/dx-assets-ui/eslint.config.cjs', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const baseConfig = require('../../eslint.config.js');
+      "const baseConfig = require('../../eslint.config.cjs');
 
       module.exports = [
+        {
+          ignores: ['**/dist'],
+        },
         ...baseConfig,
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

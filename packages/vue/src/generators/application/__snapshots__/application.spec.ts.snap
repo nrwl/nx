@@ -143,6 +143,66 @@ export default defineConfig({
 "
 `;
 
+exports[`application generator should set up project correctly for rsbuild 1`] = `
+"import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/test',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), vue()],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: { reportsDirectory: '../coverage/test', provider: 'v8' },
+  },
+});
+"
+`;
+
+exports[`application generator should set up project correctly for rsbuild 3`] = `
+[
+  ".eslintignore",
+  ".eslintrc.json",
+  ".gitignore",
+  ".prettierignore",
+  ".prettierrc",
+  ".vscode/extensions.json",
+  "nx.json",
+  "package.json",
+  "test-e2e/.eslintrc.json",
+  "test-e2e/playwright.config.ts",
+  "test-e2e/project.json",
+  "test-e2e/src/example.spec.ts",
+  "test-e2e/tsconfig.json",
+  "test/.eslintrc.json",
+  "test/index.html",
+  "test/project.json",
+  "test/rsbuild.config.ts",
+  "test/src/app/App.spec.ts",
+  "test/src/app/App.vue",
+  "test/src/app/NxWelcome.vue",
+  "test/src/main.ts",
+  "test/src/styles.css",
+  "test/src/vue-shims.d.ts",
+  "test/tsconfig.app.json",
+  "test/tsconfig.json",
+  "test/tsconfig.spec.json",
+  "test/vitest.config.ts",
+  "tsconfig.base.json",
+  "vitest.workspace.ts",
+]
+`;
+
 exports[`application generator should set up project correctly with given options 1`] = `
 "{
   "root": true,

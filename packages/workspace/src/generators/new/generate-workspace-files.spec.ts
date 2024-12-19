@@ -332,8 +332,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     const packageJson = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
     expect(packageJson).toMatchInlineSnapshot(`
       "packages: 
-        - apps/**
-        - packages/**
+        - "apps/**"
+        - "packages/**"
       "
     `);
   });

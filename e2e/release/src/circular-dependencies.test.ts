@@ -7,6 +7,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
+import { execSync } from 'node:child_process';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 expect.addSnapshotSerializer({
@@ -47,6 +48,7 @@ const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 describe('nx release circular dependencies', () => {
   let pkg1: string;
   let pkg2: string;
+  let e2eRegistryUrl: string;
 
   beforeAll(async () => {
     newProject({
@@ -85,6 +87,9 @@ describe('nx release circular dependencies', () => {
     runCLI('reset');
     resetWorkspaceContext();
     runCLI('reset');
+
+    // This is the verdaccio instance that the e2e tests themselves are working from
+    e2eRegistryUrl = execSync('npm config get registry').toString().trim();
   }, 60000);
 
   afterAll(() => {
@@ -244,7 +249,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -266,7 +271,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -429,7 +434,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -451,7 +456,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -613,7 +618,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -635,7 +640,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -757,7 +762,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -919,7 +924,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -941,7 +946,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -1091,7 +1096,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
