@@ -1,3 +1,4 @@
+bump
 <p style="text-align: center;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
