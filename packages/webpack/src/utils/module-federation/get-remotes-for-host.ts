@@ -102,7 +102,16 @@ export function getRemotes(
     (r) => !remotesToSkip.has(r)
   );
 
-  const knownDynamicRemotes = dynamicRemotes.filter(
+  // With dynamic remotes, the manifest file may contain the names with `_` due to MF limitations on naming
+  // The project graph might contain these names with `-` rather than `_`. Check for both.
+  // This can occur after migration of existing remotes past Nx 19.8
+  let normalizedDynamicRemotes = dynamicRemotes.map((r) => {
+    if (context.projectGraph.nodes[r.replace(/_/g, '-')]) {
+      return r.replace(/_/g, '-');
+    }
+    return r;
+  });
+  const knownDynamicRemotes = normalizedDynamicRemotes.filter(
     (r) => !remotesToSkip.has(r) && context.projectGraph.nodes[r]
   );
 
