@@ -22,6 +22,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import {
   basename,
   dirname,
+  extname,
   join,
   normalize,
   relative,
@@ -210,6 +211,11 @@ async function createNodesInternal(
     projectRoot
   );
 
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  const packageJson = existsSync(packageJsonPath)
+    ? readJsonFile(packageJsonPath)
+    : null;
+
   const nodeHash = hashArray([
     ...[
       fullConfigPath,
@@ -219,6 +225,7 @@ async function createNodesInternal(
       join(context.workspaceRoot, lockFileName),
     ].map(hashFile),
     hashObject(options),
+    ...(packageJson ? [hashObject(packageJson)] : []),
   ]);
   const cacheKey = `${nodeHash}_${configFilePath}`;
 
@@ -325,12 +332,7 @@ function buildTscTargets(
   if (
     options.build &&
     basename(configFilePath) === options.build.configName &&
-    isValidPackageJsonBuildConfig(
-      tsConfig,
-      context.workspaceRoot,
-      projectRoot,
-      configFilePath
-    )
+    isValidPackageJsonBuildConfig(tsConfig, context.workspaceRoot, projectRoot)
   ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
@@ -604,14 +606,12 @@ function getOutputs(
  * @param tsConfig The TypeScript configuration object.
  * @param workspaceRoot The workspace root path.
  * @param projectRoot The project root path.
- * @param tsConfigPath The path to the TypeScript configuration file.
  * @returns `true` if the package has a valid build configuration; otherwise, `false`.
  */
 function isValidPackageJsonBuildConfig(
   tsConfig,
   workspaceRoot: string,
-  projectRoot: string,
-  tsConfigPath: string
+  projectRoot: string
 ): boolean {
   if (!existsSync(joinPathFragments(projectRoot, 'package.json'))) {
     // If the package.json file does not exist.
@@ -622,30 +622,39 @@ function isValidPackageJsonBuildConfig(
     joinPathFragments(projectRoot, 'package.json')
   );
 
-  const rootDir = tsConfig.options.rootDir ?? 'src/';
-  if (!tsConfig.options.rootDir) {
-    console.warn(
-      `The 'rootDir' option is not set in the tsconfig file at ${tsConfigPath}. Assuming 'src/' as the root directory.`
-    );
-  }
+  const rootDir = tsConfig.options.rootDir ?? 'src';
+  const resolvedRootDir = resolve(workspaceRoot, projectRoot, rootDir);
 
-  const isPathWithinSrc = (path: string): boolean => {
-    const resolvedRootDir = resolve(workspaceRoot, projectRoot, rootDir);
+  const outDir = tsConfig.options.outDir
+    ? tsConfig.options.outDir
+    : tsConfig.options.outFile
+    ? dirname(tsConfig.options.outFile)
+    : 'src'; // tsconfig defaults to 'src' if outDir and outFile are not set
+
+  const isPathSourceFile = (path: string): boolean => {
+    const ext = extname(path);
+
+    const resolvedOutDir = resolve(workspaceRoot, projectRoot, outDir);
     const pathToCheck = resolve(workspaceRoot, projectRoot, path);
 
-    return pathToCheck.startsWith(resolvedRootDir);
+    if (resolvedRootDir === resolvedOutDir) {
+      // Check that the file extension is `.ts`, `.cts`, or `.mts`. As the source files are in the same directory as the output files.
+      return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
+    } else {
+      return !pathToCheck.startsWith(resolvedOutDir);
+    }
   };
 
   // If `outFile` is defined, check the validity of the path.
   if (tsConfig.options.outFile) {
-    if (isPathWithinSrc(tsConfig.options.outFile)) {
+    if (isPathSourceFile(tsConfig.options.outFile)) {
       return false;
     }
   }
 
   const buildPaths = ['main', 'module'];
   for (const field of buildPaths) {
-    if (packageJson[field] && isPathWithinSrc(packageJson[field])) {
+    if (packageJson[field] && isPathSourceFile(packageJson[field])) {
       return false;
     }
   }
@@ -657,7 +666,7 @@ function isValidPackageJsonBuildConfig(
     value: string | Record<string, string>
   ): boolean => {
     if (typeof value === 'string') {
-      return isPathWithinSrc(value);
+      return isPathSourceFile(value);
     } else if (typeof value === 'object') {
       return Object.entries(value).some(([currentKey, subValue]) => {
         // Skip types field
@@ -665,7 +674,7 @@ function isValidPackageJsonBuildConfig(
           return false;
         }
         if (typeof subValue === 'string') {
-          return isPathWithinSrc(subValue);
+          return isPathSourceFile(subValue);
         }
         return false;
       });
@@ -673,7 +682,7 @@ function isValidPackageJsonBuildConfig(
     return false;
   };
 
-  if (typeof exports === 'string' && isPathWithinSrc(exports)) {
+  if (typeof exports === 'string' && isPathSourceFile(exports)) {
     return false;
   }
 
