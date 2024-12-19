@@ -119,6 +119,7 @@ It only uses language primitives and immutable objects
 - [detectPackageManager](../../devkit/documents/detectPackageManager)
 - [ensurePackage](../../devkit/documents/ensurePackage)
 - [extractLayoutDirectory](../../devkit/documents/extractLayoutDirectory)
+- [findMatchingProjects](../../devkit/documents/findMatchingProjects)
 - [formatFiles](../../devkit/documents/formatFiles)
 - [generateFiles](../../devkit/documents/generateFiles)
 - [getOutputsForTargetAndConfiguration](../../devkit/documents/getOutputsForTargetAndConfiguration)
