@@ -71,7 +71,7 @@ There are three types of reporters that a rule can use.
 {% tabs %}
 {% tab label="project-reporter" %}
 
-The `@nx/powerpack-owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
+The `@nx/powerpack-conformance:ensure-owners` rule provides us an example of how to write a `project-reporter` rule. The `@nx/powerpack-owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
 
 ```ts
 import { ProjectGraphProjectNode } from '@nx/devkit';
