@@ -22,6 +22,7 @@ It allows Nx to recieve partial results and continue processing for better UX.
 - [message](../../devkit/documents/AggregateCreateNodesError#message): string
 - [name](../../devkit/documents/AggregateCreateNodesError#name): string
 - [partialResults](../../devkit/documents/AggregateCreateNodesError#partialresults): CreateNodesResultV2
+- [pluginName](../../devkit/documents/AggregateCreateNodesError#pluginname): string
 - [stack](../../devkit/documents/AggregateCreateNodesError#stack): string
 - [prepareStackTrace](../../devkit/documents/AggregateCreateNodesError#preparestacktrace): Function
 - [stackTraceLimit](../../devkit/documents/AggregateCreateNodesError#stacktracelimit): number
@@ -34,7 +35,7 @@ It allows Nx to recieve partial results and continue processing for better UX.
 
 ### constructor
 
-• **new AggregateCreateNodesError**(`errors`, `partialResults`): [`AggregateCreateNodesError`](../../devkit/documents/AggregateCreateNodesError)
+• **new AggregateCreateNodesError**(`errors`, `partialResults`, `pluginName?`): [`AggregateCreateNodesError`](../../devkit/documents/AggregateCreateNodesError)
 
 Throwing this error from a `createNodesV2` function will allow Nx to continue processing and recieve partial results from your plugin.
 
@@ -44,6 +45,7 @@ Throwing this error from a `createNodesV2` function will allow Nx to continue pr
 | :--------------- | :------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `errors`         | [file: string, error: Error][]                                      | An array of tuples that represent errors encountered when processing a given file. An example entry might look like ['path/to/project.json', [Error: 'Invalid JSON. Unexpected token 'a' in JSON at position 0]] |
 | `partialResults` | [`CreateNodesResultV2`](../../devkit/documents/CreateNodesResultV2) | The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.                                                                                    |
+| `pluginName?`    | `string`                                                            | -                                                                                                                                                                                                                |
 
 #### Returns
 
@@ -121,6 +123,12 @@ Error.name
 • `Readonly` **partialResults**: [`CreateNodesResultV2`](../../devkit/documents/CreateNodesResultV2)
 
 The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.
+
+---
+
+### pluginName
+
+• `Optional` **pluginName**: `string`
 
 ---
 

@@ -150,7 +150,7 @@ async function createNodesInternal(
 
   // If project is buildable, then the project type.
   // If it is not buildable, then leave it to other plugins/project.json to set the project type.
-  if (project.targets[options.buildTargetName]) {
+  if (project.targets[normalizedOptions.buildTargetName]) {
     project.projectType = isLibrary ? 'library' : 'application';
   }
 

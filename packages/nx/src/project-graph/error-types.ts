@@ -220,7 +220,8 @@ export class AggregateCreateNodesError extends Error {
    */
   constructor(
     public readonly errors: Array<[file: string | null, error: Error]>,
-    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
+    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>,
+    public pluginName?: string
   ) {
     super('Failed to create nodes');
     this.name = this.constructor.name;

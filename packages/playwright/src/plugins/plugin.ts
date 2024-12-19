@@ -113,7 +113,7 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    options,
+    normalizedOptions,
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
