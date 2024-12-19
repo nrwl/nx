@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::*;
-use tracing::{trace, trace_span};
+use tracing::{debug, trace, trace_span};
 
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, NxGlobSet};
 use crate::native::types::FileData;
 
 pub fn hash_project_files(
@@ -13,23 +13,28 @@ pub fn hash_project_files(
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let _span = trace_span!("hash_project_files", project_name).entered();
-    let collected_files = collect_files(project_name, project_root, file_sets, project_file_map)?;
-    trace!("collected_files: {:?}", collected_files.len());
+    let glob_set = build_glob_set_from_project_filesets(project_root, file_sets)?;
+
+    let collected_files = collect_files(project_name, glob_set, project_file_map)?;
+    let fileset = format!("{}:{}", project_name, file_sets.join(","));
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in collected_files {
+        debug!(
+            "Adding {} ({}) to hash of {}",
+            file.file, file.hash, &fileset
+        );
         hasher.update(file.hash.as_bytes());
         hasher.update(file.file.as_bytes());
     }
-    Ok(hasher.digest().to_string())
+    let hash_value = hasher.digest().to_string();
+    debug!("Hash of {:?}: {:?}", fileset, hash_value);
+    Ok(hash_value)
 }
 
-/// base function that should be testable (to make sure that we're getting the proper files back)
-fn collect_files<'a>(
-    project_name: &str,
+fn build_glob_set_from_project_filesets(
     project_root: &str,
     file_sets: &[String],
-    project_file_map: &'a HashMap<String, Vec<FileData>>,
-) -> Result<Vec<&'a FileData>> {
+) -> Result<NxGlobSet, Error> {
     let globs = file_sets
         .iter()
         .map(|f| {
@@ -43,7 +48,15 @@ fn collect_files<'a>(
     let now = std::time::Instant::now();
     let glob_set = build_glob_set(&globs)?;
     trace!("build_glob_set for {:?}", now.elapsed());
+    Ok(glob_set)
+}
 
+/// base function that should be testable (to make sure that we're getting the proper files back)
+fn collect_files<'a>(
+    project_name: &str,
+    glob_set: NxGlobSet,
+    project_file_map: &'a HashMap<String, Vec<FileData>>,
+) -> Result<Vec<&'a FileData>> {
     project_file_map.get(project_name).map_or_else(
         || Err(anyhow!("project {} not found", project_name)),
         |files| {
@@ -100,17 +113,18 @@ mod tests {
             ],
         );
 
-        let result = collect_files(proj_name, proj_root, file_sets, &file_map).unwrap();
+        let glob_set = build_glob_set_from_project_filesets(proj_root, file_sets).unwrap();
+
+        let result = collect_files(proj_name, glob_set, &file_map).unwrap();
 
         assert_eq!(result, vec![&tsfile_1, &tsfile_2]);
 
-        let result = collect_files(
-            proj_name,
+        let glob_set = build_glob_set_from_project_filesets(
             proj_root,
             &["!{projectRoot}/**/*.spec.ts".into()],
-            &file_map,
         )
         .unwrap();
+        let result = collect_files(proj_name, glob_set, &file_map).unwrap();
         assert_eq!(
             result,
             vec![
@@ -158,12 +172,15 @@ mod tests {
         let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
-            hash(&[
-                file_data1.hash.as_bytes(),
-                file_data1.file.as_bytes(),
-                file_data3.hash.as_bytes(),
-                file_data3.file.as_bytes()
-            ].concat())
+            hash(
+                &[
+                    file_data1.hash.as_bytes(),
+                    file_data1.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
+                    file_data3.file.as_bytes()
+                ]
+                .concat()
+            )
         );
     }
 
@@ -205,12 +222,15 @@ mod tests {
         let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
-            hash(&[
-                file_data1.hash.as_bytes(),
-                file_data1.file.as_bytes(),
-                file_data3.hash.as_bytes(),
-                file_data3.file.as_bytes(),
-            ].concat())
+            hash(
+                &[
+                    file_data1.hash.as_bytes(),
+                    file_data1.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
+                    file_data3.file.as_bytes(),
+                ]
+                .concat()
+            )
         );
     }
 }
