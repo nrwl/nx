@@ -1,4 +1,10 @@
 import * as ora from 'ora';
+import { isCI } from './is-ci';
+
+export type DelayedSpinnerOptions = {
+  delay?: number;
+  ciDelay?: number;
+};
 
 /**
  * A class that allows to delay the creation of a spinner, as well
@@ -10,18 +16,26 @@ export class DelayedSpinner {
   spinner: ora.Ora;
   timeouts: NodeJS.Timeout[] = [];
   initial: number = Date.now();
+  lastMessage: string;
 
   /**
    * Constructs a new {@link DelayedSpinner} instance.
    *
-   * @param message The message to display in the spinner
-   * @param ms The number of milliseconds to wait before creating the spinner
+   * @param opts The options for the spinner
    */
-  constructor(message: string, ms: number = 500) {
+  constructor(message: string, opts?: DelayedSpinnerOptions) {
+    opts = normalizeDelayedSpinnerOpts(opts);
+    const delay = SHOULD_SHOW_SPINNERS ? opts.delay : opts.ciDelay;
+
     this.timeouts.push(
       setTimeout(() => {
-        this.spinner = ora(message);
-      }, ms).unref()
+        if (!SHOULD_SHOW_SPINNERS) {
+          console.warn(message);
+        } else {
+          this.spinner = ora(message);
+        }
+        this.lastMessage = message;
+      }, delay).unref()
     );
   }
 
@@ -32,7 +46,12 @@ export class DelayedSpinner {
    * @returns The {@link DelayedSpinner} instance
    */
   setMessage(message: string) {
-    this.spinner.text = message;
+    if (this.spinner && SHOULD_SHOW_SPINNERS) {
+      this.spinner.text = message;
+    } else if (this.lastMessage && this.lastMessage !== message) {
+      console.warn(message);
+      this.lastMessage = message;
+    }
     return this;
   }
 
@@ -40,15 +59,18 @@ export class DelayedSpinner {
    * Schedules an update to the message of the spinner. Useful for
    * changing the message after a certain amount of time has passed.
    *
-   * @param message The message to display in the spinner
-   * @param delay How long to wait before updating the message
+   * @param opts The options for the update
    * @returns The {@link DelayedSpinner} instance
    */
-  scheduleMessageUpdate(message: string, delay: number) {
+  scheduleMessageUpdate(message: string, opts?: DelayedSpinnerOptions) {
+    opts = normalizeDelayedSpinnerOpts(opts);
     this.timeouts.push(
-      setTimeout(() => {
-        this.spinner.text = message;
-      }, delay).unref()
+      setTimeout(
+        () => {
+          this.setMessage(message);
+        },
+        SHOULD_SHOW_SPINNERS ? opts.delay : opts.ciDelay
+      ).unref()
     );
     return this;
   }
@@ -62,4 +84,13 @@ export class DelayedSpinner {
   }
 }
 
-export const SHOULD_SHOW_SPINNERS = process.stdout.isTTY;
+const SHOULD_SHOW_SPINNERS = process.stdout.isTTY && !isCI();
+
+function normalizeDelayedSpinnerOpts(
+  opts: DelayedSpinnerOptions | null | undefined
+) {
+  opts ??= {};
+  opts.delay ??= 500;
+  opts.ciDelay ??= 10_000;
+  return opts;
+}
