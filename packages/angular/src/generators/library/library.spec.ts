@@ -1491,6 +1491,21 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
 
+    it('should generate a library with a valid selector for the standalone component when library name has a slash', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        name: 'auth/common',
+      });
+
+      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(
+          'my-lib/src/lib/auth/common/auth/common.component.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
     it('should generate a library with a standalone component and have it flat', async () => {
       await runLibraryGeneratorWithOpts({ standalone: true, flat: true });
 
