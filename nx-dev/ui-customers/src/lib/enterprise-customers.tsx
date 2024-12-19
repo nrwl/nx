@@ -45,6 +45,7 @@ import {
   ZipariIcon,
 } from '@nx/nx-dev/ui-icons';
 import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
+import { CustomerTestimonialCarousel } from './customer-testimonial-carousel';
 
 export function EnterpriseCustomers(): JSX.Element {
   return (
@@ -116,6 +117,9 @@ export function EnterpriseCustomers(): JSX.Element {
             >
               <CiscoIcon aria-hidden="true" className="h-24 w-24" />
             </a>
+            <div className="col-span-4 mb-8 mt-8">
+              <CustomerTestimonialCarousel />
+            </div>
             <a
               href="https://www.paramountplus.com"
               rel="noreferrer"
@@ -124,13 +128,6 @@ export function EnterpriseCustomers(): JSX.Element {
             >
               <ParamountIcon aria-hidden="true" className="h-14 w-14" />
             </a>
-            <div className="col-span-2 flex items-center justify-center p-6 md:col-span-2">
-              <DownloadCaseStudy
-                title="Banking Case Study"
-                description="$7B European bank cuts CI times by 62% and boosts team productivity."
-                buttonHref="https://go.nx.dev/banking-case-study"
-              />
-            </div>
             <a
               href="https://www.fedex.com"
               rel="noreferrer"
@@ -419,6 +416,13 @@ export function EnterpriseCustomers(): JSX.Element {
             >
               <EntainIcon aria-hidden="true" className="h-16 w-24" />
             </a>
+            <div className="col-span-2 flex items-center justify-center p-6 md:col-span-2">
+              <DownloadCaseStudy
+                title="Banking Case Study"
+                description="$7B European bank cuts CI times by 62% and boosts team productivity."
+                buttonHref="https://go.nx.dev/banking-case-study"
+              />
+            </div>
           </div>
         </div>
       </div>
