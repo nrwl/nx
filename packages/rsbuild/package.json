@@ -55,10 +55,6 @@
     "./config-utils": {
       "types": "./config-utils.d.ts",
       "default": "./config-utils.js"
-    },
-    "./plugin": {
-      "types": "./plugin.d.ts",
-      "default": "./plugin.js"
     }
   }
 }
