@@ -1,7 +1,8 @@
 import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as glob from 'fast-glob';
+import { fdir } from 'fdir';
+import picomatch = require('picomatch');
 
 export interface GetEntryPointsOptions {
   recursive?: boolean;
@@ -50,11 +51,13 @@ export function getEntryPoints(
       const tsconfig = readJsonFile(
         path.join(project.data.root, foundTsConfig)
       );
-      const projectFiles = glob
-        .sync(tsconfig.include ?? [], {
-          cwd: project.data.root,
-          ignore: tsconfig.exclude ?? [],
-        })
+      const isExcluded = tsconfig.exclude ? picomatch(tsconfig.exclude) : null;
+      const projectFiles = new fdir()
+        .glob(...(tsconfig.include ?? []))
+        .filter((path) => !isExcluded || !isExcluded(path))
+        .withRelativePaths()
+        .crawl(project.data.root)
+        .sync()
         .map((f) => path.join(project.data.root, f));
 
       projectFiles.forEach((f) => entryPoints.add(f));
