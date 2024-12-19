@@ -330,13 +330,15 @@ export async function createProjectConfigurations(
   const inProgressPlugins = new Set<string>();
 
   function updateSpinner() {
-    if (!spinner) {
+    if (!spinner || inProgressPlugins.size === 0) {
       return;
     }
 
     if (inProgressPlugins.size === 1) {
       spinner.setMessage(
-        `Creating project graph nodes with ${inProgressPlugins.keys()[0]}`
+        `Creating project graph nodes with ${
+          inProgressPlugins.values().next().value
+        }`
       );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
       spinner.setMessage(
