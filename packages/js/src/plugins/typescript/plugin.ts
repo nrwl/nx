@@ -22,6 +22,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import {
   basename,
   dirname,
+  extname,
   join,
   normalize,
   relative,
@@ -605,7 +606,6 @@ function getOutputs(
  * @param tsConfig The TypeScript configuration object.
  * @param workspaceRoot The workspace root path.
  * @param projectRoot The project root path.
- * @param tsConfigPath The path to the TypeScript configuration file.
  * @returns `true` if the package has a valid build configuration; otherwise, `false`.
  */
 function isValidPackageJsonBuildConfig(
@@ -622,25 +622,27 @@ function isValidPackageJsonBuildConfig(
     joinPathFragments(projectRoot, 'package.json')
   );
 
+  const rootDir = tsConfig.options.rootDir ?? 'src';
+  const resolvedRootDir = resolve(workspaceRoot, projectRoot, rootDir);
+
   const outDir = tsConfig.options.outDir
     ? tsConfig.options.outDir
     : tsConfig.options.outFile
     ? dirname(tsConfig.options.outFile)
-    : false;
+    : 'src'; // tsconfig defaults to 'src' if outDir and outFile are not set
 
   const isPathSourceFile = (path: string): boolean => {
-    if (!outDir) {
-      // If `outDir` is not defined either from tsconfig.json or outFile the transpiled files will be in the same directory as the source files.
-      // In this case, we assume that the source files are `.ts`, `.cts`, or `.mts`.
-      return (
-        path.endsWith('.ts') || path.endsWith('.cts') || path.endsWith('.mts')
-      );
-    }
+    const ext = extname(path);
 
     const resolvedOutDir = resolve(workspaceRoot, projectRoot, outDir);
     const pathToCheck = resolve(workspaceRoot, projectRoot, path);
 
-    return !pathToCheck.startsWith(resolvedOutDir);
+    if (resolvedRootDir === resolvedOutDir) {
+      // Check that the file extension is `.ts`, `.cts`, or `.mts`. As the source files are in the same directory as the output files.
+      return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
+    } else {
+      return !pathToCheck.startsWith(resolvedOutDir);
+    }
   };
 
   // If `outFile` is defined, check the validity of the path.
