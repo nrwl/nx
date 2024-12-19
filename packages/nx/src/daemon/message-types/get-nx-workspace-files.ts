@@ -1,6 +1,8 @@
+import { Message } from '../client/daemon-socket-messenger';
+
 export const GET_NX_WORKSPACE_FILES = 'GET_NX_WORKSPACE_FILES' as const;
 
-export type HandleNxWorkspaceFilesMessage = {
+export type HandleNxWorkspaceFilesMessage = Message & {
   type: typeof GET_NX_WORKSPACE_FILES;
   projectRootMap: Record<string, string>;
 };

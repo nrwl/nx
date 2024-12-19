@@ -92,26 +92,33 @@ export function resetInactivityTimeout(cb: () => void): void {
 export function respondToClient(
   socket: Socket,
   response: string,
-  description: string
+  description: string,
+  tx: string
 ) {
   return new Promise(async (res) => {
     if (description) {
       serverLogger.requestLog(`Responding to the client.`, description);
     }
-    socket.write(`${response}${String.fromCodePoint(4)}`, (err) => {
-      if (err) {
-        console.error(err);
+    socket.write(
+      tx
+        ? `{ "tx": "${tx}", "response": ${response}}${String.fromCodePoint(4)}`
+        : `{ "response": ${response}}${String.fromCodePoint(4)}`,
+      (err) => {
+        if (err) {
+          console.error(err);
+        }
+        serverLogger.log(`Done responding to the client`, description);
+        res(null);
       }
-      serverLogger.log(`Done responding to the client`, description);
-      res(null);
-    });
+    );
   });
 }
 
-export async function respondWithErrorAndExit(
+export async function respondWithError(
   socket: Socket,
   description: string,
-  error: Error
+  error: Error,
+  tx: string
 ) {
   const normalizedError =
     error instanceof DaemonProjectGraphError
@@ -127,5 +134,30 @@ export async function respondWithErrorAndExit(
   console.error(normalizedError.stack);
 
   // Respond with the original error
-  await respondToClient(socket, serializeResult(error, null, null), null);
+  await respondToClient(socket, serializeResult(error, null, null), null, tx);
+}
+
+export async function respondWithErrorAndExit(
+  socket: Socket,
+  description: string,
+  error: Error,
+  tx?: string
+) {
+  const normalizedError =
+    error instanceof DaemonProjectGraphError
+      ? ProjectGraphError.fromDaemonProjectGraphError(error)
+      : error;
+
+  // print some extra stuff in the error message
+  serverLogger.requestLog(
+    `Responding to the client with an error.`,
+    description,
+    normalizedError.message
+  );
+  console.error(normalizedError.stack);
+
+  // Respond with the original error
+  await respondToClient(socket, serializeResult(error, null, null), null, tx);
+
+  process.exit(1);
 }
