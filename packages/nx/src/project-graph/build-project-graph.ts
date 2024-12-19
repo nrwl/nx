@@ -319,13 +319,14 @@ async function updateProjectGraphWithPlugins(
   const inProgressPlugins = new Set<string>();
 
   function updateSpinner() {
-    if (!spinner) {
+    if (!spinner || inProgressPlugins.size === 0) {
       return;
     }
+
     if (inProgressPlugins.size === 1) {
       spinner.setMessage(
         `Creating project graph dependencies with ${
-          inProgressPlugins.keys()[0]
+          inProgressPlugins.values().next().value
         }`
       );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -439,12 +440,15 @@ export async function applyProjectMetadata(
   const inProgressPlugins = new Set<string>();
 
   function updateSpinner() {
-    if (!spinner) {
+    if (!spinner || inProgressPlugins.size === 0) {
       return;
     }
+
     if (inProgressPlugins.size === 1) {
       spinner.setMessage(
-        `Creating project metadata with ${inProgressPlugins.keys()[0]}`
+        `Creating project metadata with ${
+          inProgressPlugins.values().next().value
+        }`
       );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
       spinner.setMessage(

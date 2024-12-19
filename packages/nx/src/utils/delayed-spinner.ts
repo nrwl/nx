@@ -15,8 +15,9 @@ export type DelayedSpinnerOptions = {
 export class DelayedSpinner {
   spinner: ora.Ora;
   timeouts: NodeJS.Timeout[] = [];
-  initial: number = Date.now();
-  lastMessage: string;
+
+  private lastMessage: string;
+  private ready: boolean;
 
   /**
    * Constructs a new {@link DelayedSpinner} instance.
@@ -29,10 +30,11 @@ export class DelayedSpinner {
 
     this.timeouts.push(
       setTimeout(() => {
+        this.ready = true;
         if (!SHOULD_SHOW_SPINNERS) {
-          console.warn(message);
+          console.warn(this.lastMessage);
         } else {
-          this.spinner = ora(message);
+          this.spinner = ora(this.lastMessage).start();
         }
         this.lastMessage = message;
       }, delay).unref()
@@ -46,12 +48,14 @@ export class DelayedSpinner {
    * @returns The {@link DelayedSpinner} instance
    */
   setMessage(message: string) {
-    if (this.spinner && SHOULD_SHOW_SPINNERS) {
-      this.spinner.text = message;
-    } else if (this.lastMessage && this.lastMessage !== message) {
+    if (SHOULD_SHOW_SPINNERS) {
+      if (this.spinner) {
+        this.spinner.text = message;
+      }
+    } else if (this.ready && this.lastMessage && this.lastMessage !== message) {
       console.warn(message);
-      this.lastMessage = message;
     }
+    this.lastMessage = message;
     return this;
   }
 
@@ -91,6 +95,6 @@ function normalizeDelayedSpinnerOpts(
 ) {
   opts ??= {};
   opts.delay ??= 500;
-  opts.ciDelay ??= 10_000;
+  opts.ciDelay ??= 30_000;
   return opts;
 }
