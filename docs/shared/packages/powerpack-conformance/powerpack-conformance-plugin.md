@@ -3,22 +3,22 @@ title: Overview of the Nx powerpack-conformance Plugin
 description: The Nx Powerpack Conformance plugin provides the ability to write and apply rules for your workspace
 ---
 
-The `@nx/powerpack-conformance` plugin allows [Nx Powerpack]() users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
+The `@nx/powerpack-conformance` plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
 
 The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Conformance rules can also complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
 
 The plugin also provides the following pre-written rules:
 
-- [**Enforce Module Boundaries**](#enforce-module-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- [**Enforce Project Boundaries**](#enforce-project-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - [**Ensure Owners**](#ensure-owners): Require every project to have an owner defined for the [`@nx/powerpack-owners` plugin](/nx-api/powerpack-owners)
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
 In order to use `@nx/powerpack-conformance`, you need to have an active Powerpack license. If you don't have a license or it has expired, the `nx conformance` command will fail.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-conformance
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
    ```shell
@@ -59,21 +59,23 @@ Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx 
 ```jsonc {% fileName="nx.json" %}
 {
   "conformance": {
-    "rules": [{
-      /**
-       * Relative path to a local rule implementation or node_module path.
-       */
-      "rule": "@nx/powerpack-conformance/enforce-module-boundaries";
-      /**
-       * Rule specific configuration options. (Optional)
-       */
-      "options": {}
-      /**
-       * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
-       * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"]. (Optional)
-       */
-      "projects": ["*"];
-    }]
+    "rules": [
+      {
+        /**
+         * Relative path to a local rule implementation or node_module path.
+         */
+        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
+        /**
+         * Rule specific configuration options. (Optional)
+         */
+        "options": {},
+        /**
+         * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
+         * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"]. (Optional)
+         */
+        "projects": ["*"]
+      }
+    ]
   }
 }
 ```
@@ -82,18 +84,18 @@ Use `npx nx-cloud record --` to capture the logs for `nx conformance` in the Nx 
 
 The following rules are provided by Nx along with the `@nx/powerpack-conformance` plugin.
 
-### Enforce Module Boundaries
+### Enforce Project Boundaries
 
 This rule is similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 
-Set the `rule` property to: `@nx/powerpack-conformance/enforce-module-boundaries`
+Set the `rule` property to: `@nx/powerpack-conformance/enforce-project-boundaries`
 
 ```json {% fileName="nx.json" %}
 {
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/powerpack-conformance/enforce-module-boundaries",
+        "rule": "@nx/powerpack-conformance/enforce-project-boundaries",
         "options": {
           // Optional
           // Can be a boolean or an object with an array of buildTargetNames
@@ -110,9 +112,9 @@ Set the `rule` property to: `@nx/powerpack-conformance/enforce-module-boundaries
               "sourceTag": "string",
               "allSourceTags": ["string"],
               // Optional
-              "onlyDependOnLibsWithTags": [],
+              "onlyDependOnProjectsWithTags": [],
               // Optional
-              "notDependOnLibsWithTags": []
+              "notDependOnProjectsWithTags": []
             }
           ],
           // Optional
@@ -130,7 +132,7 @@ Set the `rule` property to: `@nx/powerpack-conformance/enforce-module-boundaries
 | ------------------------------------------------ | ------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ignoredCircularDependencies                      | _Array<[string, string]>_ | _[]_    | List of project pairs that should be skipped from `Circular dependencies` checks, including the self-circular dependency check. E.g. `['feature-project-a', 'myapp']`. Project name can be replaced by catch all `*` for more generic matches. |
 | checkDynamicDependenciesExceptions               | _Array<string>_           | _[]_    | List of imports that should be skipped for `Imports of lazy-loaded libraries forbidden` checks. E.g. `['@myorg/lazy-project/component/*', '@myorg/other-project']`                                                                             |
-| requireBuildableDependenciesForBuildableProjects | _boolean_                 | _false_ | Enable to restrict the buildable libs from importing non-buildable libraries                                                                                                                                                                   |
+| requireBuildableDependenciesForBuildableProjects | _boolean_                 | _false_ | Enable to restrict the buildable projects from importing non-buildable libraries                                                                                                                                                               |
 | depConstraints                                   | _Array<object>_           | _[]_    | List of dependency constraints between projects                                                                                                                                                                                                |
 
 #### Dependency constraints
@@ -139,12 +141,12 @@ The `depConstraints` is an array of objects representing the constraints defined
 constraint must include `sourceTag` or `allSourceTags`. The constraints are applied with **AND** logical operation - for
 a given `source` project the resulting constraints would be **all** that match its tags.
 
-| Property                 | Type            | Description                                                                        |
-| ------------------------ | --------------- | ---------------------------------------------------------------------------------- |
-| sourceTag                | _string_        | Tag that source project must contain to match the constraint                       |
-| allSourceTags            | _Array<string>_ | List of tags the source project must contain to match the constraint               |
-| onlyDependOnLibsWithTags | _Array<string>_ | The source **can depend only** on projects that contain at least one of these tags |
-| notDependOnLibsWithTags  | _Array<string>_ | The source **can not depend** on projects that contain at least one of these tags  |
+| Property                     | Type            | Description                                                                        |
+| ---------------------------- | --------------- | ---------------------------------------------------------------------------------- |
+| sourceTag                    | _string_        | Tag that source project must contain to match the constraint                       |
+| allSourceTags                | _Array<string>_ | List of tags the source project must contain to match the constraint               |
+| onlyDependOnProjectsWithTags | _Array<string>_ | The source **can depend only** on projects that contain at least one of these tags |
+| notDependOnProjectsWithTags  | _Array<string>_ | The source **can not depend** on projects that contain at least one of these tags  |
 
 ### Ensure Owners
 
@@ -183,17 +185,14 @@ To write your own conformance rule, specify a relative path to a TypeScript or J
 The rule definition file should look like this:
 
 ```ts {% fileName="tools/local-conformance-rule.ts" %}
-import type {
-  ConformanceRule,
-  ConformanceRuleResult,
-  createConformanceRule,
-} from '@nx/powerpack-conformance';
+import { createConformanceRule } from '@nx/powerpack-conformance';
 
 const rule = createConformanceRule({
   name: 'local-conformance-rule-example',
+  description: 'The description of the rule',
   category: 'security', // `consistency`, `maintainability`, `reliability` or `security`
   reporter: 'project-reporter', // `project-reporter` or `project-files-reporter`
-  implementation: async (context): Promise<ConformanceRuleResult> => {
+  implementation: async (context) => {
     const { projectGraph, ruleOptions } = context;
     // Your rule logic goes here
     return {

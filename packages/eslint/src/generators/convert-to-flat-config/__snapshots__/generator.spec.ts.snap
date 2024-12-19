@@ -12,6 +12,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
@@ -32,20 +35,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -62,6 +73,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     languageOptions: {
@@ -86,20 +100,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -115,6 +137,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
@@ -135,20 +160,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -164,6 +197,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -183,21 +219,31 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  { ignores: ['ignore/me'] },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  {
+    ignores: ['ignore/me'],
+  },
 ];
 "
 `;
@@ -214,6 +260,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
   {
@@ -234,20 +283,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -266,6 +323,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   {
     plugins: {
       'eslint-plugin-import': eslintPluginImport,
@@ -292,20 +352,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -321,8 +389,15 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
-  { settings: { sharedData: 'Hello' } },
+  {
+    settings: {
+      sharedData: 'Hello',
+    },
+  },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -341,20 +416,28 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
@@ -370,6 +453,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -389,28 +475,39 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should convert json successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -442,6 +539,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -461,28 +561,39 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should convert yaml successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -514,6 +625,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -533,28 +647,39 @@ module.exports = [
       ],
     },
   },
-  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
-  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
-    ...config,
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      ...config.rules,
-    },
-  })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should convert yml successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -576,9 +701,12 @@ module.exports = [
 `;
 
 exports[`convert-to-flat-config generator should handle custom eslintignores 1`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -595,8 +723,12 @@ module.exports = [
     // Override or add rules here
     rules: {},
   },
-  { ignores: ['ignore/me'] },
-  { ignores: ['ignore/me/as/well'] },
+  {
+    ignores: ['ignore/me'],
+  },
+  {
+    ignores: ['ignore/me/as/well'],
+  },
 ];
 "
 `;

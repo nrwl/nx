@@ -1,19 +1,16 @@
-import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
 export interface ComponentGeneratorSchema {
-  name: string;
+  path: string;
   skipTests?: boolean;
-  directory?: string;
   export?: boolean;
   routing?: boolean;
   js?: boolean;
   fileName?: string;
   inSourceTests?: boolean;
   skipFormat?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }
 
 export interface NormalizedSchema extends ComponentGeneratorSchema {
+  directory: string;
   projectName: string;
   projectSourceRoot: string;
   fileName: string;

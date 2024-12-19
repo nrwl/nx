@@ -82,16 +82,18 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
+      NX_CLOUD_NO_TIMEOUTS: 'true'
     steps:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
@@ -110,6 +112,12 @@ jobs:
             pids=()
 
             pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
+            pids+=($!)
+
+            pnpm nx-cloud record -- nx sync:check
+            pids+=($!)
+
+            pnpm nx-cloud record -- nx-cloud conformance:check
             pids+=($!)
 
             pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &

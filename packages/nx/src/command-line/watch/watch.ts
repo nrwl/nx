@@ -132,7 +132,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
               [this.projectNameEnv]: env[this.projectNameEnv],
               [this.fileChangesEnv]: env[this.fileChangesEnv],
             },
-            windowsHide: true,
+            windowsHide: false,
           });
           commandExec.on('close', () => {
             resolve();

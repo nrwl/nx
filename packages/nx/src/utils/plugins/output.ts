@@ -62,7 +62,7 @@ export function listAlsoAvailableCorePlugins(
 }
 
 export function listPowerpackPlugins(): void {
-  const powerpackLink = 'https://nx.dev/plugin-registry';
+  const powerpackLink = 'https://nx.dev/plugin-registry#powerpack';
   output.log({
     title: `Available Powerpack Plugins: ${powerpackLink}`,
   });

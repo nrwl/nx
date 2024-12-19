@@ -5,7 +5,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building React Apps in an Nx Monorepo
 
-In this tutorial you'll learn how to use React with Nx in a [monorepo (integrated) setup](/concepts/integrated-vs-package-based#integrated-repos).
+In this tutorial you'll learn how to use React with Nx in a monorepo setup.
 
 What will you learn?
 
@@ -19,15 +19,15 @@ What will you learn?
 Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for a React standalone app setup then check out our [React standalone app tutorial](/getting-started/tutorials/react-standalone-tutorial).
 {% /callout %}
 
-## Why Use an Integrated Monorepo?
+## Why Use an Nx Monorepo?
 
-An integrated monorepo is a repository configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
+In this tutorial, we'll set up a monorepo that is configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
 
 You'll notice that instead of using npm/yarn/pnpm workspaces, projects within the repository are linked using typescript path aliases that are defined in the `tsconfig.base.json` file. Also, since we're creating projects using Nx plugin generators, all new projects come preconfigured with useful tools like Prettier, ESLint and Jest.
 
 Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 
-Features of an integrated monorepo:
+Features we'll use in this monorepo:
 
 - [Install dependencies at the root by default](/concepts/decisions/dependency-management#single-version-policy)
 - [Scaffold new code with generators](/features/generate-code)
@@ -104,7 +104,7 @@ The setup includes..
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/react-store/project.json` file contains [settings that are specific to the `react-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 
@@ -242,7 +242,7 @@ NX   Capabilities in @nx/react:
 
    GENERATORS
 
-   init : Initialize the `@nrwl/react` plugin.
+   init : Initialize the `@nx/react` plugin.
    application : Create a React application.
    library : Create a React library.
    component : Create a React component.
@@ -250,7 +250,6 @@ NX   Capabilities in @nx/react:
    storybook-configuration : Set up storybook for a React app or library.
    component-story : Generate storybook story for a React component
    stories : Create stories/specs for all components declared in an app or library.
-   component-cypress-spec : Create a Cypress spec for a UI component that has a story.
    hook : Create a hook.
    cypress-component-configuration : Setup Cypress component testing for a React project
    component-test : Generate a Cypress component test for a React component
@@ -276,7 +275,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/react:app inventory --directory=apps/inventory --dry-run" path="react-monorepo" %}
+```{% command="npx nx g @nx/react:app apps/inventory" path="react-monorepo" %}
 NX  Generating @nx/react:application
 
 ✔ Would you like to add React Router to this application? (y/N) · false
@@ -313,7 +312,7 @@ NOTE: The "dryRun" flag means no changes were made.
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
 ```shell
-npx nx g @nx/react:app inventory --directory=apps/inventory
+npx nx g @nx/react:app apps/inventory
 ```
 
 ## Sharing Code with Local Libraries
@@ -358,9 +357,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
 
 ```
-npx nx g @nx/react:library products --directory=libs/products --unitTestRunner=vitest --bundler=none
-npx nx g @nx/react:library orders --directory=libs/orders --unitTestRunner=vitest --bundler=none
-npx nx g @nx/react:library shared-ui --directory=libs/shared/ui --unitTestRunner=vitest --bundler=none
+npx nx g @nx/react:library libs/products --unitTestRunner=vitest --bundler=none
+npx nx g @nx/react:library libs/orders --unitTestRunner=vitest --bundler=none
+npx nx g @nx/react:library libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
 Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
@@ -1078,7 +1077,7 @@ Once you click the link, follow the steps provided and make sure Nx Cloud is ena
 
 ### Configure Your CI Workflow {% highlightColor="green" %}
 
-When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx affected` line run the `e2e-ci` task instead of `e2e`.
 
 If you need to generate a new workflow file for GitHub Actions or other providers, you can do so with this command:
 
@@ -1088,7 +1087,7 @@ npx nx generate ci-workflow
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-23"] %}
 name: CI
 # ...
 jobs:
@@ -1101,8 +1100,8 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -1110,7 +1109,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1147,6 +1147,7 @@ Here's some things you can dive into next:
 
 Also, make sure you
 
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)

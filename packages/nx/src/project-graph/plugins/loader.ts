@@ -24,14 +24,14 @@ import { logger } from '../../utils/logger';
 
 import type * as ts from 'typescript';
 import { extname } from 'node:path';
-import { NxPlugin } from './public-api';
-import { PluginConfiguration } from '../../config/nx-json';
+import type { PluginConfiguration } from '../../config/nx-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
-import { normalizeNxPlugin } from './utils';
 import { LoadedNxPlugin } from './internal-api';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
 import { readTsConfig } from '../../plugins/js/utils/typescript';
+import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
+import { getPackageEntryPointsToProjectMap } from '../../plugins/js/utils/packages';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -125,38 +125,48 @@ function lookupLocalPlugin(
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
+let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ): ProjectConfiguration | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
-  const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
-    normalizePath(path.relative(root, path.join(root, p)))
-  );
-  if (possiblePaths?.length) {
-    const projectRootMappings: ProjectRootMappings = new Map();
+  const possibleTsPaths =
+    tsConfigPaths[importPath]?.map((p) =>
+      normalizePath(path.relative(root, path.join(root, p)))
+    ) ?? [];
+
+  const projectRootMappings: ProjectRootMappings = new Map();
+  if (possibleTsPaths.length) {
     const projectNameMap = new Map<string, ProjectConfiguration>();
     for (const projectRoot in projects) {
       const project = projects[projectRoot];
       projectRootMappings.set(project.root, project.name);
       projectNameMap.set(project.name, project);
     }
-    for (const tsConfigPath of possiblePaths) {
+    for (const tsConfigPath of possibleTsPaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
         return projectNameMap.get(nxProject);
       }
     }
-    logger.verbose(
-      'Unable to find local plugin',
-      possiblePaths,
-      projectRootMappings
-    );
-    throw new Error(
-      'Unable to resolve local plugin with import path ' + importPath
-    );
   }
+
+  packageEntryPointsToProjectMap ??=
+    getPackageEntryPointsToProjectMap(projects);
+  if (packageEntryPointsToProjectMap[importPath]) {
+    return packageEntryPointsToProjectMap[importPath];
+  }
+
+  logger.verbose(
+    'Unable to find local plugin',
+    possibleTsPaths,
+    projectRootMappings
+  );
+  throw new Error(
+    'Unable to resolve local plugin with import path ' + importPath
+  );
 }
 
 let tsconfigPaths: Record<string, string[]>;
@@ -201,18 +211,18 @@ export function getPluginPathAndName(
   root: string
 ) {
   let pluginPath: string;
-  let registerTSTranspiler = false;
+  let shouldRegisterTSTranspiler = false;
   try {
     pluginPath = require.resolve(moduleName, {
       paths,
     });
     const extension = path.extname(pluginPath);
-    registerTSTranspiler = extension === '.ts';
+    shouldRegisterTSTranspiler = extension === '.ts';
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
       const plugin = resolveLocalNxPlugin(moduleName, projects, root);
       if (plugin) {
-        registerTSTranspiler = true;
+        shouldRegisterTSTranspiler = true;
         const main = readPluginMainFromProjectConfiguration(
           plugin.projectConfig
         );
@@ -227,18 +237,12 @@ export function getPluginPathAndName(
   }
   const packageJsonPath = path.join(pluginPath, 'package.json');
 
-  // Register the ts-transpiler if we are pointing to a
-  // plain ts file that's not part of a plugin project
-  if (registerTSTranspiler) {
-    registerPluginTSTranspiler();
-  }
-
   const { name } =
     !['.ts', '.js'].some((x) => extname(moduleName) === x) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
-  return { pluginPath, name };
+  return { pluginPath, name, shouldRegisterTSTranspiler };
 }
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
@@ -248,6 +252,27 @@ export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
     loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
     () => {},
   ] as const;
+}
+
+export async function resolveNxPlugin(
+  moduleName: string,
+  root: string,
+  paths: string[]
+) {
+  try {
+    require.resolve(moduleName);
+  } catch {
+    // If a plugin cannot be resolved, we will need projects to resolve it
+    projectsWithoutInference ??=
+      await retrieveProjectConfigurationsWithoutPluginInference(root);
+  }
+  const { pluginPath, name, shouldRegisterTSTranspiler } = getPluginPathAndName(
+    moduleName,
+    paths,
+    projectsWithoutInference,
+    root
+  );
+  return { pluginPath, name, shouldRegisterTSTranspiler };
 }
 
 export async function loadNxPluginAsync(
@@ -260,44 +285,14 @@ export async function loadNxPluginAsync(
       ? pluginConfiguration
       : pluginConfiguration.plugin;
   try {
-    try {
-      require.resolve(moduleName);
-    } catch {
-      // If a plugin cannot be resolved, we will need projects to resolve it
-      projectsWithoutInference ??=
-        await retrieveProjectConfigurationsWithoutPluginInference(root);
-    }
+    const { pluginPath, name, shouldRegisterTSTranspiler } =
+      await resolveNxPlugin(moduleName, root, paths);
 
-    performance.mark(`Load Nx Plugin: ${moduleName} - start`);
-    let { pluginPath, name } = await getPluginPathAndName(
-      moduleName,
-      paths,
-      projectsWithoutInference,
-      root
-    );
-    const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
-    plugin.name ??= name;
-    performance.mark(`Load Nx Plugin: ${moduleName} - end`);
-    performance.measure(
-      `Load Nx Plugin: ${moduleName}`,
-      `Load Nx Plugin: ${moduleName} - start`,
-      `Load Nx Plugin: ${moduleName} - end`
-    );
-    return new LoadedNxPlugin(plugin, pluginConfiguration);
+    if (shouldRegisterTSTranspiler) {
+      registerPluginTSTranspiler();
+    }
+    return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name);
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
   }
-}
-
-async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
-  const m = await import(pluginPath);
-  if (
-    m.default &&
-    ('createNodes' in m.default ||
-      'createNodesV2' in m.default ||
-      'createDependencies' in m.default)
-  ) {
-    return m.default;
-  }
-  return m;
 }

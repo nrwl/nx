@@ -13,7 +13,9 @@ import {
   updateNxJson,
   runTasksInSerial,
   GeneratorCallback,
+  readJson,
 } from '@nx/devkit';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 import {
@@ -42,6 +44,8 @@ export async function componentConfigurationGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
+
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
 
@@ -136,6 +140,7 @@ function addProjectFiles(
       ...opts,
       projectRoot: projectConfig.root,
       offsetFromRoot: offsetFromRoot(projectConfig.root),
+      linter: isEslintInstalled(tree) ? 'eslint' : 'none',
       ext: '',
     }
   );
@@ -250,6 +255,11 @@ export function updateTsConfigForComponentTesting(
       return json;
     });
   }
+}
+
+function isEslintInstalled(tree: Tree): boolean {
+  const { dependencies, devDependencies } = readJson(tree, 'package.json');
+  return !!(dependencies?.eslint || devDependencies?.eslint);
 }
 
 export default componentConfigurationGenerator;

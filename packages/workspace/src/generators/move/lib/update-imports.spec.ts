@@ -10,6 +10,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { normalizeSchema } from './normalize-schema';
 import { updateImports } from './update-imports';
+import * as tsSolution from '../../../utilities/typescript/ts-solution-setup';
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -26,7 +27,6 @@ describe('updateImports', () => {
       newProjectName: 'my-destination',
       destination: 'my-destination',
       updateImportPath: true,
-      projectNameAndRootFormat: 'as-provided',
     };
   });
 
@@ -35,17 +35,14 @@ describe('updateImports', () => {
     // tree where the workspace hasn't been updated yet, so just create libs representing
     // source and destination to make sure that the workspace has libraries with those names.
     await libraryGenerator(tree, {
-      name: 'my-destination',
+      directory: 'my-destination',
       config: 'project',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -74,16 +71,13 @@ describe('updateImports', () => {
    */
   it('should not update import paths when they contain a partial match', async () => {
     await libraryGenerator(tree, {
-      name: 'table',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'table',
     });
     await libraryGenerator(tree, {
-      name: 'tab',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'tab',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -122,16 +116,13 @@ describe('updateImports', () => {
 
   it('should correctly update deep imports', async () => {
     await libraryGenerator(tree, {
-      name: 'table',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'table',
     });
     await libraryGenerator(tree, {
-      name: 'tab',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'tab',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -170,16 +161,13 @@ describe('updateImports', () => {
 
   it('should update dynamic imports', async () => {
     await libraryGenerator(tree, {
-      name: 'table',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'table',
     });
     await libraryGenerator(tree, {
-      name: 'tab',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'tab',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -223,17 +211,14 @@ describe('updateImports', () => {
 
   it('should update imports and reexports', async () => {
     await libraryGenerator(tree, {
-      name: 'my-destination',
+      directory: 'my-destination',
       config: 'project',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -260,17 +245,14 @@ describe('updateImports', () => {
 
   it('should not throw error on export list', async () => {
     await libraryGenerator(tree, {
-      name: 'my-destination',
+      directory: 'my-destination',
       config: 'project',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -292,16 +274,13 @@ describe('updateImports', () => {
 
   it('should update require imports', async () => {
     await libraryGenerator(tree, {
-      name: 'table',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'table',
     });
     await libraryGenerator(tree, {
-      name: 'tab',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'tab',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -347,16 +326,13 @@ describe('updateImports', () => {
     // tree where the workspace hasn't been updated yet, so just create libs representing
     // source and destination to make sure that the workspace has libraries with those names.
     await libraryGenerator(tree, {
-      name: 'my-destination',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-destination',
     });
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     await libraryGenerator(tree, {
-      name: 'my-importer',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-importer',
     });
     const importerFilePath = 'my-importer/src/importer.ts';
     tree.write(
@@ -388,8 +364,7 @@ export MyExtendedClass extends MyClass {};`
 
   it('should update project ref in the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -407,8 +382,7 @@ export MyExtendedClass extends MyClass {};`
 
   it('should update project ref in the root tsconfig.base.json for secondary entry points', async () => {
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     updateJson(tree, '/tsconfig.base.json', (json) => {
       json.compilerOptions.paths['@proj/my-source/testing'] = [
@@ -438,8 +412,7 @@ export MyExtendedClass extends MyClass {};`
   it('should update project ref of a project not under libs in the root tsconfig.base.json', async () => {
     tree.delete('libs');
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -458,8 +431,7 @@ export MyExtendedClass extends MyClass {};`
   it('should update project ref in the root tsconfig.json when no tsconfig.base.json', async () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -482,8 +454,7 @@ export MyExtendedClass extends MyClass {};`
       `// A comment\n${tree.read('tsconfig.json', 'utf-8')}`
     );
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -501,8 +472,7 @@ export MyExtendedClass extends MyClass {};`
 
   it('should only update the project ref paths in the tsconfig file when --updateImportPath=false', async () => {
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -528,8 +498,7 @@ export MyExtendedClass extends MyClass {};`
 
   it("should update project ref in the root tsconfig file if it contains a secondary entry point for Next.js's server", async () => {
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
 
     tree.write('my-source/src/server.ts', '');
@@ -560,6 +529,90 @@ export MyExtendedClass extends MyClass {};`
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-source': ['my-destination/src/index.ts'],
       '@proj/my-source/server': ['my-destination/src/server.ts'],
+    });
+  });
+
+  describe('TypeScript project references', () => {
+    beforeEach(() => {
+      jest.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
+      const tsconfigContent = {
+        extends: './tsconfig.base.json',
+        ...readJson(tree, 'tsconfig.base.json'),
+      };
+      tree.write('tsconfig.json', JSON.stringify(tsconfigContent, null, 2));
+
+      const packageJson = readJson(tree, 'package.json');
+      packageJson.workspaces = ['packages/**'];
+      tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    });
+    it('should work with updateImportPath=false', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-source',
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+      const tsconfigJson = readJson(tree, 'tsconfig.json');
+      tsconfigJson.references = [{ path: './packages/my-source' }];
+      tree.write('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+
+      updateImports(
+        tree,
+        await normalizeSchema(
+          tree,
+          {
+            ...schema,
+            updateImportPath: false,
+          },
+          projectConfig
+        ),
+
+        projectConfig
+      );
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./packages/my-source",
+          },
+          {
+            "path": "./my-destination",
+          },
+        ]
+      `);
+    });
+
+    it('should work with updateImportPath=true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-source',
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+      const tsconfigJson = readJson(tree, 'tsconfig.json');
+      tsconfigJson.references = [{ path: './packages/my-source' }];
+      tree.write('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+
+      updateImports(
+        tree,
+        await normalizeSchema(
+          tree,
+          {
+            ...schema,
+          },
+          projectConfig
+        ),
+
+        projectConfig
+      );
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-destination",
+          },
+        ]
+      `);
     });
   });
 });

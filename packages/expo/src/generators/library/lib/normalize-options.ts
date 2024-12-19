@@ -1,6 +1,10 @@
-import { Tree, readNxJson } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { readNxJson, Tree } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -9,12 +13,14 @@ export interface NormalizedSchema extends Schema {
   routePath: string;
   parsedTags: string[];
   appMain: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -25,7 +31,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
   const nxJson = readNxJson(host);
   const addPluginDefault =
@@ -47,6 +52,7 @@ export async function normalizeOptions(
     parsedTags,
     importPath,
     appMain,
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
   };
 
   return normalized;

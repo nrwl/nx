@@ -115,7 +115,8 @@ function updateProjectConfigurationInPackageJson(
 
   const packageJson = readJson<PackageJson>(tree, packageJsonFile);
 
-  if (packageJson.name === projectConfiguration.name ?? projectName) {
+  projectConfiguration.name = projectName;
+  if (packageJson.name === projectConfiguration.name) {
     delete projectConfiguration.name;
   }
 

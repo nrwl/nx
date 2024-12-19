@@ -8,18 +8,18 @@ The `@nx/powerpack-shared-fs-cache` plugin enables you to use a shared file syst
 This plugin will enable the remote cache for your Nx workspace, but does not provide any of the other features of Nx Cloud. If you want to leverage [distributed task execution](/ci/features/distribute-task-execution), [re-running flaky tasks](/ci/features/flaky-tasks) or [automatically splitting tasks](/ci/features/split-e2e-tasks), you'll need to [connect to Nx Cloud](/ci/intro/connect-to-nx-cloud) and use [Nx Replay](/ci/features/remote-cache) instead.
 
 {% callout type="warning" title="Potential Cache Poisoning" %}
-Using a shared file system folder for the remote cache opens you up to the possibility of [cache poisoning](/troubleshooting/unknown-local-cache). To avoid this, use [Nx Replay](/ci/features/remote-cache) or share your cache with an AWS S3 bucket using [`@nx/powerpack-s3-cache`](/nx-api/powerpack-s3-cache).
+Using a shared file system folder for the remote cache opens you up to the possibility of [cache poisoning](/troubleshooting/unknown-local-cache). To avoid this, use [Nx Replay](/ci/features/remote-cache).
 {% /callout %}
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
 In order to use `@nx/powerpack-shared-fs-cache`, you need to have an active Powerpack license. If you don't have a license or it has expired, your cache will no longer be shared and each machine will use its local cache.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-shared-fs-cache
 
 ### 1. Install the Package
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
 ```shell

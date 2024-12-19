@@ -1,14 +1,16 @@
 # Define Code Ownership at the Project Level
 
-This plugin provides the ability to configure and maintain code owners for projects in an Nx workspace.
+{% youtube src="https://youtu.be/mor6urvw-L0" title="Nx Powerpack Codeowners" /%}
+
+This plugin provides [Nx Powerpack](/powerpack) users the ability to configure and maintain code owners for projects in an Nx workspace. Powerpack is available for Nx version 19.8 and higher.
 
 The atomic unit of code in an Nx workspace is a project. Tasks, module boundaries and the Nx graph all train us to conceptualize the workspace as a collection of projects. The CODEOWNERS file, however, requires you to switch from a project mental model to a more low-level definition based on the folder structure of your workspace. The `@nx/powerpack-owners` plugin enables you to stay in the mental model that your workspace is a collection of projects as you define the ownership rules for your workspace. Nx will take care of compiling the project ownership rules into file-based ownership rules that [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), [Bitbucket](https://support.atlassian.com/bitbucket-cloud/docs/set-up-and-use-code-owners/) or [GitLab](https://docs.gitlab.com/ee/user/project/codeowners/) can understand in the CODEOWNERS file.
 
 ## Setup
 
-The `@nx/powerpack-owners` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/recipes/installation/activate-powerpack) is a simple process.
+The `@nx/powerpack-owners` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
 
-{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://nx.app/powerpack/purchase" /%}
+{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://cloud.nx.app/powerpack/purchase" /%}
 
 Then, add the Owners plugin to your workspace.
 

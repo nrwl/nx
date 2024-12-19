@@ -26,7 +26,16 @@ describe('component', () => {
   it('should generate component files', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',
-      directory: `${projectName}/src/lib/hello`,
+      path: `${projectName}/src/lib/hello/hello`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      path: `${projectName}/src/lib/hello/hello.tsx`,
     });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -36,7 +45,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',
-      directory: 'my-app/src/app/hello',
+      path: 'my-app/src/app/hello/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -47,7 +56,7 @@ describe('component', () => {
     it('should add to index.ts barrel', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        directory: `${projectName}/src/lib/hello`,
+        path: `${projectName}/src/lib/hello/hello`,
         export: true,
       });
 
@@ -59,7 +68,7 @@ describe('component', () => {
     it('should not export from an app', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        directory: 'my-app/src/app/hello',
+        path: 'my-app/src/app/hello/hello',
         export: true,
       });
 
@@ -73,7 +82,7 @@ describe('component', () => {
     it('should create component under the directory', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        directory: 'my-lib/src/components/hello',
+        path: 'my-lib/src/components/hello/hello',
       });
 
       expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
@@ -82,7 +91,7 @@ describe('component', () => {
     it('should create with nested directories', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'helloWorld',
-        directory: 'my-lib/src/lib/foo/hello-world',
+        path: 'my-lib/src/lib/foo/hello-world/hello-world',
       });
 
       expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));

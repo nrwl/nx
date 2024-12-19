@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'path';
 import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
 import { fileExists } from '@nx/workspace/src/utilities/fileutils';
@@ -9,7 +10,6 @@ import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
-import { writeFileSync } from 'fs-extra';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 /**

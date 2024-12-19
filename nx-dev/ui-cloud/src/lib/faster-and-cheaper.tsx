@@ -1,9 +1,10 @@
 'use client';
-import { Variants, motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { Spotlight } from './elements/spotlight';
 import { AnimateValue } from '@nx/nx-dev/ui-animations';
+import { ReactElement } from 'react';
 
-export function FasterAndCheaper(): JSX.Element {
+export function FasterAndCheaper(): ReactElement {
   const spotlight: Variants = {
     offscreen: {
       display: 'none',
@@ -14,7 +15,7 @@ export function FasterAndCheaper(): JSX.Element {
   };
 
   return (
-    <section>
+    <section id="faster-and-cheaper" className="scroll-mt-24">
       <motion.div
         initial="offscreen"
         whileInView="onscreen"

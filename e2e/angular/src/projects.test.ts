@@ -34,14 +34,12 @@ describe('Angular Projects', () => {
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/angular'] });
     runCLI(
-      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --no-interactive`
     );
-    runCLI(
-      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:lib ${lib1} --no-interactive`);
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
       `${app1}/src/app/app.component.html`
@@ -72,12 +70,12 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app my-dir/${standaloneApp} --bundler=webpack --no-interactive`
     );
 
     const esbuildStandaloneApp = uniq('esbuild-app');
     runCLI(
-      `generate @nx/angular:app ${esbuildStandaloneApp} --bundler=esbuild --directory=my-dir/${esbuildStandaloneApp} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app my-dir/${esbuildStandaloneApp} --bundler=esbuild --no-interactive`
     );
 
     updateFile(
@@ -155,7 +153,7 @@ describe('Angular Projects', () => {
     const app = uniq('app');
 
     runCLI(
-      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --no-interactive`
     );
 
     if (runE2ETests('playwright')) {
@@ -165,6 +163,15 @@ describe('Angular Projects', () => {
   }, 1000000);
 
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {
+    // disable the prefer-standalone rule for app1 which is not standalone
+    let app1EslintConfig = readFile(`${app1}/eslint.config.cjs`);
+    app1EslintConfig = app1EslintConfig.replace(
+      `'@angular-eslint/directive-selector': [`,
+      `'@angular-eslint/prefer-standalone': 'off',
+      '@angular-eslint/directive-selector': [`
+    );
+    updateFile(`${app1}/eslint.config.cjs`, app1EslintConfig);
+
     // check apps and lib pass linting for initial generated code
     runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`);
 
@@ -219,10 +226,10 @@ describe('Angular Projects', () => {
     const buildableChildLib = uniq('buildlib2');
 
     runCLI(
-      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -382,6 +389,7 @@ describe('Angular Projects', () => {
 
       @Component({
         selector: 'app-root',
+        standalone: false,
         templateUrl: './app.component.html',
       })
       export class AppComponent {
@@ -463,14 +471,14 @@ describe('Angular Projects', () => {
     const entryPoint = uniq('entrypoint');
 
     runCLI(
-      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
     );
 
     runCLI(
-      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
@@ -504,12 +512,10 @@ describe('Angular Projects', () => {
     expect(() => runCLI(`lint ${childLib} --fix`)).not.toThrow();
   });
 
-  it('should support generating libraries with a scoped name when --project-name-and-root-format=as-provided', () => {
+  it('should support generating libraries with a scoped name when', () => {
     const libName = uniq('@my-org/lib1');
 
-    runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/angular:lib ${libName} --buildable --standalone`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -530,7 +536,7 @@ describe('Angular Projects', () => {
     const webpackApp = uniq('webpack-app');
 
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --no-interactive`
     );
 
     // check build produces both the browser and server bundles
@@ -541,7 +547,7 @@ describe('Angular Projects', () => {
     );
 
     runCLI(
-      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --no-interactive`
     );
 
     // check build only produces the browser bundle
@@ -572,4 +578,21 @@ describe('Angular Projects', () => {
       runCLI(`server ${webpackApp} --output-hashing none`)
     ).toThrow();
   }, 500_000);
+
+  it('should generate apps and libs with vitest', async () => {
+    const app = uniq('app');
+    const lib = uniq('lib');
+
+    runCLI(
+      `generate @nx/angular:app ${app} --unit-test-runner=vitest --no-interactive`
+    );
+    runCLI(
+      `generate @nx/angular:lib ${lib} --unit-test-runner=vitest --no-interactive`
+    );
+
+    // Make sure we are using vitest
+    checkFilesExist(`${app}/vite.config.mts`, `${lib}/vite.config.mts`);
+
+    runCLI(`run-many --target test --projects=${app},${lib} --parallel`);
+  });
 });

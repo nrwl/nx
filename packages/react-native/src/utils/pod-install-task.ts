@@ -1,9 +1,9 @@
 import { execSync } from 'child_process';
+import { existsSync } from 'node:fs';
 import { platform } from 'os';
+import { join } from 'path';
 import * as chalk from 'chalk';
 import { GeneratorCallback, logger } from '@nx/devkit';
-import { existsSync } from 'fs-extra';
-import { join } from 'path';
 
 const podInstallErrorMessage = `
 Running ${chalk.bold('pod install')} failed, see above.
@@ -72,7 +72,7 @@ export function podInstall(
       execSync('touch .xcode.env', {
         cwd: iosDirectory,
         stdio: 'inherit',
-        windowsHide: true,
+        windowsHide: false,
       });
     }
     const podCommand = [
@@ -83,7 +83,7 @@ export function podInstall(
     execSync(podCommand, {
       cwd: iosDirectory,
       stdio: 'inherit',
-      windowsHide: true,
+      windowsHide: false,
     });
   } catch (e) {
     logger.error(podInstallErrorMessage);

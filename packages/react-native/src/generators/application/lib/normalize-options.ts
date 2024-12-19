@@ -1,8 +1,10 @@
 import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
-import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
-import { ReactNativePluginOptions } from '../../../../plugins/plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Schema {
   className: string; // app name in class case
@@ -17,24 +19,23 @@ export interface NormalizedSchema extends Schema {
   rootProject: boolean;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  isTsSolutionSetup: boolean;
 }
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'application');
   const {
     projectName: appProjectName,
     names: projectNames,
     projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -71,5 +72,6 @@ export async function normalizeOptions(
     rootProject,
     e2eProjectName,
     e2eProjectRoot,
+    isTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
 }

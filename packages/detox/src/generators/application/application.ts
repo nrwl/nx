@@ -1,4 +1,5 @@
 import { formatFiles, runTasksInSerial, Tree } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import detoxInitGenerator from '../init/init';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
@@ -20,6 +21,10 @@ export async function detoxApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
+  const jsInitTask = await jsInitGenerator(host, {
+    skipFormat: true,
+  });
+
   const options = await normalizeOptions(host, schema);
 
   const initTask = await detoxInitGenerator(host, {
@@ -37,7 +42,7 @@ export async function detoxApplicationGeneratorInternal(
     await formatFiles(host);
   }
 
-  return runTasksInSerial(initTask, lintingTask, depsTask);
+  return runTasksInSerial(jsInitTask, initTask, lintingTask, depsTask);
 }
 
 export default detoxApplicationGenerator;

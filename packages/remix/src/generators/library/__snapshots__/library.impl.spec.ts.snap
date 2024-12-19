@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Remix Library Generator -projectNameAndRootFormat=as-provided --unitTestRunner should create the correct config files for testing with jest 1`] = `
+exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 1`] = `
 "export default {
   setupFilesAfterEnv: ['./src/test-setup.ts'],
   displayName: 'test',
@@ -15,14 +15,14 @@ exports[`Remix Library Generator -projectNameAndRootFormat=as-provided --unitTes
 "
 `;
 
-exports[`Remix Library Generator -projectNameAndRootFormat=as-provided --unitTestRunner should create the correct config files for testing with jest 2`] = `
+exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Library Generator -projectNameAndRootFormat=as-provided --unitTestRunner should create the correct config files for testing with vitest 1`] = `
+exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with vitest 1`] = `
 "import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -31,14 +31,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     setupFiles: ['./src/test-setup.ts'],
     watch: false,
@@ -52,14 +49,14 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Library Generator -projectNameAndRootFormat=as-provided --unitTestRunner should create the correct config files for testing with vitest 2`] = `
+exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with vitest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Library Generator -projectNameAndRootFormat=as-provided should generate a library correctly 1`] = `
+exports[`Remix Library Generator should generate a library correctly 1`] = `
 [
   "test.module.css",
   "test.spec.tsx",
@@ -67,7 +64,7 @@ exports[`Remix Library Generator -projectNameAndRootFormat=as-provided should ge
 ]
 `;
 
-exports[`Remix Library Generator -projectNameAndRootFormat=as-provided should generate a library correctly 2`] = `
+exports[`Remix Library Generator should generate a library correctly 2`] = `
 {
   "@proj/test": [
     "test/src/index.ts",

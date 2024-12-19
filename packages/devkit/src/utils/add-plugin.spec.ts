@@ -54,7 +54,7 @@ describe('addPlugin', () => {
       },
     };
     createNodes = [
-      '**/next.config.{js,cjs,mjs}',
+      '**/next.config.{ts,js,cjs,mjs}',
       (_, { targetName }) => [
         [
           'app1/next.config.js',
@@ -300,7 +300,7 @@ describe('addPlugin', () => {
       });
 
       createNodes = [
-        '**/next.config.{js,cjs,mjs}',
+        '**/next.config.{ts,js,cjs,mjs}',
         () => [
           [
             'app1/next.config.js',
@@ -430,6 +430,32 @@ describe('addPlugin', () => {
       expect(scripts.typecheck).toBe(
         'echo "Typechecking..." && nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json && echo "Done"'
       );
+    });
+
+    it('should not touch the package.json when there are no changes to make', async () => {
+      // package.json with mixed/bad indentation and array value in a single line
+      // JSON serialization would have a standard indentation and would expand the array value into multiple lines
+      const packageJsonContent = `{
+  "name": "app1",
+  "scripts": {
+            "build": "tsc --build"
+  },
+  "keywords": ["foo", "bar", "baz"]
+}`;
+      tree.write('app1/package.json', packageJsonContent);
+
+      await addPlugin(
+        tree,
+        graph,
+        '@nx/next/plugin',
+        createNodes,
+        {
+          targetName: ['build'],
+        },
+        true
+      );
+
+      expect(tree.read('app1/package.json', 'utf-8')).toBe(packageJsonContent);
     });
   });
 });

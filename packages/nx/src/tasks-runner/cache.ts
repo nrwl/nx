@@ -12,7 +12,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
-import { NxCache, CachedResult as NativeCacheResult } from '../native';
+import { NxCache, CachedResult as NativeCacheResult, IS_WASM } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
@@ -20,6 +20,7 @@ import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isCI } from '../utils/is-ci';
 import { output } from '../utils/output';
+import { logger } from '../utils/logger';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -29,17 +30,59 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-export function getCache(
-  nxJson: NxJsonConfiguration,
-  options: DefaultTasksRunnerOptions
-) {
-  return process.env.NX_DISABLE_DB !== 'true' &&
-    (nxJson.enableDbCache === true || process.env.NX_DB_CACHE === 'true')
+// This function is called once during tasks runner initialization. It checks if the db cache is enabled and logs a warning if it is not.
+export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
+  // If the user has explicitly disabled the db cache, we can warn...
+  if (
+    nxJson.useLegacyCache ||
+    process.env.NX_DISABLE_DB === 'true' ||
+    process.env.NX_DB_CACHE === 'false'
+  ) {
+    let readMoreLink = 'https://nx.dev/deprecated/legacy-cache';
+    if (
+      nxJson.tasksRunnerOptions?.default?.runner &&
+      !['nx-cloud', 'nx/tasks-runners/default', '@nrwl/nx-cloud'].includes(
+        nxJson.tasksRunnerOptions.default.runner
+      )
+    ) {
+      readMoreLink += '#tasksrunneroptions';
+    } else if (
+      process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === '0' ||
+      process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === 'false'
+    ) {
+      readMoreLink += '#nxrejectunknownlocalcache';
+    }
+    logger.warn(
+      `Nx is configured to use the legacy cache. This cache will be removed in Nx 21. Read more at ${readMoreLink}.`
+    );
+    return false;
+  }
+  // ...but if on wasm and the the db cache isnt supported we shouldn't warn
+  if (IS_WASM) {
+    return false;
+  }
+  // Below this point we are using the db cache.
+  if (
+    // The NX_REJECT_UNKNOWN_LOCAL_CACHE env var is not supported with the db cache.
+    // If the user has tried to use it, we can point them to powerpack as it
+    // provides a similar featureset.
+    process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === '0' ||
+    process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === 'false'
+  ) {
+    logger.warn(
+      'NX_REJECT_UNKNOWN_LOCAL_CACHE=0 is not supported with the new database cache. Read more at https://nx.dev/deprecated/legacy-cache#nxrejectunknownlocalcache.'
+    );
+  }
+  return true;
+}
+
+// Do not change the order of these arguments as this function is used by nx cloud
+export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
+  const nxJson = readNxJson();
+  return dbCacheEnabled(nxJson)
     ? new DbCache({
         // Remove this in Nx 21
-        nxCloudRemoteCache: isNxCloudUsed(readNxJson())
-          ? options.remoteCache
-          : null,
+        nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
       })
     : new Cache(options);
 }
@@ -49,6 +92,8 @@ export class DbCache {
 
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
+
+  private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
 
@@ -154,6 +199,8 @@ export class DbCache {
       return (
         (await this.getPowerpackS3Cache()) ??
         (await this.getPowerpackSharedCache()) ??
+        (await this.getPowerpackGcsCache()) ??
+        (await this.getPowerpackAzureCache()) ??
         null
       );
     }
@@ -165,6 +212,14 @@ export class DbCache {
 
   private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
     return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
+  }
+
+  private getPowerpackGcsCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-gcs-cache');
+  }
+
+  private getPowerpackAzureCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-azure-cache');
   }
 
   private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
@@ -230,7 +285,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
-          windowsHide: true,
+          windowsHide: false,
         });
         p.unref();
       } catch (e) {

@@ -7,16 +7,10 @@ applications.
 
 To enable incremental builds you need to use buildable libraries.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an
-earlier version of Nx or using the `derived` option, omit the `--directory` flag. See
-the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 You can generate a new buildable library with:
 
 ```shell
-nx g @nx/angular:lib my-lib --directory=libs/my-lib --buildable
+nx g @nx/angular:lib libs/my-lib --buildable
 ```
 
 The generated buildable library uses the `@nx/angular:ng-packagr-lite` executor which is optimized for the incremental
@@ -53,7 +47,7 @@ path is later changed in `ng-package.json`, it needs to be updated as well in th
 
 The `@nx/angular:package` executor also supports incremental builds. It is used to build and package an Angular library
 to be distributed as an NPM package following the Angular Package Format (APF) specification. It will be automatically
-configured when generating a publishable library (`nx g @nx/angular:lib my-lib --publishable --importPath my-lib`).
+configured when generating a publishable library (`nx g @nx/angular:lib libs/my-lib --publishable --importPath my-lib`).
 {% /callout %}
 
 ## Adjust the application executor
@@ -198,7 +192,7 @@ serve" target executor to `@nx/angular:dev-server` as shown below.
 ### Add Executor to Target Defaults
 
 If you'd like to avoid adding `"dependsOn": ["^build"]` to every application in your workspace that uses one of the
-required executors you can add it to the `"targetDefaults"` section of the `nx.json`:
+required executors you can add it to the `targetDefaults` section of the `nx.json`:
 
 {% tabs %}
 {% tab label="@nx/angular:application" %}

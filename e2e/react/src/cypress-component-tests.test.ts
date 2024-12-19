@@ -27,7 +27,7 @@ describe('React Cypress Component Tests', () => {
     ensureCypressInstallation();
 
     runCLI(
-      `generate @nx/react:app ${appName} --directory=apps/${appName} --bundler=webpack --no-interactive`
+      `generate @nx/react:app apps/${appName} --bundler=webpack --no-interactive`
     );
 
     updateJson('nx.json', (json) => ({
@@ -43,13 +43,13 @@ describe('React Cypress Component Tests', () => {
     }));
 
     runCLI(
-      `generate @nx/react:component fancy-cmp --directory=apps/${appName}/src/app/fancy-cmp --no-interactive`
+      `generate @nx/react:component apps/${appName}/src/app/fancy-cmp/fancy-cmp --no-interactive`
     );
     runCLI(
-      `generate @nx/react:lib ${usedInAppLibName} --directory=libs/${usedInAppLibName} --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:lib libs/${usedInAppLibName} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component btn --directory=libs/${usedInAppLibName}/src/lib/btn --export --no-interactive`
+      `generate @nx/react:component libs/${usedInAppLibName}/src/lib/btn/btn --export --no-interactive`
     );
     // makes sure custom webpack is loading
     createFile(
@@ -108,10 +108,10 @@ export default App;`
     );
 
     runCLI(
-      `generate @nx/react:lib ${buildableLibName} --directory=libs/${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:lib libs/${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component input --directory=libs/${buildableLibName}/src/lib/input --export --no-interactive`
+      `generate @nx/react:component libs/${buildableLibName}/src/lib/input/input --export --no-interactive`
     );
 
     checkFilesExist(`libs/${buildableLibName}/src/lib/input/input.tsx`);
@@ -298,7 +298,7 @@ ${content}`;
   it.skip('should CT vite projects importing other projects', () => {
     const viteLibName = uniq('vite-lib');
     runCLI(
-      `generate @nrwl/react:lib ${viteLibName} --bundler=vite --no-interactive`
+      `generate @nx/react:lib ${viteLibName} --bundler=vite --no-interactive`
     );
 
     updateFile(`libs/${viteLibName}/src/lib/${viteLibName}.tsx`, () => {
@@ -316,7 +316,7 @@ export default MyComponent;`;
     });
 
     runCLI(
-      `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
+      `generate @nx/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
     );
     if (runE2ETests()) {
       expect(runCLI(`component-test ${viteLibName}`)).toContain(

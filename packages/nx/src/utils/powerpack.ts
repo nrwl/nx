@@ -9,20 +9,25 @@ export async function printPowerpackLicense() {
 
     logger.log(
       `Nx Powerpack Licensed to ${organizationName} for ${seatCount} user${
-        seatCount > 1 ? '' : 's'
+        seatCount > 1 ? 's' : ''
       } in ${
         workspaceCount === 9999 ? 'an unlimited number of' : workspaceCount
-      } workspace${workspaceCount > 1 ? '' : 's'}`
+      } workspace${workspaceCount > 1 ? 's' : ''}`
     );
   } catch {}
 }
 
 export async function getPowerpackLicenseInformation() {
   try {
-    const { getPowerpackLicenseInformation } = (await import(
+    const {
+      getPowerpackLicenseInformation,
+      getPowerpackLicenseInformationAsync,
+    } = (await import(
       '@nx/powerpack-license'
     )) as typeof import('@nx/powerpack-license');
-    return getPowerpackLicenseInformation(workspaceRoot);
+    return (
+      getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
+    )(workspaceRoot);
   } catch (e) {
     if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
       throw new NxPowerpackNotInstalledError(e);

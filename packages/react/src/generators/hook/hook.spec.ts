@@ -25,7 +25,18 @@ describe('hook', () => {
   it('should generate files', async () => {
     await hookGenerator(appTree, {
       name: 'use-form',
-      directory: `${projectName}/src/lib/use-form`,
+      path: `${projectName}/src/lib/use-form/use-form`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/use-form/use-form.ts')).toBeTruthy();
+    expect(
+      appTree.exists('my-lib/src/lib/use-form/use-form.spec.tsx')
+    ).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await hookGenerator(appTree, {
+      path: `${projectName}/src/lib/use-form/use-form.ts`,
     });
 
     expect(appTree.exists('my-lib/src/lib/use-form/use-form.ts')).toBeTruthy();
@@ -37,7 +48,7 @@ describe('hook', () => {
   it('should generate files for an app', async () => {
     await hookGenerator(appTree, {
       name: 'use-form',
-      directory: 'my-app/src/app/use-form',
+      path: 'my-app/src/app/use-form/use-form',
     });
 
     expect(appTree.exists('my-app/src/app/use-form/use-form.ts')).toBeTruthy();
@@ -49,7 +60,7 @@ describe('hook', () => {
   it('handles "use" in the name', async () => {
     await hookGenerator(appTree, {
       name: 'use-hello',
-      directory: `${projectName}/src/lib/use-hello`,
+      path: `${projectName}/src/lib/use-hello/use-hello`,
       skipTests: true,
     });
 
@@ -64,7 +75,7 @@ describe('hook', () => {
   it('handles "use-" in the name', async () => {
     await hookGenerator(appTree, {
       name: 'use-hello',
-      directory: `${projectName}/src/lib/use-hello`,
+      path: `${projectName}/src/lib/use-hello/use-hello`,
       skipTests: true,
     });
     expect(
@@ -79,7 +90,7 @@ describe('hook', () => {
     it('should add to index.ts barrel', async () => {
       await hookGenerator(appTree, {
         name: 'hello',
-        directory: `${projectName}/src/lib/use-hello`,
+        path: `${projectName}/src/lib/use-hello/use-hello`,
         export: true,
       });
 
@@ -91,7 +102,7 @@ describe('hook', () => {
     it('should not export from an app', async () => {
       await hookGenerator(appTree, {
         name: 'hello',
-        directory: 'my-lib/src/app/use-hello',
+        path: 'my-lib/src/app/use-hello/use-hello',
         export: true,
       });
 
@@ -105,7 +116,7 @@ describe('hook', () => {
     it('should not generate tests', async () => {
       await hookGenerator(appTree, {
         name: 'use-hello',
-        directory: `${projectName}/src/lib/use-hello`,
+        path: `${projectName}/src/lib/use-hello/use-hello`,
         skipTests: true,
       });
       expect(
@@ -121,7 +132,7 @@ describe('hook', () => {
     it('should create component under the directory', async () => {
       await hookGenerator(appTree, {
         name: 'use-hello',
-        directory: 'my-lib/src/hooks/use-hello',
+        path: 'my-lib/src/hooks/use-hello/use-hello',
         skipTests: true,
       });
 
@@ -131,7 +142,7 @@ describe('hook', () => {
     it('should create with nested directories', async () => {
       await hookGenerator(appTree, {
         name: 'use-hello-world',
-        directory: `${projectName}/src/lib/foo/use-hello-world`,
+        path: `${projectName}/src/lib/foo/use-hello-world/use-hello-world`,
         skipTests: true,
       });
 

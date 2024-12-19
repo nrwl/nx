@@ -106,6 +106,7 @@ export async function lintProjectGeneratorInternal(
         (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
       )
     ) {
+      projectConfig.targets ??= {};
       projectConfig.targets['lint'] = {
         command: `eslint ${lintFilePatterns
           .join(' ')
@@ -113,6 +114,7 @@ export async function lintProjectGeneratorInternal(
       };
     }
   } else {
+    projectConfig.targets ??= {};
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',
     };
@@ -271,7 +273,7 @@ function createEsLintConfiguration(
     });
     const nodeList = createNodeList(importMap, nodes);
     const content = stringifyNodeList(nodeList);
-    tree.write(join(projectConfig.root, 'eslint.config.js'), content);
+    tree.write(join(projectConfig.root, `eslint.config.cjs`), content);
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
       extends: extendedRootConfig ? [pathToRootConfig] : undefined,
@@ -327,7 +329,7 @@ function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
 
   for (const targetConfig of Object.values(rootProject.data.targets ?? {})) {
     if (
-      ['@nx/eslint:lint', '@nrwl/linter:eslint', '@nx/linter:eslint'].includes(
+      ['@nx/eslint:lint', '@nx/linter:eslint'].includes(
         targetConfig.executor
       ) ||
       (targetConfig.executor === 'nx:run-commands' &&

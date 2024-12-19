@@ -90,8 +90,8 @@ npm add -D @nx/detox
 By default, when creating a mobile application, Nx will use Detox to create the e2e tests project.
 
 ```shell
-nx g @nx/react-native:app frontend --e2eTestRunner=deotx
-nx g @nx/expo:app frontend --e2eTestRunner=detox
+nx g @nx/react-native:app apps/frontend --e2eTestRunner=deotx
+nx g @nx/expo:app apps/frontend --e2eTestRunner=detox
 ```
 
 ## Using Detox

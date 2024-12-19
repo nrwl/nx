@@ -33,11 +33,6 @@
         "index": 0
       }
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the new project name and destination as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
     "importPath": {
       "type": "string",
       "description": "The new import path to use in the `tsconfig.base.json`."

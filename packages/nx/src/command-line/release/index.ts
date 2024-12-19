@@ -28,6 +28,10 @@ export const releaseChangelog = defaultClient.releaseChangelog.bind(
 /**
  * @public
  */
+export { PublishProjectsResult } from './publish';
+/**
+ * @public
+ */
 export const releasePublish = defaultClient.releasePublish.bind(
   defaultClient
 ) as typeof defaultClient.releasePublish;

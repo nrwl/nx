@@ -9,12 +9,16 @@
     "description": "Create a React Component for Next.",
     "type": "object",
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the component. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the component file path?",
+        "x-priority": "important"
+      },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?",
-        "x-priority": "important"
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -33,6 +37,10 @@
             {
               "value": "less",
               "label": "LESS              [ https://lesscss.org            ]"
+            },
+            {
+              "value": "tailwind",
+              "label": "tailwind          [ https://tailwindcss.com/       ]"
             },
             {
               "value": "styled-components",
@@ -56,17 +64,6 @@
         "default": false,
         "x-priority": "internal"
       },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "alias": "dir",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
       "export": {
         "type": "boolean",
         "description": "When true, the component is exported from the project index.ts (if it exists).",
@@ -76,7 +73,7 @@
       "js": {
         "type": "boolean",
         "description": "Generate JavaScript files rather than TypeScript files.",
-        "default": false
+        "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
       },
       "skipFormat": {
         "description": "Skip formatting files.",
@@ -85,8 +82,8 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create an app component\" %}\n\n```shell\nnx g component my-cmp --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create a component without its own folder\" %}\n\nRunning the following will create a component under `apps/my-app/components/my-cmp.tsx` rather than `apps/my-app/components/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component my-cmp --flat --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create component in a custom directory\" %}\n\nRunning the following will create a component under `apps/my-app/foo/my-cmp.tsx` rather than `apps/my-app/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component my-cmp --directory=foo --flat --project=my-app\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "required": ["path"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create a Component\" %}\n\nGenerate a component named `MyComponent` at `apps/my-app/src/app/my-component/my-component.tsx`:\n\n```shell\nnx g component apps/my-app/src/app/my-component/my-component.tsx\n```\n\n{% /tab %}\n{% tab label=\"Create a Component with a Different Symbol Name\" %}\n\nGenerate a component named `Custom` at `apps/my-app/src/app/my-component/my-component.tsx`:\n\n```shell\nnx g component apps/my-app/src/app/my-component/my-component.tsx --name=custom\n```\n\n{% /tab %}\n{% tab label=\"Create a Component Omitting the File Extension\" %}\n\nGenerate a component named `MyComponent` at `apps/my-app/src/app/my-component/my-component.tsx` without specifying the file extension:\n\n```shell\nnx g component apps/my-app/src/app/my-component/my-component\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Create a component.",

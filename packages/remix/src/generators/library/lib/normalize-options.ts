@@ -1,24 +1,30 @@
-import { type Tree, readNxJson } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { readNxJson, type Tree } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { NxRemixGeneratorSchema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface RemixLibraryOptions extends NxRemixGeneratorSchema {
   projectName: string;
   projectRoot: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<RemixLibraryOptions> {
-  const { projectName, projectRoot, projectNameAndRootFormat } =
-    await determineProjectNameAndRootOptions(tree, {
+  await ensureProjectName(tree, options, 'application');
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-    });
+    }
+  );
 
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -26,14 +32,11 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const importPath = options.importPath ?? getImportPath(tree, projectRoot);
-
   return {
     ...options,
     unitTestRunner: options.unitTestRunner ?? 'vitest',
-    importPath,
     projectName,
     projectRoot,
-    projectNameAndRootFormat,
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(tree),
   };
 }

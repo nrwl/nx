@@ -101,7 +101,7 @@ export function DocViewer({
       <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
         <div id="content-wrapper" className="w-full flex-auto flex-col">
           <div className="mb-6 pt-8">
-            <Breadcrumbs path={router.asPath} />
+            <Breadcrumbs document={document} />
           </div>
           <div className="min-w-0 flex-auto pb-24 lg:pb-16">
             {/*MAIN CONTENT*/}
@@ -119,9 +119,16 @@ export function DocViewer({
               {!hideTableOfContent && (
                 <div
                   className={cx(
-                    'fixed right-[max(2rem,calc(50%-55rem))] top-48 z-20 hidden w-60 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                    'fixed right-[max(2rem,calc(50%-55rem))] top-44 z-20 hidden w-60 space-y-6 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
                   )}
                 >
+                  {widgetData.githubStarsCount > 0 && (
+                    <div className="px-6">
+                      <GitHubStarWidget
+                        starsCount={widgetData.githubStarsCount}
+                      />
+                    </div>
+                  )}
                   <TableOfContents
                     elementRef={ref}
                     path={router.basePath}
@@ -129,11 +136,6 @@ export function DocViewer({
                     document={document}
                   >
                     <>
-                      {widgetData.githubStarsCount > 0 && (
-                        <GitHubStarWidget
-                          starsCount={widgetData.githubStarsCount}
-                        />
-                      )}
                       <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
                         <button
                           type="button"

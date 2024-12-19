@@ -1,6 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
+import {
+  NxJsonConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { LinterInitOptions, lintInitGenerator } from './init';
 import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
@@ -73,6 +79,28 @@ describe('@nx/eslint:init', () => {
     `);
   });
 
+  it('should add the eslint extension to the recommended property', async () => {
+    writeJson(tree, '.vscode/extensions.json', {
+      recommendations: [
+        'nrwl.angular-console',
+        'angular.ng-template',
+        'esbenp.prettier-vscode',
+      ],
+    });
+
+    await lintInitGenerator(tree, options);
+    expect(readJson(tree, '.vscode/extensions.json')).toMatchInlineSnapshot(`
+      {
+        "recommendations": [
+          "nrwl.angular-console",
+          "angular.ng-template",
+          "esbenp.prettier-vscode",
+          "dbaeumer.vscode-eslint",
+        ],
+      }
+    `);
+  });
+
   describe('(legacy)', () => {
     it('should add the root eslint config to the lint targetDefaults for lint', async () => {
       await lintInitGenerator(tree, { ...options, addPlugin: false });
@@ -85,7 +113,7 @@ describe('@nx/eslint:init', () => {
           'default',
           '{workspaceRoot}/.eslintrc.json',
           '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.js',
+          '{workspaceRoot}/eslint.config.cjs',
         ],
       });
     });
@@ -109,7 +137,7 @@ describe('@nx/eslint:init', () => {
           'default',
           '{workspaceRoot}/.eslintrc.json',
           '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.js',
+          '{workspaceRoot}/eslint.config.cjs',
         ],
       });
     });

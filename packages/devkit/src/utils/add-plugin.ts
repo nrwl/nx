@@ -15,8 +15,9 @@ import {
   writeJson,
 } from 'nx/src/devkit-exports';
 import {
+  isProjectConfigurationsError,
+  isProjectsWithNoNameError,
   LoadedNxPlugin,
-  ProjectConfigurationsError,
   retrieveProjectConfigurations,
 } from 'nx/src/devkit-internals';
 
@@ -130,8 +131,12 @@ async function _addPluginInternal<PluginOptions>(
         );
       } catch (e) {
         // Errors are okay for this because we're only running 1 plugin
-        if (e instanceof ProjectConfigurationsError) {
+        if (isProjectConfigurationsError(e)) {
           projConfigs = e.partialProjectConfigurationsResult;
+          // ignore errors from projects with no name
+          if (!e.errors.every(isProjectsWithNoNameError)) {
+            throw e;
+          }
         } else {
           throw e;
         }
@@ -171,8 +176,12 @@ async function _addPluginInternal<PluginOptions>(
       );
     } catch (e) {
       // Errors are okay for this because we're only running 1 plugin
-      if (e instanceof ProjectConfigurationsError) {
+      if (isProjectConfigurationsError(e)) {
         projConfigs = e.partialProjectConfigurationsResult;
+        // ignore errors from projects with no name
+        if (!e.errors.every(isProjectsWithNoNameError)) {
+          throw e;
+        }
       } else {
         throw e;
       }
@@ -233,7 +242,7 @@ function processProject(
     return;
   }
 
-  const replacedTargets = new Set<string>();
+  let hasChanges = false;
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
@@ -250,7 +259,7 @@ function processProject(
             ? `$1nx ${target} --configuration=${configuration}$3`
             : `$1nx ${target}$3`
         );
-        replacedTargets.add(target);
+        hasChanges = true;
       } else {
         /**
          * Parse script and command to handle the following:
@@ -327,7 +336,7 @@ function processProject(
                   : `$1nx ${target}$4`
               )
             );
-            replacedTargets.add(target);
+            hasChanges = true;
           } else {
             // there are different args or the script has extra args, replace with the command leaving the args
             packageJson.scripts[scriptName] = packageJson.scripts[
@@ -341,14 +350,16 @@ function processProject(
                   : `$1nx ${target}$3`
               )
             );
-            replacedTargets.add(target);
+            hasChanges = true;
           }
         }
       }
     }
   }
 
-  writeJson(tree, packageJsonPath, packageJson);
+  if (hasChanges) {
+    writeJson(tree, packageJsonPath, packageJson);
+  }
 }
 
 function getInferredTargetCommands(

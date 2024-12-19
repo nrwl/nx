@@ -20,15 +20,13 @@ export async function normalizeOptions(
   options: ComponentGeneratorSchema
 ): Promise<NormalizedSchema> {
   const {
-    artifactName: name,
-    directory,
     fileName,
     filePath,
+    directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    path: options.path,
+    allowedFileExtensions: ['vue'],
     fileExtension: 'vue',
   });
 
@@ -48,8 +46,8 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    filePath,
     directory,
+    filePath,
     className,
     fileName: componentFileName,
     projectSourceRoot,

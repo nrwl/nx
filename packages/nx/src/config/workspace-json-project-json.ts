@@ -1,3 +1,4 @@
+import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
   NxReleaseVersionConfiguration,
@@ -122,6 +123,24 @@ export interface ProjectMetadata {
   description?: string;
   technologies?: string[];
   targetGroups?: Record<string, string[]>;
+  owners?: {
+    [ownerId: string]: {
+      ownedFiles: {
+        files: ['*'] | string[];
+        fromConfig?: {
+          filePath: string;
+          location: {
+            startLine: number;
+            endLine: number;
+          };
+        };
+      }[];
+    };
+  };
+  js?: {
+    packageName: string;
+    packageExports?: PackageJson['exports'];
+  };
 }
 
 export interface TargetMetadata {

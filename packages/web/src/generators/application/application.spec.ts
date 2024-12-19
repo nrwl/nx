@@ -41,8 +41,7 @@ describe('app', () => {
   describe('not nested', () => {
     it('should update configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-app',
         addPlugin: true,
       });
       expect(readProjectConfiguration(tree, 'my-app').root).toEqual('my-app');
@@ -61,9 +60,8 @@ describe('app', () => {
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         tags: 'one,two',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
@@ -80,8 +78,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-app',
         addPlugin: true,
       });
       expect(tree.exists('my-app/src/main.ts')).toBeTruthy();
@@ -168,10 +165,9 @@ describe('app', () => {
 
     it('should setup playwright e2e project', async () => {
       await applicationGenerator(tree, {
-        name: 'cool-app',
+        directory: 'cool-app',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('cool-app-e2e/playwright.config.ts')).toBeTruthy();
@@ -179,17 +175,15 @@ describe('app', () => {
 
     it('should setup cypress e2e project correctly for vite', async () => {
       await applicationGenerator(tree, {
-        name: 'cool-app',
+        directory: 'cool-app',
         e2eTestRunner: 'cypress',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'vite',
         addPlugin: true,
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -213,17 +207,15 @@ describe('app', () => {
 
     it('should setup cypress e2e project correctly for webpack', async () => {
       await applicationGenerator(tree, {
-        name: 'cool-app',
+        directory: 'cool-app',
         e2eTestRunner: 'cypress',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
         addPlugin: true,
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -246,10 +238,9 @@ describe('app', () => {
 
     it('should setup playwright e2e project correctly for webpack', async () => {
       await applicationGenerator(tree, {
-        name: 'cool-app',
+        directory: 'cool-app',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         bundler: 'webpack',
         addPlugin: true,
       });
@@ -270,9 +261,8 @@ describe('app', () => {
       });
       updateNxJson(tree, nxJson);
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         bundler: 'vite',
-        projectNameAndRootFormat: 'as-provided',
         e2eTestRunner: 'playwright',
         addPlugin: true,
       });
@@ -304,9 +294,8 @@ describe('app', () => {
 
     it('should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         bundler: 'vite',
-        projectNameAndRootFormat: 'as-provided',
         e2eTestRunner: 'playwright',
       });
       expect(
@@ -318,8 +307,7 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-app',
         addPlugin: true,
       });
 
@@ -331,9 +319,7 @@ describe('app', () => {
   describe('nested', () => {
     it('should update configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
         directory: 'my-dir/my-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(readProjectConfiguration(tree, 'my-app').root).toEqual(
@@ -346,10 +332,8 @@ describe('app', () => {
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
         directory: 'my-dir/my-app',
         tags: 'one,two',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
@@ -371,9 +355,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
-        name: 'my-app',
         directory: 'my-dir/my-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -409,9 +391,7 @@ describe('app', () => {
 
     it('should extend from root tsconfig.base.json', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
         directory: 'my-dir/my-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -423,9 +403,7 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'my-app',
         directory: 'my-dir/my-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -435,9 +413,7 @@ describe('app', () => {
 
     it('should create Nx specific template', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
         directory: 'my-dir/my-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(
@@ -452,9 +428,8 @@ describe('app', () => {
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         style: 'scss',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('my-app/src/app/app.element.scss')).toEqual(true);
@@ -463,8 +438,7 @@ describe('app', () => {
 
   it('should setup jest without serializers', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-app',
       addPlugin: true,
     });
 
@@ -475,8 +449,7 @@ describe('app', () => {
 
   it('should setup the web build builder', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-app',
       addPlugin: true,
     });
     expect(tree.read('my-app/webpack.config.js', 'utf-8')).toMatchSnapshot();
@@ -484,8 +457,7 @@ describe('app', () => {
 
   it('should setup the web dev server', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-app',
       addPlugin: true,
     });
 
@@ -494,8 +466,7 @@ describe('app', () => {
 
   it('should setup eslint', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-app',
       addPlugin: true,
     });
     expect(tree.read('my-app/.eslintrc.json', 'utf-8')).toMatchSnapshot();
@@ -504,9 +475,8 @@ describe('app', () => {
   describe('--prefix', () => {
     it('should use the prefix in the index.html', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         prefix: 'prefix',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -519,9 +489,8 @@ describe('app', () => {
   describe('--unit-test-runner', () => {
     it('--unit-test-runner=none', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
@@ -532,9 +501,8 @@ describe('app', () => {
 
     it('--bundler=none should use jest as the default', async () => {
       await applicationGenerator(tree, {
-        name: 'my-cool-app',
+        directory: 'my-cool-app',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('my-cool-app/jest.config.ts')).toBeTruthy();
@@ -553,11 +521,10 @@ describe('app', () => {
     // then use vitest
     it('--bundler=vite --unitTestRunner=jest respects unitTestRunner given', async () => {
       await applicationGenerator(tree, {
-        name: 'my-vite-app',
+        directory: 'my-vite-app',
 
         bundler: 'vite',
         unitTestRunner: 'jest',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
@@ -566,10 +533,9 @@ describe('app', () => {
 
     it('--bundler=vite --unitTestRunner=none', async () => {
       await applicationGenerator(tree, {
-        name: 'my-vite-app',
+        directory: 'my-vite-app',
         bundler: 'vite',
         unitTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
@@ -581,10 +547,9 @@ describe('app', () => {
 
     it('--bundler=webpack --unitTestRunner=vitest', async () => {
       await applicationGenerator(tree, {
-        name: 'my-webpack-app',
+        directory: 'my-webpack-app',
         bundler: 'webpack',
         unitTestRunner: 'vitest',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('my-webpack-app/vite.config.ts')).toBeTruthy();
@@ -607,9 +572,8 @@ describe('app', () => {
   describe('--e2e-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       expect(tree.exists('my-app-e2e')).toBeFalsy();
@@ -619,9 +583,8 @@ describe('app', () => {
   describe('--compiler', () => {
     it('should support babel compiler', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         compiler: 'babel',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       } as Schema);
 
@@ -646,9 +609,8 @@ describe('app', () => {
 
     it('should support swc compiler', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         compiler: 'swc',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       } as Schema);
 
@@ -673,9 +635,8 @@ describe('app', () => {
 
     it('should be strict by default', async () => {
       await applicationGenerator(tree, {
-        name: 'my-app',
+        directory: 'my-app',
         compiler: 'swc',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       } as Schema);
 
@@ -689,9 +650,8 @@ describe('app', () => {
     beforeAll(async () => {
       viteAppTree = createTreeWithEmptyWorkspace();
       await applicationGenerator(viteAppTree, {
-        name: 'my-app',
+        directory: 'my-app',
         bundler: 'vite',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -723,10 +683,9 @@ describe('app', () => {
       );
 
       await applicationGenerator(viteAppTree, {
-        name: 'insourceTests',
+        directory: 'insourceTests',
         bundler: 'vite',
         inSourceTests: true,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 

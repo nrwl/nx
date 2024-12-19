@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
+use tracing::trace;
 
 #[napi]
 pub fn remove(src: String) -> anyhow::Result<()> {
@@ -17,7 +18,8 @@ pub fn copy(src: String, dest: String) -> anyhow::Result<()> {
 }
 
 pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<()> where P: AsRef<Path> {
-    let dest: PathBuf = dest.as_ref().into();
+    let dest: PathBuf = remove_trailing_single_dot(dest);
+
     let dest_parent = dest.parent().unwrap_or(&dest);
 
     let src: PathBuf = src.as_ref().into();
@@ -37,6 +39,18 @@ pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<()> where P: AsRef<Path> {
     Ok(())
 }
 
+fn remove_trailing_single_dot(path: impl AsRef<Path>) -> PathBuf {
+    let mut components = path.as_ref().components().collect::<Vec<_>>();
+
+    if let Some(last_component) = components.last() {
+        if last_component.as_os_str() == "." {
+            components.pop();
+        }
+    }
+
+    components.iter().collect()
+}
+
 #[cfg(windows)]
 fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<()> {
     std::os::windows::fs::symlink_file(original, link)
@@ -53,7 +67,10 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<(
 }
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+
+    trace!("creating directory: {:?}", dst.as_ref());
     fs::create_dir_all(&dst)?;
+    trace!("reading source directory: {:?}", src.as_ref());
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;

@@ -11,9 +11,9 @@ With this plugin, you can specify code ownership using the same project matcher 
 In order to use `@nx/powerpack-owners`, you need to have an active Powerpack license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-owners
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
    ```shell

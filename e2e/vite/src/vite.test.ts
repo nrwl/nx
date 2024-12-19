@@ -155,10 +155,10 @@ describe('@nx/vite/plugin', () => {
     it('should support importing .js and .css files in tsconfig path', () => {
       const mylib = uniq('mylib');
       runCLI(
-        `generate @nx/react:library ${mylib} --bundler=none --unitTestRunner=vitest --directory=libs/${mylib} --project-name-and-root-format=as-provided`
+        `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
       );
       updateFile(`libs/${mylib}/src/styles.css`, `.foo {}`);
-      updateFile(`libs/${mylib}/src/foo.mts`, `export const foo = 'foo';`);
+      updateFile(`libs/${mylib}/src/foo.mjs`, `export const foo = 'foo';`);
       updateFile(
         `libs/${mylib}/src/foo.spec.ts`,
         `
@@ -167,6 +167,35 @@ describe('@nx/vite/plugin', () => {
           test('should work', () => {
             expect(styles).toBeDefined();
             expect(foo).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
+    });
+
+    it('should support importing files with "." in the name in tsconfig path', () => {
+      const mylib = uniq('mylib');
+      runCLI(
+        `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
+      );
+      updateFile(`libs/${mylib}/src/styles.module.css`, `.foo {}`);
+      updateFile(`libs/${mylib}/src/foo.enum.ts`, `export const foo = 'foo';`);
+      updateFile(`libs/${mylib}/src/bar.enum.ts`, `export const bar = 'bar';`);
+      updateFile(
+        `libs/${mylib}/src/foo.spec.ts`,
+        `
+          import styles from '~/styles.module.css';
+          import { foo } from '~/foo.enum.ts';
+          import { bar } from '~/bar.enum';
+          test('should work', () => {
+            expect(styles).toBeDefined();
+            expect(foo).toBeDefined();
+            expect(bar).toBeDefined();
           });
         `
       );
@@ -187,7 +216,7 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/vite', '@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
       );
     });
 

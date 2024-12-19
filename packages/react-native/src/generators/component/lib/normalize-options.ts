@@ -1,12 +1,18 @@
 import { getProjects, logger, names, Tree } from '@nx/devkit';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type FileExtensionType,
+} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { Schema } from '../schema';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'js'> {
+  directory: string;
   projectSourceRoot: string;
   fileName: string;
   className: string;
   filePath: string;
+  fileExtension: string;
+  fileExtensionType: FileExtensionType;
   projectName: string;
 }
 
@@ -14,19 +20,20 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
-
   const {
     artifactName: name,
     directory,
     fileName,
     filePath,
+    fileExtension,
+    fileExtensionType,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    fileExtension: 'tsx',
+    allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
+    fileExtension: options.js ? 'js' : 'tsx',
+    js: options.js,
   });
 
   const project = getProjects(host).get(projectName);
@@ -45,27 +52,14 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    name,
     directory,
     className,
     fileName,
     filePath,
+    fileExtension,
+    fileExtensionType,
     projectSourceRoot,
     projectName,
   };
-}
-
-function assertValidOptions(options: Schema) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
-      );
-    }
-  });
 }

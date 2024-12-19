@@ -96,8 +96,7 @@ export interface ChangelogChange {
   body?: string;
   isBreaking?: boolean;
   githubReferences?: Reference[];
-  // TODO(v20): This should be an array of one or more authors (Co-authored-by is supported at the commit level and should have been supported here)
-  author?: { name: string; email: string };
+  authors?: { name: string; email: string }[];
   shortHash?: string;
   revertedHashes?: string[];
 }
@@ -164,6 +163,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -176,6 +176,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
+    if (
+      filterLog &&
+      process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
+    ) {
+      output.note(filterLog);
+    }
+
     const rawVersionPlans = await readRawVersionPlans();
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
@@ -303,7 +310,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       body: '',
                       isBreaking: releaseType.isBreaking,
                       githubReferences,
-                      author,
+                      // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                      authors: [author],
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -314,7 +322,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        author,
+                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                        authors: [author],
                         affectedProjects: [project],
                       };
                     });
@@ -362,7 +371,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             body: c.body,
             isBreaking: c.isBreaking,
             githubReferences: c.references,
-            author: c.author,
+            authors: [c.author],
             shortHash: c.shortHash,
             revertedHashes: c.revertedHashes,
             affectedProjects: '*',
@@ -393,21 +402,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         args.createRelease
       )
     ) {
-      let hasPushed = false;
-
       postGitTasks.push(async (latestCommit) => {
-        if (!hasPushed) {
-          output.logSingleLine(`Pushing to git remote`);
-
-          // Before we can create/update the release we need to ensure the commit exists on the remote
-          await gitPush({
-            gitRemote: args.gitRemote,
-            dryRun: args.dryRun,
-            verbose: args.verbose,
-          });
-          hasPushed = true;
-        }
-
         output.logSingleLine(`Creating GitHub Release`);
 
         await createOrUpdateGithubRelease(
@@ -515,13 +510,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 const releaseType =
                   versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
                 let githubReferences = [];
-                let author = undefined;
+                let authors = [];
                 const parsedCommit = vp.commit
                   ? parseGitCommit(vp.commit, true)
                   : null;
                 if (parsedCommit) {
                   githubReferences = parsedCommit.references;
-                  author = parsedCommit.author;
+                  // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                  authors = [parsedCommit.author];
                 }
                 return {
                   type: releaseType.type,
@@ -531,8 +527,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   isBreaking: releaseType.isBreaking,
                   affectedProjects: Object.keys(vp.projectVersionBumps),
                   githubReferences,
-                  author,
-                };
+                  authors,
+                } as ChangelogChange;
               })
               .filter(Boolean);
           } else {
@@ -589,7 +585,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 body: c.body,
                 isBreaking: c.isBreaking,
                 githubReferences: c.references,
-                author: c.author,
+                // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                authors: [c.author],
                 shortHash: c.shortHash,
                 revertedHashes: c.revertedHashes,
                 affectedProjects: commitChangesNonProjectFiles(
@@ -606,21 +603,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           const projectChangelogs = await generateChangelogForProjects({
             tree,
             args,
-            projectGraph,
             changes,
             projectsVersionData,
             releaseGroup,
             projects: [project],
             nxReleaseConfig,
             projectToAdditionalDependencyBumps,
-            // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
-            commits: filterHiddenCommits(
-              commits,
-              nxReleaseConfig.conventionalCommits
-            ),
           });
 
-          let hasPushed = false;
           for (const [projectName, projectChangelog] of Object.entries(
             projectChangelogs
           )) {
@@ -632,18 +622,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               )
             ) {
               postGitTasks.push(async (latestCommit) => {
-                if (!hasPushed) {
-                  output.logSingleLine(`Pushing to git remote`);
-
-                  // Before we can create/update the release we need to ensure the commit exists on the remote
-                  await gitPush({
-                    gitRemote: args.gitRemote,
-                    dryRun: args.dryRun,
-                    verbose: args.verbose,
-                  });
-                  hasPushed = true;
-                }
-
                 output.logSingleLine(`Creating GitHub Release`);
 
                 await createOrUpdateGithubRelease(
@@ -688,7 +666,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       body: '',
                       isBreaking: releaseType.isBreaking,
                       githubReferences,
-                      author,
+                      // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                      authors: [author],
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -699,7 +678,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         body: '',
                         isBreaking: releaseType.isBreaking,
                         githubReferences,
-                        author,
+                        // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+                        authors: [author],
                         affectedProjects: [project],
                       };
                     });
@@ -745,7 +725,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               body: c.body,
               isBreaking: c.isBreaking,
               githubReferences: c.references,
-              author: c.author,
+              // TODO(JamesHenry): Implement support for Co-authored-by and adding multiple authors
+              authors: [c.author],
               shortHash: c.shortHash,
               revertedHashes: c.revertedHashes,
               affectedProjects: commitChangesNonProjectFiles(
@@ -762,21 +743,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         const projectChangelogs = await generateChangelogForProjects({
           tree,
           args,
-          projectGraph,
           changes,
           projectsVersionData,
           releaseGroup,
           projects: projectNodes,
           nxReleaseConfig,
           projectToAdditionalDependencyBumps,
-          // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
-          commits: filterHiddenCommits(
-            commits,
-            nxReleaseConfig.conventionalCommits
-          ),
         });
 
-        let hasPushed = false;
         for (const [projectName, projectChangelog] of Object.entries(
           projectChangelogs
         )) {
@@ -788,18 +762,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             )
           ) {
             postGitTasks.push(async (latestCommit) => {
-              if (!hasPushed) {
-                output.logSingleLine(`Pushing to git remote`);
-
-                // Before we can create/update the release we need to ensure the commit exists on the remote
-                await gitPush({
-                  gitRemote: args.gitRemote,
-                  dryRun: args.dryRun,
-                  verbose: args.verbose,
-                });
-                hasPushed = true;
-              }
-
               output.logSingleLine(`Creating GitHub Release`);
 
               await createOrUpdateGithubRelease(
@@ -1020,6 +982,15 @@ async function applyChangesAndExit(
     }
   }
 
+  if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
+    output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+    await gitPush({
+      gitRemote: args.gitRemote,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+  }
+
   // Run any post-git tasks in series
   for (const postGitTask of postGitTasks) {
     await postGitTask(latestCommit);
@@ -1094,7 +1065,7 @@ async function generateChangelogForWorkspace({
   const dryRun = !!args.dryRun;
   const gitRemote = args.gitRemote;
 
-  const changelogRenderer = resolveChangelogRenderer(config.renderer);
+  const ChangelogRendererClass = resolveChangelogRenderer(config.renderer);
 
   let interpolatedTreePath = config.file || '';
   if (interpolatedTreePath) {
@@ -1121,18 +1092,17 @@ async function generateChangelogForWorkspace({
 
   const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
 
-  let contents = await changelogRenderer({
-    projectGraph,
+  const changelogRenderer = new ChangelogRendererClass({
     changes,
-    commits,
-    releaseVersion: releaseVersion.rawVersion,
+    changelogEntryVersion: releaseVersion.rawVersion,
     project: null,
-    repoSlug: githubRepoData?.slug,
+    isVersionPlans: false,
     repoData: githubRepoData,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
   });
+  let contents = await changelogRenderer.render();
 
   /**
    * If interactive mode, make the changelog contents available for the user to modify in their editor of choice,
@@ -1191,9 +1161,7 @@ async function generateChangelogForWorkspace({
 async function generateChangelogForProjects({
   tree,
   args,
-  projectGraph,
   changes,
-  commits,
   projectsVersionData,
   releaseGroup,
   projects,
@@ -1202,9 +1170,7 @@ async function generateChangelogForProjects({
 }: {
   tree: Tree;
   args: ChangelogOptions;
-  projectGraph: ProjectGraph;
   changes: ChangelogChange[];
-  commits: GitCommit[];
   projectsVersionData: VersionData;
   releaseGroup: ReleaseGroupWithName;
   projects: ProjectGraphProjectNode[];
@@ -1223,7 +1189,7 @@ async function generateChangelogForProjects({
   const dryRun = !!args.dryRun;
   const gitRemote = args.gitRemote;
 
-  const changelogRenderer = resolveChangelogRenderer(config.renderer);
+  const ChangelogRendererClass = resolveChangelogRenderer(config.renderer);
 
   const projectChangelogs: NxReleaseChangelogResult['projectChangelogs'] = {};
 
@@ -1241,7 +1207,10 @@ async function generateChangelogForProjects({
      * newVersion will be null in the case that no changes were detected (e.g. in conventional commits mode),
      * no changelog entry is relevant in that case.
      */
-    if (projectsVersionData[project.name].newVersion === null) {
+    if (
+      !projectsVersionData[project.name] ||
+      projectsVersionData[project.name].newVersion === null
+    ) {
       continue;
     }
 
@@ -1262,13 +1231,10 @@ async function generateChangelogForProjects({
 
     const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
 
-    let contents = await changelogRenderer({
-      projectGraph,
+    const changelogRenderer = new ChangelogRendererClass({
       changes,
-      commits,
-      releaseVersion: releaseVersion.rawVersion,
+      changelogEntryVersion: releaseVersion.rawVersion,
       project: project.name,
-      repoSlug: githubRepoData?.slug,
       repoData: githubRepoData,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
@@ -1279,11 +1245,13 @@ async function generateChangelogForProjects({
             })
           : false,
       changelogRenderOptions: config.renderOptions,
+      isVersionPlans: !!releaseGroup.versionPlans,
       conventionalCommitsConfig: releaseGroup.versionPlans
         ? null
         : nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
     });
+    let contents = await changelogRenderer.render();
 
     /**
      * If interactive mode, make the changelog contents available for the user to modify in their editor of choice,
@@ -1410,14 +1378,19 @@ function filterHiddenCommits(
 }
 
 export function shouldCreateGitHubRelease(
-  changelogConfig: NxReleaseChangelogConfiguration | false | undefined,
+  changelogConfig:
+    | NxReleaseConfig['changelog']['workspaceChangelog']
+    | NxReleaseConfig['changelog']['projectChangelogs']
+    | NxReleaseConfig['groups'][number]['changelog'],
   createReleaseArg: ChangelogOptions['createRelease'] | undefined = undefined
 ): boolean {
   if (createReleaseArg !== undefined) {
     return createReleaseArg === 'github';
   }
-
-  return (changelogConfig || {}).createRelease !== false;
+  if (changelogConfig === false) {
+    return false;
+  }
+  return changelogConfig.createRelease !== false;
 }
 
 async function promptForGitHubRelease(): Promise<boolean> {

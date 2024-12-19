@@ -90,7 +90,7 @@ function performInstallation(
     cp.execSync('npm i', {
       cwd: path.dirname(installationPath),
       stdio: 'inherit',
-      windowsHide: true,
+      windowsHide: false,
     });
   } catch (e) {
     // revert possible changes to the current installation

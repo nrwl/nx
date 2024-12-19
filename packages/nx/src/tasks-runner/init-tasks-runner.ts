@@ -1,4 +1,3 @@
-import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
 import { readNxJson } from '../config/configuration';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -13,7 +12,6 @@ import { TaskResult } from './life-cycle';
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
   loadRootEnvFiles();
-  workspaceConfigurationCheck();
   const nxJson = readNxJson();
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';

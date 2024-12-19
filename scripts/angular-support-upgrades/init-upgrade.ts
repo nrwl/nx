@@ -46,7 +46,7 @@ async function run() {
     stdio: 'inherit',
     encoding: 'utf8',
 
-    windowsHide: true,
+    windowsHide: false,
   });
   console.log('✅ - Finished installing packages!');
 
@@ -54,7 +54,7 @@ async function run() {
   execSync('pnpm nx format', {
     stdio: 'inherit',
     encoding: 'utf8',
-    windowsHide: true,
+    windowsHide: false,
   });
   console.log('✅ - Finished creating migrations!');
 }

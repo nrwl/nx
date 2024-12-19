@@ -50,7 +50,6 @@ describe('nx release conventional commits config', () => {
 
   beforeAll(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -365,11 +364,9 @@ describe('nx release conventional commits config', () => {
     expect(pkg1Changelog).toMatchInlineSnapshot(`
       # 1.0.0 (YYYY-MM-DD)
 
-
       ### Custom Type
 
       - ⚠️  **{project-name}:** this is a breaking change
-
 
       ### ⚠️  Breaking Changes
 
@@ -380,7 +377,6 @@ describe('nx release conventional commits config', () => {
     expect(pkg2Changelog).toMatchInlineSnapshot(`
       # 1.0.0 (YYYY-MM-DD)
 
-
       ### Custom Type
 
       - **{project-name}:** this is a custom type
@@ -389,7 +385,6 @@ describe('nx release conventional commits config', () => {
     const pkg3Changelog = readFile(`${pkg3}/CHANGELOG.md`);
     expect(pkg3Changelog).toMatchInlineSnapshot(`
       # 1.0.0 (YYYY-MM-DD)
-
 
       ### Custom Docs Header
 
@@ -409,7 +404,6 @@ describe('nx release conventional commits config', () => {
     expect(pkg5Changelog).toMatchInlineSnapshot(`
       # 1.0.0 (YYYY-MM-DD)
 
-
       ### 🔥 Performance
 
       - this is a performance improvement
@@ -419,11 +413,9 @@ describe('nx release conventional commits config', () => {
     expect(pkg6Changelog).toMatchInlineSnapshot(`
       # 1.0.0 (YYYY-MM-DD)
 
-
       ### 💅 Refactors
 
       - this is refactor
-
 
       ### 📦 Build
 

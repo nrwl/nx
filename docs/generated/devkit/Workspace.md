@@ -21,7 +21,6 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [cli](../../devkit/documents/Workspace#cli): Object
 - [defaultBase](../../devkit/documents/Workspace#defaultbase): string
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
-- [enableDbCache](../../devkit/documents/Workspace#enabledbcache): boolean
 - [extends](../../devkit/documents/Workspace#extends): string
 - [generators](../../devkit/documents/Workspace#generators): Object
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
@@ -42,6 +41,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
+- [useLegacyCache](../../devkit/documents/Workspace#uselegacycache): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -116,18 +116,6 @@ will be used. Convenient for small workspaces with one main application.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject)
-
----
-
-### enableDbCache
-
-• `Optional` **enableDbCache**: `boolean`
-
-Enable the new experimental db based cache
-
-#### Inherited from
-
-[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[enableDbCache](../../devkit/documents/NxJsonConfiguration#enabledbcache)
 
 ---
 
@@ -223,7 +211,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 #### Inherited from
 
@@ -370,7 +358,10 @@ Dependencies between different target names across all projects
 
 • `Optional` **tasksRunnerOptions**: `Object`
 
-Available Task Runners
+**`Deprecated`**
+
+Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+Available Task Runners for Nx to use
 
 #### Index signature
 
@@ -403,6 +394,18 @@ Set this to false to disable adding inference plugins when generating new projec
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins)
+
+---
+
+### useLegacyCache
+
+• `Optional` **useLegacyCache**: `boolean`
+
+Use the legacy file system cache instead of the db cache
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache)
 
 ---
 

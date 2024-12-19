@@ -24,43 +24,43 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 Generate a new Angular application:
 
 ```shell
-nx generate @nx/angular:app myapp
+nx generate @nx/angular:app apps/myapp
 ```
 
 Generate a new React application:
 
 ```shell
-nx generate @nx/react:app myapp
+nx generate @nx/react:app apps/myapp
 ```
 
 Generate a new web component application:
 
 ```shell
-nx generate @nx/web:app myapp
+nx generate @nx/web:app apps/myapp
 ```
 
 Generate a new Node application:
 
 ```shell
-nx generate @nx/node:app myapp
+nx generate @nx/node:app apps/myapp
 ```
 
 Generate a new Angular library application:
 
 ```shell
-nx generate @nx/angular:library mylibrary
+nx generate @nx/angular:library libs/mylibrary
 ```
 
 Generate a new React library application:
 
 ```shell
-nx generate @nx/react:library mylibrary
+nx generate @nx/react:library libs/mylibrary
 ```
 
 Generate a new Node library application:
 
 ```shell
-nx generate @nx/node:library mylibrary
+nx generate @nx/node:library libs/mylibrary
 ```
 
 ## Options

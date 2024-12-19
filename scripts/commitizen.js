@@ -20,6 +20,8 @@ const scopes = [
   { value: 'react',             name: 'react:                 anything React specific' },
   { value: 'react-native',      name: 'react-native:          anything React Native specific' },
   { value: 'remix',             name: 'remix:                 anything Remix specific' },
+  { value: 'rspack',            name: 'rspack:                anything Rspack specific' },
+  { value: 'rsbuild',           name: 'rsbuild:               anything Rsbuild specific' },
   { value: 'expo',              name: 'expo:                  anything Expo specific' },
   { value: 'release',           name: 'release:               anything related to nx release' },
   { value: 'repo',              name: 'repo:                  anything related to managing the repo itself' },

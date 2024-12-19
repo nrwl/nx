@@ -11,7 +11,10 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { createTaskHasher } from '../hasher/create-task-hasher';
-import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
+import {
+  getTaskDetails,
+  hashTasksThatDoNotDependOnOutputsOfOtherTasks,
+} from '../hasher/hash-task';
 import { IS_WASM } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
@@ -301,9 +304,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const outOfSyncTitle = 'The workspace is out of sync';
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
-    'You can manually run `nx sync` to update your workspace with the identified changes or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
-  const willErrorOnCiMessage =
-    'Please note that having the workspace out of sync will result in an error in CI.';
+    'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
+  const willErrorOnCiMessage = 'This will result in an error in CI.';
 
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
@@ -489,7 +491,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
     const promptConfig = {
       name: 'applyChanges',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to sync the identified changes to get your workspace up to date?',
       choices: [
@@ -520,7 +522,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   try {
     const promptConfig = {
       name: 'runTasks',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to ignore the sync failures and continue running the tasks?',
       choices: [
@@ -589,6 +591,9 @@ export async function invokeTasksRunner({
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
+  // this needs to be done before we start to run the tasks
+  const taskDetails = getTaskDetails();
+
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
   let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
@@ -601,7 +606,8 @@ export async function invokeTasksRunner({
     hasher,
     projectGraph,
     taskGraph,
-    nxJson
+    nxJson,
+    taskDetails
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
@@ -783,7 +789,7 @@ export function getRunner(
   runnerOptions: any;
 } {
   let runner = nxArgs.runner;
-  runner = runner || 'default';
+  runner = runner ?? 'default';
 
   if (runner !== 'default' && !nxJson.tasksRunnerOptions?.[runner]) {
     throw new Error(`Could not find runner configuration for ${runner}`);
@@ -792,6 +798,16 @@ export function getRunner(
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
   try {
+    if (isCustomRunnerPath(modulePath)) {
+      output.warn({
+        title: `Custom task runners will no longer be supported in Nx 21.`,
+        bodyLines: [
+          `Use Nx Cloud or the Nx Powerpack caches instead.`,
+          `For more information, see https://nx.dev/nx-enterprise/powerpack/custom-caching`,
+        ],
+      });
+    }
+
     const tasksRunner = loadTasksRunner(modulePath);
 
     return {
@@ -807,6 +823,8 @@ export function getRunner(
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
 }
+
+const defaultTasksRunnerPath = require.resolve('./default-tasks-runner');
 
 function getTasksRunnerPath(
   runner: string,
@@ -831,7 +849,7 @@ function getTasksRunnerPath(
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
 
-  return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
+  return isCloudRunner ? 'nx-cloud' : defaultTasksRunnerPath;
 }
 
 export function getRunnerOptions(
@@ -893,4 +911,9 @@ export function getRunnerOptions(
   }
 
   return result;
+}
+function isCustomRunnerPath(modulePath: string) {
+  return !['nx-cloud', '@nrwl/nx-cloud', defaultTasksRunnerPath].includes(
+    modulePath
+  );
 }

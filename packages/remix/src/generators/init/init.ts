@@ -1,16 +1,13 @@
 import {
-  type Tree,
+  addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
-  addDependenciesToPackageJson,
   runTasksInSerial,
-  createProjectGraphAsync,
+  type Tree,
 } from '@nx/devkit';
-import {
-  addPlugin,
-  generateCombinations,
-} from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';

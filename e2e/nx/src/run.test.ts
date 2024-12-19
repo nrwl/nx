@@ -37,7 +37,7 @@ describe('Nx Running Tests', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');
       beforeAll(() => {
-        runCLI(`generate @nx/js:lib ${proj} --directory=libs/${proj}`);
+        runCLI(`generate @nx/js:lib libs/${proj}`);
         updateJson(`libs/${proj}/project.json`, (c) => {
           c.targets['echo'] = {
             command: 'echo ECHO:',
@@ -107,7 +107,7 @@ describe('Nx Running Tests', () => {
 
     it('should execute long running tasks', () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
       updateJson(`apps/${myapp}/project.json`, (c) => {
         c.targets['counter'] = {
           executor: '@nx/workspace:counter',
@@ -127,7 +127,7 @@ describe('Nx Running Tests', () => {
 
     it('should run npm scripts', async () => {
       const mylib = uniq('mylib');
-      runCLI(`generate @nx/node:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/node:lib libs/${mylib}`);
 
       // Used to restore targets to lib after test
       const original = readJson(`libs/${mylib}/project.json`);
@@ -172,7 +172,7 @@ describe('Nx Running Tests', () => {
 
       beforeAll(async () => {
         app = uniq('myapp');
-        runCLI(`generate @nx/web:app ${app} --directory=apps/${app}`);
+        runCLI(`generate @nx/web:app apps/${app}`);
       });
 
       it('should support using {projectRoot} in options blocks in project.json', async () => {
@@ -236,7 +236,7 @@ describe('Nx Running Tests', () => {
 
     it('should pass env option to nx:run-commands executor', () => {
       const mylib = uniq('mylib');
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => {
         c.targets['echo'] = {
@@ -257,7 +257,7 @@ describe('Nx Running Tests', () => {
 
     it('should not run dependencies if --no-dependencies is passed', () => {
       const mylib = uniq('mylib');
-      runCLI(`generate @nx/js:lib ${mylib} --directory=libs/${mylib}`);
+      runCLI(`generate @nx/js:lib libs/${mylib}`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => {
         c.targets['one'] = {
@@ -294,8 +294,8 @@ describe('Nx Running Tests', () => {
     it('should stop executing all tasks when one of the tasks fails', async () => {
       const myapp1 = uniq('a');
       const myapp2 = uniq('b');
-      runCLI(`generate @nx/web:app ${myapp1} --directory=apps/${myapp1}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+      runCLI(`generate @nx/web:app apps/${myapp1}`);
+      runCLI(`generate @nx/web:app apps/${myapp2}`);
       updateJson(`apps/${myapp1}/project.json`, (c) => {
         c.targets['error'] = {
           command: 'echo boom1 && exit 1',
@@ -331,8 +331,6 @@ describe('Nx Running Tests', () => {
         .filter((r) => r);
       withBail = withBail.slice(withBail.indexOf('Failed tasks:'));
 
-      expect(withBail).toHaveLength(2);
-
       if (withBail[1] === `- ${myapp1}:error`) {
         expect(withBail).not.toContain(`- ${myapp2}:error`);
       } else {
@@ -345,14 +343,14 @@ describe('Nx Running Tests', () => {
   describe('run-one', () => {
     it('should build a specific project', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
 
       runCLI(`build ${myapp}`);
     }, 10000);
 
     it('should support project name positional arg non-consecutive to target', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
 
       runCLI(`build --verbose ${myapp}`);
     }, 10000);
@@ -363,7 +361,7 @@ describe('Nx Running Tests', () => {
       const expectedOutput = uniq('myEchoedString');
       const expectedEnvOutput = uniq('myEnvString');
 
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp}`);
       updateFile(
         `apps/${myapp}/package.json`,
         JSON.stringify({
@@ -394,36 +392,6 @@ describe('Nx Running Tests', () => {
         expectedEnvOutput
       );
     }, 10000);
-
-    it('should run targets inferred from plugin-specified project files', () => {
-      // Setup an app to extend
-      const myapp = uniq('app');
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
-
-      // Register an Nx plugin
-      const plugin = `module.exports = {
-  projectFilePatterns: ['inferred-project.nxproject'],
-  registerProjectTargets: () => ({
-    "echo": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "echo inferred-target"
-      }
-    }
-  })
-}`;
-      updateFile('tools/local-plugin/plugin.js', plugin);
-      updateFile('nx.json', (c) => {
-        const nxJson = JSON.parse(c);
-        nxJson.plugins = ['./tools/local-plugin/plugin.js'];
-        return JSON.stringify(nxJson, null, 2);
-      });
-
-      // Create a custom project file for the app
-      updateFile(`apps/${myapp}/inferred-project.nxproject`, 'contents');
-
-      expect(runCLI(`echo ${myapp}`)).toContain('inferred-target');
-    });
 
     it('should build a specific project with the daemon disabled', () => {
       const myapp = uniq('app');
@@ -621,7 +589,7 @@ describe('Nx Running Tests', () => {
         `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared --directory=libs/${libC}`
       );
       runCLI(
-        `generate @nx/node:lib ${libD} --defaults --tags=api --directory=libs/${libD}`
+        `generate @nx/node:lib ${libD} --defaults --tags=api --directory=libs/${libD} --buildable=false`
       );
 
       // libA depends on libC

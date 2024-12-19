@@ -96,7 +96,7 @@ If you'd like a more indepth recipe for scaffolding `host` and `remote` generato
 our [Module Federation Recipes](/recipes/module-federation).
 {% /callout %}
 
-```{% command="npx nx g @nx/react:host shell --remotes=remote1 --bundler=rspack" path="~/myorg" %}
+```{% command="npx nx g @nx/react:host apps/shell --remotes=remote1 --bundler=rspack" path="~/myorg" %}
  NX  Generating @nx/react:host
 
 ✔ Which stylesheet format would you like to use? · css
@@ -479,7 +479,7 @@ For more information about Zephyr Cloud I highly recommend checking out their [d
 
 ## Learn More
 
-- [Nx on CI](/ci)
+- [Nx on CI](/ci/intro/ci-with-nx)
 - [Task Distribution with Nx Agents](/ci/features/distribute-task-execution)
 - [Automated e2e Test Splitting](/ci/features/split-e2e-tasks)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)

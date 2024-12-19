@@ -7,6 +7,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
+import { execSync } from 'node:child_process';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 expect.addSnapshotSerializer({
@@ -47,10 +48,10 @@ const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 describe('nx release circular dependencies', () => {
   let pkg1: string;
   let pkg2: string;
+  let e2eRegistryUrl: string;
 
   beforeAll(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -86,6 +87,9 @@ describe('nx release circular dependencies', () => {
     runCLI('reset');
     resetWorkspaceContext();
     runCLI('reset');
+
+    // This is the verdaccio instance that the e2e tests themselves are working from
+    e2eRegistryUrl = execSync('npm config get registry').toString().trim();
   }, 60000);
 
   afterAll(() => {
@@ -245,7 +249,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -267,7 +271,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -430,7 +434,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -452,7 +456,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -545,7 +549,6 @@ describe('nx release circular dependencies', () => {
 
         + # 2.0.0 (YYYY-MM-DD)
         +
-        +
         + ### 🧱 Updated Dependencies
         +
         + - Updated {project-name} to 2.0.0
@@ -556,7 +559,6 @@ describe('nx release circular dependencies', () => {
 
 
         + # 2.0.0 (YYYY-MM-DD)
-        +
         +
         + ### 🧱 Updated Dependencies
         +
@@ -616,7 +618,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -638,7 +640,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -685,7 +687,7 @@ describe('nx release circular dependencies', () => {
         {project-name} 📄 Using the provided version specifier "major".
         {project-name} ⚠️  Warning, the following packages depend on "{project-name}" but have been filtered out via --projects, and therefore will not be updated:
         - {project-name}
-        => You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"
+        => You can adjust this behavior by removing the usage of \`version.generatorOptions.updateDependents\` with "never"
         {project-name} ✍️  New version 2.0.0 written to {project-name}/package.json
 
 
@@ -704,11 +706,6 @@ describe('nx release circular dependencies', () => {
 
         Would stage files in git with the following command, but --dry-run was set:
         git add {project-name}/package.json
-
-        NX   Your filter "{project-name}" matched the following projects:
-
-        - {project-name}
-
         Determined workspace --from ref from the first commit in the workspace: {SHASUM}
         Determined --from ref for {project-name} from the first commit in which it exists: {COMMIT_SHA}
 
@@ -725,11 +722,6 @@ describe('nx release circular dependencies', () => {
         Would stage files in git with the following command, but --dry-run was set:
         git add {project-name}/CHANGELOG.md
 
-        NX   Your filter "{project-name}" matched the following projects:
-
-        - {project-name}
-
-
         NX   Committing changes with git
 
         Would commit all previously staged files in git with the following command, but --dry-run was set:
@@ -739,11 +731,6 @@ describe('nx release circular dependencies', () => {
 
         Would tag the current commit in git with the following command, but --dry-run was set:
         git tag --annotate {project-name}@2.0.0 --message {project-name}@2.0.0
-
-        NX   Your filter "{project-name}" matched the following projects:
-
-        - {project-name}
-
 
         NX   Running target nx-release-publish for project {project-name}:
 
@@ -775,7 +762,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -868,7 +855,6 @@ describe('nx release circular dependencies', () => {
 
         + # 2.0.0 (YYYY-MM-DD)
         +
-        +
         + ### 🧱 Updated Dependencies
         +
         + - Updated {project-name} to 2.0.0
@@ -879,7 +865,6 @@ describe('nx release circular dependencies', () => {
 
 
         + # 2.0.0 (YYYY-MM-DD)
-        +
         +
         + ### 🧱 Updated Dependencies
         +
@@ -939,7 +924,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -961,7 +946,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -1042,11 +1027,6 @@ describe('nx release circular dependencies', () => {
 
         Would stage files in git with the following command, but --dry-run was set:
         git add {project-name}/package.json {project-name}/package.json
-
-        NX   Your filter "{project-name}" matched the following projects:
-
-        - {project-name}
-
         Determined workspace --from ref from the first commit in the workspace: {SHASUM}
         Determined --from ref for {project-name} from the first commit in which it exists: {COMMIT_SHA}
 
@@ -1054,7 +1034,6 @@ describe('nx release circular dependencies', () => {
 
 
         + # 2.0.0 (YYYY-MM-DD)
-        +
         +
         + ### 🧱 Updated Dependencies
         +
@@ -1067,7 +1046,6 @@ describe('nx release circular dependencies', () => {
 
         + ## 1.0.1 (YYYY-MM-DD)
         +
-        +
         + ### 🧱 Updated Dependencies
         +
         + - Updated {project-name} to 2.0.0
@@ -1078,11 +1056,6 @@ describe('nx release circular dependencies', () => {
         Would stage files in git with the following command, but --dry-run was set:
         git add {project-name}/CHANGELOG.md {project-name}/CHANGELOG.md
 
-        NX   Your filter "{project-name}" matched the following projects:
-
-        - {project-name}
-
-
         NX   Committing changes with git
 
         Would commit all previously staged files in git with the following command, but --dry-run was set:
@@ -1092,11 +1065,6 @@ describe('nx release circular dependencies', () => {
 
         Would tag the current commit in git with the following command, but --dry-run was set:
         git tag --annotate {project-name}@2.0.0 --message {project-name}@2.0.0
-
-        NX   Your filter "{project-name}" matched the following projects:
-
-        - {project-name}
-
 
         NX   Running target nx-release-publish for project {project-name}:
 
@@ -1128,7 +1096,7 @@ describe('nx release circular dependencies', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   3
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 

@@ -462,10 +462,7 @@ describe('getJestProjectsAsync', () => {
         },
       },
     });
-    const expectedResults = [
-      '<rootDir>/projects/test-1',
-      '<rootDir>/projects/test-1/jest1.config.ts',
-    ];
+    const expectedResults = ['<rootDir>/projects/test-1/jest1.config.ts'];
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 

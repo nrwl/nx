@@ -1,23 +1,17 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithNestApplication } from '../utils/testing';
-import type { ProviderGeneratorOptions } from './provider';
 import { providerGenerator } from './provider';
 
 describe('provider generator', () => {
   let tree: Tree;
-  const directory = 'api';
-  const options: ProviderGeneratorOptions = {
-    name: 'test',
-    directory,
-    unitTestRunner: 'jest',
-  };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
-    jest.clearAllMocks();
+    tree = createTreeWithNestApplication('api');
   });
 
   it('should run successfully', async () => {
-    await expect(providerGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      providerGenerator(tree, { path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

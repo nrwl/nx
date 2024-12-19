@@ -19,8 +19,7 @@ export async function createFiles(
 ) {
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild';
+  const isUsingApplicationBuilder = options.bundler === 'esbuild';
   const disableModernClassFieldsBehavior = lt(angularVersion, '18.1.0-rc.0');
 
   const rootSelector = `${options.prefix}-root`;
@@ -55,6 +54,9 @@ export async function createFiles(
     disableModernClassFieldsBehavior,
     useEventCoalescing: angularMajorVersion >= 18,
     useRouterTestingModule: angularMajorVersion < 18,
+    // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+    setStandaloneFalse: angularMajorVersion >= 19,
+    setStandaloneTrue: angularMajorVersion < 19,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'

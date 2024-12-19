@@ -5,13 +5,18 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -22,7 +27,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
 
   const fileName = projectNames.projectFileName;
@@ -57,6 +61,7 @@ export async function normalizeOptions(
     projectRoot,
     parsedTags,
     importPath,
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.

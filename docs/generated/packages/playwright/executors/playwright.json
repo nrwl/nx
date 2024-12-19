@@ -24,6 +24,10 @@
         "type": "boolean",
         "description": "Run tests with Playwright Inspector. Shortcut for 'PWDEBUG=1' environment variable and '--timeout=0',--max-failures=1 --headed --workers=1' options"
       },
+      "lastFailed": {
+        "type": "boolean",
+        "description": "Run only the tests that failed in the last run"
+      },
       "forbidOnly": {
         "type": "boolean",
         "description": "Fail if test.only is called"

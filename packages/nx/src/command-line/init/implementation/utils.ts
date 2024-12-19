@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
 import { connectWorkspaceToCloud } from '../../connect/connect-to-nx-cloud';
+import { deduceDefaultBase as gitInitDefaultBase } from '../../../utils/default-base';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -68,32 +69,40 @@ function deduceDefaultBase() {
   try {
     execSync(`git rev-parse --verify main`, {
       stdio: ['ignore', 'ignore', 'ignore'],
-      windowsHide: true,
+      windowsHide: false,
     });
     return 'main';
   } catch {
     try {
       execSync(`git rev-parse --verify dev`, {
         stdio: ['ignore', 'ignore', 'ignore'],
-        windowsHide: true,
+        windowsHide: false,
       });
       return 'dev';
     } catch {
       try {
         execSync(`git rev-parse --verify develop`, {
           stdio: ['ignore', 'ignore', 'ignore'],
-          windowsHide: true,
+          windowsHide: false,
         });
         return 'develop';
       } catch {
         try {
           execSync(`git rev-parse --verify next`, {
             stdio: ['ignore', 'ignore', 'ignore'],
-            windowsHide: true,
+            windowsHide: false,
           });
           return 'next';
         } catch {
-          return 'master';
+          try {
+            execSync(`git rev-parse --verify master`, {
+              stdio: ['ignore', 'ignore', 'ignore'],
+              windowsHide: false,
+            });
+            return 'master';
+          } catch {
+            return gitInitDefaultBase();
+          }
         }
       }
     }
@@ -144,7 +153,11 @@ export function runInstall(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
-  execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot, windowsHide: true });
+  execSync(pmc.install, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+    windowsHide: false,
+  });
 }
 
 export async function initCloud(

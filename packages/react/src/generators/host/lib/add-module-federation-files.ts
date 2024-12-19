@@ -117,7 +117,10 @@ export function addModuleFederationFiles(
         pathToMFManifest,
         `{
         ${defaultRemoteManifest
-          .map(({ name, port }) => `"${name}": "http://localhost:${port}"`)
+          .map(
+            ({ name, port }) =>
+              `"${name}": "http://localhost:${port}/mf-manifest.json"`
+          )
           .join(',\n')}
           }`
       );

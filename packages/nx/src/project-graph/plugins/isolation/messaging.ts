@@ -1,12 +1,8 @@
-import {
-  ProjectGraph,
-  ProjectGraphProcessorContext,
-} from '../../../config/project-graph';
+import { ProjectGraph } from '../../../config/project-graph';
 import { PluginConfiguration } from '../../../config/nx-json';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContext,
   CreateNodesContextV2,
 } from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
@@ -18,6 +14,9 @@ export interface PluginWorkerLoadMessage {
   payload: {
     plugin: PluginConfiguration;
     root: string;
+    name: string;
+    pluginPath: string;
+    shouldRegisterTSTranspiler: boolean;
   };
 }
 
@@ -85,7 +84,7 @@ export interface PluginCreateDependenciesResult {
   type: 'createDependenciesResult';
   payload:
     | {
-        dependencies: ReturnType<LoadedNxPlugin['createDependencies']>;
+        dependencies: Awaited<ReturnType<LoadedNxPlugin['createDependencies']>>;
         success: true;
         tx: string;
       }
@@ -100,7 +99,7 @@ export interface PluginCreateMetadataResult {
   type: 'createMetadataResult';
   payload:
     | {
-        metadata: ReturnType<LoadedNxPlugin['createMetadata']>;
+        metadata: Awaited<ReturnType<LoadedNxPlugin['createMetadata']>>;
         success: true;
         tx: string;
       }
@@ -109,50 +108,18 @@ export interface PluginCreateMetadataResult {
         error: Error;
         tx: string;
       };
-}
-
-export interface PluginWorkerProcessProjectGraphMessage {
-  type: 'processProjectGraph';
-  payload: {
-    graph: ProjectGraph;
-    ctx: ProjectGraphProcessorContext;
-    tx: string;
-  };
-}
-
-export interface PluginWorkerProcessProjectGraphResult {
-  type: 'processProjectGraphResult';
-  payload:
-    | {
-        graph: ProjectGraph;
-        success: true;
-        tx: string;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
-
-export interface PluginWorkerShutdownMessage {
-  type: 'shutdown';
-  payload: {};
 }
 
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
-  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
-  | PluginWorkerProcessProjectGraphMessage
   | PluginCreateMetadataMessage;
 
 export type PluginWorkerResult =
   | PluginWorkerLoadResult
   | PluginWorkerCreateNodesResult
   | PluginCreateDependenciesResult
-  | PluginWorkerProcessProjectGraphResult
   | PluginCreateMetadataResult;
 
 export function isPluginWorkerMessage(

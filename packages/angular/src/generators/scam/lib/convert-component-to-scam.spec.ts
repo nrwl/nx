@@ -15,7 +15,7 @@ describe('convertComponentToScam', () => {
 
     await componentGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       skipImport: true,
       export: false,
       standalone: false,
@@ -24,6 +24,7 @@ describe('convertComponentToScam', () => {
 
     // ACT
     convertComponentToScam(tree, {
+      path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/example/example.component.ts',
@@ -45,6 +46,7 @@ describe('convertComponentToScam', () => {
 
       @Component({
         selector: 'example',
+        standalone: false,
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
@@ -71,7 +73,7 @@ describe('convertComponentToScam', () => {
 
     await componentGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       skipImport: true,
       export: false,
       standalone: false,
@@ -80,6 +82,7 @@ describe('convertComponentToScam', () => {
 
     // ACT
     convertComponentToScam(tree, {
+      path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/example/example.component.ts',
@@ -121,7 +124,7 @@ describe('convertComponentToScam', () => {
 
     await componentGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app',
+      path: 'apps/app1/src/app/example',
       skipImport: true,
       export: false,
       type: 'random',
@@ -131,6 +134,7 @@ describe('convertComponentToScam', () => {
 
     // ACT
     convertComponentToScam(tree, {
+      path: 'apps/app1/src/app/example',
       directory: 'apps/app1/src/app',
       fileName: 'example.random',
       filePath: 'apps/app1/src/app/example.random.ts',
@@ -153,6 +157,7 @@ describe('convertComponentToScam', () => {
 
       @Component({
         selector: 'example',
+        standalone: false,
         templateUrl: './example.random.html',
         styleUrl: './example.random.css'
       })
@@ -179,7 +184,7 @@ describe('convertComponentToScam', () => {
 
     await componentGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app',
+      path: 'apps/app1/src/app/example',
       skipImport: true,
       export: false,
       type: 'random',
@@ -189,6 +194,7 @@ describe('convertComponentToScam', () => {
 
     // ACT
     convertComponentToScam(tree, {
+      path: 'apps/app1/src/app/example',
       directory: 'apps/app1/src/app',
       fileName: 'example.random',
       filePath: 'apps/app1/src/app/example.random.ts',

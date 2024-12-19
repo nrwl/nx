@@ -965,6 +965,47 @@ describe('project-configuration-utils', () => {
           sourceMap['libs/lib-a']['metadata.targetGroups.group1.1']
         ).toEqual(['dummy', 'dummy.ts']);
       });
+
+      it('should not clobber targetGroups', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group2: ['target3'],
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology'],
+              targetGroups: {
+                group1: ['target1', 'target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          technologies: ['technology'],
+          targetGroups: {
+            group1: ['target1', 'target2'],
+            group2: ['target3'],
+          },
+        });
+      });
     });
 
     describe('source map', () => {

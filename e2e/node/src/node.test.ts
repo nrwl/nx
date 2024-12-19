@@ -72,11 +72,11 @@ describe('Node Applications', () => {
     const port = getRandomPort();
     process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/node:app ${nodeapp} --port=${port} --directory=apps/${nodeapp} --linter=eslint`
+      `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint --unitTestRunner=jest`
     );
 
-    const lintResults = runCLI(`lint ${nodeapp}`);
-    expect(lintResults).toContain('Successfully ran target lint');
+    expect(() => runCLI(`lint ${nodeapp}`)).not.toThrow();
+    expect(() => runCLI(`test ${nodeapp}`)).not.toThrow();
 
     updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
     await runCLIAsync(`build ${nodeapp}`);
@@ -93,7 +93,7 @@ describe('Node Applications', () => {
   xit('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
     runCLI(
-      `generate @nx/node:app ${nodeapp} --directory=apps/${nodeapp} --linter=eslint`
+      `generate @nx/node:app apps/${nodeapp} --linter=eslint --unitTestRunner=jest`
     );
 
     updateJson(join('apps', nodeapp, 'project.json'), (config) => {
@@ -110,7 +110,7 @@ describe('Node Applications', () => {
     const port = getRandomPort();
     process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/node:app ${nodeapp} --directory=apps/${nodeapp} --port=${port} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint --bundler=webpack --unitTestRunner=jest`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -192,7 +192,7 @@ module.exports = {
     const nodeapp = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app ${nodeapp} --directory=apps/${nodeapp} --linter=eslint --bundler=webpack --framework=none`
+      `generate @nx/node:app apps/${nodeapp} --linter=eslint --bundler=webpack --framework=none --unitTestRunner=jest`
     );
 
     updateFile('.env', `NX_FOOBAR="test foo bar"`);
@@ -230,7 +230,7 @@ module.exports = {
     const appName = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/node:app ${appName} --no-interactive --unitTestRunner=jest --linter=eslint --e2eTestRunner=jest`
     );
 
     const nxJson = JSON.parse(readFile('nx.json'));
@@ -250,7 +250,7 @@ module.exports = {
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/express:app ${nodeapp} --directory=apps/${nodeapp} --port=${port} --linter=eslint`
+      `generate @nx/express:app apps/${nodeapp} --port=${port} --linter=eslint --unitTestRunner=jest`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -301,7 +301,7 @@ module.exports = {
     const nestapp = uniq('nestapp');
     const port = 3335;
     runCLI(
-      `generate @nx/nest:app ${nestapp} --directory=apps/${nestapp} --linter=eslint`
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
     );
 
     const lintResults = runCLI(`lint ${nestapp}`);
@@ -350,7 +350,7 @@ module.exports = {
     const nestapp = 'node-nest-docker-test';
 
     runCLI(
-      `generate @nx/node:app ${nestapp} --project-name-and-root-format=as-provided --bundler=webpack --framework=nest --docker`
+      `generate @nx/node:app ${nestapp} --bundler=webpack --framework=nest --docker --unitTestRunner=jest`
     );
 
     checkFilesExist(`${nestapp}/Dockerfile`);
@@ -365,7 +365,7 @@ module.exports = {
     const esmapp = uniq('esmapp');
 
     runCLI(
-      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
+      `generate @nx/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack --unitTestRunner=jest`
     );
     updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
       config.module = 'esnext';
@@ -431,7 +431,7 @@ describe('Build Node apps', () => {
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
     runCLI(
-      `generate @nx/nest:app ${nestapp} --linter=eslint --directory=apps/${nestapp}`
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
     );
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
@@ -493,7 +493,9 @@ describe('Build Node apps', () => {
     });
 
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nx/node:app ${nodeapp} --bundler=webpack`);
+    runCLI(
+      `generate @nx/node:app ${nodeapp} --bundler=webpack --unitTestRunner=jest --linter=eslint`
+    );
 
     const jslib = uniq('jslib');
     runCLI(`generate @nx/js:lib ${jslib} --bundler=tsc`);
@@ -537,7 +539,7 @@ ${jslib}();
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/node:app ${appName} --port=${port} --no-interactive --directory=apps/${appName}`
+      `generate @nx/node:app apps/${appName} --port=${port} --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     // deleteOutputPath should default to true
@@ -578,7 +580,7 @@ ${jslib}();
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --port=${port} --no-interactive`
+      `generate @nx/node:app ${appName} --port=${port} --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -595,7 +597,7 @@ ${jslib}();
     );
 
     runCLI(
-      `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/node:lib ${libName} --buildable --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -617,7 +619,9 @@ ${jslib}();
     // TODO(crystal, @ndcunningham): What is the alternative here?
     xit('should have plugin output if specified in `tsPlugins`', async () => {
       const nestapp = uniq('nestapp');
-      runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+      runCLI(
+        `generate @nx/nest:app ${nestapp} --linter=eslint --unitTestRunner=jest`
+      );
 
       packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 
@@ -671,7 +675,9 @@ ${jslib}();
   describe('nest libraries', function () {
     it('should be able to generate a nest library', async () => {
       const nestlib = uniq('nestlib');
-      runCLI(`generate @nx/nest:lib ${nestlib} --directory=libs/${nestlib}`);
+      runCLI(
+        `generate @nx/nest:lib libs/${nestlib} --linter=eslint --unitTestRunner=jest`
+      );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
@@ -685,7 +691,9 @@ ${jslib}();
     it('should be able to generate a nest library w/ service', async () => {
       const nestlib = uniq('nestlib');
 
-      runCLI(`generate @nx/nest:lib ${nestlib} --service`);
+      runCLI(
+        `generate @nx/nest:lib ${nestlib} --service --linter=eslint --unitTestRunner=jest`
+      );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
@@ -699,7 +707,9 @@ ${jslib}();
     it('should be able to generate a nest library w/ controller', async () => {
       const nestlib = uniq('nestlib');
 
-      runCLI(`generate @nx/nest:lib ${nestlib} --controller`);
+      runCLI(
+        `generate @nx/nest:lib ${nestlib} --controller --linter=eslint --unitTestRunner=jest`
+      );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
@@ -713,7 +723,9 @@ ${jslib}();
     it('should be able to generate a nest library w/ controller and service', async () => {
       const nestlib = uniq('nestlib');
 
-      runCLI(`generate @nx/nest:lib ${nestlib} --controller --service`);
+      runCLI(
+        `generate @nx/nest:lib ${nestlib} --controller --service --linter=eslint --unitTestRunner=jest`
+      );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
@@ -727,7 +739,7 @@ ${jslib}();
     it('should have plugin output if specified in `transformers`', async () => {
       const nestlib = uniq('nestlib');
       runCLI(
-        `generate @nx/nest:lib ${nestlib} --buildable --directory=libs/${nestlib}`
+        `generate @nx/nest:lib libs/${nestlib} --buildable --linter=eslint --unitTestRunner=jest`
       );
 
       packageInstall('@nestjs/swagger', undefined, '^7.0.0');
@@ -772,9 +784,5 @@ exports.FooModel = FooModel;
         `
       );
     }, 300000);
-
-    it('should run default jest tests', async () => {
-      await expectJestTestsToPass('@nx/node:lib');
-    }, 100000);
   });
 });

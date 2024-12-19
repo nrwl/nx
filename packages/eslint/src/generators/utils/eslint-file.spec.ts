@@ -122,10 +122,10 @@ describe('@nx/eslint:lint-file', () => {
     });
 
     it('should add extends to flat config', () => {
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -143,11 +143,11 @@ module.exports = [
 
       addExtendsToLintConfig(tree, 'apps/demo', 'plugin:playwright/recommend');
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -155,7 +155,8 @@ module.exports = [
         });
 
         module.exports = [
-        ...compat.extends("plugin:playwright/recommend"),
+            ...compat.extends("plugin:playwright/recommend"),
+
           ...baseConfig,
           {
             files: [
@@ -176,10 +177,10 @@ module.exports = [
         packageJson: { name: 'eslint', version: '9.0.0' },
         path: '',
       });
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -200,12 +201,12 @@ module.exports = [
         needCompatFixup: true,
       });
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const { fixupConfigRules } = require("@eslint/compat");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -213,7 +214,8 @@ module.exports = [
         });
 
         module.exports = [
-        ...fixupConfigRules(compat.extends("plugin:playwright/recommend")),
+            ...fixupConfigRules(compat.extends("plugin:playwright/recommend")),
+
           ...baseConfig,
           {
             files: [
@@ -234,10 +236,10 @@ module.exports = [
         packageJson: { name: 'eslint', version: '9.0.0' },
         path: '',
       });
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -262,12 +264,12 @@ module.exports = [
         { name: 'incompatible-plugin3', needCompatFixup: true },
       ]);
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const { fixupConfigRules } = require("@eslint/compat");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -275,11 +277,16 @@ module.exports = [
         });
 
         module.exports = [
-        ...compat.extends("plugin:some-plugin1", "plugin:some-plugin2"),
-        ...fixupConfigRules(compat.extends("incompatible-plugin1")),
-        ...fixupConfigRules(compat.extends("incompatible-plugin2")),
-        ...compat.extends("plugin:some-plugin3"),
-        ...fixupConfigRules(compat.extends("incompatible-plugin3")),
+            ...compat.extends("plugin:some-plugin1", "plugin:some-plugin2"),
+
+            ...fixupConfigRules(compat.extends("incompatible-plugin1")),
+
+            ...fixupConfigRules(compat.extends("incompatible-plugin2")),
+
+            ...compat.extends("plugin:some-plugin3"),
+
+            ...fixupConfigRules(compat.extends("incompatible-plugin3")),
+
           ...baseConfig,
           {
             files: [
@@ -300,10 +307,10 @@ module.exports = [
         packageJson: { name: 'eslint', version: '8.0.0' },
         path: '',
       });
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -324,11 +331,11 @@ module.exports = [
         needCompatFixup: true,
       });
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -336,7 +343,8 @@ module.exports = [
         });
 
         module.exports = [
-        ...compat.extends("plugin:playwright/recommend"),
+            ...compat.extends("plugin:playwright/recommend"),
+
           ...baseConfig,
           {
             files: [
@@ -354,10 +362,10 @@ module.exports = [
 
   describe('replaceOverridesInLintConfig', () => {
     it('should replace overrides when using flat config', () => {
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -420,11 +428,11 @@ module.exports = [
         },
       ]);
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -433,39 +441,49 @@ module.exports = [
 
         module.exports = [
           ...baseConfig,
-        ...compat.config({ extends: [
-                "plugin:@nx/angular",
-                "plugin:@angular-eslint/template/process-inline-templates"
-            ] }).map(config => ({
-            ...config,
-            files: ["**/*.ts"],
-            rules: {
-                ...config.rules,
-                "@angular-eslint/directive-selector": [
-                    "error",
-                    {
-                        type: "attribute",
-                        prefix: "myOrg",
-                        style: "camelCase"
-                    }
-                ],
-                "@angular-eslint/component-selector": [
-                    "error",
-                    {
-                        type: "element",
-                        prefix: "my-org",
-                        style: "kebab-case"
-                    }
+            ...compat.config({
+                extends: [
+                    "plugin:@nx/angular",
+                    "plugin:@angular-eslint/template/process-inline-templates"
                 ]
-            }
-        })),
-        ...compat.config({ extends: ["plugin:@nx/angular-template"] }).map(config => ({
-            ...config,
-            files: ["**/*.html"],
-            rules: {
-                ...config.rules
-            }
-        })),
+            }).map(config => ({
+                ...config,
+                files: [
+                    "**/*.ts"
+                ],
+                rules: {
+                    ...config.rules,
+                    "@angular-eslint/directive-selector": [
+                        "error",
+                        {
+                            type: "attribute",
+                            prefix: "myOrg",
+                            style: "camelCase"
+                        }
+                    ],
+                    "@angular-eslint/component-selector": [
+                        "error",
+                        {
+                            type: "element",
+                            prefix: "my-org",
+                            style: "kebab-case"
+                        }
+                    ]
+                }
+            })),
+            ...compat.config({
+                extends: [
+                    "plugin:@nx/angular-template"
+                ]
+            }).map(config => ({
+                ...config,
+                files: [
+                    "**/*.html"
+                ],
+                rules: {
+                    ...config.rules
+                }
+            })),
         ];"
       `);
     });

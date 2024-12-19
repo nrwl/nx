@@ -49,7 +49,8 @@ export default async function* serveExecutor(
   context: ExecutorContext
 ) {
   const options = normalizeOptions(schema);
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   const remixBin = require.resolve('@remix-run/dev/dist/cli');
   const args = buildRemixDevArgs(options);

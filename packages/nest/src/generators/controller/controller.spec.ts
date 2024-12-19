@@ -1,23 +1,17 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithNestApplication } from '../utils/testing';
-import type { ControllerGeneratorOptions } from './controller';
 import { controllerGenerator } from './controller';
 
 describe('controller generator', () => {
   let tree: Tree;
-  const directory = 'api';
-  const options: ControllerGeneratorOptions = {
-    name: 'test',
-    directory,
-    unitTestRunner: 'jest',
-  };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(directory);
-    jest.clearAllMocks();
+    tree = createTreeWithNestApplication('api');
   });
 
   it('should run successfully', async () => {
-    await expect(controllerGenerator(tree, options)).resolves.not.toThrow();
+    await expect(
+      controllerGenerator(tree, { path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

@@ -19,24 +19,17 @@
       }
     ],
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "Library name",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
-        "x-priority": "important"
-      },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
         "alias": "dir",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the library in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "description": "Library name",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -57,6 +50,10 @@
               "label": "LESS              [ https://lesscss.org            ]"
             },
             {
+              "value": "tailwind",
+              "label": "tailwind          [ https://tailwindcss.com/       ]"
+            },
+            {
               "value": "styled-components",
               "label": "styled-components [ https://styled-components.com ]"
             },
@@ -72,17 +69,29 @@
           ]
         }
       },
+      "bundler": {
+        "type": "string",
+        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+        "enum": ["none", "vite", "rollup"],
+        "default": "none",
+        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
+        "x-priority": "important"
+      },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
         "enum": ["eslint", "none"],
-        "default": "eslint"
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "vitest", "none"],
+        "enum": ["vitest", "jest", "none"],
+        "default": "none",
         "description": "Test runner to use for unit tests.",
-        "x-prompt": "What unit test runner should be used?"
+        "x-prompt": "What unit test runner should be used?",
+        "x-priority": "important"
       },
       "inSourceTests": {
         "type": "boolean",
@@ -154,14 +163,6 @@
         "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
         "default": false
       },
-      "bundler": {
-        "type": "string",
-        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
-        "enum": ["none", "vite", "rollup"],
-        "default": "none",
-        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
-        "x-priority": "important"
-      },
       "compiler": {
         "type": "string",
         "enum": ["babel", "swc"],
@@ -185,7 +186,7 @@
         "default": false
       }
     },
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "aliases": ["lib"],

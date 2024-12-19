@@ -47,8 +47,10 @@ export async function projectRootPath(
   } else if (config.projectType == 'library') {
     // libs/test-lib/src/lib
     projectDir = 'lib';
+  } else {
+    projectDir = '.';
   }
-  return joinPathFragments(config.sourceRoot, projectDir);
+  return joinPathFragments(config.sourceRoot ?? config.root, projectDir);
 }
 
 export function containsComponentDeclaration(
@@ -119,7 +121,10 @@ export async function createAllStories(
 
   await Promise.all(
     componentPaths.map(async (componentPath) => {
-      const relativeCmpDir = componentPath.replace(join(sourceRoot, '/'), '');
+      const relativeCmpDir = componentPath.replace(
+        join(sourceRoot ?? root, '/'),
+        ''
+      );
 
       if (!containsComponentDeclaration(tree, componentPath)) {
         return;

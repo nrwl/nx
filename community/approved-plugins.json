@@ -387,7 +387,7 @@
   {
     "name": "@nx-tools/nx-container",
     "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
-    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/plugins/nx-container"
   },
   {
     "name": "@nxrocks/nx-melos",
@@ -503,5 +503,10 @@
     "name": "nx-solhint",
     "description": "Solhint generators and inferred tasks for Nx",
     "url": "https://github.com/juliangsibecas/nx-solhint"
+  },
+  {
+    "name": "nx-foundry",
+    "description": "Foundry generators and inferred tasks for Nx",
+    "url": "https://github.com/juliangsibecas/nx-foundry"
   }
 ]

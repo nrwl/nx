@@ -1,19 +1,25 @@
 ---
 title: Overview of the Nx powerpack-s3-cache Plugin
-description: The powerpack-s3-cache Nx plugin enables you to use an AWS S3 bucket to host your remote cache instead of Nx Cloud
+description: The powerpack-s3-cache Nx plugin enables you to use an Amazon S3 bucket to host your remote cache instead of Nx Cloud
 ---
 
-The `@nx/powerpack-s3-cache` plugin enables you to use an AWS S3 bucket instead of Nx Cloud to host your remote cache.
+The `@nx/powerpack-s3-cache` plugin enables you to use an [Amazon S3](https://aws.amazon.com/s3) bucket instead of Nx Cloud to host your remote cache.
+
+This plugin will enable the remote cache for your Nx workspace, but does not provide any of the other features of Nx Cloud. If you want to leverage [distributed task execution](/ci/features/distribute-task-execution), [re-running flaky tasks](/ci/features/flaky-tasks) or [automatically splitting tasks](/ci/features/split-e2e-tasks), you'll need to [connect to Nx Cloud](/ci/intro/connect-to-nx-cloud) and use [Nx Replay](/ci/features/remote-cache) instead.
+
+{% callout type="warning" title="Potential Cache Poisoning" %}
+Using your own Amazon S3 bucket to host the remote cache opens you up to the possibility of [cache poisoning](/troubleshooting/unknown-local-cache). To avoid this, use [Nx Replay](/ci/features/remote-cache).
+{% /callout %}
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
 In order to use `@nx/powerpack-s3-cache`, you need to have an active Powerpack license. If you don't have a license or it has expired, your cache will no longer be shared and each machine will use its local cache.
 {% /callout %}
 
-## Setup
+## Set Up @nx/powerpack-s3-cache
 
 ### 1. Install the Package
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
 ```shell
@@ -41,6 +47,34 @@ There are four different ways to authenticate with AWS. They will be attempted i
 | `AWS_CREDENTIAL_EXPIRATION` | The expiration time of the credentials contained in the environment variables described above. This value must be in a format compatible with the [ISO-8601 standard](https://en.wikipedia.org/wiki/ISO_8601) and is only needed when you are using temporary credentials. |
 
 Both the `AWS_ACCESS_KEY_ID` and the `AWS_SECRET_ACCESS_KEY` environment variables are required to use the environment variable authentication method.
+
+Here's an example of using OICD in GitHub Actions to set the environment variables in CI:
+
+```yaml {% fileName=".github/workflows/ci.yml" %}
+name: CI
+...
+permissions:
+  id-token: write
+  ...
+
+jobs:
+  main:
+    env:
+      NX_POWERPACK_LICENSE: ${{ secrets.NX_POWERPACK_LICENSE }}
+    runs-on: ubuntu-latest
+    steps:
+        ...
+
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789123:role/GhAIBucketUserRole
+          aws-region: us-east-1
+
+        ...
+
+      - run: pnpm exec nx affected -t lint test build
+```
 
 #### INI Config Files
 
@@ -88,5 +122,33 @@ Regardless of how you manage your AWS authentication, you need to configure your
 | **Property**      | **Description**                                                                   |
 | ----------------- | --------------------------------------------------------------------------------- |
 | **region**        | The id of the AWS region to use                                                   |
-| **bucket**        | The name of the AWS bucket to use                                                 |
+| **bucket**        | The name of the S3 bucket to use                                                  |
 | **encryptionKey** | Nx encryption key used to encrypt and decrypt artifacts from the cache (optional) |
+
+#### S3 Compatible Providers
+
+To use `@nx/powerpack-s3-cache` with S3 compatible providers ([MinIO](https://min.io/product/s3-compatibility), [LocalStack](https://www.localstack.cloud), [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces), [Cloudflare](https://www.cloudflare.com/developer-platform/solutions/s3-compatible-object-storage), etc..), `endpoint` will need to be provided. Some providers also need to have `forcePathStyle` set to true in the configuration.
+
+Below is an example on how to connect to MinIO:
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "endpoint": "https://play.min.io",
+    "forcePathStyle": true,
+    "accessKeyId": "abc1234",
+    "secretAccessKey": "4321cba"
+  }
+}
+```
+
+| **Property**        | **Description**                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| **region**          | The id of the S3 compatible storage region to use                                                         |
+| **bucket**          | The name of the S3 compatible storage bucket to use                                                       |
+| **forcePathStyle**  | Changes the way artifacts are uploaded. Usually used for S3 compatible providers (MinIO, LocalStack, etc) |
+| **endpoint**        | The custom endpoint to upload artifacts to. If endpoint is not defined, the default AWS endpoint is used  |
+| **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
+| **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |

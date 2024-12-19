@@ -3,6 +3,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -13,8 +14,12 @@ import {
   Tree,
   updateProjectConfiguration,
   updateTsConfigsToJs,
+  writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -23,6 +28,8 @@ import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -30,6 +37,7 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   parsedTags: string[];
   compiler: 'swc' | 'tsc';
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
@@ -41,12 +49,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
-  const tasks: GeneratorCallback[] = [
-    await initGenerator(tree, {
-      ...options,
-      skipFormat: true,
-    }),
-  ];
+  const tasks: GeneratorCallback[] = [];
 
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
@@ -54,16 +57,40 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  const libraryInstall = await jsLibraryGenerator(tree, {
-    ...options,
-    bundler: schema.buildable ? 'tsc' : 'none',
-    includeBabelRc: schema.babelJest,
-    importPath: options.importPath,
-    testEnvironment: 'node',
-    skipFormat: true,
-    setParserOptionsProject: options.setParserOptionsProject,
-  });
-  tasks.push(libraryInstall);
+  // Create `package.json` first because @nx/js:lib generator will update it.
+  if (
+    options.isUsingTsSolutionConfig ||
+    options.publishable ||
+    options.buildable
+  ) {
+    writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: getImportPath(tree, options.name),
+      version: '0.0.1',
+      private: true,
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+    });
+  }
+
+  tasks.push(
+    await jsLibraryGenerator(tree, {
+      ...schema,
+      bundler: schema.buildable || schema.publishable ? 'tsc' : 'none',
+      includeBabelRc: schema.babelJest,
+      importPath: schema.importPath,
+      testEnvironment: 'node',
+      skipFormat: true,
+      setParserOptionsProject: schema.setParserOptionsProject,
+      useProjectJson: !options.isUsingTsSolutionConfig,
+    })
+  );
+
+  tasks.push(
+    await initGenerator(tree, {
+      ...options,
+      skipFormat: true,
+    })
+  );
+
   createFiles(tree, options);
 
   if (options.js) {
@@ -72,6 +99,11 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   updateProject(tree, options);
 
   tasks.push(ensureDependencies(tree));
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(tree, true));
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
@@ -86,20 +118,18 @@ async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(tree, options, 'library');
   const {
     projectName,
     names: projectNames,
     projectRoot,
     importPath,
-    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -125,6 +155,7 @@ async function normalizeOptions(
     projectRoot,
     parsedTags,
     importPath,
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(tree),
   };
 }
 
@@ -145,9 +176,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
       join(options.projectRoot, `./src/lib/${options.fileName}.spec.ts`)
     );
   }
-  if (!options.publishable && !options.buildable) {
-    tree.delete(join(options.projectRoot, 'package.json'));
-  }
   if (options.js) {
     toJS(tree);
   }
@@ -163,20 +191,29 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
 
   project.targets = project.targets || {};
   addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
-  project.targets.build = {
-    executor: `@nx/js:${options.compiler}`,
-    outputs: ['{options.outputPath}'],
-    options: {
-      outputPath: joinPathFragments(
-        'dist',
-        rootProject ? options.projectName : options.projectRoot
-      ),
-      tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-      packageJson: `${options.projectRoot}/package.json`,
-      main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
-      assets: [`${options.projectRoot}/*.md`],
-    },
-  };
+
+  // For TS solution, we want tsc build to be inferred by `@nx/js/typescript` plugin.
+  if (!options.isUsingTsSolutionConfig || options.compiler === 'swc') {
+    project.targets.build = {
+      executor: `@nx/js:${options.compiler}`,
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath: options.isUsingTsSolutionConfig
+          ? joinPathFragments(options.projectRoot, 'dist')
+          : joinPathFragments(
+              'dist',
+              rootProject ? options.projectName : options.projectRoot
+            ),
+        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+        packageJson: `${options.projectRoot}/package.json`,
+        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+        assets: options.isUsingTsSolutionConfig
+          ? undefined
+          : [`${options.projectRoot}/*.md`],
+        stripLeadingPaths: options.isUsingTsSolutionConfig ? true : undefined,
+      },
+    };
+  }
 
   if (options.compiler === 'swc') {
     addSwcDependencies(tree);

@@ -30,6 +30,13 @@ export function convertEslintJsonToFlatConfig(
   let combinedConfig: ts.PropertyAssignment[] = [];
   let languageOptions: ts.PropertyAssignment[] = [];
 
+  // exclude dist and eslint config from being linted, which matches the default for new workspaces
+  exportElements.push(
+    generateAst({
+      ignores: ['**/dist'],
+    })
+  );
+
   if (config.extends) {
     const extendsResult = addExtends(importsMap, exportElements, config);
     isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
@@ -150,21 +157,6 @@ export function convertEslintJsonToFlatConfig(
         isFlatCompatNeeded = true;
       }
       exportElements.push(generateFlatOverride(override));
-
-      // eslint-plugin-import cannot be used with ESLint v9 yet
-      // TODO(jack): Once v9 support is released, remove this block.
-      // See: https://github.com/import-js/eslint-plugin-import/pull/2996
-      if (override.extends === 'plugin:@nx/react') {
-        exportElements.push(
-          generateFlatOverride({
-            rules: {
-              'import/first': 'off',
-              'import/no-amd': 'off',
-              'import/no-webpack-loader-syntax': 'off',
-            },
-          })
-        );
-      }
     });
   }
 
@@ -233,7 +225,7 @@ function addExtends(
         configBlocks.push(generateSpreadElement(localName));
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
-          '$1eslint$2.config.js'
+          '$1eslint$2.config.cjs'
         );
         importsMap.set(newImport, localName);
       } else {

@@ -1,6 +1,6 @@
-import { join } from 'path';
+import { existsSync, rmSync, symlinkSync } from 'node:fs';
 import { platform } from 'os';
-import { removeSync, existsSync, symlinkSync } from 'fs-extra';
+import { join } from 'path';
 
 /**
  * This function symlink workspace node_modules folder with app project's node_mdules folder.
@@ -24,7 +24,7 @@ export function ensureNodeModulesSymlink(
   const symlinkType = platform() === 'win32' ? 'junction' : 'dir';
 
   if (existsSync(appNodeModulesPath)) {
-    removeSync(appNodeModulesPath);
+    rmSync(appNodeModulesPath, { recursive: true, force: true });
   }
   symlinkSync(worksapceNodeModulesPath, appNodeModulesPath, symlinkType);
 }

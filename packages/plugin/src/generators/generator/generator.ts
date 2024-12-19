@@ -1,45 +1,53 @@
 import {
   formatFiles,
+  generateFiles,
   GeneratorsJson,
   joinPathFragments,
-  Tree,
-  writeJson,
-  generateFiles,
   names,
   readJson,
   readProjectConfiguration,
+  Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { hasGenerator } from '../../utils/has-generator';
+import { getArtifactMetadataDirectory } from '../../utils/paths';
+import { nxVersion } from '../../utils/versions';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
-import { nxVersion } from '../../utils/versions';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { join, relative } from 'path';
 
 type NormalizedSchema = Schema & {
+  directory: string;
   fileName: string;
   className: string;
   propertyName: string;
   projectRoot: string;
   projectSourceRoot: string;
   project: string;
+  isTsSolutionSetup: boolean;
 };
 
 async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const { project, fileName, artifactName, filePath, directory } =
-    await determineArtifactNameAndDirectoryOptions(tree, {
-      name: options.name,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      directory: options.directory,
-      fileName: 'generator',
-    });
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    project,
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
+    path: options.path,
+    name: options.name,
+    allowedFileExtensions: ['ts'],
+    fileExtension: 'ts',
+  });
 
-  const { className, propertyName } = names(artifactName);
+  const { className, propertyName } = names(name);
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
     readProjectConfiguration(tree, project);
@@ -48,19 +56,21 @@ async function normalizeOptions(
   if (options.description) {
     description = options.description;
   } else {
-    description = `${options.name} generator`;
+    description = `${name} generator`;
   }
 
   return {
     ...options,
-    project,
     directory,
+    project,
+    name,
     fileName,
     className,
     propertyName,
     description,
     projectRoot,
     projectSourceRoot,
+    isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 }
 
@@ -78,7 +88,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   });
 
   if (options.unitTestRunner === 'none') {
-    host.delete(join(options.directory, `generator.spec.ts`));
+    host.delete(join(options.directory, `${options.fileName}.spec.ts`));
   }
 }
 
@@ -134,6 +144,19 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       options.skipLintChecks,
       options.skipFormat
     );
+
+    if (options.isTsSolutionSetup) {
+      updateJson<PackageJson>(
+        host,
+        joinPathFragments(options.projectRoot, 'package.json'),
+        (json) => {
+          const filesSet = new Set(json.files ?? ['dist', '!**/*.tsbuildinfo']);
+          filesSet.add('generators.json');
+          json.files = [...filesSet];
+          return json;
+        }
+      );
+    }
   }
   // add dependencies
   updateJson<PackageJson>(
@@ -151,15 +174,16 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
   updateJson<GeneratorsJson>(host, generatorsPath, (json) => {
     let generators = json.generators ?? json.schematics;
     generators = generators || {};
+
+    const dir = getArtifactMetadataDirectory(
+      host,
+      options.project,
+      options.directory,
+      options.isTsSolutionSetup
+    );
     generators[options.name] = {
-      factory: `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
-        'generator'
-      )}`,
-      schema: `./${joinPathFragments(
-        relative(options.projectRoot, options.directory),
-        'schema.json'
-      )}`,
+      factory: `${dir}/${options.fileName}`,
+      schema: `${dir}/schema.json`,
       description: options.description,
     };
     // @todo(v17): Remove this, prop is defunct.

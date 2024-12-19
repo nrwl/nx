@@ -10,17 +10,22 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { Linter } from '@nx/eslint';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import {
+  getProjectPackageManagerWorkspaceState,
+  getProjectPackageManagerWorkspaceStateWarningTask,
+} from '@nx/js/src/utils/package-manager-workspaces';
+import {
+  addSwcDependencies,
+  addSwcRegisterDependencies,
+} from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';
-import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
-import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
-import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-
 import type { Schema } from './schema';
+import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
 const nxVersion = require('../../../package.json').version;
 
@@ -42,38 +47,44 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.name);
 
   if (project.targets.build) {
-    project.targets.build.options.assets ??= [];
+    if (options.isTsSolutionSetup && options.bundler === 'tsc') {
+      project.targets.build.options.rootDir = project.sourceRoot;
+      project.targets.build.options.generatePackageJson = false;
+    }
+
+    project.targets.build.options.assets = [
+      ...(project.targets.build.options.assets ?? []),
+    ];
 
     const root = options.projectRoot === '.' ? '.' : './' + options.projectRoot;
-    project.targets.build.options.assets = [
-      ...project.targets.build.options.assets,
-      {
-        input: `${root}/src`,
-        glob: '**/!(*.ts)',
-        output: './src',
-      },
-      {
-        input: `${root}/src`,
-        glob: '**/*.d.ts',
-        output: './src',
-      },
-      {
-        input: root,
-        glob: 'generators.json',
-        output: '.',
-      },
-      {
-        input: root,
-        glob: 'executors.json',
-        output: '.',
-      },
-    ];
+
+    if (options.isTsSolutionSetup) {
+      project.targets.build.options.assets.push(
+        { input: `${root}/src`, glob: '**/!(*.ts)', output: '.' },
+        { input: `${root}/src`, glob: '**/*.d.ts', output: '.' }
+      );
+    } else {
+      project.targets.build.options.assets.push(
+        { input: `${root}/src`, glob: '**/!(*.ts)', output: './src' },
+        { input: `${root}/src`, glob: '**/*.d.ts', output: './src' },
+        { input: root, glob: 'generators.json', output: '.' },
+        { input: root, glob: 'executors.json', output: '.' }
+      );
+    }
 
     updateProjectConfiguration(host, options.name, project);
   }
 }
 
-export async function pluginGenerator(host: Tree, schema: Schema) {
+export async function pluginGenerator(tree: Tree, schema: Schema) {
+  return await pluginGeneratorInternal(tree, {
+    useProjectJson: true,
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
 
@@ -86,8 +97,13 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       bundler: options.bundler,
       publishable: options.publishable,
       importPath: options.npmPackageName,
-      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      unitTestRunner: options.unitTestRunner,
+      useProjectJson: options.useProjectJson,
+      addPlugin: options.addPlugin,
       skipFormat: true,
+      skipWorkspacesWarning: true,
+      useTscExecutor: true,
     })
   );
 
@@ -129,7 +145,10 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
         npmPackageName: options.npmPackageName,
         skipFormat: true,
         rootProject: options.rootProject,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
+        linter: options.linter,
+        useProjectJson: options.useProjectJson,
+        addPlugin: options.addPlugin,
+        skipWorkspacesWarning: true,
       })
     );
   }
@@ -140,6 +159,20 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  if (options.isTsSolutionSetup) {
+    const projectPackageManagerWorkspaceState =
+      getProjectPackageManagerWorkspaceState(host, options.projectRoot);
+
+    if (projectPackageManagerWorkspaceState !== 'included') {
+      tasks.push(
+        getProjectPackageManagerWorkspaceStateWarningTask(
+          projectPackageManagerWorkspaceState,
+          host.root
+        )
+      );
+    }
   }
 
   return runTasksInSerial(...tasks);

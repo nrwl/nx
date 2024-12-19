@@ -8,6 +8,7 @@ import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
 import { TagList } from '../tag-list/tag-list';
+import { OwnersList } from '../owners-list/owners-list';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
@@ -105,17 +106,24 @@ export const ProjectDetails = ({
                 {projectData.metadata?.description}
               </p>
             ) : null}
+            {projectData.metadata?.owners &&
+            Object.keys(projectData.metadata?.owners).length ? (
+              <OwnersList
+                className="mb-2"
+                owners={Object.keys(projectData.metadata?.owners)}
+              />
+            ) : null}
             {projectData.tags && projectData.tags.length ? (
-              <TagList tags={projectData.tags} />
+              <TagList className="mb-2" tags={projectData.tags} />
             ) : null}
             {projectData.root ? (
-              <p>
+              <p className="mb-2">
                 <span className="font-medium">Root:</span>
                 <span className="font-mono"> {projectData.root.trim()}</span>
               </p>
             ) : null}
             {projectData.projectType ?? typeToProjectType[project.type] ? (
-              <p>
+              <p className="mb-2">
                 <span className="font-medium">Type:</span>
                 <span className="ml-2 font-mono capitalize">
                   {projectData.projectType ?? typeToProjectType[project.type]}

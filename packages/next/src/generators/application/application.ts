@@ -30,6 +30,10 @@ import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { tsLibVersion } from '../../utils/versions';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -48,6 +52,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: options.js,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
 
@@ -101,7 +107,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       '@types/react-dom': typesReactDomVersion,
     };
 
-    if (schema.unitTestRunner && schema.unitTestRunner !== 'none') {
+    if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
     }
 
@@ -112,6 +118,27 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         devDependencies
       )
     );
+  }
+
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.json',
+    {
+      jsx: 'preserve',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['.next', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : ['.next'],
+    options.src ? 'src' : '.'
+  );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
   if (!options.skipFormat) {

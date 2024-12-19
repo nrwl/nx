@@ -5,17 +5,23 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { isValidVariable } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
 import { setupMf } from '../setup-mf/setup-mf';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { updateSsrSetup } from './lib';
 import type { Schema } from './schema';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
-import { isValidVariable } from '@nx/js';
 
 export async function host(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'host');
+
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 
@@ -47,17 +53,13 @@ export async function host(tree: Tree, schema: Schema) {
     });
   }
 
-  const {
-    projectName: hostProjectName,
-    projectNameAndRootFormat,
-    projectRoot: appRoot,
-  } = await determineProjectNameAndRootOptions(tree, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-  });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
+  await ensureProjectName(tree, options, 'application');
+  const { projectName: hostProjectName, projectRoot: appRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+    });
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,

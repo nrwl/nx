@@ -18,7 +18,7 @@ describe('React Playwright e2e tests', () => {
       packages: ['@nx/react'],
     });
     runCLI(
-      `generate @nx/react:app ${appName} --e2eTestRunner=playwright --bundler=vite --projectNameAndRootFormat=as-provided --no-interactive`
+      `generate @nx/react:app ${appName} --e2eTestRunner=playwright --bundler=vite --no-interactive`
     );
   });
 
@@ -35,7 +35,7 @@ describe('React Playwright e2e tests', () => {
 
   it('should execute e2e tests using playwright with a library used in the app', () => {
     runCLI(
-      `generate @nx/js:library ${usedInAppLibName} --unitTestRunner=none --importPath=@mylib --projectNameAndRootFormat=as-provided --no-interactive`
+      `generate @nx/js:library ${usedInAppLibName} --unitTestRunner=none --importPath=@mylib --no-interactive`
     );
 
     updateFile(

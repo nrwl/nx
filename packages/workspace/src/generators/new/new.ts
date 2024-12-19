@@ -34,15 +34,20 @@ interface Schema {
   packageManager?: PackageManager;
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
+  serverRouting?: boolean;
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
+  formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
+  workspaceGlobs?: string | string[];
 }
 
 export interface NormalizedSchema extends Schema {
   presetVersion?: string;
   isCustomPreset: boolean;
   nxCloudToken?: string;
+  workspaceGlobs?: string[];
 }
 
 export async function newGenerator(tree: Tree, opts: Schema) {
@@ -63,7 +68,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-          windowsHide: true,
+          windowsHide: false,
         });
       }
       installPackagesTask(
@@ -135,6 +140,11 @@ function parsePresetName(input: string): { package: string; version?: string } {
 function normalizeOptions(options: Schema): NormalizedSchema {
   const normalized: Partial<NormalizedSchema> = {
     ...options,
+    workspaceGlobs: Array.isArray(options.workspaceGlobs)
+      ? options.workspaceGlobs
+      : options.workspaceGlobs
+      ? [options.workspaceGlobs]
+      : undefined,
   };
 
   if (!options.directory) {

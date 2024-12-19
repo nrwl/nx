@@ -1,6 +1,13 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  addProjectConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
@@ -15,7 +22,7 @@ import {
 } from '../../utils/test-utils';
 
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
-import { LibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+import { LibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -35,6 +42,7 @@ describe('@nx/vite:configuration', () => {
         addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
+        projectType: 'application',
       });
     });
 
@@ -252,7 +260,7 @@ describe('@nx/vite:configuration', () => {
   });
 
   describe('js library with --bundler=vite', () => {
-    const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
+    const defaultOptions: Omit<LibraryGeneratorSchema, 'directory'> = {
       skipTsConfig: false,
       includeBabelRc: false,
       unitTestRunner: 'jest',
@@ -271,10 +279,9 @@ describe('@nx/vite:configuration', () => {
     it('should add build and test targets with vite and vitest', async () => {
       await jsLibraryGenerator(tree, {
         ...defaultOptions,
-        name: 'my-lib',
+        directory: 'my-lib',
         bundler: 'vite',
-        unitTestRunner: undefined,
-        projectNameAndRootFormat: 'as-provided',
+        unitTestRunner: 'vitest',
       });
 
       expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
@@ -307,10 +314,9 @@ describe('@nx/vite:configuration', () => {
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,
-          name: 'my-lib',
+          directory: 'my-lib',
           bundler: 'vite',
           unitTestRunner,
-          projectNameAndRootFormat: 'as-provided',
         });
 
         expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
@@ -322,5 +328,85 @@ describe('@nx/vite:configuration', () => {
         }
       }
     );
+  });
+
+  describe('TS solution setup', () => {
+    beforeAll(async () => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, '/package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should create package.json with exports field for libraries', async () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'packages/my-lib',
+      });
+      writeJson(tree, 'packages/my-lib/tsconfig.lib.json', {});
+      writeJson(tree, 'packages/my-lib/tsconfig.json', {});
+
+      await viteConfigurationGenerator(tree, {
+        addPlugin: true,
+        uiFramework: 'none',
+        project: 'my-lib',
+        projectType: 'library',
+        newProject: true,
+      });
+
+      expect(readJson(tree, 'packages/my-lib/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "name": "@proj/my-lib",
+          "type": "module",
+          "types": "./dist/index.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should create package.json without exports field for apps', async () => {
+      addProjectConfiguration(tree, 'my-app', {
+        root: 'apps/my-app',
+      });
+      writeJson(tree, 'apps/my-app/tsconfig.app.json', {});
+      writeJson(tree, 'apps/my-app/tsconfig.json', {});
+
+      await viteConfigurationGenerator(tree, {
+        addPlugin: true,
+        uiFramework: 'none',
+        project: 'my-app',
+        projectType: 'application',
+        newProject: true,
+      });
+
+      expect(readJson(tree, 'apps/my-app/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "@proj/my-app",
+          "private": true,
+          "version": "0.0.1",
+        }
+      `);
+    });
   });
 });

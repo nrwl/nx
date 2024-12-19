@@ -17,7 +17,7 @@ import { Schema } from './schema';
 const getSchema: (overrides?: Partial<Schema>) => Schema = (
   overrides = {}
 ) => ({
-  name: 'my-plugin',
+  directory: 'my-plugin',
   compiler: 'tsc',
   skipTsConfig: false,
   skipFormat: false,
@@ -91,7 +91,7 @@ describe('NxPlugin Plugin Generator', () => {
       await pluginGenerator(
         tree,
         getSchema({
-          name: 'my-plugin',
+          directory: 'my-plugin',
         })
       );
       const project = readProjectConfiguration(tree, 'my-plugin');
@@ -126,7 +126,7 @@ describe('NxPlugin Plugin Generator', () => {
         tree,
         getSchema({
           name: 'my-plugin',
-          rootProject: true,
+          directory: '.',
         })
       );
       const project = readProjectConfiguration(tree, 'my-plugin');
@@ -163,7 +163,7 @@ describe('NxPlugin Plugin Generator', () => {
         await pluginGenerator(
           tree,
           getSchema({
-            name: 'my-plugin',
+            directory: 'my-plugin',
             unitTestRunner: 'none',
           })
         );

@@ -4,7 +4,7 @@ exports[`createJestConfig should generate files  1`] = `
 "import { getJestProjectsAsync } from '@nx/jest';
 
 export default async () => ({
-projects: await getJestProjectsAsync()
+  projects: await getJestProjectsAsync()
 });"
 `;
 
@@ -18,7 +18,7 @@ exports[`createJestConfig should generate files with --js flag 1`] = `
 "const { getJestProjectsAsync } = require('@nx/jest');
 
 module.exports = async () => ({
-projects: await getJestProjectsAsync()
+  projects: await getJestProjectsAsync()
 });"
 `;
 

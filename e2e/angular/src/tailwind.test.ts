@@ -137,6 +137,7 @@ describe('Tailwind support', () => {
   
         @Component({
           selector: '${project}-foo',
+          standalone: false,
           template: '<button class="custom-btn text-white ${buttonBgColor}">Click me!</button>',
           styles: [\`
             .custom-btn {
@@ -176,7 +177,7 @@ describe('Tailwind support', () => {
       libSpacing: (typeof spacing)['root']
     ) => {
       const builtComponentContent = readFile(
-        `dist/${lib}/esm2022/lib/foo.component.mjs`
+        `dist/${lib}/fesm2022/${project}-${lib}.mjs`
       );
       let expectedStylesRegex = new RegExp(
         `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`
@@ -187,7 +188,7 @@ describe('Tailwind support', () => {
 
     it('should generate a buildable library with tailwind and build correctly', () => {
       runCLI(
-        `generate @nx/angular:lib ${buildLibWithTailwind.name} --buildable --add-tailwind --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:lib ${buildLibWithTailwind.name} --buildable --add-tailwind --no-interactive`
       );
       updateTailwindConfig(
         `${buildLibWithTailwind.name}/tailwind.config.js`,
@@ -209,7 +210,7 @@ describe('Tailwind support', () => {
     it('should set up tailwind in a previously generated buildable library and build correctly', () => {
       const buildLibSetupTailwind = uniq('build-lib-setup-tailwind');
       runCLI(
-        `generate @nx/angular:lib ${buildLibSetupTailwind} --buildable --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:lib ${buildLibSetupTailwind} --buildable --no-interactive`
       );
       runCLI(
         `generate @nx/angular:setup-tailwind ${buildLibSetupTailwind} --no-interactive`
@@ -228,7 +229,7 @@ describe('Tailwind support', () => {
     it('should correctly build a buildable library with a tailwind.config.js file in the project root or workspace root', () => {
       const buildLibNoProjectConfig = uniq('build-lib-no-project-config');
       runCLI(
-        `generate @nx/angular:lib ${buildLibNoProjectConfig} --buildable --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:lib ${buildLibNoProjectConfig} --buildable --no-interactive`
       );
       createTailwindConfigFile(
         `${buildLibNoProjectConfig}/tailwind.config.js`,
@@ -253,7 +254,7 @@ describe('Tailwind support', () => {
 
     it('should generate a publishable library with tailwind and build correctly', () => {
       runCLI(
-        `generate @nx/angular:lib ${pubLibWithTailwind.name} --publishable --add-tailwind --importPath=@${project}/${pubLibWithTailwind.name} --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:lib ${pubLibWithTailwind.name} --publishable --add-tailwind --importPath=@${project}/${pubLibWithTailwind.name} --no-interactive`
       );
       updateTailwindConfig(
         `${pubLibWithTailwind.name}/tailwind.config.js`,
@@ -275,7 +276,7 @@ describe('Tailwind support', () => {
     it('should set up tailwind in a previously generated publishable library and build correctly', () => {
       const pubLibSetupTailwind = uniq('pub-lib-setup-tailwind');
       runCLI(
-        `generate @nx/angular:lib ${pubLibSetupTailwind} --publishable --importPath=@${project}/${pubLibSetupTailwind} --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:lib ${pubLibSetupTailwind} --publishable --importPath=@${project}/${pubLibSetupTailwind} --no-interactive`
       );
       runCLI(
         `generate @nx/angular:setup-tailwind ${pubLibSetupTailwind} --no-interactive`
@@ -294,7 +295,7 @@ describe('Tailwind support', () => {
     it('should correctly build a publishable library with a tailwind.config.js file in the project root or workspace root', () => {
       const pubLibNoProjectConfig = uniq('pub-lib-no-project-config');
       runCLI(
-        `generate @nx/angular:lib ${pubLibNoProjectConfig} --publishable --importPath=@${project}/${pubLibNoProjectConfig} --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:lib ${pubLibNoProjectConfig} --publishable --importPath=@${project}/${pubLibNoProjectConfig} --no-interactive`
       );
       createTailwindConfigFile(
         `${pubLibNoProjectConfig}/tailwind.config.js`,
@@ -379,7 +380,7 @@ describe('Tailwind support', () => {
     it('should build correctly and only output the tailwind utilities used', async () => {
       const appWithTailwind = uniq('app-with-tailwind');
       runCLI(
-        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --no-interactive`
       );
       setupTailwindAndProjectDependencies(appWithTailwind);
 
@@ -398,7 +399,7 @@ describe('Tailwind support', () => {
     it('should build correctly and only output the tailwind utilities used when using webpack and incremental builds', async () => {
       const appWithTailwind = uniq('app-with-tailwind');
       runCLI(
-        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --bundler=webpack --no-interactive`
       );
       setupTailwindAndProjectDependencies(appWithTailwind);
       updateJson(join(appWithTailwind, 'project.json'), (config) => {

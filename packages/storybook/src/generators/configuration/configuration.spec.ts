@@ -32,9 +32,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await libraryGenerator(tree, {
-        name: 'test-ui-lib',
+        directory: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         addPlugin: true,
       });
@@ -399,9 +398,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         return json;
       });
       await libraryGenerator(tree, {
-        name: 'test-ui-lib',
+        directory: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       writeJson(tree, 'package.json', {
@@ -479,9 +477,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
     it("should update the project's .eslintrc.json if config exists", async () => {
       await libraryGenerator(tree, {
-        name: 'test-ui-lib2',
+        directory: 'test-ui-lib2',
         linter: Linter.EsLint,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -511,9 +508,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
     it('should have the proper typings', async () => {
       await libraryGenerator(tree, {
-        name: 'test-ui-lib2',
+        directory: 'test-ui-lib2',
         linter: Linter.EsLint,
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
 
@@ -589,9 +585,8 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await libraryGenerator(tree, {
-        name: 'test-ui-lib',
+        directory: 'test-ui-lib',
         bundler: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         addPlugin: true,
       });
@@ -798,5 +793,116 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         }
       }
     );
+  });
+
+  describe('TS solution setup', () => {
+    let tree: Tree;
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        bundler: 'none',
+        skipFormat: true,
+        addPlugin: true,
+      });
+
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        standaloneConfig: false,
+        uiFramework: '@storybook/react-vite',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "./tsconfig.base.json",
+          "files": [],
+          "references": [
+            {
+              "path": "./mylib",
+            },
+          ],
+          "ts-node": {
+            "compilerOptions": {
+              "module": "commonjs",
+            },
+          },
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.storybook.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.storybook.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/storybook",
+          },
+          "exclude": [
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.js",
+            "src/**/*.test.js",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.test.js",
+          ],
+          "extends": "../tsconfig.base.json",
+          "files": [
+            "../node_modules/@nx/react/typings/styled-jsx.d.ts",
+            "../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../node_modules/@nx/react/typings/image.d.ts",
+          ],
+          "include": [
+            "src/**/*.stories.ts",
+            "src/**/*.stories.js",
+            "src/**/*.stories.jsx",
+            "src/**/*.stories.tsx",
+            "src/**/*.stories.mdx",
+            ".storybook/*.js",
+            ".storybook/*.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
   });
 });

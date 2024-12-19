@@ -1,36 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 2`] = `
-"import type { MetaFunction } from '@remix-run/node';
-import {
+exports[`Remix Application Integrated Repo --directory should create the application correctly 1`] = `
+"import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
+import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
   {
@@ -38,7 +16,20 @@ export const meta: MetaFunction = () => [
   },
 ];
 
-export default function App() {
+export const links: LinksFunction = () => [
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  {
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  },
+];
+
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -48,18 +39,21 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
 }
+
+export default function App() {
+  return <Outlet />;
+}
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 3`] = `
+exports[`Remix Application Integrated Repo --directory should create the application correctly 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -72,37 +66,15 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 2`] = `
-"import type { MetaFunction } from '@remix-run/node';
-import {
+exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 1`] = `
+"import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
+import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
   {
@@ -110,7 +82,20 @@ export const meta: MetaFunction = () => [
   },
 ];
 
-export default function App() {
+export const links: LinksFunction = () => [
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  {
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  },
+];
+
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -120,18 +105,21 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
 }
+
+export default function App() {
+  return <Outlet />;
+}
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 3`] = `
+exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -144,9 +132,8 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -166,7 +153,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 
@@ -239,96 +226,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 2`] = `
-"import {
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-export const meta = () => [
-  {
-    title: 'New Remix App',
-  },
-];
-export default function App() {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
-    </html>
-  );
-}
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 3`] = `
-"import NxWelcome from '../nx-welcome';
-export default function Index() {
-  return (
-    <div>
-      <NxWelcome title={'test'} />
-    </div>
-  );
-}
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 2`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
 "export default {
   displayName: 'test',
   preset: '../jest.preset.js',
@@ -341,35 +239,14 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 3`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 2`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -379,21 +256,17 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     setupFiles: ['test-setup.ts'],
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
@@ -404,14 +277,14 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 3`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -444,37 +317,15 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 2`] = `
-"import type { MetaFunction } from '@remix-run/node';
-import {
+exports[`Remix Application Integrated Repo should create the application correctly 1`] = `
+"import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
+import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
   {
@@ -482,7 +333,20 @@ export const meta: MetaFunction = () => [
   },
 ];
 
-export default function App() {
+export const links: LinksFunction = () => [
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  {
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  },
+];
+
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -492,18 +356,21 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
 }
+
+export default function App() {
+  return <Outlet />;
+}
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 3`] = `
+exports[`Remix Application Integrated Repo should create the application correctly 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -518,7 +385,6 @@ export default function Index() {
 
 exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -538,96 +404,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --js should create the application correctly 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Standalone Project Repo --js should create the application correctly 2`] = `
-"import {
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-export const meta = () => [
-  {
-    title: 'New Remix App',
-  },
-];
-export default function App() {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
-    </html>
-  );
-}
-"
-`;
-
-exports[`Remix Application Standalone Project Repo --js should create the application correctly 3`] = `
-"import NxWelcome from '../nx-welcome';
-export default function Index() {
-  return (
-    <div>
-      <NxWelcome title={'test'} />
-    </div>
-  );
-}
-"
-`;
-
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "export default {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
@@ -644,14 +421,14 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 3`] = `
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 4`] = `
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 3`] = `
 "import { createRemixStub } from '@remix-run/testing';
 import { render, screen, waitFor } from '@testing-library/react';
 import Index from '../../app/routes/_index';
@@ -672,27 +449,6 @@ test('renders loader data', async () => {
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -702,21 +458,17 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig({
   root: __dirname,
   cacheDir: './node_modules/.vite/test',
-
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   test: {
     setupFiles: ['test-setup.ts'],
     watch: false,
     globals: true,
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage/test',
@@ -727,7 +479,7 @@ export default defineConfig({
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
 "import { createRemixStub } from '@remix-run/testing';
 import { render, screen, waitFor } from '@testing-library/react';
 import Index from '../../app/routes/_index';
@@ -747,7 +499,7 @@ test('renders loader data', async () => {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -780,7 +532,7 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 5`] = `
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
@@ -788,36 +540,14 @@ installGlobals();
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 1`] = `
-"import { createWatchPaths } from '@nx/remix';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
-export default {
-  ignoredRouteFiles: ['**/.*'],
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  watchPaths: () => createWatchPaths(__dirname),
-};
-"
-`;
-
-exports[`Remix Application Standalone Project Repo should create the application correctly 2`] = `
-"import type { MetaFunction } from '@remix-run/node';
-import {
+"import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
+import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
   {
@@ -825,7 +555,20 @@ export const meta: MetaFunction = () => [
   },
 ];
 
-export default function App() {
+export const links: LinksFunction = () => [
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  {
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  },
+];
+
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -835,18 +578,21 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
 }
+
+export default function App() {
+  return <Outlet />;
+}
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 3`] = `
+exports[`Remix Application Standalone Project Repo should create the application correctly 2`] = `
 "import NxWelcome from '../nx-welcome';
 
 export default function Index() {
@@ -859,7 +605,7 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 4`] = `
+exports[`Remix Application Standalone Project Repo should create the application correctly 3`] = `
 "import { createRemixStub } from '@remix-run/testing';
 import { render, screen, waitFor } from '@testing-library/react';
 import Index from '../../app/routes/_index';
@@ -879,9 +625,36 @@ test('renders loader data', async () => {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 5`] = `null`;
+exports[`Remix Application Standalone Project Repo should create the application correctly 4`] = `
+"import { vitePlugin as remix } from '@remix-run/dev';
+import { defineConfig } from 'vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
-exports[`Remix Application Standalone Project Repo should create the application correctly 6`] = `
+declare module '@remix-run/node' {
+  interface Future {
+    v3_singleFetch: true;
+  }
+}
+
+export default defineConfig({
+  root: __dirname,
+  plugins: [
+    remix({
+      future: {
+        v3_fetcherPersist: true,
+        v3_relativeSplatPath: true,
+        v3_throwAbortReason: true,
+        v3_singleFetch: true,
+        v3_lazyRouteDiscovery: true,
+      },
+    }),
+    nxViteTsPaths(),
+  ],
+});
+"
+`;
+
+exports[`Remix Application Standalone Project Repo should create the application correctly 5`] = `
 "{
   "root": true,
   "ignorePatterns": ["!**/*", "build", "public/build"],

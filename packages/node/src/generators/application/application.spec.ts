@@ -6,6 +6,8 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -26,9 +28,8 @@ describe('app', () => {
   describe('not nested', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         bundler: 'webpack',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
@@ -58,6 +59,11 @@ describe('app', () => {
               "options": {
                 "buildTarget": "my-node-app:build",
                 "runBuildTargetDependencies": false,
+              },
+            },
+            "test": {
+              "options": {
+                "passWithNoTests": true,
               },
             },
           },
@@ -94,9 +100,8 @@ describe('app', () => {
 
     it('should update tags', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         tags: 'one,two',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
@@ -109,8 +114,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-node-app',
         addPlugin: true,
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
@@ -186,8 +190,7 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-node-app',
         addPlugin: true,
       });
 
@@ -199,9 +202,7 @@ describe('app', () => {
   describe('nested', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
         directory: 'my-dir/my-node-app',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
@@ -270,6 +271,11 @@ describe('app', () => {
               "options": {
                 "buildTarget": "my-node-app:build",
                 "runBuildTargetDependencies": false,
+              },
+            },
+            "test": {
+              "options": {
+                "passWithNoTests": true,
               },
             },
           },
@@ -349,7 +355,7 @@ describe('app', () => {
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         unitTestRunner: 'none',
         addPlugin: true,
       });
@@ -364,11 +370,11 @@ describe('app', () => {
   describe('--frontendProject', () => {
     it('should configure proxy', async () => {
       await angularApplicationGenerator(tree, {
-        name: 'my-frontend',
+        directory: 'my-frontend',
       });
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         frontendProject: 'my-frontend',
         addPlugin: true,
       });
@@ -381,17 +387,17 @@ describe('app', () => {
 
     it('should configure proxies for multiple node projects with the same frontend app', async () => {
       await angularApplicationGenerator(tree, {
-        name: 'my-frontend',
+        directory: 'my-frontend',
       });
 
       await applicationGenerator(tree, {
-        name: 'cart',
+        directory: 'cart',
         frontendProject: 'my-frontend',
         addPlugin: true,
       });
 
       await applicationGenerator(tree, {
-        name: 'billing',
+        directory: 'billing',
         frontendProject: 'my-frontend',
         addPlugin: true,
       });
@@ -408,7 +414,7 @@ describe('app', () => {
   describe('--swcJest', () => {
     it('should use @swc/jest for jest', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         tags: 'one,two',
         swcJest: true,
         addPlugin: true,
@@ -434,7 +440,7 @@ describe('app', () => {
   describe('--babelJest (deprecated)', () => {
     it('should use babel for jest', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         tags: 'one,two',
         babelJest: true,
         addPlugin: true,
@@ -460,7 +466,7 @@ describe('app', () => {
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         js: true,
         addPlugin: true,
       } as Schema);
@@ -487,7 +493,7 @@ describe('app', () => {
 
     it('should add project config', async () => {
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         js: true,
         addPlugin: true,
       } as Schema);
@@ -514,7 +520,7 @@ describe('app', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         addPlugin: true,
       });
 
@@ -525,7 +531,7 @@ describe('app', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await applicationGenerator(tree, {
-        name: 'my-node-app',
+        directory: 'my-node-app',
         skipFormat: true,
         addPlugin: true,
       });
@@ -542,7 +548,7 @@ describe('app', () => {
   ])('--unitTestRunner', (framework, checkSpecFile) => {
     it('should generate test target and spec file by default', async () => {
       await applicationGenerator(tree, {
-        name: 'api',
+        directory: 'api',
         framework,
         addPlugin: true,
       });
@@ -552,6 +558,153 @@ describe('app', () => {
       if (checkSpecFile) {
         expect(tree.exists(`api/src/app/app.spec.ts`)).toBeTruthy();
       }
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        bundler: 'webpack',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "@proj/myapp",
+          "nx": {
+            "name": "myapp",
+            "projectType": "application",
+            "sourceRoot": "myapp/src",
+            "targets": {
+              "serve": {
+                "configurations": {
+                  "development": {
+                    "buildTarget": "myapp:build:development",
+                  },
+                  "production": {
+                    "buildTarget": "myapp:build:production",
+                  },
+                },
+                "defaultConfiguration": "development",
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:node",
+                "options": {
+                  "buildTarget": "myapp:build",
+                  "runBuildTargetDependencies": false,
+                },
+              },
+              "test": {
+                "options": {
+                  "passWithNoTests": true,
+                },
+              },
+            },
+          },
+          "private": true,
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "out-tsc/myapp",
+            "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });

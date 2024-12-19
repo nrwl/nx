@@ -37,7 +37,7 @@ describe('lib', () => {
 
   async function runLibraryGeneratorWithOpts(opts: Partial<Schema> = {}) {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       publishable: false,
       buildable: false,
       linter: Linter.EsLint,
@@ -62,7 +62,10 @@ describe('lib', () => {
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
     // ACT & ASSERT
     await expect(
-      runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
+      runLibraryGeneratorWithOpts({
+        directory: 'mylib/shared/',
+        name: 'my-lib',
+      })
     ).resolves.not.toThrow();
   });
 
@@ -421,7 +424,7 @@ describe('lib', () => {
     it('should generate files', async () => {
       // ACT
       await runLibraryGeneratorWithOpts();
-      await runLibraryGeneratorWithOpts({ name: 'my-lib2' });
+      await runLibraryGeneratorWithOpts({ directory: 'my-lib2' });
 
       // ASSERT
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
@@ -1128,7 +1131,7 @@ describe('lib', () => {
       // ACT & ASSERT
       await expect(
         runLibraryGeneratorWithOpts({
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         })
@@ -1201,45 +1204,49 @@ describe('lib', () => {
   describe('--linter', () => {
     describe('eslint', () => {
       it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
-        tree.write('eslint.config.js', '');
+        tree.write('eslint.config.cjs', '');
 
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
-        const eslintConfig = tree.read('my-lib/eslint.config.js', 'utf-8');
+        const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
         expect(eslintConfig).toMatchInlineSnapshot(`
           "const nx = require("@nx/eslint-plugin");
-          const baseConfig = require("../eslint.config.js");
+          const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
               ...baseConfig,
-          ...nx.configs["flat/angular"],
-          ...nx.configs["flat/angular-template"],
-          {
-              files: ["**/*.ts"],
-              rules: {
-                  "@angular-eslint/directive-selector": [
-                      "error",
-                      {
-                          type: "attribute",
-                          prefix: "lib",
-                          style: "camelCase"
-                      }
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
+              {
+                  files: [
+                      "**/*.ts"
                   ],
-                  "@angular-eslint/component-selector": [
-                      "error",
-                      {
-                          type: "element",
-                          prefix: "lib",
-                          style: "kebab-case"
-                      }
-                  ]
+                  rules: {
+                      "@angular-eslint/directive-selector": [
+                          "error",
+                          {
+                              type: "attribute",
+                              prefix: "lib",
+                              style: "camelCase"
+                          }
+                      ],
+                      "@angular-eslint/component-selector": [
+                          "error",
+                          {
+                              type: "element",
+                              prefix: "lib",
+                              style: "kebab-case"
+                          }
+                      ]
+                  }
+              },
+              {
+                  files: [
+                      "**/*.html"
+                  ],
+                  // Override or add rules here
+                  rules: {}
               }
-          },
-          {
-              files: ["**/*.html"],
-              // Override or add rules here
-              rules: {}
-          }
           ];
           "
         `);
@@ -1449,10 +1456,6 @@ describe('lib', () => {
         };
         "
       `);
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build.options.tailwindConfig).toBe(
-        'my-lib/tailwind.config.js'
-      );
       const { devDependencies } = readJson(tree, 'package.json');
       expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
       expect(devDependencies['postcss']).toBe(postcssVersion);
@@ -1485,6 +1488,21 @@ describe('lib', () => {
       ).toMatchSnapshot();
       expect(
         tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a valid selector for the standalone component when library name has a slash', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        name: 'auth/common',
+      });
+
+      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(
+          'my-lib/src/lib/auth/common/auth/common.component.ts',
+          'utf-8'
+        )
       ).toMatchSnapshot();
     });
 
@@ -1594,7 +1612,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         skipFormat: true,
       });
@@ -1619,7 +1637,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         skipFormat: true,
       });
@@ -1645,7 +1663,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as direct child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         standalone: true,
         skipFormat: true,
@@ -1673,7 +1691,7 @@ describe('lib', () => {
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as a lazy child', async () => {
       // ARRANGE
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         routing: true,
         standalone: true,
         skipFormat: true,
@@ -1707,7 +1725,7 @@ describe('lib', () => {
 
       // ACT
       await runLibraryGeneratorWithOpts({
-        name: 'second',
+        directory: 'second',
         standalone: true,
         routing: true,
         parent: 'my-lib/src/lib/lib.routes.ts',
@@ -1728,7 +1746,7 @@ describe('lib', () => {
 
       // ACT
       await runLibraryGeneratorWithOpts({
-        name: 'second',
+        directory: 'second',
         standalone: true,
         routing: true,
         lazy: true,

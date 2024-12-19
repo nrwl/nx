@@ -16,13 +16,15 @@ export async function normalizeOptions(
     directory,
     fileName,
     filePath,
+    fileExtension,
+    fileExtensionType,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    fileExtension: 'tsx',
-    fileName: options.fileName,
+    allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
+    fileExtension: options.js ? 'js' : 'tsx',
+    js: options.js,
   });
 
   const project = readProjectConfiguration(tree, projectName);
@@ -55,13 +57,16 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    projectName,
     directory,
+    projectName,
     styledModule,
     hasStyles: options.style !== 'none',
     className,
     fileName,
     filePath,
-    projectSourceRoot: projectSourceRoot ?? projectRoot,
+    projectRoot,
+    projectSourceRoot,
+    fileExtension,
+    fileExtensionType,
   };
 }

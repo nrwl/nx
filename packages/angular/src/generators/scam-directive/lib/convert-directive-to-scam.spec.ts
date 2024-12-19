@@ -15,7 +15,7 @@ describe('convertDirectiveToScam', () => {
 
     await directiveGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       skipImport: true,
       export: false,
       standalone: false,
@@ -24,6 +24,7 @@ describe('convertDirectiveToScam', () => {
 
     // ACT
     convertDirectiveToScam(tree, {
+      path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/example/example.directive.ts',
@@ -44,7 +45,8 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[example]',
+        standalone: false
       })
       export class ExampleDirective {
         constructor() {}
@@ -71,7 +73,7 @@ describe('convertDirectiveToScam', () => {
 
     await directiveGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app/example',
+      path: 'apps/app1/src/app/example/example',
       skipImport: true,
       export: false,
       standalone: false,
@@ -80,6 +82,7 @@ describe('convertDirectiveToScam', () => {
 
     // ACT
     convertDirectiveToScam(tree, {
+      path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/example/example.directive.ts',

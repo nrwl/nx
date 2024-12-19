@@ -178,7 +178,7 @@ export function Fence({
   return (
     <div
       className={cx(
-        'code-block group relative',
+        'code-block group relative mb-4',
         isWithinTab ? '-ml-4 -mr-4 w-[calc(100%+2rem)]' : 'w-auto'
       )}
     >

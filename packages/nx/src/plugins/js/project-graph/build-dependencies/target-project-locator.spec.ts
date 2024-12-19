@@ -207,6 +207,24 @@ describe('TargetProjectLocator', () => {
             root: 'libs/parent-path/child-path',
           },
         },
+        'parent-pm-workspaces': {
+          name: 'parent-pm-workspaces',
+          type: 'lib',
+          data: { root: 'packages/parent-pm-workspaces' },
+        },
+        'child-pm-workspaces': {
+          name: 'child-pm-workspaces',
+          type: 'lib',
+          data: {
+            root: 'packages/child-pm-workspaces',
+            metadata: {
+              js: {
+                packageName: '@proj/child-pm-workspaces',
+                packageExports: undefined,
+              },
+            },
+          },
+        },
       };
       npmProjects = {
         'npm:@ng/core': {
@@ -493,6 +511,19 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(lodash4).toEqual('npm:lodash-4');
+    });
+
+    it('should resolve local packages linked using package manager workspaces', () => {
+      const targetProjectLocator = new TargetProjectLocator(
+        projects,
+        npmProjects
+      );
+      const result = targetProjectLocator.findProjectFromImport(
+        '@proj/child-pm-workspaces',
+        'packages/parent-pm-workspaces/index.ts'
+      );
+
+      expect(result).toEqual('child-pm-workspaces');
     });
   });
 
@@ -983,9 +1014,9 @@ describe('TargetProjectLocator', () => {
 });
 
 describe('isBuiltinModuleImport()', () => {
-  const withExclusions = builtinModules.filter(
-    (s) => !['test/mock_loader'].includes(s)
-  );
+  const withExclusions = builtinModules
+    .concat(builtinModules.filter((a) => true).map((s) => 'node:' + s))
+    .concat(['node:test', 'node:sqlite', 'node:test']);
 
   it.each(withExclusions)(
     `should return true for %s builtin module`,

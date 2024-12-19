@@ -22,7 +22,6 @@ import { nxVersion } from '../utils/versions';
 export interface FileMapCache {
   version: string;
   nxVersion: string;
-  deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
@@ -113,7 +112,6 @@ export function createProjectFileMapCache(
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
-    deps: packageJsonDeps, // TODO(v19): We can remove this in favor of nxVersion
     // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,

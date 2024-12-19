@@ -13,20 +13,19 @@ describe('redux', () => {
   beforeEach(async () => {
     appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: true,
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 
   it('should add dependencies', async () => {
     await reduxGenerator(appTree, {
       name: 'my-slice',
-      directory: 'my-lib/src/lib/my-slice',
+      path: 'my-lib/src/lib/my-slice/my-slice',
     });
 
     const packageJson = readJson(appTree, '/package.json');
@@ -37,7 +36,18 @@ describe('redux', () => {
   it('should add slice and spec files', async () => {
     await reduxGenerator(appTree, {
       name: 'my-slice',
-      directory: 'my-lib/src/lib',
+      path: 'my-lib/src/lib/my-slice/',
+    });
+
+    expect(appTree.exists('/my-lib/src/lib/my-slice.slice.ts')).toBeTruthy();
+    expect(
+      appTree.exists('/my-lib/src/lib/my-slice.slice.spec.ts')
+    ).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await reduxGenerator(appTree, {
+      path: 'my-lib/src/lib/my-slice.slice.ts',
     });
 
     expect(appTree.exists('/my-lib/src/lib/my-slice.slice.ts')).toBeTruthy();
@@ -54,22 +64,21 @@ describe('redux', () => {
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'none',
-        name: 'my-app',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-app',
       });
       await reduxGenerator(appTree, {
         name: 'my-slice',
-        directory: 'my-lib/src/lib/my-slice',
+        path: 'my-lib/src/lib/my-slice/my-slice',
         appProject: 'my-app',
       });
       await reduxGenerator(appTree, {
         name: 'another-slice',
-        directory: 'my-lib/src/lib/another-slice',
+        path: 'my-lib/src/lib/another-slice/another-slice',
         appProject: 'my-app',
       });
       await reduxGenerator(appTree, {
         name: 'third-slice',
-        directory: 'my-lib/src/lib/third-slice',
+        path: 'my-lib/src/lib/third-slice/third-slice',
         appProject: 'my-app',
       });
 
@@ -88,7 +97,7 @@ describe('redux', () => {
       await expect(
         reduxGenerator(appTree, {
           name: 'my-slice',
-          directory: 'my-lib/src/lib/my-slice',
+          path: 'my-lib/src/lib/my-slice/my-slice',
           appProject: 'my-lib',
         })
       ).rejects.toThrow(/Expected m/);

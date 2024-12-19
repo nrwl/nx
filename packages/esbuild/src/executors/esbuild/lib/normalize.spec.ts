@@ -21,6 +21,7 @@ describe('normalizeOptions', () => {
     cwd: '/',
     isVerbose: false,
     projectName: 'myapp',
+    nxJsonConfiguration: {},
     projectsConfigurations: {
       version: 2,
       projects: {
@@ -65,6 +66,7 @@ describe('normalizeOptions', () => {
       singleEntry: true,
       external: [],
       thirdParty: false,
+      isTsSolutionSetup: false,
     });
   });
 
@@ -92,6 +94,7 @@ describe('normalizeOptions', () => {
       singleEntry: false,
       external: [],
       thirdParty: false,
+      isTsSolutionSetup: false,
     });
   });
 
@@ -118,6 +121,7 @@ describe('normalizeOptions', () => {
       singleEntry: true,
       external: [],
       thirdParty: false,
+      isTsSolutionSetup: false,
     });
   });
 
@@ -161,6 +165,7 @@ describe('normalizeOptions', () => {
       singleEntry: true,
       external: [],
       thirdParty: false,
+      isTsSolutionSetup: false,
     });
   });
 

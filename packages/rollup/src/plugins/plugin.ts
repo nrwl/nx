@@ -5,8 +5,12 @@ import {
   type CreateDependencies,
   type CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
+  logger,
   readJsonFile,
   type TargetConfiguration,
   writeJsonFile,
@@ -15,27 +19,28 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-const cachePath = join(workspaceDataDirectory, 'rollup.hash');
-const targetsCache = readTargetsCache();
+const pmc = getPackageManagerCommand();
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+function readTargetsCache(
+  cachePath: string
+): Record<string, Record<string, TargetConfiguration>> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(
+  cachePath: string,
+  results: Record<string, Record<string, TargetConfiguration>>
+) {
+  writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
   return [];
 };
 
@@ -43,52 +48,106 @@ export interface RollupPluginOptions {
   buildTargetName?: string;
 }
 
+const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
+
 export const createNodes: CreateNodes<RollupPluginOptions> = [
-  '**/rollup.config.{js,cjs,mjs}',
+  rollupConfigGlob,
   async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-    const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
-    // Do not create a project if package.json and project.json do not exist
-    const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    options = normalizeOptions(options);
-
-    const hash = await calculateHashForCreateNodes(
-      projectRoot,
-      options,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-
-    targetsCache[hash] ??= await buildRollupTarget(
+    return createNodesInternal(
       configFilePath,
-      projectRoot,
-      options,
-      context
+      normalizeOptions(options),
+      context,
+      {},
+      isUsingTsSolutionSetup()
     );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets: targetsCache[hash],
-        },
-      },
-    };
   },
 ];
+
+export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
+  rollupConfigGlob,
+  async (configFilePaths, options, context) => {
+    const normalizedOptions = normalizeOptions(options);
+    const optionsHash = hashObject(normalizedOptions);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `rollup-${optionsHash}.hash`
+    );
+    const targetsCache = readTargetsCache(cachePath);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
+
+    try {
+      return await createNodesFromFiles(
+        (configFile, _, context) =>
+          createNodesInternal(
+            configFile,
+            normalizedOptions,
+            context,
+            targetsCache,
+            isTsSolutionSetup
+          ),
+        configFilePaths,
+        normalizedOptions,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: Required<RollupPluginOptions>,
+  context: CreateNodesContext,
+  targetsCache: Record<string, Record<string, TargetConfiguration>>,
+  isTsSolutionSetup: boolean
+) {
+  const projectRoot = dirname(configFilePath);
+  const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
+
+  // Do not create a project if package.json and project.json do not exist
+  const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+
+  targetsCache[hash] ??= await buildRollupTarget(
+    configFilePath,
+    projectRoot,
+    options,
+    context,
+    isTsSolutionSetup
+  );
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets: targetsCache[hash],
+      },
+    },
+  };
+}
 
 async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  isTsSolutionSetup: boolean
 ): Promise<Record<string, TargetConfiguration>> {
   let loadConfigFile: (
     path: string,
@@ -123,7 +182,11 @@ async function buildRollupTarget(
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
-    command: `rollup -c ${basename(configFilePath)}`,
+    command: `rollup -c ${basename(configFilePath)}${
+      configFilePath.endsWith('ts')
+        ? ' --configPlugin @rollup/plugin-typescript'
+        : ''
+    }`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
@@ -134,7 +197,27 @@ async function buildRollupTarget(
       { externalDependencies: ['rollup'] },
     ],
     outputs,
+    metadata: {
+      technologies: ['rollup'],
+      description: 'Run Rollup',
+      help: {
+        command: `${pmc.exec} rollup --help`,
+        example: {
+          options: {
+            sourcemap: true,
+            watch: true,
+          },
+        },
+      },
+    },
   };
+
+  if (isTsSolutionSetup) {
+    targets[options.buildTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+  }
+
   return targets;
 }
 
@@ -173,9 +256,10 @@ function getOutputs(
   return Array.from(outputs);
 }
 
-function normalizeOptions(options: RollupPluginOptions) {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-
-  return options;
+function normalizeOptions(
+  options: RollupPluginOptions
+): Required<RollupPluginOptions> {
+  return {
+    buildTargetName: options.buildTargetName ?? 'build',
+  };
 }

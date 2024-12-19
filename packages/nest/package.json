@@ -36,7 +36,6 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/node": "file:../node",
-    "@phenomnomnominal/tsquery": "~5.0.1",
     "tslib": "^2.3.0"
   },
   "publishConfig": {

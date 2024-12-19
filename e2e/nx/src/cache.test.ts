@@ -248,9 +248,9 @@ describe('cache', () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');
     const child2 = uniq('child2');
-    runCLI(`generate @nx/js:lib ${parent} --directory=libs/${parent}`);
-    runCLI(`generate @nx/js:lib ${child1} --directory=libs/${child1}`);
-    runCLI(`generate @nx/js:lib ${child2} --directory=libs/${child2}`);
+    runCLI(`generate @nx/js:lib libs/${parent}`);
+    runCLI(`generate @nx/js:lib libs/${child1}`);
+    runCLI(`generate @nx/js:lib libs/${child2}`);
     updateJson(`nx.json`, (c) => {
       c.namedInputs = {
         default: ['{projectRoot}/**/*'],
@@ -315,7 +315,7 @@ describe('cache', () => {
 
   it('should support ENV as an input', () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --directory=libs/${lib}`);
+    runCLI(`generate @nx/js:lib libs/${lib}`);
     updateJson(`nx.json`, (c) => {
       c.targetDefaults = {
         echo: {

@@ -1,14 +1,15 @@
-import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
 /**
  * Same as the @nx/react library schema, except it removes keys: style, routing, globalCss
  */
 export interface Schema {
-  name: string;
+  path: string;
+  name?: string;
   skipTests?: boolean;
-  directory?: string;
   export?: boolean;
   classComponent?: boolean;
+
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
   js?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }

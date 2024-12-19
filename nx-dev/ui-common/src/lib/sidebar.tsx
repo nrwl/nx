@@ -208,16 +208,16 @@ export function SidebarMobile({
     general: [
       { name: 'Home', href: '/', current: false },
       { name: 'Blog', href: '/blog', current: false },
-      { name: 'Community', href: '/community', current: false },
-      { name: 'Launch Nx', href: '/launch-nx', current: false },
+      { name: 'Resources', href: '/resources', current: false },
+      { name: 'Nx Cloud', href: '/nx-cloud', current: false },
       {
-        name: 'Contact',
-        href: '/contact',
+        name: 'Powerpack',
+        href: '/powerpack',
         current: false,
       },
       {
-        name: 'Go to app',
-        href: 'https://cloud.nx.app',
+        name: 'Enterprise',
+        href: '/enterprise',
         current: false,
       },
     ],

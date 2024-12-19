@@ -5,7 +5,6 @@ import { join } from 'path';
 
 import { workspaceRoot } from '../../utils/workspace-root';
 import { PluginConfiguration } from '../../config/nx-json';
-import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
 
 import {
@@ -16,11 +15,9 @@ import {
   CreateNodesContextV2,
   CreateNodesResult,
   NxPluginV2,
+  ProjectsMetadata,
 } from './public-api';
-import {
-  ProjectGraph,
-  ProjectGraphProcessor,
-} from '../../config/project-graph';
+import { ProjectGraph } from '../../config/project-graph';
 import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
 import { createNodesFromFiles } from './utils';
@@ -29,7 +26,7 @@ import {
   isAggregateCreateNodesError,
 } from '../error-types';
 import { IS_WASM } from '../../native';
-import { platform } from 'os';
+import { RawProjectGraphDependency } from '../project-graph-builder';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -46,18 +43,17 @@ export class LoadedNxPlugin {
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
-  ) => ReturnType<CreateDependencies>;
+  ) => Promise<RawProjectGraphDependency[]>;
   readonly createMetadata?: (
     graph: ProjectGraph,
     context: CreateMetadataContext
-  ) => ReturnType<CreateMetadata>;
-  readonly processProjectGraph?: ProjectGraphProcessor;
+  ) => Promise<ProjectsMetadata>;
 
   readonly options?: unknown;
   readonly include?: string[];
   readonly exclude?: string[];
 
-  constructor(plugin: NormalizedPlugin, pluginDefinition: PluginConfiguration) {
+  constructor(plugin: NxPluginV2, pluginDefinition: PluginConfiguration) {
     this.name = plugin.name;
     if (typeof pluginDefinition !== 'string') {
       this.options = pluginDefinition.options;
@@ -116,16 +112,14 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.createDependencies) {
-      this.createDependencies = (context) =>
+      this.createDependencies = async (context) =>
         plugin.createDependencies(this.options, context);
     }
 
     if (plugin.createMetadata) {
-      this.createMetadata = (graph, context) =>
+      this.createMetadata = async (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
     }
-
-    this.processProjectGraph = plugin.processProjectGraph;
   }
 }
 
@@ -133,18 +127,6 @@ export type CreateNodesResultWithContext = CreateNodesResult & {
   file: string;
   pluginName: string;
 };
-
-export type NormalizedPlugin = NxPluginV2 &
-  Pick<NxPluginV1, 'processProjectGraph'>;
-
-// Short lived cache (cleared between cmd runs)
-// holding resolved nx plugin objects.
-// Allows loaded plugins to not be reloaded when
-// referenced multiple times.
-export const nxPluginCache: Map<
-  unknown,
-  [Promise<LoadedNxPlugin>, () => void]
-> = new Map();
 
 function isIsolationEnabled() {
   // Explicitly enabled, regardless of further conditions
@@ -163,31 +145,45 @@ function isIsolationEnabled() {
   return true;
 }
 
+/**
+ * Use `getPlugins` instead.
+ * @deprecated Do not use this. Use `getPlugins` instead.
+ */
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<readonly [LoadedNxPlugin[], () => void]> {
   performance.mark('loadNxPlugins:start');
-
   const loadingMethod = isIsolationEnabled()
     ? loadNxPluginInIsolation
     : loadNxPlugin;
 
   plugins = await normalizePlugins(plugins, root);
 
-  const result: Promise<LoadedNxPlugin>[] = new Array(plugins?.length);
-
   const cleanupFunctions: Array<() => void> = [];
-  await Promise.all(
-    plugins.map(async (plugin, idx) => {
-      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
-      result[idx] = loadedPluginPromise;
-      cleanupFunctions.push(cleanup);
-    })
-  );
-
   const ret = [
-    await Promise.all(result),
+    await Promise.all(
+      plugins.map(async (plugin) => {
+        const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
+        performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
+
+        const [loadedPluginPromise, cleanup] = await loadingMethod(
+          plugin,
+          root
+        );
+
+        cleanupFunctions.push(cleanup);
+        const res = await loadedPluginPromise;
+        performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
+        performance.measure(
+          `Load Nx Plugin: ${pluginPath}`,
+          `Load Nx Plugin: ${pluginPath} - start`,
+          `Load Nx Plugin: ${pluginPath} - end`
+        );
+
+        return res;
+      })
+    ),
     () => {
       for (const fn of cleanupFunctions) {
         fn();

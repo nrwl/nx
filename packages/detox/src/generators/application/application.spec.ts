@@ -26,11 +26,10 @@ describe('detox application generator', () => {
       });
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-app-e2e',
+        e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -102,7 +101,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -174,7 +172,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -241,11 +238,10 @@ describe('detox application generator', () => {
       });
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-dir/my-app-e2e',
+        e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'react-native',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -311,11 +307,10 @@ describe('detox application generator', () => {
       });
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-dir/my-app-e2e',
+        e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
         linter: Linter.None,
         framework: 'expo',
-        projectNameAndRootFormat: 'as-provided',
         addPlugin: true,
       });
     });
@@ -394,7 +389,7 @@ describe('detox application generator', () => {
 
     it('should extend from tsconfig.base.json', async () => {
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-app-e2e',
+        e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
@@ -409,7 +404,7 @@ describe('detox application generator', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await detoxApplicationGenerator(tree, {
-        e2eName: 'my-app-e2e',
+        e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',

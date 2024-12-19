@@ -24,8 +24,40 @@ describe('component', () => {
 
   it('should generate files with vitest', async () => {
     await componentGenerator(appTree, {
-      name: 'hello',
-      directory: `${libName}/src/lib/hello`,
+      path: `${libName}/src/lib/hello/hello`,
+    });
+
+    expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "<script setup lang="ts">
+      // defineProps<{}>()
+      </script>
+
+      <template>
+        <p>Welcome to Hello!</p>
+      </template>
+
+      <style scoped></style>
+      "
+    `);
+    expect(appTree.read(`${libName}/src/lib/hello/hello.spec.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from '@vue/test-utils';
+      import Hello from './hello.vue';
+
+      describe('Hello', () => {
+        it('renders properly', () => {
+          const wrapper = mount(Hello, {});
+          expect(wrapper.text()).toContain('Welcome to Hello');
+        });
+      });
+      "
+    `);
+  });
+
+  it('should handle path with file extension', async () => {
+    await componentGenerator(appTree, {
+      path: `${libName}/src/lib/hello/hello.vue`,
     });
 
     expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
@@ -58,8 +90,7 @@ describe('component', () => {
 
   it('should have correct component name based on directory', async () => {
     await componentGenerator(appTree, {
-      name: 'hello-world',
-      directory: `${libName}/src/foo/bar/hello-world`,
+      path: `${libName}/src/foo/bar/hello-world/hello-world`,
     });
 
     expect(
@@ -72,8 +103,7 @@ describe('component', () => {
 
   it('should generate files for an app', async () => {
     await componentGenerator(appTree, {
-      name: 'hello',
-      directory: `${appName}/src/app/hello`,
+      path: `${appName}/src/app/hello/hello`,
     });
 
     expect(
@@ -87,8 +117,7 @@ describe('component', () => {
   describe('--export', () => {
     it('should add to index.ts barrel', async () => {
       await componentGenerator(appTree, {
-        name: 'hello',
-        directory: `${libName}/src/lib/hello`,
+        path: `${libName}/src/lib/hello/hello`,
         export: true,
       });
       expect(appTree.read(`${libName}/src/index.ts`, 'utf-8'))
@@ -100,8 +129,7 @@ describe('component', () => {
 
     it('should not export from an app', async () => {
       await componentGenerator(appTree, {
-        name: 'hello',
-        directory: `${appName}/src/app/hello`,
+        path: `${appName}/src/app/hello/hello`,
         export: true,
       });
 

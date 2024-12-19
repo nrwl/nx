@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -13,6 +14,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import {
@@ -34,6 +36,11 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -49,13 +56,6 @@ export async function expoLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = await normalizeOptions(host, schema);
-  if (options.publishable === true && !schema.importPath) {
-    throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
-    );
-  }
-
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(host, {
@@ -63,6 +63,14 @@ export async function expoLibraryGeneratorInternal(
     skipFormat: true,
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
+  if (options.publishable === true && !schema.importPath) {
+    throw new Error(
+      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+    );
+  }
+
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
   if (!options.skipPackageJson) {
@@ -70,12 +78,12 @@ export async function expoLibraryGeneratorInternal(
   }
   initRootBabelConfig(host);
 
+  createFiles(host, options);
+
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {
     tasks.push(addProjectTask);
   }
-
-  createFiles(host, options);
 
   const lintTask = await addLinting(host, {
     ...options,
@@ -101,7 +109,7 @@ export async function expoLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -111,8 +119,31 @@ export async function expoLibraryGeneratorInternal(
     ]);
   }
 
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {
@@ -133,7 +164,29 @@ async function addProject(
     tags: options.parsedTags,
     targets: {},
   };
-  addProjectConfiguration(host, options.name, project);
+
+  if (options.isUsingTsSolutionConfig) {
+    const packageName = getImportPath(host, options.name);
+    const sourceEntry = !options.buildable
+      ? options.js
+        ? './src/index.js'
+        : './src/index.ts'
+      : undefined;
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: packageName,
+      version: '0.0.1',
+      main: sourceEntry,
+      types: sourceEntry,
+      nx: {
+        name: packageName === options.name ? undefined : options.name,
+        projectType: 'library',
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.name, project);
+  }
 
   if (!options.publishable && !options.buildable) {
     return () => {};

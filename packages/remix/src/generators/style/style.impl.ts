@@ -17,18 +17,20 @@ import {
 } from '../../utils/remix-route-utils';
 
 export default async function (tree: Tree, options: RemixStyleSchema) {
-  const { project: projectName, artifactName: name } =
-    await determineArtifactNameAndDirectoryOptions(tree, {
-      name: options.path,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat ?? 'as-provided',
-    });
+  const {
+    project: projectName,
+    directory,
+    fileName,
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
+    path: options.path,
+  });
   const project = readProjectConfiguration(tree, projectName);
   if (!project) throw new Error(`Project does not exist: ${projectName}`);
 
   const appDir = await resolveRemixAppDirectory(tree, project.name);
-  const normalizedRoutePath = `${normalizeRoutePath(options.path)
-    .replace(/^\//, '')
-    .replace('.tsx', '')}.css`;
+  const normalizedRoutePath = `${normalizeRoutePath(
+    joinPathFragments(directory, fileName)
+  ).replace(/^\//, '')}.css`;
   const stylesheetPath = joinPathFragments(
     appDir,
     'styles',

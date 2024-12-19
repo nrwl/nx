@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nx/devkit';
+import type { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   createFile,
@@ -6,7 +6,6 @@ import {
   killProcessAndPorts,
   newProject,
   readFile,
-  readJson,
   runCLI,
   runCommandAsync,
   runCommandUntil,
@@ -53,7 +52,6 @@ describe('nx release', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -93,9 +91,6 @@ describe('nx release', () => {
       `git remote add origin https://github.com/nrwl/fake-repo.git`
     );
 
-    const pkg1ContentsBeforeVersioning = readFile(`${pkg1}/package.json`);
-    const pkg2ContentsBeforeVersioning = readFile(`${pkg2}/package.json`);
-
     const versionOutput = runCLI(`release version 999.9.9`);
 
     /**
@@ -123,50 +118,6 @@ describe('nx release', () => {
       ).length
     ).toEqual(3);
 
-    // Only one dependency relationship exists, so this log should only match once
-    const dependencyRelationshipLogMatch = versionOutput.match(
-      /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-    );
-    if (
-      !dependencyRelationshipLogMatch ||
-      dependencyRelationshipLogMatch.length !== 1
-    ) {
-      const projectGraphDependencies = readJson(
-        '.nx/cache/project-graph.json'
-      ).dependencies;
-      const firstPartyProjectGraphDependencies = JSON.stringify(
-        Object.fromEntries(
-          Object.entries(projectGraphDependencies).filter(
-            ([key]) => !key.startsWith('npm:')
-          )
-        )
-      );
-
-      // From JamesHenry: explicit warning to assist troubleshooting NXC-143.
-      console.warn(
-        `
-WARNING: Expected to find exactly one dependency relationship log line.
-
-If you are seeing this message then you have been impacted by some flakiness in the test.
-
-${JSON.stringify(
-  {
-    versionOutput,
-    pkg1Name: pkg1,
-    pkg2Name: pkg2,
-    pkg1ContentsBeforeVersioning,
-    pkg2ContentsBeforeVersioning,
-    pkg2ContentsAfterVersioning: readFile(`${pkg2}/package.json`),
-    firstPartyProjectGraphDependencies,
-  },
-  null,
-  2
-)}`
-      );
-    }
-    // TODO: re-enable this assertion once the flakiness documented in NXC-143 is resolved
-    // expect(dependencyRelationshipLogMatch.length).toEqual(1);
-
     // Generate a changelog for the new version
     expect(exists('CHANGELOG.md')).toEqual(false);
 
@@ -178,12 +129,11 @@ ${JSON.stringify(
 
       + ## 999.9.9 (YYYY-MM-DD)
       +
-      +
       + ### 🚀 Features
       +
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
       +
-      + ### ❤️  Thank You
+      + ### ❤️ Thank You
       +
       + - Test @{COMMIT_AUTHOR}
 
@@ -199,12 +149,11 @@ ${JSON.stringify(
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
       ## 999.9.9 (YYYY-MM-DD)
 
-
       ### 🚀 Features
 
       - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
-      ### ❤️  Thank You
+      ### ❤️ Thank You
 
       - Test @{COMMIT_AUTHOR}
     `);
@@ -377,14 +326,6 @@ ${JSON.stringify(
         /New version 1000.0.0-next.0 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
-
-    // TODO: Also impacted by NXC-143
-    // Only one dependency relationship exists, so this log should only match once
-    // expect(
-    //   versionOutput2.match(
-    //     /Applying new version 1000.0.0-next.0 to 1 package which depends on my-pkg-\d*/g
-    //   ).length
-    // ).toEqual(1);
 
     // Perform an initial dry-run of the publish to the custom registry (not e2e registry), and a custom dist tag of "next"
     const publishToNext = `release publish --registry=${customRegistryUrl} --tag=next`;
@@ -723,7 +664,7 @@ ${JSON.stringify(
       +
       ## 999.9.9 (YYYY-MM-DD)
 
-
+      ### 🚀 Features
 
 
       NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -756,7 +697,7 @@ ${JSON.stringify(
       NX   Tagging commit with git
 
 
-      NX   Pushing to git remote
+      NX   Pushing to git remote "origin"
 
 
       NX   Creating GitHub Release
@@ -847,14 +788,6 @@ ${JSON.stringify(
         /New version 1100.1.0 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
-
-    // TODO: Also impacted by NXC-143
-    // Only one dependency relationship exists, so this log should only match once
-    // expect(
-    //   versionOutput3.match(
-    //     /Applying new version 1100.1.0 to 1 package which depends on my-pkg-\d*/g
-    //   ).length
-    // ).toEqual(1);
 
     createFile(
       `${pkg1}/my-file.txt`,

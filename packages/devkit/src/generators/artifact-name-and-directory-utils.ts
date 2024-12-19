@@ -12,18 +12,32 @@ import {
 } from 'nx/src/devkit-internals';
 import { join, relative } from 'path';
 
-// TODO(leo): remove in a follow up
-export type NameAndDirectoryFormat = 'as-provided';
+const DEFAULT_ALLOWED_JS_FILE_EXTENSIONS = ['js', 'cjs', 'mjs', 'jsx'];
+const DEFAULT_ALLOWED_TS_FILE_EXTENSIONS = ['ts', 'cts', 'mts', 'tsx'];
+const DEFAULT_ALLOWED_FILE_EXTENSIONS = [
+  ...DEFAULT_ALLOWED_JS_FILE_EXTENSIONS,
+  ...DEFAULT_ALLOWED_TS_FILE_EXTENSIONS,
+  'vue',
+];
 
 export type ArtifactGenerationOptions = {
-  name: string;
-  directory?: string;
-  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
-  fileName?: string;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
+  path: string;
+  name?: string;
+  fileExtension?: string;
   suffix?: string;
+  allowedFileExtensions?: string[];
+
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
+  js?: boolean;
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
+  jsOptionName?: string;
 };
 
+export type FileExtensionType = 'js' | 'ts' | 'other';
 export type NameAndDirectoryOptions = {
   /**
    * Normalized artifact name.
@@ -38,6 +52,14 @@ export type NameAndDirectoryOptions = {
    */
   fileName: string;
   /**
+   * Normalized file extension.
+   */
+  fileExtension: string;
+  /**
+   * Normalized file extension type.
+   */
+  fileExtensionType: FileExtensionType;
+  /**
    * Normalized full file path of the artifact.
    */
   filePath: string;
@@ -50,115 +72,84 @@ export type NameAndDirectoryOptions = {
 export async function determineArtifactNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
-): Promise<
-  NameAndDirectoryOptions & {
-    // TODO(leo): remove in a follow up
-    nameAndDirectoryFormat: NameAndDirectoryFormat;
-  }
-> {
-  const nameAndDirectoryOptions = getNameAndDirectoryOptions(tree, options);
+): Promise<NameAndDirectoryOptions> {
+  const normalizedOptions = getNameAndDirectoryOptions(tree, options);
 
   validateResolvedProject(
-    tree,
-    nameAndDirectoryOptions.project,
-    options,
-    nameAndDirectoryOptions.directory
+    normalizedOptions.project,
+    normalizedOptions.directory
   );
 
-  return {
-    ...nameAndDirectoryOptions,
-    nameAndDirectoryFormat: 'as-provided',
-  };
+  return normalizedOptions;
 }
 
 function getNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
 ): NameAndDirectoryOptions {
-  const directory = options.directory
-    ? normalizePath(options.directory.replace(/^\.?\//, ''))
+  const path = options.path
+    ? normalizePath(options.path.replace(/^\.?\//, ''))
     : undefined;
-  const fileExtension = options.fileExtension ?? 'ts';
-  const { name: extractedName, directory: extractedDirectory } =
-    extractNameAndDirectoryFromName(options.name);
-
-  if (extractedDirectory && directory) {
-    throw new Error(
-      `You can't specify both a directory (${options.directory}) and a name with a directory path (${options.name}). ` +
-        `Please specify either a directory or a name with a directory path.`
-    );
-  }
-
-  const asProvidedOptions = getAsProvidedOptions(tree, {
-    ...options,
-    directory: directory ?? extractedDirectory,
-    fileExtension,
-    name: extractedName,
-  });
-
-  return asProvidedOptions;
-}
-
-function getAsProvidedOptions(
-  tree: Tree,
-  options: ArtifactGenerationOptions
-): NameAndDirectoryOptions {
+  let { name: extractedName, directory } =
+    extractNameAndDirectoryFromPath(path);
   const relativeCwd = getRelativeCwd();
 
-  let asProvidedDirectory: string;
-  if (options.directory) {
-    // append the directory to the current working directory if it doesn't start with it
-    if (
-      options.directory === relativeCwd ||
-      options.directory.startsWith(`${relativeCwd}/`)
-    ) {
-      asProvidedDirectory = options.directory;
-    } else {
-      asProvidedDirectory = joinPathFragments(relativeCwd, options.directory);
-    }
-  } else {
-    asProvidedDirectory = relativeCwd;
+  // append the directory to the current working directory if it doesn't start with it
+  if (directory !== relativeCwd && !directory.startsWith(`${relativeCwd}/`)) {
+    directory = joinPathFragments(relativeCwd, directory);
   }
-  const asProvidedProject = findProjectFromPath(tree, asProvidedDirectory);
 
-  const asProvidedFileName =
-    options.fileName ??
-    (options.suffix ? `${options.name}.${options.suffix}` : options.name);
-  const asProvidedFilePath = joinPathFragments(
-    asProvidedDirectory,
-    `${asProvidedFileName}.${options.fileExtension}`
+  const project = findProjectFromPath(tree, directory);
+
+  let fileName = extractedName;
+  let fileExtension: string = options.fileExtension ?? 'ts';
+
+  const allowedFileExtensions =
+    options.allowedFileExtensions ?? DEFAULT_ALLOWED_FILE_EXTENSIONS;
+  const fileExtensionRegex = new RegExp(
+    `\\.(${allowedFileExtensions.join('|')})$`
+  );
+  const fileExtensionMatch = fileName.match(fileExtensionRegex);
+
+  if (fileExtensionMatch) {
+    fileExtension = fileExtensionMatch[1];
+    fileName = fileName.replace(fileExtensionRegex, '');
+    extractedName = fileName;
+  } else if (options.suffix) {
+    fileName = `${fileName}.${options.suffix}`;
+  }
+
+  const filePath = joinPathFragments(directory, `${fileName}.${fileExtension}`);
+  const fileExtensionType = getFileExtensionType(fileExtension);
+
+  validateFileExtension(
+    fileExtension,
+    allowedFileExtensions,
+    options.js,
+    options.jsOptionName
   );
 
   return {
-    artifactName: options.name,
-    directory: asProvidedDirectory,
-    fileName: asProvidedFileName,
-    filePath: asProvidedFilePath,
-    project: asProvidedProject,
+    artifactName: options.name ?? extractedName,
+    directory,
+    fileName,
+    fileExtension,
+    fileExtensionType,
+    filePath,
+    project,
   };
 }
 
 function validateResolvedProject(
-  tree: Tree,
   project: string | undefined,
-  options: ArtifactGenerationOptions,
   normalizedDirectory: string
 ): void {
   if (project) {
     return;
   }
 
-  if (options.directory) {
-    throw new Error(
-      `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
-        `Please make sure to navigate to a location or provide a directory that exists under a project root.`
-    );
-  }
-
   throw new Error(
-    `The current working directory "${
-      getRelativeCwd() || '.'
-    }" does not exist under any project root. ` +
+    `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
       `Please make sure to navigate to a location or provide a directory that exists under a project root.`
   );
 }
@@ -192,13 +183,63 @@ function getCwd(): string {
     : process.cwd();
 }
 
-function extractNameAndDirectoryFromName(rawName: string): {
+function extractNameAndDirectoryFromPath(path: string): {
   name: string;
-  directory: string | undefined;
+  directory: string;
 } {
-  const parsedName = normalizePath(rawName).split('/');
-  const name = parsedName.pop();
-  const directory = parsedName.length ? parsedName.join('/') : undefined;
+  // Remove trailing slash
+  path = path.replace(/\/$/, '');
+
+  const parsedPath = normalizePath(path).split('/');
+  const name = parsedPath.pop();
+  const directory = parsedPath.join('/');
 
   return { name, directory };
+}
+
+function getFileExtensionType(fileExtension: string): FileExtensionType {
+  if (DEFAULT_ALLOWED_JS_FILE_EXTENSIONS.includes(fileExtension)) {
+    return 'js';
+  }
+
+  if (DEFAULT_ALLOWED_TS_FILE_EXTENSIONS.includes(fileExtension)) {
+    return 'ts';
+  }
+
+  return 'other';
+}
+
+function validateFileExtension(
+  fileExtension: string,
+  allowedFileExtensions: string[],
+  js: boolean | undefined,
+  jsOptionName: string | undefined
+): FileExtensionType {
+  const fileExtensionType = getFileExtensionType(fileExtension);
+
+  if (!allowedFileExtensions.includes(fileExtension)) {
+    throw new Error(
+      `The provided file path has an extension (.${fileExtension}) that is not supported by this generator.
+The supported extensions are: ${allowedFileExtensions
+        .map((ext) => `.${ext}`)
+        .join(', ')}.`
+    );
+  }
+
+  if (js !== undefined) {
+    jsOptionName = jsOptionName ?? 'js';
+
+    if (js && fileExtensionType === 'ts') {
+      throw new Error(
+        `The provided file path has an extension (.${fileExtension}) that conflicts with the provided "--${jsOptionName}" option.`
+      );
+    }
+    if (!js && fileExtensionType === 'js') {
+      throw new Error(
+        `The provided file path has an extension (.${fileExtension}) that conflicts with the provided "--${jsOptionName}" option.`
+      );
+    }
+  }
+
+  return fileExtensionType;
 }

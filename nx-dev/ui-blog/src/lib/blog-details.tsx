@@ -23,7 +23,7 @@ export async function generateMetadata({ post }: BlogDetailsProps) {
             : 'https://nx.dev/socials/nx-media.png',
           width: 800,
           height: 421,
-          alt: 'Nx: Smart, Fast and Extensible Build System',
+          alt: 'Nx: Smart Monorepos · Fast CI',
           type: 'image/jpeg',
         },
       ],
@@ -45,7 +45,7 @@ export function BlogDetails({ post }: BlogDetailsProps) {
 
   return (
     <main id="main" role="main" className="w-full py-8">
-      <div className="mx-auto mb-8 flex max-w-screen-xl justify-between px-4 lg:px-8">
+      <div className="mx-auto flex max-w-3xl justify-between px-4 lg:px-0">
         <Link
           href="/blog"
           className="flex w-20 shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
@@ -87,9 +87,9 @@ export function BlogDetails({ post }: BlogDetailsProps) {
           </div>
         ) : (
           post.cover_image && (
-            <div className="mx-auto mb-16 aspect-[1.7] w-full max-w-screen-md">
+            <div className="mx-auto mb-16 w-full max-w-screen-md">
               <Image
-                className="h-full w-full object-cover md:rounded-md"
+                className="w-full object-cover md:rounded-md"
                 src={post.cover_image}
                 alt={post.title}
                 width={1400}

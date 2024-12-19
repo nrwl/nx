@@ -9,16 +9,26 @@
     "properties": {
       "region": {
         "type": "string",
-        "description": "The AWS region the bucket is located in",
-        "x-prompt": "Which AWS region is the bucket located in?"
+        "description": "The AWS region the bucket is located in"
+      },
+      "accessKeyId": {
+        "type": "string",
+        "description": "The AWS Access Key ID to use to access the S3 Bucket, alternatively set the AWS_ACCESS_KEY_ID environment variable"
+      },
+      "secretAccessKey": {
+        "type": "string",
+        "description": "The AWS Secret Access Key to use to access the S3 Bucket, alternatively set the AWS_SECRET_ACCESS_KEY environment variable"
       },
       "bucket": {
         "type": "string",
-        "description": "The the name of the S3 Bucket to store the Nx Cache in",
-        "x-prompt": "What is the name of the S3 Bucket to store the Nx Cache in?"
+        "description": "The the name of the S3 Bucket to store the Nx Cache in"
+      },
+      "forcePathStyle": {
+        "type": "boolean",
+        "description": "Set to true to use path style URLs for S3 objects"
       }
     },
-    "required": ["region", "bucket"],
+    "required": [],
     "presets": []
   },
   "description": "Initialize the S3 Cache",

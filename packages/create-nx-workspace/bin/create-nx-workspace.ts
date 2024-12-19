@@ -7,7 +7,6 @@ import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
-import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
@@ -25,21 +24,24 @@ import {
   withOptions,
   withPackageManager,
 } from '../src/internal-utils/yargs-options';
-import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
+import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
+  linter?: 'none' | 'eslint';
+  formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
 }
 
 interface NoneArguments extends BaseArguments {
   stack: 'none';
-  workspaceType: 'package-based' | 'integrated' | 'standalone';
-  js: boolean;
-  appName: string | undefined;
+  workspaceType?: 'package-based' | 'integrated' | 'standalone';
+  js?: boolean;
+  appName?: string | undefined;
 }
 
 interface ReactArguments extends BaseArguments {
@@ -64,6 +66,7 @@ interface AngularArguments extends BaseArguments {
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   bundler: 'webpack' | 'esbuild';
   ssr: boolean;
+  serverRouting: boolean;
   prefix: string;
 }
 
@@ -157,6 +160,15 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Bundler to be used to build the app.`,
             type: 'string',
           })
+          .option('workspaces', {
+            describe: chalk.dim`Use package manager workspaces.`,
+            type: 'boolean',
+            default: false,
+          })
+          .option('formatter', {
+            describe: chalk.dim`Code formatter to use.`,
+            type: 'string',
+          })
           .option('framework', {
             describe: chalk.dim`Framework option to be used with certain stacks.`,
             type: 'string',
@@ -222,8 +234,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     parsedArgs
   );
 
-  showNxWarning(parsedArgs.name);
-
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
@@ -236,11 +246,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
-    console.log(workspaceInfo.nxCloudInfo);
+    process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
   if (isKnownPreset(parsedArgs.preset)) {
-    pointToTutorialAndCourse(parsedArgs.preset as Preset);
+    printSocialInformation();
   } else {
     output.log({
       title: `Successfully applied preset: ${parsedArgs.preset}`,
@@ -394,7 +404,11 @@ async function determineStack(
       choices: [
         {
           name: `none`,
-          message: `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
+          message:
+            process.env.NX_ADD_PLUGINS !== 'false' &&
+            process.env.NX_ADD_TS_PLUGIN !== 'false'
+              ? `None:          Configures a TypeScript/JavaScript monorepo.`
+              : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
         },
         {
           name: `react`,
@@ -438,54 +452,118 @@ async function determinePresetOptions(
   }
 }
 
+async function determineFormatterOptions(args: {
+  formatter?: 'none' | 'prettier';
+  interactive?: boolean;
+}) {
+  if (args.formatter) return args.formatter;
+  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
+    {
+      name: 'prettier',
+      message: `Would you like to use Prettier for code formatting?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+}
+
+async function determineLinterOptions(args: { interactive?: boolean }) {
+  const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
+    {
+      name: 'eslint',
+      message: `Would you like to use ESLint?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.eslint === 'Yes' ? 'eslint' : 'none';
+}
+
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
-  let preset: Preset;
-  let workspaceType: 'package-based' | 'standalone' | 'integrated' | undefined =
-    undefined;
-  let appName: string | undefined = undefined;
-  let js: boolean | undefined;
-
-  if (parsedArgs.preset) {
-    preset = parsedArgs.preset;
+  if (
+    (!parsedArgs.preset || parsedArgs.preset === Preset.TS) &&
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    process.env.NX_ADD_TS_PLUGIN !== 'false'
+  ) {
+    return {
+      preset: Preset.TS,
+      formatter: await determineFormatterOptions(parsedArgs),
+    };
   } else {
-    workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
-    if (workspaceType === 'standalone') {
-      preset = Preset.TsStandalone;
-    } else if (workspaceType === 'integrated') {
-      preset = Preset.Apps;
+    let preset: Preset;
+    let workspaceType:
+      | 'package-based'
+      | 'standalone'
+      | 'integrated'
+      | undefined = undefined;
+    let appName: string | undefined = undefined;
+    let js: boolean | undefined;
+
+    if (parsedArgs.preset) {
+      preset = parsedArgs.preset;
     } else {
-      preset = Preset.NPM;
+      workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
+      if (workspaceType === 'standalone') {
+        preset = Preset.TsStandalone;
+      } else if (workspaceType === 'integrated') {
+        preset = Preset.Apps;
+      } else {
+        preset = Preset.NPM;
+      }
     }
-  }
 
-  if (parsedArgs.js !== undefined) {
-    js = parsedArgs.js;
-  } else if (preset === Preset.TsStandalone) {
-    // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
-    appName = parsedArgs.name;
-    const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
-      {
-        name: 'ts',
-        message: `Would you like to use TypeScript with this project?`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 0,
-        skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
-    js = reply.ts === 'No';
-  }
+    if (preset === Preset.TS) {
+      return { preset, formatter: 'prettier' };
+    }
 
-  return { preset, js, appName };
+    if (parsedArgs.js !== undefined) {
+      js = parsedArgs.js;
+    } else if (preset === Preset.TsStandalone) {
+      // Only standalone TS preset generates a default package, so we need to provide --js and --appName options.
+      appName = parsedArgs.name;
+      const reply = await enquirer.prompt<{ ts: 'Yes' | 'No' }>([
+        {
+          name: 'ts',
+          message: `Would you like to use TypeScript with this project?`,
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+            {
+              name: 'No',
+            },
+          ],
+          initial: 0,
+          skip: !parsedArgs.interactive || isCI(),
+        },
+      ]);
+      js = reply.ts === 'No';
+    }
+
+    return { preset, js, appName };
+  }
 }
 
 async function determineReactOptions(
@@ -498,6 +576,10 @@ async function determineReactOptions(
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
   let nextSrcDir = false;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -513,27 +595,25 @@ async function determineReactOptions(
   } else {
     const framework = await determineReactFramework(parsedArgs);
 
-    // React Native and Expo only support integrated monorepos for now.
-    // TODO(jack): Add standalone support for React Native and Expo.
-    const workspaceType =
-      framework === 'react-native' || framework === 'expo'
-        ? 'integrated'
-        : await determineStandaloneOrMonorepo();
+    const isStandalone =
+      workspaces || framework === 'react-native' || framework === 'expo'
+        ? false
+        : (await determineStandaloneOrMonorepo()) === 'standalone';
 
-    if (workspaceType === 'standalone') {
+    if (isStandalone) {
       appName = parsedArgs.name;
     } else {
       appName = await determineAppName(parsedArgs);
     }
 
     if (framework === 'nextjs') {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.NextJsStandalone;
       } else {
         preset = Preset.NextJs;
       }
     } else if (framework === 'remix') {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.RemixStandalone;
       } else {
         preset = Preset.RemixMonorepo;
@@ -543,7 +623,7 @@ async function determineReactOptions(
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.ReactStandalone;
       } else {
         preset = Preset.ReactMonorepo;
@@ -620,6 +700,14 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
   return {
     preset,
     style,
@@ -628,6 +716,9 @@ async function determineReactOptions(
     nextAppDir,
     nextSrcDir,
     e2eTestRunner,
+    linter,
+    formatter,
+    workspaces,
   };
 }
 
@@ -638,6 +729,10 @@ async function determineVueOptions(
   let style: undefined | string = undefined;
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
@@ -649,7 +744,9 @@ async function determineVueOptions(
   } else {
     const framework = await determineVueFramework(parsedArgs);
 
-    const workspaceType = await determineStandaloneOrMonorepo();
+    const workspaceType = workspaces
+      ? 'monorepo'
+      : await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -706,7 +803,23 @@ async function determineVueOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, e2eTestRunner };
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
+  return {
+    preset,
+    style,
+    appName,
+    e2eTestRunner,
+    linter,
+    formatter,
+    workspaces,
+  };
 }
 
 async function determineAngularOptions(
@@ -718,6 +831,7 @@ async function determineAngularOptions(
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
+  let serverRouting: undefined | boolean = undefined;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -832,6 +946,25 @@ async function determineAngularOptions(
     ssr = reply.ssr === 'Yes';
   }
 
+  if (parsedArgs.serverRouting !== undefined) {
+    serverRouting = parsedArgs.serverRouting;
+  } else if (ssr && bundler === 'esbuild') {
+    const reply = await enquirer.prompt<{ serverRouting: 'Yes' | 'No' }>([
+      {
+        name: 'serverRouting',
+        message:
+          'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
+        type: 'autocomplete',
+        choices: [{ name: 'Yes' }, { name: 'No' }],
+        initial: 1,
+        skip: !parsedArgs.interactive || isCI(),
+      },
+    ]);
+    serverRouting = reply.serverRouting === 'Yes';
+  } else {
+    serverRouting = false;
+  }
+
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   return {
@@ -843,6 +976,7 @@ async function determineAngularOptions(
     e2eTestRunner,
     bundler,
     ssr,
+    serverRouting,
     prefix,
   };
 }
@@ -854,6 +988,10 @@ async function determineNodeOptions(
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset) {
     preset = parsedArgs.preset;
@@ -876,7 +1014,9 @@ async function determineNodeOptions(
   } else {
     framework = await determineNodeFramework(parsedArgs);
 
-    const workspaceType = await determineStandaloneOrMonorepo();
+    const workspaceType = workspaces
+      ? 'monorepo'
+      : await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       preset = Preset.NodeStandalone;
       appName = parsedArgs.name;
@@ -911,11 +1051,22 @@ async function determineNodeOptions(
     docker = reply.docker === 'Yes';
   }
 
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs);
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
   return {
     preset,
     appName,
     framework,
     docker,
+    linter,
+    formatter,
+    workspaces,
   };
 }
 

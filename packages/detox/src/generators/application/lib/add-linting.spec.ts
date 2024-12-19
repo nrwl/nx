@@ -10,7 +10,7 @@ describe('Add Linting', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProject(tree, {
-      e2eName: 'my-app-e2e',
+      e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
@@ -26,7 +26,7 @@ describe('Add Linting', () => {
 
   it('should update configuration when eslint is passed', async () => {
     await addLinting(tree, {
-      e2eName: 'my-app-e2e',
+      e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
@@ -44,7 +44,7 @@ describe('Add Linting', () => {
 
   it('should not add lint target when "none" is passed', async () => {
     await addLinting(tree, {
-      e2eName: 'my-app-e2e',
+      e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',

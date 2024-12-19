@@ -60,7 +60,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:migration --directory=${plugin}/src/migrations/update-${version} --packageVersion=${version} --packageJsonUpdates=false`
+      `generate @nx/plugin:migration --path=${plugin}/src/migrations/update-${version}/update-${version} --packageVersion=${version} --packageJsonUpdates=false`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -92,7 +92,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:generator ${generator} --directory=${plugin}/src/generators/${generator}`
+      `generate @nx/plugin:generator ${plugin}/src/generators/${generator}/generator --name ${generator}`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -129,7 +129,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:executor ${executor} --directory=${plugin}/src/executors/${executor} --includeHasher`
+      `generate @nx/plugin:executor --name ${executor} --path=${plugin}/src/executors/${executor}/executor --includeHasher`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -178,31 +178,31 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
 
     runCLI(
-      `generate @nx/plugin:generator ${goodGenerator} --directory=${plugin}/src/generators/${goodGenerator}`
+      `generate @nx/plugin:generator --name=${goodGenerator} --path=${plugin}/src/generators/${goodGenerator}/generator`
     );
 
     runCLI(
-      `generate @nx/plugin:generator ${badFactoryPath} --directory=${plugin}/src/generators/${badFactoryPath}`
+      `generate @nx/plugin:generator --name=${badFactoryPath} --path=${plugin}/src/generators/${badFactoryPath}/generator`
     );
 
     runCLI(
-      `generate @nx/plugin:executor ${goodExecutor} --directory=${plugin}/src/executors/${goodExecutor}`
+      `generate @nx/plugin:executor --name=${goodExecutor} --path=${plugin}/src/executors/${goodExecutor}/executor`
     );
 
     runCLI(
-      `generate @nx/plugin:executor ${badExecutorBadImplPath} --directory=${plugin}/src/executors/${badExecutorBadImplPath}`
+      `generate @nx/plugin:executor --name=${badExecutorBadImplPath} --path=${plugin}/src/executors/${badExecutorBadImplPath}/executor`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${badMigrationVersion} --directory=${plugin} --packageVersion="invalid"`
+      `generate @nx/plugin:migration --name=${badMigrationVersion} --path=${plugin}/src/migrations --packageVersion="invalid"`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${missingMigrationVersion} --directory=${plugin}/migrations/0.1.0 --packageVersion="0.1.0"`
+      `generate @nx/plugin:migration --name=${missingMigrationVersion} --path=${plugin}/migrations/0.1.0 --packageVersion="0.1.0"`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${goodMigration} --directory=${plugin}/migrations/0.1.0  --packageVersion="0.1.0"`
+      `generate @nx/plugin:migration --name=${goodMigration} --path=${plugin}/migrations/0.1.0  --packageVersion="0.1.0"`
     );
 
     updateFile(`${plugin}/generators.json`, (f) => {
@@ -271,47 +271,7 @@ describe('Nx Plugin', () => {
       runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     });
 
-    it('should be able to infer projects and targets (v1)', async () => {
-      // Setup project inference + target inference
-      updateFile(
-        `${plugin}/src/index.ts`,
-        `import {basename} from 'path'
-
-  export function registerProjectTargets(f) {
-    if (basename(f) === 'my-project-file') {
-      return {
-        build: {
-          executor: "nx:run-commands",
-          options: {
-            command: "echo 'custom registered target'"
-          }
-        }
-      }
-    }
-  }
-
-  export const projectFilePatterns = ['my-project-file'];
-  `
-      );
-
-      // Register plugin in nx.json (required for inference)
-      updateFile(`nx.json`, (nxJson) => {
-        const nx = JSON.parse(nxJson);
-        nx.plugins = [`@${workspaceName}/${plugin}`];
-        return JSON.stringify(nx, null, 2);
-      });
-
-      // Create project that should be inferred by Nx
-      const inferredProject = uniq('inferred');
-      createFile(`${inferredProject}/my-project-file`);
-
-      // Attempt to use inferred project w/ Nx
-      expect(runCLI(`build ${inferredProject}`)).toContain(
-        'custom registered target'
-      );
-    });
-
-    it('should be able to infer projects and targets (v2)', async () => {
+    it('should be able to infer projects and targets', async () => {
       // Setup project inference + target inference
       updateFile(`${plugin}/src/index.ts`, NX_PLUGIN_V2_CONTENTS);
 
@@ -348,11 +308,11 @@ describe('Nx Plugin', () => {
       const generatedProject = uniq('project');
 
       runCLI(
-        `generate @nx/plugin:generator ${generator} --directory=${plugin}/src/generators/${generator}`
+        `generate @nx/plugin:generator --name ${generator} --path ${plugin}/src/generators/${generator}/generator`
       );
 
       runCLI(
-        `generate @nx/plugin:executor ${executor} --directory=${plugin}/src/executors/${executor}`
+        `generate @nx/plugin:executor --name ${executor} --path ${plugin}/src/executors/${executor}/executor`
       );
 
       updateFile(
@@ -389,7 +349,7 @@ describe('Nx Plugin', () => {
 
       expect(() => {
         runCLI(
-          `generate @nx/plugin:generator ${generator} --directory=${plugin}/src/generators/${generator}`
+          `generate @nx/plugin:generator ${plugin}/src/generators/${generator}/generator --name ${generator}`
         );
 
         runCLI(
@@ -407,7 +367,7 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory libs/subdir/${plugin} --e2eTestRunner=jest`
+        `generate @nx/plugin:plugin libs/subdir/${plugin} --linter=eslint  --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readJson(
@@ -438,7 +398,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin}`
+      `generate @nx/plugin:create-package ${createAppName} --name=${createAppName} --project=${plugin} --verbose`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -458,7 +418,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
+      `generate @nx/plugin:create-package ${createAppName} --name=${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --verbose`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -477,7 +437,7 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     expect(() =>
       runCLI(
-        `generate @nx/plugin:create-package create-${plugin} --project=invalid-plugin`
+        `generate @nx/plugin:create-package create-${plugin} --name=create-${plugin} --project=invalid-plugin`
       )
     ).toThrow();
   });
@@ -487,7 +447,7 @@ describe('Nx Plugin', () => {
     const createAppName = `create-${plugin}-app`;
 
     runCLI(
-      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable --project-name-and-root-format=as-provided`
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -504,7 +464,7 @@ describe('Nx Plugin', () => {
     );
 
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --project-name-and-root-format=as-provided`
+      `generate @nx/plugin:create-package ${createAppName} --name=${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
     );
 
     // check files are generated without the layout directory ("libs/") and

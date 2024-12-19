@@ -1,6 +1,6 @@
 import { NxReactWebpackPlugin as _NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';
 
-// TODO(v20): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
+// TODO(v21): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
 /** @deprecated Use '@nx/react/webpack-plugin' instead. */
 export const NxReactWebpackPlugin = _NxReactWebpackPlugin;
 

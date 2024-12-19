@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -16,7 +17,7 @@ describe('library', () => {
   let tree: Tree;
 
   let defaultSchema: Schema = {
-    name: 'my-lib',
+    directory: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -150,7 +151,7 @@ describe('library', () => {
 
   it('should support eslint flat config', async () => {
     tree.write(
-      'eslint.config.js',
+      'eslint.config.cjs',
       `const { FlatCompat } = require('@eslint/eslintrc');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
@@ -207,10 +208,10 @@ module.exports = [
 
     await libraryGenerator(tree, defaultSchema);
 
-    const eslintJson = tree.read('my-lib/eslint.config.js', 'utf-8');
+    const eslintJson = tree.read('my-lib/eslint.config.cjs', 'utf-8');
     expect(eslintJson).toMatchSnapshot();
     // assert **/*.vue was added to override in base eslint config
-    const eslintBaseJson = tree.read('eslint.config.js', 'utf-8');
+    const eslintBaseJson = tree.read('eslint.config.cjs', 'utf-8');
     expect(eslintBaseJson).toContain(
       `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
     );
@@ -390,7 +391,7 @@ module.exports = [
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        name: 'my-lib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -398,7 +399,7 @@ module.exports = [
       try {
         await libraryGenerator(tree, {
           ...defaultSchema,
-          name: 'myLib2',
+          directory: 'myLib2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -436,6 +437,173 @@ module.exports = [
         'my-lib/tsconfig.*?.json',
       ]);
       expect(eslintConfig.overrides[0].files).toContain('*.vue');
+    });
+  });
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+      });
+
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import vue from '@vitejs/plugin-vue';
+        import { defineConfig } from 'vite';
+
+        export default defineConfig({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/my-lib',
+          plugins: [vue()],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: './test-output/vitest/coverage',
+              provider: 'v8',
+            },
+          },
+        });
+        "
+      `);
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-lib",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-lib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "jsxImportSource": "vue",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/my-lib",
+            "resolveJsonModule": true,
+            "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "vite/client",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "src/**/__tests__/*",
+            "src/**/*.spec.vue",
+            "src/**/*.test.vue",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.vue",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-lib/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "preserve",
+            "jsxImportSource": "vue",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/vitest",
+            "resolveJsonModule": true,
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });

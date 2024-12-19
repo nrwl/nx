@@ -22,7 +22,6 @@ describe('Nx Import Gradle', () => {
   beforeAll(() => {
     proj = newProject({
       packages: ['@nx/js'],
-      unsetProjectNameAndRootFormat: false,
     });
 
     if (getSelectedPackageManager() === 'pnpm') {

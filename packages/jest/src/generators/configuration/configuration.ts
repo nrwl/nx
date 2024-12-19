@@ -1,3 +1,16 @@
+import {
+  formatFiles,
+  GeneratorCallback,
+  logger,
+  readNxJson,
+  readProjectConfiguration,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { JestPluginOptions } from '../../plugins/plugin';
+import { getPresetExt } from '../../utils/config/config-file';
 import { jestInitGenerator } from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
@@ -7,17 +20,6 @@ import { updateTsConfig } from './lib/update-tsconfig';
 import { updateVsCodeRecommendedExtensions } from './lib/update-vscode-recommended-extensions';
 import { updateWorkspace } from './lib/update-workspace';
 import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
-import {
-  formatFiles,
-  Tree,
-  GeneratorCallback,
-  readProjectConfiguration,
-  readNxJson,
-  runTasksInSerial,
-} from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-import { JestPluginOptions } from '../../plugins/plugin';
-import { getPresetExt } from '../../utils/config/config-file';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -69,6 +71,7 @@ function normalizeOptions(
     ...schemaDefaults,
     ...options,
     rootProject: project.root === '.' || project.root === '',
+    isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 }
 
@@ -110,8 +113,13 @@ export async function configurationGeneratorInternal(
       );
     }
   });
+
   if (!hasPlugin || options.addExplicitTargets) {
     updateWorkspace(tree, options);
+  }
+
+  if (options.isTsSolutionSetup) {
+    ignoreTestOutput(tree);
   }
 
   if (!schema.skipFormat) {
@@ -119,6 +127,20 @@ export async function configurationGeneratorInternal(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function ignoreTestOutput(tree: Tree): void {
+  if (!tree.exists('.gitignore')) {
+    logger.warn(`Couldn't find a root .gitignore file to update.`);
+  }
+
+  let content = tree.read('.gitignore', 'utf-8');
+  if (/^test-output$/gm.test(content)) {
+    return;
+  }
+
+  content = `${content}\ntest-output\n`;
+  tree.write('.gitignore', content);
 }
 
 export default configurationGenerator;

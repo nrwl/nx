@@ -59,10 +59,14 @@ describe('ast-utils', () => {
                 b: "off",
                 c: [
                     "error",
-                    { some: { rich: [
+                    {
+                        some: {
+                            rich: [
                                 "config",
                                 "options"
-                            ] } }
+                            ]
+                        }
+                    }
                 ]
             }
         }"
@@ -73,7 +77,13 @@ describe('ast-utils', () => {
         getOutput({
           files: '*.ts', //  old single * syntax should be replaced by **/*
         })
-      ).toMatchInlineSnapshot(`"{ files: ["**/*.ts"] }"`);
+      ).toMatchInlineSnapshot(`
+        "{
+            files: [
+                "**/*.ts"
+            ]
+        }"
+      `);
 
       expect(
         getOutput({
@@ -82,7 +92,9 @@ describe('ast-utils', () => {
         })
       ).toMatchInlineSnapshot(`
         "{
-            languageOptions: { parser: require("jsonc-eslint-parser") }
+            languageOptions: {
+                parser: require("jsonc-eslint-parser")
+            }
         }"
       `);
 
@@ -95,15 +107,29 @@ describe('ast-utils', () => {
         })
       ).toMatchInlineSnapshot(`
         "{
-            languageOptions: { parserOptions: { foo: "bar" } }
+            languageOptions: {
+                parserOptions: {
+                    foo: "bar"
+                }
+            }
         }"
       `);
 
       // It should add the compat tooling for extends, and spread the rules object to allow for easier editing by users
       expect(getOutput({ extends: ['plugin:@nx/typescript'] }))
         .toMatchInlineSnapshot(`
-        "...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+        "...compat.config({
+            extends: [
+                "plugin:@nx/typescript"
+            ]
+        }).map(config => ({
             ...config,
+            files: [
+                "**/*.ts",
+                "**/*.tsx",
+                "**/*.cts",
+                "**/*.mts"
+            ],
             rules: {
                 ...config.rules
             }
@@ -113,7 +139,11 @@ describe('ast-utils', () => {
       // It should add the compat tooling for plugins, and spread the rules object to allow for easier editing by users
       expect(getOutput({ plugins: ['@nx/eslint-plugin'] }))
         .toMatchInlineSnapshot(`
-        "...compat.config({ plugins: ["@nx/eslint-plugin"] }).map(config => ({
+        "...compat.config({
+            plugins: [
+                "@nx/eslint-plugin"
+            ]
+        }).map(config => ({
             ...config,
             rules: {
                 ...config.rules
@@ -123,7 +153,11 @@ describe('ast-utils', () => {
 
       // It should add the compat tooling for env, and spread the rules object to allow for easier editing by users
       expect(getOutput({ env: { jest: true } })).toMatchInlineSnapshot(`
-        "...compat.config({ env: { jest: true } }).map(config => ({
+        "...compat.config({
+            env: {
+                jest: true
+            }
+        }).map(config => ({
             ...config,
             rules: {
                 ...config.rules
@@ -134,7 +168,11 @@ describe('ast-utils', () => {
       // Files for the compat tooling should be added appropriately
       expect(getOutput({ env: { jest: true }, files: ['*.ts', '*.tsx'] }))
         .toMatchInlineSnapshot(`
-        "...compat.config({ env: { jest: true } }).map(config => ({
+        "...compat.config({
+            env: {
+                jest: true
+            }
+        }).map(config => ({
             ...config,
             files: [
                 "**/*.ts",
@@ -150,7 +188,7 @@ describe('ast-utils', () => {
 
   describe('addBlockToFlatConfigExport', () => {
     it('should inject block to the end of the file', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -172,27 +210,31 @@ describe('ast-utils', () => {
         })
       );
       expect(result).toMatchInlineSnapshot(`
-              "const baseConfig = require("../../eslint.config.js");
-                  module.exports = [
-                      ...baseConfig,
-                      {
-                          files: [
-                              "my-lib/**/*.ts",
-                              "my-lib/**/*.tsx"
-                          ],
-                          rules: {}
-                      },
-                      { ignores: ["my-lib/.cache/**/*"] },
-              {
-                  files: ["**/*.svg"],
-                  rules: { "@nx/do-something-with-svg": "error" }
-              },
-                  ];"
-          `);
+        "const baseConfig = require("../../eslint.config.cjs");
+            module.exports = [
+                ...baseConfig,
+                {
+                    files: [
+                        "my-lib/**/*.ts",
+                        "my-lib/**/*.tsx"
+                    ],
+                    rules: {}
+                },
+                { ignores: ["my-lib/.cache/**/*"] },
+            {
+                files: [
+                    "**/*.svg"
+                ],
+                rules: {
+                    "@nx/do-something-with-svg": "error"
+                }
+            },
+            ];"
+      `);
     });
 
     it('should inject spread to the beginning of the file', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -210,26 +252,27 @@ describe('ast-utils', () => {
         { insertAtTheEnd: false }
       );
       expect(result).toMatchInlineSnapshot(`
-              "const baseConfig = require("../../eslint.config.js");
-                  module.exports = [
-              ...config,
-                      ...baseConfig,
-                      {
-                          files: [
-                              "my-lib/**/*.ts",
-                              "my-lib/**/*.tsx"
-                          ],
-                          rules: {}
-                      },
-                      { ignores: ["my-lib/.cache/**/*"] },
-                  ];"
-          `);
+        "const baseConfig = require("../../eslint.config.cjs");
+            module.exports = [
+            ...config,
+
+                ...baseConfig,
+                {
+                    files: [
+                        "my-lib/**/*.ts",
+                        "my-lib/**/*.tsx"
+                    ],
+                    rules: {}
+                },
+                { ignores: ["my-lib/.cache/**/*"] },
+            ];"
+      `);
     });
   });
 
   describe('addImportToFlatConfig', () => {
     it('should inject import if not found', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -248,7 +291,7 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
               "const varName = require("@myorg/awesome-config");
-              const baseConfig = require("../../eslint.config.js");
+              const baseConfig = require("../../eslint.config.cjs");
                   module.exports = [
                       ...baseConfig,
                       {
@@ -265,7 +308,7 @@ describe('ast-utils', () => {
 
     it('should update import if already found', () => {
       const content = `const { varName } = require("@myorg/awesome-config");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -284,7 +327,7 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
               "const { varName, otherName, someName  } = require("@myorg/awesome-config");
-                  const baseConfig = require("../../eslint.config.js");
+                  const baseConfig = require("../../eslint.config.cjs");
                   module.exports = [
                       ...baseConfig,
                       {
@@ -301,7 +344,7 @@ describe('ast-utils', () => {
 
     it('should not inject import if already exists', () => {
       const content = `const { varName, otherName } = require("@myorg/awesome-config");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -323,7 +366,7 @@ describe('ast-utils', () => {
 
     it('should not update import if already exists', () => {
       const content = `const varName = require("@myorg/awesome-config");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
         ...baseConfig,
         {
@@ -372,7 +415,7 @@ describe('ast-utils', () => {
 
   describe('addCompatToFlatConfig', () => {
     it('should add compat to config', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     module.exports = [
       ...baseConfig,
       {
@@ -388,7 +431,7 @@ describe('ast-utils', () => {
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
            
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -409,7 +452,7 @@ describe('ast-utils', () => {
     });
 
     it('should add only partially compat to config if parts exist', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
     const js = require("@eslint/js");
     module.exports = [
       ...baseConfig,
@@ -425,7 +468,7 @@ describe('ast-utils', () => {
       const result = addFlatCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
             const js = require("@eslint/js");
            
         const compat = new FlatCompat({
@@ -448,7 +491,7 @@ describe('ast-utils', () => {
 
     it('should not add compat to config if exist', () => {
       const content = `const FlatCompat = require("@eslint/eslintrc");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     const js = require("@eslint/js");
 
     const compat = new FlatCompat({
@@ -475,7 +518,7 @@ describe('ast-utils', () => {
   describe('removeOverridesFromLintConfig', () => {
     it('should remove all rules from config', () => {
       const content = `const FlatCompat = require("@eslint/eslintrc");
-    const baseConfig = require("../../eslint.config.js");
+    const baseConfig = require("../../eslint.config.cjs");
     const js = require("@eslint/js");
 
     const compat = new FlatCompat({
@@ -515,7 +558,7 @@ describe('ast-utils', () => {
       const result = removeOverridesFromLintConfig(content);
       expect(result).toMatchInlineSnapshot(`
               "const FlatCompat = require("@eslint/eslintrc");
-                  const baseConfig = require("../../eslint.config.js");
+                  const baseConfig = require("../../eslint.config.cjs");
                   const js = require("@eslint/js");
 
                   const compat = new FlatCompat({
@@ -531,7 +574,7 @@ describe('ast-utils', () => {
     });
 
     it('should remove all rules from starting with first', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
     module.exports = [
       {
@@ -562,7 +605,7 @@ describe('ast-utils', () => {
     ];`;
       const result = removeOverridesFromLintConfig(content);
       expect(result).toMatchInlineSnapshot(`
-              "const baseConfig = require("../../eslint.config.js");
+              "const baseConfig = require("../../eslint.config.cjs");
 
                   module.exports = [
                   ];"
@@ -572,35 +615,35 @@ describe('ast-utils', () => {
 
   describe('replaceOverride', () => {
     it('should find and replace rules in override', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
-    module.exports = [
-      {
+module.exports = [
+    {
         files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
         ],
         rules: {
-          'my-ts-rule': 'error'
+            'my-ts-rule': 'error'
         }
-      },
-      {
+    },
+    {
         files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.js"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.js"
         ],
         rules: {}
-      },
-      {
+    },
+    {
         files: [
-          "my-lib/**/*.js",
-          "my-lib/**/*.jsx"
+            "my-lib/**/*.js",
+            "my-lib/**/*.jsx"
         ],
         rules: {
-          'my-js-rule': 'error'
+            'my-js-rule': 'error'
         }
-      },
-    ];`;
+    },
+];`;
 
       const result = replaceOverride(
         content,
@@ -614,63 +657,63 @@ describe('ast-utils', () => {
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
 
-            module.exports = [
-              {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-rule": "error"
-          }
-              },
-              {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.js"
-          ],
-          "rules": {
-            "my-rule": "error"
-          }
-              },
-              {
+        module.exports = [
+            {
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-rule": "error"
+              }
+            },
+            {
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.js"
+              ],
+              "rules": {
+                "my-rule": "error"
+              }
+            },
+            {
                 files: [
-                  "my-lib/**/*.js",
-                  "my-lib/**/*.jsx"
+                    "my-lib/**/*.js",
+                    "my-lib/**/*.jsx"
                 ],
                 rules: {
-                  'my-js-rule': 'error'
+                    'my-js-rule': 'error'
                 }
-              },
-            ];"
+            },
+        ];"
       `);
     });
 
     it('should append rules in override', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
-    module.exports = [
-      {
+module.exports = [
+    {
         files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
         ],
         rules: {
-          'my-ts-rule': 'error'
+            'my-ts-rule': 'error'
         }
-      },
-      {
+    },
+    {
         files: [
-          "my-lib/**/*.js",
-          "my-lib/**/*.jsx"
+            "my-lib/**/*.js",
+            "my-lib/**/*.jsx"
         ],
         rules: {
-          'my-js-rule': 'error'
+            'my-js-rule': 'error'
         }
-      },
-    ];`;
+    },
+];`;
 
       const result = replaceOverride(
         content,
@@ -685,47 +728,47 @@ describe('ast-utils', () => {
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
 
-            module.exports = [
-              {
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-ts-rule": "error",
-            "my-new-rule": "error"
-          }
-              },
-              {
+        module.exports = [
+            {
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-ts-rule": "error",
+                "my-new-rule": "error"
+              }
+            },
+            {
                 files: [
-                  "my-lib/**/*.js",
-                  "my-lib/**/*.jsx"
+                    "my-lib/**/*.js",
+                    "my-lib/**/*.jsx"
                 ],
                 rules: {
-                  'my-js-rule': 'error'
+                    'my-js-rule': 'error'
                 }
-              },
-            ];"
+            },
+        ];"
       `);
     });
 
     it('should work for compat overrides', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      const content = `const baseConfig = require("../../eslint.config.cjs");
 
-    module.exports = [
-      ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
-        ...config,
-        files: [
-          "my-lib/**/*.ts",
-          "my-lib/**/*.tsx"
-        ],
-        rules: {
-          'my-ts-rule': 'error'
-        }
-      }),
-    ];`;
+module.exports = [
+    ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+    ...config,
+    files: [
+        "my-lib/**/*.ts",
+        "my-lib/**/*.tsx"
+    ],
+    rules: {
+        'my-ts-rule': 'error'
+    }
+  }),
+];`;
 
       const result = replaceOverride(
         content,
@@ -740,21 +783,21 @@ describe('ast-utils', () => {
         })
       );
       expect(result).toMatchInlineSnapshot(`
-        "const baseConfig = require("../../eslint.config.js");
+        "const baseConfig = require("../../eslint.config.cjs");
 
-            module.exports = [
-              ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
-                ...config,
-          "files": [
-            "my-lib/**/*.ts",
-            "my-lib/**/*.tsx"
-          ],
-          "rules": {
-            "my-ts-rule": "error",
-            "my-new-rule": "error"
-          }
-              }),
-            ];"
+        module.exports = [
+            ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+            ...config,
+              "files": [
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
+              ],
+              "rules": {
+                "my-ts-rule": "error",
+                "my-new-rule": "error"
+              }
+          }),
+        ];"
       `);
     });
   });
@@ -958,7 +1001,7 @@ describe('ast-utils', () => {
           rules: {}
         })),
         { ignores: ["src/ignore/to/keep.ts"] },
-        ...compat.config({ extends: ["plugin:@nrwl/javascript"] }).map(config => ({
+        ...compat.config({ extends: ["plugin:@nx/javascript"] }).map(config => ({
           files: ['*.js', '*.jsx'],
           ...config,
           rules: {}
@@ -968,8 +1011,6 @@ describe('ast-utils', () => {
       const result = removeCompatExtends(content, [
         'plugin:@nx/typescript',
         'plugin:@nx/javascript',
-        'plugin:@nrwl/typescript',
-        'plugin:@nrwl/javascript',
       ]);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");

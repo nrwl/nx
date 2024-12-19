@@ -2,27 +2,34 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
+import {
+  getUpdatedPackageJsonContent,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { join } from 'node:path/posix';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addBuildTarget,
-  addServeTarget,
   addPreviewTarget,
+  addServeTarget,
   createOrEditViteConfig,
   TargetFlags,
 } from '../../utils/generator-utils';
-
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
-import { ViteConfigurationGeneratorSchema } from './schema';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { convertNonVite } from './lib/convert-non-vite';
+import { ViteConfigurationGeneratorSchema } from './schema';
 
 export function viteConfigurationGenerator(
   host: Tree,
@@ -43,7 +50,8 @@ export async function viteConfigurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const { targets, root: projectRoot } = projectConfig;
 
-  const projectType = projectConfig.projectType ?? 'library';
+  const projectType =
+    schema.projectType ?? projectConfig.projectType ?? 'library';
 
   schema.includeLib ??= projectType === 'library';
 
@@ -103,20 +111,10 @@ export async function viteConfigurationGeneratorInternal(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.lib.json'),
       (json) => {
-        if (!json.compilerOptions) {
-          json.compilerOptions = {};
-        }
-        if (!json.compilerOptions.types) {
-          json.compilerOptions.types = [];
-        }
+        json.compilerOptions ??= {};
+        json.compilerOptions.types ??= [];
         if (!json.compilerOptions.types.includes('vite/client')) {
-          return {
-            ...json,
-            compilerOptions: {
-              ...json.compilerOptions,
-              types: [...json.compilerOptions.types, 'vite/client'],
-            },
-          };
+          json.compilerOptions.types.push('vite/client');
         }
         return json;
       }
@@ -163,8 +161,14 @@ export async function viteConfigurationGeneratorInternal(
       testTarget: 'test',
       skipFormat: true,
       addPlugin: schema.addPlugin,
+      compiler: schema.compiler,
+      projectType,
     });
     tasks.push(vitestTask);
+  }
+
+  if (isUsingTsSolutionSetup(tree)) {
+    updatePackageJson(tree, schema, projectType);
   }
 
   if (!schema.skipFormat) {
@@ -175,3 +179,46 @@ export async function viteConfigurationGeneratorInternal(
 }
 
 export default viteConfigurationGenerator;
+
+function updatePackageJson(
+  tree: Tree,
+  options: ViteConfigurationGeneratorSchema,
+  projectType: 'application' | 'library'
+) {
+  const project = readProjectConfiguration(tree, options.project);
+
+  const packageJsonPath = join(project.root, 'package.json');
+  let packageJson: PackageJson;
+  if (tree.exists(packageJsonPath)) {
+    packageJson = readJson(tree, packageJsonPath);
+  } else {
+    packageJson = {
+      name: getImportPath(tree, options.project),
+      version: '0.0.1',
+    };
+    if (projectType === 'application') {
+      packageJson.private = true;
+    }
+  }
+
+  if (projectType === 'library') {
+    // we always write/override the vite and project config with some set values,
+    // so we can rely on them
+    const main = join(project.root, 'src/index.ts');
+    // we configure the dts plugin with the entryRoot set to `src`
+    const rootDir = join(project.root, 'src');
+    const outputPath = joinPathFragments(project.root, 'dist');
+
+    packageJson = getUpdatedPackageJsonContent(packageJson, {
+      main,
+      outputPath,
+      projectRoot: project.root,
+      rootDir,
+      generateExportsField: true,
+      packageJsonPath,
+      format: ['esm'],
+    });
+  }
+
+  writeJson(tree, packageJsonPath, packageJson);
+}

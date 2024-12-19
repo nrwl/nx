@@ -61,13 +61,13 @@ Tasks can fail:
 Let’s see how varying a few parameters affects the probability of the CI execution failing.
 
 | Number of VMS | Avg Tests per VM | Flaky Test Probability | Slow Test Probability | Broken CI Builds (Flaky) | Slow CI Builds |
-| ------------- | ---------------- | ---------------------- | --------------------- | ------------------------ | -------------- |
-| 5             | 10               | 0.1%                   | 0.3%                  | 5%                       | 15%            |
-| 10            | 10               | 0.1%                   | 0.3%                  | 10%                      | 26%            |
-| 50            | 10               | 0.1%                   | 0.3%                  | 39%                      | 78%            |
-| 5             | 10               | 0.5%                   | 1%                    | 23%                      | 41%            |
-| 10            | 10               | 0.5%                   | 1%                    | 40%                      | 65%            |
-| 50            | 10               | 0.5%                   | 1%                    | 92%                      | 99%            |
+| :-----------: | :--------------: | :--------------------: | :-------------------: | :----------------------: | :------------: |
+|       5       |        10        |          0.1%          |         0.3%          |            5%            |      15%       |
+|      10       |        10        |          0.1%          |         0.3%          |           10%            |      26%       |
+|      50       |        10        |          0.1%          |         0.3%          |           39%            |      78%       |
+|       5       |        10        |          0.5%          |          1%           |           23%            |      41%       |
+|      10       |        10        |          0.5%          |          1%           |           40%            |      65%       |
+|      50       |        10        |          0.5%          |          1%           |           92%            |      99%       |
 
 **The result is much worse than most intuitively expect.** For instance, assuming that an **e2e test has 1 in 1000 chance (0.1%) of failing** for a flaky reason, when the number of e2e tests reaches 500, **the probability of the CI failing for a flaky reason reaches 39%**, and the vast majority of CI executions are slowed down. Note, this is an exceptionally stable test suite. The bottom part of the table is more representative of a typical e2e suite, and the CI becomes “broken” at a much smaller scale.
 
@@ -171,11 +171,9 @@ The spirit of this post is similar to Alan Kay's quote, "A change of perspective
 
 ---
 
-You can learn more about Nx Cloud on [nx.app](https://nx.app) and Nx open source on [nx.dev]().
+You can learn more about Nx Cloud on [our docs](/nx-cloud).
 
-**Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](https://nx.app/campaigns/pro)
-
-We also have a **Pro for Startups** plan which offers agents that are 3.5x cheaper than analogous VMs on CircleCI or Github Actions. [Learn more about Nx Pro for Startups.](https://nx.app/campaigns/pro-for-startups)
+**Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](/pricing)
 
 ---
 
@@ -187,4 +185,4 @@ We also have a **Pro for Startups** plan which offers agents that are 3.5x cheap
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+- [Speed up your CI](/nx-cloud)

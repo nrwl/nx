@@ -13,6 +13,7 @@ import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
+import { addViteTempFilesToGitIgnore } from '../../utils/add-vite-temp-files-to-gitignore';
 
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -21,7 +22,8 @@ export function updateNxJsonSettings(tree: Tree) {
   if (productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
-      '!{projectRoot}/tsconfig.spec.json'
+      '!{projectRoot}/tsconfig.spec.json',
+      '!{projectRoot}/src/test-setup.[jt]s'
     );
 
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
@@ -83,6 +85,7 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
+  addViteTempFilesToGitIgnore(tree);
 
   if (schema.setupPathsPlugin) {
     await setupPathsPlugin(tree, { skipFormat: true });

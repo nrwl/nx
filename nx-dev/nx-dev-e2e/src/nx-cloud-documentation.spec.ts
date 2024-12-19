@@ -31,42 +31,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/security/encryption',
   },
   {
-    title: 'Running Nx Cloud Enterprise',
-    path: '/ci/recipes/enterprise/on-premise/on-premise',
-  },
-  {
-    title: 'Auth (Basic)',
-    path: '/ci/recipes/enterprise/on-premise/auth-single-admin',
-  },
-  {
-    title: 'GitHub Auth',
-    path: '/ci/recipes/enterprise/on-premise/auth-github',
-  },
-  {
-    title: 'GitLab Auth',
-    path: '/ci/recipes/enterprise/on-premise/auth-gitlab',
-  },
-  {
-    title: 'Setting up a dedicated Nx Cloud VM',
-    path: '/ci/recipes/enterprise/on-premise/ami-setup',
-  },
-  {
-    title: 'BitBucket Cloud Auth',
-    path: '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  },
-  {
-    title: 'BitBucket Data Center Auth',
-    path: '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center',
-  },
-  {
-    title: 'SAML Auth',
-    path: '/ci/recipes/enterprise/on-premise/auth-saml',
-  },
-  {
-    title: 'Advanced Configuration',
-    path: '/ci/recipes/enterprise/on-premise/advanced-config',
-  },
-  {
     title: 'Configuring the Cloud Runner / Nx CLI',
     path: '/ci/reference/config',
   },

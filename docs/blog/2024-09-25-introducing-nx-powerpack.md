@@ -13,10 +13,14 @@ Today we're introducing our latest product, **Nx Powerpack**, a suite of paid ex
 - No, we’re **not placing existing features behind a paywall**. Nx Powerpack introduces new features on top of Nx (more about that below).
 - Yes, we still **strongly believe in OSS and our community**, and we will keep improving Nx more than ever; if anything, Powerpack will help us fund our OSS work on Nx core and ensure its long-term sustainability.
 
+### What about my open-source repo ?
+
+Open source projects can continue to use Nx Cloud for **free** the same way they always have, and they can continue to use Nx with all its features. If you are an open-source maintainer and you want to use Powerpack, you will get a **free license**. Just reach out to us at [powerpack-support@nrwl.io](mailto:powerpack-support@nrwl.io).
+
 So this leaves us with:
 ![Nx products and their licenses](/blog/images/evolving-nx/nx-products-licenses.avif)
 
-> But why do we release Nx Powerpack under a commercial license? Read all about our strategy, the reasoning behind Powerpack and OSS funding in the **blog post from our CEO, Jeff Cross**: [Evolving Nx](/blog/evolving-nx).
+> But why are we releasing Nx Powerpack under a commercial license? Read all about our strategy, the reasoning behind Powerpack and OSS funding in the **blog post from our CEO, Jeff Cross**: [Evolving Nx](/blog/evolving-nx).
 
 But now to the fun, technical part! Nx Powerpack is a bundle that - in this very first release - comes with three major features:
 
@@ -26,7 +30,7 @@ But now to the fun, technical part! Nx Powerpack is a bundle that - in this very
 
 Let’s dive in!
 
-## Getting an Nx Powerpack license
+## Get an Nx Powerpack License
 
 All Powerpack features require a dedicated commercial license. You can get one here: [Nx Powerpack](/powerpack).
 
@@ -36,9 +40,9 @@ Once you have your license, run the following command
 npx nx activate-powerpack <your-license>
 ```
 
-## Codeowners for monorepos
+## Codeowners for Monorepos
 
-Setting up Codeowners is highly recommended when designing a monorepo. If you’re not closely familiar, Codeowners is a common feature of VCS providers (such as GitHub, GitLab, Bitbucket, etc.), allowing you to enforce specific code reviewers to approve PRs. This functionality is especially important in a monorepo, where you manage multiple projects with multiple teams. You want to ensure the right people are reviewing the code being submitted.
+Setting up Codeowners is highly recommended when designing a monorepo. If you’re not familiar, Codeowners is a common feature of VCS providers (such as GitHub, GitLab, Bitbucket, etc.), allowing you to enforce specific code reviewers to approve PRs. This functionality is especially important in a monorepo, where you manage multiple projects with multiple teams. You want to ensure the right people are reviewing the code being submitted.
 
 Here’s a simple example of a [GitHub CODEOWNERS definition](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners):
 
@@ -59,7 +63,7 @@ In a monorepo you reason based on projects. That's what you pass to your [Nx run
 npx nx add @nx/powerpack-owners
 ```
 
-This will allow you to define an owners section in your `nx.json` where you can define owners at the project level or even leveraging project tags. Here's a small example:
+This will allow you to define an owners section in your `nx.json` where you can define owners at the project level or even leverage project tags. Here's a small example:
 
 ```json {% fileName="nx.json" %}
 {
@@ -93,7 +97,7 @@ This will allow you to define an owners section in your `nx.json` where you can 
 }
 ```
 
-A dedicated `nx sync` command automatically synchronizes such definition to a `CODEOWNERS` that matches your VCS provider:
+A dedicated `nx sync` command automatically synchronizes these definitions to a `CODEOWNERS` file that matches your VCS provider:
 
 ```{% fileName=".github/CODEOWNERS" %}
 
@@ -115,17 +119,17 @@ A dedicated `nx sync` command automatically synchronizes such definition to a `C
 ...
 ```
 
-Read all about how to [configure Codeowners for your project on our docs](/features/powerpack/owners).
+Read all about how to [configure Codeowners for your project in our docs](/nx-enterprise/powerpack/owners).
 
-## Self-hosted cache storage
+## Self-hosted Cache Storage
 
 A continuous effort on our Nx core is to improve speed. Last year, we began **rewriting performance-critical parts of Nx into Rust**, and more core components are being rewritten. As part of this effort, we also changed how we manage local cache, moving from a **file-based to a database-based approach**. In addition to small performance gains from reduced I/O, this opens up many opportunities for improving local cache handling, such as keeping only relevant cache based on usage, more easily controlling maximum cache size, and optimizing task orchestration by running failed tasks earlier.
 
-As part of this new approach we're also going to [deprecate custom `taskRunners`](/deprecated/custom-task-runners) in Nx 20. I bring this up because it might affect users that relied on 3rd party tools that hooked into the task runners API.
+As part of this new approach we're also going to [deprecate custom task runners](/deprecated/legacy-cache) in Nx 20. I bring this up because it might affect users that relied on 3rd party tools that hooked into the task runners API.
 
 To fill in on the custom task runner API we're providing a new Powerpack plugin that allows you to use S3 or a network drive as your storing mechanism for your Nx cache.
 
-Here's an example on how to get started with AWS S3 based remote caching. First add the powerpack plugin:
+Here's an example of how to get started with [Amazon S3](https://aws.amazon.com/s3) based remote caching. First add the Powerpack plugin:
 
 ```shell
 npx nx add @nx/powerpack-s3-cache
@@ -152,9 +156,6 @@ permissions:
   id-token: write
   ...
 
-env:
-  NX_DB_CACHE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -174,9 +175,9 @@ jobs:
 
 Similarly you can **set up network file based caching** using the `nx add @nx/powerpack-shared-fs-cache` package and by setting the `cacheDirectory` path in your `nx.json`.
 
-Read all about how to [set up S3 or network drive based caching for your Nx workspace on our docs](/features/powerpack/custom-caching).
+Read all about how to [set up S3 or network drive based caching for your Nx workspace in our docs](/nx-enterprise/powerpack/custom-caching).
 
-## Workspace conformance (Beta)
+## Workspace Conformance (Beta)
 
 We're releasing the `@nx/powerpack-conformance` plugin in an early preview. This new package focuses specifically on the maintainability of your monorepo. It allows you to encode your organization's standards so they can be enforced automatically. In this first version, the workspace conformance package ships with:
 
@@ -241,9 +242,9 @@ You can then run `nx conformance` to execute the conformance checks:
 
 In this first preview release, you'll only be able to run workspace conformance rules on a single workspace. In future iterations, you **will be able to connect it to your existing Nx Cloud organization**, allowing you to upload conformance rules and run them across connected workspaces.
 
-Read all the details on how to [get started with workspace conformance rules in our docs](/features/powerpack/conformance).
+Read all the details on how to [get started with workspace conformance rules in our docs](/nx-enterprise/powerpack/conformance).
 
-## Learn more
+## Learn More
 
 - [Nx Docs](/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)

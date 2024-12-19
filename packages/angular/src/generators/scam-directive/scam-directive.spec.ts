@@ -15,7 +15,7 @@ describe('SCAM Directive Generator', () => {
     // ACT
     await scamDirectiveGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app',
+      path: 'apps/app1/src/app/example',
       inlineScam: true,
       skipFormat: true,
     });
@@ -30,7 +30,8 @@ describe('SCAM Directive Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[example]',
+        standalone: false
       })
       export class ExampleDirective {
         constructor() {}
@@ -58,7 +59,7 @@ describe('SCAM Directive Generator', () => {
     // ACT
     await scamDirectiveGenerator(tree, {
       name: 'example',
-      directory: 'apps/app1/src/app',
+      path: 'apps/app1/src/app/example',
       inlineScam: false,
       skipFormat: true,
     });
@@ -72,6 +73,47 @@ describe('SCAM Directive Generator', () => {
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
       import { ExampleDirective } from './example.directive';
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleDirective],
+        exports: [ExampleDirective],
+      })
+      export class ExampleDirectiveModule {}
+      "
+    `);
+  });
+
+  it('should handle path with file extension', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await scamDirectiveGenerator(tree, {
+      name: 'example',
+      path: 'apps/app1/src/app/example.directive.ts',
+      inlineScam: true,
+      skipFormat: true,
+    });
+
+    const directiveSource = tree.read(
+      'apps/app1/src/app/example.directive.ts',
+      'utf-8'
+    );
+    expect(directiveSource).toMatchInlineSnapshot(`
+      "import { Directive, NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Directive({
+        selector: '[example]',
+        standalone: false
+      })
+      export class ExampleDirective {
+        constructor() {}
+      }
 
       @NgModule({
         imports: [CommonModule],
@@ -99,7 +141,7 @@ describe('SCAM Directive Generator', () => {
     // ACT
     await scamDirectiveGenerator(tree, {
       name: 'example',
-      directory: 'libs/lib1/feature/src/lib/example',
+      path: 'libs/lib1/feature/src/lib/example/example',
       inlineScam: false,
       export: true,
       skipFormat: true,
@@ -133,6 +175,22 @@ describe('SCAM Directive Generator', () => {
     `);
   });
 
+  it('should error when the class name is invalid', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await expect(
+      scamDirectiveGenerator(tree, {
+        name: '404',
+        path: 'apps/app1/src/app/example',
+      })
+    ).rejects.toThrow('Class name "404Directive" is invalid.');
+  });
+
   describe('--path', () => {
     it('should not throw when the path does not exist under project', async () => {
       // ARRANGE
@@ -146,7 +204,7 @@ describe('SCAM Directive Generator', () => {
       // ACT
       await scamDirectiveGenerator(tree, {
         name: 'example',
-        directory: 'apps/app1/src/app/random/example',
+        path: 'apps/app1/src/app/random/example/example',
         inlineScam: true,
         skipFormat: true,
       });
@@ -161,7 +219,8 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[example]'
+          selector: '[example]',
+          standalone: false
         })
         export class ExampleDirective {
           constructor() {}
@@ -189,7 +248,7 @@ describe('SCAM Directive Generator', () => {
       // ACT
       await scamDirectiveGenerator(tree, {
         name: 'example',
-        directory: '/apps/app1/src/app/random/example',
+        path: '/apps/app1/src/app/random/example/example',
         inlineScam: true,
         skipFormat: true,
       });
@@ -204,7 +263,8 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[example]'
+          selector: '[example]',
+          standalone: false
         })
         export class ExampleDirective {
           constructor() {}
@@ -233,7 +293,7 @@ describe('SCAM Directive Generator', () => {
       expect(
         scamDirectiveGenerator(tree, {
           name: 'example',
-          directory: 'libs/proj/src/lib/random/example',
+          path: 'libs/proj/src/lib/random/example/example',
           inlineScam: true,
           skipFormat: true,
         })
