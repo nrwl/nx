@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import addViteTempFilesToGitIgnore from './add-vite-temp-files-to-git-ignore';
+import addViteTempFilesToGitIgnore from './add-vitest-temp-files-to-git-ignore';
 
 describe('addViteTempFilesToGitIgnore', () => {
   it('should update an existing .gitignore file to add the glob correctly', () => {
@@ -24,7 +24,7 @@ describe('addViteTempFilesToGitIgnore', () => {
     tree.write(
       '.gitignore',
       `.idea
-      **/vite.config.{js,ts,mjs,mts,cjs,cts}.timestamp*`
+      **/vitest.config.{js,ts,mjs,mts,cjs,cts}.timestamp*`
     );
 
     // ACT
