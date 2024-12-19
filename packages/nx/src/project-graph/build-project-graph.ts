@@ -44,7 +44,7 @@ import {
   ConfigurationSourceMaps,
   mergeMetadata,
 } from './utils/project-configuration-utils';
-import { DelayedSpinner, SHOULD_SHOW_SPINNERS } from '../utils/delayed-spinner';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -323,24 +323,28 @@ async function updateProjectGraphWithPlugins(
       return;
     }
     if (inProgressPlugins.size === 1) {
-      return `Creating project graph dependencies with ${
-        inProgressPlugins.keys()[0]
-      }`;
+      spinner.setMessage(
+        `Creating project graph dependencies with ${
+          inProgressPlugins.keys()[0]
+        }`
+      );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      return [
-        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
+      spinner.setMessage(
+        [
+          `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
     } else {
-      return `Creating project graph dependencies with ${inProgressPlugins.size} plugins`;
+      spinner.setMessage(
+        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`
+      );
     }
   }
 
-  if (SHOULD_SHOW_SPINNERS) {
-    spinner = new DelayedSpinner(
-      `Creating project graph dependencies with ${plugins.length} plugins`
-    );
-  }
+  spinner = new DelayedSpinner(
+    `Creating project graph dependencies with ${plugins.length} plugins`
+  );
 
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
@@ -439,22 +443,26 @@ export async function applyProjectMetadata(
       return;
     }
     if (inProgressPlugins.size === 1) {
-      return `Creating project metadata with ${inProgressPlugins.keys()[0]}`;
+      spinner.setMessage(
+        `Creating project metadata with ${inProgressPlugins.keys()[0]}`
+      );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      return [
-        `Creating project metadata with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
+      spinner.setMessage(
+        [
+          `Creating project metadata with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
     } else {
-      return `Creating project metadata with ${inProgressPlugins.size} plugins`;
+      spinner.setMessage(
+        `Creating project metadata with ${inProgressPlugins.size} plugins`
+      );
     }
   }
 
-  if (SHOULD_SHOW_SPINNERS) {
-    spinner = new DelayedSpinner(
-      `Creating project metadata with ${plugins.length} plugins`
-    );
-  }
+  spinner = new DelayedSpinner(
+    `Creating project metadata with ${plugins.length} plugins`
+  );
 
   const promises = plugins.map(async (plugin) => {
     if (plugin.createMetadata) {
