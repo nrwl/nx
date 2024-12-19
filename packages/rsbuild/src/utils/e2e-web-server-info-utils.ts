@@ -22,7 +22,7 @@ export async function getRsbuildE2EWebServerInfo(
     tree,
     projectName,
     {
-      plugin: '@nx/rsbuild/plugin',
+      plugin: '@nx/rsbuild',
       serveTargetName: 'devTargetName',
       serveStaticTargetName: 'previewTargetName',
       configFilePath,
