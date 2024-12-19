@@ -18,6 +18,7 @@ import {
 } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
+import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
 
 export interface FileMapCache {
   version: string;
@@ -33,6 +34,8 @@ export const nxProjectGraph = join(
   'project-graph.json'
 );
 export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
+
+export const nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
 
 export function ensureCacheDirectory(): void {
   try {
@@ -102,6 +105,31 @@ export function readProjectGraphCache(): null | ProjectGraph {
   return data ?? null;
 }
 
+export function readSourceMapsCache(): null | ConfigurationSourceMaps {
+  performance.mark('read source-maps:start');
+  ensureCacheDirectory();
+
+  let data = null;
+  try {
+    if (fileExists(nxSourceMaps)) {
+      data = readJsonFile(nxSourceMaps);
+    }
+  } catch (error) {
+    console.log(
+      `Error reading '${nxSourceMaps}'. Continue the process without the cache.`
+    );
+    console.log(error);
+  }
+
+  performance.mark('read source-maps:end');
+  performance.measure(
+    'read cache',
+    'read source-maps:start',
+    'read source-maps:end'
+  );
+  return data ?? null;
+}
+
 export function createProjectFileMapCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
@@ -123,7 +151,8 @@ export function createProjectFileMapCache(
 
 export function writeCache(
   cache: FileMapCache,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps
 ): void {
   performance.mark('write cache:start');
   let retry = 1;
@@ -137,6 +166,7 @@ export function writeCache(
     const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
     const tmpProjectGraphPath = `${nxProjectGraph}~${unique}`;
     const tmpFileMapPath = `${nxFileMap}~${unique}`;
+    const tmpSourceMapPath = `${nxFileMap}~${unique}`;
 
     try {
       writeJsonFile(tmpProjectGraphPath, projectGraph);
@@ -144,6 +174,9 @@ export function writeCache(
 
       writeJsonFile(tmpFileMapPath, cache);
       renameSync(tmpFileMapPath, nxFileMap);
+
+      writeJsonFile(tmpSourceMapPath, sourceMaps);
+      renameSync(tmpSourceMapPath, nxSourceMaps);
       done = true;
     } catch (err: any) {
       if (err instanceof Error) {
