@@ -107,7 +107,7 @@ describe('Nx Running Tests', () => {
 
     it('should execute long running tasks', () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp} --bundler=vite`);
       updateJson(`apps/${myapp}/project.json`, (c) => {
         c.targets['counter'] = {
           executor: '@nx/workspace:counter',
@@ -172,7 +172,7 @@ describe('Nx Running Tests', () => {
 
       beforeAll(async () => {
         app = uniq('myapp');
-        runCLI(`generate @nx/web:app apps/${app}`);
+        runCLI(`generate @nx/web:app apps/${app} --bundler=vite`);
       });
 
       it('should support using {projectRoot} in options blocks in project.json', async () => {
@@ -294,8 +294,8 @@ describe('Nx Running Tests', () => {
     it('should stop executing all tasks when one of the tasks fails', async () => {
       const myapp1 = uniq('a');
       const myapp2 = uniq('b');
-      runCLI(`generate @nx/web:app apps/${myapp1}`);
-      runCLI(`generate @nx/web:app apps/${myapp2}`);
+      runCLI(`generate @nx/web:app apps/${myapp1} --bundler=vite`);
+      runCLI(`generate @nx/web:app apps/${myapp2} --bundler=vite`);
       updateJson(`apps/${myapp1}/project.json`, (c) => {
         c.targets['error'] = {
           command: 'echo boom1 && exit 1',
@@ -343,14 +343,14 @@ describe('Nx Running Tests', () => {
   describe('run-one', () => {
     it('should build a specific project', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp} --bundler=vite`);
 
       runCLI(`build ${myapp}`);
     }, 10000);
 
     it('should support project name positional arg non-consecutive to target', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp} --bundler=vite`);
 
       runCLI(`build --verbose ${myapp}`);
     }, 10000);
@@ -361,7 +361,7 @@ describe('Nx Running Tests', () => {
       const expectedOutput = uniq('myEchoedString');
       const expectedEnvOutput = uniq('myEnvString');
 
-      runCLI(`generate @nx/web:app apps/${myapp}`);
+      runCLI(`generate @nx/web:app apps/${myapp} --bundler=vite`);
       updateFile(
         `apps/${myapp}/package.json`,
         JSON.stringify({
@@ -395,7 +395,9 @@ describe('Nx Running Tests', () => {
 
     it('should build a specific project with the daemon disabled', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(
+        `generate @nx/web:app ${myapp} --directory=apps/${myapp} --bundler=vite`
+      );
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
         env: { NX_DAEMON: 'false' },
@@ -412,7 +414,9 @@ describe('Nx Running Tests', () => {
 
     it('should build the project when within the project root', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+      runCLI(
+        `generate @nx/web:app ${myapp} --directory=apps/${myapp} --bundler=vite`
+      );
 
       // Should work within the project directory
       expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
@@ -491,7 +495,9 @@ describe('Nx Running Tests', () => {
         myapp = uniq('myapp');
         mylib1 = uniq('mylib1');
         mylib2 = uniq('mylib1');
-        runCLI(`generate @nx/web:app ${myapp} --directory=apps/${myapp}`);
+        runCLI(
+          `generate @nx/web:app ${myapp} --directory=apps/${myapp} --bundler=vite`
+        );
         runCLI(`generate @nx/js:lib ${mylib1} --directory=libs/${mylib1}`);
         runCLI(`generate @nx/js:lib ${mylib2} --directory=libs/${mylib2}`);
 
@@ -578,7 +584,9 @@ describe('Nx Running Tests', () => {
       const libC = uniq('libc-rand');
       const libD = uniq('libd-rand');
 
-      runCLI(`generate @nx/web:app ${appA} --directory=apps/${appA}`);
+      runCLI(
+        `generate @nx/web:app ${appA} --directory=apps/${appA} --bundler=vite`
+      );
       runCLI(
         `generate @nx/js:lib ${libA} --bundler=tsc --defaults --directory=libs/${libA}`
       );
@@ -695,8 +703,12 @@ describe('Nx Running Tests', () => {
     it('should run multiple targets', () => {
       const myapp1 = uniq('myapp');
       const myapp2 = uniq('myapp');
-      runCLI(`generate @nx/web:app ${myapp1} --directory=apps/${myapp1}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+      runCLI(
+        `generate @nx/web:app ${myapp1} --directory=apps/${myapp1} --bundler=vite`
+      );
+      runCLI(
+        `generate @nx/web:app ${myapp2} --directory=apps/${myapp2} --bundler=vite`
+      );
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).
@@ -786,7 +798,9 @@ describe('Nx Running Tests', () => {
       let output = runCLI('exec -- echo HELLO');
       expect(output).toContain('HELLO');
 
-      output = runCLI(`build ${pkg}`);
+      output = runCLI(`build ${pkg}`, {
+        verbose: false,
+      });
       expect(output).toContain(pkg);
       expect(output).not.toContain(pkg2);
 
@@ -796,21 +810,26 @@ describe('Nx Running Tests', () => {
       expect(output).toContain(pkg);
       expect(output).not.toContain(pkg2);
 
-      output = runCLI(`exec -- echo '$NX_PROJECT_NAME'`).replace(/\s+/g, ' ');
+      output = runCLI(`exec -- echo '$NX_PROJECT_NAME'`, {
+        verbose: false,
+      }).replace(/\s+/g, ' ');
       expect(output).toContain(pkg);
       expect(output).toContain(pkg2);
 
-      output = runCLI("exec -- echo '$NX_PROJECT_ROOT_PATH'").replace(
-        /\s+/g,
-        ' '
-      );
+      output = runCLI("exec -- echo '$NX_PROJECT_ROOT_PATH'", {
+        verbose: false,
+      }).replace(/\s+/g, ' ');
       expect(output).toContain(`${path.join('libs', pkg)}`);
       expect(output).toContain(`${path.join('libs', pkg2)}`);
 
-      output = runCLI(`exec --projects ${pkg} -- echo WORLD`);
+      output = runCLI(`exec --projects ${pkg} -- echo WORLD`, {
+        verbose: false,
+      });
       expect(output).toContain('WORLD');
 
-      output = runCLI(`exec --projects ${pkg} -- echo '$NX_PROJECT_NAME'`);
+      output = runCLI(`exec --projects ${pkg} -- echo '$NX_PROJECT_NAME'`, {
+        verbose: false,
+      });
       expect(output).toContain(pkg);
       expect(output).not.toContain(pkg2);
     });
