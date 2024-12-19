@@ -7,8 +7,8 @@ import { MovingBorder } from '@nx/nx-dev/ui-animations';
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import { Dialog, Transition } from '@headlessui/react';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { VideoModal } from './video-modal';
 
 function PlayButton({
   className,
@@ -82,9 +82,9 @@ export function HetznerCloudTestimonial(): ReactElement {
     <div className="border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
       <section
         id="hetzner-cloud-testimonial"
-        className="z-0 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+        className="z-0 mx-auto max-w-7xl scroll-mt-20 px-4 sm:px-6 lg:px-8"
       >
-        <SectionHeading as="h2" variant="title" id="hetzner-cloud-testimonial">
+        <SectionHeading as="h2" variant="title">
           Nx Enterprise{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             speeds build and test times
@@ -260,54 +260,13 @@ export function HetznerCloudTestimonial(): ReactElement {
             </blockquote>
           </figure>
         </div>
-        {/*MODAL*/}
-        <Transition appear show={isOpen} as={Fragment}>
-          <Dialog
-            as="div"
-            open={isOpen}
-            onClose={() => setIsOpen(false)}
-            className="relative z-10"
-          >
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
-            </Transition.Child>
-            <div className="fixed inset-0 overflow-y-auto">
-              <div className="flex min-h-full items-center justify-center p-4 text-center">
-                <Transition.Child
-                  as={Fragment}
-                  enter="ease-out duration-300"
-                  enterFrom="opacity-0 scale-95"
-                  enterTo="opacity-100 scale-100"
-                  leave="ease-in duration-200"
-                  leaveFrom="opacity-100 scale-100"
-                  leaveTo="opacity-0 scale-95"
-                >
-                  <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-950 bg-black text-left align-middle shadow-xl transition-all focus:outline-none">
-                    <iframe
-                      width="808"
-                      height="454"
-                      src="https://www.youtube.com/embed/2BLqiNnBPuU?si=752RGHhozOMzbWlx"
-                      title="YouTube video player"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="max-w-full"
-                    />
-                  </Dialog.Panel>
-                </Transition.Child>
-              </div>
-            </div>
-          </Dialog>
-        </Transition>
       </section>
+
+      <VideoModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        videoUrl="https://youtu.be/2BLqiNnBPuU"
+      />
     </div>
   );
 }

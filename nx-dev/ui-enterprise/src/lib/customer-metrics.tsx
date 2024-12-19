@@ -11,32 +11,46 @@ export function CustomerMetrics(): ReactElement {
         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
           <div className="mt-6 flex flex-col-reverse gap-x-8 gap-y-20 lg:flex-row lg:items-center">
             <div className="lg:w-full lg:max-w-2xl lg:flex-auto">
-              <figure className="rounded-2xl bg-white shadow-lg ring-1 ring-slate-900/5 sm:col-span-2 xl:col-start-2 xl:row-end-1 dark:bg-slate-800">
-                <blockquote className="p-6 text-lg font-semibold tracking-tight text-black dark:text-white">
-                  <p>
-                    Engineers will run a test command and expect it to run for
-                    20 mins, they start it and see it finishes in a few seconds,
-                    then they ask “Did I start it wrong? Why is it so fast?”
-                  </p>
-                </blockquote>
-                <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-slate-900/10 px-6 py-4 sm:flex-nowrap dark:border-slate-100/10">
-                  <img
-                    alt="pavlo grosse"
-                    src="https://avatars.githubusercontent.com/u/2219064?v=4"
-                    className="size-10 flex-none rounded-full bg-slate-50"
-                  />
-                  <div className="flex-auto">
-                    <div className="font-semibold">Pavlo Grosse</div>
-                    <div className="text-slate-600 dark:text-slate-500">
-                      Senior Software Engineer, Hetzner Cloud
+              <a
+                href="#hetzner-cloud-testimonial"
+                onClick={() => {
+                  sendCustomEvent(
+                    'hetzner-quote-click',
+                    'enterprise-customer-metrics',
+                    'enterprise'
+                  );
+                }}
+                className="group relative block rounded-2xl"
+              >
+                <div className="absolute -inset-px rounded-xl bg-gradient-to-r from-blue-600/40 to-blue-600/40 opacity-0 blur-[8px] transition duration-500 group-hover:opacity-100" />
+                <figure className="relative rounded-2xl bg-white shadow-lg ring-1 ring-slate-900/5 dark:bg-slate-800">
+                  <blockquote className="p-6 text-lg font-semibold tracking-tight text-black dark:text-white">
+                    <p>
+                      Engineers will run a test command and expect it to run for
+                      20 mins, they start it and see it finishes in a few
+                      seconds, then they ask "Did I start it wrong? Why is it so
+                      fast?"
+                    </p>
+                  </blockquote>
+                  <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-slate-900/10 px-6 py-4 sm:flex-nowrap dark:border-slate-100/10">
+                    <img
+                      alt="pavlo grosse"
+                      src="https://avatars.githubusercontent.com/u/2219064?v=4"
+                      className="size-10 flex-none rounded-full bg-slate-50"
+                    />
+                    <div className="flex-auto">
+                      <div className="font-semibold">Pavlo Grosse</div>
+                      <div className="text-slate-600 dark:text-slate-500">
+                        Senior Software Engineer, Hetzner Cloud
+                      </div>
                     </div>
-                  </div>
-                  <HetznerCloudIcon
-                    aria-hidden="true"
-                    className="mx-auto size-10 flex-none bg-white text-[#D50C2D]"
-                  />
-                </figcaption>
-              </figure>
+                    <HetznerCloudIcon
+                      aria-hidden="true"
+                      className="mx-auto size-10 flex-none bg-white text-[#D50C2D]"
+                    />
+                  </figcaption>
+                </figure>
+              </a>
               <SectionHeading
                 as="p"
                 variant="subtitle"

@@ -6,6 +6,9 @@ import {
   CarouselViewport,
 } from './carousel';
 import { PayfitIcon, UkgIcon } from '@nx/nx-dev/ui-icons';
+import { PlayIcon } from '@heroicons/react/24/outline';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { VideoModal } from './video-modal';
 
 export function Carousel({
   items,
@@ -70,6 +73,14 @@ export function Carousel({
 }
 
 export function TestimonialCarousel(): ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState('');
+
+  const openVideo = (videoUrl: string) => {
+    setCurrentVideo(videoUrl);
+    setIsOpen(true);
+  };
+
   return (
     <section className="">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -77,9 +88,19 @@ export function TestimonialCarousel(): ReactElement {
           items={[
             {
               element: (
-                <div className="relative overflow-hidden">
+                <div
+                  onClick={() => {
+                    openVideo('https://youtu.be/Vdk-tza4PCs');
+                    sendCustomEvent(
+                      'payfit-testimonial-video-click',
+                      'testimonial-carousel',
+                      'enterprise'
+                    );
+                  }}
+                  className="group relative cursor-pointer overflow-hidden"
+                >
                   <div
-                    className="absolute inset-0 bg-opacity-75 bg-contain bg-right bg-no-repeat"
+                    className="absolute inset-0 bg-opacity-75 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
                     style={{
                       backgroundImage:
                         "url('https://images.unsplash.com/photo-1511376868136-742c0de8c9a8?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
@@ -91,17 +112,17 @@ export function TestimonialCarousel(): ReactElement {
                       <figure className="flex flex-auto flex-col justify-between">
                         <blockquote className="text-pretty text-xl/8">
                           <p>
-                            “The number of hours we spent trying to manage CI
+                            "The number of hours we spent trying to manage CI
                             before, trying to load balance in CircleCI, the
                             number of agents that we run ourselves by hand and
                             try to distribute ourselves manually - it was
-                            painful, we’d spend hours and days trying to do
+                            painful, we'd spend hours and days trying to do
                             that.{' '}
                             <span className="font-semibold">
-                              With Nx Cloud we don’t need to think about that,
+                              With Nx Cloud we don't need to think about that,
                               here is my task, deal with it and make it fast
                             </span>
-                            .”
+                            ."
                           </p>
                         </blockquote>
                         <figcaption className="mt-10 flex items-center gap-x-6">
@@ -114,12 +135,16 @@ export function TestimonialCarousel(): ReactElement {
                             <div className="font-semibold">
                               Nicolas Beaussart
                             </div>
-                            <div className="mt-1 ">
+                            <div className="mt-1">
                               Staff Platform Engineer, Payfit
                             </div>
                           </div>
                         </figcaption>
                       </figure>
+                      <button className="mt-8 inline-flex w-fit items-center gap-2 rounded-lg bg-white/20 px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30">
+                        <PlayIcon className="size-5" />
+                        Watch customer story
+                      </button>
                     </div>
                     <div className="grid-col-1 grid place-items-center p-4">
                       <PayfitIcon
@@ -130,21 +155,25 @@ export function TestimonialCarousel(): ReactElement {
                   </div>
                 </div>
               ),
-              // innerButtonElement: (
-              //   <PayfitIcon
-              //     aria-hidden="true"
-              //     className="h-10 self-start text-[#0F6FDE]"
-              //   />
-              // ),
               innerButtonElement: (
                 <span className="text-2xl">Increase speed</span>
               ),
             },
             {
               element: (
-                <div className="relative">
+                <div
+                  onClick={() => {
+                    openVideo('https://youtu.be/rSC8wihnfP4');
+                    sendCustomEvent(
+                      'ukg-testimonial-video-click',
+                      'testimonial-carousel',
+                      'enterprise'
+                    );
+                  }}
+                  className="group relative cursor-pointer overflow-hidden"
+                >
                   <div
-                    className="absolute inset-0 bg-opacity-75 bg-contain bg-right bg-no-repeat"
+                    className="absolute inset-0 bg-opacity-75 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
                     style={{
                       backgroundImage:
                         "url('https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
@@ -156,10 +185,10 @@ export function TestimonialCarousel(): ReactElement {
                       <figure className="flex flex-auto flex-col justify-between">
                         <blockquote className="text-pretty text-xl/8">
                           <p>
-                            “I really like the Nx check-ins - Nx people are very
+                            "I really like the Nx check-ins - Nx people are very
                             well prepared for how to help their team grow and
                             scale and to help us spot some of our challenges. I
-                            can’t see a future where we don’t have Nx.”
+                            can't see a future where we don't have Nx."
                           </p>
                         </blockquote>
                         <figcaption className="mt-10 flex items-center gap-x-6">
@@ -174,6 +203,10 @@ export function TestimonialCarousel(): ReactElement {
                           </div>
                         </figcaption>
                       </figure>
+                      <button className="mt-8 inline-flex w-fit items-center gap-2 rounded-lg bg-white/20 px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30">
+                        <PlayIcon className="size-5" />
+                        Watch customer story
+                      </button>
                     </div>
                     <div className="grid-col-1 grid place-items-center p-4">
                       <UkgIcon aria-hidden="true" className="h-6 lg:h-12" />
@@ -181,9 +214,6 @@ export function TestimonialCarousel(): ReactElement {
                   </div>
                 </div>
               ),
-              // innerButtonElement: (
-              //   <UkgIcon aria-hidden="true" className="h-8 text-[#005151]" />
-              // ),
               innerButtonElement: (
                 <span className="text-2xl">Proactive partnership</span>
               ),
@@ -191,6 +221,12 @@ export function TestimonialCarousel(): ReactElement {
           ]}
         />
       </div>
+
+      <VideoModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        videoUrl={currentVideo}
+      />
     </section>
   );
 }
