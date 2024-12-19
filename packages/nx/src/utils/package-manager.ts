@@ -53,7 +53,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb'))
+      existsSync(join(dir, 'bun.lockb')) ||
+        existsSync(join(dir, 'bun.lock')) 
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
       ? 'yarn'

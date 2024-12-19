@@ -162,6 +162,7 @@ function replaceMentions(
       'package-lock.json',
       'pnpm-lock.yaml',
       'bun.lockb',
+      'bun.lock',
       'CHANGELOG.md',
     ];
     if (ignoredFiles.includes(basename(path))) {
