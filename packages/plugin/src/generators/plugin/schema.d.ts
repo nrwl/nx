@@ -9,7 +9,7 @@ export interface Schema {
   skipLintChecks?: boolean; // default is false
   e2eTestRunner?: 'jest' | 'none';
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter | LinterType;
   setParserOptionsProject?: boolean;
   compiler?: 'swc' | 'tsc';
