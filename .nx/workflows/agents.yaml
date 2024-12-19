@@ -17,12 +17,8 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
-          paths: |
-            node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
-            ~/.pnpm-store
-          base_branch: 'master'
+          paths: .pnpm-store
+          base-branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
@@ -74,12 +70,8 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
-          paths: |
-            node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
-            ~/.pnpm-store
-          base_branch: 'master'
+          paths: .pnpm-store
+          base-branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
