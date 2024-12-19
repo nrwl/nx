@@ -1,5 +1,13 @@
 # Enterprise Release Notes
 
+### 2024.10.2
+
+- Fix: AWS S3 bucket connections when using STS role-based authentication
+
+### 2024.10.1
+
+- Fix: GitHub and external bucket connection issues when using a proxy
+
 ### 2024.10
 
 This is a big release so let's go through the highlights first. There is also an important "Breaking changes" section at the end.
