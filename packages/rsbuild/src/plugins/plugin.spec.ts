@@ -15,7 +15,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
   isUsingTsSolutionSetup: jest.fn().mockReturnValue(false),
 }));
 
-describe('@nx/rsbuild/plugin', () => {
+describe('@nx/rsbuild', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
