@@ -29,6 +29,11 @@
       "version": "20.0.6-beta.0",
       "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
       "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+    },
+    "update-20-3-0": {
+      "version": "20.3.0-beta.2",
+      "description": "Add gitignore entry for temporary vitest config files.",
+      "implementation": "./src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore"
     }
   },
   "packageJsonUpdates": {

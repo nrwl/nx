@@ -13,4 +13,17 @@ export function addViteTempFilesToGitIgnore(tree: Tree) {
   } else {
     tree.write('.gitignore', newGitIgnoreContents);
   }
+
+  newGitIgnoreContents = `vitest.config.*.timestamp*`;
+  if (tree.exists('.gitignore')) {
+    const gitIgnoreContents = tree.read('.gitignore', 'utf-8');
+    if (!gitIgnoreContents.includes(newGitIgnoreContents)) {
+      newGitIgnoreContents = stripIndents`${gitIgnoreContents}
+        ${newGitIgnoreContents}`;
+
+      tree.write('.gitignore', newGitIgnoreContents);
+    }
+  } else {
+    tree.write('.gitignore', newGitIgnoreContents);
+  }
 }
