@@ -189,7 +189,10 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
+          paths: |
+            ~/.cache/yarn
+            ~/.npm
+            .pnpm-store
           base-branch: 'main'
 ```
 
@@ -222,15 +225,10 @@ launch-templates:
         # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
-          base-branch: 'main'
-      - name: Restore Browser Binary Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
           paths: |
-            '~/.cache/Cypress'
-            '~/.cache/ms-playwright'
+            ~/.cache/yarn
+            ~/.npm
+            .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
@@ -273,15 +271,10 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
-          base-branch: 'main'
-      - name: Restore Browser Binary Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
           paths: |
-            '~/.cache/Cypress'
-            '~/.cache/ms-playwright'
+            ~/.cache/yarn
+            ~/.npm
+            .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
@@ -311,7 +304,10 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
+          paths: |
+            ~/.cache/yarn
+            ~/.npm
+            .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
