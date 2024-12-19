@@ -153,6 +153,7 @@ export async function hostGenerator(
     { '@module-federation/enhanced': moduleFederationEnhancedVersion },
     {
       '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
     }
   );
   tasks.push(installTask);
