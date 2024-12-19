@@ -29,6 +29,10 @@ import {
   configurePlugins,
   runPackageManagerInstallPlugins,
 } from '../init/configure-plugins';
+import {
+  checkCompatibleWithPlugins,
+  updatePluginsInNxJson,
+} from '../init/implementation/check-compatible-with-plugins';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -286,19 +290,31 @@ export async function importHandler(options: ImportOptions) {
     packageManager,
     destinationGitClient
   );
-
-  if (installed && plugins.length > 0) {
-    installed = await runPluginsInstall(plugins, pmc, destinationGitClient);
-    if (installed) {
-      const { succeededPlugins } = await configurePlugins(
-        plugins,
-        updatePackageScripts,
-        pmc,
-        workspaceRoot,
-        verbose
+  if (installed) {
+    // Check compatibility with existing plugins for the workspace included new imported projects
+    if (nxJson.plugins?.length > 0) {
+      const incompatiblePlugins = await checkCompatibleWithPlugins(
+        nxJson.plugins,
+        workspaceRoot
       );
-      if (succeededPlugins.length > 0) {
+      if (Object.keys(incompatiblePlugins).length > 0) {
+        updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
         await destinationGitClient.amendCommit();
+      }
+    }
+    if (plugins.length > 0) {
+      installed = await runPluginsInstall(plugins, pmc, destinationGitClient);
+      if (installed) {
+        const { succeededPlugins } = await configurePlugins(
+          plugins,
+          updatePackageScripts,
+          pmc,
+          workspaceRoot,
+          verbose
+        );
+        if (succeededPlugins.length > 0) {
+          await destinationGitClient.amendCommit();
+        }
       }
     }
   }
