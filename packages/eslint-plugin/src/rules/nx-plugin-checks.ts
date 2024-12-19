@@ -18,7 +18,7 @@ import {
   getSourceFilePath,
 } from '../utils/runtime-lint-utils';
 
-type Options = [
+export type Options = [
   {
     generatorsJson?: string;
     executorsJson?: string;
