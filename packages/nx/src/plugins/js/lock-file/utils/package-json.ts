@@ -25,6 +25,7 @@ export type NormalizedPackageJson = Pick<
   | 'peerDependencies'
   | 'peerDependenciesMeta'
   | 'optionalDependencies'
+  | 'packageManager'
 >;
 
 /**
@@ -42,6 +43,7 @@ export function normalizePackageJson(
     peerDependencies,
     peerDependenciesMeta,
     optionalDependencies,
+    packageManager,
   } = packageJson;
 
   return {
@@ -53,5 +55,6 @@ export function normalizePackageJson(
     peerDependencies,
     peerDependenciesMeta,
     optionalDependencies,
+    packageManager,
   };
 }
