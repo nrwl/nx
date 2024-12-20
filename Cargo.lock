@@ -1509,6 +1509,7 @@ dependencies = [
  "swc_ecma_visit",
  "tempfile",
  "thiserror",
+ "tokio",
  "tracing",
  "tracing-subscriber",
  "walkdir",

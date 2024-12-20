@@ -316,7 +316,11 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         serializedSourceMaps: null,
       };
     } else {
-      writeCache(g.projectFileMapCache, g.projectGraph);
+      writeCache(
+        g.projectFileMapCache,
+        g.projectGraph,
+        projectConfigurationsResult.sourceMaps
+      );
       return g;
     }
   } catch (err) {

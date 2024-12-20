@@ -13,6 +13,14 @@ export declare class ChildProcess {
   onOutput(callback: (message: string) => void): void
 }
 
+export declare class FileLock {
+  locked: boolean
+  constructor(lockFilePath: string)
+  lock(): void
+  unlock(): void
+  wait(): Promise<void>
+}
+
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
