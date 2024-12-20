@@ -3,13 +3,12 @@ import {
   getSelectedPackageManager,
   newProject,
   runCLI,
-  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
 
-describe('hhhhhhVue Plugin', () => {
+describe('Vue Plugin', () => {
   let proj: string;
 
   const pm = getSelectedPackageManager();
@@ -34,11 +33,9 @@ packages:
         return json;
       });
     }
-
-    console.log(tmpProjPath());
   });
 
-  // afterAll(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should serve application in dev mode', async () => {
     const app = uniq('app');
