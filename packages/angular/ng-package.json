@@ -13,7 +13,6 @@
     "@schematics",
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",
-    "chalk",
     "ignore",
     "minimatch",
     "rxjs-for-await",
