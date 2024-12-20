@@ -31,12 +31,12 @@ export class DelayedSpinner {
     this.timeouts.push(
       setTimeout(() => {
         this.ready = true;
+        this.lastMessage = message;
         if (!SHOULD_SHOW_SPINNERS) {
           console.warn(this.lastMessage);
         } else {
           this.spinner = ora(this.lastMessage).start();
         }
-        this.lastMessage = message;
       }, delay).unref()
     );
   }
