@@ -199,7 +199,7 @@ describe('moveProjectConfiguration', () => {
             'default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
-            '{workspaceRoot}/eslint.config.js',
+            '{workspaceRoot}/eslint.config.cjs',
           ],
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],

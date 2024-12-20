@@ -63,7 +63,10 @@ module.exports = function (path, options) {
   }
   // Try to use the defaultResolver
   try {
-    if (path.startsWith('@nx/')) throw new Error('custom resolution');
+    // powerpack packages are installed via npm and resolved like any other packages
+    if (path.startsWith('@nx/') && !path.startsWith('@nx/powerpack-')) {
+      throw new Error('custom resolution');
+    }
     if (path.startsWith('nx/')) throw new Error('custom resolution');
 
     if (path.indexOf('@nx/workspace') > -1) {

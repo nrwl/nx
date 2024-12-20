@@ -69,7 +69,7 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
       "checkObsoleteDependencies": true, // toggle to disable
       "checkVersionMismatches": true, // toggle to disable
       "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
-      "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
+      "ignoredFiles": ["webpack.config.js", "eslint.config.cjs"], // list of files that should be skipped for check
       "includeTransitiveDependencies": true, // collect dependencies transitively from children
       "useLocalPathsForWorkspaceDependencies": true // toggle to disable
     }

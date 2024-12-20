@@ -71,7 +71,7 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
 
 function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
   tree.write(
-    'eslint.config.js',
+    'eslint.config.cjs',
     getGlobalFlatEslintConfiguration(options.rootProject)
   );
 

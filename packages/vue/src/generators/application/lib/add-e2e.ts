@@ -8,6 +8,7 @@ import {
 import { webStaticServeGenerator } from '@nx/web';
 
 import { nxVersion } from '../../../utils/versions';
+import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
@@ -20,11 +21,7 @@ export async function addE2e(
   const nxJson = readNxJson(tree);
   const hasPlugin =
     options.bundler === 'rsbuild'
-      ? nxJson.plugins?.find((p) =>
-          typeof p === 'string'
-            ? p === '@nx/rsbuild/plugin'
-            : p.plugin === '@nx/rsbuild/plugin'
-        )
+      ? await hasRsbuildPlugin(tree, options.appProjectRoot)
       : nxJson.plugins?.find((p) =>
           typeof p === 'string'
             ? p === '@nx/vite/plugin'

@@ -24,6 +24,11 @@ export async function normalizeOptions(
     allowedFileExtensions: ['ts'],
     fileExtension: 'ts',
   });
+  if (name.includes('/')) {
+    throw new Error(
+      `The component name '${name}' cannot contain a slash as it must be a valid JS symbol. Please use a different name.`
+    );
+  }
 
   const { className } = names(name);
   const { className: suffixClassName } = names(options.type);

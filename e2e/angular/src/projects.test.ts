@@ -164,13 +164,13 @@ describe('Angular Projects', () => {
 
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {
     // disable the prefer-standalone rule for app1 which is not standalone
-    let app1EslintConfig = readFile(`${app1}/eslint.config.js`);
+    let app1EslintConfig = readFile(`${app1}/eslint.config.cjs`);
     app1EslintConfig = app1EslintConfig.replace(
       `'@angular-eslint/directive-selector': [`,
       `'@angular-eslint/prefer-standalone': 'off',
       '@angular-eslint/directive-selector': [`
     );
-    updateFile(`${app1}/eslint.config.js`, app1EslintConfig);
+    updateFile(`${app1}/eslint.config.cjs`, app1EslintConfig);
 
     // check apps and lib pass linting for initial generated code
     runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`);

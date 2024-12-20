@@ -114,10 +114,20 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   const tsSysFromTree: ts.System = {
     ...ts.sys,
     fileExists(path) {
-      return tsconfigExists(tree, tsconfigInfoCaches, path);
+      // Given ts.System.resolve resolve full path for tsconfig within node_modules
+      // We need to remove the workspace root to ensure we don't have double workspace root within the Tree
+      const correctPath = path.startsWith(tree.root)
+        ? relative(tree.root, path)
+        : path;
+      return tsconfigExists(tree, tsconfigInfoCaches, correctPath);
     },
     readFile(path) {
-      return readRawTsconfigContents(tree, tsconfigInfoCaches, path);
+      // Given ts.System.resolve resolve full path for tsconfig within node_modules
+      // We need to remove the workspace root to ensure we don't have double workspace root within the Tree
+      const correctPath = path.startsWith(tree.root)
+        ? relative(tree.root, path)
+        : path;
+      return readRawTsconfigContents(tree, tsconfigInfoCaches, correctPath);
     },
   };
 

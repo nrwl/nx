@@ -445,6 +445,9 @@ export function createTmpTsConfig(
     process.env.NX_TASK_TARGET_TARGET ?? 'build',
     'tsconfig.generated.json'
   );
+  if (tsconfigPath === tmpTsConfigPath) {
+    return tsconfigPath;
+  }
   const parsedTSConfig = readTsConfigWithRemappedPaths(
     tsconfigPath,
     tmpTsConfigPath,

@@ -12,6 +12,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
@@ -38,7 +41,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -49,7 +52,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -70,6 +73,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     languageOptions: {
@@ -100,7 +106,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -111,7 +117,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -131,6 +137,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
@@ -157,7 +166,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -168,7 +177,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -188,6 +197,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -213,7 +225,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -224,7 +236,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -248,6 +260,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
   {
@@ -274,7 +289,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -285,7 +300,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -308,6 +323,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   {
     plugins: {
       'eslint-plugin-import': eslintPluginImport,
@@ -340,7 +358,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -351,7 +369,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -371,6 +389,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     settings: {
@@ -401,7 +422,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -412,7 +433,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -432,6 +453,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -457,7 +481,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -468,7 +492,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -478,9 +502,12 @@ module.exports = [
 `;
 
 exports[`convert-to-flat-config generator should convert json successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -512,6 +539,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -537,7 +567,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -548,7 +578,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -558,9 +588,12 @@ module.exports = [
 `;
 
 exports[`convert-to-flat-config generator should convert yaml successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -592,6 +625,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -617,7 +653,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -628,7 +664,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -638,9 +674,12 @@ module.exports = [
 `;
 
 exports[`convert-to-flat-config generator should convert yml successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -662,9 +701,12 @@ module.exports = [
 `;
 
 exports[`convert-to-flat-config generator should handle custom eslintignores 1`] = `
-"const baseConfig = require('../../eslint.config.js');
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

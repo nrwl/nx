@@ -35,7 +35,6 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -145,10 +144,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   } else if (options.buildable && options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
     tasks.push(rollupTask);
-  } else if (options.bundler === 'none' && options.addPlugin) {
-    const nxJson = readNxJson(host);
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
-    updateNxJson(host, nxJson);
   }
 
   // Set up test target

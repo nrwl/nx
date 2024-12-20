@@ -15,8 +15,10 @@ export function updateEslintConfig(
   if (
     !tree.exists('.eslintrc.json') &&
     !tree.exists('eslint.config.js') &&
+    !tree.exists('eslint.config.cjs') &&
     !tree.exists('.eslintrc.base.json') &&
-    !tree.exists('eslint.base.config.js')
+    !tree.exists('eslint.base.config.js') &&
+    !tree.exists('eslint.base.config.cjs')
   ) {
     return;
   }

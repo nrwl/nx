@@ -27,7 +27,8 @@ export async function addE2e(
   const hasNxBuildPlugin =
     (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
     (options.bundler === 'rspack' && hasRspackPlugin(tree)) ||
-    (options.bundler === 'rsbuild' && hasRsbuildPlugin(tree)) ||
+    (options.bundler === 'rsbuild' &&
+      (await hasRsbuildPlugin(tree, options.appProjectRoot))) ||
     (options.bundler === 'vite' && hasVitePlugin(tree));
 
   let e2eWebServerInfo: E2EWebServerDetails = {

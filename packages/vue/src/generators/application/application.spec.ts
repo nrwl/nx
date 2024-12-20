@@ -114,7 +114,7 @@ describe('application generator', () => {
     expect(listFiles(tree)).toMatchSnapshot();
     expect(
       readNxJson(tree).plugins.find(
-        (p) => typeof p !== 'string' && p.plugin === '@nx/rsbuild/plugin'
+        (p) => typeof p !== 'string' && p.plugin === '@nx/rsbuild'
       )
     ).toMatchInlineSnapshot(`
       {
@@ -125,7 +125,7 @@ describe('application generator', () => {
           "previewTargetName": "preview",
           "typecheckTargetName": "typecheck",
         },
-        "plugin": "@nx/rsbuild/plugin",
+        "plugin": "@nx/rsbuild",
       }
     `);
   });

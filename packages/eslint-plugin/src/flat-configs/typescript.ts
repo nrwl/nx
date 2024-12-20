@@ -15,7 +15,7 @@ const isPrettierAvailable =
  */
 export default tseslint.config(
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
   },
   {
@@ -30,7 +30,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', , '**/*.cts', '**/*.mts'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',

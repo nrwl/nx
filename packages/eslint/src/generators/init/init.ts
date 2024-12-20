@@ -28,7 +28,7 @@ function updateProductionFileset(tree: Tree) {
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
-    productionFileSet.push('!{projectRoot}/eslint.config.js');
+    productionFileSet.push('!{projectRoot}/eslint.config.cjs');
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
@@ -45,7 +45,7 @@ function addTargetDefaults(tree: Tree) {
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
-    `{workspaceRoot}/eslint.config.js`,
+    `{workspaceRoot}/eslint.config.cjs`,
   ];
   updateNxJson(tree, nxJson);
 }

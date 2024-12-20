@@ -57,9 +57,9 @@ export function migrateConfigToMonorepoStyle(
         keepExistingVersions
       );
       tree.write(
-        tree.exists('eslint.config.js')
-          ? 'eslint.base.config.js'
-          : 'eslint.config.js',
+        tree.exists('eslint.config.cjs')
+          ? 'eslint.base.config.cjs'
+          : 'eslint.config.cjs',
         getGlobalFlatEslintConfiguration()
       );
     } else {
@@ -134,7 +134,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       let config = tree.read(projectEslintPath, 'utf-8');
       // remove @nx plugin
       config = removePlugin(config, '@nx', '@nx/eslint-plugin-nx');
-      // extend eslint.base.config.js
+      // extend eslint.base.config.cjs
       config = addImportToFlatConfig(
         config,
         'baseConfig',

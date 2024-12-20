@@ -21,18 +21,23 @@ export async function updateSsrSetup(
   appName: string,
   typescriptConfiguration: boolean
 ) {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   let project = readProjectConfiguration(tree, appName);
 
   tree.rename(
     joinPathFragments(project.sourceRoot, 'main.server.ts'),
     joinPathFragments(project.sourceRoot, 'bootstrap.server.ts')
   );
-  tree.write(
-    joinPathFragments(project.root, 'server.ts'),
-    "import('./src/main.server');"
+  const pathToServerEntry = joinPathFragments(
+    angularMajorVersion >= 19
+      ? project.sourceRoot ?? joinPathFragments(project.root, 'src')
+      : project.root,
+    'server.ts'
   );
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  tree.write(
+    pathToServerEntry,
+    `import('./${angularMajorVersion >= 19 ? '' : 'src/'}main.server');`
+  );
 
   generateFiles(tree, join(__dirname, '../files/common'), project.root, {
     appName,

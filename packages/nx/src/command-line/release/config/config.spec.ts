@@ -10923,7 +10923,7 @@ describe('createNxReleaseConfig()', () => {
             'group-1': {
               projects: 'nx',
               versionPlans: {
-                ignorePatternsForPlanCheck: ['**/eslint.config.js'],
+                ignorePatternsForPlanCheck: ['**/eslint.config.cjs'],
               },
             },
             'group-2': {
@@ -11076,7 +11076,7 @@ describe('createNxReleaseConfig()', () => {
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [
-                    "**/eslint.config.js",
+                    "**/eslint.config.cjs",
                   ],
                 },
               },

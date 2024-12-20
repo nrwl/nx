@@ -91,7 +91,7 @@ function createNxJson(
           ].filter(Boolean)
         : []),
       ...(eslintProjectConfigFile
-        ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.js']
+        ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.cjs']
         : []),
     ].filter(Boolean),
   };
@@ -124,8 +124,8 @@ function createNxJson(
     if (fileExists(join(repoRoot, '.eslintrc.json'))) {
       inputs.push('{workspaceRoot}/.eslintrc.json');
     }
-    if (fileExists(join(repoRoot, 'eslint.config.js'))) {
-      inputs.push('{workspaceRoot}/eslint.config.js');
+    if (fileExists(join(repoRoot, 'eslint.config.cjs'))) {
+      inputs.push('{workspaceRoot}/eslint.config.cjs');
     }
     nxJson.targetDefaults.lint = {
       ...nxJson.targetDefaults.lint,
@@ -230,7 +230,9 @@ function projectHasEslintConfig(
 ): boolean {
   return (
     fileExists(join(project.root, '.eslintrc.json')) ||
-    fileExists(join(project.root, 'eslint.config.js'))
+    fileExists(join(project.root, 'eslint.config.js')) ||
+    fileExists(join(project.root, 'eslint.config.mjs')) ||
+    fileExists(join(project.root, 'eslint.config.cjs'))
   );
 }
 

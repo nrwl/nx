@@ -113,7 +113,7 @@ describe('@nx/eslint:init', () => {
           'default',
           '{workspaceRoot}/.eslintrc.json',
           '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.js',
+          '{workspaceRoot}/eslint.config.cjs',
         ],
       });
     });
@@ -137,7 +137,7 @@ describe('@nx/eslint:init', () => {
           'default',
           '{workspaceRoot}/.eslintrc.json',
           '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.js',
+          '{workspaceRoot}/eslint.config.cjs',
         ],
       });
     });

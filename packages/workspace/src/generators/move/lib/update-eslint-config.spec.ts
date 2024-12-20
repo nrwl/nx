@@ -243,7 +243,7 @@ describe('updateEslint (flat config)', () => {
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.delete('.eslintrc.json');
-    tree.write('eslint.config.js', `module.exports = [];`);
+    tree.write('eslint.config.cjs', `module.exports = [];`);
   });
 
   it('should handle config not existing', async () => {
@@ -267,16 +267,16 @@ describe('updateEslint (flat config)', () => {
     convertToFlat(tree, 'my-lib');
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
-    ).toEqual(expect.stringContaining(`require('../../eslint.config.js')`));
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
+    ).toEqual(expect.stringContaining(`require('../../eslint.config.cjs')`));
   });
 
   it('should update config extends path when project is moved from subdirectory', async () => {
@@ -287,7 +287,7 @@ describe('updateEslint (flat config)', () => {
     });
     convertToFlat(tree, 'api/test');
     // This step is usually handled elsewhere
-    tree.rename('api/test/eslint.config.js', 'test/eslint.config.js');
+    tree.rename('api/test/eslint.config.cjs', 'test/eslint.config.cjs');
 
     const projectConfig = readProjectConfiguration(tree, 'api-test');
 
@@ -302,8 +302,8 @@ describe('updateEslint (flat config)', () => {
 
     updateEslintConfig(tree, newSchema, projectConfig);
 
-    expect(tree.read('test/eslint.config.js', 'utf-8')).toEqual(
-      expect.stringContaining(`require('../eslint.config.js')`)
+    expect(tree.read('test/eslint.config.cjs', 'utf-8')).toEqual(
+      expect.stringContaining(`require('../eslint.config.cjs')`)
     );
   });
 
@@ -316,15 +316,15 @@ describe('updateEslint (flat config)', () => {
     convertToFlat(tree, 'my-lib', { hasParser: true });
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
     ).toEqual(
       expect.stringContaining(
         `project: ["shared/my-destination/tsconfig.*?.json"]`
@@ -346,15 +346,15 @@ describe('updateEslint (flat config)', () => {
     });
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
     ).toEqual(
       expect.stringContaining(
         `project: ["shared/my-destination/tsconfig.*?.json", "shared/my-destination/${storybookProject}"]`
@@ -372,15 +372,15 @@ describe('updateEslint (flat config)', () => {
     convertToFlat(tree, 'my-lib', { hasParser: true, isString: true });
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
     ).toEqual(
       expect.stringContaining(
         `project: "shared/my-destination/tsconfig.*?.json"`
@@ -417,9 +417,9 @@ function convertToFlat(
   }
 
   tree.write(
-    joinPathFragments(path, 'eslint.config.js'),
+    joinPathFragments(path, 'eslint.config.cjs'),
     `const { FlatCompat } = require("@eslint/eslintrc");
-  const baseConfig = require("${offset}eslint.config.js");
+  const baseConfig = require("${offset}eslint.config.cjs");
   const js = require("@eslint/js");
   const compat = new FlatCompat({
     baseDirectory: __dirname,

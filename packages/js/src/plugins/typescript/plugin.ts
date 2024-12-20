@@ -19,7 +19,15 @@ import {
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { basename, dirname, join, normalize, relative, sep } from 'node:path';
+import {
+  basename,
+  dirname,
+  join,
+  normalize,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
@@ -201,6 +209,7 @@ async function createNodesInternal(
     context.workspaceRoot,
     projectRoot
   );
+
   const nodeHash = hashArray([
     ...[
       fullConfigPath,
@@ -313,7 +322,16 @@ function buildTscTargets(
   }
 
   // Build target
-  if (options.build && basename(configFilePath) === options.build.configName) {
+  if (
+    options.build &&
+    basename(configFilePath) === options.build.configName &&
+    isValidPackageJsonBuildConfig(
+      tsConfig,
+      context.workspaceRoot,
+      projectRoot,
+      configFilePath
+    )
+  ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
@@ -576,6 +594,99 @@ function getOutputs(
   });
 
   return Array.from(outputs);
+}
+
+/**
+ * Checks whether a `package.json` file has a valid build configuration by ensuring
+ * that the `main`, `module`, or `exports` do not include paths from the `rootDir`.
+ * Or if `outFile` is defined, it should not be within the `rootDir`.
+ *
+ * @param tsConfig The TypeScript configuration object.
+ * @param workspaceRoot The workspace root path.
+ * @param projectRoot The project root path.
+ * @param tsConfigPath The path to the TypeScript configuration file.
+ * @returns `true` if the package has a valid build configuration; otherwise, `false`.
+ */
+function isValidPackageJsonBuildConfig(
+  tsConfig,
+  workspaceRoot: string,
+  projectRoot: string,
+  tsConfigPath: string
+): boolean {
+  if (!existsSync(joinPathFragments(projectRoot, 'package.json'))) {
+    // If the package.json file does not exist.
+    // Assume it's valid because it would be using `project.json` instead.
+    return true;
+  }
+  const packageJson = readJsonFile(
+    joinPathFragments(projectRoot, 'package.json')
+  );
+
+  const rootDir = tsConfig.options.rootDir ?? 'src/';
+  if (!tsConfig.options.rootDir) {
+    console.warn(
+      `The 'rootDir' option is not set in the tsconfig file at ${tsConfigPath}. Assuming 'src/' as the root directory.`
+    );
+  }
+
+  const isPathWithinSrc = (path: string): boolean => {
+    const resolvedRootDir = resolve(workspaceRoot, projectRoot, rootDir);
+    const pathToCheck = resolve(workspaceRoot, projectRoot, path);
+
+    return pathToCheck.startsWith(resolvedRootDir);
+  };
+
+  // If `outFile` is defined, check the validity of the path.
+  if (tsConfig.options.outFile) {
+    if (isPathWithinSrc(tsConfig.options.outFile)) {
+      return false;
+    }
+  }
+
+  const buildPaths = ['main', 'module'];
+  for (const field of buildPaths) {
+    if (packageJson[field] && isPathWithinSrc(packageJson[field])) {
+      return false;
+    }
+  }
+
+  const exports = packageJson?.exports;
+
+  // Checks if the value is a path within the `src` directory.
+  const containsInvalidPath = (
+    value: string | Record<string, string>
+  ): boolean => {
+    if (typeof value === 'string') {
+      return isPathWithinSrc(value);
+    } else if (typeof value === 'object') {
+      return Object.entries(value).some(([currentKey, subValue]) => {
+        // Skip types field
+        if (currentKey === 'types') {
+          return false;
+        }
+        if (typeof subValue === 'string') {
+          return isPathWithinSrc(subValue);
+        }
+        return false;
+      });
+    }
+    return false;
+  };
+
+  if (typeof exports === 'string' && isPathWithinSrc(exports)) {
+    return false;
+  }
+
+  // Check nested exports if `exports` is an object.
+  if (typeof exports === 'object') {
+    for (const key in exports) {
+      if (containsInvalidPath(exports[key])) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 function pathToInputOrOutput(

@@ -30,6 +30,7 @@ export async function updateSsrSetup(
     skipPackageJson?: boolean;
   }
 ) {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   let project = readProjectConfiguration(tree, appName);
 
   tree.rename(
@@ -37,9 +38,15 @@ export async function updateSsrSetup(
     joinPathFragments(project.sourceRoot, 'bootstrap.server.ts')
   );
 
+  const pathToServerEntry = joinPathFragments(
+    angularMajorVersion >= 19
+      ? project.sourceRoot ?? joinPathFragments(project.root, 'src')
+      : project.root,
+    'server.ts'
+  );
   tree.write(
-    joinPathFragments(project.root, 'server.ts'),
-    "import('./src/main.server');"
+    pathToServerEntry,
+    `import('./${angularMajorVersion >= 19 ? '' : 'src/'}main.server');`
   );
 
   const browserBundleOutput = project.targets.build.options.outputPath;
@@ -47,8 +54,6 @@ export async function updateSsrSetup(
     /\/browser$/,
     '/server'
   );
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   generateFiles(tree, join(__dirname, '../files/common'), project.root, {
     appName,

@@ -407,6 +407,9 @@ async function buildJestTargets(
             outputs,
             options: {
               cwd: projectRoot,
+              env: {
+                TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}',
+              },
             },
             metadata: {
               technologies: ['jest'],
