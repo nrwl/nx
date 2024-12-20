@@ -1,11 +1,14 @@
-import { Fragment, useState } from 'react';
+'use client';
+import { Fragment, useState, useRef, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
+// TODO - move this to a data type file
 interface Testimonial {
   title: string;
   subtitle: string;
+  accentColor?: string;
   metrics?: {
     value: string;
     label: string;
@@ -33,6 +36,7 @@ const testimonials: Testimonial[] = [
     ],
     videoId: '2BLqiNnBPuU',
     thumbnail: '/images/customers/video-story-pavlo-grosse.avif',
+    accentColor: 'orange-600',
   },
   {
     title: 'Customer story',
@@ -115,13 +119,52 @@ const testimonials: Testimonial[] = [
 export function CustomerTestimonialCarousel(): JSX.Element {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isBelowMd, setIsBelowMd] = useState(false);
   const currentTestimonial = testimonials[currentIndex];
+  const ulRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+
+    const handleResize = () => {
+      setIsBelowMd(mediaQuery.matches);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Attach listener
+    mediaQuery.addEventListener('change', handleResize);
+
+    return () => {
+      // Clean up listener
+      mediaQuery.removeEventListener('change', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
+    if (isBelowMd) {
+      timer = setInterval(() => {
+        setCurrentIndex((currentIndex + 1) % testimonials.length);
+      }, 7000);
+    } else if (timer) {
+      clearInterval(timer);
+    }
+
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [isBelowMd, setCurrentIndex, currentIndex]);
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-12 gap-8">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-6 md:gap-4">
         {/* Left side - Quote or Metrics */}
-        <div className="col-span-3">
+        <div className="col-span-2 hidden md:block">
           {currentTestimonial.quote ? (
             <figure className="flex h-full flex-col justify-center">
               <blockquote className="relative">
@@ -177,9 +220,9 @@ export function CustomerTestimonialCarousel(): JSX.Element {
         </div>
 
         {/* Right side - Video Card */}
-        <div className="col-span-9">
+        <div className="col-span-2 md:col-span-4">
           <div
-            className="group relative cursor-pointer overflow-hidden rounded-lg"
+            className="group relative cursor-pointer overflow-hidden rounded-lg shadow-lg"
             onClick={() => setIsOpen(true)}
           >
             {/* Thumbnail */}
@@ -192,7 +235,13 @@ export function CustomerTestimonialCarousel(): JSX.Element {
             />
 
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div
+              className={`absolute inset-0 bg-gradient-to-t ${
+                currentTestimonial.accentColor
+                  ? `from-${currentTestimonial.accentColor} opacity-60`
+                  : 'from-black/80'
+              } via-black/20 to-transparent`}
+            />
 
             {/* Content Overlay */}
             <div className="absolute bottom-0 left-0 p-8">
@@ -206,21 +255,19 @@ export function CustomerTestimonialCarousel(): JSX.Element {
             </div>
           </div>
 
-          {/* Navigation dots */}
-          <div className="mt-4 flex justify-center gap-2">
+          {/* Mobile Navigation display dots */}
+          <ul ref={ulRef} className="mt-4 flex justify-center gap-2 md:hidden">
             {testimonials.map((_, index) => (
-              <button
+              <li
                 key={index}
-                onClick={() => setCurrentIndex(index)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   index === currentIndex
                     ? 'w-12 bg-blue-500'
-                    : 'w-4 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600'
+                    : 'w-4 bg-slate-200 dark:bg-slate-700'
                 }`}
-                aria-label={`Go to testimonial ${index + 1}`}
               />
             ))}
-          </div>
+          </ul>
         </div>
       </div>
 

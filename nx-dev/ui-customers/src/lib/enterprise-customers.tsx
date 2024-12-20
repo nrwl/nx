@@ -117,7 +117,7 @@ export function EnterpriseCustomers(): JSX.Element {
             >
               <CiscoIcon aria-hidden="true" className="h-24 w-24" />
             </a>
-            <div className="col-span-4 mb-8 mt-8">
+            <div className="col-span-2 mb-8 mt-8 px-4 md:col-span-4 xl:px-0">
               <CustomerTestimonialCarousel />
             </div>
             <a
