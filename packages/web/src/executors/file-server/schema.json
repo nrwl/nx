@@ -74,7 +74,14 @@
       "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath"
     },
     "cors": {
-      "type": "boolean",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "description": "Enable CORS",
       "default": true
     },
