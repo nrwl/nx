@@ -190,9 +190,9 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
-            ~/.cache/yarn
             ~/.npm
-            .pnpm-store
+            # or ~/.cache/yarn
+            # or .pnpm-store
           base-branch: 'main'
 ```
 
@@ -226,9 +226,9 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
-            ~/.cache/yarn
             ~/.npm
-            .pnpm-store
+            # or ~/.cache/yarn
+            # or .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
@@ -272,9 +272,9 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
-            ~/.cache/yarn
             ~/.npm
-            .pnpm-store
+            # or ~/.cache/yarn
+            # or .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
@@ -305,9 +305,9 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
-            ~/.cache/yarn
             ~/.npm
-            .pnpm-store
+            # or ~/.cache/yarn
+            # or .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
