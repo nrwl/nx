@@ -1,18 +1,16 @@
+use rayon::prelude::*;
 use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
 use tracing::{debug, debug_span, trace, warn};
 
+use crate::native::glob::glob_files::glob_files;
+use crate::native::hasher::hash;
 use crate::native::types::FileData;
-use crate::native::{glob::build_glob_set, hasher::hash};
 
-pub fn hash_workspace_files(
-    workspace_file_sets: &[String],
-    all_workspace_files: &[FileData],
-    cache: Arc<DashMap<String, String>>,
-) -> Result<String> {
-    let globs: Vec<String> = workspace_file_sets
+fn globs_from_workspace_inputs(workspace_file_sets: &[String]) -> Vec<String> {
+    workspace_file_sets
         .iter()
         .inspect(|&x| trace!("Workspace file set: {}", x))
         .filter_map(|x| {
@@ -33,7 +31,23 @@ pub fn hash_workspace_files(
                 None
             }
         })
-        .collect();
+        .collect()
+}
+
+pub fn get_workspace_files<'a, 'b>(
+    workspace_file_sets: &'a [String],
+    all_workspace_files: &'b [FileData],
+) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
+    let globs = globs_from_workspace_inputs(workspace_file_sets);
+    glob_files(all_workspace_files, globs, None)
+}
+
+pub fn hash_workspace_files(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+    cache: Arc<DashMap<String, String>>,
+) -> Result<String> {
+    let globs = globs_from_workspace_inputs(workspace_file_sets);
 
     if globs.is_empty() {
         return Ok(hash(b""));
@@ -43,8 +57,6 @@ pub fn hash_workspace_files(
     if let Some(cache_results) = cache.get(&cache_key) {
         return Ok(cache_results.clone());
     }
-
-    let glob = build_glob_set(&globs)?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     debug_span!("Hashing workspace fileset", cache_key).in_scope(|| {
@@ -133,7 +145,6 @@ mod test {
             file: "packages/project/project.json".into(),
             hash: "abc".into(),
         };
-
         for i in 0..1000 {
             let result = hash_workspace_files(
                 &["{workspaceRoot}/**/*".to_string()],
