@@ -51,7 +51,9 @@ describe('Nuxt Plugin', () => {
   }, 300_000);
 
   it('should have build, serve, build-static, server-static targets', () => {
-    runCLI(`show project ${app} --json > targets.json`);
+    runCLI(`show project ${app} --json > targets.json`, {
+      verbose: false,
+    });
 
     const targets = readJson('targets.json');
     expect(targets.targets['build']).toBeDefined();
