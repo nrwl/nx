@@ -134,7 +134,7 @@ mod test {
             hash: "abc".into(),
         };
 
-        for i in 0..1000 {
+        for _ in 0..1000 {
             let result = hash_workspace_files(
                 &["{workspaceRoot}/**/*".to_string()],
                 &[
