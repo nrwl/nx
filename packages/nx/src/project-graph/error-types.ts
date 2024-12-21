@@ -220,7 +220,8 @@ export class AggregateCreateNodesError extends Error {
    */
   constructor(
     public readonly errors: Array<[file: string | null, error: Error]>,
-    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
+    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>,
+    public pluginIndex?: number
   ) {
     super('Failed to create nodes');
     this.name = this.constructor.name;
@@ -245,22 +246,26 @@ export class AggregateCreateNodesError extends Error {
 export class MergeNodesError extends Error {
   file: string;
   pluginName: string;
+  pluginIndex: number;
 
   constructor({
     file,
     pluginName,
     error,
+    pluginIndex,
   }: {
     file: string;
     pluginName: string;
     error: Error;
+    pluginIndex?: number;
   }) {
-    const msg = `The nodes created from ${file} by the "${pluginName}" could not be merged into the project graph:`;
+    const msg = `The nodes created from ${file} by the "${pluginName}" could not be merged into the project graph.`;
 
     super(msg, { cause: error });
     this.name = this.constructor.name;
     this.file = file;
     this.pluginName = pluginName;
+    this.pluginIndex = pluginIndex;
     this.stack = `${this.message}\n${indentString(
       formatErrorStackAndCause(error),
       2
