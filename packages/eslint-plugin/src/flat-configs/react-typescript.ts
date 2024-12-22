@@ -11,6 +11,11 @@ import tseslint from 'typescript-eslint';
  * package.
  */
 export default tseslint.config({
+  // Files need to be specified or else typescript-eslint rules will be
+  // applied to non-TS files. For example, libs add rules to *.json
+  // files, and TS rules should not apply to them.
+  // See: https://github.com/nrwl/nx/issues/28245
+  files: ['**/*.ts', '**/*.tsx'],
   rules: {
     // TypeScript"s `noFallthroughCasesInSwitch` option is more robust (#6906)
     'default-case': 'off',
