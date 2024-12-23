@@ -216,6 +216,14 @@ You can have a more dynamic visualization of a terminal output by using the foll
 {% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
 ```
 
+#### Table of Contents
+
+You can add a table of contents to your document by using the following component. This is mostly useful for blog posts.
+
+```markdown
+{% toc /%}
+```
+
 #### Custom iframes
 
 We can display a special iframe and setting its width inside the document.
