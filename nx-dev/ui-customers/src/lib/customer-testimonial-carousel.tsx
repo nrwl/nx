@@ -4,11 +4,21 @@ import { Dialog, Transition } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
-// TODO - move this to a data type file
+// TODO - move these to a data type file
+type GradientCompanies = keyof typeof gradientColours;
+
+const gradientColours = {
+  hetzner: 'from-orange-600/80',
+  caseware: 'from-black/80',
+  siriusxm: 'from-blue-600/60',
+  payfit: 'from-orange-600/60',
+  ukg: 'from-teal-500/60',
+  vmware: 'from-black/80',
+};
 interface Testimonial {
   title: string;
   subtitle: string;
-  accentColor?: string;
+  company: GradientCompanies;
   metrics?: {
     value: string;
     label: string;
@@ -36,7 +46,7 @@ const testimonials: Testimonial[] = [
     ],
     videoId: '2BLqiNnBPuU',
     thumbnail: '/images/customers/video-story-pavlo-grosse.avif',
-    accentColor: 'orange-600',
+    company: 'hetzner',
   },
   {
     title: 'Customer story',
@@ -51,6 +61,7 @@ const testimonials: Testimonial[] = [
     ],
     videoId: 'lvS8HjjFwEM',
     thumbnail: '/images/customers/video-story-caseware.avif',
+    company: 'caseware',
   },
   {
     title: 'Customer story',
@@ -66,6 +77,7 @@ const testimonials: Testimonial[] = [
     },
     videoId: 'Q0ky-8oJcro',
     thumbnail: '/images/customers/video-story-siriusxm.avif',
+    company: 'siriusxm',
   },
   {
     title: 'Customer story',
@@ -80,6 +92,7 @@ const testimonials: Testimonial[] = [
     ],
     videoId: 'Vdk-tza4PCs',
     thumbnail: '/images/customers/video-story-payfit.avif',
+    company: 'payfit',
   },
   {
     title: 'Customer story',
@@ -99,6 +112,7 @@ const testimonials: Testimonial[] = [
     },
     videoId: 'rSC8wihnfP4',
     thumbnail: '/images/customers/video-story-ukg.avif',
+    company: 'ukg',
   },
   {
     title: 'Customer story',
@@ -113,6 +127,7 @@ const testimonials: Testimonial[] = [
     },
     videoId: '6pF5cMl_VcM',
     thumbnail: '/images/customers/video-story-broadcom.avif',
+    company: 'vmware',
   },
 ];
 
@@ -236,11 +251,9 @@ export function CustomerTestimonialCarousel(): JSX.Element {
 
             {/* Gradient Overlay */}
             <div
-              className={`absolute inset-0 bg-gradient-to-t ${
-                currentTestimonial.accentColor
-                  ? `from-${currentTestimonial.accentColor} opacity-60`
-                  : 'from-black/80'
-              } via-black/20 to-transparent`}
+              className={`${
+                gradientColours[currentTestimonial.company]
+              } absolute inset-0 bg-gradient-to-t via-black/20 to-transparent`}
             />
 
             {/* Content Overlay */}
