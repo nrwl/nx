@@ -40,7 +40,7 @@
     "unitTestRunner": {
       "description": "Test runner to use for unit tests.",
       "type": "string",
-      "enum": ["none", "jest"],
+      "enum": ["none", "jest", "vitest"],
       "x-priority": "important"
     },
     "tags": {

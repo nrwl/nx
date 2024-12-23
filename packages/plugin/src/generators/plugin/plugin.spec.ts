@@ -172,9 +172,61 @@ describe('NxPlugin Plugin Generator', () => {
           expect(tree.exists(path)).toBeFalsy()
         );
 
+        ['my-plugin/vite.config.ts'].forEach((path) =>
+          expect(tree.exists(path)).toBeFalsy()
+        );
+
         expect(
           readProjectConfiguration(tree, 'my-plugin').targets.test
         ).not.toBeDefined();
+      });
+    });
+
+    describe('jest', () => {
+      it('should generate test files with jest.config.ts', async () => {
+        await pluginGenerator(
+          tree,
+          getSchema({
+            directory: 'my-plugin',
+            unitTestRunner: 'jest',
+          })
+        );
+
+        ['my-plugin/jest.config.ts'].forEach((path) =>
+          expect(tree.exists(path)).toBeTruthy()
+        );
+
+        const projectTargets = readProjectConfiguration(
+          tree,
+          'my-plugin'
+        ).targets;
+
+        expect(projectTargets.test).toBeDefined();
+        expect(projectTargets.test?.executor).toEqual('@nx/jest:jest');
+      });
+    });
+
+    describe('vitest', () => {
+      it('should generate test files with vite.config.ts', async () => {
+        await pluginGenerator(
+          tree,
+          getSchema({
+            directory: 'my-plugin',
+            unitTestRunner: 'vitest',
+          })
+        );
+
+        ['my-plugin/vite.config.ts'].forEach((path) =>
+          expect(tree.exists(path)).toBeTruthy()
+        );
+
+        const projectTargets = readProjectConfiguration(
+          tree,
+          'my-plugin'
+        ).targets;
+
+        expect(projectTargets.test).toBeDefined();
+        expect(projectTargets.test?.executor).toEqual('@nx/vite:test');
       });
     });
   });
