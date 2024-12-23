@@ -3,7 +3,7 @@ title: Nx Cloud Pipelines Come To Nx Console
 slug: nx-cloud-pipelines-come-to-nx-console
 authors: [Zack DeRose]
 tags: [nx, nx-cloud, nx-console, enterprise]
-cover_image: '/blog/images/2024-11-25/thumbnail.png'
+cover_image: /blog/images/2024-11-25/thumbnail.png
 ---
 
 ## Your CI Pipelines, Now At-A-Glance In Your IDE
@@ -12,7 +12,7 @@ We're in the process of adding a new integration between [Nx Cloud](/nx-cloud), 
 
 Now, once you've [connected your Nx Console to Nx Cloud](https://blog.nrwl.io/nx-console-meets-nx-cloud-d45dc099dc5d), you will have access to a new panel in the console that shows all of your recent CI Pipelines, including those in progress now.
 
-![Nx Cloud Pipeline Panel](/blog/images/2024-11-25/pipeline-panel.png)
+{% video-player src="/documentation/blog/media/nx-console-pipeline-running.mp4" alt="Nx Console CI Pipeline Execution" /%}
 
 This way, you can keep an eye on the status of the pipeline of your latest PR, and always just 1 click away from seeing detailed your results on Nx Cloud.
 
@@ -20,7 +20,7 @@ This way, you can keep an eye on the status of the pipeline of your latest PR, a
 
 In addition to a panel where you can see all of your recent pipelines, you can also receive pop-up notifications when a pipeline completes
 
-![Pipeline Result Notification](/blog/images/2024-11-25/result-notification.png)
+{% video-player src="/documentation/blog/media/nxconsole-ci-completion.mp4" alt="Nx Console CI Completion" /%}
 
 Head to the Nx Console settings to adjust controls on these notifications. This will allow you to adjust notifications to only show for failed runs if you prefer, or to turn off the notifications altogether.
 
@@ -30,9 +30,7 @@ Head to the Nx Console settings to adjust controls on these notifications. This 
 
 We're in the process of landing this on Nx Console for VSCode now - and we're already dog-fooding it on the `nx` and `nx-console` repos. It will be landing in the next few week for all Nx Cloud projects, with the feature landing on Nx Console for JetBrains IDEs to follow soon!
 
-For more on Nx Cloud, check out the Solutions tab above! Nx Cloud is free to get started, so you can [create your free account today](https://cloud.nx.app)!
-
-[![Learn More about Nx Cloud](/blog/images/2024-11-25/learn-more-about-nx-cloud.gif)](/nx-cloud)
+For more on Nx Cloud go to [nx.dev/nx-cloud](/nx-cloud)! Nx Cloud is free to get started, so you can [create your free account today](https://nx.app)!
 
 And if you're not using Nx Console yet, you can get started now with Nx Console available for VSCode and JetBrains IDEs:
 
