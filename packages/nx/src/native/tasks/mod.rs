@@ -5,6 +5,7 @@ mod inputs;
 pub mod task_hasher;
 pub mod types;
 mod utils;
+mod hash_plan_inspector;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod details;

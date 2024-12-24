@@ -3,6 +3,7 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
@@ -13,7 +14,7 @@ use crate::native::workspace::files_hashing::{full_files_hash, selective_files_h
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{config_files, types::NxWorkspaceFiles, workspace_files};
+use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use tracing::{trace, warn};
@@ -227,7 +228,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
         let file_data = self.all_file_data();
-        let globbed_files = config_files::glob_files(&file_data, globs, exclude)?;
+        let globbed_files = glob_files(&file_data, globs, exclude)?;
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
@@ -238,7 +239,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(files, globs, exclude)?.collect::<Vec<_>>();
+        let globbed_files = glob_files(files, globs, exclude)?.collect::<Vec<_>>();
 
         let mut hasher = xxh3::Xxh3::new();
         for file in globbed_files {
