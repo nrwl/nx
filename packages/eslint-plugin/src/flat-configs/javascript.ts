@@ -24,7 +24,7 @@ const isPrettierAvailable =
  */
 export default tseslint.config(
   {
-    files: ['**/*.js', '**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
   },
   {
@@ -40,7 +40,7 @@ export default tseslint.config(
     plugins: { '@typescript-eslint': tseslint.plugin },
   },
   {
-    files: ['**/*.js', '**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',

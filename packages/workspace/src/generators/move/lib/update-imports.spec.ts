@@ -10,6 +10,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { normalizeSchema } from './normalize-schema';
 import { updateImports } from './update-imports';
+import * as tsSolution from '../../../utilities/typescript/ts-solution-setup';
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -528,6 +529,90 @@ export MyExtendedClass extends MyClass {};`
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-source': ['my-destination/src/index.ts'],
       '@proj/my-source/server': ['my-destination/src/server.ts'],
+    });
+  });
+
+  describe('TypeScript project references', () => {
+    beforeEach(() => {
+      jest.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
+      const tsconfigContent = {
+        extends: './tsconfig.base.json',
+        ...readJson(tree, 'tsconfig.base.json'),
+      };
+      tree.write('tsconfig.json', JSON.stringify(tsconfigContent, null, 2));
+
+      const packageJson = readJson(tree, 'package.json');
+      packageJson.workspaces = ['packages/**'];
+      tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    });
+    it('should work with updateImportPath=false', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-source',
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+      const tsconfigJson = readJson(tree, 'tsconfig.json');
+      tsconfigJson.references = [{ path: './packages/my-source' }];
+      tree.write('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+
+      updateImports(
+        tree,
+        await normalizeSchema(
+          tree,
+          {
+            ...schema,
+            updateImportPath: false,
+          },
+          projectConfig
+        ),
+
+        projectConfig
+      );
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./packages/my-source",
+          },
+          {
+            "path": "./my-destination",
+          },
+        ]
+      `);
+    });
+
+    it('should work with updateImportPath=true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-source',
+      });
+
+      const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+      const tsconfigJson = readJson(tree, 'tsconfig.json');
+      tsconfigJson.references = [{ path: './packages/my-source' }];
+      tree.write('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+
+      updateImports(
+        tree,
+        await normalizeSchema(
+          tree,
+          {
+            ...schema,
+          },
+          projectConfig
+        ),
+
+        projectConfig
+      );
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-destination",
+          },
+        ]
+      `);
     });
   });
 });

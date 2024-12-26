@@ -832,6 +832,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "common-tasks",
+        "name": "Common Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/common-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/common-tasks",
+        "tags": ["run-tasks"]
+      },
+      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -1111,6 +1122,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/executors-and-configurations",
+    "tags": ["run-tasks"]
+  },
+  "/concepts/common-tasks": {
+    "id": "common-tasks",
+    "name": "Common Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/common-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/common-tasks",
     "tags": ["run-tasks"]
   },
   "/concepts/nx-daemon": {
@@ -1968,6 +1990,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-run-command",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-nx-cloud",
+            "name": "Nx Cloud Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-nx-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-nx-cloud",
             "tags": ["editor-setup"]
           },
           {
@@ -3732,6 +3765,17 @@
         "tags": ["editor-setup"]
       },
       {
+        "id": "console-nx-cloud",
+        "name": "Nx Cloud Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-nx-cloud",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "console-troubleshooting",
         "name": "Troubleshooting",
         "description": "",
@@ -3789,6 +3833,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-run-command",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-nx-cloud": {
+    "id": "console-nx-cloud",
+    "name": "Nx Cloud Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-nx-cloud",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {

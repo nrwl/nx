@@ -122,10 +122,10 @@ describe('@nx/eslint:lint-file', () => {
     });
 
     it('should add extends to flat config', () => {
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -143,11 +143,11 @@ module.exports = [
 
       addExtendsToLintConfig(tree, 'apps/demo', 'plugin:playwright/recommend');
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -177,10 +177,10 @@ module.exports = [
         packageJson: { name: 'eslint', version: '9.0.0' },
         path: '',
       });
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -201,12 +201,12 @@ module.exports = [
         needCompatFixup: true,
       });
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const { fixupConfigRules } = require("@eslint/compat");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -236,10 +236,10 @@ module.exports = [
         packageJson: { name: 'eslint', version: '9.0.0' },
         path: '',
       });
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -264,12 +264,12 @@ module.exports = [
         { name: 'incompatible-plugin3', needCompatFixup: true },
       ]);
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const { fixupConfigRules } = require("@eslint/compat");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -307,10 +307,10 @@ module.exports = [
         packageJson: { name: 'eslint', version: '8.0.0' },
         path: '',
       });
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -331,11 +331,11 @@ module.exports = [
         needCompatFixup: true,
       });
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,
@@ -362,10 +362,10 @@ module.exports = [
 
   describe('replaceOverridesInLintConfig', () => {
     it('should replace overrides when using flat config', () => {
-      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
-        'apps/demo/eslint.config.js',
-        `const baseConfig = require("../../eslint.config.js");
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
@@ -428,11 +428,11 @@ module.exports = [
         },
       ]);
 
-      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.js");
+        const baseConfig = require("../../eslint.config.cjs");
 
         const compat = new FlatCompat({
           baseDirectory: __dirname,

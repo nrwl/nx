@@ -139,7 +139,7 @@ export interface ProjectMetadata {
   };
   js?: {
     packageName: string;
-    packageExports: undefined | PackageJson['exports'];
+    packageExports?: PackageJson['exports'];
   };
 }
 

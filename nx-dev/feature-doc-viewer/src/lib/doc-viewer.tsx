@@ -96,6 +96,16 @@ export function DocViewer({
           siteName: 'Nx',
           type: 'website',
         }}
+        additionalMetaTags={
+          metadata.keywords
+            ? [
+                {
+                  name: 'keywords',
+                  content: metadata.keywords,
+                },
+              ]
+            : []
+        }
       />
 
       <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">

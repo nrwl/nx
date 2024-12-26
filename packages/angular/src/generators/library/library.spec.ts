@@ -1204,14 +1204,14 @@ describe('lib', () => {
   describe('--linter', () => {
     describe('eslint', () => {
       it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
-        tree.write('eslint.config.js', '');
+        tree.write('eslint.config.cjs', '');
 
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
-        const eslintConfig = tree.read('my-lib/eslint.config.js', 'utf-8');
+        const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
         expect(eslintConfig).toMatchInlineSnapshot(`
           "const nx = require("@nx/eslint-plugin");
-          const baseConfig = require("../eslint.config.js");
+          const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
               ...baseConfig,
@@ -1488,6 +1488,21 @@ describe('lib', () => {
       ).toMatchSnapshot();
       expect(
         tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a valid selector for the standalone component when library name has a slash', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        name: 'auth/common',
+      });
+
+      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(
+          'my-lib/src/lib/auth/common/auth/common.component.ts',
+          'utf-8'
+        )
       ).toMatchSnapshot();
     });
 

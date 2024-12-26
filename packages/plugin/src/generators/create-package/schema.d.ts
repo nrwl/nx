@@ -8,7 +8,7 @@ export interface CreatePackageSchema {
   // options to create cli package, passed to js library generator
   skipFormat?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter | LinterType;
   compiler?: 'swc' | 'tsc';
 
