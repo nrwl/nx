@@ -171,7 +171,9 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
         resolvedFile = matchTsPathFallback?.(importPath);
       }
 
-      if (!resolvedFile) {
+      const resolvedPathExist = existsSync(resolvedFile)
+
+      if (!resolvedPathExist) {
         if (tsConfigPathsEsm || tsConfigPathsFallback) {
           logIt(
             `Unable to resolve ${importPath} with tsconfig paths. Using fallback file matching.`
