@@ -1,3 +1,7 @@
+---
+keywords: [distributed tasks]
+---
+
 # Distribute Task Execution (Nx Agents)
 
 {% youtube

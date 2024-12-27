@@ -1,3 +1,7 @@
+---
+keywords: [build, serve, test, lint]
+---
+
 # Common Tasks
 
 The tasks that are [inferred by plugins](/concepts/inferred-tasks) or that you define in your [project configuration](/reference/project-configuration) can have any name that you want, but it is helpful for developers if you keep your task naming convention consistent across the projects in your repository. This way, if a developer moves from one project to another, they already know how to launch tasks for the new project. Here are some common task names that you can define for your projects.
