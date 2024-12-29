@@ -508,7 +508,7 @@ describe('hostGenerator', () => {
             "moduleResolution": "bundler",
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
-            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -516,6 +516,7 @@ describe('hostGenerator', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",

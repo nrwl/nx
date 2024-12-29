@@ -1,7 +1,13 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
+import {
+  Tree,
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -60,7 +66,7 @@ describe('app', () => {
         });
 
         it('should configure eslint correctly (flat config)', async () => {
-          tree.write('eslint.config.js', '');
+          tree.write('eslint.config.cjs', '');
 
           await applicationGenerator(tree, {
             directory: name,
@@ -68,7 +74,7 @@ describe('app', () => {
           });
 
           expect(
-            tree.read(`${name}/eslint.config.js`, 'utf-8')
+            tree.read(`${name}/eslint.config.cjs`, 'utf-8')
           ).toMatchSnapshot();
         });
 
@@ -194,4 +200,175 @@ describe('app', () => {
       });
     }
   );
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'vitest',
+        linter: 'eslint',
+      });
+
+      expect(tree.read('myapp/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(
+        `null`
+      );
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "composite": true,
+            "jsx": "preserve",
+            "jsxImportSource": "vue",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/myapp",
+            "resolveJsonModule": true,
+            "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            ".nuxt/nuxt.d.ts",
+            "src/**/*",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "composite": true,
+            "jsx": "preserve",
+            "jsxImportSource": "vue",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/vitest",
+            "resolveJsonModule": true,
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            ".nuxt/nuxt.d.ts",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "out-tsc/playwright",
+            "sourceMap": false,
+          },
+          "exclude": [
+            "out-tsc",
+            "test-output",
+            "eslint.config.js",
+            "eslint.config.mjs",
+            "eslint.config.cjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "**/*.ts",
+            "**/*.js",
+            "playwright.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.spec.js",
+            "src/**/*.test.ts",
+            "src/**/*.test.js",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "../myapp",
+            },
+          ],
+        }
+      `);
+    });
+  });
 });

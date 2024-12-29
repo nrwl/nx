@@ -1,15 +1,14 @@
-import { ComponentProps, ReactElement } from 'react';
-import { Button, ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ComponentProps, Fragment, ReactElement, useState } from 'react';
+import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { MovingBorder } from '@nx/nx-dev/ui-animations';
 import { motion } from 'framer-motion';
-import {
-  ArrowDownTrayIcon,
-  PlayIcon,
-  VideoCameraIcon,
-} from '@heroicons/react/24/outline';
+import { PlayIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { VideoModal } from './video-modal';
 
 function PlayButton({
   className,
@@ -64,12 +63,12 @@ function PlayButton({
         initial="initial"
         whileHover="hover"
         variants={parent}
-        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-slate-100 bg-white/10 p-6 text-sm text-white antialiased backdrop-blur-xl"
+        className="relative isolate flex size-20 cursor-pointer items-center justify-center gap-6 rounded-full border-2 border-slate-100 bg-white/10 p-6 text-white antialiased backdrop-blur-xl"
       >
         <PlayIcon aria-hidden="true" className="absolute left-6 top-6 size-8" />
         <motion.div variants={child} className="absolute left-20 top-4 w-48">
           <p className="text-base font-medium">Watch the interview</p>
-          <p># customer story</p>
+          <p className="text-xs">Under 3 minutes.</p>
         </motion.div>
       </motion.div>
     </div>
@@ -77,18 +76,20 @@ function PlayButton({
 }
 
 export function HetznerCloudTestimonial(): ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
       <section
         id="hetzner-cloud-testimonial"
-        className="z-0 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+        className="z-0 mx-auto max-w-7xl scroll-mt-20 px-4 sm:px-6 lg:px-8"
       >
-        <SectionHeading as="h2" variant="title" id="hetzner-cloud-testimonial">
+        <SectionHeading as="h2" variant="title">
           Nx Enterprise{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             speeds build and test times
           </span>{' '}
-          <br />
+          <br className="hidden md:block" />
           as Hetzner Cloud{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             scales up
@@ -96,7 +97,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           product offering
         </SectionHeading>
         <div className="mt-8 md:grid md:grid-cols-2 md:items-center md:gap-10 lg:gap-12">
-          <div className="mb-24 hidden sm:px-6 md:mb-0 md:block">
+          <div className="mb-24 block sm:px-6 md:mb-0">
             <div className="relative">
               <div className="absolute bottom-0 start-0 -translate-x-14 translate-y-10">
                 <svg
@@ -159,16 +160,27 @@ export function HetznerCloudTestimonial(): ReactElement {
                 </svg>
               </div>
 
-              <img
+              <Image
                 src="/images/enterprise/video-story-pavlo-grosse.avif"
-                alt="Avatar"
+                alt="video still"
+                width={960}
+                height={540}
+                loading="lazy"
+                unoptimized
                 className="relative rounded-xl"
               />
 
               <div className="absolute inset-0 grid h-full w-full items-center justify-center">
-                {/*<PlayButton*/}
-                {/*onClick={() => setIsOpen(true)}*/}
-                {/*/>*/}
+                <PlayButton
+                  onClick={() => {
+                    setIsOpen(true);
+                    sendCustomEvent(
+                      'hetzner-cloud-testimonial-video-click',
+                      'hetzner-cloud-testimonial',
+                      'enterprise'
+                    );
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -221,14 +233,22 @@ export function HetznerCloudTestimonial(): ReactElement {
               </figcaption>
 
               <footer className="mt-8 flex items-center gap-6">
-                {/*<Button*/}
-                {/*  title="Watch the customer story"*/}
-                {/*  variant="secondary"*/}
-                {/*  size="small"*/}
-                {/*>*/}
-                {/*  <PlayIcon aria-hidden="true" className="size-5 shrink-0" />*/}
-                {/*  <span>Watch the customer story</span>*/}
-                {/*</Button>*/}
+                <Button
+                  title="Watch the customer story"
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    setIsOpen(true);
+                    sendCustomEvent(
+                      'hetzner-cloud-testimonial-video-click',
+                      'hetzner-cloud-testimonial',
+                      'enterprise'
+                    );
+                  }}
+                >
+                  <PlayIcon aria-hidden="true" className="size-5 shrink-0" />
+                  <span>Watch the customer story</span>
+                </Button>
                 <Link
                   href="/customers"
                   prefetch={false}
@@ -241,6 +261,12 @@ export function HetznerCloudTestimonial(): ReactElement {
           </figure>
         </div>
       </section>
+
+      <VideoModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        videoUrl="https://youtu.be/2BLqiNnBPuU"
+      />
     </div>
   );
 }

@@ -35,7 +35,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
-  isUsingTsSolutionSetup,
+  addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
@@ -107,7 +107,7 @@ export async function reactNativeLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -130,13 +130,17 @@ export async function reactNativeLibraryGeneratorInternal(
       : undefined
   );
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host));
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {
@@ -222,6 +226,10 @@ async function addProject(
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  if (options.isUsingTsSolutionConfig) {
+    return;
+  }
+
   updateJson(
     tree,
     joinPathFragments(options.projectRoot, 'tsconfig.json'),

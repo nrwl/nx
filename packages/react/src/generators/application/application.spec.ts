@@ -15,6 +15,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+
+const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -86,20 +88,31 @@ describe('app', () => {
         addPlugin: true,
       });
 
-      const snapshot = `
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-            
-            import { defineConfig } from 'cypress';
-
-        export default defineConfig({
-          e2e: { ...nxE2EPreset(__filename, {"cypressDir":"src","bundler":"vite","webServerCommands":{"default":"${packageCmd} nx run my-app:serve","production":"${packageCmd} nx run my-app:preview"},"ciWebServerCommand":"${packageCmd} nx run my-app:preview","ciBaseUrl":"http://localhost:4300"}),
-        baseUrl: 'http://localhost:4200' }
-        });
-        "
-      `;
       expect(
         appTree.read('my-app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchInlineSnapshot(snapshot);
+      ).toMatchInlineSnapshot(
+        `
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              "cypressDir": "src",
+              "bundler": "vite",
+              "webServerCommands": {
+                "default": "${packageCmd} nx run my-app:serve",
+                "production": "${packageCmd} nx run my-app:preview"
+              },
+              "ciWebServerCommand": "${packageCmd} nx run my-app:preview",
+              "ciBaseUrl": "http://localhost:4300"
+            }),
+            baseUrl: 'http://localhost:4200'
+          }
+        });
+        "
+      `
+      );
     });
 
     it('should setup playwright correctly for vite', async () => {
@@ -486,6 +499,8 @@ describe('app', () => {
       expect(() => {
         readJson(appTree, `my-app/.babelrc`);
       }).not.toThrow();
+      const content = appTree.read('my-app/src/app/app.tsx').toString();
+      expect(content).toMatchSnapshot();
     }
   );
 
@@ -493,6 +508,8 @@ describe('app', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.module.scss')).toEqual(true);
+      const content = appTree.read('my-app/src/app/app.tsx').toString();
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -508,6 +525,20 @@ describe('app', () => {
         /* You can add global styles to this file, and also import other style files */
         "
       `);
+    });
+
+    it('should not generate any styles files', async () => {
+      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
+
+      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
+      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
+      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
+
+      const content = appTree.read('my-app/src/app/app.tsx').toString();
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -1248,7 +1279,7 @@ describe('app', () => {
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'package.json', (json) => {
-        json.workspaces = ['packages/*', 'apps/*'];
+        json.workspaces = ['packages/**', 'apps/**'];
         return json;
       });
       writeJson(appTree, 'tsconfig.base.json', {
@@ -1313,7 +1344,7 @@ describe('app', () => {
             "moduleResolution": "bundler",
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
-            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1322,6 +1353,7 @@ describe('app', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
@@ -1335,6 +1367,9 @@ describe('app', () => {
             "vite.config.mts",
             "vitest.config.ts",
             "vitest.config.mts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -1391,13 +1426,15 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "outDir": "dist",
+            "outDir": "out-tsc/playwright",
             "sourceMap": false,
-            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
           },
           "exclude": [
-            "dist",
+            "out-tsc",
+            "test-output",
             "eslint.config.js",
+            "eslint.config.mjs",
+            "eslint.config.cjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -1418,5 +1455,104 @@ describe('app', () => {
         }
       `);
     });
+
+    it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'libs/nested1',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'libs/nested2',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.workspaces).toEqual([
+        'packages/**',
+        'apps/**',
+        'myapp',
+        'libs/**',
+      ]);
+    });
+
+    it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      appTree.write('pnpm-workspace.yaml', `packages:`);
+
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'apps/nested1',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+      await applicationGenerator(appTree, {
+        directory: 'apps/nested2',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
+
+      const pnpmContent = appTree.read('pnpm-workspace.yaml', 'utf-8');
+      const pnpmWorkspaceFile = load(pnpmContent);
+
+      expect(pnpmWorkspaceFile.packages).toEqual(['myapp', 'apps/**']);
+    });
+  });
+
+  describe('--bundler=rsbuild', () => {
+    it.each([
+      { style: 'styled-components' },
+      { style: 'styled-jsx' },
+      { style: '@emotion/styled' },
+    ])(
+      `should generate valid rsbuild config files for $style`,
+      async ({ style }) => {
+        await applicationGenerator(appTree, {
+          ...schema,
+          bundler: 'rsbuild',
+          style: style as any,
+        });
+
+        const content = appTree.read('my-app/src/app/app.tsx').toString();
+        expect(content).toMatchSnapshot();
+        const configContents = appTree
+          .read('my-app/rsbuild.config.ts')
+          .toString();
+        expect(configContents).toMatchSnapshot();
+      }
+    );
   });
 });

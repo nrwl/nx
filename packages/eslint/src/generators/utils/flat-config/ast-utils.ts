@@ -1002,12 +1002,40 @@ export function generateFlatOverride(
   }
 
   // At this point we are applying the flat config compat tooling to the override
-  const { excludedFiles, parser, parserOptions, rules, files, ...rest } =
+  let { excludedFiles, parser, parserOptions, rules, files, ...rest } =
     override;
 
   const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
     ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
   ];
+
+  // If converting the JS rule, then we need to match ESLint default and also include .cjs and .mjs files.
+  if (
+    (Array.isArray(rest.extends) &&
+      rest.extends.includes('plugin:@nx/javascript')) ||
+    rest.extends === 'plugin:@nx/javascript'
+  ) {
+    const newFiles = new Set(files);
+    newFiles.add('**/*.js');
+    newFiles.add('**/*.jsx');
+    newFiles.add('**/*.cjs');
+    newFiles.add('**/*.mjs');
+    files = Array.from(newFiles);
+  }
+  // If converting the TS rule, then we need to match ESLint default and also include .cts and .mts files.
+  if (
+    (Array.isArray(rest.extends) &&
+      rest.extends.includes('plugin:@nx/typescript')) ||
+    rest.extends === 'plugin:@nx/typescript'
+  ) {
+    const newFiles = new Set(files);
+    newFiles.add('**/*.ts');
+    newFiles.add('**/*.tsx');
+    newFiles.add('**/*.cts');
+    newFiles.add('**/*.mts');
+    files = Array.from(newFiles);
+  }
+
   addTSObjectProperty(objectLiteralElements, 'files', files);
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
 

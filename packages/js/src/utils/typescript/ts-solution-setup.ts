@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
-import { relative } from 'node:path/posix';
+import { basename, dirname, join, relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -98,7 +98,9 @@ export function assertNotUsingTsSolutionSetup(
     ],
   });
 
-  process.exit(1);
+  throw new Error(
+    `The ${artifactString} doesn't yet support the existing TypeScript setup. See the error above.`
+  );
 }
 
 export function findRuntimeTsConfigName(
@@ -141,8 +143,24 @@ export function updateTsconfigFiles(
         ...compilerOptions,
       };
 
+      if (rootDir && rootDir !== '.') {
+        // when rootDir is different from '.', the tsbuildinfo file is output
+        // at `<outDir>/<relative path to config from rootDir>/`, so we need
+        // to set it explicitly to ensure it's output to the outDir
+        // https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile
+        json.compilerOptions.tsBuildInfoFile = join(
+          'out-tsc',
+          projectRoot.split('/').at(-1),
+          basename(runtimeTsconfigFileName, '.json') + '.tsbuildinfo'
+        );
+      } else if (json.compilerOptions.tsBuildInfoFile) {
+        // when rootDir is '.' or not set, it would be output to the outDir, so
+        // we don't need to set it explicitly
+        delete json.compilerOptions.tsBuildInfoFile;
+      }
+
       const excludeSet: Set<string> = json.exclude
-        ? new Set(['dist', ...json.exclude, ...exclude])
+        ? new Set(['out-tsc', 'dist', ...json.exclude, ...exclude])
         : new Set(exclude);
       json.exclude = Array.from(excludeSet);
 
@@ -184,5 +202,43 @@ export function updateTsconfigFiles(
         json.references.push({ path: projectPath });
       return json;
     });
+  }
+}
+
+export function addProjectToTsSolutionWorkspace(
+  tree: Tree,
+  projectDir: string
+) {
+  // If dir is "libs/foo" then use "libs/**" so we don't need so many entries in the workspace file.
+  // If the dir is just "foo" then we have to add it as is.
+  const baseDir = dirname(projectDir);
+  const pattern = baseDir === '.' ? projectDir : `${baseDir}/**`;
+  if (tree.exists('pnpm-workspace.yaml')) {
+    const { load, dump } = require('@zkochan/js-yaml');
+    const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
+    const yamlData = load(workspaceFile);
+
+    if (!yamlData?.packages) {
+      yamlData.packages = [];
+    }
+
+    if (!yamlData.packages.includes(pattern)) {
+      yamlData.packages.push(pattern);
+      tree.write(
+        'pnpm-workspace.yaml',
+        dump(yamlData, { indent: 2, quotingType: '"', forceQuotes: true })
+      );
+    }
+  } else {
+    // Update package.json
+    const packageJson = readJson(tree, 'package.json');
+    if (!packageJson.workspaces) {
+      packageJson.workspaces = [];
+    }
+
+    if (!packageJson.workspaces.includes(pattern)) {
+      packageJson.workspaces.push(pattern);
+      tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    }
   }
 }

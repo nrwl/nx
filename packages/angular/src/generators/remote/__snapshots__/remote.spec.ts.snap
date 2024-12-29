@@ -125,7 +125,7 @@ export default AppServerModule;
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `
-"import('./src/main.server');
+"import('./main.server');
 "
 `;
 
@@ -357,7 +357,7 @@ export default AppServerModule;
 "
 `;
 
-exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./src/main.server');"`;
+exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./main.server');"`;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 6`] = `
 "import { ModuleFederationConfig } from '@nx/module-federation';

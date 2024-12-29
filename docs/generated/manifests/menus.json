@@ -607,6 +607,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Common Tasks",
+            "path": "/concepts/common-tasks",
+            "id": "common-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Daemon",
             "path": "/concepts/nx-daemon",
             "id": "nx-daemon",
@@ -807,6 +815,14 @@
         "name": "Executors and Configurations",
         "path": "/concepts/executors-and-configurations",
         "id": "executors-and-configurations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Common Tasks",
+        "path": "/concepts/common-tasks",
+        "id": "common-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1434,6 +1450,14 @@
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Cloud Integration",
+                "path": "/recipes/nx-console/console-nx-cloud",
+                "id": "console-nx-cloud",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2724,6 +2748,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud Integration",
+            "path": "/recipes/nx-console/console-nx-cloud",
+            "id": "console-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Troubleshooting",
             "path": "/recipes/nx-console/console-troubleshooting",
             "id": "console-troubleshooting",
@@ -2762,6 +2794,14 @@
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud Integration",
+        "path": "/recipes/nx-console/console-nx-cloud",
+        "id": "console-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -9899,6 +9939,14 @@
                 "id": "init",
                 "path": "/nx-api/rsbuild/generators/init",
                 "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "configuration",
+                "path": "/nx-api/rsbuild/generators/configuration",
+                "name": "configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

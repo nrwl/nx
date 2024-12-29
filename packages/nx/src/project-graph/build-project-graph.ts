@@ -44,6 +44,7 @@ import {
   ConfigurationSourceMaps,
   mergeMetadata,
 } from './utils/project-configuration-utils';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -313,14 +314,52 @@ async function updateProjectGraphWithPlugins(
     (plugin) => plugin.createDependencies
   );
   performance.mark('createDependencies:start');
+
+  let spinner: DelayedSpinner;
+  const inProgressPlugins = new Set<string>();
+
+  function updateSpinner() {
+    if (!spinner || inProgressPlugins.size === 0) {
+      return;
+    }
+
+    if (inProgressPlugins.size === 1) {
+      spinner.setMessage(
+        `Creating project graph dependencies with ${
+          inProgressPlugins.values().next().value
+        }`
+      );
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      spinner.setMessage(
+        [
+          `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
+    } else {
+      spinner.setMessage(
+        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`
+      );
+    }
+  }
+
+  spinner = new DelayedSpinner(
+    `Creating project graph dependencies with ${plugins.length} plugins`
+  );
+
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
-
+      inProgressPlugins.add(plugin.name);
       try {
-        const dependencies = await plugin.createDependencies({
-          ...context,
-        });
+        const dependencies = await plugin
+          .createDependencies({
+            ...context,
+          })
+          .finally(() => {
+            inProgressPlugins.delete(plugin.name);
+            updateSpinner();
+          });
 
         for (const dep of dependencies) {
           builder.addDependency(
@@ -352,6 +391,7 @@ async function updateProjectGraphWithPlugins(
     `createDependencies:start`,
     `createDependencies:end`
   );
+  spinner?.cleanup();
 
   const graphWithDeps = builder.getUpdatedProjectGraph();
 
@@ -396,15 +436,50 @@ export async function applyProjectMetadata(
   const errors: CreateMetadataError[] = [];
 
   performance.mark('createMetadata:start');
+  let spinner: DelayedSpinner;
+  const inProgressPlugins = new Set<string>();
+
+  function updateSpinner() {
+    if (!spinner || inProgressPlugins.size === 0) {
+      return;
+    }
+
+    if (inProgressPlugins.size === 1) {
+      spinner.setMessage(
+        `Creating project metadata with ${
+          inProgressPlugins.values().next().value
+        }`
+      );
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      spinner.setMessage(
+        [
+          `Creating project metadata with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
+    } else {
+      spinner.setMessage(
+        `Creating project metadata with ${inProgressPlugins.size} plugins`
+      );
+    }
+  }
+
+  spinner = new DelayedSpinner(
+    `Creating project metadata with ${plugins.length} plugins`
+  );
+
   const promises = plugins.map(async (plugin) => {
     if (plugin.createMetadata) {
       performance.mark(`${plugin.name}:createMetadata - start`);
+      inProgressPlugins.add(plugin.name);
       try {
         const metadata = await plugin.createMetadata(graph, context);
         results.push({ metadata, pluginName: plugin.name });
       } catch (e) {
         errors.push(new CreateMetadataError(e, plugin.name));
       } finally {
+        inProgressPlugins.delete(plugin.name);
+        updateSpinner();
         performance.mark(`${plugin.name}:createMetadata - end`);
         performance.measure(
           `${plugin.name}:createMetadata`,
@@ -416,6 +491,8 @@ export async function applyProjectMetadata(
   });
 
   await Promise.all(promises);
+
+  spinner?.cleanup();
 
   for (const { metadata: projectsMetadata, pluginName } of results) {
     for (const project in projectsMetadata) {

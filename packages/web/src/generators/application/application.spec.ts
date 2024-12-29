@@ -184,7 +184,6 @@ describe('app', () => {
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
@@ -217,7 +216,6 @@ describe('app', () => {
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
         import { defineConfig } from 'cypress';
 
         export default defineConfig({

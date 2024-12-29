@@ -31,8 +31,10 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -142,10 +144,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   } else if (options.buildable && options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
     tasks.push(rollupTask);
-  } else if (options.bundler === 'none' && options.addPlugin) {
-    const nxJson = readNxJson(host);
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
-    updateNxJson(host, nxJson);
   }
 
   // Set up test target
@@ -280,13 +278,16 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       : undefined
   );
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host));
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {

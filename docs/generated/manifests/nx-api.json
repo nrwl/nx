@@ -2909,6 +2909,15 @@
         "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
         "path": "/nx-api/rsbuild/generators/init",
         "type": "generator"
+      },
+      "/nx-api/rsbuild/generators/configuration": {
+        "description": "Add an Rsbuild configuration for the provided project.",
+        "file": "generated/packages/rsbuild/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/rsbuild/src/generators/configuration/schema.json",
+        "path": "/nx-api/rsbuild/generators/configuration",
+        "type": "generator"
       }
     },
     "path": "/nx-api/rsbuild"

@@ -43,7 +43,7 @@ export async function initGeneratorInternal(
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
-      '@nx/rsbuild/plugin',
+      '@nx/rsbuild',
       createNodesV2,
       {
         buildTargetName: ['build', 'rsbuild:build', 'rsbuild-build'],

@@ -4,6 +4,7 @@ import {
   joinPathFragments,
   logger,
   offsetFromRoot,
+  readCachedProjectGraph,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -577,7 +578,7 @@ export function createProjectStorybookDir(
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
   viteConfigFileName?: string,
-  useReactNative?: boolean
+  usesReactNative?: boolean
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -622,7 +623,7 @@ export function createProjectStorybookDir(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
-    useReactNative,
+    usesReactNative,
   });
 
   if (js) {
@@ -739,13 +740,14 @@ export function findNextConfig(
   }
 }
 
-export function findMetroConfig(
-  tree: Tree,
-  projectRoot: string
-): string | undefined {
-  const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
-  if (tree.exists(nextConfigPath)) {
-    return nextConfigPath;
+export function isUsingReactNative(projectName: string): boolean {
+  try {
+    const projectGraph = readCachedProjectGraph();
+    return projectGraph?.dependencies?.[projectName]?.some(
+      (dep) => dep.target === 'npm:react-native'
+    );
+  } catch {
+    return false;
   }
 }
 
