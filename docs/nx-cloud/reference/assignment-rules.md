@@ -70,23 +70,23 @@ assignment-rules:
 
 A typical `assignment-rules.yaml` file might look like this:
 
-```yaml
+```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
 assignment-rules:
   - project: app1
     target: build
     configuration: production
     runs-on:
-      - linux-large-js
-      - linux-medium-js
+      - linux-large
+      - linux-medium
 
   - target: lint
     runs-on:
-      - linux-medium-js
+      - linux-medium
 
   - configuration: development
     runs-on:
-      - linux-medium-js
-      - linux-large-js
+      - linux-medium
+      - linux-large
 ```
 
 Note that the labels supplied in the `runs-ons` property will be used to determine which agents will have rules applied to them. When using self-hosted agents, you must supply these labels to your agents via an environment variable: `NX_AGENT_LAUNCH_TEMPLATE`.
@@ -99,8 +99,55 @@ npx nx-cloud start-ci-run --assignment-rules='.nx/workflows/assignment-rules.yam
 
 The following is an example of what this looks like within a github actions pipeline:
 
-```angular2html
+```yaml {% fileName=".github/workflows/ci.yaml" %}
+...
+jobs:
+  main:
+    displayName: Main Job
+    ...
+    steps:
+      ...
+      - run: npx nx-cloud start-ci-run --assignment-rules=.nx/workflows/assignment-rules.yaml --stop-agents-after="e2e-ci"
+      - ..
 
+  medium-agents:
+    displayName: Agents ${{ matrix.agent }}
+    runs-on:
+      group: medium-agents
+    strategy:
+      matrix:
+        agent: [1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      ...
+
+      - name: Start Agent ${{ matrix.agent }}
+        run: npx nx-cloud start-agent
+        env:
+          NX_AGENT_NAME: ${{ matrix.agent }}
+          NX_AGENT_LAUNCH_TEMPLATE: "linux-medium" # This value needs to match one of the 'runs-on' values defined in the assignment rules
+
+  large-agents:
+    displayName: Agents ${{ matrix.agent }}
+    runs-on:
+      group: large-agents
+    strategy:
+      matrix:
+        agent: [1, 2, 3]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      ... # other setup steps
+
+      - name: Start Agent ${{ matrix.agent }}
+        run: npx nx-cloud start-agent
+        env:
+          NX_AGENT_NAME: ${{ matrix.agent }}
+          NX_AGENT_LAUNCH_TEMPLATE: "linux-large" # This value needs to match one of the 'runs-on' values defined in the assignment rules
 ```
 
 ## Using Assignment Rules with Dynamic Nx Agents
