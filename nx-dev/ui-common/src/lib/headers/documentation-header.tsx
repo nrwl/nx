@@ -1,7 +1,6 @@
 'use client';
-import { Fragment, type JSX } from 'react';
-
-import { GitHubIcon } from '@nx/nx-dev/ui-icons';
+import { Fragment, ReactElement } from 'react';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
@@ -13,21 +12,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
 import { Popover, Transition } from '@headlessui/react';
-import { TwoColumnsMenu } from './two-columns-menu';
-import {
-  companyItems,
-  eventItems,
-  featuresItems,
-  learnItems,
-  ossProducts,
-  resourceMenuItems,
-  productsMenuItems,
-} from './menu-items';
+import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
-function Menu({ tabs }: { tabs: any[] }): JSX.Element {
+function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
     <div className="hidden sm:block">
       <nav
@@ -62,7 +51,7 @@ export function DocumentationHeader({
 }: {
   isNavOpen: boolean;
   toggleNav: (value: boolean) => void;
-}): JSX.Element {
+}): ReactElement {
   const router = useRouter();
   let routerPath = router.asPath;
   const isCI: boolean = routerPath.startsWith('/ci');
@@ -338,12 +327,12 @@ export function DocumentationHeader({
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
             <ButtonLink
-              href="/nx-cloud"
+              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
               title="Try Nx Cloud for free"
               variant="primary"
               size="small"
             >
-              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudAnimatedIcon className="size-4" aria-hidden="true" />
               <span>Try Nx Cloud for free</span>
             </ButtonLink>
           </nav>
