@@ -1,24 +1,20 @@
 'use client';
-import { Fragment, useState, useRef, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-
-// TODO - move these to a data type file
-type GradientCompanies = keyof typeof gradientColours;
-
-const gradientColours = {
-  hetzner: 'from-orange-600/80',
-  caseware: 'from-black/80',
-  siriusxm: 'from-blue-600/60',
-  payfit: 'from-orange-600/60',
-  ukg: 'from-teal-500/60',
-  vmware: 'from-black/80',
-};
+import {
+  CasewareIcon,
+  HetznerCloudIcon,
+  PayfitIcon,
+  SiriusxmIcon,
+  UkgIcon,
+  VmwareIcon,
+} from '@nx/nx-dev/ui-icons';
+import SlidingLogos from './sliding-logos';
 interface Testimonial {
   title: string;
   subtitle: string;
-  company: GradientCompanies;
   metrics?: {
     value: string;
     label: string;
@@ -28,12 +24,21 @@ interface Testimonial {
     author: {
       name: string;
       role: string;
-      company: string;
     };
   };
+  company: string;
   videoId: string;
   thumbnail: string;
 }
+
+const featuredLogos = [
+  { SVGComponent: HetznerCloudIcon, height: 'h-10', width: 'w-10' },
+  { SVGComponent: CasewareIcon, height: 'h-12', width: 'w-12' },
+  { SVGComponent: SiriusxmIcon, height: 'h-32', width: 'w-32' },
+  { SVGComponent: PayfitIcon, height: 'h-16', width: 'w-16' },
+  { SVGComponent: UkgIcon, height: 'h-20', width: 'w-20' },
+  { SVGComponent: VmwareIcon, height: 'h-28', width: 'w-28' },
+];
 
 const testimonials: Testimonial[] = [
   {
@@ -44,9 +49,9 @@ const testimonials: Testimonial[] = [
       { value: 'Faster CI', label: 'More projects, less time' },
       { value: 'Seconds', label: 'From 20min CI to instant builds' },
     ],
+    company: 'Hetzner',
     videoId: '2BLqiNnBPuU',
     thumbnail: '/images/customers/video-story-pavlo-grosse.avif',
-    company: 'hetzner',
   },
   {
     title: 'Customer story',
@@ -59,9 +64,9 @@ const testimonials: Testimonial[] = [
         label: 'Unified workflows: frontend to backend',
       },
     ],
+    company: 'Casware',
     videoId: 'lvS8HjjFwEM',
     thumbnail: '/images/customers/video-story-caseware.avif',
-    company: 'caseware',
   },
   {
     title: 'Customer story',
@@ -72,12 +77,11 @@ const testimonials: Testimonial[] = [
       author: {
         name: 'Justin Schwartzenberger',
         role: 'Principal Software Engineer',
-        company: 'SiriusXM',
       },
     },
+    company: 'SiriusXM',
     videoId: 'Q0ky-8oJcro',
     thumbnail: '/images/customers/video-story-siriusxm.avif',
-    company: 'siriusxm',
   },
   {
     title: 'Customer story',
@@ -90,9 +94,9 @@ const testimonials: Testimonial[] = [
         label: 'Nx Agents handle the load, automatically',
       },
     ],
+    company: 'Payfit',
     videoId: 'Vdk-tza4PCs',
     thumbnail: '/images/customers/video-story-payfit.avif',
-    company: 'payfit',
   },
   {
     title: 'Customer story',
@@ -107,12 +111,11 @@ const testimonials: Testimonial[] = [
       author: {
         name: 'Sid Govindaraju',
         role: 'Engineering Manager',
-        company: 'UKG',
       },
     },
+    company: 'UKG',
     videoId: 'rSC8wihnfP4',
     thumbnail: '/images/customers/video-story-ukg.avif',
-    company: 'ukg',
   },
   {
     title: 'Customer story',
@@ -122,64 +125,40 @@ const testimonials: Testimonial[] = [
       author: {
         name: 'Laurent Delamare',
         role: 'Frontend Architect',
-        company: 'Broadcom (VMware)',
       },
     },
+    company: 'Broadcom (VMware)',
     videoId: '6pF5cMl_VcM',
     thumbnail: '/images/customers/video-story-broadcom.avif',
-    company: 'vmware',
   },
 ];
 
 export function CustomerTestimonialCarousel(): JSX.Element {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [isBelowMd, setIsBelowMd] = useState(false);
   const currentTestimonial = testimonials[currentIndex];
-  const ulRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-
-    const handleResize = () => {
-      setIsBelowMd(mediaQuery.matches);
-    };
-
-    // Initial check
-    handleResize();
-
-    // Attach listener
-    mediaQuery.addEventListener('change', handleResize);
-
-    return () => {
-      // Clean up listener
-      mediaQuery.removeEventListener('change', handleResize);
-    };
-  }, []);
+  const slideLogoTimeOut = 12000;
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
 
-    if (isBelowMd) {
-      timer = setInterval(() => {
-        setCurrentIndex((currentIndex + 1) % testimonials.length);
-      }, 7000);
-    } else if (timer) {
-      clearInterval(timer);
-    }
+    timer = setInterval(() => {
+      setCurrentIndex((currentIndex + 1) % testimonials.length);
+    }, slideLogoTimeOut);
 
     return () => {
       if (timer) {
         clearInterval(timer);
       }
     };
-  }, [isBelowMd, setCurrentIndex, currentIndex]);
+  }, [setCurrentIndex, currentIndex]);
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-6 md:gap-4">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
         {/* Left side - Quote or Metrics */}
-        <div className="col-span-2 hidden md:block">
+        <div className="col-span hidden md:block">
           {currentTestimonial.quote ? (
             <figure className="flex h-full flex-col justify-center">
               <blockquote className="relative">
@@ -212,7 +191,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
                     </div>
                     <div className="text-sm text-slate-600 dark:text-slate-500">
                       {currentTestimonial.quote.author.role},{' '}
-                      {currentTestimonial.quote.author.company}
+                      {currentTestimonial.company}
                     </div>
                   </div>
                 </figcaption>
@@ -235,9 +214,9 @@ export function CustomerTestimonialCarousel(): JSX.Element {
         </div>
 
         {/* Right side - Video Card */}
-        <div className="col-span-2 md:col-span-4">
+        <div className="col-span-2 md:col-span-3">
           <div
-            className="group relative cursor-pointer overflow-hidden rounded-lg shadow-lg"
+            className="group relative cursor-pointer overflow-hidden rounded-lg xl:[box-shadow:0_50px_100px_-20px_rgba(50,50,93,0.25),_0_30px_60px_-30px_rgba(0,0,0,0.3)] "
             onClick={() => setIsOpen(true)}
           >
             {/* Thumbnail */}
@@ -250,11 +229,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
             />
 
             {/* Gradient Overlay */}
-            <div
-              className={`${
-                gradientColours[currentTestimonial.company]
-              } absolute inset-0 bg-gradient-to-t via-black/20 to-transparent`}
-            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 from-25% via-black/20" />
 
             {/* Content Overlay */}
             <div className="absolute bottom-0 left-0 p-8">
@@ -269,7 +244,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
           </div>
 
           {/* Mobile Navigation display dots */}
-          <ul ref={ulRef} className="mt-4 flex justify-center gap-2 md:hidden">
+          <ul className="mt-4 flex justify-center gap-2 md:hidden">
             {testimonials.map((_, index) => (
               <li
                 key={index}
@@ -281,6 +256,15 @@ export function CustomerTestimonialCarousel(): JSX.Element {
               />
             ))}
           </ul>
+
+          <div className="hidden gap-2 py-16 md:flex">
+            <SlidingLogos
+              logos={featuredLogos}
+              logoTimeOut={slideLogoTimeOut}
+              currentLogoIndex={currentIndex}
+              setCurrentLogoIndex={setCurrentIndex}
+            />
+          </div>
         </div>
       </div>
 
