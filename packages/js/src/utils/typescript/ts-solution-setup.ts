@@ -183,17 +183,6 @@ export function updateTsconfigFiles(
     });
   }
 
-  if (tree.exists(tsconfigE2E)) {
-    // tsconfig.json for e2e projects need to have references array
-    updateJson(tree, tsconfigE2E, (json) => {
-      json.references ??= [];
-      const projectPath = relative(e2eRoot, projectRoot);
-      if (!json.references.some((x) => x.path === projectPath))
-        json.references.push({ path: projectPath });
-      return json;
-    });
-  }
-
   if (tree.exists('tsconfig.json')) {
     updateJson(tree, 'tsconfig.json', (json) => {
       const projectPath = './' + projectRoot;
