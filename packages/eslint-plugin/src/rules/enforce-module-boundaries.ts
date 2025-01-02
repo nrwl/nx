@@ -51,7 +51,7 @@ import {
   stringifyTags,
 } from '../utils/runtime-lint-utils';
 
-type Options = [
+export type Options = [
   {
     allow: string[];
     buildTargets: string[];
