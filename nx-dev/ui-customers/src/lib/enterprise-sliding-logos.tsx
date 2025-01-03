@@ -1,36 +1,29 @@
-import { useState, useEffect, SVGProps, FC } from 'react';
+import { SVGProps, FC } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
-interface SlidingLogosProps {
+interface EnterpriseSlidingLogosProps {
   logos: {
     SVGComponent: FC<SVGProps<SVGSVGElement>>;
     height: string;
     width: string;
   }[];
-  logoTimeOut?: number;
   currentLogoIndex?: number;
+  isFirstSetVisible?: boolean;
   setCurrentLogoIndex?: (index: number) => void;
 }
 
-const SlidingLogos: FC<SlidingLogosProps> = ({
+const EnterpriseSlidingLogos: FC<EnterpriseSlidingLogosProps> = ({
   logos,
-  logoTimeOut = 12000,
   currentLogoIndex,
+  isFirstSetVisible,
   setCurrentLogoIndex = () => {},
 }) => {
-  const [isFirstSet, setIsFirstSet] = useState(true);
-
-  // Update this effect to depend on the `currentLogoIndex` prop its best to use the passed down prop which is updated already based on a timer in the parent component
-  // Ideal use-case is to only use 1 timer to manage the same functionality
-  useEffect(() => {
-    const logoCount = logos.length || 1; // Avoid division by zero
-    const SLIDE_INTERVAL = Math.max((logoCount / 2) * logoTimeOut, 12000);
-    const _interval = setInterval(() => {
-      setIsFirstSet((prev) => !prev);
-    }, SLIDE_INTERVAL);
-
-    return () => clearInterval(_interval);
-  }, [logos, logoTimeOut]);
+  function updateCurrentLogoIndex(index: number, set: number) {
+    // If it is the second set we need to add half of the length to set the index correctly
+    set > 1
+      ? setCurrentLogoIndex(index + logos.length / 2)
+      : setCurrentLogoIndex(index);
+  }
 
   if (!logos.length) {
     return <></>;
@@ -56,8 +49,8 @@ const SlidingLogos: FC<SlidingLogosProps> = ({
 
   return (
     <div className="relative h-full w-full">
-      <AnimatePresence initial={false} custom={isFirstSet ? 1 : -1}>
-        {isFirstSet ? (
+      <AnimatePresence initial={false} custom={isFirstSetVisible ? 1 : -1}>
+        {isFirstSetVisible ? (
           <motion.div
             key="first"
             custom={1}
@@ -70,10 +63,12 @@ const SlidingLogos: FC<SlidingLogosProps> = ({
           >
             {logoSet1.map(({ SVGComponent, height, width }, i) => (
               <button
-                onClick={() => setCurrentLogoIndex(i)}
+                onClick={() => updateCurrentLogoIndex(i, 1)}
                 key={`firstSet-logo-${i}`}
-                className={`relative flex h-full w-full items-center justify-center ${
-                  i === currentLogoIndex ? 'text-slate-950' : ''
+                className={`relative flex h-full w-full items-center justify-center transition-all ${
+                  i === currentLogoIndex
+                    ? 'text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-300'
+                    : 'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
                 }`}
               >
                 <SVGComponent
@@ -96,12 +91,12 @@ const SlidingLogos: FC<SlidingLogosProps> = ({
           >
             {logoSet2.map(({ SVGComponent, height, width }, i) => (
               <button
-                onClick={() => setCurrentLogoIndex(i)}
+                onClick={() => updateCurrentLogoIndex(i, 2)}
                 key={`secondSet-logo-${i}`}
-                className={`relative flex items-center justify-center ${
+                className={`relative flex items-center justify-center transition-all ${
                   i + logoSet2.length === currentLogoIndex
-                    ? 'text-slate-950'
-                    : ''
+                    ? 'text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-300'
+                    : 'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
                 }`}
               >
                 <SVGComponent
@@ -117,4 +112,4 @@ const SlidingLogos: FC<SlidingLogosProps> = ({
   );
 };
 
-export default SlidingLogos;
+export default EnterpriseSlidingLogos;
