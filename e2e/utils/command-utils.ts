@@ -375,16 +375,21 @@ export function runCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
+    const isVerbose = opts.verbose ?? isVerboseE2ERun();
     const commandToRun = `${pm.runNxSilent} ${command} ${
-      opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+      isVerbose ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
+    const env = {
+      CI: 'true',
+      ...getStrippedEnvironmentVariables(),
+      ...opts.env,
+    };
+    if (!isVerbose && env['NX_VERBOSE_LOGGING'] === 'true') {
+      delete env['NX_VERBOSE_LOGGING'];
+    }
     const logs = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
-      env: {
-        CI: 'true',
-        ...getStrippedEnvironmentVariables(),
-        ...opts.env,
-      },
+      env,
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
