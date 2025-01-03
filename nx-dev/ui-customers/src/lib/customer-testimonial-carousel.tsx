@@ -1,7 +1,11 @@
 'use client';
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { PlayIcon } from '@heroicons/react/24/outline';
+import {
+  PlayIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import {
   CasewareIcon,
@@ -11,7 +15,7 @@ import {
   UkgIcon,
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
-import SlidingLogos from './sliding-logos';
+import EnterpriseSlidingLogos from './enterprise-sliding-logos';
 interface Testimonial {
   title: string;
   subtitle: string;
@@ -64,7 +68,7 @@ const testimonials: Testimonial[] = [
         label: 'Unified workflows: frontend to backend',
       },
     ],
-    company: 'Casware',
+    company: 'Caseware',
     videoId: 'lvS8HjjFwEM',
     thumbnail: '/images/customers/video-story-caseware.avif',
   },
@@ -136,29 +140,37 @@ const testimonials: Testimonial[] = [
 export function CustomerTestimonialCarousel(): JSX.Element {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isFirstSetVisible, setIsFirstSetVisible] = useState(true);
   const currentTestimonial = testimonials[currentIndex];
-
-  const slideLogoTimeOut = 12000;
+  const slideLogoTimeOut = 12000; // 12 seconds
 
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    let timer: NodeJS.Timeout;
+
+    // Update the visibility of the first set of logos since the current index changed
+    setIsFirstSetVisible(currentIndex < testimonials.length / 2);
+
+    // Clear the current timer and start a new one
 
     timer = setInterval(() => {
-      setCurrentIndex((currentIndex + 1) % testimonials.length);
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % testimonials.length;
+        setIsFirstSetVisible(nextIndex < testimonials.length / 2);
+        return nextIndex;
+      });
     }, slideLogoTimeOut);
 
+    // Cleanup on unmount or when dependencies change
     return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
+      clearInterval(timer);
     };
-  }, [setCurrentIndex, currentIndex]);
+  }, [currentIndex, setCurrentIndex]);
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
         {/* Left side - Quote or Metrics */}
-        <div className="col-span hidden md:block">
+        <div className="col-span hidden lg:block">
           {currentTestimonial.quote ? (
             <figure className="flex h-full flex-col justify-center">
               <blockquote className="relative">
@@ -215,32 +227,72 @@ export function CustomerTestimonialCarousel(): JSX.Element {
 
         {/* Right side - Video Card */}
         <div className="col-span-2 md:col-span-3">
-          <div
-            className="group relative cursor-pointer overflow-hidden rounded-lg xl:[box-shadow:0_50px_100px_-20px_rgba(50,50,93,0.25),_0_30px_60px_-30px_rgba(0,0,0,0.3)] "
-            onClick={() => setIsOpen(true)}
-          >
-            {/* Thumbnail */}
-            <Image
-              src={currentTestimonial.thumbnail}
-              alt={currentTestimonial.title}
-              width={1200}
-              height={675}
-              className="aspect-video w-full object-cover transition duration-300 group-hover:scale-105"
-            />
+          <div className="flex items-center gap-4">
+            {/* Prev Button */}
+            <button
+              disabled={currentIndex === 0}
+              title={`See ${testimonials[currentIndex - 1]?.company} again!`}
+              className="hidden h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:flex dark:hover:text-white"
+              onClick={() => {
+                setCurrentIndex(
+                  (currentIndex - 1 + testimonials.length) % testimonials.length
+                );
+              }}
+            >
+              <ChevronLeftIcon className="h-8 w-8" />
+            </button>
+            <div
+              className="group relative h-[450px] w-full cursor-pointer self-stretch overflow-hidden rounded-lg xl:shadow-2xl"
+              onClick={() => setIsOpen(true)}
+            >
+              {/* Thumbnail */}
+              <Image
+                quality={100}
+                src={currentTestimonial.thumbnail}
+                alt={currentTestimonial.title}
+                fill
+                className="mb-4 aspect-video h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              />
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 from-25% via-black/20" />
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 from-25% via-black/20" />
 
-            {/* Content Overlay */}
-            <div className="absolute bottom-0 left-0 p-8">
-              <h3 className="text-xl font-semibold text-white md:text-2xl lg:text-3xl">
-                {currentTestimonial.subtitle}
-              </h3>
-              <button className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20">
-                <PlayIcon className="size-5" />
-                Watch video
-              </button>
+              {/* Content Overlay */}
+              <div className="absolute bottom-0 left-0 p-8">
+                <h3 className="text-xl font-semibold text-white md:text-2xl lg:text-3xl">
+                  {currentTestimonial.subtitle}
+                </h3>
+                <button className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20">
+                  <PlayIcon className="size-5" />
+                  Watch video
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="absolute bottom-0 left-0 h-2 w-full overflow-hidden bg-gray-300">
+                <div
+                  key={currentIndex}
+                  className="animate-progress h-full w-full bg-sky-600/80"
+                  style={{
+                    animationDuration: `${slideLogoTimeOut}ms`, // Dynamic duration
+                  }}
+                />
+              </div>
             </div>
+
+            {/* Next Button */}
+            <button
+              className="hidden h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:flex dark:hover:text-white"
+              disabled={currentIndex === testimonials.length - 1}
+              title={`Next up ${testimonials[currentIndex + 1]?.company}!`}
+              onClick={() => {
+                setCurrentIndex(
+                  (currentIndex + 1 + testimonials.length) % testimonials.length
+                );
+              }}
+            >
+              <ChevronRightIcon className="h-8 w-8" />
+            </button>
           </div>
 
           {/* Mobile Navigation display dots */}
@@ -257,14 +309,14 @@ export function CustomerTestimonialCarousel(): JSX.Element {
             ))}
           </ul>
 
-          <div className="hidden gap-2 py-16 md:flex">
-            <SlidingLogos
+          {/* <div className="hidden gap-2 py-16 md:flex">
+            <EnterpriseSlidingLogos
               logos={featuredLogos}
-              logoTimeOut={slideLogoTimeOut}
               currentLogoIndex={currentIndex}
+              isFirstSetVisible={isFirstSetVisible}
               setCurrentLogoIndex={setCurrentIndex}
             />
-          </div>
+          </div> */}
         </div>
       </div>
 
