@@ -39,7 +39,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
 
   const defaultCtaButtons: ButtonLinkProps[] = [
     {
-      href: '/nx-cloud',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud',
       variant: 'primary',
       size: 'small',
       target: '_blank',

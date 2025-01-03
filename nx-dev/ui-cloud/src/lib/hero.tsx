@@ -27,7 +27,7 @@ export function Hero(): JSX.Element {
         </SectionHeading>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <ButtonLink
-            href="https://cloud.nx.app"
+            href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=nx-cloud-hero&utm_campaign=go-to-app"
             title="Get started"
             variant="primary"
             size="default"
