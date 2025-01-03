@@ -1,7 +1,7 @@
 import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as glob from 'fast-glob';
+import { globSync } from 'tinyglobby';
 
 export interface GetEntryPointsOptions {
   recursive?: boolean;
@@ -50,12 +50,11 @@ export function getEntryPoints(
       const tsconfig = readJsonFile(
         path.join(project.data.root, foundTsConfig)
       );
-      const projectFiles = glob
-        .sync(tsconfig.include ?? [], {
-          cwd: project.data.root,
-          ignore: tsconfig.exclude ?? [],
-        })
-        .map((f) => path.join(project.data.root, f));
+      const projectFiles = globSync(tsconfig.include ?? [], {
+        cwd: project.data.root,
+        ignore: tsconfig.exclude ?? [],
+        expandDirectories: false,
+      }).map((f) => path.join(project.data.root, f));
 
       projectFiles.forEach((f) => entryPoints.add(f));
       options?.onProjectFilesMatched?.(projectName, projectFiles);
