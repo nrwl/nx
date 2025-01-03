@@ -180,9 +180,9 @@ export default presetGenerator;
 
 The preset generator does 2 things:
 
-- Create an Nx project using the`addProjectConfiguration` function. This creates a `project.json` file which allows Nx to run commands on it.
-- Generates files in the project using the`generateFiles` function. This uses the templates under `src/generators/preset/files` which are interpolated to become the files that are generated for the user.
-- Format the generated files with `prettier` with the`formatFiles` function
+- Create an Nx project using the `addProjectConfiguration` function. This creates a `project.json` file which allows Nx to run commands on it.
+- Generates files in the project using the `generateFiles` function. This uses the templates under `src/generators/preset/files` which are interpolated to become the files that are generated for the user.
+- Format the generated files with `prettier` with the `formatFiles` function
 
 ![](/blog/images/2023-08-10/38RvkLIwUAvVDDrEp5sFPQ.avif)
 _preset generator_
@@ -588,7 +588,7 @@ You can modify this e2e test to test your CLI. Then, run it using the command `n
 
 The default test works like this:
 
-1.  Creates a test workspace at `tmp/`using the `create-my-own-react-app` CLI
+1.  Creates a test workspace at `tmp/` using the `create-my-own-react-app` CLI
 2.  Runs `npm ls my-own-react` to validate that the plugin is installed in the test workspace
 3.  Cleans up the test workspace
 
