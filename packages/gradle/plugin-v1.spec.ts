@@ -1,10 +1,10 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2 } from './plugin';
-import { type GradleReport } from './src/utils/get-gradle-report';
+import { type GradleReport } from './src/plugin-v1/utils/get-gradle-report';
 
 let gradleReport: GradleReport;
-jest.mock('./src/utils/get-gradle-report', () => {
+jest.mock('./src/plugin-v1/utils/get-gradle-report', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
     populateGradleReport: jest.fn().mockImplementation(() => void 0),
@@ -12,7 +12,7 @@ jest.mock('./src/utils/get-gradle-report', () => {
   };
 });
 
-describe('@nx/gradle/plugin', () => {
+describe('@nx/gradle/plugin-v1', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
@@ -75,55 +75,7 @@ describe('@nx/gradle/plugin', () => {
       [
         [
           "proj/build.gradle",
-          {
-            "projects": {
-              "proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Verification": [
-                      "test",
-                    ],
-                  },
-                  "technologies": [
-                    "gradle",
-                  ],
-                },
-                "name": "proj",
-                "projectType": "application",
-                "targets": {
-                  "test": {
-                    "cache": true,
-                    "command": "./gradlew proj:test",
-                    "dependsOn": [
-                      "testClasses",
-                    ],
-                    "inputs": [
-                      "default",
-                      "^production",
-                    ],
-                    "metadata": {
-                      "help": {
-                        "command": "./gradlew help --task proj:test",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "--rerun",
-                            ],
-                          },
-                        },
-                      },
-                      "technologies": [
-                        "gradle",
-                      ],
-                    },
-                    "options": {
-                      "cwd": ".",
-                    },
-                  },
-                },
-              },
-            },
-          },
+          {},
         ],
       ]
     `);

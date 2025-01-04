@@ -15,14 +15,10 @@ export function createGradleProject(
   packageName: string = 'gradleProject',
   addProjectJsonNamePrefix: string = ''
 ) {
-  e2eConsoleLogger(
-    `Using java version: ${execSync('java -version')} ${execSync(
-      'echo $JAVA_HOME'
-    )}`
-  );
+  e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
   const gradleCommand = isWindows()
-    ? resolve(`${__dirname}/../../gradlew.bat`)
-    : resolve(`${__dirname}/../../gradlew`);
+    ? resolve(`${__dirname}/../../../../packages/gradle/native/gradlew.bat`)
+    : resolve(`${__dirname}/../../../../packages/gradle/native/gradlew`);
   e2eConsoleLogger(
     'Using gradle version: ' +
       execSync(`${gradleCommand} --version`, {

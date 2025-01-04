@@ -3,6 +3,14 @@ import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+export const fileSeparator = process.platform.startsWith('win')
+  ? 'file:///'
+  : 'file://';
+
+export const newLineSeparator = process.platform.startsWith('win')
+  ? '\r\n'
+  : '\n';
+
 /**
  * For gradle command, it needs to be run from the directory of the gradle binary
  * @returns gradle binary file name

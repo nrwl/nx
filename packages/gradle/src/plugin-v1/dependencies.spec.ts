@@ -10,7 +10,6 @@ describe('processGradleDependencies', () => {
   it('should process gradle dependencies with composite build', () => {
     const depFilePath = join(
       __dirname,
-      '..',
       'utils/__mocks__/gradle-composite-dependencies.txt'
     );
     const dependencies = new Set([]);
@@ -59,7 +58,6 @@ describe('processGradleDependencies', () => {
   it('should process gradle dependencies with regular build', () => {
     const depFilePath = join(
       __dirname,
-      '..',
       'utils/__mocks__/gradle-dependencies.txt'
     );
     const dependencies = new Set([]);
