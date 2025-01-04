@@ -113,7 +113,7 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    options,
+    normalizedOptions,
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -343,8 +343,8 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
 function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
   return {
     ...options,
-    targetName: options.targetName ?? 'e2e',
-    ciTargetName: options.ciTargetName ?? 'e2e-ci',
+    targetName: options?.targetName ?? 'e2e',
+    ciTargetName: options?.ciTargetName ?? 'e2e-ci',
   };
 }
 
