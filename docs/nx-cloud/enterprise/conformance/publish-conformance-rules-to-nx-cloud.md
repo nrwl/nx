@@ -8,48 +8,10 @@ Let's create a custom rule which we can then publish to Nx Cloud. We will first 
 nx generate @nx/js:library cloud-conformance-rules
 ```
 
-The Nx Cloud distribution mechanism expects each rule to be created in a named subdirectory in the `src/` directory of our new project, and each rule directory to contain an `index.ts` and a `schema.json` file.
+The Nx Cloud distribution mechanism expects each rule to be created in a named subdirectory in the `src/` directory of our new project, and each rule directory to contain an `index.ts` and a `schema.json` file. You can read more about [creating a conformance rule](/nx-api/powerpack-conformance/documents/create-conformance-rule) in the dedicated guide. For this recipe, we'll generate a default rule to use in the publishing process.
 
-E.g.
-
-```
-cloud-conformance-rules/
-├── src/
-│   ├── test-cloud-rule/
-│   │   ├── index.ts // Our rule implementation
-│   │   └── schema.json // The schema definition for the options supported by our rule
-```
-
-Our simple rule implementation in `test-cloud-rule/index.ts`, that will currently not report any violations, might look like this:
-
-```ts
-import { createConformanceRule } from '@nx/powerpack-conformance';
-
-export default createConformanceRule<object>({
-  name: 'test-cloud-rule',
-  category: 'reliability',
-  description: 'A test cloud rule',
-  reporter: 'non-project-files-reporter',
-  implementation: async () => {
-    return {
-      severity: 'low',
-      details: {
-        violations: [],
-      },
-    };
-  },
-});
-```
-
-And because we do not yet have any options that we want to support for our rule, our `schema.json` file will looks like this (using the [JSON Schema](https://json-schema.org/) format):
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false
-}
+```shell
+nx g @nx/powerpack-conformance:create-rule --name=test-cloud-rule --directory=cloud-conformance-rules/src/test-cloud-rule --category=reliability --description="A test cloud rule" --reporter=non-project-files-reporter
 ```
 
 We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The [`@nx/powerpack-conformance` plugin](/nx-api/powerpack-conformance) provides a [dedicated executor called `bundle-rules`](/nx-api/powerpack-conformance/executors/bundle-rules) for creating appropriate build artifacts for this purpose, so we will wire that executor up to a new build target in our `cloud-conformance-rules` project's `project.json` file:

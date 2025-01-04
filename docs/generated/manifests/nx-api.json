@@ -3707,6 +3707,17 @@
         "path": "/nx-api/powerpack-conformance/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      },
+      "/nx-api/powerpack-conformance/documents/create-conformance-rule": {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/powerpack-conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/create-conformance-rule"
       }
     },
     "root": "/libs/nx-packages/powerpack-conformance",
@@ -3722,7 +3733,17 @@
         "type": "executor"
       }
     },
-    "generators": {},
+    "generators": {
+      "/nx-api/powerpack-conformance/generators/create-rule": {
+        "description": "Create a new conformance rule",
+        "file": "external-generated/packages/powerpack-conformance/generators/create-rule.json",
+        "hidden": false,
+        "name": "create-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/generators/create-rule/schema.json",
+        "path": "/nx-api/powerpack-conformance/generators/create-rule",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/powerpack-conformance"
   },
   "powerpack-enterprise-cloud": {

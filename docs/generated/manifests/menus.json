@@ -10797,6 +10797,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Create a Conformance Rule",
+                "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+                "id": "create-conformance-rule",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -10811,6 +10819,23 @@
                 "id": "bundle-rules",
                 "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
                 "name": "bundle-rules",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-conformance/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "create-rule",
+                "path": "/nx-api/powerpack-conformance/generators/create-rule",
+                "name": "create-rule",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

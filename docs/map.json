@@ -2680,6 +2680,12 @@
               "id": "overview",
               "path": "/nx-api/powerpack-conformance",
               "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            },
+            {
+              "name": "Create a Conformance Rule",
+              "id": "create-conformance-rule",
+              "path": "/nx-api/powerpack-conformance",
+              "file": "shared/packages/powerpack-conformance/create-conformance-rule"
             }
           ]
         },
