@@ -40,6 +40,20 @@
                 "type": "string",
                 "description": "Prefix in front of every line out of the output"
               },
+              "prefixColor": {
+                "type": "string",
+                "description": "Color of the prefix",
+                "enum": [
+                  "black",
+                  "red",
+                  "green",
+                  "yellow",
+                  "blue",
+                  "magenta",
+                  "cyan",
+                  "white"
+                ]
+              },
               "color": {
                 "type": "string",
                 "description": "Color of the output",
