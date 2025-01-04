@@ -210,7 +210,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                 <p className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
                   Nx is speed and scalability. Before we only had a few features
                   and CI was slow and now it’s fast with way more features.
-                  That’s a huge win for us.”.
+                  That’s a huge win for us.
                 </p>
               </div>
 
