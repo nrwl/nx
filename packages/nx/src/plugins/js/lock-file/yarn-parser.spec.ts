@@ -2596,6 +2596,7 @@ __metadata:
         dependencies: {
           resolve: '^1.12.0',
         },
+        packageManager: 'yarn@3.0.0',
       };
 
       const hash = uniq('mock-hash');
@@ -2721,6 +2722,7 @@ __metadata:
         dependencies: {
           resolve: '^1.12.0',
         },
+        packageManager: 'yarn@4.0.0',
       };
 
       const hash = uniq('mock-hash');
@@ -2771,7 +2773,7 @@ __metadata:
           version: 0.0.0-use.local
           resolution: "@my-ns/example@workspace:."
           dependencies:
-            resolve: ^1.12.0
+            resolve: "npm:^1.12.0"
           languageName: unknown
           linkType: soft
 
