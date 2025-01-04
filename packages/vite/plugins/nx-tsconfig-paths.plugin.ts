@@ -237,7 +237,10 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
       const normalizedImport = alias.replace(/\/\*$/, '');
 
-      if (importPath.startsWith(normalizedImport)) {
+      if (
+        importPath === normalizedImport ||
+        importPath.startsWith(normalizedImport + '/')
+      ) {
         const joinedPath = joinPathFragments(
           tsconfig.absoluteBaseUrl,
           paths[0].replace(/\/\*$/, '')
