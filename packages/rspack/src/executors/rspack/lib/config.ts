@@ -31,8 +31,8 @@ export async function getRspackConfigs(
 
   if (
     (typeof userDefinedConfig === 'function' &&
-      isNxRspackComposablePlugin(userDefinedConfig)) ||
-    !options.standardRspackConfigFunction
+      (isNxRspackComposablePlugin(userDefinedConfig) ||
+    !options.standardRspackConfigFunction))
   ) {
     // Old behavior, call the Nx-specific rspack config function that user exports
     return await userDefinedConfig(config, {
