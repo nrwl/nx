@@ -4,4 +4,4 @@ export const typescriptVersion = '~5.6.2';
 
 // TODO: remove when preset generation is reworked and
 // deps are not installed from workspace
-export const angularCliVersion = '~19.0.0';
+export const angularCliVersion = '~19.1.0-next.2';
