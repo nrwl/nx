@@ -103,7 +103,7 @@ The following is an example of what this looks like within a github actions pipe
 ...
 jobs:
   main:
-    displayName: Main Job
+    name: Main Job
     ...
     steps:
       ...
@@ -111,7 +111,7 @@ jobs:
       - ..
 
   medium-agents:
-    displayName: Agents ${{ matrix.agent }}
+    name: Agents ${{ matrix.agent }}
     runs-on:
       group: medium-agents
     strategy:
@@ -120,6 +120,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
 
       ...
 
@@ -130,7 +133,7 @@ jobs:
           NX_AGENT_LAUNCH_TEMPLATE: "linux-medium" # This value needs to match one of the 'runs-on' values defined in the assignment rules
 
   large-agents:
-    displayName: Agents ${{ matrix.agent }}
+    name: Agents ${{ matrix.agent }}
     runs-on:
       group: large-agents
     strategy:
@@ -140,6 +143,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
 
       ... # other setup steps
 
@@ -183,7 +189,7 @@ You can then reference your distribution configuration in your CI pipeline confi
 ...
 jobs:
   - job: main
-    displayName: Main Job
+    name: Main Job
     ...
     steps:
       ...
