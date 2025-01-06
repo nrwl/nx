@@ -94,7 +94,7 @@ Note that the labels supplied in the `runs-ons` property will be used to determi
 You can then reference your assignment rules file within your `start-ci-run` command:
 
 ```shell
-npx nx-cloud start-ci-run --assignment-rules='.nx/workflows/assignment-rules.yaml'
+npx nx-cloud start-ci-run --assignment-rules=".nx/workflows/assignment-rules.yaml"
 ```
 
 The following is an example of what this looks like within a github actions pipeline:
@@ -107,7 +107,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx-cloud start-ci-run --assignment-rules=.nx/workflows/assignment-rules.yaml --stop-agents-after="e2e-ci"
+      - run: npx nx-cloud start-ci-run --assignment-rules=".nx/workflows/assignment-rules.yaml" --stop-agents-after="e2e-ci"
       - ..
 
   medium-agents:
