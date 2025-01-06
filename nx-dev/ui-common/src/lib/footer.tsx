@@ -317,7 +317,7 @@ export function Footer({
         </div>
         <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
           <p className="text-sm text-slate-400 xl:text-center">
-            &copy; 2024 made with{' '}
+            &copy; 2025 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
             <Link href="/company" prefetch={false} title="Company">
               <svg
