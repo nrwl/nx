@@ -1,11 +1,7 @@
 'use client';
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import {
-  PlayIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline';
+import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import {
   CasewareIcon,
@@ -15,7 +11,6 @@ import {
   UkgIcon,
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
-import EnterpriseSlidingLogos from './enterprise-sliding-logos';
 interface Testimonial {
   title: string;
   subtitle: string;
@@ -33,16 +28,12 @@ interface Testimonial {
   company: string;
   videoId: string;
   thumbnail: string;
+  logo: {
+    icon: any;
+    height: string;
+    width: string;
+  };
 }
-
-const featuredLogos = [
-  { SVGComponent: HetznerCloudIcon, height: 'h-10', width: 'w-10' },
-  { SVGComponent: CasewareIcon, height: 'h-12', width: 'w-12' },
-  { SVGComponent: SiriusxmIcon, height: 'h-32', width: 'w-32' },
-  { SVGComponent: PayfitIcon, height: 'h-16', width: 'w-16' },
-  { SVGComponent: UkgIcon, height: 'h-20', width: 'w-20' },
-  { SVGComponent: VmwareIcon, height: 'h-28', width: 'w-28' },
-];
 
 const testimonials: Testimonial[] = [
   {
@@ -56,6 +47,11 @@ const testimonials: Testimonial[] = [
     company: 'Hetzner',
     videoId: '2BLqiNnBPuU',
     thumbnail: '/images/customers/video-story-pavlo-grosse.avif',
+    logo: {
+      icon: HetznerCloudIcon,
+      height: 'h-10',
+      width: 'w-10',
+    },
   },
   {
     title: 'Customer story',
@@ -71,6 +67,11 @@ const testimonials: Testimonial[] = [
     company: 'Caseware',
     videoId: 'lvS8HjjFwEM',
     thumbnail: '/images/customers/video-story-caseware.avif',
+    logo: {
+      icon: CasewareIcon,
+      height: 'h-12',
+      width: 'w-12',
+    },
   },
   {
     title: 'Customer story',
@@ -86,6 +87,11 @@ const testimonials: Testimonial[] = [
     company: 'SiriusXM',
     videoId: 'Q0ky-8oJcro',
     thumbnail: '/images/customers/video-story-siriusxm.avif',
+    logo: {
+      icon: SiriusxmIcon,
+      height: 'h-32',
+      width: 'w-32',
+    },
   },
   {
     title: 'Customer story',
@@ -101,6 +107,11 @@ const testimonials: Testimonial[] = [
     company: 'Payfit',
     videoId: 'Vdk-tza4PCs',
     thumbnail: '/images/customers/video-story-payfit.avif',
+    logo: {
+      icon: PayfitIcon,
+      height: 'h-16',
+      width: 'w-16',
+    },
   },
   {
     title: 'Customer story',
@@ -120,6 +131,11 @@ const testimonials: Testimonial[] = [
     company: 'UKG',
     videoId: 'rSC8wihnfP4',
     thumbnail: '/images/customers/video-story-ukg.avif',
+    logo: {
+      icon: UkgIcon,
+      height: 'h-20',
+      width: 'w-20',
+    },
   },
   {
     title: 'Customer story',
@@ -134,41 +150,42 @@ const testimonials: Testimonial[] = [
     company: 'Broadcom (VMware)',
     videoId: '6pF5cMl_VcM',
     thumbnail: '/images/customers/video-story-broadcom.avif',
+    logo: {
+      icon: VmwareIcon,
+      height: 'h-28',
+      width: 'w-28',
+    },
   },
 ];
 
 export function CustomerTestimonialCarousel(): JSX.Element {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [isFirstSetVisible, setIsFirstSetVisible] = useState(true);
   const currentTestimonial = testimonials[currentIndex];
   const slideLogoTimeOut = 12000; // 12 seconds
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
-    // Update the visibility of the first set of logos since the current index changed
-    setIsFirstSetVisible(currentIndex < testimonials.length / 2);
-
     // Clear the current timer and start a new one
-
-    timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % testimonials.length;
-        setIsFirstSetVisible(nextIndex < testimonials.length / 2);
-        return nextIndex;
-      });
-    }, slideLogoTimeOut);
+    if (!isOpen) {
+      timer = setInterval(() => {
+        setCurrentIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % testimonials.length;
+          return nextIndex;
+        });
+      }, slideLogoTimeOut);
+    }
 
     // Cleanup on unmount or when dependencies change
     return () => {
       clearInterval(timer);
     };
-  }, [currentIndex, setCurrentIndex]);
+  }, [currentIndex, setCurrentIndex, isOpen]);
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 lg:grid-cols-4 lg:gap-4">
         {/* Left side - Quote or Metrics */}
         <div className="col-span hidden lg:block">
           {currentTestimonial.quote ? (
@@ -228,19 +245,6 @@ export function CustomerTestimonialCarousel(): JSX.Element {
         {/* Right side - Video Card */}
         <div className="col-span-2 md:col-span-3">
           <div className="flex items-center gap-4">
-            {/* Prev Button */}
-            <button
-              disabled={currentIndex === 0}
-              title={`See ${testimonials[currentIndex - 1]?.company} again!`}
-              className="hidden h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:flex dark:hover:text-white"
-              onClick={() => {
-                setCurrentIndex(
-                  (currentIndex - 1 + testimonials.length) % testimonials.length
-                );
-              }}
-            >
-              <ChevronLeftIcon className="h-8 w-8" />
-            </button>
             <div
               className="group relative h-[450px] w-full cursor-pointer self-stretch overflow-hidden rounded-lg xl:shadow-2xl"
               onClick={() => setIsOpen(true)}
@@ -267,32 +271,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
                   Watch video
                 </button>
               </div>
-
-              {/* Progress Bar */}
-              <div className="absolute bottom-0 left-0 h-2 w-full overflow-hidden bg-gray-300">
-                <div
-                  key={currentIndex}
-                  className="animate-progress h-full w-full bg-sky-600/80"
-                  style={{
-                    animationDuration: `${slideLogoTimeOut}ms`, // Dynamic duration
-                  }}
-                />
-              </div>
             </div>
-
-            {/* Next Button */}
-            <button
-              className="hidden h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:flex dark:hover:text-white"
-              disabled={currentIndex === testimonials.length - 1}
-              title={`Next up ${testimonials[currentIndex + 1]?.company}!`}
-              onClick={() => {
-                setCurrentIndex(
-                  (currentIndex + 1 + testimonials.length) % testimonials.length
-                );
-              }}
-            >
-              <ChevronRightIcon className="h-8 w-8" />
-            </button>
           </div>
 
           {/* Mobile Navigation display dots */}
@@ -308,16 +287,38 @@ export function CustomerTestimonialCarousel(): JSX.Element {
               />
             ))}
           </ul>
-
-          {/* <div className="hidden gap-2 py-16 md:flex">
-            <EnterpriseSlidingLogos
-              logos={featuredLogos}
-              currentLogoIndex={currentIndex}
-              isFirstSetVisible={isFirstSetVisible}
-              setCurrentLogoIndex={setCurrentIndex}
-            />
-          </div> */}
         </div>
+      </div>
+
+      {/* Carosel Navigation */}
+      <div className="relative mx-auto hidden max-w-7xl grid-cols-6 items-center justify-center px-4 pt-16 md:grid">
+        {testimonials.map(({ company, logo }, i) => (
+          <button
+            onClick={() => setCurrentIndex(i)}
+            key={`firstSet-logo-${i}`}
+            title={company}
+            className={`relative grid h-full w-full place-items-center border border-slate-200/15 transition-all dark:border-slate-800/20 ${
+              i === currentIndex
+                ? 'text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-300'
+                : 'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
+            }`}
+          >
+            <logo.icon
+              key={`firstSet-icon-${i}`}
+              className={`${logo.height} ${logo.width} transition-transform duration-300`}
+            />
+
+            {/* Progress Bar at the Top */}
+            {i === currentIndex && !isOpen && (
+              <div className="absolute left-0 top-0 h-[2px] w-full overflow-hidden bg-gray-300/80 transition-all">
+                <div
+                  className="animate-progress h-full w-full bg-sky-600/80"
+                  style={{ animationDuration: `${slideLogoTimeOut}ms` }}
+                />
+              </div>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Video Modal */}
