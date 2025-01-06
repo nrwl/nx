@@ -1,3 +1,7 @@
+---
+keywords: [update]
+---
+
 # Automate Updating Dependencies
 
 {% youtube
