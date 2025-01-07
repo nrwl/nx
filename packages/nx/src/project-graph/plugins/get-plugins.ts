@@ -1,6 +1,10 @@
 import { hashObject } from '../../hasher/file-hasher';
 import { readNxJson } from '../../config/nx-json';
-import { LoadedNxPlugin, loadNxPlugins } from './internal-api';
+import {
+  loadDefaultNxPlugins,
+  LoadedNxPlugin,
+  loadSpecifiedNxPlugins,
+} from './internal-api';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 let currentPluginsConfigurationHash: string;
@@ -10,7 +14,7 @@ let pendingPluginsPromise:
   | undefined;
 let cleanup: () => void;
 
-export async function getPlugins() {
+export async function getPlugins(): Promise<LoadedNxPlugin[]> {
   const pluginsConfiguration = readNxJson().plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
@@ -28,13 +32,19 @@ export async function getPlugins() {
     cleanup();
   }
 
-  pendingPluginsPromise ??= loadNxPlugins(pluginsConfiguration, workspaceRoot);
+  pendingPluginsPromise ??= loadSpecifiedNxPlugins(
+    pluginsConfiguration,
+    workspaceRoot
+  );
 
   currentPluginsConfigurationHash = pluginsConfigurationHash;
-  const [result, cleanupFn] = await pendingPluginsPromise;
+  const [[result, cleanupFn], defaultPlugins] = await Promise.all([
+    pendingPluginsPromise,
+    getOnlyDefaultPlugins(),
+  ]);
   cleanup = cleanupFn;
-  loadedPlugins = result;
-  return result;
+  loadedPlugins = result.concat(defaultPlugins);
+  return loadedPlugins;
 }
 
 let loadedDefaultPlugins: LoadedNxPlugin[];
@@ -55,7 +65,7 @@ export async function getOnlyDefaultPlugins() {
     cleanupDefaultPlugins();
   }
 
-  pendingDefaultPluginPromise ??= loadNxPlugins([], workspaceRoot);
+  pendingDefaultPluginPromise ??= loadDefaultNxPlugins(workspaceRoot);
 
   const [result, cleanupFn] = await pendingDefaultPluginPromise;
   cleanupDefaultPlugins = cleanupFn;

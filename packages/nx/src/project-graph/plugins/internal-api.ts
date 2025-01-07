@@ -145,15 +145,67 @@ function isIsolationEnabled() {
   return true;
 }
 
+const loadingMethod = isIsolationEnabled()
+  ? loadNxPluginInIsolation
+  : loadNxPlugin;
+
 /**
- * Use `getPlugins` instead.
- * @deprecated Do not use this. Use `getPlugins` instead.
+ * @deprecated prefer getOnlyDefaultPlugins
  */
-export async function loadNxPlugins(
+export async function loadDefaultNxPlugins(root = workspaceRoot) {
+  performance.mark('loadDefaultNxPlugins:start');
+
+  const plugins = await getDefaultPlugins(root);
+
+  const cleanupFunctions: Array<() => void> = [];
+  const ret = [
+    await Promise.all(
+      plugins.map(async (plugin) => {
+        performance.mark(`Load Nx Plugin: ${plugin} - start`);
+
+        const [loadedPluginPromise, cleanup] = await loadingMethod(
+          plugin,
+          root
+        );
+
+        cleanupFunctions.push(cleanup);
+        const res = await loadedPluginPromise;
+        performance.mark(`Load Nx Plugin: ${plugin} - end`);
+        performance.measure(
+          `Load Nx Plugin: ${plugin}`,
+          `Load Nx Plugin: ${plugin} - start`,
+          `Load Nx Plugin: ${plugin} - end`
+        );
+
+        return res;
+      })
+    ),
+    () => {
+      for (const fn of cleanupFunctions) {
+        fn();
+      }
+      if (unregisterPluginTSTranspiler) {
+        unregisterPluginTSTranspiler();
+      }
+    },
+  ] as const;
+  performance.mark('loadDefaultNxPlugins:end');
+  performance.measure(
+    'loadDefaultNxPlugins',
+    'loadDefaultNxPlugins:start',
+    'loadDefaultNxPlugins:end'
+  );
+  return ret;
+}
+
+/**
+ * @deprecated prefer getPlugins
+ */
+export async function loadSpecifiedNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<readonly [LoadedNxPlugin[], () => void]> {
-  performance.mark('loadNxPlugins:start');
+  performance.mark('loadSpecifiedNxPlugins:start');
   const loadingMethod = isIsolationEnabled()
     ? loadNxPluginInIsolation
     : loadNxPlugin;
@@ -193,23 +245,38 @@ export async function loadNxPlugins(
       }
     },
   ] as const;
-  performance.mark('loadNxPlugins:end');
+  performance.mark('loadSpecifiedNxPlugins:end');
   performance.measure(
-    'loadNxPlugins',
-    'loadNxPlugins:start',
-    'loadNxPlugins:end'
+    'loadSpecifiedNxPlugins',
+    'loadSpecifiedNxPlugins:start',
+    'loadSpecifiedNxPlugins:end'
   );
   return ret;
+}
+
+/**
+ * Use `getPlugins` instead.
+ * @deprecated Do not use this. Use `getPlugins` instead.
+ */
+export async function loadNxPlugins(
+  plugins: PluginConfiguration[],
+  root = workspaceRoot
+): Promise<readonly [LoadedNxPlugin[], () => void]> {
+  const defaultPlugins = await loadDefaultNxPlugins(root);
+  const specifiedPlugins = await loadSpecifiedNxPlugins(plugins, root);
+
+  const combinedCleanup = () => {
+    specifiedPlugins[1]();
+    defaultPlugins[1]();
+  };
+
+  return [specifiedPlugins[0].concat(defaultPlugins[0]), combinedCleanup];
 }
 
 async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
   plugins ??= [];
 
-  return [
-    ...plugins,
-    // Most of the nx core node plugins go on the end, s.t. it overwrites any other plugins
-    ...(await getDefaultPlugins(root)),
-  ];
+  return [...plugins];
 }
 
 export async function getDefaultPlugins(root: string) {
