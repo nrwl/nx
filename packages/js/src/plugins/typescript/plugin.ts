@@ -549,16 +549,34 @@ function getOutputs(
         pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
       );
 
-      if (
-        config.options.tsBuildInfoFile &&
-        !normalize(config.options.tsBuildInfoFile).startsWith(
-          `${normalize(config.options.outDir)}${sep}`
-        )
-      ) {
-        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      if (config.options.tsBuildInfoFile) {
+        if (
+          !normalize(config.options.tsBuildInfoFile).startsWith(
+            `${normalize(config.options.outDir)}${sep}`
+          )
+        ) {
+          // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+          outputs.add(
+            pathToInputOrOutput(
+              config.options.tsBuildInfoFile,
+              workspaceRoot,
+              projectRoot
+            )
+          );
+        }
+      } else if (config.options.rootDir && config.options.rootDir !== '.') {
+        // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
+        const relativeRootDir = relative(
+          config.options.rootDir,
+          join(workspaceRoot, projectRoot)
+        );
         outputs.add(
           pathToInputOrOutput(
-            config.options.tsBuildInfoFile,
+            joinPathFragments(
+              config.options.outDir,
+              relativeRootDir,
+              `*.tsbuildinfo`
+            ),
             workspaceRoot,
             projectRoot
           )
