@@ -38,7 +38,7 @@ function getBorderClass(index: number, totalIcons: number, columns = 4) {
 
 const CustomerIconGrid: FC<CustomerIconGridProps> = ({ icons }) => {
   return (
-    <div className="grid grid-cols-2 justify-between px-4 md:grid-cols-4">
+    <div className="grid grid-cols-2 justify-between md:grid-cols-4">
       {icons.map((customerIcon, index) => {
         const borderClass = getBorderClass(index, icons.length);
 

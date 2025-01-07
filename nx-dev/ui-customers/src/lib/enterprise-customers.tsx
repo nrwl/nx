@@ -274,7 +274,7 @@ export function EnterpriseCustomers(): JSX.Element {
         <div className="mx-auto max-w-7xl">
           <CustomerIconGrid icons={secondCustomerIcons} />
 
-          <div className="grid-cols grid justify-center gap-4 px-4 py-6 md:grid-cols-3">
+          <div className="grid-cols grid justify-center gap-4 px-2 py-6 md:grid-cols-3">
             <DownloadCaseStudy
               title="Financial Institution Case Study"
               description="$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud."
