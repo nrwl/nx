@@ -571,14 +571,14 @@ function getOutputs(
           join(workspaceRoot, projectRoot)
         );
         outputs.add(
-          joinPathFragments(
-            pathToInputOrOutput(
+          pathToInputOrOutput(
+            joinPathFragments(
               config.options.outDir,
-              workspaceRoot,
-              projectRoot
+              relativeRootDir,
+              `*.tsbuildinfo`
             ),
-            relativeRootDir,
-            `*.tsbuildinfo`
+            workspaceRoot,
+            projectRoot
           )
         );
       }
