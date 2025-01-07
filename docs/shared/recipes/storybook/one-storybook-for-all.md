@@ -21,7 +21,7 @@ Let’s see how we can implement this solution:
 According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using the `@storybook/react-vite` framework:
 
 ```shell
-nx g @nx/react:library lib/storybook-host --bundler=none --unitTestRunner=none
+nx g @nx/react:library libs/storybook-host --bundler=none --unitTestRunner=none
 ```
 
 Now, you have a new library, which will act as a shell/host for all your stories.
