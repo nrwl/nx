@@ -109,6 +109,7 @@ import {
   isHandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import { isConnectMessage } from '../message-types/connect';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -140,10 +141,14 @@ const server = createServer(async (socket) => {
     performanceObserver.observe({ entryTypes: ['measure'] });
   }
 
+  let unreffed = false;
+
   socket.on(
     'data',
     consumeMessagesFromSocket(async (message) => {
-      await handleMessage(socket, message);
+      await handleMessage(socket, message, () => {
+        unreffed = true;
+      });
     })
   );
 
@@ -153,7 +158,9 @@ const server = createServer(async (socket) => {
   });
 
   socket.on('close', () => {
-    numberOfOpenConnections -= 1;
+    if (!unreffed) {
+      numberOfOpenConnections -= 1;
+    }
     openSockets.delete(socket);
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
@@ -164,7 +171,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket, data: string) {
+async function handleMessage(socket, data: string, unrefCallback: () => void) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -200,6 +207,10 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, 'PING', () =>
       Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
     );
+  } else if (isConnectMessage(payload)) {
+    if (payload.data.unref) {
+      unrefCallback();
+    }
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
     await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
       handleRequestProjectGraph()

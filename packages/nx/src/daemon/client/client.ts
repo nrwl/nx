@@ -78,6 +78,7 @@ import {
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { CONNECT, ConnectMessage } from '../message-types/connect';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -121,6 +122,8 @@ export class DaemonClient {
   private _daemonReady: () => void | null = null;
   private _out: FileHandle = null;
   private _err: FileHandle = null;
+
+  private firstMessageSent = false;
 
   enabled() {
     if (this._enabled === undefined) {
@@ -531,6 +534,13 @@ export class DaemonClient {
       this._daemonReady();
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
+      await this.socketMessenger.sendMessage({
+        type: CONNECT,
+        data: {
+          source: global.NX_PLUGIN_WORKER ? 'plugin-worker' : 'cli',
+          unref: !!global.NX_PLUGIN_WORKER,
+        },
+      } as ConnectMessage);
     }
     // An open promise isn't enough to keep the event loop
     // alive, so we set a timeout here and clear it when we hear
