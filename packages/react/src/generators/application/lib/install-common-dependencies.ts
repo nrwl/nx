@@ -6,6 +6,7 @@ import {
   sassVersion,
   swcLoaderVersion,
   testingLibraryReactVersion,
+  testingLibraryDomVersion,
   tsLibVersion,
   typesNodeVersion,
   typesReactDomVersion,
@@ -61,6 +62,7 @@ export async function installCommonDependencies(
 
   if (options.unitTestRunner && options.unitTestRunner !== 'none') {
     devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+    devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);

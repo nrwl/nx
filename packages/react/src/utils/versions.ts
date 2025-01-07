@@ -34,6 +34,7 @@ export const styledJsxVersion = '5.1.2';
 export const reactRouterDomVersion = '6.11.2';
 
 export const testingLibraryReactVersion = '16.1.0';
+export const testingLibraryDomVersion = '10.4.0';
 
 export const reduxjsToolkitVersion = '1.9.3';
 export const reactReduxVersion = '8.0.5';
