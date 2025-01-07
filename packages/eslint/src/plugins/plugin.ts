@@ -34,7 +34,16 @@ export interface EslintPluginOptions {
   extensions?: string[];
 }
 
-const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
+const DEFAULT_EXTENSIONS = [
+  'ts',
+  'tsx',
+  'js',
+  'cjs',
+  'mjs',
+  'jsx',
+  'html',
+  'vue',
+];
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const ESLINT_CONFIG_GLOB_V1 = combineGlobPatterns(
   ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`)
