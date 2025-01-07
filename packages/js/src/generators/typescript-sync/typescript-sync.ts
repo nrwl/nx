@@ -477,8 +477,8 @@ function collectProjectDependencies(
 
   for (const dep of projectGraph.dependencies[projectName]) {
     const targetProjectNode = projectGraph.nodes[dep.target];
-    if (!targetProjectNode) {
-      // It's an npm dependency
+    if (!targetProjectNode || dep.type === 'implicit') {
+      // It's an npm or an implicit dependency
       continue;
     }
 
