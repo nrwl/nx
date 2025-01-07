@@ -6,7 +6,6 @@ import {
   BloombergIcon,
   CaisGroupIcon,
   CapitalOneIcon,
-  CasewareIcon,
   CaterpillarIcon,
   CiscoIcon,
   ClickUpIcon,
@@ -16,7 +15,6 @@ import {
   FedExIcon,
   FicoIcon,
   HasuraIcon,
-  HetznerCloudIcon,
   HiltonIcon,
   IkeaIcon,
   IntelIcon,
@@ -26,10 +24,8 @@ import {
   MillienniumIcon,
   ModernaIcon,
   ParamountIcon,
-  PayfitIcon,
   PaylocityIcon,
   PhilipsIcon,
-  RabobankIcon,
   RedBullIcon,
   RoyalBankOfCanadaIcon,
   SainsburysIcon,
@@ -39,20 +35,14 @@ import {
   ThreeKitIcon,
   TideIcon,
   TMobileIcon,
-  UkgIcon,
   VarianIcon,
-  VmwareIcon,
   VodafoneIcon,
-  SiriusxmIcon,
-  WalmartIcon,
   PlexIcon,
   ZipariIcon,
 } from '@nx/nx-dev/ui-icons';
 import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
 import { CustomerTestimonialCarousel } from './customer-testimonial-carousel';
-import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { ButtonLink } from '@nx/nx-dev/ui-common';
-import CustomerIconGrid, { CustomerIcon } from './customer-icon-grid';
+import { CustomerIconGrid, type CustomerIcon } from './customer-icon-grid';
 
 const firstCustomerIcons: CustomerIcon[] = [
   { url: 'https://man-es.com', icon: ManIcon, height: 'h-20', width: 'w-20' },
@@ -69,12 +59,6 @@ const firstCustomerIcons: CustomerIcon[] = [
     width: 'w-32',
   },
   {
-    url: 'https://vmware.com',
-    icon: VmwareIcon,
-    height: 'h-28',
-    width: 'w-28',
-  },
-  {
     url: 'https://hilton.com',
     icon: HiltonIcon,
     height: 'h-24',
@@ -88,15 +72,15 @@ const firstCustomerIcons: CustomerIcon[] = [
     width: 'w-16',
   },
   { url: 'https://cisco.com', icon: CiscoIcon, height: 'h-24', width: 'w-24' },
-];
-
-const secondCustomerIcons: CustomerIcon[] = [
   {
     url: 'https://zipari.com',
     icon: ZipariIcon,
     height: 'h-12',
     width: 'w-12',
   },
+];
+
+const secondCustomerIcons: CustomerIcon[] = [
   {
     url: 'https://www.fedex.com',
     icon: FedExIcon,
@@ -108,12 +92,6 @@ const secondCustomerIcons: CustomerIcon[] = [
     icon: AmericanAirlinesIcon,
     height: 'h-12',
     width: 'w-12',
-  },
-  {
-    url: 'https://www.rabobank.com',
-    icon: RabobankIcon,
-    height: 'h-32',
-    width: 'w-32',
   },
   {
     url: 'https://www.bill.com',
@@ -158,15 +136,6 @@ const secondCustomerIcons: CustomerIcon[] = [
     width: 'w-12',
   },
   {
-    url: 'https://www.siriusxm.com/',
-    icon: SiriusxmIcon,
-    height: 'h-28',
-    width: 'w-28',
-  },
-];
-
-const thirdCustomerIcons: CustomerIcon[] = [
-  {
     url: 'https://mailchimp.com',
     icon: MailChimpIcon,
     height: 'h-14',
@@ -178,6 +147,15 @@ const thirdCustomerIcons: CustomerIcon[] = [
     height: 'h-32',
     width: 'w-32',
   },
+  {
+    url: 'https://www.paramountplus.com',
+    icon: ParamountIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+];
+
+const thirdCustomerIcons: CustomerIcon[] = [
   {
     url: 'https://clickup.com',
     icon: ClickUpIcon,
@@ -228,12 +206,6 @@ const thirdCustomerIcons: CustomerIcon[] = [
   },
   { url: 'https://www.tide.co', icon: TideIcon, height: 'h-20', width: 'w-20' },
   { url: 'https://hasura.io', icon: HasuraIcon, height: 'h-12', width: 'w-12' },
-  {
-    url: 'https://www.hetzner.com/cloud',
-    icon: HetznerCloudIcon,
-    height: 'h-10',
-    width: 'w-10',
-  },
   { url: ' https://www.dnb.no', icon: DnbIcon, height: 'h-16', width: 'w-16' },
   {
     url: 'https://ghost.org',
@@ -241,7 +213,6 @@ const thirdCustomerIcons: CustomerIcon[] = [
     height: 'h-14',
     width: 'w-14',
   },
-  { url: 'https://www.ukg.ca', icon: UkgIcon, height: 'h-20', width: 'w-20' },
   {
     url: 'https://www.varian.com',
     icon: VarianIcon,
@@ -261,12 +232,6 @@ const thirdCustomerIcons: CustomerIcon[] = [
     width: 'w-40',
   },
   {
-    url: 'https://payfit.com',
-    icon: PayfitIcon,
-    height: 'h-14',
-    width: 'w-14',
-  },
-  {
     url: 'https://www.threekit.com',
     icon: ThreeKitIcon,
     height: 'h-12',
@@ -277,12 +242,6 @@ const thirdCustomerIcons: CustomerIcon[] = [
     icon: CaisGroupIcon,
     height: 'h-28',
     width: 'w-28',
-  },
-  {
-    url: 'https://www.caseware.com',
-    icon: CasewareIcon,
-    height: 'h-12',
-    width: 'w-12',
   },
   {
     url: 'https://www.entaingroup.com',
@@ -297,18 +256,6 @@ const thirdCustomerIcons: CustomerIcon[] = [
     width: 'w-10',
   },
   { url: 'https://plex.tv', icon: PlexIcon, height: 'h-20', width: 'w-20' },
-  {
-    url: 'paramountplus.com',
-    icon: ParamountIcon,
-    height: 'h-14',
-    width: 'w-14',
-  },
-  {
-    url: 'https://www.walmart.com',
-    icon: WalmartIcon,
-    height: 'h-28',
-    width: 'w-28',
-  },
 ];
 
 export function EnterpriseCustomers(): JSX.Element {
@@ -326,46 +273,32 @@ export function EnterpriseCustomers(): JSX.Element {
         </div>
         <div className="mx-auto max-w-7xl">
           <CustomerIconGrid icons={secondCustomerIcons} />
-          <div className="grid-cols grid justify-between gap-4 p-6 md:grid-cols-3">
+
+          <div className="grid-cols grid justify-center gap-4 px-4 py-6 md:grid-cols-3">
             <DownloadCaseStudy
               title="Financial Institution Case Study"
               description="$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud."
               buttonHref="https://go.nx.dev/financial-case-study"
+              buttonText="Read more"
+              variant="secondary"
             />
             <DownloadCaseStudy
               title="Banking Case Study"
               description="$7B European bank cuts CI times by 62% and boosts team productivity."
               buttonHref="https://go.nx.dev/banking-case-study"
+              buttonText="Read more"
+              variant="secondary"
             />
 
             {/* Blog Excerpt */}
-            <div className="flex items-center justify-center">
-              <div className="border border-slate-100 bg-white shadow-lg sm:rounded-lg dark:border-slate-800/60 dark:bg-slate-950">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-base font-semibold leading-6 text-slate-900 dark:text-slate-100">
-                    Improve your architecture and CI pipeline times
-                  </h3>
-                  <div className="mt-2 sm:flex sm:items-start sm:justify-between">
-                    <div className="max-w-xl text-sm">
-                      <p>
-                        Discover how to structure your monorepo the right way to
-                        save time, reduce costs, and maximize efficiency
-                      </p>
-                    </div>
-                    <div className="mt-5 sm:ml-6 sm:mt-0 sm:flex sm:flex-shrink-0 sm:items-center">
-                      <ButtonLink
-                        href="/blog/improve-architecture-and-ci-times-with-projects"
-                        title={`Download`}
-                        variant="secondary"
-                        size="small"
-                      >
-                        Read More <ChevronRightIcon className="h-4 w-4" />
-                      </ButtonLink>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <DownloadCaseStudy
+              title="Improve your architecture and CI speeds"
+              description="Structure your monorepo the right way to save time, reduce costs, and maximize efficiency."
+              buttonHref="/blog/improve-architecture-and-ci-times-with-projects"
+              buttonText="Read more"
+              buttonCTA="Read more"
+              variant="secondary"
+            />
           </div>
           <CustomerIconGrid icons={thirdCustomerIcons} />
         </div>

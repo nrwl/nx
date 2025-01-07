@@ -148,7 +148,7 @@ const testimonials: Testimonial[] = [
       },
     },
     company: 'Broadcom (VMware)',
-    videoId: '6pF5cMl_VcM',
+    videoId: 'RWTgYNKqxNc',
     thumbnail: '/images/customers/video-story-broadcom.avif',
     logo: {
       icon: VmwareIcon,
