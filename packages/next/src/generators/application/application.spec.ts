@@ -1038,11 +1038,6 @@ describe('app (legacy)', () => {
             "**/*.cy.jsx",
             "**/*.d.ts",
           ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
-          ],
         }
       `);
     });
