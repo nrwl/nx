@@ -436,6 +436,9 @@ function getInputs(
 
   const inputs: TargetConfiguration['inputs'] = [];
   if (includePaths.size) {
+    if (existsSync(join(workspaceRoot, projectRoot, 'package.json'))) {
+      inputs.push('{projectRoot}/package.json');
+    }
     inputs.push(
       ...Array.from(configFiles).map((p: string) =>
         pathToInputOrOutput(p, workspaceRoot, projectRoot)

@@ -671,7 +671,7 @@ describe('lib', () => {
             },
           },
           "private": true,
-          "type": "commonjs",
+          "type": "module",
           "typings": "./dist/index.d.ts",
           "version": "0.0.1",
         }
