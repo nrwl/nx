@@ -236,7 +236,7 @@ export async function libraryGeneratorInternal(
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(tree));
+    tasks.push(() => installPackagesTask(tree, true));
   }
 
   tasks.push(() => {
@@ -503,7 +503,11 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
   createProjectTsConfigs(tree, options);
 
   let fileNameImport = options.fileName;
-  if (options.bundler === 'vite') {
+  if (
+    options.bundler === 'vite' ||
+    (options.isUsingTsSolutionConfig &&
+      (options.bundler === 'tsc' || options.bundler === 'swc'))
+  ) {
     const tsConfig = readTsConfigFromTree(
       tree,
       join(options.projectRoot, 'tsconfig.lib.json')
@@ -563,7 +567,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
     addSwcConfig(
       tree,
       options.projectRoot,
-      options.bundler === 'swc' ? 'commonjs' : 'es6'
+      options.bundler === 'swc' && !options.isUsingTsSolutionConfig
+        ? 'commonjs'
+        : 'es6'
     );
   } else if (options.includeBabelRc) {
     addBabelRc(tree, options);
@@ -1091,7 +1097,7 @@ function determineEntryFields(
   switch (options.bundler) {
     case 'tsc':
       return {
-        type: 'commonjs',
+        type: options.isUsingTsSolutionConfig ? 'module' : 'commonjs',
         main: options.isUsingTsSolutionConfig
           ? './dist/index.js'
           : './src/index.js',
@@ -1101,7 +1107,7 @@ function determineEntryFields(
       };
     case 'swc':
       return {
-        type: 'commonjs',
+        type: options.isUsingTsSolutionConfig ? 'module' : 'commonjs',
         main: options.isUsingTsSolutionConfig
           ? './dist/index.js'
           : './src/index.js',
