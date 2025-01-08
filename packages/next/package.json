@@ -37,7 +37,7 @@
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@babel/plugin-proposal-decorators": "^7.22.7",
-    "@svgr/webpack": "^8.0.1",
+    "@svgr/webpack": "^8.1.0",
     "copy-webpack-plugin": "^10.2.4",
     "file-loader": "^6.2.0",
     "ignore": "^5.0.4",
