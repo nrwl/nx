@@ -46,6 +46,28 @@ describe('Nx Running Tests', () => {
         });
       });
 
+      it('should support running using a substring of the project name', () => {
+        // Note: actual project name will have some numbers at the end.
+        expect(() => runCLI(`echo proj`)).not.toThrow();
+      });
+
+      it('should error when multiple projects match a substring', () => {
+        const test1 = uniq('test1');
+        const test2 = uniq('test2');
+        runCLI(`generate @nx/js:lib libs/${test1}`);
+        runCLI(`generate @nx/js:lib libs/${test2}`);
+        updateJson(`libs/${test1}/project.json`, (c) => {
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+        updateJson(`libs/${test2}/project.json`, (c) => {
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+
+        expect(() => runCLI(`echo test`)).toThrow();
+      });
+
       it.each([
         '--watch false',
         '--watch=false',
