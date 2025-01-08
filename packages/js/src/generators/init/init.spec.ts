@@ -1,4 +1,4 @@
-import { writeJson, readJson, Tree, updateJson } from '@nx/devkit';
+import { writeJson, readJson, Tree, updateJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
 import { typescriptVersion } from '../../utils/versions';
@@ -166,4 +166,52 @@ describe('js init generator', () => {
       expect(!!packageJson.devDependencies?.['tslib']).toBe(shouldAdd);
     }
   );
+
+  it('should register the @nx/js/typescript plugin when addTsPlugin is true', async () => {
+    await init(tree, { addTsPlugin: true });
+
+    const nxJson = readNxJson(tree);
+    const typescriptPlugin = nxJson.plugins.find(
+      (plugin) =>
+        typeof plugin === 'object' && plugin.plugin === '@nx/js/typescript'
+    );
+    expect(typescriptPlugin).toBeDefined();
+  });
+
+  it('should create tsconfig.json and tsconfig.base.json files when addTsPlugin is true', async () => {
+    await init(tree, { addTsPlugin: true });
+
+    expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "extends": "./tsconfig.base.json",
+        "compileOnSave": false,
+        "files": [],
+        "references": []
+      }
+      "
+    `);
+    expect(tree.read('tsconfig.base.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "compilerOptions": {
+          "composite": true,
+          "declarationMap": true,
+          "emitDeclarationOnly": true,
+          "importHelpers": true,
+          "isolatedModules": true,
+          "lib": ["es2022"],
+          "module": "NodeNext",
+          "moduleResolution": "NodeNext",
+          "noEmitOnError": true,
+          "noFallthroughCasesInSwitch": true,
+          "noImplicitOverride": true,
+          "noImplicitReturns": true,
+          "noUnusedLocals": true,
+          "skipLibCheck": true,
+          "strict": true,
+          "target": "es2022"
+        }
+      }
+      "
+    `);
+  });
 });
