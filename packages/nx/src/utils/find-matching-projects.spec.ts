@@ -178,6 +178,13 @@ describe('findMatchingProjects', () => {
       findMatchingProjects(['!tag:api', 'test-project'], projectGraph)
     ).toEqual(['b', 'nested', 'test-project']);
   });
+
+  it('should match on substring of names', () => {
+    expect(findMatchingProjects(['test', 'nest'], projectGraph)).toEqual([
+      'test-project',
+      'nested',
+    ]);
+  });
 });
 
 const projects = [

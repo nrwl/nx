@@ -167,6 +167,20 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
+    // Only matching substrings when string is long enough, otherwise there will be too many matches.
+    // This is consistent with the behavior of run-one.ts.
+    if (pattern.value.length > 1) {
+      const matchingProjects = Object.keys(projects).filter((name) =>
+        name.includes(pattern.value)
+      );
+      for (const projectName of matchingProjects) {
+        if (pattern.exclude) {
+          matchedProjects.delete(projectName);
+        } else {
+          matchedProjects.add(projectName);
+        }
+      }
+    }
     return;
   }
 

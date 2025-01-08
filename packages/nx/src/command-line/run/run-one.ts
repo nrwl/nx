@@ -129,7 +129,11 @@ function getProjects(
       };
     } else if (matchingProjects.length > 1) {
       output.error({
-        title: `Multiple projects matched:\n- ${matchingProjects.join('\n- ')}`,
+        title: `Multiple projects matched:`,
+        bodyLines:
+          matchingProjects.length > 100
+            ? [...matchingProjects.slice(0, 100), '...']
+            : matchingProjects,
       });
       process.exit(1);
     }

@@ -9,10 +9,25 @@ export async function showProjectHandler(
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   const graph = await createProjectGraphAsync();
-  const node = graph.nodes[args.projectName];
+  let node = graph.nodes[args.projectName];
   if (!node) {
-    console.log(`Could not find project ${args.projectName}`);
-    process.exit(1);
+    const matchingProjects = Object.keys(graph.nodes).filter((name) =>
+      name.includes(args.projectName)
+    );
+    if (matchingProjects.length === 1) {
+      node = graph.nodes[matchingProjects[0]];
+    } else if (matchingProjects.length > 1) {
+      console.log(
+        `Multiple projects matched:\n  ${(matchingProjects.length > 100
+          ? [...matchingProjects.slice(0, 100), '...']
+          : matchingProjects
+        ).join('  \n')}`
+      );
+      process.exit(1);
+    } else {
+      console.log(`Could not find project ${args.projectName}`);
+      process.exit(1);
+    }
   }
   if (args.json) {
     console.log(JSON.stringify(node.data));
