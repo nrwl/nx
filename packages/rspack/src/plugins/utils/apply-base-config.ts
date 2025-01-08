@@ -18,6 +18,7 @@ import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -46,6 +47,7 @@ export function applyBaseConfig(
   options.memoryLimit ??= 2048;
   options.transformers ??= [];
   options.progress ??= true;
+  options.outputHashing ??= 'all';
 
   applyNxIndependentConfig(options, config);
 
@@ -112,6 +114,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
+    clean: options.deleteOutputPath,
   };
 
   config.watch = options.watch;
@@ -132,6 +135,7 @@ function applyNxIndependentConfig(
       IGNORED_RSPACK_WARNINGS.some((r) =>
         typeof x === 'string' ? r.test(x) : r.test(x.message)
       ),
+    ...(config.ignoreWarnings ?? []),
   ];
 
   config.optimization = !isProd
@@ -213,6 +217,8 @@ function applyNxDependentConfig(
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
   const plugins: RspackPluginInstance[] = [];
 
+  const isUsingTsSolution = isUsingTsSolutionSetup();
+
   const executorContext: Partial<ExecutorContext> = {
     projectName: options.projectName,
     targetName: options.targetName,
@@ -221,9 +227,14 @@ function applyNxDependentConfig(
     root: options.root,
   };
 
-  plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
+  options.useTsconfigPaths ??= !isUsingTsSolution;
+  // If the project is using ts solutions setup, the paths are not in tsconfig and we should not use the plugin's paths.
+  if (options.useTsconfigPaths) {
+    plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
+  }
 
-  if (!options?.skipTypeChecking) {
+  // New TS Solution already has a typecheck target
+  if (!options?.skipTypeChecking && !isUsingTsSolution) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({

@@ -1,5 +1,18 @@
 {
-  "generators": {},
+  "generators": {
+    "update-20-2-0-update-with-module-federation-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.3",
+      "description": "Update the withModuleFederation import use @nx/module-federation/rspack.",
+      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
+    },
+    "ensure-nx-module-federation-package": {
+      "cli": "nx",
+      "version": "20.3.0-beta.2",
+      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    }
+  },
   "packageJsonUpdates": {
     "18.1.0": {
       "version": "18.1.0-beta.0",
@@ -70,10 +83,10 @@
       }
     },
     "20.2.0": {
-      "version": "20.2.0-beta.3",
+      "version": "20.2.0-beta.7",
       "packages": {
         "@rspack/core": {
-          "version": "^1.1.2",
+          "version": "^1.1.5",
           "alwaysAddToPackageJson": false
         },
         "@rspack/dev-server": {

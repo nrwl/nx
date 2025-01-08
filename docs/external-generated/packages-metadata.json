@@ -35,20 +35,41 @@
         "path": "powerpack-conformance/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      },
+      {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/powerpack-conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/create-conformance-rule"
       }
     ],
     "executors": [
       {
-        "description": "Compile and bundle an Nx Conformance Rule",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+        "description": "Compile and bundle one or more Nx Conformance Rules",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
         "hidden": false,
-        "name": "bundle-rule",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
-        "path": "powerpack-conformance/executors/bundle-rule",
+        "name": "bundle-rules",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
+        "path": "powerpack-conformance/executors/bundle-rules",
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Create a new conformance rule",
+        "file": "external-generated/packages/powerpack-conformance/generators/create-rule.json",
+        "hidden": false,
+        "name": "create-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/generators/create-rule/schema.json",
+        "path": "powerpack-conformance/generators/create-rule",
+        "type": "generator"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
     "packageName": "@nx/powerpack-conformance",

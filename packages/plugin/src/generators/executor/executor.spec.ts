@@ -47,6 +47,28 @@ describe('NxPlugin Executor Generator', () => {
     ).toBeTruthy();
   });
 
+  it('should handle path with file extension', async () => {
+    await executorGenerator(tree, {
+      name: 'my-executor',
+      path: 'my-plugin/src/executors/my-executor/executor.ts',
+      unitTestRunner: 'jest',
+      includeHasher: false,
+    });
+
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
+    ).toBeTruthy();
+  });
+
   it('should generate files relative to the cwd', async () => {
     setCwd('my-plugin/src/executors/my-executor');
     await executorGenerator(tree, {

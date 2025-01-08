@@ -50,6 +50,27 @@ describe('NxPlugin Generator Generator', () => {
     ).toBeTruthy();
   });
 
+  it('should handle path with file extension', async () => {
+    await generatorGenerator(tree, {
+      name: 'my-generator',
+      path: 'my-plugin/src/generators/my-generator/generator.ts',
+      unitTestRunner: 'jest',
+    });
+
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/generator.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
+    ).toBeTruthy();
+  });
+
   it('should generate files relative to cwd', async () => {
     setCwd('my-plugin/src/nx-integrations/generators/my-generator');
     await generatorGenerator(tree, {

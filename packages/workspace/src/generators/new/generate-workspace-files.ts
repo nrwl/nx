@@ -416,18 +416,29 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NPM ||
     (options.preset === Preset.TS &&
       process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false')
+      process.env.NX_ADD_TS_PLUGIN !== 'false') ||
+    ((options.preset === Preset.Expo ||
+      options.preset === Preset.NextJs ||
+      options.preset === Preset.ReactMonorepo ||
+      options.preset === Preset.ReactNative ||
+      options.preset === Preset.RemixMonorepo ||
+      options.preset === Preset.VueMonorepo ||
+      options.preset === Preset.Nuxt ||
+      options.preset === Preset.NodeMonorepo ||
+      options.preset === Preset.Express) &&
+      options.workspaces)
   ) {
+    const workspaces = options.workspaceGlobs ?? ['packages/**'];
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
-        `packages:
-  - 'packages/*'
+        `packages: 
+  ${workspaces.map((workspace) => `- "${workspace}"`).join('\n  ')}
 `
       );
     } else {
       updateJson(tree, join(options.directory, 'package.json'), (json) => {
-        json.workspaces = ['packages/*'];
+        json.workspaces = workspaces;
         return json;
       });
     }

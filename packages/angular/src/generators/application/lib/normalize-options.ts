@@ -1,4 +1,4 @@
-import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
+import { joinPathFragments, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
@@ -7,7 +7,6 @@ import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function normalizeOptions(
   host: Tree,
@@ -30,11 +29,7 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  let bundler = options.bundler;
-  if (!bundler) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
-    bundler = angularMajorVersion >= 17 ? 'esbuild' : 'webpack';
-  }
+  const bundler = options.bundler ?? 'esbuild';
 
   // Set defaults and then overwrite with user options
   return {

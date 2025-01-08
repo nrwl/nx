@@ -162,7 +162,7 @@ describe('eslint-utils', () => {
   });
 
   describe('ESLint Flat Config', () => {
-    it('should throw if a non eslint.config.js or eslint.config.cjs file is used with ESLint Flat Config', async () => {
+    it('should throw if a non eslint.config.cjs or eslint.config.cjs file is used with ESLint Flat Config', async () => {
       await expect(
         resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true)
       ).rejects.toThrowErrorMatchingInlineSnapshot(

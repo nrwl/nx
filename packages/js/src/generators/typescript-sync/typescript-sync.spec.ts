@@ -14,6 +14,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: jest.fn(() => Promise.resolve()),
 }));
 
 describe('syncGenerator()', () => {
@@ -55,6 +56,14 @@ describe('syncGenerator()', () => {
         {}
       ),
     });
+  }
+
+  function addProjectWithImplicitDependencies(
+    name: string,
+    implicitDependencies: string[]
+  ) {
+    addProject(name);
+    projectGraph.nodes[name].data.implicitDependencies = implicitDependencies;
   }
 
   beforeEach(async () => {
@@ -282,7 +291,14 @@ describe('syncGenerator()', () => {
             // This is a nested comment
             "target": "es5"
           },
-          "references": [{ "path": "./packages/a" }, { "path": "./packages/b" }]
+          "references": [
+            {
+              "path": "./packages/a"
+            },
+            {
+              "path": "./packages/b"
+            }
+          ]
         }
         "
       `);
@@ -302,7 +318,11 @@ describe('syncGenerator()', () => {
           "compilerOptions": {
             "composite": true
           },
-          "references": [{ "path": "./packages/b" }]
+          "references": [
+            {
+              "path": "./packages/b"
+            }
+          ]
         }
         "
       `);
@@ -551,11 +571,11 @@ describe('syncGenerator()', () => {
   "compilerOptions": {
     "composite": true,
     // This is a nested comment
-    "target": "es5",
+    "target": "es5"
   },
   "references": []
 }
-      `
+`
       );
 
       await syncGenerator(tree);
@@ -569,7 +589,11 @@ describe('syncGenerator()', () => {
             // This is a nested comment
             "target": "es5"
           },
-          "references": [{ "path": "../bar/tsconfig.build.json" }]
+          "references": [
+            {
+              "path": "../bar/tsconfig.build.json"
+            }
+          ]
         }
         "
       `);
@@ -593,13 +617,36 @@ describe('syncGenerator()', () => {
             "composite": true
           },
           "references": [
-            { "path": "./packages/a" },
-            { "path": "./packages/b" },
-            { "path": "./packages/foo" }
+            {
+              "path": "./packages/a"
+            },
+            {
+              "path": "./packages/b"
+            },
+            {
+              "path": "./packages/foo"
+            }
           ]
         }
         "
       `);
+
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if dependent project is an implicit dependency', async () => {
+      addProject('implicit-dep');
+      addProjectWithImplicitDependencies('foo', ['implicit-dep']);
+
+      await syncGenerator(tree);
 
       expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
         .toMatchInlineSnapshot(`
@@ -639,21 +686,21 @@ describe('syncGenerator()', () => {
 
           expect(readJson(tree, 'packages/b/tsconfig.json').references)
             .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "../a",
-          },
-        ]
-      `);
+                    [
+                      {
+                        "path": "../a",
+                      },
+                    ]
+                `);
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
-        [
-          {
-            "path": "../a/${runtimeTsConfigFileName}",
-          },
-        ]
-      `);
+                    [
+                      {
+                        "path": "../a/${runtimeTsConfigFileName}",
+                      },
+                    ]
+                `);
         }
       );
 
@@ -908,96 +955,96 @@ describe('syncGenerator()', () => {
           ).toBeUndefined();
           expect(readJson(tree, 'packages/b/tsconfig.json').references)
             .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a",
+                        },
+                      ]
+                  `);
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a/${runtimeTsConfigFileName}",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a/${runtimeTsConfigFileName}",
+                        },
+                      ]
+                  `);
           expect(readJson(tree, 'packages/c/tsconfig.json').references)
             .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a",
+                        },
+                        {
+                          "path": "../b",
+                        },
+                      ]
+                  `);
           expect(
             readJson(tree, `packages/c/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a/${runtimeTsConfigFileName}",
-            },
-            {
-              "path": "../b/${runtimeTsConfigFileName}",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a/${runtimeTsConfigFileName}",
+                        },
+                        {
+                          "path": "../b/${runtimeTsConfigFileName}",
+                        },
+                      ]
+                  `);
           expect(readJson(tree, 'packages/d/tsconfig.json').references)
             .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-            {
-              "path": "../b",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a",
+                        },
+                        {
+                          "path": "../b",
+                        },
+                      ]
+                  `);
           expect(
             readJson(tree, `packages/d/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a/${runtimeTsConfigFileName}",
-            },
-            {
-              "path": "../b/${runtimeTsConfigFileName}",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a/${runtimeTsConfigFileName}",
+                        },
+                        {
+                          "path": "../b/${runtimeTsConfigFileName}",
+                        },
+                      ]
+                  `);
           expect(readJson(tree, 'packages/e/tsconfig.json').references)
             .toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a",
-            },
-            {
-              "path": "../b",
-            },
-            {
-              "path": "../d",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a",
+                        },
+                        {
+                          "path": "../b",
+                        },
+                        {
+                          "path": "../d",
+                        },
+                      ]
+                  `);
           expect(
             readJson(tree, `packages/e/${runtimeTsConfigFileName}`).references
           ).toMatchInlineSnapshot(`
-          [
-            {
-              "path": "../a/${runtimeTsConfigFileName}",
-            },
-            {
-              "path": "../b/${runtimeTsConfigFileName}",
-            },
-            {
-              "path": "../d/${runtimeTsConfigFileName}",
-            },
-          ]
-        `);
+                      [
+                        {
+                          "path": "../a/${runtimeTsConfigFileName}",
+                        },
+                        {
+                          "path": "../b/${runtimeTsConfigFileName}",
+                        },
+                        {
+                          "path": "../d/${runtimeTsConfigFileName}",
+                        },
+                      ]
+                  `);
         }
       );
 
@@ -1096,20 +1143,20 @@ describe('syncGenerator()', () => {
 
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
           .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "../a",
-          },
-        ]
-      `);
+                  [
+                    {
+                      "path": "../a",
+                    },
+                  ]
+              `);
         expect(readJson(tree, 'packages/b/tsconfig.custom.json').references)
           .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "../a/tsconfig.custom.json",
-          },
-        ]
-      `);
+                  [
+                    {
+                      "path": "../a/tsconfig.custom.json",
+                    },
+                  ]
+              `);
       });
 
       it('should sync project references to multiple configured runtime tsconfig files', async () => {

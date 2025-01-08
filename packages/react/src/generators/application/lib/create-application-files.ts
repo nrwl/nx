@@ -18,9 +18,11 @@ import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
 import {
-  getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function createApplicationFiles(
   host: Tree,
@@ -66,6 +68,7 @@ export async function createApplicationFiles(
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
     style: options.style === 'tailwind' ? 'css' : options.style,
     hasStyleFile,
+    isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
 
   if (options.bundler === 'vite') {
@@ -145,7 +148,21 @@ export async function createApplicationFiles(
       host,
       join(__dirname, '../files/base-rspack'),
       options.appProjectRoot,
-      templateVariables
+      {
+        ...templateVariables,
+        rspackPluginOptions: hasRspackPlugin(host)
+          ? createNxRspackPluginOptions(options)
+          : null,
+      }
+    );
+  } else if (options.bundler === 'rsbuild') {
+    generateFiles(
+      host,
+      join(__dirname, '../files/base-rsbuild'),
+      options.appProjectRoot,
+      {
+        ...templateVariables,
+      }
     );
   }
 
@@ -211,6 +228,39 @@ function createNxWebpackPluginOptions(
       {
         js: options.js,
         useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
+      },
+      `./src/main.tsx`
+    ),
+    tsConfig: './tsconfig.app.json',
+    assets: ['./src/favicon.ico', './src/assets'],
+    styles:
+      options.styledModule || !options.hasStyles
+        ? []
+        : [
+            `./src/styles.${
+              options.style !== 'tailwind' ? options.style : 'css'
+            }`,
+          ],
+  };
+}
+
+function createNxRspackPluginOptions(
+  options: NormalizedSchema
+): WithNxOptions & WithReactOptions {
+  return {
+    target: 'web',
+    outputPath: joinPathFragments(
+      'dist',
+      options.appProjectRoot != '.'
+        ? options.appProjectRoot
+        : options.projectName
+    ),
+    index: './src/index.html',
+    baseHref: '/',
+    main: maybeJs(
+      {
+        js: options.js,
+        useJsx: true,
       },
       `./src/main.tsx`
     ),

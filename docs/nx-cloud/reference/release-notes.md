@@ -64,6 +64,8 @@ Most workspaces will not be affected by this, but if you have these values confi
 they will stop working with this release (see [this](https://github.com/nrwl/nx-cloud-helm/pull/141/files) for details on what was removed).
 Please go to your workspace settings and you should be able to configure all the above values when you setup a VCS integration.
 
+_Terminal outputs_ in the web app will now be fully served from storage bucket (either S3/Gcloud/Azure, or your internal file-server). This means your NxCloud cluster needs to have an open/healthy connection to the bucket. You can test this by ssh'ing into the `nx-cloud-frontend` pod and trying to `wget` one of your bucket artefacts. Any proxy or firewall constraints will need to be handled. Additionally, if your bucket is hosted at a self-signed https URL, any fetch calls from the frontend pod to your bucket will fail. If you think any of this applies to you, please contact your DPE to discuss options.
+
 ### 2406.29.1.patch1
 
 - Fix an issue with specifying custom AWS credentials in Minio instances

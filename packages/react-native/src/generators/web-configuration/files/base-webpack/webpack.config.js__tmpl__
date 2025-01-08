@@ -6,6 +6,8 @@ module.exports = {
   resolve: {
     alias: {
       'react-native$': 'react-native-web',
+      'react-native-svg': 'react-native-svg-web',
+      '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
     },
     extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js']
   },
@@ -51,6 +53,8 @@ module.exports = composePlugins(
   config.resolve.alias = {
     ...config.resolve.alias ?? {},
     'react-native$': 'react-native-web',
+    'react-native-svg': 'react-native-svg-web',
+    '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
   };
   config.resolve.extensions = [
     '.web.tsx',

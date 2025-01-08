@@ -173,7 +173,7 @@ export function PowerpackFeatures(): ReactElement {
                 Nx Powerpack is reliably maintained by the Nx team. Nx (the
                 company) adheres to strict security and data-handling standards,
                 including compliance with <Strong>SOC 2</Strong> (Type 1 and
-                Type 2) and <Strong>GDPR</Strong>.
+                Type 2).
               </p>
 
               <div className="mt-6">

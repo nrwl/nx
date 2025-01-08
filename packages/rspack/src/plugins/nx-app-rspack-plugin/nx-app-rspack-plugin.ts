@@ -6,7 +6,6 @@ import type {
 import { normalizeOptions } from '../utils/plugins/normalize-options';
 import { applyBaseConfig } from '../utils/apply-base-config';
 import { applyWebConfig } from '../utils/apply-web-config';
-import { deleteOutputDir } from '../utils/delete-output-path';
 
 /**
  * This plugin provides features to build Node and Web applications.
@@ -47,10 +46,6 @@ export class NxAppRspackPlugin {
       applyWebConfig(this.options, compiler.options, {
         useNormalizedEntry: true,
       });
-    }
-
-    if (this.options.deleteOutputPath) {
-      deleteOutputDir(this.options.root, this.options.outputPath);
     }
   }
 }

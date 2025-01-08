@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -13,6 +14,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import {
@@ -20,7 +22,6 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -35,6 +36,11 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -50,7 +56,13 @@ export async function expoLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'expo', 'library');
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -59,13 +71,6 @@ export async function expoLibraryGeneratorInternal(
     );
   }
 
-  const tasks: GeneratorCallback[] = [];
-
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
   if (!options.skipPackageJson) {
@@ -104,7 +109,7 @@ export async function expoLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -114,8 +119,31 @@ export async function expoLibraryGeneratorInternal(
     ]);
   }
 
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {
@@ -136,7 +164,29 @@ async function addProject(
     tags: options.parsedTags,
     targets: {},
   };
-  addProjectConfiguration(host, options.name, project);
+
+  if (options.isUsingTsSolutionConfig) {
+    const packageName = getImportPath(host, options.name);
+    const sourceEntry = !options.buildable
+      ? options.js
+        ? './src/index.js'
+        : './src/index.ts'
+      : undefined;
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: packageName,
+      version: '0.0.1',
+      main: sourceEntry,
+      types: sourceEntry,
+      nx: {
+        name: packageName === options.name ? undefined : options.name,
+        projectType: 'library',
+        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.name, project);
+  }
 
   if (!options.publishable && !options.buildable) {
     return () => {};

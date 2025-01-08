@@ -20,9 +20,9 @@ export function Hero(): JSX.Element {
               href="/contact"
               variant="contrast"
               size="default"
-              title="Join us"
+              title="Contact us"
             >
-              Reach out
+              Contact us
             </ButtonLink>
 
             <a

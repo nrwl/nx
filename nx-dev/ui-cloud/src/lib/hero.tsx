@@ -7,6 +7,7 @@ import { ComponentProps, Fragment, useState } from 'react';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import { MovingBorder } from '@nx/nx-dev/ui-animations';
 import Image from 'next/image';
+import { NxCloudAnimatedIcon } from '@nx/nx-dev/ui-icons';
 
 export function Hero(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,12 +27,13 @@ export function Hero(): JSX.Element {
         </SectionHeading>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <ButtonLink
-            href="https://cloud.nx.app"
+            href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=nx-cloud-hero&utm_campaign=go-to-app"
             title="Get started"
             variant="primary"
             size="default"
           >
-            Get started
+            <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
+            <span>Go to app</span>
           </ButtonLink>
           <ButtonLink
             href="/ci/intro/ci-with-nx"

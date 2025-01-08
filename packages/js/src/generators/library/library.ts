@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  installPackagesTask,
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
@@ -42,14 +43,12 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import {
-  ensureProjectIsExcludedFromPluginRegistrations,
-  ensureProjectIsIncludedInPluginRegistrations,
-} from '../../utils/typescript/plugin';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
   getRootTsConfigFileName,
+  readTsConfigFromTree,
 } from '../../utils/typescript/ts-config';
 import {
   isUsingTsSolutionSetup,
@@ -69,6 +68,7 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 
 const defaultOutputDirectory = 'dist';
 
@@ -234,6 +234,11 @@ export async function libraryGeneratorInternal(
     });
   }
 
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(tree));
+  }
+
   tasks.push(() => {
     logShowProjectCommand(options.name);
   });
@@ -247,14 +252,7 @@ async function configureProject(
 ) {
   if (options.hasPlugin) {
     const nxJson = readNxJson(tree);
-    if (options.bundler === 'none') {
-      ensureProjectIsExcludedFromPluginRegistrations(
-        nxJson,
-        options.projectRoot
-      );
-    } else {
-      ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
-    }
+    ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
     updateNxJson(tree, nxJson);
   }
 
@@ -291,7 +289,10 @@ async function configureProject(
       projectConfiguration.targets.build.options.format = ['cjs'];
     }
 
-    if (options.bundler === 'swc' && options.skipTypeCheck) {
+    if (
+      options.bundler === 'swc' &&
+      (options.skipTypeCheck || options.isUsingTsSolutionConfig)
+    ) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
 
@@ -501,6 +502,25 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
 
   createProjectTsConfigs(tree, options);
 
+  let fileNameImport = options.fileName;
+  if (options.bundler === 'vite') {
+    const tsConfig = readTsConfigFromTree(
+      tree,
+      join(options.projectRoot, 'tsconfig.lib.json')
+    );
+    const ts = ensureTypescript();
+    if (
+      tsConfig.options.moduleResolution === ts.ModuleResolutionKind.Node16 ||
+      tsConfig.options.moduleResolution === ts.ModuleResolutionKind.NodeNext
+    ) {
+      // Node16 and NodeNext require explicit file extensions for relative
+      // import paths. Since we generate the file with the `.ts` extension,
+      // we import it from the same file with the `.js` extension.
+      // https://www.typescriptlang.org/docs/handbook/modules/reference.html#file-extension-substitution
+      fileNameImport = `${options.fileName}.js`;
+    }
+  }
+
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     dot: '.',
@@ -514,6 +534,7 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
+    fileNameImport,
   });
 
   if (!options.rootProject) {
@@ -777,7 +798,7 @@ async function normalizeOptions(
 
   if (
     (options.bundler === 'swc' || options.bundler === 'rollup') &&
-    options.skipTypeCheck == null
+    (options.skipTypeCheck == null || !isUsingTsSolutionConfig)
   ) {
     options.skipTypeCheck = false;
   }
@@ -970,6 +991,10 @@ function createProjectTsConfigs(
         .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
         .join(',\n    '),
       tmpl: '',
+      outDir:
+        options.bundler === 'tsc'
+          ? 'dist'
+          : `out-tsc/${options.projectRoot.split('/').pop()}`,
     }
   );
 
@@ -1097,14 +1122,10 @@ function determineEntryFields(
       };
     case 'vite':
       return {
-        // Since we're publishing both formats, skip the type field.
-        // Bundlers or Node will determine the entry point to use.
+        type: 'module',
         main: options.isUsingTsSolutionConfig
           ? './dist/index.js'
           : './index.js',
-        module: options.isUsingTsSolutionConfig
-          ? './dist/index.mjs'
-          : './index.mjs',
         typings: options.isUsingTsSolutionConfig
           ? './dist/index.d.ts'
           : './index.d.ts',
@@ -1125,6 +1146,17 @@ function determineEntryFields(
         // Safest option is to not set a type field.
         // Allow the user to decide which module format their library is using
         type: undefined,
+        // For non-buildable libraries, point to source so we can still use them in apps via bundlers like Vite.
+        main: options.isUsingTsSolutionConfig
+          ? options.js
+            ? './src/index.js'
+            : './src/index.ts'
+          : undefined,
+        types: options.isUsingTsSolutionConfig
+          ? options.js
+            ? './src/index.js'
+            : './src/index.ts'
+          : undefined,
       };
     }
   }

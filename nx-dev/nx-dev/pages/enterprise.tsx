@@ -3,28 +3,31 @@ import { NextSeo } from 'next-seo';
 import { DefaultLayout } from '@nx/nx-dev/ui-common';
 import {
   CallToAction,
-  DownloadEbook,
-  EnterpriseAddons,
+  CustomerLogos,
+  CustomerMetrics,
   Hero,
-  MetricsAndCustomers,
-  ScaleYourPeople,
+  HetznerCloudTestimonial,
+  MakeYourCiFast,
+  ScaleOrganizationIntro,
+  ScaleYourOrganization,
   Security,
-  TrustedBy,
-  SolveYourCi,
+  TestimonialCarousel,
+  VmwareTestimonial,
 } from '@nx/nx-dev/ui-enterprise';
-import { TrialCallout } from '@nx/nx-dev/ui-pricing';
+import { requestFreeTrial } from '../lib/components/headerCtaConfigs';
+import { ReactElement } from 'react';
 
-export function Enterprise(): JSX.Element {
+export function Enterprise(): ReactElement {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
-        title="Nx Enterprise"
+        title="Solving the Performance Paradox, get speed and scale"
         description="Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Enterprise',
+          title: 'Solving the Performance Paradox, get speed and scale',
           description:
             "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
           images: [
@@ -40,35 +43,32 @@ export function Enterprise(): JSX.Element {
           type: 'website',
         }}
       />
-      <DefaultLayout>
+      <DefaultLayout headerCTAConfig={[requestFreeTrial]} isHome={true}>
         <div>
           <Hero />
+          <CustomerLogos />
+        </div>
+        <CustomerMetrics />
+        <div className="mt-32 lg:mt-40">
+          <MakeYourCiFast />
         </div>
         <div className="mt-32 lg:mt-40">
-          <MetricsAndCustomers />
+          <TestimonialCarousel />
         </div>
         <div className="mt-32 lg:mt-40">
-          <TrialCallout pageId="enterprise" />
+          <ScaleOrganizationIntro />
+          <ScaleYourOrganization />
         </div>
-        <div className="mt-32 lg:mt-56">
-          <ScaleYourPeople />
+        <div className="mt-32 lg:mt-40">
+          <HetznerCloudTestimonial />
         </div>
         <div className="mt-32 lg:mt-56">
           <Security />
         </div>
         <div className="mt-32 lg:mt-56">
-          <SolveYourCi />
+          <VmwareTestimonial />
         </div>
-        <div className="mt-32 lg:mt-56">
-          <DownloadEbook />
-        </div>
-        <div className="mt-32 lg:mt-56">
-          <EnterpriseAddons />
-        </div>
-        <div className="mt-32">
-          <TrustedBy />
-        </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="mt-32 lg:mt-40">
           <CallToAction />
         </div>
       </DefaultLayout>

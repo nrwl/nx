@@ -6,12 +6,16 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
 import type { RemixLibraryOptions } from './normalize-options';
+import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export function addTsconfigEntryPoints(
   tree: Tree,
   options: RemixLibraryOptions
 ) {
-  const { sourceRoot } = readProjectConfiguration(tree, options.projectName);
+  const { root: projectRoot, sourceRoot } = readProjectConfiguration(
+    tree,
+    options.projectName
+  );
   const serverFilePath = joinPathFragments(sourceRoot, 'server.ts');
 
   tree.write(
@@ -20,14 +24,13 @@ export function addTsconfigEntryPoints(
   );
 
   const baseTsConfig = getRootTsConfigPathInTree(tree);
+  // Use same logic as `determineProjectNameAndRootOptions` to get the import path
+  const importPath = resolveImportPath(tree, options.name, projectRoot);
   updateJson(tree, baseTsConfig, (json) => {
-    if (
-      json.compilerOptions.paths &&
-      json.compilerOptions.paths[options.importPath]
-    ) {
-      json.compilerOptions.paths[
-        joinPathFragments(options.importPath, 'server')
-      ] = [serverFilePath];
+    if (json.compilerOptions.paths && json.compilerOptions.paths[importPath]) {
+      json.compilerOptions.paths[joinPathFragments(importPath, 'server')] = [
+        serverFilePath,
+      ];
     }
 
     return json;

@@ -34,6 +34,13 @@
       "id": "console-run-command",
       "name": "Run Command",
       "path": "/recipes/nx-console/console-run-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-nx-cloud",
+      "id": "console-nx-cloud",
+      "name": "Nx Cloud Integration",
+      "path": "/recipes/nx-console/console-nx-cloud"
     }
   ],
   "run-tasks": [
@@ -57,6 +64,13 @@
       "id": "executors-and-configurations",
       "name": "Executors and Configurations",
       "path": "/concepts/executors-and-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/common-tasks",
+      "id": "common-tasks",
+      "name": "Common Tasks",
+      "path": "/concepts/common-tasks"
     },
     {
       "description": "",
@@ -499,6 +513,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/updating-version-references",
+      "id": "updating-version-references",
+      "name": "Updating Version References in Manifest Files (e.g. package.json)",
+      "path": "/recipes/nx-release/updating-version-references"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
@@ -559,13 +580,6 @@
       "id": "configure-changelog-format",
       "name": "Configure Changelog Format",
       "path": "/recipes/nx-release/configure-changelog-format"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-      "id": "publish-custom-dist-directory",
-      "name": "Publish a Custom Dist Directory",
-      "path": "/recipes/nx-release/publish-custom-dist-directory"
     },
     {
       "description": "",
@@ -1235,6 +1249,20 @@
       "id": "conformance",
       "name": "Run Language-Agnostic Conformance Rules",
       "path": "/nx-enterprise/powerpack/conformance"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+      "id": "configure-conformance-rules-in-nx-cloud",
+      "name": "Configure Conformance Rules in Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+      "id": "publish-conformance-rules-to-nx-cloud",
+      "name": "Publish Conformance Rules to Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
     }
   ],
   "owners": [

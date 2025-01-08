@@ -237,6 +237,12 @@
               "file": "shared/concepts/executors-and-configurations"
             },
             {
+              "name": "Common Tasks",
+              "id": "common-tasks",
+              "tags": ["run-tasks"],
+              "file": "shared/concepts/common-tasks"
+            },
+            {
               "name": "Nx Daemon",
               "id": "nx-daemon",
               "tags": ["daemon"],
@@ -500,6 +506,12 @@
                   "file": "shared/recipes/nx-release/release-projects-independently"
                 },
                 {
+                  "name": "Updating Version References in Manifest Files (e.g. package.json)",
+                  "id": "updating-version-references",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/updating-version-references"
+                },
+                {
                   "name": "Automatically Version with Conventional Commits",
                   "id": "automatically-version-with-conventional-commits",
                   "tags": ["nx-release"],
@@ -552,12 +564,6 @@
                   "id": "configure-changelog-format",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/configure-changelog-format"
-                },
-                {
-                  "name": "Publish a Custom Dist Directory",
-                  "id": "publish-custom-dist-directory",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
                 },
                 {
                   "name": "Build Before Versioning",
@@ -626,6 +632,12 @@
                   "id": "console-run-command",
                   "tags": ["editor-setup"],
                   "file": "shared/recipes/console-run-command"
+                },
+                {
+                  "name": "Nx Cloud Integration",
+                  "id": "console-nx-cloud",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-nx-cloud"
                 },
                 {
                   "name": "Troubleshooting",
@@ -1953,6 +1965,25 @@
                       "file": "nx-cloud/enterprise/dte/jenkins-dte"
                     }
                   ]
+                },
+                {
+                  "name": "Conformance",
+                  "id": "conformance",
+                  "description": "Conformance features that are available to Nx Cloud Enterprise customers",
+                  "itemList": [
+                    {
+                      "name": "Configure Conformance Rules in Nx Cloud",
+                      "id": "configure-conformance-rules-in-nx-cloud",
+                      "tags": ["conformance"],
+                      "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+                    },
+                    {
+                      "name": "Publish Conformance Rules to Nx Cloud",
+                      "id": "publish-conformance-rules-to-nx-cloud",
+                      "tags": ["conformance"],
+                      "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
+                    }
+                  ]
                 }
               ]
             },
@@ -2000,6 +2031,11 @@
               "name": "Launch Templates",
               "id": "launch-templates",
               "file": "nx-cloud/reference/launch-templates"
+            },
+            {
+              "name": "Assignment Rules",
+              "id": "assignment-rules",
+              "file": "nx-cloud/reference/assignment-rules"
             },
             {
               "name": "Custom Steps",
@@ -2644,6 +2680,12 @@
               "id": "overview",
               "path": "/nx-api/powerpack-conformance",
               "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            },
+            {
+              "name": "Create a Conformance Rule",
+              "id": "create-conformance-rule",
+              "path": "/nx-api/powerpack-conformance",
+              "file": "shared/packages/powerpack-conformance/create-conformance-rule"
             }
           ]
         },

@@ -27,7 +27,11 @@ import {
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
+import { detectUiFramework } from '../../utils/detect-ui-framework';
 
+/**
+ * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
+ */
 export function vitestGenerator(
   tree: Tree,
   schema: VitestGeneratorSchema,
@@ -51,7 +55,13 @@ export async function vitestGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const { root, projectType: _projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  const projectType = schema.projectType ?? _projectType;
+  const uiFramework =
+    schema.uiFramework ?? (await detectUiFramework(schema.project));
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
@@ -60,22 +70,49 @@ export async function vitestGeneratorInternal(
     addPlugin: schema.addPlugin,
   });
   tasks.push(initTask);
-  tasks.push(ensureDependencies(tree, schema));
+  tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));
 
-  const nxJson = readNxJson(tree);
-  const hasPluginCheck = nxJson.plugins?.some(
-    (p) =>
-      (typeof p === 'string'
-        ? p === '@nx/vite/plugin'
-        : p.plugin === '@nx/vite/plugin') || hasPlugin
-  );
-  if (!hasPluginCheck) {
-    const testTarget = schema.testTarget ?? 'test';
-    addOrChangeTestTarget(tree, schema, testTarget);
-  }
+  addOrChangeTestTarget(tree, schema, hasPlugin);
 
   if (!schema.skipViteConfig) {
-    if (schema.uiFramework === 'react') {
+    if (uiFramework === 'angular') {
+      const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
+
+      const setupFile = joinPathFragments(root, relativeTestSetupPath);
+      if (!tree.exists(setupFile)) {
+        tree.write(
+          setupFile,
+          `import '@analogjs/vitest-angular/setup-zone';
+
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+`
+        );
+      }
+
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: false,
+          includeVitest: true,
+          inSourceTests: false,
+          imports: [`import angular from '@analogjs/vite-plugin-angular'`],
+          plugins: ['angular()'],
+          setupFile: relativeTestSetupPath,
+          useEsmExtension: true,
+        },
+        true
+      );
+    } else if (uiFramework === 'react') {
       createOrEditViteConfig(
         tree,
         {
@@ -279,7 +316,9 @@ function createFiles(
     extendedConfig: isTsSolutionSetup
       ? `${rootOffset}tsconfig.base.json`
       : './tsconfig.json',
-    outDir: isTsSolutionSetup ? `./out-tsc/jest` : `${rootOffset}dist/out-tsc`,
+    outDir: isTsSolutionSetup
+      ? `./out-tsc/vitest`
+      : `${rootOffset}dist/out-tsc`,
   });
 }
 

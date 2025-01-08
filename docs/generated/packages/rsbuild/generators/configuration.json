@@ -1,0 +1,55 @@
+{
+  "name": "configuration",
+  "factory": "./src/generators/configuration/configuration",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "Rsbuild",
+    "title": "Nx Rsbuild Configuration Generator",
+    "description": "Rsbuild configuration generator.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-dropdown": "project",
+        "x-prompt": "What is the name of the project to set up a Rsbuild for?",
+        "x-priority": "important"
+      },
+      "entry": {
+        "type": "string",
+        "description": "Path relative to the workspace root for the entry file. Defaults to '<projectRoot>/src/index.ts'.",
+        "x-priority": "important"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'.",
+        "x-priority": "important"
+      },
+      "devServerPort": {
+        "type": "number",
+        "description": "The port for the dev server to listen on.",
+        "default": 4200
+      },
+      "target": {
+        "type": "string",
+        "description": "Target platform for the build, same as the Rsbuild output.target config option.",
+        "enum": ["node", "web", "web-worker"],
+        "default": "web"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "presets": []
+  },
+  "description": "Add an Rsbuild configuration for the provided project.",
+  "implementation": "/packages/rsbuild/src/generators/configuration/configuration.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/rsbuild/src/generators/configuration/schema.json",
+  "type": "generator"
+}

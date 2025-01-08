@@ -12,7 +12,7 @@ export interface NormalizedSchema extends CreatePackageSchema {
   bundler: 'swc' | 'tsc';
   projectName: string;
   projectRoot: string;
-  unitTestRunner: 'jest' | 'none';
+  unitTestRunner: 'jest' | 'vitest' | 'none';
   linter: LinterType;
   useProjectJson: boolean;
   addPlugin: boolean;

@@ -114,10 +114,20 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   const tsSysFromTree: ts.System = {
     ...ts.sys,
     fileExists(path) {
-      return tsconfigExists(tree, tsconfigInfoCaches, path);
+      // Given ts.System.resolve resolve full path for tsconfig within node_modules
+      // We need to remove the workspace root to ensure we don't have double workspace root within the Tree
+      const correctPath = path.startsWith(tree.root)
+        ? relative(tree.root, path)
+        : path;
+      return tsconfigExists(tree, tsconfigInfoCaches, correctPath);
     },
     readFile(path) {
-      return readRawTsconfigContents(tree, tsconfigInfoCaches, path);
+      // Given ts.System.resolve resolve full path for tsconfig within node_modules
+      // We need to remove the workspace root to ensure we don't have double workspace root within the Tree
+      const correctPath = path.startsWith(tree.root)
+        ? relative(tree.root, path)
+        : path;
+      return readRawTsconfigContents(tree, tsconfigInfoCaches, correctPath);
     },
   };
 
@@ -261,7 +271,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     return {
       outOfSyncMessage:
-        'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.',
+        'Some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.',
     };
   }
 }
@@ -467,8 +477,8 @@ function collectProjectDependencies(
 
   for (const dep of projectGraph.dependencies[projectName]) {
     const targetProjectNode = projectGraph.nodes[dep.target];
-    if (!targetProjectNode) {
-      // It's an npm dependency
+    if (!targetProjectNode || dep.type === 'implicit') {
+      // It's an npm or an implicit dependency
       continue;
     }
 
@@ -604,7 +614,7 @@ function patchTsconfigJsonReferences(
     stringifiedJsonContents,
     ['references'],
     updatedReferences,
-    {}
+    { formattingOptions: { keepLines: true, insertSpaces: true, tabSize: 2 } }
   );
   const updatedJsonContents = applyEdits(stringifiedJsonContents, edits);
   // The final contents will be formatted by formatFiles() later
