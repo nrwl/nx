@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 export default function NxPowerPackPage(): JSX.Element {
   const headerCTAConfig: ButtonLinkProps[] = [
     {
-      href: 'https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl',
+      href: '/powerpack/trial',
       variant: 'primary',
       size: 'small',
       title: 'Request a free trial',

@@ -64,7 +64,7 @@ export function CallToAction(): ReactElement {
         <div className="mt-10">
           <Link
             aria-label="Request a free trial"
-            href="/contact/sales"
+            href="/enterprise/trial"
             prefetch={false}
             title="Request a free trial"
             onClick={() =>
@@ -81,7 +81,7 @@ export function CallToAction(): ReactElement {
           <p className="mt-6 italic">
             Want to talk terms or see a demo?{' '}
             <Link
-              href="/contact/sales"
+              href="/enterprise/trial"
               title="Talk to the team"
               className="font-semibold underline"
               prefetch={false}

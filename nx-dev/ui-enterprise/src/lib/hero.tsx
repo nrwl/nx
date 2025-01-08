@@ -72,7 +72,7 @@ export function Hero(): ReactElement {
           </SectionHeading>
           <div className="mt-8 flex items-center gap-x-6">
             <ButtonLink
-              href="/contact/sales"
+              href="/enterprise/trial"
               title="Request a free trial"
               variant="primary"
               size="default"

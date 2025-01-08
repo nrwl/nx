@@ -41,12 +41,12 @@ export function Hero(): ReactElement {
         </SectionHeading>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <ButtonLink
-            href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
-            title="Talk to the engineering team"
+            href="/powerpack/trial"
+            title="Request a free trial"
             variant="primary"
             size="default"
           >
-            Get Powerpack
+            Buy Powerpack
           </ButtonLink>
           <a
             href={YOUTUBE_URL}
