@@ -643,13 +643,6 @@ function isValidPackageJsonBuildConfig(
     return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
   };
 
-  // If `outFile` is defined, check the validity of the path.
-  if (tsConfig.options.outFile) {
-    if (isPathSourceFile(tsConfig.options.outFile)) {
-      return false;
-    }
-  }
-
   // Checks if the value is a path within the `src` directory.
   const containsInvalidPath = (
     value: string | Record<string, string>
