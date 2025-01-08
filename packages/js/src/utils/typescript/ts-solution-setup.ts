@@ -198,10 +198,11 @@ export function addProjectToTsSolutionWorkspace(
   tree: Tree,
   projectDir: string
 ) {
-  // If dir is "libs/foo" then use "libs/**" so we don't need so many entries in the workspace file.
+  // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
+  // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
   // If the dir is just "foo" then we have to add it as is.
   const baseDir = dirname(projectDir);
-  const pattern = baseDir === '.' ? projectDir : `${baseDir}/**`;
+  const pattern = baseDir === '.' ? projectDir : `${baseDir}/*`;
   if (tree.exists('pnpm-workspace.yaml')) {
     const { load, dump } = require('@zkochan/js-yaml');
     const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');

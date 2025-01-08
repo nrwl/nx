@@ -23,13 +23,13 @@ describe('Vue Plugin', () => {
         'pnpm-workspace.yaml',
         `
 packages:
-  - 'apps/**'
-  - 'packages/**'
+  - 'apps/*'
+  - 'packages/*'
 `
       );
     } else {
       updateJson('package.json', (json) => {
-        json.workspaces = ['apps/**', 'packages/**'];
+        json.workspaces = ['apps/*', 'packages/*'];
         return json;
       });
     }
