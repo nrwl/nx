@@ -492,7 +492,7 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
   let attempts = 0;
   // Generate a random number between 2 and 4 to raise to the power of attempts
   const baseExponent = Math.random() * 2 + 2;
-  const baseTimeout = 15
+  const baseTimeout = 15;
   const _try = async () => {
     try {
       attempts++;
@@ -503,7 +503,9 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
         // After enough attempts, throw the error
         throw e;
       }
-      await new Promise((res) => setTimeout(res, basetimeout * baseExponent ** attempts));
+      await new Promise((res) =>
+        setTimeout(res, baseTimeout * baseExponent ** attempts)
+      );
       return await _try();
     }
   };
