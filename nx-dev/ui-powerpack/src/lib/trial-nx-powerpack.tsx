@@ -16,9 +16,10 @@ export function TrialNxPowerpack(): ReactElement {
   return (
     <section id="trial-nx-powerpack">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-6xl text-center">
           <SectionHeading as="h1" variant="display" id="try-nx-powerpack">
-            Start a Trial of Nx Powerpack
+            Start a Trial of <br />
+            Nx Powerpack
           </SectionHeading>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
@@ -93,7 +94,7 @@ export function TrialNxPowerpack(): ReactElement {
               <figcaption className="mt-6 flex items-center gap-x-4 text-sm/6">
                 <img
                   alt="Amir Toole"
-                  src="/images/customers/contact/amir-toole-caseware-headshot.avif"
+                  src="/images/customers/enterprise/amir-toole-caseware-headshot.avif"
                   className="size-8 flex-none rounded-full"
                 />
                 <div>

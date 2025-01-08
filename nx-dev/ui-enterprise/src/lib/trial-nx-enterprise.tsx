@@ -18,7 +18,8 @@ export function TrialNxEnterprise(): ReactElement {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h1" variant="display" id="trial-nx-enterprise">
-            Start a Trial of Nx Enterprise
+            Start a Trial of <br />
+            Nx Enterprise
           </SectionHeading>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
