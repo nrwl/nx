@@ -12,7 +12,7 @@ import {
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import { LoadedNxPlugin } from './plugins/internal-api';
+import type { LoadedNxPlugin } from './plugins/loaded-nx-plugin';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,

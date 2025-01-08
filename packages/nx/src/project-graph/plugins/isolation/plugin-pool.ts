@@ -7,7 +7,7 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import { LoadedNxPlugin } from '../internal-api';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 
@@ -17,7 +17,7 @@ import {
   sendMessageOverSocket,
 } from './messaging';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
-import { resolveNxPlugin } from '../loader';
+import { resolveNxPlugin } from '../resolve-plugin';
 
 const cleanupFunctions = new Set<() => void>();
 
