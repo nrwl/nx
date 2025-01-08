@@ -1,8 +1,10 @@
 import {
   cleanupProject,
+  getPackageManagerCommand,
   getSelectedPackageManager,
   newProject,
   runCLI,
+  runCommand,
   uniq,
   updateFile,
   updateJson,
@@ -20,7 +22,7 @@ describe('JS - TS solution setup', () => {
     cleanupProject();
   });
 
-  it('should generate libraries with different bundlers, link them and build them successfully', () => {
+  it('should generate libraries with different bundlers and link them successfully', () => {
     const esbuildParentLib = uniq('esbuild-parent-lib');
     const esbuildChildLib = uniq('esbuild-child-lib');
     const rollupParentLib = uniq('rollup-parent-lib');
@@ -31,21 +33,37 @@ describe('JS - TS solution setup', () => {
     const tscChildLib = uniq('tsc-child-lib');
     const viteParentLib = uniq('vite-parent-lib');
     const viteChildLib = uniq('vite-child-lib');
-    const noBundlerLib = uniq('no-bundler-lib');
 
     runCLI(
-      `generate @nx/js:lib packages/${esbuildParentLib} --bundler=esbuild`
+      `generate @nx/js:lib packages/${esbuildParentLib} --bundler=esbuild --linter=eslint --unitTestRunner=jest`
     );
-    runCLI(`generate @nx/js:lib packages/${esbuildChildLib} --bundler=esbuild`);
-    runCLI(`generate @nx/js:lib packages/${rollupParentLib} --bundler=rollup`);
-    runCLI(`generate @nx/js:lib packages/${rollupChildLib} --bundler=rollup`);
-    runCLI(`generate @nx/js:lib packages/${swcParentLib} --bundler=swc`);
-    runCLI(`generate @nx/js:lib packages/${swcChildLib} --bundler=swc`);
-    runCLI(`generate @nx/js:lib packages/${tscParentLib} --bundler=tsc`);
-    runCLI(`generate @nx/js:lib packages/${tscChildLib} --bundler=tsc`);
-    runCLI(`generate @nx/js:lib packages/${viteParentLib} --bundler=vite`);
-    runCLI(`generate @nx/js:lib packages/${viteChildLib} --bundler=vite`);
-    runCLI(`generate @nx/js:lib packages/${noBundlerLib} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib packages/${esbuildChildLib} --bundler=esbuild --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${rollupParentLib} --bundler=rollup --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${rollupChildLib} --bundler=rollup --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${swcParentLib} --bundler=swc --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${swcChildLib} --bundler=swc --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${tscParentLib} --bundler=tsc --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${tscChildLib} --bundler=tsc --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${viteParentLib} --bundler=vite --linter=eslint --unitTestRunner=jest`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${viteChildLib} --bundler=vite --linter=eslint --unitTestRunner=jest`
+    );
 
     // add deps, each parent lib imports all child libs
     const addImports = (parentLib: string) => {
@@ -56,7 +74,6 @@ export * from '@proj/${rollupChildLib}';
 export * from '@proj/${swcChildLib}';
 export * from '@proj/${tscChildLib}';
 export * from '@proj/${viteChildLib}';
-export * from '@proj/${noBundlerLib}';
 ${content}`
       );
     };
@@ -78,7 +95,6 @@ ${content}`
           json.dependencies[`@proj/${swcChildLib}`] = 'workspace:*';
           json.dependencies[`@proj/${tscChildLib}`] = 'workspace:*';
           json.dependencies[`@proj/${viteChildLib}`] = 'workspace:*';
-          json.dependencies[`@proj/${noBundlerLib}`] = 'workspace:*';
           return json;
         });
       };
@@ -88,15 +104,80 @@ ${content}`
       addDeps(swcParentLib);
       addDeps(tscParentLib);
       addDeps(viteParentLib);
+
+      const pmc = getPackageManagerCommand({ packageManager: pm });
+      runCommand(pmc.install);
     }
 
     // sync to ensure the TS project references are updated
     runCLI(`sync`);
 
-    expect(() => runCLI(`build ${esbuildParentLib}`)).not.toThrow();
-    expect(() => runCLI(`build ${rollupParentLib}`)).not.toThrow();
-    expect(() => runCLI(`build ${swcParentLib}`)).not.toThrow();
-    expect(() => runCLI(`build ${tscParentLib}`)).not.toThrow();
-    expect(() => runCLI(`build ${viteParentLib}`)).not.toThrow();
+    // check build
+    expect(runCLI(`build ${esbuildParentLib}`)).toContain(
+      `Successfully ran target build for project ${esbuildParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`build ${rollupParentLib}`)).toContain(
+      `Successfully ran target build for project ${rollupParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`build ${swcParentLib}`)).toContain(
+      `Successfully ran target build for project ${swcParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`build ${tscParentLib}`)).toContain(
+      `Successfully ran target build for project ${tscParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`build ${viteParentLib}`)).toContain(
+      `Successfully ran target build for project ${viteParentLib} and 5 tasks it depends on`
+    );
+
+    // check typecheck
+    expect(runCLI(`typecheck ${esbuildParentLib}`)).toContain(
+      `Successfully ran target typecheck for project ${esbuildParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`typecheck ${rollupParentLib}`)).toContain(
+      `Successfully ran target typecheck for project ${rollupParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`typecheck ${swcParentLib}`)).toContain(
+      `Successfully ran target typecheck for project ${swcParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`typecheck ${tscParentLib}`)).toContain(
+      `Successfully ran target typecheck for project ${tscParentLib} and 5 tasks it depends on`
+    );
+    expect(runCLI(`typecheck ${viteParentLib}`)).toContain(
+      `Successfully ran target typecheck for project ${viteParentLib} and 5 tasks it depends on`
+    );
+
+    // check lint
+    expect(runCLI(`lint ${esbuildParentLib}`)).toContain(
+      `Successfully ran target lint for project ${esbuildParentLib}`
+    );
+    expect(runCLI(`lint ${rollupParentLib}`)).toContain(
+      `Successfully ran target lint for project ${rollupParentLib}`
+    );
+    expect(runCLI(`lint ${swcParentLib}`)).toContain(
+      `Successfully ran target lint for project ${swcParentLib}`
+    );
+    expect(runCLI(`lint ${tscParentLib}`)).toContain(
+      `Successfully ran target lint for project ${tscParentLib}`
+    );
+    expect(runCLI(`lint ${viteParentLib}`)).toContain(
+      `Successfully ran target lint for project ${viteParentLib}`
+    );
+
+    // check test
+    expect(runCLI(`test ${esbuildParentLib}`)).toContain(
+      `Successfully ran target test for project ${esbuildParentLib}`
+    );
+    expect(runCLI(`test ${rollupParentLib}`)).toContain(
+      `Successfully ran target test for project ${rollupParentLib}`
+    );
+    expect(runCLI(`test ${swcParentLib}`)).toContain(
+      `Successfully ran target test for project ${swcParentLib}`
+    );
+    expect(runCLI(`test ${tscParentLib}`)).toContain(
+      `Successfully ran target test for project ${tscParentLib}`
+    );
+    expect(runCLI(`test ${viteParentLib}`)).toContain(
+      `Successfully ran target test for project ${viteParentLib}`
+    );
   }, 300_000);
 });

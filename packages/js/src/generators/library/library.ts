@@ -285,10 +285,6 @@ async function configureProject(
       },
     };
 
-    if (options.bundler === 'esbuild') {
-      projectConfiguration.targets.build.options.format = ['cjs'];
-    }
-
     if (
       options.bundler === 'swc' &&
       (options.skipTypeCheck || options.isUsingTsSolutionConfig)
@@ -298,6 +294,7 @@ async function configureProject(
 
     if (options.isUsingTsSolutionConfig) {
       if (options.bundler === 'esbuild') {
+        projectConfiguration.targets.build.options.format = ['esm'];
         projectConfiguration.targets.build.options.declarationRootDir = `${options.projectRoot}/src`;
       } else if (options.bundler === 'swc') {
         projectConfiguration.targets.build.options.stripLeadingPaths = true;
@@ -306,6 +303,7 @@ async function configureProject(
       projectConfiguration.targets.build.options.assets = [];
 
       if (options.bundler === 'esbuild') {
+        projectConfiguration.targets.build.options.format = ['cjs'];
         projectConfiguration.targets.build.options.generatePackageJson = true;
       }
 
@@ -468,7 +466,7 @@ export async function addLint(
         } else if (options.bundler === 'rollup') {
           ruleOptions.ignoredFiles ??= [];
           ruleOptions.ignoredFiles.push(
-            '{projectRoot}/rollup.config.{js,ts,mjs,mts}'
+            '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}'
           );
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         } else if (options.bundler === 'esbuild') {
@@ -506,7 +504,7 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
   if (
     options.bundler === 'vite' ||
     (options.isUsingTsSolutionConfig &&
-      (options.bundler === 'tsc' || options.bundler === 'swc'))
+      ['esbuild', 'swc', 'tsc'].includes(options.bundler))
   ) {
     const tsConfig = readTsConfigFromTree(
       tree,
@@ -1137,11 +1135,10 @@ function determineEntryFields(
           : './index.d.ts',
       };
     case 'esbuild':
-      // For libraries intended for Node, use CJS.
       return {
-        type: 'commonjs',
+        type: options.isUsingTsSolutionConfig ? 'module' : 'commonjs',
         main: options.isUsingTsSolutionConfig
-          ? './dist/index.cjs'
+          ? './dist/index.js'
           : './index.cjs',
         typings: options.isUsingTsSolutionConfig
           ? './dist/index.d.ts'

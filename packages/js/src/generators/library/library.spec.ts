@@ -1439,7 +1439,7 @@ describe('lib', () => {
             {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs}',
-                '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
               ],
             },
           ],

@@ -131,7 +131,7 @@ export async function setupBuildGenerator(
         project: options.project,
         skipFormat: true,
         skipValidation: true,
-        format: ['cjs'],
+        format: isTsSolutionSetup ? ['esm'] : ['cjs'],
       });
       tasks.push(task);
       break;
