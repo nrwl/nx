@@ -6,7 +6,7 @@ import {
   ChevronRightIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-import Image from 'next/image';
+
 import {
   CasewareIcon,
   HetznerCloudIcon,
@@ -260,28 +260,26 @@ export function CustomerTestimonialCarousel(): JSX.Element {
               <ChevronLeftIcon className="h-8 w-8" />
             </button>
             <div
-              className="group relative h-[450px] w-full cursor-pointer self-stretch overflow-hidden rounded-lg xl:shadow-2xl"
+              className="group relative h-full max-h-[450px] w-full cursor-pointer self-stretch overflow-hidden rounded-lg xl:shadow-2xl"
               onClick={() => setIsOpen(true)}
             >
               {/* Thumbnail */}
-              <Image
-                quality={100}
+              <img
                 src={currentTestimonial.thumbnail}
                 alt={currentTestimonial.title}
-                fill
-                className="mb-4 aspect-video h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                className="aspect-video h-full w-full object-cover transition duration-300 group-hover:scale-105"
               />
 
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 from-25% via-black/20" />
 
               {/* Content Overlay */}
-              <div className="absolute bottom-0 left-0 p-8">
-                <h3 className="text-xl font-semibold text-white md:text-2xl lg:text-3xl">
+              <div className="absolute bottom-0 left-0 p-4 md:p-8">
+                <h3 className="text-base font-semibold text-white md:text-2xl lg:text-3xl">
                   {currentTestimonial.subtitle}
                 </h3>
-                <button className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20">
-                  <PlayIcon className="size-5" />
+                <button className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20 md:mt-4 md:gap-2">
+                  <PlayIcon className="size-3 md:size-5" />
                   Watch video
                 </button>
               </div>
