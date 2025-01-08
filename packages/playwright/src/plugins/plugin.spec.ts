@@ -1,8 +1,8 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-
-import { createNodesV2 } from './plugin';
 import { PlaywrightTestConfig } from '@playwright/test';
+import { join } from 'node:path';
+import { createNodesV2 } from './plugin';
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -139,7 +139,12 @@ describe('@nx/playwright/plugin', () => {
     await mockPlaywrightConfig(tempFs, {
       reporter: [
         ['list'],
-        ['json', { outputFile: 'test-results/report.json' }],
+        [
+          'json',
+          // test absolute path
+          { outputFile: join(tempFs.tempDir, 'test-results/report.json') },
+        ],
+        // test relative path
         ['html', { outputFolder: 'test-results/html' }],
       ],
     });
