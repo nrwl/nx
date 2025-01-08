@@ -2,6 +2,7 @@ import { output } from '../../utils/output';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { ShowProjectOptions } from './command-object';
 import { generateGraph } from '../graph/graph';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 export async function showProjectHandler(
   args: ShowProjectOptions
@@ -11,16 +12,20 @@ export async function showProjectHandler(
   const graph = await createProjectGraphAsync();
   let node = graph.nodes[args.projectName];
   if (!node) {
-    const matchingProjects = Object.keys(graph.nodes).filter((name) =>
-      name.includes(args.projectName)
-    );
-    if (matchingProjects.length === 1) {
-      node = graph.nodes[matchingProjects[0]];
-    } else if (matchingProjects.length > 1) {
+    const projects = findMatchingProjects([args.projectName], graph.nodes);
+    if (projects.length === 1) {
+      const projectName = projects[0];
+      node = graph.nodes[projectName];
+    } else if (projects.length > 1) {
+      output.error({
+        title: `Multiple projects matched:`,
+        bodyLines:
+          projects.length > 100 ? [...projects.slice(0, 100), '...'] : projects,
+      });
       console.log(
-        `Multiple projects matched:\n  ${(matchingProjects.length > 100
-          ? [...matchingProjects.slice(0, 100), '...']
-          : matchingProjects
+        `Multiple projects matched:\n  ${(projects.length > 100
+          ? [...projects.slice(0, 100), '...']
+          : projects
         ).join('  \n')}`
       );
       process.exit(1);

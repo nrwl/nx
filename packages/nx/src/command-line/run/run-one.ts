@@ -21,6 +21,7 @@ import { TargetDependencyConfig } from '../../config/workspace-json-project-json
 import { readNxJson } from '../../config/configuration';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { generateGraph } from '../graph/graph';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 export async function runOne(
   cwd: string,
@@ -111,29 +112,23 @@ function getProjects(
         [projectName]: projectGraph.nodes[projectName],
       },
     };
-  } else if (
-    // If the string is too short then it's going to match too many entries
-    projectName.length > 1
-  ) {
-    const matchingProjects = Object.keys(projectGraph.nodes).filter((p) =>
-      p.includes(projectName)
-    );
-    if (matchingProjects.length === 1) {
-      const project = projectGraph.nodes[matchingProjects[0]];
+  } else {
+    const projects = findMatchingProjects([projectName], projectGraph.nodes);
+    if (projects.length === 1) {
+      const projectName = projects[0];
+      const project = projectGraph.nodes[projectName];
       return {
-        projectName: project.data.name,
+        projectName,
         projects: [project],
         projectsMap: {
           [project.data.name]: project,
         },
       };
-    } else if (matchingProjects.length > 1) {
+    } else if (projects.length > 1) {
       output.error({
         title: `Multiple projects matched:`,
         bodyLines:
-          matchingProjects.length > 100
-            ? [...matchingProjects.slice(0, 100), '...']
-            : matchingProjects,
+          projects.length > 100 ? [...projects.slice(0, 100), '...'] : projects,
       });
       process.exit(1);
     }
