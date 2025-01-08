@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, FC, SVGProps } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import {
   ChevronLeftIcon,
@@ -33,9 +33,10 @@ interface Testimonial {
   videoId: string;
   thumbnail: string;
   logo: {
-    icon: any;
+    icon: FC<SVGProps<SVGSVGElement>>;
     height: string;
     width: string;
+    color?: string;
   };
 }
 
@@ -45,8 +46,9 @@ const testimonials: Testimonial[] = [
     subtitle:
       'How Hetzner Cloud solved the Performance Paradox: Faster builds with more features',
     metrics: [
-      { value: 'Faster CI', label: 'More projects, less time' },
-      { value: 'Seconds', label: 'From 20min CI to instant builds' },
+      { value: 'Faster tests', label: 'From 20 min -> seconds.' },
+      { value: 'Faster builds', label: 'Down from 30 minutes.' },
+      { value: 'Speed & scale', label: 'Faster CI with even more features.' },
     ],
     company: 'Hetzner',
     videoId: '2BLqiNnBPuU',
@@ -55,6 +57,7 @@ const testimonials: Testimonial[] = [
       icon: HetznerCloudIcon,
       height: 'h-10',
       width: 'w-10',
+      color: 'text-[#D50C2D]',
     },
   },
   {
@@ -83,6 +86,7 @@ const testimonials: Testimonial[] = [
       icon: CasewareIcon,
       height: 'h-12',
       width: 'w-12',
+      color: 'text-[#F56354]',
     },
   },
   {
@@ -113,6 +117,7 @@ const testimonials: Testimonial[] = [
       icon: SiriusxmIcon,
       height: 'h-32',
       width: 'w-32',
+      color: 'text-[#0000EB]',
     },
   },
   {
@@ -141,6 +146,7 @@ const testimonials: Testimonial[] = [
       icon: PayfitIcon,
       height: 'h-16',
       width: 'w-16',
+      color: 'text-[#0F6FDE]',
     },
   },
   {
@@ -170,6 +176,7 @@ const testimonials: Testimonial[] = [
       icon: UkgIcon,
       height: 'h-20',
       width: 'w-20',
+      color: 'text-[#005151]',
     },
   },
   {
@@ -197,6 +204,7 @@ const testimonials: Testimonial[] = [
       icon: VmwareIcon,
       height: 'h-28',
       width: 'w-28',
+      color: 'text-[#607078]',
     },
   },
 ];
@@ -212,10 +220,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
 
     if (!isOpen) {
       timer = setInterval(() => {
-        setCurrentIndex((prevIndex) => {
-          const nextIndex = (prevIndex + 1) % testimonials.length;
-          return nextIndex;
-        });
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
       }, slideLogoTimeOut);
     }
 
@@ -249,7 +254,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
             {/* Prev Button Mobile only */}
             <button
               disabled={currentIndex === 0}
-              title={`See ${testimonials[currentIndex - 1]?.company} again!`}
+              title={`See ${testimonials[currentIndex - 1]?.company}`}
               className="flex h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:hidden dark:hover:text-white"
               onClick={() => {
                 setCurrentIndex(
@@ -257,10 +262,14 @@ export function CustomerTestimonialCarousel(): JSX.Element {
                 );
               }}
             >
-              <ChevronLeftIcon className="h-8 w-8" />
+              <span className="sr-only">Previous</span>
+              <ChevronLeftIcon
+                className="h-8 w-8 flex-shrink-0"
+                aria-hidden="true"
+              />
             </button>
             <div
-              className="group relative h-full max-h-[450px] w-full cursor-pointer self-stretch overflow-hidden rounded-lg xl:shadow-2xl"
+              className="group relative h-56 w-full cursor-pointer self-stretch overflow-hidden rounded-lg sm:h-80 md:h-[450px] xl:shadow-2xl"
               onClick={() => setIsOpen(true)}
             >
               {/* Thumbnail */}
@@ -279,7 +288,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
                   {currentTestimonial.subtitle}
                 </h3>
                 <button className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20 md:mt-4 md:gap-2">
-                  <PlayIcon className="size-3 md:size-5" />
+                  <PlayIcon className="size-3 md:size-5" aria-hidden="true" />
                   Watch video
                 </button>
               </div>
@@ -288,14 +297,18 @@ export function CustomerTestimonialCarousel(): JSX.Element {
             <button
               className="flex h-12 w-12 items-center justify-center rounded-full p-2 transition hover:text-slate-950 disabled:pointer-events-none disabled:opacity-0 md:hidden dark:hover:text-white"
               disabled={currentIndex === testimonials.length - 1}
-              title={`Next ${testimonials[currentIndex + 1]?.company}!`}
+              title={`Next ${testimonials[currentIndex + 1]?.company}`}
               onClick={() => {
                 setCurrentIndex(
                   (currentIndex + 1 + testimonials.length) % testimonials.length
                 );
               }}
             >
-              <ChevronRightIcon className="h-8 w-8" />
+              <span className="sr-only">Next</span>
+              <ChevronRightIcon
+                className="h-8 w-8 flex-shrink-0"
+                aria-hidden="true"
+              />
             </button>
           </div>
 
@@ -330,14 +343,16 @@ export function CustomerTestimonialCarousel(): JSX.Element {
           >
             <logo.icon
               key={`firstSet-icon-${i}`}
-              className={`${logo.height} ${logo.width} transition-transform duration-300`}
+              className={`${logo.height} ${logo.width} ${
+                i === currentIndex && logo.color
+              } transition-transform duration-300`}
             />
 
             {/* Progress Bar */}
             {i === currentIndex && !isOpen && (
               <div className="absolute left-0 top-0 h-[2px] w-full overflow-hidden bg-gray-300/80 transition-all">
                 <div
-                  className="animate-progress h-full w-full bg-sky-600/80"
+                  className="animate-progress h-full w-full bg-blue-600/80 dark:bg-sky-600/80"
                   style={{ animationDuration: `${slideLogoTimeOut}ms` }}
                 />
               </div>
