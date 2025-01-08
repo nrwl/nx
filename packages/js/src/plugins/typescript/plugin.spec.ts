@@ -485,6 +485,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
@@ -552,6 +553,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
@@ -628,6 +630,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
@@ -719,6 +722,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.spec.json",
@@ -771,6 +775,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
                       "^production",
@@ -833,6 +838,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -869,6 +875,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -905,6 +912,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -941,6 +949,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -980,6 +989,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -1432,6 +1442,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.spec.json",
@@ -2208,6 +2219,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
@@ -2283,6 +2295,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
@@ -2367,6 +2380,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
@@ -2448,6 +2462,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/src/**/*.ts",
@@ -2514,6 +2529,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2549,6 +2565,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/**/*.ts",
@@ -2584,6 +2601,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2619,6 +2637,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2657,6 +2676,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -3012,6 +3032,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
