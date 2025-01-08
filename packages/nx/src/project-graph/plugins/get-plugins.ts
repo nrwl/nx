@@ -170,7 +170,7 @@ async function loadSpecifiedNxPlugins(
 ): Promise<readonly [LoadedNxPlugin[], () => void]> {
   performance.mark('loadSpecifiedNxPlugins:start');
 
-  plugins = await normalizePlugins(plugins, root);
+  plugins ??= [];
 
   const cleanupFunctions: Array<() => void> = [];
   const ret = [
@@ -212,12 +212,6 @@ async function loadSpecifiedNxPlugins(
     'loadSpecifiedNxPlugins:end'
   );
   return ret;
-}
-
-async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
-  plugins ??= [];
-
-  return [...plugins];
 }
 
 function getDefaultPlugins(root: string) {
