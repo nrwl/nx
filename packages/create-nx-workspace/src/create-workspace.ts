@@ -115,8 +115,8 @@ function getWorkspaceGlobsFromPreset(preset: string): string[] {
     case Preset.RemixMonorepo:
     case Preset.VueMonorepo:
     case Preset.WebComponents:
-      return ['apps/**', 'libs/**', 'packages/**'];
+      return ['apps/*'];
     default:
-      return ['libs/**', 'packages/**'];
+      return ['packages/*'];
   }
 }
