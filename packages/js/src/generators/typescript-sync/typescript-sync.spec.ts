@@ -659,6 +659,53 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should not add a reference if dependent project does not have a tsconfig files', async () => {
+      addProject('foo', ['bar'], ['tsconfig.lib.json']);
+      addProject('bar');
+      tree.delete('packages/bar/tsconfig.json');
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          },
+          "references": [
+            {
+              "path": "./packages/a"
+            },
+            {
+              "path": "./packages/b"
+            },
+            {
+              "path": "./packages/foo"
+            }
+          ]
+        }
+        "
+      `);
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+      expect(tree.read('packages/foo/tsconfig.lib.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+    });
+
     describe('without custom sync generator options', () => {
       it.each`
         runtimeTsConfigFileName
