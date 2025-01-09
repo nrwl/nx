@@ -2905,7 +2905,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     "outputs": [
                       "{workspaceRoot}/dist/libs/my-lib",
-                      "{workspaceRoot}/dist/libs/*.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3066,7 +3065,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/libs/my-lib/other",
-                      "{workspaceRoot}/dist/libs/my-lib/*.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
