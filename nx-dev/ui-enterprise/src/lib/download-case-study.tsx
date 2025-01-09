@@ -19,7 +19,7 @@ export function DownloadCaseStudy({
   variant = 'primary',
 }: DownloadCaseStudyProps): ReactElement {
   return (
-    <div className="flex h-full flex-col border border-slate-100 bg-white shadow-lg sm:rounded-lg dark:border-slate-800/60 dark:bg-slate-950">
+    <div className="flex h-full flex-col border border-slate-100 bg-white shadow sm:rounded-lg dark:border-slate-800/60 dark:bg-slate-950">
       <div className="flex flex-1 flex-col  px-4 py-5 sm:p-6">
         <h3 className="text-base font-semibold leading-6 text-slate-900 dark:text-slate-100">
           {title}

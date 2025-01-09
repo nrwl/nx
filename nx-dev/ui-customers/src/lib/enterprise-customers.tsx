@@ -43,6 +43,7 @@ import {
 import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
 import { CustomerTestimonialCarousel } from './customer-testimonial-carousel';
 import { CustomerIconGrid, type CustomerIcon } from './customer-icon-grid';
+import { type ReactElement } from 'react';
 
 const firstCustomerIcons: CustomerIcon[] = [
   { url: 'https://man-es.com', icon: ManIcon, height: 'h-20', width: 'w-20' },
@@ -258,7 +259,7 @@ const thirdCustomerIcons: CustomerIcon[] = [
   { url: 'https://plex.tv', icon: PlexIcon, height: 'h-20', width: 'w-20' },
 ];
 
-export function EnterpriseCustomers(): JSX.Element {
+export function EnterpriseCustomers(): ReactElement {
   return (
     <section id="customers">
       <div className="mt-8">
@@ -274,7 +275,7 @@ export function EnterpriseCustomers(): JSX.Element {
         <div className="mx-auto max-w-7xl">
           <CustomerIconGrid icons={secondCustomerIcons} />
 
-          <div className="grid-cols grid justify-center gap-4 px-2 py-6 md:grid-cols-3">
+          <div className="grid-cols my-8 grid justify-center gap-8 px-2 py-6 md:grid-cols-3">
             <DownloadCaseStudy
               title="Financial Institution Case Study"
               description="$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud."

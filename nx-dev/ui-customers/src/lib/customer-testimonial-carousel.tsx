@@ -1,5 +1,12 @@
 'use client';
-import { Fragment, useState, useEffect, FC, SVGProps } from 'react';
+import {
+  Fragment,
+  useState,
+  useEffect,
+  FC,
+  SVGProps,
+  type ReactElement,
+} from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import {
   ChevronLeftIcon,
@@ -209,7 +216,7 @@ const testimonials: Testimonial[] = [
   },
 ];
 
-export function CustomerTestimonialCarousel(): JSX.Element {
+export function CustomerTestimonialCarousel(): ReactElement {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const currentTestimonial = testimonials[currentIndex];
@@ -237,7 +244,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
           <div className="flex h-full flex-col justify-center space-y-8">
             {currentTestimonial.metrics?.map((metric, index) => (
               <div key={index} className="space-y-2">
-                <div className="border-l-2 border-sky-900/70 pl-4 text-3xl font-bold text-slate-700 dark:border-blue-300/60 dark:text-slate-200">
+                <div className="border-l-2 border-blue-900/70 pl-4 text-3xl font-bold text-slate-700 dark:border-sky-300/60 dark:text-slate-200">
                   {metric.value}
                 </div>
                 <div className="text-balance pl-[18px] text-lg text-slate-500 dark:text-slate-400">
@@ -333,7 +340,7 @@ export function CustomerTestimonialCarousel(): JSX.Element {
         {testimonials.map(({ company, logo }, i) => (
           <button
             onClick={() => setCurrentIndex(i)}
-            key={`firstSet-logo-${i}`}
+            key={`logo-${i}`}
             title={company}
             className={`relative grid h-full w-full place-items-center border border-slate-200/15 transition-all dark:border-slate-800/20 ${
               i === currentIndex
@@ -341,11 +348,13 @@ export function CustomerTestimonialCarousel(): JSX.Element {
                 : 'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
             }`}
           >
+            <span className="sr-only">{company} Logo</span>
             <logo.icon
-              key={`firstSet-icon-${i}`}
+              key={`logo-icon-${i}`}
               className={`${logo.height} ${logo.width} ${
                 i === currentIndex && logo.color
               } transition-transform duration-300`}
+              aria-hidden="true"
             />
 
             {/* Progress Bar */}

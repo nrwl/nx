@@ -1,7 +1,8 @@
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { type ReactElement } from 'react';
 
-export function Hero(): JSX.Element {
+export function Hero(): ReactElement {
   return (
     <section>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">

@@ -1,9 +1,8 @@
 import { FC, SVGProps } from 'react';
 
 /**
- * Use `#283A93` for a colored version.
+ * Use `#060EAE` for a colored version.
  */
-
 export const RabobankIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
