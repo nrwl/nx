@@ -1331,7 +1331,6 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
         ]
       `);
       expect(readJson(appTree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`

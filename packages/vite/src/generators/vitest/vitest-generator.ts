@@ -15,7 +15,10 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
@@ -118,7 +121,7 @@ getTestBed().initTestEnvironment(
         tree,
         {
           project: schema.project,
-          includeLib: projectType === 'library',
+          includeLib: getProjectType(tree, root, projectType) === 'library',
           includeVitest: true,
           inSourceTests: schema.inSourceTests,
           rollupOptionsExternal: [
@@ -142,7 +145,7 @@ getTestBed().initTestEnvironment(
         {
           ...schema,
           includeVitest: true,
-          includeLib: projectType === 'library',
+          includeLib: getProjectType(tree, root, projectType) === 'library',
         },
         true
       );
@@ -265,7 +268,9 @@ function updateTsConfig(
 
   let runtimeTsconfigPath = joinPathFragments(
     projectRoot,
-    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json'
+    getProjectType(tree, projectRoot, projectType) === 'application'
+      ? 'tsconfig.app.json'
+      : 'tsconfig.lib.json'
   );
   if (options.runtimeTsconfigFileName) {
     runtimeTsconfigPath = joinPathFragments(

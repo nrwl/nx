@@ -68,6 +68,7 @@ import type {
   NormalizedLibraryGeneratorOptions,
 } from './schema';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
+import { getImportPath } from '../../utils/get-import-path';
 
 const defaultOutputDirectory = 'dist';
 
@@ -99,6 +100,12 @@ export async function libraryGeneratorInternal(
     })
   );
   const options = await normalizeOptions(tree, schema);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
   createFiles(tree, options);
 
@@ -234,12 +241,6 @@ export async function libraryGeneratorInternal(
     );
   }
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
-  }
-
   sortPackageJsonFields(tree, options.projectRoot);
 
   if (!options.skipFormat) {
@@ -369,8 +370,24 @@ async function configureProject(
       delete projectConfiguration.tags;
     }
 
+    // We want a minimal setup, so unless targets and tags are set, just skip the `nx` property in `package.json`.
+    if (options.isUsingTsSolutionConfig) {
+      delete projectConfiguration.projectType;
+      // SWC executor has logic around sourceRoot and `--strip-leading-paths`. If it is not set then dist will contain the `src` folder rather than being flat.
+      // TODO(leo): Look at how we can remove the dependency on sourceRoot for SWC.
+      if (options.bundler !== 'swc') {
+        delete projectConfiguration.sourceRoot;
+      }
+    }
+
     // empty targets are cleaned up automatically by `updateProjectConfiguration`
-    updateProjectConfiguration(tree, options.name, projectConfiguration);
+    updateProjectConfiguration(
+      tree,
+      options.isUsingTsSolutionConfig
+        ? options.importPath ?? options.name
+        : options.name,
+      projectConfiguration
+    );
   } else if (options.config === 'workspace' || options.config === 'project') {
     addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
@@ -897,7 +914,9 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    name: projectName,
+    name: isUsingTsSolutionConfig
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectNames,
     projectRoot,
     parsedTags,

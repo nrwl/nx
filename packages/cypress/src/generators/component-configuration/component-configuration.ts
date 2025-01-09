@@ -202,14 +202,13 @@ export function updateTsConfigForComponentTesting(
   tree: Tree,
   projectConfig: ProjectConfiguration
 ) {
-  const tsConfigPath = joinPathFragments(
-    projectConfig.root,
-    projectConfig.projectType === 'library'
-      ? 'tsconfig.lib.json'
-      : 'tsconfig.app.json'
-  );
+  let tsConfigPath: string | null = null;
+  for (const candidate of ['tsconfig.lib.json', 'tsconfig.app.json']) {
+    const p = joinPathFragments(projectConfig.root, candidate);
+    if (tree.exists(p)) tsConfigPath = p;
+  }
 
-  if (tree.exists(tsConfigPath)) {
+  if (tsConfigPath !== null) {
     updateJson(tree, tsConfigPath, (json) => {
       const excluded = new Set([
         ...(json.exclude || []),

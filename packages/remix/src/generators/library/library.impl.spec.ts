@@ -173,7 +173,6 @@ describe('Remix Library Generator', () => {
           "main",
           "types",
           "exports",
-          "nx",
         ]
       `);
       expect(readJson(tree, 'packages/foo/package.json'))
@@ -189,15 +188,27 @@ describe('Remix Library Generator', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/foo",
-          "nx": {
-            "name": "foo",
-            "projectType": "library",
-            "sourceRoot": "packages/foo/src",
-          },
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
       `);
     });
+
+    it('should generate server entrypoint', async () => {
+      await libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+      });
+
+      expect(tree.exists(`test/src/server.ts`));
+      expect(tree.children(`test/src/lib`).sort()).toMatchInlineSnapshot(`
+        [
+          "test.module.css",
+          "test.spec.tsx",
+          "test.tsx",
+        ]
+      `);
+    }, 25_000);
   });
 });

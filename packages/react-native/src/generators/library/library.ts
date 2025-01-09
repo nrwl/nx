@@ -101,7 +101,8 @@ export async function reactNativeLibraryGeneratorInternal(
     options.projectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
+    'tsconfig.lib.json'
   );
   tasks.push(jestTask);
 
@@ -171,14 +172,11 @@ async function addProject(
     'package.json'
   );
   if (options.isUsingTsSolutionConfig) {
-    writeJson(host, packageJsonPath, {
-      name: getImportPath(host, options.name),
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: options.name,
       version: '0.0.1',
       ...determineEntryFields(options),
       nx: {
-        name: options.name,
-        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-        projectType: 'library',
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
     });
