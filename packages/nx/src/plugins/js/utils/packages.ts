@@ -21,7 +21,14 @@ export function getPackageEntryPointsToProjectMap<
       result[packageName] = project;
     } else {
       for (const entryPoint of Object.keys(packageExports)) {
-        result[join(packageName, entryPoint)] = project;
+        // if entrypoint begins with '.', it is a relative subpath export
+        // otherwise, it is a conditional export
+        // https://nodejs.org/api/packages.html#conditional-exports
+        if (entryPoint.startsWith('.')) {
+          result[join(packageName, entryPoint)] = project;
+        } else {
+          result[packageName] = project;
+        }
       }
     }
   }
