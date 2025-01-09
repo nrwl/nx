@@ -14,7 +14,7 @@ import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 
-import { LoadedNxPlugin } from '../plugins/internal-api';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   MergeNodesError,
   ProjectConfigurationsError,

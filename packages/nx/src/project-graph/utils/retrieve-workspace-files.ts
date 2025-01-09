@@ -9,7 +9,7 @@ import {
   ConfigurationResult,
   createProjectConfigurations,
 } from './project-configuration-utils';
-import { LoadedNxPlugin } from '../plugins/internal-api';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
