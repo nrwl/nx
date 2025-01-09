@@ -1686,11 +1686,19 @@ describe('lib', () => {
           "dependencies": {
             "tslib": "^2.3.0",
           },
+          "exports": {
+            ".": {
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./dist/index.js",
+          "module": "./dist/index.js",
           "name": "@proj/my-ts-lib",
           "private": true,
           "type": "module",
-          "typings": "./dist/index.d.ts",
+          "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }
       `);
@@ -1710,11 +1718,19 @@ describe('lib', () => {
           "dependencies": {
             "@swc/helpers": "~0.5.11",
           },
+          "exports": {
+            ".": {
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./dist/index.js",
+          "module": "./dist/index.js",
           "name": "@proj/my-ts-lib",
           "private": true,
           "type": "module",
-          "typings": "./dist/index.d.ts",
+          "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }
       `);
