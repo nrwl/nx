@@ -6,7 +6,7 @@ import {
   Hero,
   OssProjects,
 } from '@nx/nx-dev/ui-customers';
-import { tryNxCloudForFree } from '../lib/components/headerCtaConfigs';
+import { contactButton } from '../lib/components/headerCtaConfigs';
 
 export function Customers(): JSX.Element {
   const router = useRouter();
@@ -34,7 +34,7 @@ export function Customers(): JSX.Element {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={[tryNxCloudForFree]}>
+      <DefaultLayout headerCTAConfig={[contactButton]}>
         <div>
           <Hero />
         </div>
