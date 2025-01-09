@@ -62,7 +62,7 @@ function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (
     !baseTsconfigJson.compilerOptions ||
     !baseTsconfigJson.compilerOptions.composite ||
-    !baseTsconfigJson.compilerOptions.declaration
+    baseTsconfigJson.compilerOptions.declaration === false
   ) {
     return false;
   }
