@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
 import { ReactElement } from 'react';
 import {
@@ -11,6 +12,7 @@ import {
   StorybookIcon,
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function TalkToOurTeam(): ReactElement {
   return (
@@ -21,8 +23,8 @@ export function TalkToOurTeam(): ReactElement {
             Talk to our team
           </SectionHeading>
         </div>
-        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
-          <section className="mt-4">
+        <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
+          <section className="mt-4 flex-1">
             <p className="text-lg leading-relaxed">
               Whether you’re scaling your team, optimizing CI pipelines, or
               exploring the full potential of Nx, we’re here to help. Reach out
@@ -122,7 +124,7 @@ export function TalkToOurTeam(): ReactElement {
               </div>
             </div>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+          <section className="w-full flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
             <HubspotForm
               region="na1"
               portalId="2757427"
@@ -132,6 +134,19 @@ export function TalkToOurTeam(): ReactElement {
             />
           </section>
         </div>
+        <p className="mt-6 text-center italic">
+          <Link
+            href="/enterprise/trial"
+            title="Talk to the team"
+            className="font-semibold underline"
+            prefetch={false}
+            onClick={() =>
+              sendCustomEvent('contact-team', 'talk-to-out-team-cta', 'contact')
+            }
+          >
+            Reach out to our team
+          </Link>{' '}
+        </p>
       </div>
     </section>
   );

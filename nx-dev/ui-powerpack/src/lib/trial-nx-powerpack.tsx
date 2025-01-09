@@ -22,8 +22,8 @@ export function TrialNxPowerpack(): ReactElement {
             Nx Powerpack
           </SectionHeading>
         </div>
-        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
-          <section className="mt-4">
+        <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
+          <section className="mt-4 flex-1">
             <p className="text-lg leading-relaxed">
               Experience faster, more secure caching for your monorepo. Nx
               Powerpack helps you streamline builds and testing, enabling your
@@ -161,7 +161,7 @@ export function TrialNxPowerpack(): ReactElement {
               </div>
             </div>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+          <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
             <HubspotForm
               region="na1"
               portalId="2757427"

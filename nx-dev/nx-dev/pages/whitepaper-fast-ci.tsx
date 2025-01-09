@@ -62,8 +62,8 @@ export function WhitePaperFastCI(): JSX.Element {
                   Up to 70% Faster Builds for Monorepos
                 </SectionHeading>
               </div>
-              <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
-                <section className="mt-4">
+              <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
+                <section className="mt-4 flex-1">
                   <p className="text-lg leading-relaxed">
                     The world’s moving fast, and getting products to market
                     feels like a race that keeps speeding up. Monorepos are
@@ -123,7 +123,7 @@ export function WhitePaperFastCI(): JSX.Element {
                   <div className="py-10">
                     <a
                       target="_blank"
-                      className="mt-4 text-lg font-bold leading-relaxed hover:underline"
+                      className="mt-4 text-lg font-bold leading-relaxed underline"
                       href="/assets/enterprise/Fast-CI-Whitepaper.pdf"
                     >
                       View whitepaper
@@ -212,7 +212,7 @@ export function WhitePaperFastCI(): JSX.Element {
                     </div>
                   </div>
                 </section>
-                <section className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+                <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
                   <HubspotForm
                     region="na1"
                     portalId="2757427"

@@ -22,8 +22,8 @@ export function TrialNxEnterprise(): ReactElement {
             Nx Enterprise
           </SectionHeading>
         </div>
-        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
-          <section className="mt-4">
+        <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
+          <section className="mt-4 flex-1">
             <p className="text-lg leading-relaxed">
               Unlock the full potential of Nx Enterprise with a hands-on guided
               trial. Experience how our tools and expert support can transform
@@ -72,7 +72,7 @@ export function TrialNxEnterprise(): ReactElement {
             <div className="py-10">
               <a
                 target="_blank"
-                className="mt-4 text-lg font-bold leading-relaxed hover:underline"
+                className="mt-4 text-lg font-bold leading-relaxed underline"
                 href="/assets/enterprise/Nx-Enterprise-POV.pdf"
               >
                 View PDF
@@ -162,7 +162,7 @@ export function TrialNxEnterprise(): ReactElement {
               </div>
             </div>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+          <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
             <HubspotForm
               region="na1"
               portalId="2757427"
