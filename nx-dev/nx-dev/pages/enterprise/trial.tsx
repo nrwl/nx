@@ -10,13 +10,13 @@ export function EnterpriseTrial(): ReactElement {
   return (
     <>
       <NextSeo
-        title="Nx Enterprise Trial"
-        description="Accelerate your organization's journey to tighter collaboration, improved developer experience, and faster, more efficient workflows. Start your enterprise trial today and see the difference."
+        title="Try Nx Enterprise - Scalable CI Solutions for Your Team"
+        description="Request a free Nx Enterprise trial to experience advanced CI features and premium support, designed to help your team ship faster and more reliably."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Enterprise Trial',
+          title: 'Try Nx Enterprise - Scalable CI Solutions for Your Team',
           description:
-            "Accelerate your organization's journey to tighter collaboration, improved developer experience, and faster, more efficient workflows. Start your enterprise trial today and see the difference.",
+            'Request a free Nx Enterprise trial to experience advanced CI features and premium support, designed to help your team ship faster and more reliably.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',

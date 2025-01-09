@@ -10,13 +10,14 @@ export function PowerpackTrial(): ReactElement {
   return (
     <>
       <NextSeo
-        title="Powerpack Trial"
-        description="Get started with your Nx Powerpack trial! Unlock a suite of enterprise-grade extensions for the Nx CLI, designed to optimize your development workflows and boost team productivity. Let us help you find the right plan for your needs."
+        title="Start Your Nx Powerpack Trial - Speed and Scale for Monorepos"
+        description="Unlock self-hosted cache storage, enforce workspace conformance, and manage codeowners for your monorepos. Start your free Nx Powerpack trial today!"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Powerpack Trial',
+          title:
+            'Start Your Nx Powerpack Trial - Speed and Scale for Monorepos',
           description:
-            'Get started with your Nx Powerpack trial! Unlock a suite of enterprise-grade extensions for the Nx CLI, designed to optimize your development workflows and boost team productivity. Let us help you find the right plan for your needs.',
+            'Unlock self-hosted cache storage, enforce workspace conformance, and manage codeowners for your monorepos. Start your free Nx Powerpack trial today!',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',

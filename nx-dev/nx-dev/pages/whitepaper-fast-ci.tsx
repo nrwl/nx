@@ -21,13 +21,13 @@ export function WhitePaperFastCI(): ReactElement {
   return (
     <>
       <NextSeo
-        title="White paper fast CI"
-        description="The world is moving fast, and monorepos are transforming development by boosting collaboration and speed. Avoid costly CI delays with workflows tailored for monorepos."
+        title="Fast CI for Monorepos - Speed Up Development and Cut Costs"
+        description="Download our in-depth whitepaper to discover strategies for reducing build times and boosting CI performance. Nx's enterprise-grade tools are built for large, fast-moving teams."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'White paper fast CI',
+          title: 'Fast CI for Monorepos - Speed Up Development and Cut Costs',
           description:
-            'The world is moving fast, and monorepos are transforming development by boosting collaboration and speed. Avoid costly CI delays with workflows tailored for monorepos.',
+            "Download our in-depth whitepaper to discover strategies for reducing build times and boosting CI performance. Nx's enterprise-grade tools are built for large, fast-moving teams.",
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
