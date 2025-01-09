@@ -12,9 +12,9 @@ launch-templates:
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
           paths: .pnpm-store
@@ -65,9 +65,9 @@ launch-templates:
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
           paths: .pnpm-store
