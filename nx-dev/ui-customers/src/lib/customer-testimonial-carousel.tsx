@@ -57,7 +57,7 @@ const testimonials: Testimonial[] = [
       { value: 'Faster builds', label: 'Down from 30 minutes.' },
       { value: 'Speed & scale', label: 'Faster CI with even more features.' },
     ],
-    company: 'Hetzner',
+    company: 'Hetzner Cloud',
     videoId: '2BLqiNnBPuU',
     thumbnail: '/images/customers/video-story-pavlo-grosse.avif',
     logo: {
@@ -70,7 +70,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'Scaling 700+ projects: How Nx Enterprise became a no-brainer for Caseware.',
+      'Scaling 700+ projects: How Nx Enterprise became a no-brainer for Caseware',
     metrics: [
       {
         value: 'Massive scale',
@@ -99,7 +99,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'How SiriusXM stays competitive by iterating and getting to market fast.',
+      'How SiriusXM stays competitive by iterating and getting to market fast',
     metrics: [
       {
         value: 'Faster releases',
@@ -130,14 +130,14 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'From 5 days to 2 hours: How Payfit improved velocity and offloads complexity.',
+      'From 5 days to 2 hours: How Payfit improved velocity and offloads complexity',
     metrics: [
       {
         value: 'From 5 days → 2 hours',
         label: 'Nx & Nx Cloud drastically accelerate feature deployment',
       },
       {
-        value: 'Eliminated CI Complexity',
+        value: 'Eliminated CI complexity',
         label: 'Nx Cloud offloads CI load balancing headaches.',
       },
       {
@@ -159,14 +159,14 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'How UKG reduced build times while scaling development across teams.',
+      'How UKG reduced build times while scaling development across teams',
     metrics: [
       {
         value: 'From 1 day → instant builds',
         label: 'Nx Cloud slashed build wait times, enabling dev productivity.',
       },
       {
-        value: 'Eliminated CI Maintenance',
+        value: 'Eliminated CI maintenance',
         label:
           'Nx Cloud frees teams from managing CI, letting devs focus on code.',
       },
@@ -188,7 +188,7 @@ const testimonials: Testimonial[] = [
   },
   {
     title: 'Customer story',
-    subtitle: 'How Broadcom stays efficient and nimble with monorepos',
+    subtitle: 'How VMware stays efficient and nimble with monorepos',
     metrics: [
       {
         value: '2x faster',
@@ -204,7 +204,7 @@ const testimonials: Testimonial[] = [
           'Nx’s rapid feature delivery keeps teams at the cutting edge of development.',
       },
     ],
-    company: 'Broadcom (VMware)',
+    company: 'VMware (Broadcom)',
     videoId: 'RWTgYNKqxNc',
     thumbnail: '/images/customers/video-story-broadcom.avif',
     logo: {
@@ -238,7 +238,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
 
   return (
     <div className="w-full">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 lg:grid-cols-5 lg:gap-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 lg:grid-cols-5 lg:gap-12">
         {/* Left side - Quote or Metrics */}
         <div className="col-span-2 hidden lg:block">
           <div className="flex h-full flex-col justify-center space-y-8">
@@ -247,7 +247,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
                 <div className="border-l-2 border-blue-900/70 pl-4 text-3xl font-bold text-slate-700 dark:border-sky-300/60 dark:text-slate-200">
                   {metric.value}
                 </div>
-                <div className="text-balance pl-[18px] text-lg text-slate-500 dark:text-slate-400">
+                <div className="text-balance pl-[18px] pr-8 text-lg text-slate-500 dark:text-slate-400">
                   {metric.label}
                 </div>
               </div>
@@ -343,9 +343,8 @@ export function CustomerTestimonialCarousel(): ReactElement {
             key={`logo-${i}`}
             title={company}
             className={`relative grid h-full w-full place-items-center border border-slate-200/15 transition-all dark:border-slate-800/20 ${
-              i === currentIndex
-                ? 'text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-300'
-                : 'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
+              i !== currentIndex &&
+              'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
             }`}
           >
             <span className="sr-only">{company} Logo</span>
@@ -353,7 +352,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
               key={`logo-icon-${i}`}
               className={`${logo.height} ${logo.width} ${
                 i === currentIndex && logo.color
-              } transition-transform duration-300`}
+              } transition`}
               aria-hidden="true"
             />
 

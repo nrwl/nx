@@ -19,7 +19,7 @@ export function Hero(): ReactElement {
           </SectionHeading>
           <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
-              href="/pricing"
+              href="https://cloud.nx.app/get-started/"
               title="Try Nx Cloud for free"
               variant="primary"
               size="default"

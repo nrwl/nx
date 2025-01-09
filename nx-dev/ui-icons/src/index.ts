@@ -49,7 +49,6 @@ export * from './lib/customers/payfit';
 export * from './lib/customers/paylocity';
 export * from './lib/customers/philips';
 export * from './lib/customers/plex';
-export * from './lib/customers/rabobank';
 export * from './lib/customers/react-query';
 export * from './lib/customers/red-bull';
 export * from './lib/customers/redwood-js';
