@@ -8,7 +8,10 @@ import {
   createProjectGraphAsync,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
+import {
+  getReactDependenciesVersionsToInstall,
+  isReact18,
+} from '@nx/react/src/utils/version-utils';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nxVersion } from '../../utils/versions';
 import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils';
@@ -19,7 +22,10 @@ async function updateDependencies(host: Tree, schema: InitSchema) {
 
   tasks.push(removeDependenciesFromPackageJson(host, ['@nx/next'], []));
 
-  const versions = await getNextDependenciesVersionsToInstall(host);
+  const versions = await getNextDependenciesVersionsToInstall(
+    host,
+    await isReact18(host)
+  );
   const reactVersions = await getReactDependenciesVersionsToInstall(host);
 
   tasks.push(

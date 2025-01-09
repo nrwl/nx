@@ -7,7 +7,8 @@ type NextDependenciesVersions = {
 };
 
 export async function getNextDependenciesVersionsToInstall(
-  tree: Tree
+  tree: Tree,
+  isReact18 = false
 ): Promise<NextDependenciesVersions> {
   if (await isNext14(tree)) {
     return {
