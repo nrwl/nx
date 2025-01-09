@@ -2,7 +2,7 @@ use std::fs::{create_dir_all, read_to_string, write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use fs_extra::remove_items;
+use fs_extra::{dir::get_size, remove_items};
 use napi::bindgen_prelude::*;
 use regex::Regex;
 use rusqlite::params;
@@ -29,6 +29,7 @@ pub struct NxCache {
     cache_path: PathBuf,
     db: External<NxDbConnection>,
     link_task_details: bool,
+    max_cache_size: Option<i64>,
 }
 
 #[napi]
@@ -39,6 +40,7 @@ impl NxCache {
         cache_path: String,
         db_connection: External<NxDbConnection>,
         link_task_details: Option<bool>,
+        max_cache_size: Option<i64>,
     ) -> anyhow::Result<Self> {
         let cache_path = PathBuf::from(&cache_path);
 
@@ -51,6 +53,7 @@ impl NxCache {
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
             link_task_details: link_task_details.unwrap_or(true),
+            max_cache_size,
         };
 
         r.setup()?;
@@ -113,7 +116,7 @@ impl NxCache {
                         code,
                         terminal_output,
                         outputs_path: task_dir.to_normalized_string(),
-                        size: Some(size)
+                        size: Some(size),
                     })
                 },
             )
@@ -176,10 +179,17 @@ impl NxCache {
             &result.outputs_path
         );
         let terminal_output = result.terminal_output;
+        let size = if result.size.is_some() {
+            result.size
+        } else if Path::new(&result.outputs_path).exists() {
+            Some(get_size(&result.outputs_path).unwrap_or(0) as i64)
+        } else {
+            None
+        };
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
-        self.record_to_cache(hash, code, result.size)?;
+        self.record_to_cache(hash, code, size)?;
         Ok(())
     }
 
@@ -200,6 +210,46 @@ impl NxCache {
             "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
             params![hash, code, size],
         )?;
+        if self.max_cache_size.is_some() {
+            self.ensure_cache_size_within_limit()?
+        }
+        Ok(())
+    }
+
+    fn ensure_cache_size_within_limit(&self) -> anyhow::Result<()> {
+        if let Some(max_cache_size) = self.max_cache_size {
+            let full_cache_size = self
+                .db
+                .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
+                    row.get::<_, i64>(0)
+                })?
+                .unwrap_or(0);
+            if max_cache_size < full_cache_size {
+                let mut cache_size = full_cache_size;
+                let mut hashes_to_delete = vec![];
+                let mut stmt = self.db.prepare(
+                    "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
+                )?;
+                while cache_size > max_cache_size {
+                    let mut rows = stmt.query([])?;
+                    while let Some(row) = rows.next()? {
+                        let hash: String = row.get(0)?;
+                        let size: i64 = row.get(1)?;
+                        cache_size -= size;
+                        hashes_to_delete.push(hash);
+
+                        if (cache_size) < max_cache_size {
+                            break;
+                        }
+                    }
+                }
+                for hash in hashes_to_delete {
+                    self.db
+                        .execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                    remove_items(&[self.cache_path.join(&hash)])?;
+                }
+            }
+        }
         Ok(())
     }
 

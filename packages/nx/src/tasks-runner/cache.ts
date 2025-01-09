@@ -89,7 +89,14 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
 }
 
 export class DbCache {
-  private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+  private nxJson = readNxJson();
+  private cache = new NxCache(
+    workspaceRoot,
+    cacheDir,
+    getDbConnection(),
+    undefined,
+    parseMaxCacheSize(this.nxJson.maxCacheSize)
+  );
 
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
@@ -573,4 +580,50 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
   };
   return _try();
+}
+
+/**
+ * Converts a string representation of a max cache size to a number.
+ *
+ * e.g. '1GB' -> 1024 * 1024 * 1024
+ *      '1MB' -> 1024 * 1024
+ *      '1KB' -> 1024
+ *
+ * @param maxCacheSize Max cache size as specified in nx.json
+ */
+export function parseMaxCacheSize(maxCacheSize: string): number | undefined {
+  if (!maxCacheSize) {
+    return undefined;
+  }
+  let regexResult = maxCacheSize.match(
+    /^(?<size>[\d|.]+)\s?((?<unit>[KMG]?B)?)$/
+  );
+  if (!regexResult) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize}. Must be a number followed by an optional unit (KB, MB, GB)`
+    );
+  }
+  let sizeString = regexResult.groups.size;
+  let unit = regexResult.groups.unit;
+  if ([...sizeString].filter((c) => c === '.').length > 1) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize} (multiple decimal points in size)`
+    );
+  }
+  let size = parseFloat(sizeString);
+  if (isNaN(size)) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize} (${sizeString} is not a number)`
+    );
+  }
+  switch (unit) {
+    case 'KB':
+      return size * 1024;
+    case 'MB':
+      return size * 1024 * 1024;
+    case 'GB':
+      return size * 1024 * 1024 * 1024;
+    default:
+      return size;
+  }
 }
