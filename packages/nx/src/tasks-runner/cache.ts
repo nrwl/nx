@@ -83,7 +83,7 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
-        skipRemoteCache: options.skipRemoteCache,
+        disableRemoteCache: options.disableRemoteCache,
       })
     : new Cache(options);
 }
@@ -99,7 +99,7 @@ export class DbCache {
   constructor(
     private readonly options: {
       nxCloudRemoteCache: RemoteCache;
-      skipRemoteCache?: boolean;
+      disableRemoteCache?: boolean;
     }
   ) {}
 
@@ -191,7 +191,7 @@ export class DbCache {
   }
 
   private async _getRemoteCache(): Promise<RemoteCacheV2 | null> {
-    if (this.options.skipRemoteCache) {
+    if (this.options.disableRemoteCache) {
       output.warn({
         title: 'Remote Cache Disabled',
         bodyLines: [

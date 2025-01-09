@@ -33,7 +33,7 @@ export interface RunOptions {
   nxIgnoreCycles: boolean;
   skipNxCache: boolean;
   cloud: boolean;
-  skipRemoteCache: boolean;
+  disableRemoteCache: boolean;
   dte: boolean;
   batch: boolean;
   useAgents: boolean;
@@ -91,9 +91,9 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       default: false,
     })
-    .options('skipRemoteCache', {
+    .options('disableRemoteCache', {
       type: 'boolean',
-      describe: 'Do not save cache results to the remote cache.',
+      describe: 'Disables the remote cache.',
       default: false,
     })
     .options('excludeTaskDependencies', {
