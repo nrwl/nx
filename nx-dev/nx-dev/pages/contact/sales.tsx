@@ -2,8 +2,9 @@ import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
 import { Footer, Header } from '@nx/nx-dev/ui-common';
 import { TalkToOurTeam } from '@nx/nx-dev/ui-contact';
+import { type ReactElement } from 'react';
 
-export function ContactSales(): JSX.Element {
+export function ContactSales(): ReactElement {
   const router = useRouter();
 
   return (

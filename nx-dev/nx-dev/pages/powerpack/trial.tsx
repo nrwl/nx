@@ -2,20 +2,21 @@ import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
 import { Footer, Header } from '@nx/nx-dev/ui-common';
 import { TrialNxPowerpack } from '@nx/nx-dev/ui-powerpack';
+import { type ReactElement } from 'react';
 
-export function PowerpackTrial(): JSX.Element {
+export function PowerpackTrial(): ReactElement {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
         title="Powerpack Trial"
-        description="We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization."
+        description="Get started with your Nx Powerpack trial! Unlock a suite of enterprise-grade extensions for the Nx CLI, designed to optimize your development workflows and boost team productivity. Let us help you find the right plan for your needs."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Powerpack Trial',
           description:
-            'We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization.',
+            'Get started with your Nx Powerpack trial! Unlock a suite of enterprise-grade extensions for the Nx CLI, designed to optimize your development workflows and boost team productivity. Let us help you find the right plan for your needs.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',

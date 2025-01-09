@@ -13,20 +13,21 @@ import {
   StorybookIcon,
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
+import { type ReactElement } from 'react';
 
-export function WhitePaperFastCI(): JSX.Element {
+export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
         title="White paper fast CI"
-        description="We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization."
+        description="The world is moving fast, and monorepos are transforming development by boosting collaboration and speed. Avoid costly CI delays with workflows tailored for monorepos."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'White paper fast CI',
           description:
-            'We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization.',
+            'The world is moving fast, and monorepos are transforming development by boosting collaboration and speed. Avoid costly CI delays with workflows tailored for monorepos.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',

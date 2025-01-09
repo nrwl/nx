@@ -5,9 +5,9 @@ import {
   Hero,
   PowerpackFeatures,
 } from '@nx/nx-dev/ui-powerpack';
-import { contactButton } from '../../lib/components/headerCtaConfigs';
 
 import type { Metadata } from 'next';
+import { type ReactElement } from 'react';
 
 export const metadata: Metadata = {
   title: 'Nx Powerpack',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function NxPowerPackPage(): JSX.Element {
+export default function NxPowerPackPage(): ReactElement {
   const headerCTAConfig: ButtonLinkProps[] = [
     {
       href: '/powerpack/trial',

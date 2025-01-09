@@ -1,5 +1,5 @@
 import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
-import { ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
   CaterpillarIcon,

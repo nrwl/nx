@@ -2,20 +2,21 @@ import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
 import { Footer, Header } from '@nx/nx-dev/ui-common';
 import { TrialNxEnterprise } from '@nx/nx-dev/ui-enterprise';
+import { type ReactElement } from 'react';
 
-export function EnterpriseTrial(): JSX.Element {
+export function EnterpriseTrial(): ReactElement {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
         title="Nx Enterprise Trial"
-        description="We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization."
+        description="Accelerate your organization's journey to tighter collaboration, improved developer experience, and faster, more efficient workflows. Start your enterprise trial today and see the difference."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Enterprise Trial',
           description:
-            'We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization.',
+            "Accelerate your organization's journey to tighter collaboration, improved developer experience, and faster, more efficient workflows. Start your enterprise trial today and see the difference.",
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
