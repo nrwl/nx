@@ -134,19 +134,6 @@ export function TalkToOurTeam(): ReactElement {
             />
           </section>
         </div>
-        <p className="mt-6 text-center italic">
-          <Link
-            href="/enterprise/trial"
-            title="Talk to the team"
-            className="font-semibold underline"
-            prefetch={false}
-            onClick={() =>
-              sendCustomEvent('contact-team', 'talk-to-out-team-cta', 'contact')
-            }
-          >
-            Reach out to our team
-          </Link>{' '}
-        </p>
       </div>
     </section>
   );

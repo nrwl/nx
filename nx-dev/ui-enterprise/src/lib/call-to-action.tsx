@@ -81,7 +81,7 @@ export function CallToAction(): ReactElement {
           <p className="mt-6 italic">
             Want to talk terms or see a demo?{' '}
             <Link
-              href="/enterprise/trial"
+              href="/contact/sales"
               title="Talk to the team"
               className="font-semibold underline"
               prefetch={false}
