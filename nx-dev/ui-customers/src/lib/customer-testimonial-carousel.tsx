@@ -343,9 +343,8 @@ export function CustomerTestimonialCarousel(): ReactElement {
             key={`logo-${i}`}
             title={company}
             className={`relative grid h-full w-full place-items-center border border-slate-200/15 transition-all dark:border-slate-800/20 ${
-              i === currentIndex
-                ? 'text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-300'
-                : 'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
+              i !== currentIndex &&
+              'text-slate-400 hover:text-slate-500 dark:text-slate-700 dark:hover:text-slate-500'
             }`}
           >
             <span className="sr-only">{company} Logo</span>
@@ -353,7 +352,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
               key={`logo-icon-${i}`}
               className={`${logo.height} ${logo.width} ${
                 i === currentIndex && logo.color
-              } transition-transform duration-300`}
+              } transition`}
               aria-hidden="true"
             />
 
