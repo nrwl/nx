@@ -323,6 +323,7 @@
       - [Record Non-Nx Commands](/ci/recipes/other/record-commands)
       - [Prepare applications for deployment via CI](/ci/recipes/other/ci-deployment)
       - [Reduce the Number of Affected Projects in a CI Pipeline Execution](/ci/recipes/other/cipe-affected-project-graph)
+      - [Cache Nx generated metadata](/ci/recipes/other/cache-nx-generated-metadata)
   - [Reference](/ci/reference)
     - [Configuration Options](/ci/reference/config)
     - [nx-cloud CLI](/ci/reference/nx-cloud-cli)

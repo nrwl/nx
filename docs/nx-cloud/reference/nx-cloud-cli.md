@@ -235,3 +235,7 @@ Same as `npx nx-cloud complete-ci-run`.
 This command tells Nx Cloud to terminate all agents associated with this CI pipeline execution.
 Invoking this command is not needed anymore. New versions of Nx Cloud can track when the main job terminates
 and terminate associated agents automatically.
+
+## npx nx-cloud get-workspace-data
+
+Retrieves [cached Nx generated metadata](/ci/recipes/other/cache-nx-generated-metadata) for your workspace. If no cached workspace data exists for the workspace, Nx will generate your workspaces metadata as normal.

@@ -2007,6 +2007,11 @@
                   "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
                   "id": "cipe-affected-project-graph",
                   "file": "nx-cloud/recipes/cipe-affected-project-graph"
+                },
+                {
+                  "name": "Cache Nx generated metadata",
+                  "id": "cache-nx-generated-metadata",
+                  "file": "nx-cloud/recipes/cache-nx-generated-metadata"
                 }
               ]
             }

@@ -926,6 +926,17 @@
             "isExternal": false,
             "path": "/ci/recipes/other/cipe-affected-project-graph",
             "tags": []
+          },
+          {
+            "id": "cache-nx-generated-metadata",
+            "name": "Cache Nx generated metadata",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/cache-nx-generated-metadata",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/other/cache-nx-generated-metadata",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -1899,6 +1910,17 @@
         "isExternal": false,
         "path": "/ci/recipes/other/cipe-affected-project-graph",
         "tags": []
+      },
+      {
+        "id": "cache-nx-generated-metadata",
+        "name": "Cache Nx generated metadata",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/cache-nx-generated-metadata",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/other/cache-nx-generated-metadata",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1936,6 +1958,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/other/cipe-affected-project-graph",
+    "tags": []
+  },
+  "/ci/recipes/other/cache-nx-generated-metadata": {
+    "id": "cache-nx-generated-metadata",
+    "name": "Cache Nx generated metadata",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/cache-nx-generated-metadata",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/other/cache-nx-generated-metadata",
     "tags": []
   },
   "/ci/reference": {

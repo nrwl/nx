@@ -6139,6 +6139,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Cache Nx generated metadata",
+                "path": "/ci/recipes/other/cache-nx-generated-metadata",
+                "id": "cache-nx-generated-metadata",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6849,6 +6857,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Cache Nx generated metadata",
+            "path": "/ci/recipes/other/cache-nx-generated-metadata",
+            "id": "cache-nx-generated-metadata",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6873,6 +6889,14 @@
         "name": "Reduce the Number of Affected Projects in a CI Pipeline Execution",
         "path": "/ci/recipes/other/cipe-affected-project-graph",
         "id": "cipe-affected-project-graph",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Cache Nx generated metadata",
+        "path": "/ci/recipes/other/cache-nx-generated-metadata",
+        "id": "cache-nx-generated-metadata",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
