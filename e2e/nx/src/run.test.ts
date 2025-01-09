@@ -46,26 +46,37 @@ describe('Nx Running Tests', () => {
         });
       });
 
-      it('should support running using a substring of the project name', () => {
-        // Note: actual project name will have some numbers at the end.
-        expect(() => runCLI(`echo proj`)).not.toThrow();
-      });
-
-      it('should error when multiple projects match a substring', () => {
-        const test1 = uniq('test1');
-        const test2 = uniq('test2');
-        runCLI(`generate @nx/js:lib libs/${test1}`);
-        runCLI(`generate @nx/js:lib libs/${test2}`);
-        updateJson(`libs/${test1}/project.json`, (c) => {
+      it('should support running with simple names (i.e. matching on full segments)', () => {
+        const foo = uniq('foo');
+        const bar = uniq('bar');
+        const nested = uniq('nested');
+        runCLI(`generate @nx/js:lib libs/${foo}`);
+        runCLI(`generate @nx/js:lib libs/${bar}`);
+        runCLI(`generate @nx/js:lib libs/nested/${nested}`);
+        updateJson(`libs/${foo}/project.json`, (c) => {
+          c.name = `@acme/${foo}`;
           c.targets['echo'] = { command: 'echo TEST' };
           return c;
         });
-        updateJson(`libs/${test2}/project.json`, (c) => {
+        updateJson(`libs/${bar}/project.json`, (c) => {
+          c.name = `@acme/${bar}`;
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+        updateJson(`libs/nested/${nested}/project.json`, (c) => {
+          c.name = `@acme/nested/${bar}`; // The last segment is a duplicate
           c.targets['echo'] = { command: 'echo TEST' };
           return c;
         });
 
-        expect(() => runCLI(`echo test`)).toThrow();
+        // Full segments should match
+        expect(() => runCLI(`echo ${foo}`)).not.toThrow();
+
+        // Multiple matches should fail
+        expect(() => runCLI(`echo ${bar}`)).toThrow();
+
+        // Partial segments should not match (Note: project foo has numbers in the end that aren't matched fully)
+        expect(() => runCLI(`echo foo`)).toThrow();
       });
 
       it.each([

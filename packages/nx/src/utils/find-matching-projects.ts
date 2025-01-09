@@ -167,18 +167,19 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
-    // Only matching substrings when string is long enough, otherwise there will be too many matches.
-    // This is consistent with the behavior of run-one.ts.
-    if (pattern.value.length > 1) {
-      const matchingProjects = Object.keys(projects).filter((name) =>
-        name.includes(pattern.value)
-      );
-      for (const projectName of matchingProjects) {
-        if (pattern.exclude) {
-          matchedProjects.delete(projectName);
-        } else {
-          matchedProjects.add(projectName);
-        }
+    // Custom regex that is basically \b without underscores, so "foo" pattern matches "foo_bar".
+    const regex = new RegExp(
+      `(?<![a-zA-Z0-9])${pattern.value}(?![a-zA-Z0-9])`,
+      'i'
+    );
+    const matchingProjects = Object.keys(projects).filter((name) =>
+      regex.test(name)
+    );
+    for (const projectName of matchingProjects) {
+      if (pattern.exclude) {
+        matchedProjects.delete(projectName);
+      } else {
+        matchedProjects.add(projectName);
       }
     }
     return;
