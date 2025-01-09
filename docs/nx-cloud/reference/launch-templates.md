@@ -141,9 +141,9 @@ You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/
 launch-templates:
   template-one:
     init-steps:
-      - uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+      - uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`
@@ -186,7 +186,7 @@ launch-templates:
   template-one:
     init-steps:
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
@@ -218,9 +218,9 @@ launch-templates:
       - name: Checkout
         # using a reusable step in an external GitHub repo,
         # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         # the cache step requires configuration via env vars
         # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
         inputs:
@@ -230,10 +230,17 @@ launch-templates:
             # or ~/.cache/yarn
             # or .pnpm-store
           base-branch: 'main'
+      - name: Restore Browser Binary Cache
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
+          paths: |
+            '~/.cache/Cypress'
+          base-branch: 'main'
       - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
       - name: Install Browsers (if needed)
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-browsers/main.yaml'
         # You can also run a custom script to configure various things on the agent machine
       - name: Run a custom script
         script: |
@@ -266,9 +273,9 @@ launch-templates:
       MY_ENV_VAR: shared
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
@@ -276,10 +283,17 @@ launch-templates:
             # or ~/.cache/yarn
             # or .pnpm-store
           base-branch: 'main'
+      - name: Restore Browser Binary Cache
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
+          paths: |
+            '~/.cache/Cypress'
+          base-branch: 'main'
       - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
       - name: Install Browsers (if needed)
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-browsers/main.yaml'
       - name: Run a custom script
         script: |
           git config --global user.email test@test.com
@@ -299,9 +313,9 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v9'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: |
@@ -310,7 +324,7 @@ launch-templates:
             # or .pnpm-store
           base-branch: 'main'
       - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
       - name: Install Rust
         script: |
           curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
@@ -387,14 +401,14 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v9'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Auth to Registry
         script: |
           # create .npmrc with @myorg scoped packages pointing to GH npm registry
           echo "@myorg:registry=https://npm.pkg.github.com" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=${SOME_AUTH_TOKEN}" >> .npmrc
       - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
 ```
 
 Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
@@ -422,10 +436,10 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v9'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Install Node
         # note the step is only released as of v4 of the workflow steps
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
         inputs:
           # can omit value if a '.nvmrc' file is within the root of the repo
           node_version: '21'
@@ -449,7 +463,7 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v9'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Install nvm
         script: |
           # run nvm install script
@@ -464,7 +478,7 @@ launch-templates:
         # confirm that the node version has changed
         script: node -v
       - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
       # Continue setup steps as needed
 ```
 
