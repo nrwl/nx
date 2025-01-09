@@ -723,9 +723,16 @@ function pathToInputOrOutput(
   workspaceRoot: string,
   projectRoot: string
 ): string {
-  const pathRelativeToProjectRoot = normalizePath(relative(projectRoot, path));
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(workspaceRoot, path);
+  const pathRelativeToProjectRoot = normalizePath(
+    relative(fullProjectRoot, fullPath)
+  );
   if (pathRelativeToProjectRoot.startsWith('..')) {
-    return joinPathFragments('{workspaceRoot}', relative(workspaceRoot, path));
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, fullPath)
+    );
   }
 
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);

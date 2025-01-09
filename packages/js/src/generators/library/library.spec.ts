@@ -1688,6 +1688,7 @@ describe('lib', () => {
           },
           "exports": {
             ".": {
+              "default": "./dist/index.js",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -1720,6 +1721,7 @@ describe('lib', () => {
           },
           "exports": {
             ".": {
+              "default": "./dist/index.js",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },

@@ -1226,6 +1226,7 @@ module.exports = withNx(
         {
           "exports": {
             ".": {
+              "default": "./dist/index.esm.js",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },

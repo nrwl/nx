@@ -370,6 +370,7 @@ describe('@nx/vite:configuration', () => {
         {
           "exports": {
             ".": {
+              "default": "./dist/index.js",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
