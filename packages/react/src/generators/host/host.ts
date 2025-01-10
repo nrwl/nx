@@ -146,7 +146,7 @@ export async function hostGenerator(
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
