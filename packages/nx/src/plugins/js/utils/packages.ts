@@ -15,7 +15,11 @@ export function getPackageEntryPointsToProjectMap<
     }
 
     const { packageName, packageExports } = metadata.js;
-    if (!packageExports || typeof packageExports === 'string') {
+    if (
+      !packageExports ||
+      typeof packageExports === 'string' ||
+      !Object.keys(packageExports).length
+    ) {
       // no `exports` or it points to a file, which would be the equivalent of
       // an '.' export, in which case the package name is the entry point
       result[packageName] = project;
@@ -29,6 +33,10 @@ export function getPackageEntryPointsToProjectMap<
         } else {
           result[packageName] = project;
         }
+      }
+      // if there was no '.' entrypoint, ensure the package name is matched with the project
+      if (!result[packageName]) {
+        result[packageName] = project;
       }
     }
   }

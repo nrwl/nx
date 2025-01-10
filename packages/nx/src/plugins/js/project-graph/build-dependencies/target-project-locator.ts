@@ -263,8 +263,8 @@ export class TargetProjectLocator {
       this.packageEntryPointsToProjectMap[dep]?.name ??
       // if the package exports do not include ".", look for subpath exports
       Object.entries(this.packageEntryPointsToProjectMap).find(([entryPoint]) =>
-        entryPoint.startsWith(`${dep}/`)
-      )?.[1].name ??
+        dep.startsWith(`${entryPoint}/`)
+      )?.[1]?.name ??
       null
     );
   }
