@@ -167,6 +167,14 @@ describe('Remix Library Generator', () => {
       expect(readJson(tree, 'packages/foo/package.json'))
         .toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/foo",
           "nx": {

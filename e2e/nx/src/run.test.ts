@@ -728,8 +728,12 @@ describe('Nx Running Tests', () => {
     it('should run multiple targets', () => {
       const myapp1 = uniq('myapp');
       const myapp2 = uniq('myapp');
-      runCLI(`generate @nx/web:app ${myapp1} --directory=apps/${myapp1}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+      runCLI(
+        `generate @nx/web:app ${myapp1} --directory=apps/${myapp1} --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/web:app ${myapp2} --directory=apps/${myapp2} --unitTestRunner=vitest`
+      );
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).
