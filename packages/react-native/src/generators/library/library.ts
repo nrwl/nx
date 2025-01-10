@@ -39,6 +39,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -162,17 +163,15 @@ async function addProject(
     targets: {},
   };
 
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
+  );
   if (options.isUsingTsSolutionConfig) {
-    const sourceEntry = !options.buildable
-      ? options.js
-        ? './src/index.js'
-        : './src/index.ts'
-      : undefined;
-    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+    writeJson(host, packageJsonPath, {
       name: getImportPath(host, options.name),
       version: '0.0.1',
-      main: sourceEntry,
-      types: sourceEntry,
+      ...determineEntryFields(options),
       nx: {
         name: options.name,
         sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -198,13 +197,24 @@ async function addProject(
     skipFormat: true,
   });
 
+  updateJson(host, packageJsonPath, (json) => {
+    if (json.type === 'module') {
+      // The @nx/rollup:configuration generator can set the type to 'module' which would
+      // potentially break this library.
+      delete json.type;
+    }
+    return json;
+  });
+
   const external = ['react/jsx-runtime', 'react-native', 'react', 'react-dom'];
 
   project.targets.build = {
     executor: '@nx/rollup:rollup',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: `dist/${options.projectRoot}`,
+      outputPath: options.isUsingTsSolutionConfig
+        ? `${options.projectRoot}/dist`
+        : `dist/${options.projectRoot}`,
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       project: `${options.projectRoot}/package.json`,
       entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
@@ -291,6 +301,29 @@ function maybeJs(options: NormalizedSchema, path: string): string {
   return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
     ? path.replace(/\.tsx?$/, '.js')
     : path;
+}
+
+function determineEntryFields(
+  options: NormalizedSchema
+): Pick<PackageJson, 'main' | 'types' | 'exports'> {
+  if (options.buildable) {
+    return {};
+  }
+
+  return {
+    main: options.js ? './src/index.js' : './src/index.ts',
+    types: options.js ? './src/index.js' : './src/index.ts',
+    exports: {
+      '.': options.js
+        ? './src/index.js'
+        : {
+            types: './src/index.ts',
+            import: './src/index.ts',
+            default: './src/index.ts',
+          },
+      './package.json': './package.json',
+    },
+  };
 }
 
 export default reactNativeLibraryGenerator;
