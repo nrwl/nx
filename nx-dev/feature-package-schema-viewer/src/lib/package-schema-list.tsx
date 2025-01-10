@@ -87,8 +87,8 @@ export function PackageSchemaList({
             <Heading2 title="Package reference" />
 
             <p className="mb-16">
-              Here is a list of all the executors and generators available from
-              this package.
+              Here is a list of all the executors, generators and migrations
+              available from this package.
             </p>
 
             <Heading2 title={'Guides'} />

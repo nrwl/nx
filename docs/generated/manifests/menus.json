@@ -7434,113 +7434,385 @@
             "name": "migrations",
             "children": [
               {
-                "id": "remove-library-generator-simple-module-name-option",
-                "path": "/nx-api/angular/migrations/remove-library-generator-simple-module-name-option",
-                "name": "remove-library-generator-simple-module-name-option",
+                "id": "ensure-nx-module-federation-package",
+                "path": "/nx-api/angular/migrations/ensure-nx-module-federation-package",
+                "name": "ensure-nx-module-federation-package",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-16-0-0-add-nx-packages",
-                "path": "/nx-api/angular/migrations/update-16-0-0-add-nx-packages",
-                "name": "update-16-0-0-add-nx-packages",
+                "id": "20.2.3-ngrx-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.3-ngrx-package-updates",
+                "name": "20.2.3-ngrx-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "remove-protractor-defaults-from-generators",
-                "path": "/nx-api/angular/migrations/remove-protractor-defaults-from-generators",
-                "name": "remove-protractor-defaults-from-generators",
+                "id": "20.2.2-angular-eslint-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.2-angular-eslint-package-updates",
+                "name": "20.2.2-angular-eslint-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "remove-karma-defaults-from-generators",
-                "path": "/nx-api/angular/migrations/remove-karma-defaults-from-generators",
-                "name": "remove-karma-defaults-from-generators",
+                "id": "remove-angular-eslint-rules",
+                "path": "/nx-api/angular/migrations/remove-angular-eslint-rules",
+                "name": "remove-angular-eslint-rules",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "remove-render-module-platform-server-exports",
-                "path": "/nx-api/angular/migrations/remove-render-module-platform-server-exports",
-                "name": "remove-render-module-platform-server-exports",
+                "id": "remove-tailwind-config-from-ng-packagr-executors",
+                "path": "/nx-api/angular/migrations/remove-tailwind-config-from-ng-packagr-executors",
+                "name": "remove-tailwind-config-from-ng-packagr-executors",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "remove-ngcc-invocation",
-                "path": "/nx-api/angular/migrations/remove-ngcc-invocation",
-                "name": "remove-ngcc-invocation",
+                "id": "20.2.0-analog-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.0-analog-package-updates",
+                "name": "20.2.0-analog-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "extract-app-config-for-standalone",
-                "path": "/nx-api/angular/migrations/extract-app-config-for-standalone",
-                "name": "extract-app-config-for-standalone",
+                "id": "disable-angular-eslint-prefer-standalone",
+                "path": "/nx-api/angular/migrations/disable-angular-eslint-prefer-standalone",
+                "name": "disable-angular-eslint-prefer-standalone",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-server-executor-config",
-                "path": "/nx-api/angular/migrations/update-server-executor-config",
-                "name": "update-server-executor-config",
+                "id": "update-angular-cli-version-19-0-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-19-0-0",
+                "name": "update-angular-cli-version-19-0-0",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-16-0-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-16-0-0",
-                "name": "update-angular-cli-version-16-0-0",
+                "id": "add-localize-polyfill-to-targets",
+                "path": "/nx-api/angular/migrations/add-localize-polyfill-to-targets",
+                "name": "add-localize-polyfill-to-targets",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "switch-data-persistence-operators-imports-to-ngrx-router-store",
-                "path": "/nx-api/angular/migrations/switch-data-persistence-operators-imports-to-ngrx-router-store",
-                "name": "switch-data-persistence-operators-imports-to-ngrx-router-store",
+                "id": "update-angular-ssr-imports-to-use-node-entry-point",
+                "path": "/nx-api/angular/migrations/update-angular-ssr-imports-to-use-node-entry-point",
+                "name": "update-angular-ssr-imports-to-use-node-entry-point",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "rename-angular-eslint-accesibility-rules",
-                "path": "/nx-api/angular/migrations/rename-angular-eslint-accesibility-rules",
-                "name": "rename-angular-eslint-accesibility-rules",
+                "id": "20.2.0-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.0-package-updates",
+                "name": "20.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-16-1-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-16-1-0",
-                "name": "update-angular-cli-version-16-1-0",
+                "id": "20.2.0-jest-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.0-jest-package-updates",
+                "name": "20.2.0-jest-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "explicitly-set-projects-to-update-buildable-deps",
-                "path": "/nx-api/angular/migrations/explicitly-set-projects-to-update-buildable-deps",
-                "name": "explicitly-set-projects-to-update-buildable-deps",
+                "id": "20.2.0-angular-eslint-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.0-angular-eslint-package-updates",
+                "name": "20.2.0-angular-eslint-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-16-2-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-16-2-0",
-                "name": "update-angular-cli-version-16-2-0",
+                "id": "20.2.0-module-federation-package-updates",
+                "path": "/nx-api/angular/migrations/20.2.0-module-federation-package-updates",
+                "name": "20.2.0-module-federation-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-20-2-0-update-module-federation-config-import",
+                "path": "/nx-api/angular/migrations/update-20-2-0-update-module-federation-config-import",
+                "name": "update-20-2-0-update-module-federation-config-import",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-20-2-0-update-with-module-federation-import",
+                "path": "/nx-api/angular/migrations/update-20-2-0-update-with-module-federation-import",
+                "name": "update-20-2-0-update-with-module-federation-import",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.7.0-package-updates",
+                "path": "/nx-api/angular/migrations/19.7.0-package-updates",
+                "name": "19.7.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-19-6-1-ensure-module-federation-target-defaults",
+                "path": "/nx-api/angular/migrations/update-19-6-1-ensure-module-federation-target-defaults",
+                "name": "update-19-6-1-ensure-module-federation-target-defaults",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.6.1-ngrx-package-updates",
+                "path": "/nx-api/angular/migrations/19.6.1-ngrx-package-updates",
+                "name": "19.6.1-ngrx-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-angular-cli-version-18-2-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-18-2-0",
+                "name": "update-angular-cli-version-18-2-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.6.0-package-updates",
+                "path": "/nx-api/angular/migrations/19.6.0-package-updates",
+                "name": "19.6.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-19-6-0",
+                "path": "/nx-api/angular/migrations/update-19-6-0",
+                "name": "update-19-6-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.5.4-ngrx-package-updates",
+                "path": "/nx-api/angular/migrations/19.5.4-ngrx-package-updates",
+                "name": "19.5.4-ngrx-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-angular-cli-version-18-1-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-18-1-0",
+                "name": "update-angular-cli-version-18-1-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.5.0-package-updates",
+                "path": "/nx-api/angular/migrations/19.5.0-package-updates",
+                "name": "19.5.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.5.0-module-federation-package-updates",
+                "path": "/nx-api/angular/migrations/19.5.0-module-federation-package-updates",
+                "name": "19.5.0-module-federation-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.4.0-ngrx-package-updates",
+                "path": "/nx-api/angular/migrations/19.4.0-ngrx-package-updates",
+                "name": "19.4.0-ngrx-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "add-typescript-eslint-utils",
+                "path": "/nx-api/angular/migrations/add-typescript-eslint-utils",
+                "name": "add-typescript-eslint-utils",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.1.2-package-updates",
+                "path": "/nx-api/angular/migrations/19.1.2-package-updates",
+                "name": "19.1.2-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-angular-cli-version-18-0-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-18-0-0",
+                "name": "update-angular-cli-version-18-0-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.1.0-package-updates",
+                "path": "/nx-api/angular/migrations/19.1.0-package-updates",
+                "name": "19.1.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.1.0-jest-package-updates",
+                "path": "/nx-api/angular/migrations/19.1.0-jest-package-updates",
+                "name": "19.1.0-jest-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-angular-cli-version-17-3-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-17-3-0",
+                "name": "update-angular-cli-version-17-3-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/angular/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.2.0-angular-eslint-package-updates",
+                "path": "/nx-api/angular/migrations/18.2.0-angular-eslint-package-updates",
+                "name": "18.2.0-angular-eslint-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "fix-target-defaults-for-webpack-browser",
+                "path": "/nx-api/angular/migrations/fix-target-defaults-for-webpack-browser",
+                "name": "fix-target-defaults-for-webpack-browser",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.1.0-jest-package-updates",
+                "path": "/nx-api/angular/migrations/18.1.0-jest-package-updates",
+                "name": "18.1.0-jest-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-angular-cli-version-17-2-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-17-2-0",
+                "name": "update-angular-cli-version-17-2-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.1.0-package-updates",
+                "path": "/nx-api/angular/migrations/18.1.0-package-updates",
+                "name": "18.1.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "add-module-federation-env-var-to-target-defaults",
+                "path": "/nx-api/angular/migrations/add-module-federation-env-var-to-target-defaults",
+                "name": "add-module-federation-env-var-to-target-defaults",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-angular-cli-version-17-1-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-17-1-0",
+                "name": "update-angular-cli-version-17-1-0",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "add-browser-sync-dependency",
+                "path": "/nx-api/angular/migrations/add-browser-sync-dependency",
+                "name": "add-browser-sync-dependency",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "add-autoprefixer-dependency",
+                "path": "/nx-api/angular/migrations/add-autoprefixer-dependency",
+                "name": "add-autoprefixer-dependency",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/angular/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-types-node-package-updates",
+                "path": "/nx-api/angular/migrations/17.3.0-types-node-package-updates",
+                "name": "17.3.0-types-node-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.2.0-ngrx-package-updates",
+                "path": "/nx-api/angular/migrations/17.2.0-ngrx-package-updates",
+                "name": "17.2.0-ngrx-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "rename-webpack-dev-server-executor",
+                "path": "/nx-api/angular/migrations/rename-webpack-dev-server-executor",
+                "name": "rename-webpack-dev-server-executor",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.1.3-jest-package-updates",
+                "path": "/nx-api/angular/migrations/17.1.3-jest-package-updates",
+                "name": "17.1.3-jest-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7586,465 +7858,193 @@
                 "disableCollapsible": false
               },
               {
-                "id": "rename-webpack-dev-server-executor",
-                "path": "/nx-api/angular/migrations/rename-webpack-dev-server-executor",
-                "name": "rename-webpack-dev-server-executor",
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/angular/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-17-1-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-17-1-0",
-                "name": "update-angular-cli-version-17-1-0",
+                "id": "17.1.0-jest-package-updates",
+                "path": "/nx-api/angular/migrations/17.1.0-jest-package-updates",
+                "name": "17.1.0-jest-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "add-browser-sync-dependency",
-                "path": "/nx-api/angular/migrations/add-browser-sync-dependency",
-                "name": "add-browser-sync-dependency",
+                "id": "17.1.0-angular-eslint-package-updates",
+                "path": "/nx-api/angular/migrations/17.1.0-angular-eslint-package-updates",
+                "name": "17.1.0-angular-eslint-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "add-autoprefixer-dependency",
-                "path": "/nx-api/angular/migrations/add-autoprefixer-dependency",
-                "name": "add-autoprefixer-dependency",
+                "id": "16.8.0-package-updates",
+                "path": "/nx-api/angular/migrations/16.8.0-package-updates",
+                "name": "16.8.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "add-module-federation-env-var-to-target-defaults",
-                "path": "/nx-api/angular/migrations/add-module-federation-env-var-to-target-defaults",
-                "name": "add-module-federation-env-var-to-target-defaults",
+                "id": "update-angular-cli-version-16-2-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-16-2-0",
+                "name": "update-angular-cli-version-16-2-0",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-17-2-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-17-2-0",
-                "name": "update-angular-cli-version-17-2-0",
+                "id": "16.7.0-package-updates",
+                "path": "/nx-api/angular/migrations/16.7.0-package-updates",
+                "name": "16.7.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "fix-target-defaults-for-webpack-browser",
-                "path": "/nx-api/angular/migrations/fix-target-defaults-for-webpack-browser",
-                "name": "fix-target-defaults-for-webpack-browser",
+                "id": "explicitly-set-projects-to-update-buildable-deps",
+                "path": "/nx-api/angular/migrations/explicitly-set-projects-to-update-buildable-deps",
+                "name": "explicitly-set-projects-to-update-buildable-deps",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-17-3-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-17-3-0",
-                "name": "update-angular-cli-version-17-3-0",
+                "id": "update-angular-cli-version-16-1-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-16-1-0",
+                "name": "update-angular-cli-version-16-1-0",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-18-0-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-18-0-0",
-                "name": "update-angular-cli-version-18-0-0",
+                "id": "16.4.0-package-updates",
+                "path": "/nx-api/angular/migrations/16.4.0-package-updates",
+                "name": "16.4.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "add-typescript-eslint-utils",
-                "path": "/nx-api/angular/migrations/add-typescript-eslint-utils",
-                "name": "add-typescript-eslint-utils",
+                "id": "rename-angular-eslint-accesibility-rules",
+                "path": "/nx-api/angular/migrations/rename-angular-eslint-accesibility-rules",
+                "name": "rename-angular-eslint-accesibility-rules",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-18-1-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-18-1-0",
-                "name": "update-angular-cli-version-18-1-0",
+                "id": "switch-data-persistence-operators-imports-to-ngrx-router-store",
+                "path": "/nx-api/angular/migrations/switch-data-persistence-operators-imports-to-ngrx-router-store",
+                "name": "switch-data-persistence-operators-imports-to-ngrx-router-store",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-6-0",
-                "path": "/nx-api/angular/migrations/update-19-6-0",
-                "name": "update-19-6-0",
+                "id": "16.2.0-ngrx-package-updates",
+                "path": "/nx-api/angular/migrations/16.2.0-ngrx-package-updates",
+                "name": "16.2.0-ngrx-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-18-2-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-18-2-0",
-                "name": "update-angular-cli-version-18-2-0",
+                "id": "16.1.3-jest-package-updates",
+                "path": "/nx-api/angular/migrations/16.1.3-jest-package-updates",
+                "name": "16.1.3-jest-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-6-1-ensure-module-federation-target-defaults",
-                "path": "/nx-api/angular/migrations/update-19-6-1-ensure-module-federation-target-defaults",
-                "name": "update-19-6-1-ensure-module-federation-target-defaults",
+                "id": "remove-render-module-platform-server-exports",
+                "path": "/nx-api/angular/migrations/remove-render-module-platform-server-exports",
+                "name": "remove-render-module-platform-server-exports",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-20-2-0-update-module-federation-config-import",
-                "path": "/nx-api/angular/migrations/update-20-2-0-update-module-federation-config-import",
-                "name": "update-20-2-0-update-module-federation-config-import",
+                "id": "remove-ngcc-invocation",
+                "path": "/nx-api/angular/migrations/remove-ngcc-invocation",
+                "name": "remove-ngcc-invocation",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-20-2-0-update-with-module-federation-import",
-                "path": "/nx-api/angular/migrations/update-20-2-0-update-with-module-federation-import",
-                "name": "update-20-2-0-update-with-module-federation-import",
+                "id": "extract-app-config-for-standalone",
+                "path": "/nx-api/angular/migrations/extract-app-config-for-standalone",
+                "name": "extract-app-config-for-standalone",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-cli-version-19-0-0",
-                "path": "/nx-api/angular/migrations/update-angular-cli-version-19-0-0",
-                "name": "update-angular-cli-version-19-0-0",
+                "id": "update-server-executor-config",
+                "path": "/nx-api/angular/migrations/update-server-executor-config",
+                "name": "update-server-executor-config",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "add-localize-polyfill-to-targets",
-                "path": "/nx-api/angular/migrations/add-localize-polyfill-to-targets",
-                "name": "add-localize-polyfill-to-targets",
+                "id": "update-angular-cli-version-16-0-0",
+                "path": "/nx-api/angular/migrations/update-angular-cli-version-16-0-0",
+                "name": "update-angular-cli-version-16-0-0",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-angular-ssr-imports-to-use-node-entry-point",
-                "path": "/nx-api/angular/migrations/update-angular-ssr-imports-to-use-node-entry-point",
-                "name": "update-angular-ssr-imports-to-use-node-entry-point",
+                "id": "16.1.0-package-updates",
+                "path": "/nx-api/angular/migrations/16.1.0-package-updates",
+                "name": "16.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "disable-angular-eslint-prefer-standalone",
-                "path": "/nx-api/angular/migrations/disable-angular-eslint-prefer-standalone",
-                "name": "disable-angular-eslint-prefer-standalone",
+                "id": "16.1.0-angular-eslint-package-updates",
+                "path": "/nx-api/angular/migrations/16.1.0-angular-eslint-package-updates",
+                "name": "16.1.0-angular-eslint-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "remove-angular-eslint-rules",
-                "path": "/nx-api/angular/migrations/remove-angular-eslint-rules",
-                "name": "remove-angular-eslint-rules",
+                "id": "remove-protractor-defaults-from-generators",
+                "path": "/nx-api/angular/migrations/remove-protractor-defaults-from-generators",
+                "name": "remove-protractor-defaults-from-generators",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "remove-tailwind-config-from-ng-packagr-executors",
-                "path": "/nx-api/angular/migrations/remove-tailwind-config-from-ng-packagr-executors",
-                "name": "remove-tailwind-config-from-ng-packagr-executors",
+                "id": "remove-karma-defaults-from-generators",
+                "path": "/nx-api/angular/migrations/remove-karma-defaults-from-generators",
+                "name": "remove-karma-defaults-from-generators",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "ensure-nx-module-federation-package",
-                "path": "/nx-api/angular/migrations/ensure-nx-module-federation-package",
-                "name": "ensure-nx-module-federation-package",
+                "id": "remove-library-generator-simple-module-name-option",
+                "path": "/nx-api/angular/migrations/remove-library-generator-simple-module-name-option",
+                "name": "remove-library-generator-simple-module-name-option",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "16.1.0",
-                "path": "/nx-api/angular/migrations/16.1.0",
-                "name": "16.1.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "16.1.0-angular-eslint",
-                "path": "/nx-api/angular/migrations/16.1.0-angular-eslint",
-                "name": "16.1.0-angular-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "16.1.3-jest",
-                "path": "/nx-api/angular/migrations/16.1.3-jest",
-                "name": "16.1.3-jest",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "16.2.0-ngrx",
-                "path": "/nx-api/angular/migrations/16.2.0-ngrx",
-                "name": "16.2.0-ngrx",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "16.4.0",
-                "path": "/nx-api/angular/migrations/16.4.0",
-                "name": "16.4.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "16.7.0",
-                "path": "/nx-api/angular/migrations/16.7.0",
-                "name": "16.7.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "16.8.0",
-                "path": "/nx-api/angular/migrations/16.8.0",
-                "name": "16.8.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.1.0",
-                "path": "/nx-api/angular/migrations/17.1.0",
-                "name": "17.1.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.1.0-jest",
-                "path": "/nx-api/angular/migrations/17.1.0-jest",
-                "name": "17.1.0-jest",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.1.0-angular-eslint",
-                "path": "/nx-api/angular/migrations/17.1.0-angular-eslint",
-                "name": "17.1.0-angular-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.1.3-jest",
-                "path": "/nx-api/angular/migrations/17.1.3-jest",
-                "name": "17.1.3-jest",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.2.0-ngrx",
-                "path": "/nx-api/angular/migrations/17.2.0-ngrx",
-                "name": "17.2.0-ngrx",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.3.0-types-node",
-                "path": "/nx-api/angular/migrations/17.3.0-types-node",
-                "name": "17.3.0-types-node",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.3.0",
-                "path": "/nx-api/angular/migrations/17.3.0",
-                "name": "17.3.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.1.0-jest",
-                "path": "/nx-api/angular/migrations/18.1.0-jest",
-                "name": "18.1.0-jest",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.1.0",
-                "path": "/nx-api/angular/migrations/18.1.0",
-                "name": "18.1.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.2.0",
-                "path": "/nx-api/angular/migrations/18.2.0",
-                "name": "18.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.2.0-angular-eslint",
-                "path": "/nx-api/angular/migrations/18.2.0-angular-eslint",
-                "name": "18.2.0-angular-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.1.0",
-                "path": "/nx-api/angular/migrations/19.1.0",
-                "name": "19.1.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.1.0-jest",
-                "path": "/nx-api/angular/migrations/19.1.0-jest",
-                "name": "19.1.0-jest",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.1.2",
-                "path": "/nx-api/angular/migrations/19.1.2",
-                "name": "19.1.2",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.4.0-ngrx",
-                "path": "/nx-api/angular/migrations/19.4.0-ngrx",
-                "name": "19.4.0-ngrx",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.5.0-module-federation",
-                "path": "/nx-api/angular/migrations/19.5.0-module-federation",
-                "name": "19.5.0-module-federation",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.5.0",
-                "path": "/nx-api/angular/migrations/19.5.0",
-                "name": "19.5.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.5.4-ngrx",
-                "path": "/nx-api/angular/migrations/19.5.4-ngrx",
-                "name": "19.5.4-ngrx",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.6.0",
-                "path": "/nx-api/angular/migrations/19.6.0",
-                "name": "19.6.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.6.1-ngrx",
-                "path": "/nx-api/angular/migrations/19.6.1-ngrx",
-                "name": "19.6.1-ngrx",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.7.0",
-                "path": "/nx-api/angular/migrations/19.7.0",
-                "name": "19.7.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0-module-federation",
-                "path": "/nx-api/angular/migrations/20.2.0-module-federation",
-                "name": "20.2.0-module-federation",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0",
-                "path": "/nx-api/angular/migrations/20.2.0",
-                "name": "20.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0-jest",
-                "path": "/nx-api/angular/migrations/20.2.0-jest",
-                "name": "20.2.0-jest",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0-angular-eslint",
-                "path": "/nx-api/angular/migrations/20.2.0-angular-eslint",
-                "name": "20.2.0-angular-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0-analog",
-                "path": "/nx-api/angular/migrations/20.2.0-analog",
-                "name": "20.2.0-analog",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.2-angular-eslint",
-                "path": "/nx-api/angular/migrations/20.2.2-angular-eslint",
-                "name": "20.2.2-angular-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.3-ngrx",
-                "path": "/nx-api/angular/migrations/20.2.3-ngrx",
-                "name": "20.2.3-ngrx",
+                "id": "update-16-0-0-add-nx-packages",
+                "path": "/nx-api/angular/migrations/update-16-0-0-add-nx-packages",
+                "name": "update-16-0-0-add-nx-packages",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8167,14 +8167,6 @@
             "name": "migrations",
             "children": [
               {
-                "id": "update-cypress-version-13-6-6",
-                "path": "/nx-api/cypress/migrations/update-cypress-version-13-6-6",
-                "name": "update-cypress-version-13-6-6",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "update-19-6-0-update-ci-webserver-for-vite",
                 "path": "/nx-api/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite",
                 "name": "update-19-6-0-update-ci-webserver-for-vite",
@@ -8183,33 +8175,41 @@
                 "disableCollapsible": false
               },
               {
-                "id": "17.2.0-beta.2",
-                "path": "/nx-api/cypress/migrations/17.2.0-beta.2",
-                "name": "17.2.0-beta.2",
+                "id": "19.4.1-package-updates",
+                "path": "/nx-api/cypress/migrations/19.4.1-package-updates",
+                "name": "19.4.1-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.0",
-                "path": "/nx-api/cypress/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "19.1.0-package-updates",
+                "path": "/nx-api/cypress/migrations/19.1.0-package-updates",
+                "name": "19.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.1.0",
-                "path": "/nx-api/cypress/migrations/19.1.0",
-                "name": "19.1.0",
+                "id": "update-cypress-version-13-6-6",
+                "path": "/nx-api/cypress/migrations/update-cypress-version-13-6-6",
+                "name": "update-cypress-version-13-6-6",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.4.1",
-                "path": "/nx-api/cypress/migrations/19.4.1",
-                "name": "19.4.1",
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/cypress/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.2.0-beta.2-package-updates",
+                "path": "/nx-api/cypress/migrations/17.2.0-beta.2-package-updates",
+                "name": "17.2.0-beta.2-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8308,33 +8308,33 @@
             "name": "migrations",
             "children": [
               {
-                "id": "18.0.0",
-                "path": "/nx-api/detox/migrations/18.0.0",
-                "name": "18.0.0",
+                "id": "20.3.0-package-updates",
+                "path": "/nx-api/detox/migrations/20.3.0-package-updates",
+                "name": "20.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.1.0",
-                "path": "/nx-api/detox/migrations/18.1.0",
-                "name": "18.1.0",
+                "id": "19.2.0-package-updates",
+                "path": "/nx-api/detox/migrations/19.2.0-package-updates",
+                "name": "19.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.2.0",
-                "path": "/nx-api/detox/migrations/19.2.0",
-                "name": "19.2.0",
+                "id": "18.1.0-package-updates",
+                "path": "/nx-api/detox/migrations/18.1.0-package-updates",
+                "name": "18.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.3.0",
-                "path": "/nx-api/detox/migrations/20.3.0",
-                "name": "20.3.0",
+                "id": "18.0.0-package-updates",
+                "path": "/nx-api/detox/migrations/18.0.0-package-updates",
+                "name": "18.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8543,33 +8543,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "update-17-0-0-rename-to-eslint",
-                "path": "/nx-api/eslint/migrations/update-17-0-0-rename-to-eslint",
-                "name": "update-17-0-0-rename-to-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-typescript-eslint",
-                "path": "/nx-api/eslint/migrations/update-typescript-eslint",
-                "name": "update-typescript-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "simplify-eslint-patterns",
-                "path": "/nx-api/eslint/migrations/simplify-eslint-patterns",
-                "name": "simplify-eslint-patterns",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "move-options-to-target-defaults",
-                "path": "/nx-api/eslint/migrations/move-options-to-target-defaults",
-                "name": "move-options-to-target-defaults",
+                "id": "add-file-extensions-to-overrides",
+                "path": "/nx-api/eslint/migrations/add-file-extensions-to-overrides",
+                "name": "add-file-extensions-to-overrides",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8583,57 +8559,81 @@
                 "disableCollapsible": false
               },
               {
-                "id": "add-file-extensions-to-overrides",
-                "path": "/nx-api/eslint/migrations/add-file-extensions-to-overrides",
-                "name": "add-file-extensions-to-overrides",
+                "id": "19.5.0-package-updates",
+                "path": "/nx-api/eslint/migrations/19.5.0-package-updates",
+                "name": "19.5.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.0.0",
-                "path": "/nx-api/eslint/migrations/17.0.0",
-                "name": "17.0.0",
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/eslint/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.1.0",
-                "path": "/nx-api/eslint/migrations/17.1.0",
-                "name": "17.1.0",
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/eslint/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.2.0",
-                "path": "/nx-api/eslint/migrations/17.2.0",
-                "name": "17.2.0",
+                "id": "move-options-to-target-defaults",
+                "path": "/nx-api/eslint/migrations/move-options-to-target-defaults",
+                "name": "move-options-to-target-defaults",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.0",
-                "path": "/nx-api/eslint/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "17.2.0-package-updates",
+                "path": "/nx-api/eslint/migrations/17.2.0-package-updates",
+                "name": "17.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.2.0",
-                "path": "/nx-api/eslint/migrations/18.2.0",
-                "name": "18.2.0",
+                "id": "simplify-eslint-patterns",
+                "path": "/nx-api/eslint/migrations/simplify-eslint-patterns",
+                "name": "simplify-eslint-patterns",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.5.0",
-                "path": "/nx-api/eslint/migrations/19.5.0",
-                "name": "19.5.0",
+                "id": "update-typescript-eslint",
+                "path": "/nx-api/eslint/migrations/update-typescript-eslint",
+                "name": "update-typescript-eslint",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/eslint/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.0.0-package-updates",
+                "path": "/nx-api/eslint/migrations/17.0.0-package-updates",
+                "name": "17.0.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-17-0-0-rename-to-eslint",
+                "path": "/nx-api/eslint/migrations/update-17-0-0-rename-to-eslint",
+                "name": "update-17-0-0-rename-to-eslint",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8690,17 +8690,17 @@
             "name": "migrations",
             "children": [
               {
-                "id": "update-17-2-6-rename-workspace-rules",
-                "path": "/nx-api/eslint-plugin/migrations/update-17-2-6-rename-workspace-rules",
-                "name": "update-17-2-6-rename-workspace-rules",
+                "id": "update-19-1-0-rename-no-extra-semi",
+                "path": "/nx-api/eslint-plugin/migrations/update-19-1-0-rename-no-extra-semi",
+                "name": "update-19-1-0-rename-no-extra-semi",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-1-0-rename-no-extra-semi",
-                "path": "/nx-api/eslint-plugin/migrations/update-19-1-0-rename-no-extra-semi",
-                "name": "update-19-1-0-rename-no-extra-semi",
+                "id": "update-17-2-6-rename-workspace-rules",
+                "path": "/nx-api/eslint-plugin/migrations/update-17-2-6-rename-workspace-rules",
+                "name": "update-17-2-6-rename-workspace-rules",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8895,6 +8895,54 @@
             "name": "migrations",
             "children": [
               {
+                "id": "20.3.0-package-updates",
+                "path": "/nx-api/expo/migrations/20.3.0-package-updates",
+                "name": "20.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-19-7-0-remove-eas-pre-install",
+                "path": "/nx-api/expo/migrations/update-19-7-0-remove-eas-pre-install",
+                "name": "update-19-7-0-remove-eas-pre-install",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-19-2-0-remove-webpack-config",
+                "path": "/nx-api/expo/migrations/update-19-2-0-remove-webpack-config",
+                "name": "update-19-2-0-remove-webpack-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.2.0-package-updates",
+                "path": "/nx-api/expo/migrations/19.2.0-package-updates",
+                "name": "19.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-19-0-0-change-webpack-to-metro",
+                "path": "/nx-api/expo/migrations/update-19-0-0-change-webpack-to-metro",
+                "name": "update-19-0-0-change-webpack-to-metro",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.0.0-package-updates",
+                "path": "/nx-api/expo/migrations/19.0.0-package-updates",
+                "name": "19.0.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "update-18-0-0-remove-block-list",
                 "path": "/nx-api/expo/migrations/update-18-0-0-remove-block-list",
                 "name": "update-18-0-0-remove-block-list",
@@ -8927,65 +8975,17 @@
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-0-0-change-webpack-to-metro",
-                "path": "/nx-api/expo/migrations/update-19-0-0-change-webpack-to-metro",
-                "name": "update-19-0-0-change-webpack-to-metro",
+                "id": "18.0.0-package-updates",
+                "path": "/nx-api/expo/migrations/18.0.0-package-updates",
+                "name": "18.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-2-0-remove-webpack-config",
-                "path": "/nx-api/expo/migrations/update-19-2-0-remove-webpack-config",
-                "name": "update-19-2-0-remove-webpack-config",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-19-7-0-remove-eas-pre-install",
-                "path": "/nx-api/expo/migrations/update-19-7-0-remove-eas-pre-install",
-                "name": "update-19-7-0-remove-eas-pre-install",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.1.0",
-                "path": "/nx-api/expo/migrations/17.1.0",
-                "name": "17.1.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.0.0",
-                "path": "/nx-api/expo/migrations/18.0.0",
-                "name": "18.0.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.0.0",
-                "path": "/nx-api/expo/migrations/19.0.0",
-                "name": "19.0.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.2.0",
-                "path": "/nx-api/expo/migrations/19.2.0",
-                "name": "19.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.3.0",
-                "path": "/nx-api/expo/migrations/20.3.0",
-                "name": "20.3.0",
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/expo/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9102,9 +9102,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "add-project-report-all",
-                "path": "/nx-api/gradle/migrations/add-project-report-all",
-                "name": "add-project-report-all",
+                "id": "add-include-subprojects-tasks",
+                "path": "/nx-api/gradle/migrations/add-include-subprojects-tasks",
+                "name": "add-include-subprojects-tasks",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9118,9 +9118,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "add-include-subprojects-tasks",
-                "path": "/nx-api/gradle/migrations/add-include-subprojects-tasks",
-                "name": "add-include-subprojects-tasks",
+                "id": "add-project-report-all",
+                "path": "/nx-api/gradle/migrations/add-project-report-all",
+                "name": "add-project-report-all",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9211,14 +9211,6 @@
             "name": "migrations",
             "children": [
               {
-                "id": "move-options-to-target-defaults",
-                "path": "/nx-api/jest/migrations/move-options-to-target-defaults",
-                "name": "move-options-to-target-defaults",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "replace-getJestProjects-with-getJestProjectsAsync",
                 "path": "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync",
                 "name": "replace-getJestProjects-with-getJestProjectsAsync",
@@ -9227,25 +9219,33 @@
                 "disableCollapsible": false
               },
               {
-                "id": "17.2.0",
-                "path": "/nx-api/jest/migrations/17.2.0",
-                "name": "17.2.0",
+                "id": "19.6.0-package-updates",
+                "path": "/nx-api/jest/migrations/19.6.0-package-updates",
+                "name": "19.6.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.2.0",
-                "path": "/nx-api/jest/migrations/19.2.0",
-                "name": "19.2.0",
+                "id": "19.2.0-package-updates",
+                "path": "/nx-api/jest/migrations/19.2.0-package-updates",
+                "name": "19.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.6.0",
-                "path": "/nx-api/jest/migrations/19.6.0",
-                "name": "19.6.0",
+                "id": "17.2.0-package-updates",
+                "path": "/nx-api/jest/migrations/17.2.0-package-updates",
+                "name": "17.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "move-options-to-target-defaults",
+                "path": "/nx-api/jest/migrations/move-options-to-target-defaults",
+                "name": "move-options-to-target-defaults",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9416,6 +9416,78 @@
             "name": "migrations",
             "children": [
               {
+                "id": "20.2.0-package-updates",
+                "path": "/nx-api/js/migrations/20.2.0-package-updates",
+                "name": "20.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.5.1-package-updates",
+                "path": "/nx-api/js/migrations/19.5.1-package-updates",
+                "name": "19.5.1-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.2.0-package-updates",
+                "path": "/nx-api/js/migrations/19.2.0-package-updates",
+                "name": "19.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.0.0-package-updates",
+                "path": "/nx-api/js/migrations/19.0.0-package-updates",
+                "name": "19.0.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/js/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.0.4-package-updates",
+                "path": "/nx-api/js/migrations/18.0.4-package-updates",
+                "name": "18.0.4-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-beta.10-package-updates",
+                "path": "/nx-api/js/migrations/17.3.0-beta.10-package-updates",
+                "name": "17.3.0-beta.10-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/js/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/js/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "update-17-0-0-remove-deprecated-build-options",
                 "path": "/nx-api/js/migrations/update-17-0-0-remove-deprecated-build-options",
                 "name": "update-17-0-0-remove-deprecated-build-options",
@@ -9424,81 +9496,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "17.0.0",
-                "path": "/nx-api/js/migrations/17.0.0",
-                "name": "17.0.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.1.0",
-                "path": "/nx-api/js/migrations/17.1.0",
-                "name": "17.1.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.3.0",
-                "path": "/nx-api/js/migrations/17.3.0",
-                "name": "17.3.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.3.0-beta.10",
-                "path": "/nx-api/js/migrations/17.3.0-beta.10",
-                "name": "17.3.0-beta.10",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.0.4",
-                "path": "/nx-api/js/migrations/18.0.4",
-                "name": "18.0.4",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.2.0",
-                "path": "/nx-api/js/migrations/18.2.0",
-                "name": "18.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.0.0",
-                "path": "/nx-api/js/migrations/19.0.0",
-                "name": "19.0.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.2.0",
-                "path": "/nx-api/js/migrations/19.2.0",
-                "name": "19.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.5.1",
-                "path": "/nx-api/js/migrations/19.5.1",
-                "name": "19.5.1",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0",
-                "path": "/nx-api/js/migrations/20.2.0",
-                "name": "20.2.0",
+                "id": "17.0.0-package-updates",
+                "path": "/nx-api/js/migrations/17.0.0-package-updates",
+                "name": "17.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9824,33 +9824,33 @@
             "name": "migrations",
             "children": [
               {
+                "id": "19.0.3-package-updates",
+                "path": "/nx-api/next/migrations/19.0.3-package-updates",
+                "name": "19.0.3-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.0.4-package-updates",
+                "path": "/nx-api/next/migrations/18.0.4-package-updates",
+                "name": "18.0.4-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.1-beta.0-package-updates",
+                "path": "/nx-api/next/migrations/17.3.1-beta.0-package-updates",
+                "name": "17.3.1-beta.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "update-17-2-7",
                 "path": "/nx-api/next/migrations/update-17-2-7",
                 "name": "update-17-2-7",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.3.1-beta.0",
-                "path": "/nx-api/next/migrations/17.3.1-beta.0",
-                "name": "17.3.1-beta.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.0.4",
-                "path": "/nx-api/next/migrations/18.0.4",
-                "name": "18.0.4",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.0.3",
-                "path": "/nx-api/next/migrations/19.0.3",
-                "name": "19.0.3",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9932,17 +9932,17 @@
             "name": "migrations",
             "children": [
               {
-                "id": "17.3.0",
-                "path": "/nx-api/node/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "17.3.1-package-updates",
+                "path": "/nx-api/node/migrations/17.3.1-package-updates",
+                "name": "17.3.1-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.1",
-                "path": "/nx-api/node/migrations/17.3.1",
-                "name": "17.3.1",
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/node/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10024,17 +10024,17 @@
                 "disableCollapsible": false
               },
               {
-                "id": "18.2.0",
-                "path": "/nx-api/nuxt/migrations/18.2.0",
-                "name": "18.2.0",
+                "id": "18.3.0-package-updates",
+                "path": "/nx-api/nuxt/migrations/18.3.0-package-updates",
+                "name": "18.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.3.0",
-                "path": "/nx-api/nuxt/migrations/18.3.0",
-                "name": "18.3.0",
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/nuxt/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10333,73 +10333,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "17.0.0-move-cache-directory",
-                "path": "/nx-api/nx/migrations/17.0.0-move-cache-directory",
-                "name": "17.0.0-move-cache-directory",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.0.0-use-minimal-config-for-tasks-runner-options",
-                "path": "/nx-api/nx/migrations/17.0.0-use-minimal-config-for-tasks-runner-options",
-                "name": "17.0.0-use-minimal-config-for-tasks-runner-options",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "rm-default-collection-npm-scope",
-                "path": "/nx-api/nx/migrations/rm-default-collection-npm-scope",
-                "name": "rm-default-collection-npm-scope",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "17.3.0-update-nx-wrapper",
-                "path": "/nx-api/nx/migrations/17.3.0-update-nx-wrapper",
-                "name": "17.3.0-update-nx-wrapper",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.0.0-disable-adding-plugins-for-existing-workspaces",
-                "path": "/nx-api/nx/migrations/18.0.0-disable-adding-plugins-for-existing-workspaces",
-                "name": "18.0.0-disable-adding-plugins-for-existing-workspaces",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "move-default-base-to-nx-json-root",
-                "path": "/nx-api/nx/migrations/move-default-base-to-nx-json-root",
-                "name": "move-default-base-to-nx-json-root",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19-2-0-move-graph-cache-directory",
-                "path": "/nx-api/nx/migrations/19-2-0-move-graph-cache-directory",
-                "name": "19-2-0-move-graph-cache-directory",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19-2-2-update-nx-wrapper",
-                "path": "/nx-api/nx/migrations/19-2-2-update-nx-wrapper",
-                "name": "19-2-2-update-nx-wrapper",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19-2-4-set-project-name",
-                "path": "/nx-api/nx/migrations/19-2-4-set-project-name",
-                "name": "19-2-4-set-project-name",
+                "id": "use-legacy-cache",
+                "path": "/nx-api/nx/migrations/use-legacy-cache",
+                "name": "use-legacy-cache",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10413,9 +10349,73 @@
                 "disableCollapsible": false
               },
               {
-                "id": "use-legacy-cache",
-                "path": "/nx-api/nx/migrations/use-legacy-cache",
-                "name": "use-legacy-cache",
+                "id": "19-2-4-set-project-name",
+                "path": "/nx-api/nx/migrations/19-2-4-set-project-name",
+                "name": "19-2-4-set-project-name",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19-2-2-update-nx-wrapper",
+                "path": "/nx-api/nx/migrations/19-2-2-update-nx-wrapper",
+                "name": "19-2-2-update-nx-wrapper",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19-2-0-move-graph-cache-directory",
+                "path": "/nx-api/nx/migrations/19-2-0-move-graph-cache-directory",
+                "name": "19-2-0-move-graph-cache-directory",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "move-default-base-to-nx-json-root",
+                "path": "/nx-api/nx/migrations/move-default-base-to-nx-json-root",
+                "name": "move-default-base-to-nx-json-root",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.0.0-disable-adding-plugins-for-existing-workspaces",
+                "path": "/nx-api/nx/migrations/18.0.0-disable-adding-plugins-for-existing-workspaces",
+                "name": "18.0.0-disable-adding-plugins-for-existing-workspaces",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-update-nx-wrapper",
+                "path": "/nx-api/nx/migrations/17.3.0-update-nx-wrapper",
+                "name": "17.3.0-update-nx-wrapper",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "rm-default-collection-npm-scope",
+                "path": "/nx-api/nx/migrations/rm-default-collection-npm-scope",
+                "name": "rm-default-collection-npm-scope",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.0.0-use-minimal-config-for-tasks-runner-options",
+                "path": "/nx-api/nx/migrations/17.0.0-use-minimal-config-for-tasks-runner-options",
+                "name": "17.0.0-use-minimal-config-for-tasks-runner-options",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.0.0-move-cache-directory",
+                "path": "/nx-api/nx/migrations/17.0.0-move-cache-directory",
+                "name": "17.0.0-move-cache-directory",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10506,17 +10506,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "17-3-1-add-project-to-config",
-                "path": "/nx-api/playwright/migrations/17-3-1-add-project-to-config",
-                "name": "17-3-1-add-project-to-config",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18-1-0-remove-baseUrl-from-project-json",
-                "path": "/nx-api/playwright/migrations/18-1-0-remove-baseUrl-from-project-json",
-                "name": "18-1-0-remove-baseUrl-from-project-json",
+                "id": "update-19-6-0-add-e2e-ci-target-defaults",
+                "path": "/nx-api/playwright/migrations/update-19-6-0-add-e2e-ci-target-defaults",
+                "name": "update-19-6-0-add-e2e-ci-target-defaults",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10530,9 +10522,17 @@
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-6-0-add-e2e-ci-target-defaults",
-                "path": "/nx-api/playwright/migrations/update-19-6-0-add-e2e-ci-target-defaults",
-                "name": "update-19-6-0-add-e2e-ci-target-defaults",
+                "id": "18-1-0-remove-baseUrl-from-project-json",
+                "path": "/nx-api/playwright/migrations/18-1-0-remove-baseUrl-from-project-json",
+                "name": "18-1-0-remove-baseUrl-from-project-json",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17-3-1-add-project-to-config",
+                "path": "/nx-api/playwright/migrations/17-3-1-add-project-to-config",
+                "name": "17-3-1-add-project-to-config",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10842,41 +10842,17 @@
             "name": "migrations",
             "children": [
               {
-                "id": "add-module-federation-env-var-to-target-defaults",
-                "path": "/nx-api/react/migrations/add-module-federation-env-var-to-target-defaults",
-                "name": "add-module-federation-env-var-to-target-defaults",
+                "id": "ensure-nx-module-federation-package",
+                "path": "/nx-api/react/migrations/ensure-nx-module-federation-package",
+                "name": "ensure-nx-module-federation-package",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "fix-target-defaults-for-webpack",
-                "path": "/nx-api/react/migrations/fix-target-defaults-for-webpack",
-                "name": "fix-target-defaults-for-webpack",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-19-6-0-turn-module-federation-dts-off",
-                "path": "/nx-api/react/migrations/update-19-6-0-turn-module-federation-dts-off",
-                "name": "update-19-6-0-turn-module-federation-dts-off",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-module-federation-ssr-server-file",
-                "path": "/nx-api/react/migrations/update-module-federation-ssr-server-file",
-                "name": "update-module-federation-ssr-server-file",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-19-6-1-ensure-module-federation-target-defaults",
-                "path": "/nx-api/react/migrations/update-19-6-1-ensure-module-federation-target-defaults",
-                "name": "update-19-6-1-ensure-module-federation-target-defaults",
+                "id": "20.2.0-package-updates",
+                "path": "/nx-api/react/migrations/20.2.0-package-updates",
+                "name": "20.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -10898,89 +10874,113 @@
                 "disableCollapsible": false
               },
               {
-                "id": "ensure-nx-module-federation-package",
-                "path": "/nx-api/react/migrations/ensure-nx-module-federation-package",
-                "name": "ensure-nx-module-federation-package",
+                "id": "20.1.0-package-updates",
+                "path": "/nx-api/react/migrations/20.1.0-package-updates",
+                "name": "20.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.0.0-beta.0",
-                "path": "/nx-api/react/migrations/17.0.0-beta.0",
-                "name": "17.0.0-beta.0",
+                "id": "20.0.0-package-updates",
+                "path": "/nx-api/react/migrations/20.0.0-package-updates",
+                "name": "20.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.0",
-                "path": "/nx-api/react/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "19.7.0-package-updates",
+                "path": "/nx-api/react/migrations/19.7.0-package-updates",
+                "name": "19.7.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.0.0",
-                "path": "/nx-api/react/migrations/19.0.0",
-                "name": "19.0.0",
+                "id": "update-19-6-1-ensure-module-federation-target-defaults",
+                "path": "/nx-api/react/migrations/update-19-6-1-ensure-module-federation-target-defaults",
+                "name": "update-19-6-1-ensure-module-federation-target-defaults",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.0.3",
-                "path": "/nx-api/react/migrations/19.0.3",
-                "name": "19.0.3",
+                "id": "update-19-6-0-turn-module-federation-dts-off",
+                "path": "/nx-api/react/migrations/update-19-6-0-turn-module-federation-dts-off",
+                "name": "update-19-6-0-turn-module-federation-dts-off",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.2.0",
-                "path": "/nx-api/react/migrations/19.2.0",
-                "name": "19.2.0",
+                "id": "update-module-federation-ssr-server-file",
+                "path": "/nx-api/react/migrations/update-module-federation-ssr-server-file",
+                "name": "update-module-federation-ssr-server-file",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.5.0-module-federation",
-                "path": "/nx-api/react/migrations/19.5.0-module-federation",
-                "name": "19.5.0-module-federation",
+                "id": "19.5.0-module-federation-package-updates",
+                "path": "/nx-api/react/migrations/19.5.0-module-federation-package-updates",
+                "name": "19.5.0-module-federation-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.7.0",
-                "path": "/nx-api/react/migrations/19.7.0",
-                "name": "19.7.0",
+                "id": "19.2.0-package-updates",
+                "path": "/nx-api/react/migrations/19.2.0-package-updates",
+                "name": "19.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.0.0",
-                "path": "/nx-api/react/migrations/20.0.0",
-                "name": "20.0.0",
+                "id": "19.0.3-package-updates",
+                "path": "/nx-api/react/migrations/19.0.3-package-updates",
+                "name": "19.0.3-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.1.0",
-                "path": "/nx-api/react/migrations/20.1.0",
-                "name": "20.1.0",
+                "id": "19.0.0-package-updates",
+                "path": "/nx-api/react/migrations/19.0.0-package-updates",
+                "name": "19.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.2.0",
-                "path": "/nx-api/react/migrations/20.2.0",
-                "name": "20.2.0",
+                "id": "fix-target-defaults-for-webpack",
+                "path": "/nx-api/react/migrations/fix-target-defaults-for-webpack",
+                "name": "fix-target-defaults-for-webpack",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "add-module-federation-env-var-to-target-defaults",
+                "path": "/nx-api/react/migrations/add-module-federation-env-var-to-target-defaults",
+                "name": "add-module-federation-env-var-to-target-defaults",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/react/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.0.0-beta.0-package-updates",
+                "path": "/nx-api/react/migrations/17.0.0-beta.0-package-updates",
+                "name": "17.0.0-beta.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -11207,6 +11207,46 @@
             "name": "migrations",
             "children": [
               {
+                "id": "20.3.0-package-updates",
+                "path": "/nx-api/react-native/migrations/20.3.0-package-updates",
+                "name": "20.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-19-6-0-rename-upgrade-target-name",
+                "path": "/nx-api/react-native/migrations/update-19-6-0-rename-upgrade-target-name",
+                "name": "update-19-6-0-rename-upgrade-target-name",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.5.0-package-updates",
+                "path": "/nx-api/react-native/migrations/19.5.0-package-updates",
+                "name": "19.5.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.2.0-package-updates",
+                "path": "/nx-api/react-native/migrations/19.2.0-package-updates",
+                "name": "19.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.0.0-package-updates",
+                "path": "/nx-api/react-native/migrations/19.0.0-package-updates",
+                "name": "19.0.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "update-18-0-0-add-web-configuration",
                 "path": "/nx-api/react-native/migrations/update-18-0-0-add-web-configuration",
                 "name": "update-18-0-0-add-web-configuration",
@@ -11255,65 +11295,25 @@
                 "disableCollapsible": false
               },
               {
-                "id": "update-19-6-0-rename-upgrade-target-name",
-                "path": "/nx-api/react-native/migrations/update-19-6-0-rename-upgrade-target-name",
-                "name": "update-19-6-0-rename-upgrade-target-name",
+                "id": "18.0.0-package-updates",
+                "path": "/nx-api/react-native/migrations/18.0.0-package-updates",
+                "name": "18.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.1.0",
-                "path": "/nx-api/react-native/migrations/17.1.0",
-                "name": "17.1.0",
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/react-native/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.0",
-                "path": "/nx-api/react-native/migrations/17.3.0",
-                "name": "17.3.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "18.0.0",
-                "path": "/nx-api/react-native/migrations/18.0.0",
-                "name": "18.0.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.0.0",
-                "path": "/nx-api/react-native/migrations/19.0.0",
-                "name": "19.0.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.2.0",
-                "path": "/nx-api/react-native/migrations/19.2.0",
-                "name": "19.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.5.0",
-                "path": "/nx-api/react-native/migrations/19.5.0",
-                "name": "19.5.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.3.0",
-                "path": "/nx-api/react-native/migrations/20.3.0",
-                "name": "20.3.0",
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/react-native/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -11516,33 +11516,33 @@
             "name": "migrations",
             "children": [
               {
-                "id": "17.2.1",
-                "path": "/nx-api/remix/migrations/17.2.1",
-                "name": "17.2.1",
+                "id": "20.1.0-package-updates",
+                "path": "/nx-api/remix/migrations/20.1.0-package-updates",
+                "name": "20.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.1.0",
-                "path": "/nx-api/remix/migrations/18.1.0",
-                "name": "18.1.0",
+                "id": "18.1.1-package-updates",
+                "path": "/nx-api/remix/migrations/18.1.1-package-updates",
+                "name": "18.1.1-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.1.1",
-                "path": "/nx-api/remix/migrations/18.1.1",
-                "name": "18.1.1",
+                "id": "18.1.0-package-updates",
+                "path": "/nx-api/remix/migrations/18.1.0-package-updates",
+                "name": "18.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.1.0",
-                "path": "/nx-api/remix/migrations/20.1.0",
-                "name": "20.1.0",
+                "id": "17.2.1-package-updates",
+                "path": "/nx-api/remix/migrations/17.2.1-package-updates",
+                "name": "17.2.1-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -11616,17 +11616,17 @@
             "name": "migrations",
             "children": [
               {
-                "id": "18.2.0",
-                "path": "/nx-api/rollup/migrations/18.2.0",
-                "name": "18.2.0",
+                "id": "19.0.0-package-updates",
+                "path": "/nx-api/rollup/migrations/19.0.0-package-updates",
+                "name": "19.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.0.0",
-                "path": "/nx-api/rollup/migrations/19.0.0",
-                "name": "19.0.0",
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/rollup/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -11823,14 +11823,6 @@
             "name": "migrations",
             "children": [
               {
-                "id": "update-20-2-0-update-with-module-federation-import",
-                "path": "/nx-api/rspack/migrations/update-20-2-0-update-with-module-federation-import",
-                "name": "update-20-2-0-update-with-module-federation-import",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "ensure-nx-module-federation-package",
                 "path": "/nx-api/rspack/migrations/ensure-nx-module-federation-package",
                 "name": "ensure-nx-module-federation-package",
@@ -11839,41 +11831,49 @@
                 "disableCollapsible": false
               },
               {
-                "id": "18.1.0",
-                "path": "/nx-api/rspack/migrations/18.1.0",
-                "name": "18.1.0",
+                "id": "20.2.0-package-updates",
+                "path": "/nx-api/rspack/migrations/20.2.0-package-updates",
+                "name": "20.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.1.3",
-                "path": "/nx-api/rspack/migrations/18.1.3",
-                "name": "18.1.3",
+                "id": "update-20-2-0-update-with-module-federation-import",
+                "path": "/nx-api/rspack/migrations/update-20-2-0-update-with-module-federation-import",
+                "name": "update-20-2-0-update-with-module-federation-import",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.3.0",
-                "path": "/nx-api/rspack/migrations/19.3.0",
-                "name": "19.3.0",
+                "id": "19.7.0-package-updates",
+                "path": "/nx-api/rspack/migrations/19.7.0-package-updates",
+                "name": "19.7.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.7.0",
-                "path": "/nx-api/rspack/migrations/19.7.0",
-                "name": "19.7.0",
+                "id": "19.3.0-package-updates",
+                "path": "/nx-api/rspack/migrations/19.3.0-package-updates",
+                "name": "19.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.2.0",
-                "path": "/nx-api/rspack/migrations/20.2.0",
-                "name": "20.2.0",
+                "id": "18.1.3-package-updates",
+                "path": "/nx-api/rspack/migrations/18.1.3-package-updates",
+                "name": "18.1.3-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "18.1.0-package-updates",
+                "path": "/nx-api/rspack/migrations/18.1.0-package-updates",
+                "name": "18.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12012,6 +12012,22 @@
             "name": "migrations",
             "children": [
               {
+                "id": "20.2.0-package-updates",
+                "path": "/nx-api/storybook/migrations/20.2.0-package-updates",
+                "name": "20.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "19.6.0-package-updates",
+                "path": "/nx-api/storybook/migrations/19.6.0-package-updates",
+                "name": "19.6.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "update-19-6-0-add-nx-packages",
                 "path": "/nx-api/storybook/migrations/update-19-6-0-add-nx-packages",
                 "name": "update-19-6-0-add-nx-packages",
@@ -12020,57 +12036,41 @@
                 "disableCollapsible": false
               },
               {
-                "id": "17.2.0-beta.2",
-                "path": "/nx-api/storybook/migrations/17.2.0-beta.2",
-                "name": "17.2.0-beta.2",
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/storybook/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.1.0-beta.4",
-                "path": "/nx-api/storybook/migrations/17.1.0-beta.4",
-                "name": "17.1.0-beta.4",
+                "id": "17.2.0-beta.2-package-updates",
+                "path": "/nx-api/storybook/migrations/17.2.0-beta.2-package-updates",
+                "name": "17.2.0-beta.2-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.1.0",
-                "path": "/nx-api/storybook/migrations/17.1.0",
-                "name": "17.1.0",
+                "id": "17.1.0-beta.4-package-updates",
+                "path": "/nx-api/storybook/migrations/17.1.0-beta.4-package-updates",
+                "name": "17.1.0-beta.4-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.0.0",
-                "path": "/nx-api/storybook/migrations/17.0.0",
-                "name": "17.0.0",
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/storybook/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.2.0",
-                "path": "/nx-api/storybook/migrations/18.2.0",
-                "name": "18.2.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "19.6.0",
-                "path": "/nx-api/storybook/migrations/19.6.0",
-                "name": "19.6.0",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "20.2.0",
-                "path": "/nx-api/storybook/migrations/20.2.0",
-                "name": "20.2.0",
+                "id": "17.0.0-package-updates",
+                "path": "/nx-api/storybook/migrations/17.0.0-package-updates",
+                "name": "17.0.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12201,41 +12201,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "move-target-defaults",
-                "path": "/nx-api/vite/migrations/move-target-defaults",
-                "name": "move-target-defaults",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-vite-config",
-                "path": "/nx-api/vite/migrations/update-vite-config",
-                "name": "update-vite-config",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "vitest-coverage-and-reporters",
-                "path": "/nx-api/vite/migrations/vitest-coverage-and-reporters",
-                "name": "vitest-coverage-and-reporters",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-19-6-0-add-depends-on-for-preview-server",
-                "path": "/nx-api/vite/migrations/update-19-6-0-add-depends-on-for-preview-server",
-                "name": "update-19-6-0-add-depends-on-for-preview-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "update-20-0-4",
-                "path": "/nx-api/vite/migrations/update-20-0-4",
-                "name": "update-20-0-4",
+                "id": "update-20-3-0",
+                "path": "/nx-api/vite/migrations/update-20-3-0",
+                "name": "update-20-3-0",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12249,33 +12217,65 @@
                 "disableCollapsible": false
               },
               {
-                "id": "update-20-3-0",
-                "path": "/nx-api/vite/migrations/update-20-3-0",
-                "name": "update-20-3-0",
+                "id": "update-20-0-4",
+                "path": "/nx-api/vite/migrations/update-20-0-4",
+                "name": "update-20-0-4",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.1.0",
-                "path": "/nx-api/vite/migrations/18.1.0",
-                "name": "18.1.0",
+                "id": "update-19-6-0-add-depends-on-for-preview-server",
+                "path": "/nx-api/vite/migrations/update-19-6-0-add-depends-on-for-preview-server",
+                "name": "update-19-6-0-add-depends-on-for-preview-server",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.0",
-                "path": "/nx-api/vite/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "18.1.0-package-updates",
+                "path": "/nx-api/vite/migrations/18.1.0-package-updates",
+                "name": "18.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.2.0",
-                "path": "/nx-api/vite/migrations/17.2.0",
-                "name": "17.2.0",
+                "id": "vitest-coverage-and-reporters",
+                "path": "/nx-api/vite/migrations/vitest-coverage-and-reporters",
+                "name": "vitest-coverage-and-reporters",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/vite/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "update-vite-config",
+                "path": "/nx-api/vite/migrations/update-vite-config",
+                "name": "update-vite-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "17.2.0-package-updates",
+                "path": "/nx-api/vite/migrations/17.2.0-package-updates",
+                "name": "17.2.0-package-updates",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "move-target-defaults",
+                "path": "/nx-api/vite/migrations/move-target-defaults",
+                "name": "move-target-defaults",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12381,17 +12381,17 @@
             "name": "migrations",
             "children": [
               {
-                "id": "19.4.3",
-                "path": "/nx-api/vue/migrations/19.4.3",
-                "name": "19.4.3",
+                "id": "19.4.3-package-updates",
+                "path": "/nx-api/vue/migrations/19.4.3-package-updates",
+                "name": "19.4.3-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.2.0",
-                "path": "/nx-api/vue/migrations/17.2.0",
-                "name": "17.2.0",
+                "id": "17.2.0-package-updates",
+                "path": "/nx-api/vue/migrations/17.2.0-package-updates",
+                "name": "17.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12482,9 +12482,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "17.3.0",
-                "path": "/nx-api/web/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/web/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12599,9 +12599,9 @@
             "name": "migrations",
             "children": [
               {
-                "id": "update-17-2-1-webpack-config-setup",
-                "path": "/nx-api/webpack/migrations/update-17-2-1-webpack-config-setup",
-                "name": "update-17-2-1-webpack-config-setup",
+                "id": "19.7.0-package-updates",
+                "path": "/nx-api/webpack/migrations/19.7.0-package-updates",
+                "name": "19.7.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12615,17 +12615,17 @@
                 "disableCollapsible": false
               },
               {
-                "id": "19.6.0",
-                "path": "/nx-api/webpack/migrations/19.6.0",
-                "name": "19.6.0",
+                "id": "19.6.0-package-updates",
+                "path": "/nx-api/webpack/migrations/19.6.0-package-updates",
+                "name": "19.6.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.7.0",
-                "path": "/nx-api/webpack/migrations/19.7.0",
-                "name": "19.7.0",
+                "id": "update-17-2-1-webpack-config-setup",
+                "path": "/nx-api/webpack/migrations/update-17-2-1-webpack-config-setup",
+                "name": "update-17-2-1-webpack-config-setup",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -12780,41 +12780,41 @@
             "name": "migrations",
             "children": [
               {
-                "id": "17.1.0",
-                "path": "/nx-api/workspace/migrations/17.1.0",
-                "name": "17.1.0",
+                "id": "20.2.0-package-updates",
+                "path": "/nx-api/workspace/migrations/20.2.0-package-updates",
+                "name": "20.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "17.3.0",
-                "path": "/nx-api/workspace/migrations/17.3.0",
-                "name": "17.3.0",
+                "id": "19.5.1-package-updates",
+                "path": "/nx-api/workspace/migrations/19.5.1-package-updates",
+                "name": "19.5.1-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "18.2.0",
-                "path": "/nx-api/workspace/migrations/18.2.0",
-                "name": "18.2.0",
+                "id": "18.2.0-package-updates",
+                "path": "/nx-api/workspace/migrations/18.2.0-package-updates",
+                "name": "18.2.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "19.5.1",
-                "path": "/nx-api/workspace/migrations/19.5.1",
-                "name": "19.5.1",
+                "id": "17.3.0-package-updates",
+                "path": "/nx-api/workspace/migrations/17.3.0-package-updates",
+                "name": "17.3.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "20.2.0",
-                "path": "/nx-api/workspace/migrations/20.2.0",
-                "name": "20.2.0",
+                "id": "17.1.0-package-updates",
+                "path": "/nx-api/workspace/migrations/17.1.0-package-updates",
+                "name": "17.1.0-package-updates",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

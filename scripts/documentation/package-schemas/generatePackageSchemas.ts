@@ -4,6 +4,7 @@
 import { createDocumentMetadata } from '@nx/nx-dev/models-document';
 import * as chalk from 'chalk';
 import { join, resolve } from 'path';
+import { compare } from 'semver';
 import {
   getSchemaFromReference,
   InternalLookup,
@@ -29,8 +30,11 @@ function processSchemaData(data: NxSchema, path: string): NxSchema {
   return resolver.getSchema();
 }
 
-function migrationExamplesFile(migration: any, absoluteRoot: string): any {
+function updateMigration(migration: any, absoluteRoot: string): any {
   if (!migration.implementation) {
+    if (migration.packages) {
+      migration.name = migration.name + '-package-updates';
+    }
     return migration;
   }
   migration.examplesFile = getExamplesFileFromPath(
@@ -101,9 +105,11 @@ export function generatePackageSchemas(
       }));
     }
     if (!!packageMetadata.migrations.length) {
-      packageMetadata.migrations = packageMetadata.migrations.map((item) => ({
-        ...migrationExamplesFile(item, absoluteRoot),
-      }));
+      packageMetadata.migrations = packageMetadata.migrations
+        .map((item) => ({
+          ...updateMigration(item, absoluteRoot),
+        }))
+        .sort((m1, m2) => compare(m1.version, m2.version) * -1);
     }
     return packageMetadata;
   });
