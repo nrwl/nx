@@ -1185,23 +1185,32 @@ function determineEntryFields(
           types: './index.d.ts',
         };
       }
-    default: {
+    case 'none': {
+      if (options.isUsingTsSolutionConfig) {
+        return {
+          main: options.js ? './src/index.js' : './src/index.ts',
+          types: options.js ? './src/index.js' : './src/index.ts',
+          exports: {
+            '.': options.js
+              ? './src/index.js'
+              : {
+                  types: './src/index.ts',
+                  import: './src/index.ts',
+                  default: './src/index.ts',
+                },
+            './package.json': './package.json',
+          },
+        };
+      }
+
       return {
         // Safest option is to not set a type field.
         // Allow the user to decide which module format their library is using
         type: undefined,
-        // For non-buildable libraries, point to source so we can still use them in apps via bundlers like Vite.
-        main: options.isUsingTsSolutionConfig
-          ? options.js
-            ? './src/index.js'
-            : './src/index.ts'
-          : undefined,
-        types: options.isUsingTsSolutionConfig
-          ? options.js
-            ? './src/index.js'
-            : './src/index.ts'
-          : undefined,
       };
+    }
+    default: {
+      return {};
     }
   }
 }

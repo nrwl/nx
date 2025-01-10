@@ -556,6 +556,14 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
           "nx": {
