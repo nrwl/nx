@@ -633,18 +633,17 @@ function getOutputs(
  * @returns `true` if the package has a valid build configuration; otherwise, `false`.
  */
 function isValidPackageJsonBuildConfig(
-  tsConfig,
+  tsConfig: ParsedCommandLine,
   workspaceRoot: string,
   projectRoot: string
 ): boolean {
-  if (!existsSync(joinPathFragments(projectRoot, 'package.json'))) {
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
     // If the package.json file does not exist.
     // Assume it's valid because it would be using `project.json` instead.
     return true;
   }
-  const packageJson = readJsonFile(
-    joinPathFragments(projectRoot, 'package.json')
-  );
+  const packageJson = readJsonFile(packageJsonPath);
 
   const outDir = tsConfig.options.outFile
     ? dirname(tsConfig.options.outFile)
@@ -691,10 +690,9 @@ function isValidPackageJsonBuildConfig(
   if (exports) {
     if (typeof exports === 'string') {
       return !isPathSourceFile(exports);
-    } else if (typeof exports === 'object' && '.' in exports) {
-      if (containsInvalidPath(exports['.'])) {
-        return false;
-      }
+    }
+    if (typeof exports === 'object' && '.' in exports) {
+      return !containsInvalidPath(exports['.']);
     }
 
     // Check other exports if `.` is not defined or valid.
