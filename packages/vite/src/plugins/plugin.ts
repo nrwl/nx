@@ -30,7 +30,11 @@ const pmc = getPackageManagerCommand();
 export interface VitePluginOptions {
   buildTargetName?: string;
   testTargetName?: string;
+  /**
+   * @deprecated Use devTargetName instead. This option will be removed in Nx 22.
+   */
   serveTargetName?: string;
+  devTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
@@ -219,10 +223,17 @@ async function buildViteTargets(
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      targets[options.serveTargetName] = serveTarget(
-        projectRoot,
-        isUsingTsSolutionSetup
-      );
+      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup);
+
+      targets[options.serveTargetName] = {
+        ...devTarget,
+        metadata: {
+          ...devTarget.metadata,
+          deprecated:
+            'Use devTargetName instead. This option will be removed in Nx 22.',
+        },
+      };
+      targets[options.devTargetName] = devTarget;
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
         options.buildTargetName
@@ -339,7 +350,7 @@ async function buildTarget(
 
 function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
-    command: `vite serve`,
+    command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
@@ -516,6 +527,7 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
+  options.devTargetName ??= 'dev';
   options.previewTargetName ??= 'preview';
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';

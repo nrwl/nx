@@ -88,10 +88,8 @@ describe('app', () => {
         addPlugin: true,
       });
 
-      expect(
-        appTree.read('my-app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchInlineSnapshot(
-        `
+      expect(appTree.read('my-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
 
@@ -101,18 +99,17 @@ describe('app', () => {
               "cypressDir": "src",
               "bundler": "vite",
               "webServerCommands": {
-                "default": "${packageCmd} nx run my-app:serve",
-                "production": "${packageCmd} nx run my-app:preview"
+                "default": "npx nx run my-app:dev",
+                "production": "npx nx run my-app:preview"
               },
-              "ciWebServerCommand": "${packageCmd} nx run my-app:preview",
+              "ciWebServerCommand": "npx nx run my-app:preview",
               "ciBaseUrl": "http://localhost:4300"
             }),
             baseUrl: 'http://localhost:4200'
           }
         });
         "
-      `
-      );
+      `);
     });
 
     it('should setup playwright correctly for vite', async () => {
