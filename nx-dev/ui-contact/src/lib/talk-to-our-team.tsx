@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
 import { type ReactElement } from 'react';
 import {
@@ -12,7 +11,6 @@ import {
   StorybookIcon,
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function TalkToOurTeam(): ReactElement {
   return (
@@ -24,7 +22,7 @@ export function TalkToOurTeam(): ReactElement {
           </SectionHeading>
         </div>
         <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
-          <section className="mt-4 flex-1">
+          <section className="flex-1">
             <p className="text-lg leading-relaxed">
               Whether you’re scaling your team, optimizing CI pipelines, or
               exploring the full potential of Nx, we’re here to help. Reach out

@@ -5,15 +5,12 @@ import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
 import {
   CapitalOneIcon,
   CaterpillarIcon,
-  ManIcon,
-  RedwoodJsIcon,
   RoyalBankOfCanadaIcon,
   ShopifyIcon,
   SiriusxmAlternateIcon,
-  StorybookIcon,
-  VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
 import { type ReactElement } from 'react';
+import { ArrowLongRightIcon } from '@heroicons/react/24/outline';
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
@@ -64,71 +61,28 @@ export function WhitePaperFastCI(): ReactElement {
                 </SectionHeading>
               </div>
               <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
-                <section className="mt-4 flex-1">
+                <section className="flex-1">
                   <p className="text-lg leading-relaxed">
                     The world’s moving fast, and getting products to market
                     feels like a race that keeps speeding up. Monorepos are
                     transforming development by enhancing collaboration, code
-                    reuse, and team velocity. But, CI not tailored for monorepos
-                    can result in delays and added costs. Make sure you’re
-                    avoiding these common pitfalls.
+                    reuse, and team velocity. But, CI that is not tailored for
+                    monorepos can result in slow builds, operational complexity,
+                    increased costs and test bottlenecks.
                   </p>
-                  <div className="mt-4">
-                    <ol className="ml-4 list-inside list-decimal space-y-2">
-                      <li>
-                        {' '}
-                        <span className="font-bold">Slow Build Times</span>
-                        <p className="ml-4 mt-2">
-                          As monorepos grow, builds and tests across multiple
-                          projects take longer, bottlenecking even the most
-                          high-performing teams.
-                        </p>{' '}
-                      </li>
-                      <li>
-                        <span className="font-bold">
-                          Operational Complexity
-                        </span>
-                        <p className="ml-4 mt-2">
-                          Managing CI pipelines for monorepos often requires
-                          custom, static configurations that demand constant
-                          tweaking – stealing focus from devs.
-                        </p>
-                      </li>
-                      <li>
-                        <span className="font-bold">Runaway Costs</span>
-                        <p className="ml-4 mt-2">
-                          Inefficient resource allocation means even small
-                          changes can trigger significant compute costs, making
-                          scaling expensive and unsustainable.
-                        </p>
-                      </li>
-                      <li>
-                        <span className="font-bold">Test Bottlenecks</span>
-                        <p className="ml-4 mt-2">
-                          End-to-end test flakiness and long runtimes delay
-                          feedback cycles, frustrating teams and introducing
-                          costly delays in deployment.
-                        </p>
-                      </li>
-                    </ol>
-                  </div>
-                  <p className="mt-8 text-lg font-bold leading-relaxed">
-                    Feeling the impact of these challenges?
-                  </p>
-                  <p className="text-lg leading-relaxed">
-                    Check out our <span className="font-bold">whitepaper</span>{' '}
-                    to see how Nx Cloud users get products to market faster. Or
-                    reach out and we can talk through your team’s unique needs.
-                  </p>
-
-                  <div className="py-10">
+                  <div className="py-10 italic">
                     <a
                       target="_blank"
-                      className="mt-4 text-lg font-bold leading-relaxed underline"
+                      className="group text-lg font-semibold leading-relaxed underline"
                       href="/assets/enterprise/Fast-CI-Whitepaper.pdf"
                     >
-                      View whitepaper
+                      See how to get fast CI, built for monorepos{' '}
+                      <ArrowLongRightIcon
+                        className="inline-block h-6 w-6 transition group-hover:translate-x-1"
+                        aria-hidden="true"
+                      />
                     </a>
+                    <p className="mt-2">(download pdf)</p>
                   </div>
 
                   <figure className="mt-4 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
@@ -161,56 +115,26 @@ export function WhitePaperFastCI(): ReactElement {
                       />
                     </figcaption>
                   </figure>
-                  <div className="mx-auto mt-12 grid w-full grid-cols-4 gap-2 md:grid-cols-2 lg:mt-12">
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <RoyalBankOfCanadaIcon
-                        aria-hidden="true"
-                        className="size-14 text-black dark:text-white"
-                      />
-                    </div>
+                  <div className="mt-12 grid w-full grid-cols-4 place-items-center gap-2">
+                    <CapitalOneIcon
+                      aria-hidden="true"
+                      className="col-span-1 size-28  text-black dark:text-white"
+                    />
 
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <ManIcon
-                        aria-hidden="true"
-                        className="size-14 text-[#E40045]"
-                      />
-                    </div>
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <ShopifyIcon
-                        aria-hidden="true"
-                        className="size-12 text-[#7AB55C]"
-                      />
-                    </div>
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <CapitalOneIcon
-                        aria-hidden="true"
-                        className="size-28 text-black dark:text-white"
-                      />
-                    </div>
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <VmwareIcon
-                        aria-hidden="true"
-                        className="size-28 text-black dark:text-white"
-                      />
-                    </div>
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <StorybookIcon
-                        aria-hidden="true"
-                        className="size-12 text-[#FF4785]"
-                      />
-                    </div>
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <RedwoodJsIcon
-                        aria-hidden="true"
-                        className="size-12 text-[#BF4722]"
-                      />
-                    </div>
-                    <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">
-                      <CaterpillarIcon
-                        aria-hidden="true"
-                        className="size-14 text-[#FFCD11]"
-                      />
-                    </div>
+                    <CaterpillarIcon
+                      aria-hidden="true"
+                      className="col-span-1 size-14  text-[#FFCD11]"
+                    />
+
+                    <RoyalBankOfCanadaIcon
+                      aria-hidden="true"
+                      className="col-span-1 size-14  text-black dark:text-white"
+                    />
+
+                    <ShopifyIcon
+                      aria-hidden="true"
+                      className="col-span-1 size-14 text-[#7AB55C]"
+                    />
                   </div>
                 </section>
                 <section className="flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
