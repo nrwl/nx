@@ -4,7 +4,7 @@ import {
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy';
 import {
   isRouteErrorResponse,
   useParams,

@@ -1,5 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { TaskNodeTooltipProps } from '@nx/graph/ui-tooltips';
+import { TaskNodeTooltipProps } from '@nx/graph/legacy';
 import { useEffect, useState } from 'react';
 
 export function TaskNodeActions(props: TaskNodeTooltipProps) {

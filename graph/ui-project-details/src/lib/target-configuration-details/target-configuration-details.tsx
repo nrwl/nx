@@ -2,9 +2,9 @@
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { JsonCodeBlock } from '@nx/graph-internal/ui-code-block';
-import { ExpandedTargetsContext } from '@nx/graph/shared';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import { ExpandedTargetsContext } from '@nx/graph/legacy';
+import { CopyToClipboardButton } from '@nx/graph/legacy';
+import { PropertyInfoTooltip, Tooltip } from '@nx/graph/legacy';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Pill } from '../pill';
 import { ShowOptionsHelp } from '../show-all-options/show-options-help';

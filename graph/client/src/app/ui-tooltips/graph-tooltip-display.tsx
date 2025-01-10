@@ -12,9 +12,9 @@ import {
   ProjectNodeTooltipActions,
   TaskNodeTooltip,
   Tooltip,
-} from '@nx/graph/ui-tooltips';
+} from '@nx/graph/legacy';
 import { TaskNodeActions } from './task-node-actions';
-import { getExternalApiService, useRouteConstructor } from '@nx/graph/shared';
+import { getExternalApiService, useRouteConstructor } from '@nx/graph/legacy';
 import { useNavigate } from 'react-router-dom';
 import { useCallback } from 'react';
 
