@@ -29,7 +29,10 @@ import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
@@ -106,6 +109,12 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
     tasks.push(() => installPackagesTask(tree, true));
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   if (!schema.skipFormat) {

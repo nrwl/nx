@@ -206,11 +206,8 @@ export function addProjectToTsSolutionWorkspace(
   if (tree.exists('pnpm-workspace.yaml')) {
     const { load, dump } = require('@zkochan/js-yaml');
     const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
-    const yamlData = load(workspaceFile);
-
-    if (!yamlData?.packages) {
-      yamlData.packages = [];
-    }
+    const yamlData = load(workspaceFile) ?? {};
+    yamlData.packages ??= [];
 
     if (!yamlData.packages.includes(pattern)) {
       yamlData.packages.push(pattern);

@@ -18,21 +18,6 @@ describe('Vue Plugin', () => {
       packages: ['@nx/vue'],
       preset: 'ts',
     });
-    if (pm === 'pnpm') {
-      updateFile(
-        'pnpm-workspace.yaml',
-        `
-packages:
-  - 'apps/*'
-  - 'packages/*'
-`
-      );
-    } else {
-      updateJson('package.json', (json) => {
-        json.workspaces = ['apps/*', 'packages/*'];
-        return json;
-      });
-    }
   });
 
   afterAll(() => cleanupProject());
