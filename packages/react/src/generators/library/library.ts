@@ -35,6 +35,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -69,17 +70,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.isUsingTsSolutionConfig) {
-    const sourceEntry =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : undefined;
     writeJson(host, `${options.projectRoot}/package.json`, {
       name: options.importPath,
       version: '0.0.1',
-      main: sourceEntry,
-      types: sourceEntry,
+      ...determineEntryFields(options),
       nx: {
         name: options.importPath === options.name ? undefined : options.name,
         projectType: 'library',
