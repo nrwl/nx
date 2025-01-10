@@ -33,6 +33,7 @@ export function PackageSchemaList({
         .filter((d) => d.id !== 'overview'),
       executors: Object.keys(pkg.executors).map((k) => pkg.executors[k]),
       generators: Object.keys(pkg.generators).map((k) => pkg.generators[k]),
+      migrations: Object.keys(pkg.migrations).map((k) => pkg.migrations[k]),
     },
     githubUrl: pkg.githubRoot + pkg.root,
     seo: {
@@ -100,6 +101,10 @@ export function PackageSchemaList({
             <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Generators'} />
             <SchemaList files={vm.package.generators} type={'generator'} />
+
+            <div className="h-12">{/* SPACER */}</div>
+            <Heading2 title={'Migrations'} />
+            <SchemaList files={vm.package.migrations} type={'migration'} />
           </div>
         </div>
       </div>

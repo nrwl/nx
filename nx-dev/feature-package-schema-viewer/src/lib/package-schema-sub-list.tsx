@@ -14,7 +14,7 @@ export function PackageSchemaSubList({
   type,
   pkg,
 }: {
-  type: 'document' | 'executor' | 'generator';
+  type: 'document' | 'executor' | 'generator' | 'migration';
   pkg: ProcessedPackageMetadata;
 }): JSX.Element {
   const router = useRouter();
@@ -25,7 +25,7 @@ export function PackageSchemaSubList({
     package: PackageMetadata;
     githubUrl: string;
     seo: { title: string; description: string; url: string; imageUrl: string };
-    type: 'document' | 'executor' | 'generator';
+    type: 'document' | 'executor' | 'generator' | 'migration';
     heading: string;
   } = {
     package: {
@@ -35,6 +35,7 @@ export function PackageSchemaSubList({
         .filter((d) => d.id !== 'overview'),
       executors: Object.keys(pkg.executors).map((k) => pkg.executors[k]),
       generators: Object.keys(pkg.generators).map((k) => pkg.generators[k]),
+      migrations: Object.keys(pkg.migrations).map((k) => pkg.migrations[k]),
     },
     githubUrl: pkg.githubRoot + pkg.root,
     seo: {
@@ -96,6 +97,10 @@ export function PackageSchemaSubList({
 
             {vm.type === 'generator' ? (
               <SchemaList files={vm.package.generators} type={'generator'} />
+            ) : null}
+
+            {vm.type === 'migration' ? (
+              <SchemaList files={vm.package.migrations} type={'migration'} />
             ) : null}
           </div>
         </div>

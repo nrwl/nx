@@ -1,0 +1,12 @@
+{
+  "name": "add-file-extensions-to-overrides",
+  "version": "20.3.0-beta.1",
+  "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
+  "implementation": "/packages/eslint/src/migrations/update-20-3-0/add-file-extensions-to-overrides.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/eslint",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

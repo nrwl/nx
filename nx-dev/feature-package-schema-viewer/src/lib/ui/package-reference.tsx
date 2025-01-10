@@ -58,7 +58,7 @@ export function SchemaList({
   type,
 }: {
   files: FileMetadata[];
-  type: 'executor' | 'generator';
+  type: 'executor' | 'generator' | 'migration';
 }): JSX.Element {
   return (
     <ul className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -114,7 +114,7 @@ function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
 function EmptyList({
   type,
 }: {
-  type: 'executor' | 'generator' | 'document';
+  type: 'executor' | 'generator' | 'migration' | 'document';
 }): JSX.Element {
   return (
     <li className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">

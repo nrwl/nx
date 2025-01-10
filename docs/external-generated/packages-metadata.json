@@ -16,6 +16,7 @@
     ],
     "executors": [],
     "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-azure-cache",
     "packageName": "@nx/powerpack-azure-cache",
@@ -70,6 +71,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
     "packageName": "@nx/powerpack-conformance",
@@ -91,6 +93,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-enterprise-cloud",
     "packageName": "@nx/powerpack-enterprise-cloud",
@@ -114,6 +117,7 @@
     ],
     "executors": [],
     "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-gcs-cache",
     "packageName": "@nx/powerpack-gcs-cache",
@@ -125,6 +129,7 @@
     "documents": [],
     "executors": [],
     "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-license",
     "packageName": "@nx/powerpack-license",
@@ -167,6 +172,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-owners",
     "packageName": "@nx/powerpack-owners",
@@ -189,17 +195,8 @@
       }
     ],
     "executors": [],
-    "generators": [
-      {
-        "description": "Initialize the S3 Cache",
-        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
-        "path": "powerpack-s3-cache/generators/init",
-        "type": "generator"
-      }
-    ],
+    "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-s3-cache",
     "packageName": "@nx/powerpack-s3-cache",
@@ -233,6 +230,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-shared-fs-cache",
     "packageName": "@nx/powerpack-shared-fs-cache",

@@ -13,7 +13,7 @@ export interface FileMetadata {
   name: string;
   originalFilePath: string;
   path: string;
-  type: 'executor' | 'generator';
+  type: 'executor' | 'generator' | 'migration';
 }
 
 /**
@@ -35,6 +35,7 @@ export interface PackageData {
   }[];
   executors: SchemaMetadata[];
   generators: SchemaMetadata[];
+  migrations: SchemaMetadata[];
   githubRoot: string;
   name: string;
   packageName: string;
@@ -47,6 +48,7 @@ export interface PackageMetadata {
   documents: DocumentMetadata[];
   executors: FileMetadata[];
   generators: FileMetadata[];
+  migrations: FileMetadata[];
   githubRoot: string;
   name: string;
   packageName: string;
@@ -59,6 +61,7 @@ export interface ProcessedPackageMetadata {
   documents: Record<string, DocumentMetadata>;
   executors: Record<string, FileMetadata>;
   generators: Record<string, FileMetadata>;
+  migrations: Record<string, FileMetadata>;
   githubRoot: string;
   name: string;
   packageName: string;
@@ -75,8 +78,19 @@ export interface SchemaMetadata {
   name: string;
   path: string;
   schema: NxSchema | null;
-  type: 'executor' | 'generator';
+  type: 'executor' | 'generator' | 'migration';
   'x-deprecated'?: string;
+}
+
+export interface MigrationMetadata extends SchemaMetadata {
+  type: 'migration';
+  examplesFile?: string;
+  version: string;
+  requires: Record<string, string>;
+  packages: Record<
+    string,
+    { version: string; alwaysAddToPackageJson?: boolean }
+  >;
 }
 
 export interface NxSchema extends JsonSchema1 {
@@ -88,5 +102,5 @@ export interface NxSchema extends JsonSchema1 {
 
 export type IntrinsicPackageMetadata = Omit<
   ProcessedPackageMetadata,
-  'executors' | 'documents' | 'generators'
+  'executors' | 'documents' | 'generators' | 'migrations'
 >;

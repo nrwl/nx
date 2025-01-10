@@ -11,7 +11,7 @@ import {
 import { NxSchema, PackageMetadata } from '@nx/nx-dev/models-package';
 import { generateJsonFile, generateMarkdownFile } from '../utils';
 import { findPackageMetadataList } from './package-metadata';
-import { schemaResolver } from './schema.resolver';
+import { schemaResolver, getExamplesFileFromPath } from './schema.resolver';
 
 function processSchemaData(data: NxSchema, path: string): NxSchema {
   const lookup = new InternalLookup(data);
@@ -27,6 +27,17 @@ function processSchemaData(data: NxSchema, path: string): NxSchema {
   resolver.resolveReferences();
   resolver.resolveExamplesFile();
   return resolver.getSchema();
+}
+
+function migrationExamplesFile(migration: any, absoluteRoot: string): any {
+  if (!migration.implementation) {
+    return migration;
+  }
+  migration.examplesFile = getExamplesFileFromPath(
+    absoluteRoot,
+    migration.implementation.replace('.ts', '.md')
+  );
+  return migration;
 }
 
 function pathResolver(root: string): (path: string) => string {
@@ -89,6 +100,11 @@ export function generatePackageSchemas(
         ),
       }));
     }
+    if (!!packageMetadata.migrations.length) {
+      packageMetadata.migrations = packageMetadata.migrations.map((item) => ({
+        ...migrationExamplesFile(item, absoluteRoot),
+      }));
+    }
     return packageMetadata;
   });
   const packagesMetadata = packages.map(
@@ -142,6 +158,21 @@ export function generatePackageSchemas(
         path: [p.name, 'generators', g.name].join('/'),
         type: 'generator',
       })),
+      migrations: p.migrations.map((g) => ({
+        description: g.description,
+        file: [
+          generatedFolderName,
+          'packages',
+          p.name,
+          'migrations',
+          g.name + '.json',
+        ].join('/'),
+        hidden: g.hidden,
+        name: g.name,
+        originalFilePath: g.path,
+        path: [p.name, 'migrations', g.name].join('/'),
+        type: 'migration',
+      })),
       githubRoot: p.githubRoot,
       name: p.name,
       packageName: p.packageName,
@@ -176,6 +207,14 @@ export function generatePackageSchemas(
       fileGenerationPromises.push(
         generateJsonFile(
           join(outputPackagesPath, p.name, 'generators', g.name + '.json'),
+          g
+        )
+      )
+    );
+    p.migrations.forEach((g) =>
+      fileGenerationPromises.push(
+        generateJsonFile(
+          join(outputPackagesPath, p.name, 'migrations', g.name + '.json'),
           g
         )
       )
