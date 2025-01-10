@@ -56,6 +56,7 @@ import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
+  addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -572,10 +573,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     tasks.push(dockerTask);
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
-
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
       tree,
@@ -589,6 +586,16 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
         : undefined
     );
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   tasks.push(() => {

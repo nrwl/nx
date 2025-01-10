@@ -13,10 +13,6 @@ import {
 import { Linter } from '@nx/eslint';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
-import {
   addSwcDependencies,
   addSwcRegisterDependencies,
 } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -102,7 +98,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       useProjectJson: options.useProjectJson,
       addPlugin: options.addPlugin,
       skipFormat: true,
-      skipWorkspacesWarning: true,
       useTscExecutor: true,
     })
   );
@@ -149,7 +144,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         linter: options.linter,
         useProjectJson: options.useProjectJson,
         addPlugin: options.addPlugin,
-        skipWorkspacesWarning: true,
       })
     );
   }
@@ -160,20 +154,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
 
   if (!options.skipFormat) {
     await formatFiles(host);
-  }
-
-  if (options.isTsSolutionSetup) {
-    const projectPackageManagerWorkspaceState =
-      getProjectPackageManagerWorkspaceState(host, options.projectRoot);
-
-    if (projectPackageManagerWorkspaceState !== 'included') {
-      tasks.push(
-        getProjectPackageManagerWorkspaceStateWarningTask(
-          projectPackageManagerWorkspaceState,
-          host.root
-        )
-      );
-    }
   }
 
   return runTasksInSerial(...tasks);

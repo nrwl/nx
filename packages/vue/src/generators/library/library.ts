@@ -26,7 +26,10 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -141,8 +144,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.js) toJS(tree);
 
-  if (!options.skipFormat) await formatFiles(tree);
-
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
       tree,
@@ -160,6 +161,14 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         : undefined
     );
   }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
+  if (!options.skipFormat) await formatFiles(tree);
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
