@@ -46,7 +46,7 @@ export function Hero(): ReactElement {
             variant="primary"
             size="default"
           >
-            Get Powerpack
+            Buy Powerpack
           </ButtonLink>
           <a
             href={YOUTUBE_URL}

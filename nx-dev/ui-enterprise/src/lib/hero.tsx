@@ -1,6 +1,5 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { ReactElement } from 'react';
-import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { type ReactElement } from 'react';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function Hero(): ReactElement {
@@ -70,9 +69,9 @@ export function Hero(): ReactElement {
             Accelerate your organization's journey to tighter collaboration,
             better developer experience, and speed…lots of speed.
           </SectionHeading>
-          <div className="mt-8 flex items-center gap-x-6">
+          <div className="mt-8 flex items-center gap-x-3">
             <ButtonLink
-              href="/contact/sales"
+              href="/enterprise/trial"
               title="Request a free trial"
               variant="primary"
               size="default"
@@ -85,6 +84,15 @@ export function Hero(): ReactElement {
               }
             >
               Request a free trial
+            </ButtonLink>
+
+            <ButtonLink
+              href="/contact/sales"
+              title="Talk to the team"
+              variant="secondary"
+              size="default"
+            >
+              Contact sales
             </ButtonLink>
           </div>
         </div>
