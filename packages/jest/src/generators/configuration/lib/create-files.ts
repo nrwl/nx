@@ -62,7 +62,8 @@ export function createFiles(
       ? `${rootOffset}tsconfig.base.json`
       : './tsconfig.json',
     outDir: isTsSolutionSetup ? `./out-tsc/jest` : `${rootOffset}dist/out-tsc`,
-    module: !isTsSolutionSetup ? 'commonjs' : undefined,
+    module:
+      !isTsSolutionSetup || transformer === 'ts-jest' ? 'commonjs' : undefined,
   });
 
   if (options.setupFile === 'none') {

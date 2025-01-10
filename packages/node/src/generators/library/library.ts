@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -83,6 +84,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       useProjectJson: !options.isUsingTsSolutionConfig,
     })
   );
+
+  updatePackageJson(tree, options);
 
   tasks.push(
     await initGenerator(tree, {
@@ -232,5 +235,24 @@ function ensureDependencies(tree: Tree): GeneratorCallback {
     tree,
     { tslib: tslibVersion },
     { '@types/node': typesNodeVersion }
+  );
+}
+
+function updatePackageJson(tree: Tree, options: NormalizedSchema) {
+  const packageJson = readJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'package.json')
+  );
+
+  if (packageJson.type === 'module') {
+    // The @nx/js:lib generator can set the type to 'module' which would
+    // potentially break consumers of the library.
+    delete packageJson.type;
+  }
+
+  writeJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'package.json'),
+    packageJson
   );
 }

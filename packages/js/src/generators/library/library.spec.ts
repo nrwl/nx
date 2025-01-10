@@ -1653,6 +1653,14 @@ describe('lib', () => {
       expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/my-ts-lib",
           "private": true,
@@ -1663,6 +1671,10 @@ describe('lib', () => {
       expect(readJson(tree, 'my-js-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
+          "exports": {
+            ".": "./src/index.js",
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.js",
           "name": "@proj/my-js-lib",
           "private": true,
@@ -1686,11 +1698,20 @@ describe('lib', () => {
           "dependencies": {
             "tslib": "^2.3.0",
           },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./dist/index.js",
+          "module": "./dist/index.js",
           "name": "@proj/my-ts-lib",
           "private": true,
           "type": "module",
-          "typings": "./dist/index.d.ts",
+          "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }
       `);
@@ -1710,11 +1731,20 @@ describe('lib', () => {
           "dependencies": {
             "@swc/helpers": "~0.5.11",
           },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./dist/index.js",
+          "module": "./dist/index.js",
           "name": "@proj/my-ts-lib",
           "private": true,
           "type": "module",
-          "typings": "./dist/index.d.ts",
+          "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }
       `);
