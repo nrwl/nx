@@ -1144,6 +1144,14 @@ module.exports = withNx(
 
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
           "nx": {
@@ -1157,6 +1165,10 @@ module.exports = withNx(
       `);
       expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": "./src/index.js",
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.js",
           "name": "@proj/myjslib",
           "nx": {
