@@ -1139,7 +1139,6 @@ function determineEntryFields(
         return {
           type: 'module',
           main: './dist/index.js',
-          module: './dist/index.js',
           types: './dist/index.d.ts',
         };
       } else {
