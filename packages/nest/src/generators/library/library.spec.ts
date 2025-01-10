@@ -433,6 +433,8 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "module": "commonjs",
+            "moduleResolution": "node10",
             "outDir": "./out-tsc/jest",
             "types": [
               "jest",
