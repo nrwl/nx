@@ -1,19 +1,18 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
   EyeIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-
 import {
+  CopyToClipboardButton,
   AtomizerTooltip,
   PropertyInfoTooltip,
   Tooltip,
-} from '@nx/graph/ui-tooltips';
+} from '@nx/graph/legacy';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
