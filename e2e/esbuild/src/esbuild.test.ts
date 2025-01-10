@@ -48,7 +48,7 @@ describe('EsBuild Plugin', () => {
       private: true,
       type: 'commonjs',
       main: './index.cjs',
-      typings: './index.d.ts',
+      types: './index.d.ts',
       dependencies: {},
     });
 

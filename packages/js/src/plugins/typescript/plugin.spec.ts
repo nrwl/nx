@@ -1919,7 +1919,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
-        'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+        'libs/my-lib/package.json': JSON.stringify({
+          main: 'dist/index.js',
+          types: 'dist/index.d.ts',
+          exports: {
+            '.': {
+              types: './dist/index.d.ts',
+              import: './dist/index.js',
+              default: './dist/index.js',
+            },
+            './package.json': './package.json',
+          },
+        }),
       });
       expect(
         await invokeCreateNodesOnMatchingFiles(context, {

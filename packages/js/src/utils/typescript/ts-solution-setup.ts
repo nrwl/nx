@@ -8,9 +8,9 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
-import { basename, dirname, join, relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
