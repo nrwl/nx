@@ -30,7 +30,10 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { relative } from 'node:path/posix';
 
@@ -230,10 +233,6 @@ export async function e2eProjectGeneratorInternal(
     }
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
-
   if (isUsingTsSolutionConfig) {
     updateJson(host, 'tsconfig.json', (json) => {
       json.references ??= [];
@@ -243,6 +242,16 @@ export async function e2eProjectGeneratorInternal(
       }
       return json;
     });
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
   }
 
   tasks.push(() => {

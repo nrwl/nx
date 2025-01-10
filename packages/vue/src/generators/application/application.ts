@@ -23,7 +23,10 @@ import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
@@ -123,8 +126,6 @@ export async function applicationGeneratorInternal(
 
   if (options.js) toJS(tree);
 
-  if (!options.skipFormat) await formatFiles(tree);
-
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
       tree,
@@ -142,6 +143,14 @@ export async function applicationGeneratorInternal(
         : undefined
     );
   }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
+  if (!options.skipFormat) await formatFiles(tree);
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

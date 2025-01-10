@@ -1633,6 +1633,50 @@ describe('lib', () => {
       });
     });
 
+    it.each`
+      directory                  | expected
+      ${'my-ts-lib'}             | ${'my-ts-lib'}
+      ${'libs/my-ts-lib'}        | ${'libs/*'}
+      ${'libs/shared/my-ts-lib'} | ${'libs/shared/*'}
+    `(
+      'should add "$expected" to the workspace when creating a library in "$directory" using pnpm',
+      async ({ directory, expected }) => {
+        tree.write('pnpm-workspace.yaml', '');
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory,
+        });
+
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
+          .toMatchInlineSnapshot(`
+        "packages:
+          - '${expected}'
+        "
+      `);
+      }
+    );
+
+    it.each`
+      directory                  | expected
+      ${'my-ts-lib'}             | ${'my-ts-lib'}
+      ${'libs/my-ts-lib'}        | ${'libs/*'}
+      ${'libs/shared/my-ts-lib'} | ${'libs/shared/*'}
+    `(
+      'should add "$expected" to the workspace when creating a library in "$directory" using npm or yarn',
+      async ({ directory, expected }) => {
+        // ensure there's no pnpm-workspace.yaml, so it uses the package.json workspaces
+        tree.delete('pnpm-workspace.yaml');
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory,
+        });
+
+        expect(readJson(tree, 'package.json').workspaces).toContain(expected);
+      }
+    );
+
     it('should map non-buildable libraries to source', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,

@@ -36,10 +36,6 @@ import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
-import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from '../../utils/package-manager-workspaces';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
@@ -53,6 +49,7 @@ import {
   readTsConfigFromTree,
 } from '../../utils/typescript/ts-config';
 import {
+  addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   isUsingTypeScriptPlugin,
 } from '../../utils/typescript/ts-solution-setup';
@@ -218,21 +215,14 @@ export async function libraryGeneratorInternal(
     );
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
-  if (
-    !options.skipWorkspacesWarning &&
-    options.isUsingTsSolutionConfig &&
-    options.projectPackageManagerWorkspaceState !== 'included'
-  ) {
-    tasks.push(
-      getProjectPackageManagerWorkspaceStateWarningTask(
-        options.projectPackageManagerWorkspaceState,
-        tree.root
-      )
-    );
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   if (options.publishable) {
@@ -872,9 +862,6 @@ async function normalizeOptions(
 
   options.minimal ??= false;
 
-  const projectPackageManagerWorkspaceState =
-    getProjectPackageManagerWorkspaceState(tree, projectRoot);
-
   // We default to generate a project.json file if the new setup is not being used
   options.useProjectJson ??= !isUsingTsSolutionConfig;
 
@@ -888,7 +875,6 @@ async function normalizeOptions(
     importPath,
     hasPlugin,
     isUsingTsSolutionConfig,
-    projectPackageManagerWorkspaceState,
   };
 }
 

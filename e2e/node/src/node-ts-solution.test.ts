@@ -28,21 +28,6 @@ describe('Node Applications', () => {
       packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
       preset: 'ts',
     });
-    if (pm === 'pnpm') {
-      updateFile(
-        'pnpm-workspace.yaml',
-        `
-packages:
-  - 'apps/*'
-  - 'packages/*'
-`
-      );
-    } else {
-      updateJson('package.json', (json) => {
-        json.workspaces = ['apps/*', 'packages/*'];
-        return json;
-      });
-    }
   });
 
   afterAll(() => {
