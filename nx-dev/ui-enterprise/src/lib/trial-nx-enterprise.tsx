@@ -1,4 +1,4 @@
-import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
+import { ButtonLink, HubspotForm, SectionHeading } from '@nx/nx-dev/ui-common';
 import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
@@ -7,7 +7,8 @@ import {
   RoyalBankOfCanadaIcon,
   ShopifyIcon,
 } from '@nx/nx-dev/ui-icons';
-import { ArrowLongRightIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function TrialNxEnterprise(): ReactElement {
   return (
@@ -22,8 +23,7 @@ export function TrialNxEnterprise(): ReactElement {
         <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
           <section className="flex-1">
             <h3 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
-              {' '}
-              Much more than a simple trial{' '}
+              Much more than a simple trial
             </h3>
 
             <p className="mt-8 text-lg leading-relaxed">
@@ -31,20 +31,34 @@ export function TrialNxEnterprise(): ReactElement {
               is your hands-on opportunity to boost CI & DX, realize Nx’s full
               value, and quantify your ROI. Let us guide you.
             </p>
-            <div className="py-12">
-              <a
-                target="_blank"
-                className="group text-lg font-semibold italic leading-relaxed underline"
+
+            <div className="mt-12 text-center">
+              <SectionHeading as="p" variant="subtitle" className="text-white">
+                How a Proof of Value works?
+              </SectionHeading>
+              <ButtonLink
                 href="/assets/enterprise/Nx-Enterprise-POV.pdf"
+                title="Download the ebook"
+                target="_blank"
+                variant="secondary"
+                size="small"
+                onClick={() =>
+                  sendCustomEvent(
+                    'download-ebook-click',
+                    'enterprise-trial-hero',
+                    'enterprise-trial'
+                  )
+                }
+                className="mt-2"
               >
-                How a Proof of Value works{' '}
-                <ArrowLongRightIcon
-                  className="inline-block h-6 w-6 transition group-hover:translate-x-1"
+                <ArrowDownTrayIcon
                   aria-hidden="true"
+                  className="size-5 shrink-0"
                 />
-              </a>
+                <span>Download the ebook</span>
+              </ButtonLink>
             </div>
-            <figure className="rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+            <figure className="mt-16 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
               <blockquote className="text-base/7">
                 <p>
                   “They asked me a few years ago, ‘Do you want to trial Nx
@@ -56,7 +70,7 @@ export function TrialNxEnterprise(): ReactElement {
               </blockquote>
               <figcaption className="mt-6 flex items-center gap-x-4 text-sm/6">
                 <img
-                  alt="Amir Toole"
+                  alt="Amir Toole, VP of Engineering, Caseware"
                   src="/images/customers/enterprise/amir-toole-caseware-headshot.avif"
                   className="size-8 flex-none rounded-full"
                 />
