@@ -1,22 +1,17 @@
 'use client';
 
-import { useState, useEffect, ReactElement } from 'react';
+import { MouseEvent, ReactElement, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MonorepoWorldIcon } from '@nx/nx-dev/ui-icons';
-import { ButtonLink } from './button';
 import {
-  PlayIcon,
-  XMarkIcon,
-  ChatBubbleLeftRightIcon,
-  VideoCameraIcon,
   MegaphoneIcon,
+  VideoCameraIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function WebinarNotifier(): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'webinar-december-10-2024--notifier-closed';
+  const localStorageKey = 'webinar-january-22-2025--notifier-closed';
 
   useEffect(() => {
     setIsMounted(true);
@@ -26,7 +21,7 @@ export function WebinarNotifier(): ReactElement | null {
     }
   }, []);
 
-  const closeNotifier = (e: React.MouseEvent) => {
+  const closeNotifier = (e: MouseEvent) => {
     e.stopPropagation();
     setIsVisible(false);
     localStorage.setItem(localStorageKey, 'true');
@@ -66,7 +61,7 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Join our webinar + live Q&A on Dec 10th</span>
+            <span>Join our webinar + live Q&A on January 22nd</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
