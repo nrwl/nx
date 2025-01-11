@@ -7,29 +7,19 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, ReactElement, useEffect, useState } from 'react';
 import { ButtonLink, ButtonLinkProps } from '../button';
-import {
-  companyItems,
-  eventItems,
-  featuresItems,
-  learnItems,
-  ossProducts,
-  resourceMenuItems,
-  productsMenuItems,
-  enterpriseResourcesMenuItems,
-} from './menu-items';
+import { resourceMenuItems } from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
-import { TwoColumnsMenu } from './two-columns-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { GitHubIcon, NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { GitHubIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
 }
 
-export function Header({ ctaButtons }: HeaderProps): JSX.Element {
+export function Header({ ctaButtons }: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
 
   // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
@@ -49,7 +39,7 @@ export function Header({ ctaButtons }: HeaderProps): JSX.Element {
 
   const defaultCtaButtons: ButtonLinkProps[] = [
     {
-      href: '/nx-cloud',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud',
       variant: 'primary',
       size: 'small',
       target: '_blank',
@@ -70,7 +60,7 @@ export function Header({ ctaButtons }: HeaderProps): JSX.Element {
         }}
       />
       {/*DESKTOP*/}
-      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-slate-200/40 bg-white/70 px-4 py-2 shadow-lg backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-slate-800/60 dark:bg-slate-950/40">
+      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-slate-200/40 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-slate-800/60 dark:bg-slate-950/40">
         {/*PRIMARY NAVIGATION*/}
         <div className="flex flex-shrink-0 text-sm">
           {/*LOGO*/}

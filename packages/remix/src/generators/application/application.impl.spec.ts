@@ -431,6 +431,7 @@ describe('Remix Application', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "tests/**/*.spec.ts",
             "tests/**/*.test.ts",
@@ -500,13 +501,15 @@ describe('Remix Application', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "outDir": "dist",
+            "outDir": "out-tsc/playwright",
             "sourceMap": false,
-            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
           },
           "exclude": [
-            "dist",
+            "out-tsc",
+            "test-output",
             "eslint.config.js",
+            "eslint.config.mjs",
+            "eslint.config.cjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -518,11 +521,6 @@ describe('Remix Application', () => {
             "src/**/*.test.ts",
             "src/**/*.test.js",
             "src/**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
           ],
         }
       `);

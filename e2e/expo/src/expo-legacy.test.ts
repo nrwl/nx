@@ -79,7 +79,7 @@ describe('@nx/expo (legacy)', () => {
 
   it('should serve with metro', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8051;
 
     try {
       process = await runCommandUntil(
@@ -168,16 +168,17 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should start', async () => {
+    const port = 8041;
     // run start command
     const startProcess = await runCommandUntil(
-      `start ${appName} -- --port=8081`,
-      (output) => output.includes(`http://localhost:8081`)
+      `start ${appName} -- --port=${port}`,
+      (output) => output.includes(`http://localhost:${port}`)
     );
 
     // port and process cleanup
     try {
       await promisifiedTreeKill(startProcess.pid, 'SIGKILL');
-      await killPorts(8081);
+      await killPorts(port);
     } catch (err) {
       expect(err).toBeFalsy();
     }

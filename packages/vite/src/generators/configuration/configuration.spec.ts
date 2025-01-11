@@ -371,14 +371,15 @@ describe('@nx/vite:configuration', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
-              "import": "./dist/index.mjs",
+              "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
             "./package.json": "./package.json",
           },
           "main": "./dist/index.js",
-          "module": "./dist/index.mjs",
+          "module": "./dist/index.js",
           "name": "@proj/my-lib",
+          "type": "module",
           "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }

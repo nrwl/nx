@@ -14,6 +14,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: jest.fn(() => Promise.resolve()),
 }));
 
 describe('syncGenerator()', () => {
@@ -55,6 +56,14 @@ describe('syncGenerator()', () => {
         {}
       ),
     });
+  }
+
+  function addProjectWithImplicitDependencies(
+    name: string,
+    implicitDependencies: string[]
+  ) {
+    addProject(name);
+    projectGraph.nodes[name].data.implicitDependencies = implicitDependencies;
   }
 
   beforeEach(async () => {
@@ -562,11 +571,11 @@ describe('syncGenerator()', () => {
   "compilerOptions": {
     "composite": true,
     // This is a nested comment
-    "target": "es5",
+    "target": "es5"
   },
   "references": []
 }
-      `
+`
       );
 
       await syncGenerator(tree);
@@ -623,6 +632,70 @@ describe('syncGenerator()', () => {
       `);
 
       expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if dependent project is an implicit dependency', async () => {
+      addProject('implicit-dep');
+      addProjectWithImplicitDependencies('foo', ['implicit-dep']);
+
+      await syncGenerator(tree);
+
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if dependent project does not have a tsconfig files', async () => {
+      addProject('foo', ['bar'], ['tsconfig.lib.json']);
+      addProject('bar');
+      tree.delete('packages/bar/tsconfig.json');
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          },
+          "references": [
+            {
+              "path": "./packages/a"
+            },
+            {
+              "path": "./packages/b"
+            },
+            {
+              "path": "./packages/foo"
+            }
+          ]
+        }
+        "
+      `);
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+      expect(tree.read('packages/foo/tsconfig.lib.json').toString('utf-8'))
         .toMatchInlineSnapshot(`
         "{
           "compilerOptions": {

@@ -607,6 +607,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Common Tasks",
+            "path": "/concepts/common-tasks",
+            "id": "common-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Daemon",
             "path": "/concepts/nx-daemon",
             "id": "nx-daemon",
@@ -807,6 +815,14 @@
         "name": "Executors and Configurations",
         "path": "/concepts/executors-and-configurations",
         "id": "executors-and-configurations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Common Tasks",
+        "path": "/concepts/common-tasks",
+        "id": "common-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1269,6 +1285,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Updating Version References in Manifest Files (e.g. package.json)",
+                "path": "/recipes/nx-release/updating-version-references",
+                "id": "updating-version-references",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Automatically Version with Conventional Commits",
                 "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
                 "id": "automatically-version-with-conventional-commits",
@@ -1336,14 +1360,6 @@
                 "name": "Configure Changelog Format",
                 "path": "/recipes/nx-release/configure-changelog-format",
                 "id": "configure-changelog-format",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Publish a Custom Dist Directory",
-                "path": "/recipes/nx-release/publish-custom-dist-directory",
-                "id": "publish-custom-dist-directory",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1434,6 +1450,14 @@
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Cloud Integration",
+                "path": "/recipes/nx-console/console-nx-cloud",
+                "id": "console-nx-cloud",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2418,6 +2442,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Updating Version References in Manifest Files (e.g. package.json)",
+            "path": "/recipes/nx-release/updating-version-references",
+            "id": "updating-version-references",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automatically Version with Conventional Commits",
             "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
             "id": "automatically-version-with-conventional-commits",
@@ -2490,14 +2522,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Publish a Custom Dist Directory",
-            "path": "/recipes/nx-release/publish-custom-dist-directory",
-            "id": "publish-custom-dist-directory",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Build Before Versioning",
             "path": "/recipes/nx-release/build-before-versioning",
             "id": "build-before-versioning",
@@ -2528,6 +2552,14 @@
         "name": "Release Projects Independently",
         "path": "/recipes/nx-release/release-projects-independently",
         "id": "release-projects-independently",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Updating Version References in Manifest Files (e.g. package.json)",
+        "path": "/recipes/nx-release/updating-version-references",
+        "id": "updating-version-references",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2600,14 +2632,6 @@
         "name": "Configure Changelog Format",
         "path": "/recipes/nx-release/configure-changelog-format",
         "id": "configure-changelog-format",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Publish a Custom Dist Directory",
-        "path": "/recipes/nx-release/publish-custom-dist-directory",
-        "id": "publish-custom-dist-directory",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2724,6 +2748,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud Integration",
+            "path": "/recipes/nx-console/console-nx-cloud",
+            "id": "console-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Troubleshooting",
             "path": "/recipes/nx-console/console-troubleshooting",
             "id": "console-troubleshooting",
@@ -2762,6 +2794,14 @@
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud Integration",
+        "path": "/recipes/nx-console/console-nx-cloud",
+        "id": "console-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -9886,6 +9926,40 @@
         "disableCollapsible": false
       },
       {
+        "id": "rsbuild",
+        "path": "/nx-api/rsbuild",
+        "name": "rsbuild",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/rsbuild/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/rsbuild/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "configuration",
+                "path": "/nx-api/rsbuild/generators/configuration",
+                "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "rspack",
         "path": "/nx-api/rspack",
         "name": "rspack",
@@ -10723,6 +10797,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Create a Conformance Rule",
+                "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+                "id": "create-conformance-rule",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -10737,6 +10819,23 @@
                 "id": "bundle-rules",
                 "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
                 "name": "bundle-rules",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/powerpack-conformance/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "create-rule",
+                "path": "/nx-api/powerpack-conformance/generators/create-rule",
+                "name": "create-rule",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

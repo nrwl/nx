@@ -421,15 +421,19 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
       options.preset === Preset.NextJs ||
       options.preset === Preset.ReactMonorepo ||
       options.preset === Preset.ReactNative ||
-      options.preset === Preset.RemixMonorepo) &&
+      options.preset === Preset.RemixMonorepo ||
+      options.preset === Preset.VueMonorepo ||
+      options.preset === Preset.Nuxt ||
+      options.preset === Preset.NodeMonorepo ||
+      options.preset === Preset.Express) &&
       options.workspaces)
   ) {
-    const workspaces = options.workspaceGlobs ?? ['packages/**'];
+    const workspaces = options.workspaceGlobs ?? ['packages/*'];
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
         `packages: 
-  - ${workspaces.join('\n  - ')}
+  ${workspaces.map((workspace) => `- "${workspace}"`).join('\n  ')}
 `
       );
     } else {

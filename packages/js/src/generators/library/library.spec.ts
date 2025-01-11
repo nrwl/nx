@@ -1439,7 +1439,7 @@ describe('lib', () => {
             {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs}',
-                '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
               ],
             },
           ],
@@ -1633,6 +1633,50 @@ describe('lib', () => {
       });
     });
 
+    it.each`
+      directory                  | expected
+      ${'my-ts-lib'}             | ${'my-ts-lib'}
+      ${'libs/my-ts-lib'}        | ${'libs/*'}
+      ${'libs/shared/my-ts-lib'} | ${'libs/shared/*'}
+    `(
+      'should add "$expected" to the workspace when creating a library in "$directory" using pnpm',
+      async ({ directory, expected }) => {
+        tree.write('pnpm-workspace.yaml', '');
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory,
+        });
+
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
+          .toMatchInlineSnapshot(`
+        "packages:
+          - '${expected}'
+        "
+      `);
+      }
+    );
+
+    it.each`
+      directory                  | expected
+      ${'my-ts-lib'}             | ${'my-ts-lib'}
+      ${'libs/my-ts-lib'}        | ${'libs/*'}
+      ${'libs/shared/my-ts-lib'} | ${'libs/shared/*'}
+    `(
+      'should add "$expected" to the workspace when creating a library in "$directory" using npm or yarn',
+      async ({ directory, expected }) => {
+        // ensure there's no pnpm-workspace.yaml, so it uses the package.json workspaces
+        tree.delete('pnpm-workspace.yaml');
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory,
+        });
+
+        expect(readJson(tree, 'package.json').workspaces).toContain(expected);
+      }
+    );
+
     it('should map non-buildable libraries to source', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
@@ -1653,6 +1697,14 @@ describe('lib', () => {
       expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/my-ts-lib",
           "private": true,
@@ -1663,6 +1715,10 @@ describe('lib', () => {
       expect(readJson(tree, 'my-js-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
+          "exports": {
+            ".": "./src/index.js",
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.js",
           "name": "@proj/my-js-lib",
           "private": true,
@@ -1670,6 +1726,149 @@ describe('lib', () => {
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should set "type: module" in package.json for bundler=tsc', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-ts-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "tslib": "^2.3.0",
+          },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "name": "@proj/my-ts-lib",
+          "private": true,
+          "type": "module",
+          "types": "./dist/index.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should set "type: module" in package.json for bundler=swc', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-ts-lib',
+        bundler: 'swc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "@swc/helpers": "~0.5.11",
+          },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "name": "@proj/my-ts-lib",
+          "private": true,
+          "type": "module",
+          "types": "./dist/index.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should set "type: es6" in .swcrc for bundler=swc', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-ts-lib',
+        bundler: 'swc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(tree.read('my-ts-lib/.swcrc', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": [
+            "jest.config.ts",
+            ".*\\\\.spec.tsx?$",
+            ".*\\\\.test.tsx?$",
+            "./src/jest-setup.ts$",
+            "./**/jest-setup.ts$",
+            ".*.js$"
+          ]
+        }
+        "
+      `);
+    });
+
+    it('should generate relative import paths with file extension for bundler=tsc', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-ts-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'jest',
+        linter: 'none',
+      });
+
+      expect(tree.read('my-ts-lib/src/index.ts', 'utf-8')).toContain(
+        `export * from './lib/my-ts-lib.js';`
+      );
+      expect(
+        tree.read('my-ts-lib/src/lib/my-ts-lib.spec.ts', 'utf-8')
+      ).toContain(`import { myTsLib } from './my-ts-lib.js';`);
+    });
+
+    it('should generate relative import paths with file extension for bundler=swc', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-ts-lib',
+        bundler: 'swc',
+        unitTestRunner: 'vitest',
+        linter: 'none',
+      });
+
+      expect(tree.read('my-ts-lib/src/index.ts', 'utf-8')).toContain(
+        `export * from './lib/my-ts-lib.js';`
+      );
+      expect(
+        tree.read('my-ts-lib/src/lib/my-ts-lib.spec.ts', 'utf-8')
+      ).toContain(`import { myTsLib } from './my-ts-lib.js';`);
     });
   });
 });

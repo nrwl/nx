@@ -218,7 +218,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
@@ -226,6 +226,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
     }
   );
   tasks.push(installTask);

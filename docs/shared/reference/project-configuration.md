@@ -1,3 +1,7 @@
+---
+keywords: [project.json]
+---
+
 # Project Configuration
 
 A project's configuration is constructed by Nx from three sources:

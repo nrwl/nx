@@ -53,7 +53,7 @@ export function PlansDisplay(): ReactElement {
                 </p>
                 <div className="my-12">
                   <ButtonLink
-                    href="https://cloud.nx.app"
+                    href="https://cloud.nx.app/get-started/?utm_source=nx-dev&utm_medium=nx-cloud-plans&utm_campaign=hobby-plan"
                     aria-describedby="hobby-plan"
                     title="Start now"
                     size="default"
@@ -157,7 +157,7 @@ export function PlansDisplay(): ReactElement {
 
               <div className="my-12">
                 <ButtonLink
-                  href="https://cloud.nx.app"
+                  href="https://cloud.nx.app/get-started/?utm_source=nx-dev&utm_medium=nx-cloud-plans&utm_campaign=team-plan"
                   aria-describedby="team-plan"
                   title="Get started"
                   size="default"

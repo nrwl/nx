@@ -11,6 +11,10 @@
     "examples": [
       {
         "description": "Generate a generator exported with the name matching the file name. It results in the generator `foo` at `mylib/src/generators/foo.ts`",
+        "command": "nx g @nx/plugin:generator mylib/src/generators/foo.ts"
+      },
+      {
+        "description": "Generate a generator without providing the file extension. It results in the generator `foo` at `mylib/src/generators/foo.ts`",
         "command": "nx g @nx/plugin:generator mylib/src/generators/foo"
       },
       {
@@ -21,7 +25,7 @@
     "properties": {
       "path": {
         "type": "string",
-        "description": "The file path to the generator without the file extension. Relative to the current working directory.",
+        "description": "The file path to the generator. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What is the generator file path?",
         "x-priority": "important"
@@ -37,7 +41,7 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "none"],
+        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "jest"
       },

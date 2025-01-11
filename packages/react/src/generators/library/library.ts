@@ -31,8 +31,11 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -67,22 +70,17 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.isUsingTsSolutionConfig) {
-    const sourceEntry =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : undefined;
     writeJson(host, `${options.projectRoot}/package.json`, {
       name: options.importPath,
-      main: sourceEntry,
-      types: sourceEntry,
+      version: '0.0.1',
+      ...determineEntryFields(options),
       nx: {
         name: options.importPath === options.name ? undefined : options.name,
         projectType: 'library',
         sourceRoot: `${options.projectRoot}/src`,
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   } else {
     addProjectConfiguration(host, options.name, {
@@ -140,10 +138,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   } else if (options.buildable && options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
     tasks.push(rollupTask);
-  } else if (options.bundler === 'none' && options.addPlugin) {
-    const nxJson = readNxJson(host);
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
-    updateNxJson(host, nxJson);
   }
 
   // Set up test target
@@ -278,13 +272,16 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       : undefined
   );
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {
-    tasks.push(() => installPackagesTask(host));
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {

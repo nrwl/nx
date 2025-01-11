@@ -1,3 +1,7 @@
+---
+keywords: [split tasks, atomizer]
+---
+
 # Automatically Split E2E Tasks by File (Atomizer)
 
 {% youtube

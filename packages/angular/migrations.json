@@ -332,6 +332,12 @@
       },
       "description": "Remove the deprecated 'tailwindConfig' option from ng-packagr executors. Tailwind CSS configurations located at the project or workspace root will be picked up automatically.",
       "factory": "./src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors"
+    },
+    "ensure-nx-module-federation-package": {
+      "cli": "nx",
+      "version": "20.3.0-beta.2",
+      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
     }
   },
   "packageJsonUpdates": {
@@ -1365,6 +1371,47 @@
         },
         "@analogjs/vite-plugin-angular": {
           "version": "~1.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.2-angular-eslint": {
+      "version": "20.2.2-beta.0",
+      "requires": {
+        "eslint": "^8.57.0 || ^9.0.0",
+        "@angular/core": ">= 19.0.0 < 20.0.0"
+      },
+      "packages": {
+        "angular-eslint": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.3-ngrx": {
+      "version": "20.3.0-beta.2",
+      "requires": {
+        "@angular/core": "^19.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         }
       }

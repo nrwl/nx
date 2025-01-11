@@ -48,15 +48,15 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com                    ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ https://lesscss.org                       ]"
+              "label": "LESS              [ https://lesscss.org                      ]"
             },
             {
               "value": "tailwind",
-              "label": "tailwind [ https://tailwindcss.com/            ]"
+              "label": "tailwind          [ https://tailwindcss.com/                 ]"
             },
             {
               "value": "styled-components",
@@ -95,7 +95,7 @@
       "bundler": {
         "description": "The bundler to use.",
         "type": "string",
-        "enum": ["vite", "webpack", "rspack"],
+        "enum": ["vite", "webpack", "rspack", "rsbuild"],
         "x-prompt": "Which bundler do you want to use to build the application?",
         "default": "vite",
         "x-priority": "important"

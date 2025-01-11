@@ -1,3 +1,4 @@
+import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
   NxReleaseVersionConfiguration,
@@ -135,6 +136,10 @@ export interface ProjectMetadata {
         };
       }[];
     };
+  };
+  js?: {
+    packageName: string;
+    packageExports?: PackageJson['exports'];
   };
 }
 

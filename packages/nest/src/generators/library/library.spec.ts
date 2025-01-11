@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
-import { readJson, readProjectConfiguration } from '@nx/devkit';
+import { readJson, readProjectConfiguration, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 
@@ -343,6 +343,118 @@ describe('lib', () => {
       expect(
         tree.exists('api/my-lib/src/lib/my-lib.controller.spec.ts')
       ).toBeTruthy();
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      devkit.updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./mylib",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "baseUrl": ".",
+            "emitDeclarationOnly": false,
+            "forceConsistentCasingInFileNames": true,
+            "importHelpers": true,
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "noFallthroughCasesInSwitch": true,
+            "noImplicitAny": true,
+            "noImplicitOverride": true,
+            "noImplicitReturns": true,
+            "outDir": "dist",
+            "rootDir": "src",
+            "strict": true,
+            "strictBindCallApply": true,
+            "strictNullChecks": true,
+            "target": "es6",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+          ],
+          "references": [],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "commonjs",
+            "moduleResolution": "node10",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });

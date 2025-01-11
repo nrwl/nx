@@ -13,7 +13,6 @@ import {
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export async function normalizeOptions(
   host: Tree,

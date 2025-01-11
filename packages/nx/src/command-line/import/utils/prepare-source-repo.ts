@@ -1,6 +1,5 @@
 import * as createSpinner from 'ora';
-import { dirname, join, relative } from 'path';
-import { mkdir, rm } from 'node:fs/promises';
+import { join, relative } from 'path';
 import { GitRepository } from '../../../utils/git-utils';
 
 export async function prepareSourceRepo(

@@ -155,6 +155,15 @@ export async function createApplicationFiles(
           : null,
       }
     );
+  } else if (options.bundler === 'rsbuild') {
+    generateFiles(
+      host,
+      join(__dirname, '../files/base-rsbuild'),
+      options.appProjectRoot,
+      {
+        ...templateVariables,
+      }
+    );
   }
 
   if (

@@ -41,7 +41,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -132,7 +132,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -279,7 +279,7 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 
 exports[`library should support eslint flat config 1`] = `
 "const vue = require('eslint-plugin-vue');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 module.exports = [
   ...baseConfig,

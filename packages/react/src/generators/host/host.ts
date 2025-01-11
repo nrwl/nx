@@ -146,13 +146,14 @@ export async function hostGenerator(
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
     { '@module-federation/enhanced': moduleFederationEnhancedVersion },
     {
       '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
     }
   );
   tasks.push(installTask);

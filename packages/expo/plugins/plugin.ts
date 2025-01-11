@@ -17,7 +17,6 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 

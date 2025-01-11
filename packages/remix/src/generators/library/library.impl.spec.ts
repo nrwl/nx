@@ -26,7 +26,7 @@ describe('Remix Library Generator', () => {
     // ASSERT
     const tsconfig = readJson(tree, 'tsconfig.base.json');
     expect(tree.exists(`test/src/server.ts`));
-    expect(tree.children(`test/src/lib`)).toMatchSnapshot();
+    expect(tree.children(`test/src/lib`).sort()).toMatchSnapshot();
     expect(tsconfig.compilerOptions.paths).toMatchSnapshot();
   }, 25_000);
 
@@ -167,6 +167,14 @@ describe('Remix Library Generator', () => {
       expect(readJson(tree, 'packages/foo/package.json'))
         .toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/foo",
           "nx": {
@@ -175,6 +183,7 @@ describe('Remix Library Generator', () => {
             "sourceRoot": "packages/foo/src",
           },
           "types": "./src/index.ts",
+          "version": "0.0.1",
         }
       `);
     });

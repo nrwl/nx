@@ -1,0 +1,31 @@
+<%_ if (isUsingTsSolutionSetup) { _%>{
+  "extends": "<%= offsetFromRoot%>tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "jsx": "react-jsx",
+    "lib": ["dom"],
+    "types": [
+      "node",
+      <%_ if (style === 'styled-jsx') { _%>"@nx/react/typings/styled-jsx.d.ts",<%_ } _%>
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts"
+    ]
+  },
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.spec.tsx", "src/**/*.test.tsx", "src/**/*.spec.js", "src/**/*.test.js", "src/**/*.spec.jsx", "src/**/*.test.jsx"],
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+}<% } else { %>{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "types": [
+      "node",
+      <%_ if (style === 'styled-jsx') { _%>"@nx/react/typings/styled-jsx.d.ts",<%_ } _%>
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts"
+    ]
+  },
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.spec.tsx", "src/**/*.test.tsx", "src/**/*.spec.js", "src/**/*.test.js", "src/**/*.spec.jsx", "src/**/*.test.jsx"],
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+}
+<% } %>

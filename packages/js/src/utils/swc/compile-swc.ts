@@ -68,6 +68,10 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
     typeCheckOptions.cacheDir = cacheDir;
   }
 
+  if (normalizedOptions.isTsSolutionSetup && normalizedOptions.skipTypeCheck) {
+    typeCheckOptions.ignoreDiagnostics = true;
+  }
+
   return typeCheckOptions;
 }
 
@@ -90,7 +94,7 @@ export async function compileSwc(
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 
-  if (normalizedOptions.skipTypeCheck) {
+  if (normalizedOptions.skipTypeCheck && !normalizedOptions.isTsSolutionSetup) {
     await postCompilationCallback();
     return { success: isCompileSuccess };
   }
@@ -159,7 +163,10 @@ export async function* compileSwcWatch(
             initialPostCompile = false;
           }
 
-          if (normalizedOptions.skipTypeCheck) {
+          if (
+            normalizedOptions.skipTypeCheck ||
+            normalizedOptions.isTsSolutionSetup
+          ) {
             next(getResult(swcStatus));
             return;
           }

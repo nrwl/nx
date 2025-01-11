@@ -138,6 +138,12 @@ export function createNodeFromPackageJson(
   const hash = hashObject({
     ...json,
     root: projectRoot,
+    /**
+     * Increment this number to force processing the package.json again. Do it
+     * when the implementation of this plugin is changed and results in different
+     * results for the same package.json contents.
+     */
+    bust: 1,
   });
 
   const cached = cache[hash];
@@ -248,9 +254,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
-        const { packages } = readYamlFile<{ packages: string[] }>(
-          join(root, 'pnpm-workspace.yaml')
-        );
+        const { packages } =
+          readYamlFile<{ packages: string[] }>(
+            join(root, 'pnpm-workspace.yaml')
+          ) ?? {};
         patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
@@ -262,7 +269,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'lerna.json'))) {
       try {
-        const { packages } = readJson<any>('lerna.json');
+        const { packages } = readJson<any>('lerna.json') ?? {};
         patterns.push(
           ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
         );

@@ -19,7 +19,16 @@ import {
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { basename, dirname, join, normalize, relative, sep } from 'node:path';
+import {
+  basename,
+  dirname,
+  extname,
+  join,
+  normalize,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
@@ -201,6 +210,12 @@ async function createNodesInternal(
     context.workspaceRoot,
     projectRoot
   );
+
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  const packageJson = existsSync(packageJsonPath)
+    ? readJsonFile(packageJsonPath)
+    : null;
+
   const nodeHash = hashArray([
     ...[
       fullConfigPath,
@@ -210,6 +225,7 @@ async function createNodesInternal(
       join(context.workspaceRoot, lockFileName),
     ].map(hashFile),
     hashObject(options),
+    ...(packageJson ? [hashObject(packageJson)] : []),
   ]);
   const cacheKey = `${nodeHash}_${configFilePath}`;
 
@@ -313,7 +329,11 @@ function buildTscTargets(
   }
 
   // Build target
-  if (options.build && basename(configFilePath) === options.build.configName) {
+  if (
+    options.build &&
+    basename(configFilePath) === options.build.configName &&
+    isValidPackageJsonBuildConfig(tsConfig, context.workspaceRoot, projectRoot)
+  ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
@@ -418,6 +438,9 @@ function getInputs(
 
   const inputs: TargetConfiguration['inputs'] = [];
   if (includePaths.size) {
+    if (existsSync(join(workspaceRoot, projectRoot, 'package.json'))) {
+      inputs.push('{projectRoot}/package.json');
+    }
     inputs.push(
       ...Array.from(configFiles).map((p: string) =>
         pathToInputOrOutput(p, workspaceRoot, projectRoot)
@@ -531,16 +554,34 @@ function getOutputs(
         pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
       );
 
-      if (
-        config.options.tsBuildInfoFile &&
-        !normalize(config.options.tsBuildInfoFile).startsWith(
-          `${normalize(config.options.outDir)}${sep}`
-        )
-      ) {
-        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      if (config.options.tsBuildInfoFile) {
+        if (
+          !normalize(config.options.tsBuildInfoFile).startsWith(
+            `${normalize(config.options.outDir)}${sep}`
+          )
+        ) {
+          // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+          outputs.add(
+            pathToInputOrOutput(
+              config.options.tsBuildInfoFile,
+              workspaceRoot,
+              projectRoot
+            )
+          );
+        }
+      } else if (config.options.rootDir && config.options.rootDir !== '.') {
+        // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
+        const relativeRootDir = relative(
+          config.options.rootDir,
+          join(workspaceRoot, projectRoot)
+        );
         outputs.add(
           pathToInputOrOutput(
-            config.options.tsBuildInfoFile,
+            joinPathFragments(
+              config.options.outDir,
+              relativeRootDir,
+              `*.tsbuildinfo`
+            ),
             workspaceRoot,
             projectRoot
           )
@@ -578,14 +619,118 @@ function getOutputs(
   return Array.from(outputs);
 }
 
+/**
+ * Validates the build configuration of a `package.json` file by ensuring that paths in the `exports`, `module`,
+ * and `main` fields reference valid output paths within the `outDir` defined in the TypeScript configuration.
+ * Priority is given to the `exports` field, specifically the `.` export if defined. If `exports` is not defined,
+ * the function falls back to validating `main` and `module` fields. If `outFile` is specified, it validates that the file
+ * is located within the output directory.
+ * If no `package.json` file exists, it assumes the configuration is valid.
+ *
+ * @param tsConfig The TypeScript configuration object.
+ * @param workspaceRoot The workspace root path.
+ * @param projectRoot The project root path.
+ * @returns `true` if the package has a valid build configuration; otherwise, `false`.
+ */
+function isValidPackageJsonBuildConfig(
+  tsConfig: ParsedCommandLine,
+  workspaceRoot: string,
+  projectRoot: string
+): boolean {
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    // If the package.json file does not exist.
+    // Assume it's valid because it would be using `project.json` instead.
+    return true;
+  }
+  const packageJson = readJsonFile(packageJsonPath);
+
+  const outDir = tsConfig.options.outFile
+    ? dirname(tsConfig.options.outFile)
+    : tsConfig.options.outDir;
+  const resolvedOutDir = outDir
+    ? resolve(workspaceRoot, projectRoot, outDir)
+    : undefined;
+
+  const isPathSourceFile = (path: string): boolean => {
+    if (resolvedOutDir) {
+      const pathToCheck = resolve(workspaceRoot, projectRoot, path);
+      return !pathToCheck.startsWith(resolvedOutDir);
+    }
+
+    const ext = extname(path);
+    // Check that the file extension is a TS file extension. As the source files are in the same directory as the output files.
+    return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
+  };
+
+  // Checks if the value is a path within the `src` directory.
+  const containsInvalidPath = (
+    value: string | Record<string, string>
+  ): boolean => {
+    if (typeof value === 'string') {
+      return isPathSourceFile(value);
+    } else if (typeof value === 'object') {
+      return Object.entries(value).some(([currentKey, subValue]) => {
+        // Skip types field
+        if (currentKey === 'types') {
+          return false;
+        }
+        if (typeof subValue === 'string') {
+          return isPathSourceFile(subValue);
+        }
+        return false;
+      });
+    }
+    return false;
+  };
+
+  const exports = packageJson?.exports;
+
+  // Check the `.` export if `exports` is defined.
+  if (exports) {
+    if (typeof exports === 'string') {
+      return !isPathSourceFile(exports);
+    }
+    if (typeof exports === 'object' && '.' in exports) {
+      return !containsInvalidPath(exports['.']);
+    }
+
+    // Check other exports if `.` is not defined or valid.
+    for (const key in exports) {
+      if (key !== '.' && containsInvalidPath(exports[key])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // If `exports` is not defined, fallback to `main` and `module` fields.
+  const buildPaths = ['main', 'module'];
+  for (const field of buildPaths) {
+    if (packageJson[field] && isPathSourceFile(packageJson[field])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function pathToInputOrOutput(
   path: string,
   workspaceRoot: string,
   projectRoot: string
 ): string {
-  const pathRelativeToProjectRoot = normalizePath(relative(projectRoot, path));
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(workspaceRoot, path);
+  const pathRelativeToProjectRoot = normalizePath(
+    relative(fullProjectRoot, fullPath)
+  );
   if (pathRelativeToProjectRoot.startsWith('..')) {
-    return joinPathFragments('{workspaceRoot}', relative(workspaceRoot, path));
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, fullPath)
+    );
   }
 
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);

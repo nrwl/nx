@@ -6,7 +6,7 @@
 Generate a component named `MyComponent` at `apps/my-app/src/app/my-component/my-component.tsx`:
 
 ```shell
-nx g component apps/my-app/src/app/my-component/my-component
+nx g component apps/my-app/src/app/my-component/my-component.tsx
 ```
 
 {% /tab %}
@@ -15,7 +15,16 @@ nx g component apps/my-app/src/app/my-component/my-component
 Generate a component named `Custom` at `apps/my-app/src/app/my-component/my-component.tsx`:
 
 ```shell
-nx g component apps/my-app/src/app/my-component/my-component --name=custom
+nx g component apps/my-app/src/app/my-component/my-component.tsx --name=custom
+```
+
+{% /tab %}
+{% tab label="Create a Component Omitting the File Extension" %}
+
+Generate a component named `MyComponent` at `apps/my-app/src/app/my-component/my-component.tsx` without specifying the file extension:
+
+```shell
+nx g component apps/my-app/src/app/my-component/my-component
 ```
 
 {% /tab %}
