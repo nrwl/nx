@@ -1,4 +1,4 @@
-import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
+import { HubspotForm, SectionHeading } from '@nx/nx-dev/ui-common';
 import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
@@ -16,7 +16,7 @@ export function TrialNxPowerpack(): ReactElement {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-6xl text-center">
           <SectionHeading as="h1" variant="display" id="try-nx-powerpack">
-            Try Powerpack
+            Try Nx Powerpack
             <br />
             for free
           </SectionHeading>

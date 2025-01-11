@@ -72,7 +72,7 @@ export function WebinarNotifier(): ReactElement | null {
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
                 title="Signup"
-                href="https://bit.ly/3B0Ebfe"
+                href="https://bit.ly/40t8IMN"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
