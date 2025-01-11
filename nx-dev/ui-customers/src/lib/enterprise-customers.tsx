@@ -26,6 +26,7 @@ import {
   ParamountIcon,
   PaylocityIcon,
   PhilipsIcon,
+  PlexIcon,
   RedBullIcon,
   RoyalBankOfCanadaIcon,
   SainsburysIcon,
@@ -37,12 +38,11 @@ import {
   TMobileIcon,
   VarianIcon,
   VodafoneIcon,
-  PlexIcon,
   ZipariIcon,
 } from '@nx/nx-dev/ui-icons';
 import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
 import { CustomerTestimonialCarousel } from './customer-testimonial-carousel';
-import { CustomerIconGrid, type CustomerIcon } from './customer-icon-grid';
+import { type CustomerIcon, CustomerIconGrid } from './customer-icon-grid';
 import { type ReactElement } from 'react';
 
 const firstCustomerIcons: CustomerIcon[] = [
