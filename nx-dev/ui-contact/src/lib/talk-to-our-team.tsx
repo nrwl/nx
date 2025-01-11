@@ -66,7 +66,7 @@ export function TalkToOurTeam(): ReactElement {
                 </div>
                 <SiriusxmAlternateIcon
                   aria-hidden="true"
-                  className="ml-auto size-10 text-[#0000EB]"
+                  className="ml-auto size-10 rounded text-[#0000EB] dark:bg-slate-200"
                 />
               </figcaption>
             </figure>
