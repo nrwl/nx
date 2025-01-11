@@ -104,6 +104,7 @@ describe('application generator', () => {
 
     const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
+    expect(tsConfig.compilerOptions.experimentalDecorators).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
@@ -278,6 +279,7 @@ describe('application generator', () => {
         {
           "compilerOptions": {
             "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
             "outDir": "out-tsc/myapp",
