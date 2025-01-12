@@ -27,7 +27,7 @@ jobs:
           main-branch-name: 'main'
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
 
 workflows:
   version: 2
@@ -78,7 +78,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected -t test build
+      - run: ./nx affected -t build
 "
 `;
 
@@ -109,7 +109,7 @@ jobs:
           main-branch-name: 'main'
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
 
 workflows:
   version: 2
@@ -160,6 +160,6 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected -t test build
+      - run: ./nx affected -t build
 "
 `;

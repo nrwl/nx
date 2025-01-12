@@ -99,7 +99,7 @@ function createRollupConfig(
   };
 
   tree.write(
-    joinPathFragments(project.root, 'rollup.config.js'),
+    joinPathFragments(project.root, 'rollup.config.cjs'),
     `const { withNx } = require('@nx/rollup/with-nx');
 
 module.exports = withNx(

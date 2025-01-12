@@ -365,7 +365,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.js`, 'utf-8')
       ).toMatchSnapshot();
@@ -402,7 +402,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.ts`, 'utf-8')
       ).toMatchSnapshot();
@@ -435,7 +435,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.js`, 'utf-8')
       ).toMatchSnapshot();
@@ -475,7 +475,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.ts`, 'utf-8')
       ).toMatchSnapshot();
@@ -496,30 +496,12 @@ describe('Host App Generator', () => {
     });
 
     describe('compat', () => {
-      it('should generate the correct main.server.ts', async () => {
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: {
-            '@angular/core': '15.2.0',
-          },
-        }));
-
-        await generateTestHostApplication(tree, {
-          directory: 'test',
-          ssr: true,
-          skipFormat: true,
-        });
-
-        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      });
-
       it('should generate the correct app component spec file using RouterTestingModule', async () => {
         const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         updateJson(tree, 'package.json', (json) => ({
           ...json,
           dependencies: {
-            '@angular/core': '15.2.0',
+            '@angular/core': '17.0.0',
           },
         }));
 

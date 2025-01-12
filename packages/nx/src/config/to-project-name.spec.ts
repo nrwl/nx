@@ -3,7 +3,10 @@ import { TempFs } from '../internal-testing-utils/temp-fs';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from './configuration';
-import { loadNxPlugins } from '../project-graph/plugins/internal-api';
+import {
+  cleanupPlugins,
+  getPlugins,
+} from '../project-graph/plugins/get-plugins';
 
 describe('Workspaces', () => {
   let fs: TempFs;
@@ -40,16 +43,13 @@ describe('Workspaces', () => {
           NX_WORKSPACE_ROOT_PATH: fs.tempDir,
         },
         async () => {
-          const [plugins, cleanup] = await loadNxPlugins(
-            readNxJson(fs.tempDir).plugins,
-            fs.tempDir
-          );
+          const plugins = await getPlugins(fs.tempDir);
           const res = await retrieveProjectConfigurations(
             plugins,
             fs.tempDir,
             readNxJson(fs.tempDir)
           );
-          cleanup();
+          cleanupPlugins();
           return res;
         }
       );
@@ -57,6 +57,9 @@ describe('Workspaces', () => {
         {
           "metadata": {
             "description": "my-package description",
+            "js": {
+              "packageName": "my-package",
+            },
             "targetGroups": {},
           },
           "name": "my-package",

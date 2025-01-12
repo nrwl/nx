@@ -137,8 +137,9 @@ describe('@nx/vite:init', () => {
     await initGenerator(tree, {});
 
     // ASSERT
-    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
-      `"vite.config.*.timestamp*"`
-    );
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+      "vite.config.*.timestamp*
+      vitest.config.*.timestamp*"
+    `);
   });
 });

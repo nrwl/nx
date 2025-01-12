@@ -93,7 +93,6 @@ export async function createTestApp(
   });
 
   await componentGenerator(appTree, {
-    name: 'my-component',
     path: `${appName}/src/components/my-component`,
   });
 

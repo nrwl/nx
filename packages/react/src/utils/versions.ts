@@ -1,8 +1,5 @@
 export const nxVersion = require('../../package.json').version;
 
-// Always pull the latest version until we merge rspack plugin into the repo.
-export const nxRspackVersion = '*';
-
 export const reactVersion = '18.3.1';
 export const reactDomVersion = '18.3.1';
 export const reactIsVersion = '18.3.1';
@@ -54,8 +51,8 @@ export const typesExpressVersion = '4.17.17';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '~2.6.11';
-export const moduleFederationEnhancedVersion = '0.7.6';
+export const moduleFederationNodeVersion = '^2.6.21';
+export const moduleFederationEnhancedVersion = '^0.8.8';
 
 // style preprocessors
 export const lessVersion = '3.12.2';

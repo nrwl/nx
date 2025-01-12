@@ -30,6 +30,13 @@ export function convertEslintJsonToFlatConfig(
   let combinedConfig: ts.PropertyAssignment[] = [];
   let languageOptions: ts.PropertyAssignment[] = [];
 
+  // exclude dist and eslint config from being linted, which matches the default for new workspaces
+  exportElements.push(
+    generateAst({
+      ignores: ['**/dist'],
+    })
+  );
+
   if (config.extends) {
     const extendsResult = addExtends(importsMap, exportElements, config);
     isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
@@ -218,7 +225,7 @@ function addExtends(
         configBlocks.push(generateSpreadElement(localName));
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
-          '$1eslint$2.config.js'
+          '$1eslint$2.config.cjs'
         );
         importsMap.set(newImport, localName);
       } else {

@@ -1,4 +1,5 @@
 import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { ReactElement } from 'react';
 
 const teamMembers = [
   {
@@ -97,11 +98,6 @@ const teamMembers = [
     imageUrl: 'joe-johnson.avif',
   },
   {
-    name: 'Johanna Pearce',
-    title: 'Architect',
-    imageUrl: 'johanna-pearce.avif',
-  },
-  {
     name: 'Jonathan Cammisuli',
     title: 'Architect',
     imageUrl: 'jonathan-cammisuli.avif',
@@ -162,6 +158,11 @@ const teamMembers = [
     imageUrl: 'patrick-mariglia.avif',
   },
   {
+    name: 'Phillip Dacosta',
+    title: 'Software Engineer',
+    imageUrl: 'phillip-dacosta.avif',
+  },
+  {
     name: 'Philip Fulcher',
     title: 'Senior Engineer',
     imageUrl: 'philip-fulcher.avif',
@@ -187,7 +188,7 @@ const teamMembers = [
     imageUrl: 'zack-derose.avif',
   },
 ];
-export function TheTeam(): JSX.Element {
+export function TheTeam(): ReactElement {
   return (
     <section>
       <div className="max-w-7x1 mx-auto px-4 text-center sm:px-6 lg:px-8">

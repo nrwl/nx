@@ -23,10 +23,14 @@ export interface Schema {
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
-  bundler?: 'webpack' | 'vite' | 'rspack';
+  bundler?: 'webpack' | 'vite' | 'rspack' | 'rsbuild';
   minimal?: boolean;
+  // Internal options
   addPlugin?: boolean;
   nxCloudToken?: string;
+  useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
+  alwaysGenerateProjectJson?: boolean; // this is needed for MF currently
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
@@ -40,4 +44,5 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   addPlugin?: boolean;
+  isUsingTsSolutionConfig?: boolean;
 }

@@ -35,6 +35,7 @@
               "@nx/cypress",
               "@nx/playwright",
               "@nx/storybook",
+              "@nx/rsbuild",
               "eslint"
             ]
           }

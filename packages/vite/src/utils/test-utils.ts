@@ -407,6 +407,67 @@ export function mockAngularAppGenerator(tree: Tree): Tree {
     projectType: 'application',
   });
 
+  writeJson(tree, `apps/${appName}/tsconfig.json`, {
+    compilerOptions: {
+      target: 'es2022',
+      esModuleInterop: true,
+      forceConsistentCasingInFileNames: true,
+      strict: true,
+      noImplicitOverride: true,
+      noPropertyAccessFromIndexSignature: true,
+      noImplicitReturns: true,
+      noFallthroughCasesInSwitch: true,
+    },
+    files: [],
+    include: [],
+    references: [
+      {
+        path: './tsconfig.editor.json',
+      },
+      {
+        path: './tsconfig.app.json',
+      },
+      {
+        path: './tsconfig.spec.json',
+      },
+    ],
+    extends: '../../tsconfig.base.json',
+    angularCompilerOptions: {
+      enableI18nLegacyMessageIdFormat: false,
+      strictInjectionParameters: true,
+      strictInputAccessModifiers: true,
+      strictTemplates: true,
+    },
+  });
+
+  writeJson(tree, `apps/${appName}/tsconfig.app.json`, {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      outDir: '../../dist/out-tsc',
+      types: [],
+    },
+    files: ['src/main.ts'],
+    include: ['src/**/*.d.ts'],
+    exclude: ['jest.config.ts', 'src/**/*.test.ts', 'src/**/*.spec.ts'],
+  });
+
+  writeJson(tree, `apps/${appName}/tsconfig.spec.json`, {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      outDir: '../../dist/out-tsc',
+      module: 'commonjs',
+      target: 'es2016',
+      types: ['jest', 'node'],
+    },
+    files: ['src/test-setup.ts'],
+    include: [
+      'jest.config.ts',
+      'src/**/*.test.ts',
+      'src/**/*.spec.ts',
+      'src/**/*.d.ts',
+    ],
+  });
+
   return tree;
 }
 

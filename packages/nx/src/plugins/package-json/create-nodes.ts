@@ -21,6 +21,11 @@ import {
   CreateNodesV2,
 } from '../../project-graph/plugins';
 import { basename } from 'path';
+import { hashObject } from '../../hasher/file-hasher';
+import {
+  PackageJsonConfigurationCache,
+  readPackageJsonConfigurationCache,
+} from '../../../plugins/package-json';
 
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(
@@ -41,6 +46,8 @@ export const createNodesV2: CreateNodesV2 = [
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
 
+    const cache = readPackageJsonConfigurationCache();
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
         if (
@@ -53,7 +60,8 @@ export const createNodesV2: CreateNodesV2 = [
 
         return createNodeFromPackageJson(
           packageJsonPath,
-          context.workspaceRoot
+          context.workspaceRoot,
+          cache
         );
       },
       packageJsons,
@@ -120,15 +128,41 @@ export function buildPackageJsonWorkspacesMatcher(
 
 export function createNodeFromPackageJson(
   pkgJsonPath: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: PackageJsonConfigurationCache
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
+
+  const projectRoot = dirname(pkgJsonPath);
+
+  const hash = hashObject({
+    ...json,
+    root: projectRoot,
+    /**
+     * Increment this number to force processing the package.json again. Do it
+     * when the implementation of this plugin is changed and results in different
+     * results for the same package.json contents.
+     */
+    bust: 1,
+  });
+
+  const cached = cache[hash];
+  if (cached) {
+    return {
+      projects: {
+        [cached.root]: cached,
+      },
+    };
+  }
+
   const project = buildProjectConfigurationFromPackageJson(
     json,
     workspaceRoot,
     pkgJsonPath,
     readNxJson(workspaceRoot)
   );
+
+  cache[hash] = project;
   return {
     projects: {
       [project.root]: project,
@@ -220,9 +254,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
-        const { packages } = readYamlFile<{ packages: string[] }>(
-          join(root, 'pnpm-workspace.yaml')
-        );
+        const { packages } =
+          readYamlFile<{ packages: string[] }>(
+            join(root, 'pnpm-workspace.yaml')
+          ) ?? {};
         patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
@@ -234,7 +269,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'lerna.json'))) {
       try {
-        const { packages } = readJson<any>('lerna.json');
+        const { packages } = readJson<any>('lerna.json') ?? {};
         patterns.push(
           ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
         );

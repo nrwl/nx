@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { NormalizedJestProjectSchema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function createFiles(
   tree: Tree,
@@ -62,7 +62,8 @@ export function createFiles(
       ? `${rootOffset}tsconfig.base.json`
       : './tsconfig.json',
     outDir: isTsSolutionSetup ? `./out-tsc/jest` : `${rootOffset}dist/out-tsc`,
-    module: !isTsSolutionSetup ? 'commonjs' : undefined,
+    module:
+      !isTsSolutionSetup || transformer === 'ts-jest' ? 'commonjs' : undefined,
   });
 
   if (options.setupFile === 'none') {

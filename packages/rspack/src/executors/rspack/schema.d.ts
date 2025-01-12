@@ -69,4 +69,5 @@ export interface NormalizedRspackExecutorSchema extends RspackExecutorSchema {
   root: string;
   projectRoot: string;
   sourceRoot: string;
+  useTsconfigPaths: boolean;
 }

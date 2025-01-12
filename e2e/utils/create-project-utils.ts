@@ -76,10 +76,12 @@ export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
   packages,
+  preset = 'apps',
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
+  preset?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -93,7 +95,7 @@ export function newProject({
         'create-nx-workspace:start'
       );
       runCreateWorkspace(projScope, {
-        preset: 'apps',
+        preset,
         packageManager,
       });
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
@@ -222,6 +224,8 @@ export function runCreateWorkspace(
     docker,
     nextAppDir,
     nextSrcDir,
+    linter = 'eslint',
+    formatter = 'prettier',
     e2eTestRunner,
     ssr,
     framework,
@@ -241,7 +245,9 @@ export function runCreateWorkspace(
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
+    linter?: 'none' | 'eslint';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+    formatter?: 'prettier' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
@@ -252,6 +258,7 @@ export function runCreateWorkspace(
   const pm = getPackageManagerCommand({ packageManager });
 
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -289,6 +296,14 @@ export function runCreateWorkspace(
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (linter) {
+    command += ` --linter=${linter}`;
+  }
+
+  if (formatter) {
+    command += ` --formatter=${formatter}`;
   }
 
   if (e2eTestRunner) {
@@ -360,7 +375,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip`;
+  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip --no-interactive`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;

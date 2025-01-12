@@ -45,6 +45,17 @@ describe('redux', () => {
     ).toBeTruthy();
   });
 
+  it('should handle path with file extension', async () => {
+    await reduxGenerator(appTree, {
+      path: 'my-lib/src/lib/my-slice.slice.ts',
+    });
+
+    expect(appTree.exists('/my-lib/src/lib/my-slice.slice.ts')).toBeTruthy();
+    expect(
+      appTree.exists('/my-lib/src/lib/my-slice.slice.spec.ts')
+    ).toBeTruthy();
+  });
+
   describe('--appProject', () => {
     it('should configure app main', async () => {
       await applicationGenerator(appTree, {

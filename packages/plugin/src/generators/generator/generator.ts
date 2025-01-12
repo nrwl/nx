@@ -43,6 +43,8 @@ async function normalizeOptions(
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     path: options.path,
     name: options.name,
+    allowedFileExtensions: ['ts'],
+    fileExtension: 'ts',
   });
 
   const { className, propertyName } = names(name);

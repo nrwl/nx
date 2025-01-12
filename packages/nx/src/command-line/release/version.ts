@@ -40,7 +40,7 @@ import {
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
-import { gitAdd, gitTag } from './utils/git';
+import { gitAdd, gitPush, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
@@ -180,6 +180,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -192,6 +193,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
+    if (
+      filterLog &&
+      process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
+    ) {
+      output.note(filterLog);
+    }
+
     if (!args.specifier) {
       const rawVersionPlans = await readRawVersionPlans();
       await setResolvedVersionPlansOnGroups(
@@ -368,6 +376,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             verbose: args.verbose,
           });
         }
+      }
+
+      if (args.gitPush ?? nxReleaseConfig.version.git.push) {
+        output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+        await gitPush({
+          gitRemote: args.gitRemote,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
       }
 
       return {

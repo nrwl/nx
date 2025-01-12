@@ -40,6 +40,19 @@ describe('component', () => {
     ).toBeTruthy();
   });
 
+  it('should handle path with file extension', async () => {
+    await componentGenerator(tree, {
+      path: `${appName}/components/hello/hello.tsx`,
+      style: 'css',
+    });
+
+    expect(tree.exists('my-app/components/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/components/hello/hello.spec.tsx')).toBeTruthy();
+    expect(
+      tree.exists('my-app/components/hello/hello.module.css')
+    ).toBeTruthy();
+  });
+
   it('should generate component in default directory for library', async () => {
     await componentGenerator(tree, {
       name: 'hello',

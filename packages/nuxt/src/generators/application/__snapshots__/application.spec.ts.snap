@@ -7,7 +7,8 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*"
+vite.config.*.timestamp*
+vitest.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
@@ -35,7 +36,7 @@ exports[`app generated files content - as-provided - my-app general application 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -108,7 +109,6 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure tsconfig and project.json correctly 2`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [
@@ -190,7 +190,6 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure vitest correctly 3`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [
@@ -368,7 +367,8 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*"
+vite.config.*.timestamp*
+vitest.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
@@ -396,7 +396,7 @@ exports[`app generated files content - as-provided - myApp general application s
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -469,7 +469,6 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure tsconfig and project.json correctly 2`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [
@@ -551,7 +550,6 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure vitest correctly 3`] = `
 "{
-  "compilerOptions": {},
   "files": [],
   "include": [".nuxt/nuxt.d.ts"],
   "references": [

@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -26,6 +25,10 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -41,16 +44,16 @@ export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'application');
-
-  const options = await normalizeOptions(host, schema);
-
   const tasks: GeneratorCallback[] = [];
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
@@ -125,6 +128,28 @@ export async function reactNativeApplicationGeneratorInternal(
         `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
       ],
     });
+  }
+
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      noUnusedLocals: false,
+      lib: ['dom'],
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
   if (!options.skipFormat) {

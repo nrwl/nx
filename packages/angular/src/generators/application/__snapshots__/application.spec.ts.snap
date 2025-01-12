@@ -25,6 +25,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -85,6 +86,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -126,7 +128,6 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 import { RouterModule } from '@angular/router';
 
 @Component({
-  standalone: true,
   imports: [RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -170,7 +171,6 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 "import { Component } from '@angular/core';
 
 @Component({
-  standalone: true,
   imports: [],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -243,7 +243,6 @@ import { RouterModule } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -311,7 +310,6 @@ exports[`app --standalone should generate a standalone app correctly without rou
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -545,6 +543,7 @@ exports[`app format files should format files 2`] = `
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -618,8 +617,8 @@ exports[`app nested should create project configs 1`] = `
               "type": "initial",
             },
             {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
+              "maximumError": "8kb",
+              "maximumWarning": "4kb",
               "type": "anyComponentStyle",
             },
           ],
@@ -734,8 +733,8 @@ exports[`app not nested should create project configs 1`] = `
               "type": "initial",
             },
             {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
+              "maximumError": "8kb",
+              "maximumWarning": "4kb",
               "type": "anyComponentStyle",
             },
           ],

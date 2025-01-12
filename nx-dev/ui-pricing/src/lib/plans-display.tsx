@@ -53,7 +53,7 @@ export function PlansDisplay(): ReactElement {
                 </p>
                 <div className="my-12">
                   <ButtonLink
-                    href="https://cloud.nx.app"
+                    href="https://cloud.nx.app/get-started/?utm_source=nx-dev&utm_medium=nx-cloud-plans&utm_campaign=hobby-plan"
                     aria-describedby="hobby-plan"
                     title="Start now"
                     size="default"
@@ -157,7 +157,7 @@ export function PlansDisplay(): ReactElement {
 
               <div className="my-12">
                 <ButtonLink
-                  href="https://cloud.nx.app"
+                  href="https://cloud.nx.app/get-started/?utm_source=nx-dev&utm_medium=nx-cloud-plans&utm_campaign=team-plan"
                   aria-describedby="team-plan"
                   title="Get started"
                   size="default"
@@ -376,6 +376,12 @@ export function PlansDisplay(): ReactElement {
             <p className="text-sm opacity-80">
               Credits are the Nx Cloud currency allowing for usage based
               pricing. Prices do not include applicable taxes.
+            </p>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm font-medium opacity-80">
+              Looking for the Pro plan?{' '}
+              <Link href="#faq">Checkout our FAQ ↓</Link>
             </p>
           </div>
         </div>

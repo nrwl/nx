@@ -108,7 +108,7 @@
         "type": "executor"
       },
       "/nx-api/angular/executors/application": {
-        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.",
         "file": "generated/packages/angular/executors/application.json",
         "hidden": false,
         "name": "application",
@@ -200,7 +200,7 @@
         "type": "generator"
       },
       "/nx-api/angular/generators/convert-to-application-executor": {
-        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder.",
         "file": "generated/packages/angular/generators/convert-to-application-executor.json",
         "hidden": false,
         "name": "convert-to-application-executor",
@@ -2891,6 +2891,37 @@
     },
     "path": "/nx-api/rollup"
   },
+  "rsbuild": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "rsbuild",
+    "packageName": "@nx/rsbuild",
+    "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
+    "documents": {},
+    "root": "/packages/rsbuild",
+    "source": "/packages/rsbuild/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/rsbuild/generators/init": {
+        "description": "Initialize the `@nx/rsbuild` plugin.",
+        "file": "generated/packages/rsbuild/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
+        "path": "/nx-api/rsbuild/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/rsbuild/generators/configuration": {
+        "description": "Add an Rsbuild configuration for the provided project.",
+        "file": "generated/packages/rsbuild/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/rsbuild/src/generators/configuration/schema.json",
+        "path": "/nx-api/rsbuild/generators/configuration",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/rsbuild"
+  },
   "rspack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "rspack",
@@ -3676,6 +3707,17 @@
         "path": "/nx-api/powerpack-conformance/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      },
+      "/nx-api/powerpack-conformance/documents/create-conformance-rule": {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/powerpack-conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/create-conformance-rule"
       }
     },
     "root": "/libs/nx-packages/powerpack-conformance",
@@ -3691,7 +3733,17 @@
         "type": "executor"
       }
     },
-    "generators": {},
+    "generators": {
+      "/nx-api/powerpack-conformance/generators/create-rule": {
+        "description": "Create a new conformance rule",
+        "file": "external-generated/packages/powerpack-conformance/generators/create-rule.json",
+        "hidden": false,
+        "name": "create-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/generators/create-rule/schema.json",
+        "path": "/nx-api/powerpack-conformance/generators/create-rule",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/powerpack-conformance"
   },
   "powerpack-enterprise-cloud": {

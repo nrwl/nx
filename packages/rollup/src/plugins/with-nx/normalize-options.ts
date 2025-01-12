@@ -7,6 +7,7 @@ import type {
   RollupWithNxPluginOptions,
 } from './with-nx-options';
 import { createEntryPoints } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function normalizeOptions(
   projectRoot: string,
@@ -16,6 +17,12 @@ export function normalizeOptions(
   if (global.NX_GRAPH_CREATION)
     return options as NormalizedRollupWithNxPluginOptions;
   normalizeRelativePaths(projectRoot, options);
+
+  // New TS Solution already has a typecheck target
+  if (isUsingTsSolutionSetup()) {
+    options.skipTypeCheck = true;
+  }
+
   return {
     ...options,
     additionalEntryPoints: createEntryPoints(
