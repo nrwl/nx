@@ -78,11 +78,7 @@ export function WhitePaperFastCI(): ReactElement {
                   </p>
 
                   <div className="mt-12 text-center">
-                    <SectionHeading
-                      as="p"
-                      variant="subtitle"
-                      className="text-white"
-                    >
+                    <SectionHeading as="p" variant="subtitle">
                       See how to get fast CI, built for monorepos
                     </SectionHeading>
                     <ButtonLink

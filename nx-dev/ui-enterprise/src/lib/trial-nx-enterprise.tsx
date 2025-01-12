@@ -33,7 +33,7 @@ export function TrialNxEnterprise(): ReactElement {
             </p>
 
             <div className="mt-12 text-center">
-              <SectionHeading as="p" variant="subtitle" className="text-white">
+              <SectionHeading as="p" variant="subtitle">
                 How a Proof of Value works?
               </SectionHeading>
               <ButtonLink
