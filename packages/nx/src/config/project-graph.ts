@@ -103,6 +103,12 @@ export interface ProjectGraphProjectNode {
   };
 }
 
+export function isProjectGraphProjectNode(
+  node: ProjectGraphProjectNode | ProjectGraphExternalNode
+): node is ProjectGraphProjectNode {
+  return node.type === 'app' || node.type === 'e2e' || node.type === 'lib';
+}
+
 /**
  * A node describing an external dependency
  * `name` has as form of:
@@ -114,13 +120,19 @@ export interface ProjectGraphProjectNode {
  *
  */
 export interface ProjectGraphExternalNode {
-  type: 'npm';
-  name: `npm:${string}`;
+  type: 'npm' | 'cargo' | 'gradle';
+  name: `npm:${string}` | `cargo:${string}` | `gradle:${string}`;
   data: {
     version: string;
     packageName: string;
     hash?: string;
   };
+}
+
+export function isProjectGraphExternalNode(
+  node: ProjectGraphProjectNode | ProjectGraphExternalNode
+): node is ProjectGraphExternalNode {
+  return node.type === 'npm' || node.type === 'cargo' || node.type === 'gradle';
 }
 
 /**
