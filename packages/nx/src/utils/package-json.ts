@@ -55,6 +55,7 @@ export interface PackageJson {
             require?: string;
             import?: string;
             development?: string;
+            default?: string;
           }
       >;
   dependencies?: Record<string, string>;

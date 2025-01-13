@@ -33,7 +33,10 @@ import {
   createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -170,22 +173,6 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.js) toJS(tree);
 
-  if (!options.skipFormat) await formatFiles(tree);
-
-  tasks.push(() => {
-    try {
-      execSync(`npx -y nuxi prepare`, {
-        cwd: options.appProjectRoot,
-
-        windowsHide: false,
-      });
-    } catch (e) {
-      console.error(
-        `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
-      );
-    }
-  });
-
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
       tree,
@@ -203,6 +190,28 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
         : undefined
     );
   }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
+  if (!options.skipFormat) await formatFiles(tree);
+
+  tasks.push(() => {
+    try {
+      execSync(`npx -y nuxi prepare`, {
+        cwd: options.appProjectRoot,
+
+        windowsHide: false,
+      });
+    } catch (e) {
+      console.error(
+        `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
+      );
+    }
+  });
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

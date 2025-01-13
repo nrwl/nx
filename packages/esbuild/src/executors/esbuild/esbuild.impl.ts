@@ -134,8 +134,8 @@ export async function* esbuildExecutor(
                       setup(build: esbuild.PluginBuild) {
                         build.onEnd(async (result: esbuild.BuildResult) => {
                           if (
-                            !options.skipTypeCheck &&
-                            !options.isTsSolutionSetup
+                            !options.skipTypeCheck ||
+                            options.isTsSolutionSetup
                           ) {
                             const { errors } = await runTypeCheck(
                               options,
@@ -183,7 +183,7 @@ export async function* esbuildExecutor(
     );
   } else {
     // Run type-checks first and bail if they don't pass.
-    if (!options.skipTypeCheck && !options.isTsSolutionSetup) {
+    if (!options.skipTypeCheck || options.isTsSolutionSetup) {
       const { errors } = await runTypeCheck(options, context);
       if (errors.length > 0) {
         yield { success: false };
@@ -243,6 +243,10 @@ function getTypeCheckOptions(
   if (watch) {
     typeCheckOptions.incremental = true;
     typeCheckOptions.cacheDir = cacheDir;
+  }
+
+  if (options.isTsSolutionSetup && options.skipTypeCheck) {
+    typeCheckOptions.ignoreDiagnostics = true;
   }
 
   return typeCheckOptions;

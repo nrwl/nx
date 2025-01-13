@@ -372,8 +372,9 @@ function updateTsConfigReferences(
 
   let hasChanges = false;
   for (const dep of dependencies) {
-    // Ensure the project reference for the target is set
-    let referencePath = dep.data.root;
+    // Ensure the project reference for the target is set if we can find the
+    // relevant tsconfig file
+    let referencePath: string;
     if (runtimeTsConfigFileName) {
       const runtimeTsConfigPath = joinPathFragments(
         dep.data.root,
@@ -431,6 +432,19 @@ function updateTsConfigReferences(
           joinPathFragments(dep.data.root, 'tsconfig.json')
         )
       ) {
+        continue;
+      }
+    }
+    if (!referencePath) {
+      if (
+        tsconfigExists(
+          tree,
+          tsconfigInfoCaches,
+          joinPathFragments(dep.data.root, 'tsconfig.json')
+        )
+      ) {
+        referencePath = dep.data.root;
+      } else {
         continue;
       }
     }

@@ -218,7 +218,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
