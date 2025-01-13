@@ -1,1 +1,1 @@
-export * from './lib/graph-migrate';
+export * from './lib/migrate';
