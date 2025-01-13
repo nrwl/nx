@@ -86,17 +86,25 @@ export async function compileSwc(
     rmSync(normalizedOptions.outputPath, { recursive: true, force: true });
   }
 
-  const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
-    encoding: 'utf8',
-    cwd: normalizedOptions.swcCliOptions.swcCwd,
-    windowsHide: false,
-  });
-  logger.log(swcCmdLog.replace(/\n/, ''));
-  const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
+  try {
+    const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
+      encoding: 'utf8',
+      cwd: normalizedOptions.swcCliOptions.swcCwd,
+      windowsHide: false,
+      stdio: 'pipe',
+    });
+    logger.log(swcCmdLog.replace(/\n/, ''));
+  } catch (error) {
+    logger.error('SWC compilation failed');
+    if (error.stderr) {
+      logger.error(error.stderr.toString());
+    }
+    return { success: false };
+  }
 
   if (normalizedOptions.skipTypeCheck && !normalizedOptions.isTsSolutionSetup) {
     await postCompilationCallback();
-    return { success: isCompileSuccess };
+    return { success: true };
   }
 
   const { errors, warnings } = await runTypeCheck(
@@ -111,7 +119,7 @@ export async function compileSwc(
 
   await postCompilationCallback();
   return {
-    success: !hasErrors && isCompileSuccess,
+    success: !hasErrors,
     outfile: normalizedOptions.mainOutputPath,
   };
 }
