@@ -9,6 +9,8 @@ import { FileMetadata } from '@nx/nx-dev/models-package';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import React from 'react';
+import { major, minor } from 'semver';
+import { Heading3 } from './headings';
 
 export function DocumentList({
   documents,
@@ -53,6 +55,10 @@ function DocumentListItem({
   );
 }
 
+interface MigrationFileMetadata extends FileMetadata {
+  version: string;
+}
+
 export function SchemaList({
   files,
   type,
@@ -60,6 +66,33 @@ export function SchemaList({
   files: FileMetadata[];
   type: 'executor' | 'generator' | 'migration';
 }): JSX.Element {
+  if (type === 'migration') {
+    const filesAndLabels: (string | FileMetadata)[] = [];
+    let currentVersion = '';
+    (files as any).forEach((file: MigrationFileMetadata) => {
+      const minorVersion = `${major(file.version)}.${minor(file.version)}`;
+      if (currentVersion !== minorVersion) {
+        currentVersion = minorVersion;
+        filesAndLabels.push(minorVersion);
+      }
+      filesAndLabels.push(file);
+    });
+    return (
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+        {!!filesAndLabels.length ? (
+          filesAndLabels.map((schema) =>
+            typeof schema === 'string' ? (
+              <VersionLabelListItem label={schema}></VersionLabelListItem>
+            ) : (
+              <SchemaListItem key={schema.name} file={schema} />
+            )
+          )
+        ) : (
+          <EmptyList type={type} />
+        )}
+      </ul>
+    );
+  }
   return (
     <ul className="divide-y divide-slate-100 dark:divide-slate-800">
       {!!files.length ? (
@@ -73,6 +106,18 @@ export function SchemaList({
   );
 }
 
+export const VersionLabelListItem = ({ label }: { label: string }) => (
+  <li
+    key={label}
+    className="relative flex px-1 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60"
+  >
+    <div className="py-2">
+      <p className="text-sm font-bold">
+        <Heading3 title={label}></Heading3>
+      </p>
+    </div>
+  </li>
+);
 function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
   return (
     <li
