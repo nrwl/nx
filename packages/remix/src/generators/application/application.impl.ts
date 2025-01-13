@@ -310,9 +310,6 @@ export default {...nxPreset};
   tasks.push(await addE2E(tree, options));
 
   addViteTempFilesToGitIgnore(tree);
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
 
   updateTsconfigFiles(
     tree,
@@ -333,6 +330,10 @@ export default {...nxPreset};
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.useTsSolution) {
     addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   tasks.push(() => {

@@ -1,6 +1,5 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { HubspotForm } from './hubspot-form';
-import { ReactElement } from 'react';
+import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
+import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
   CaterpillarIcon,
@@ -13,32 +12,37 @@ import {
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
 
-export function TalkToOurSalesTeam(): ReactElement {
+export function TalkToOurTeam(): ReactElement {
   return (
-    <section id="contact-sales">
+    <section id="contact-team">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h1" variant="display" id="how-can-we-help">
-            Talk to our sales team
+            Talk to our team
           </SectionHeading>
         </div>
-        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
-          <section className="mt-4">
+        <div className="mx-auto mt-16 flex max-w-5xl flex-col gap-12 md:flex-row lg:gap-8">
+          <section className="flex-1">
             <p className="text-lg leading-relaxed">
-              We’re here to help you find the right plan and pricing for your
-              needs and discuss{' '}
-              <span className="font-medium">
-                how Nx Cloud Enterprise can drive better business outcomes for
-                your organization
-              </span>
-              .
+              Whether you’re scaling your team, optimizing CI pipelines, or
+              exploring the full potential of Nx, we’re here to help. Reach out
+              to:
             </p>
-            <p className="mt-4 text-lg leading-relaxed">
-              Fill out the form, and we’ll get back to you to schedule a call or
-              start the discussion on a shared Slack.
+            <div className="mt-4">
+              <ul className="ml-4 list-inside list-disc space-y-2">
+                <li> Learn about our products and solutions. </li>
+                <li> Demo our products firsthand and see the difference. </li>
+                <li> Find the right plan for your unique needs. </li>
+              </ul>
+            </div>
+            <p className="mt-5 text-lg font-bold leading-relaxed">
+              Let’s Talk!
+            </p>
+            <p className="text-lg leading-relaxed">
+              Fill out the form, an Nx expert with reach out shortly.
             </p>
 
-            <figure className="mt-12 border-l border-slate-200 pl-8 dark:border-slate-800">
+            <figure className="mt-12 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
               <blockquote className="text-base/7">
                 <p>
                   “The decision to jump to Nx Cloud was really something we
@@ -62,7 +66,7 @@ export function TalkToOurSalesTeam(): ReactElement {
                 </div>
                 <SiriusxmAlternateIcon
                   aria-hidden="true"
-                  className="ml-auto size-10 text-[#0000EB]"
+                  className="ml-auto size-10 rounded text-[#0000EB] dark:bg-slate-200"
                 />
               </figcaption>
             </figure>
@@ -118,7 +122,7 @@ export function TalkToOurSalesTeam(): ReactElement {
               </div>
             </div>
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800/40">
+          <section className="w-full flex-1 rounded-xl border border-slate-200 bg-white p-8 md:self-start dark:border-slate-800/40">
             <HubspotForm
               region="na1"
               portalId="2757427"

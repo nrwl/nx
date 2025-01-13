@@ -8,9 +8,9 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
-import { basename, dirname, join, relative } from 'node:path/posix';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -62,7 +62,7 @@ function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (
     !baseTsconfigJson.compilerOptions ||
     !baseTsconfigJson.compilerOptions.composite ||
-    !baseTsconfigJson.compilerOptions.declaration
+    baseTsconfigJson.compilerOptions.declaration === false
   ) {
     return false;
   }
@@ -206,11 +206,8 @@ export function addProjectToTsSolutionWorkspace(
   if (tree.exists('pnpm-workspace.yaml')) {
     const { load, dump } = require('@zkochan/js-yaml');
     const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
-    const yamlData = load(workspaceFile);
-
-    if (!yamlData?.packages) {
-      yamlData.packages = [];
-    }
+    const yamlData = load(workspaceFile) ?? {};
+    yamlData.packages ??= [];
 
     if (!yamlData.packages.includes(pattern)) {
       yamlData.packages.push(pattern);

@@ -259,7 +259,14 @@ export class TargetProjectLocator {
       this.nodes
     );
 
-    return this.packageEntryPointsToProjectMap[dep]?.name ?? null;
+    return (
+      this.packageEntryPointsToProjectMap[dep]?.name ??
+      // if the package exports do not include ".", look for subpath exports
+      Object.entries(this.packageEntryPointsToProjectMap).find(([entryPoint]) =>
+        dep.startsWith(`${entryPoint}/`)
+      )?.[1]?.name ??
+      null
+    );
   }
 
   private resolveImportWithTypescript(

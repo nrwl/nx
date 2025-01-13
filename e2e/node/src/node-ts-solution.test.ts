@@ -28,21 +28,6 @@ describe('Node Applications', () => {
       packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
       preset: 'ts',
     });
-    if (pm === 'pnpm') {
-      updateFile(
-        'pnpm-workspace.yaml',
-        `
-packages:
-  - 'apps/*'
-  - 'packages/*'
-`
-      );
-    } else {
-      updateJson('package.json', (json) => {
-        json.workspaces = ['apps/*', 'packages/*'];
-        return json;
-      });
-    }
   });
 
   afterAll(() => {
@@ -116,9 +101,11 @@ packages:
     expect(() => runCLI(`lint ${nodeapp}`)).not.toThrow();
     expect(() => runCLI(`test ${nodeapp}`)).not.toThrow();
     expect(() => runCLI(`build ${nodeapp}`)).not.toThrow();
+    expect(() => runCLI(`typecheck ${nodeapp}`)).not.toThrow();
     expect(() => runCLI(`lint ${nodelib}`)).not.toThrow();
     expect(() => runCLI(`test ${nodelib}`)).not.toThrow();
     expect(() => runCLI(`build ${nodelib}`)).not.toThrow();
+    expect(() => runCLI(`typecheck ${nodelib}`)).not.toThrow();
 
     const p = await runCommandUntil(
       `serve ${nodeapp}`,

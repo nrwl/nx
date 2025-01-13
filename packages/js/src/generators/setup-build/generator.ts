@@ -144,7 +144,7 @@ export async function setupBuildGenerator(
         tsConfig: tsConfigFile,
         project: options.project,
         compiler: 'tsc',
-        format: ['cjs', 'esm'],
+        format: isTsSolutionSetup ? ['esm'] : ['cjs', 'esm'],
         addPlugin,
         skipFormat: true,
         skipValidation: true,

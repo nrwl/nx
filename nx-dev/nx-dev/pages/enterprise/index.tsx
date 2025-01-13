@@ -14,7 +14,7 @@ import {
   TestimonialCarousel,
   VmwareTestimonial,
 } from '@nx/nx-dev/ui-enterprise';
-import { requestFreeTrial } from '../lib/components/headerCtaConfigs';
+import { requestFreeTrial } from '../../lib/components/headerCtaConfigs';
 import { ReactElement } from 'react';
 
 export function Enterprise(): ReactElement {
