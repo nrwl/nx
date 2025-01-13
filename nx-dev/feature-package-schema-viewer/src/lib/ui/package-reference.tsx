@@ -70,7 +70,7 @@ export function SchemaList({
     const filesAndLabels: (string | FileMetadata)[] = [];
     let currentVersion = '';
     (files as any).forEach((file: MigrationFileMetadata) => {
-      const minorVersion = `${major(file.version)}.${minor(file.version)}`;
+      const minorVersion = `${major(file.version)}.${minor(file.version)}.x`;
       if (currentVersion !== minorVersion) {
         currentVersion = minorVersion;
         filesAndLabels.push(minorVersion);

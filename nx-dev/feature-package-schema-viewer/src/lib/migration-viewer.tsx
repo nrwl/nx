@@ -2,7 +2,6 @@ import {
   MigrationMetadata,
   ProcessedPackageMetadata,
 } from '@nx/nx-dev/models-package';
-import { h2, table } from 'markdown-factory';
 import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
@@ -31,22 +30,8 @@ function getMarkdown(
   packageName: string
 ): {
   header: ReactNode;
-  packages: ReactNode;
   customContent: ReactNode;
 } {
-  type FieldName = 'name' | 'version' | 'required';
-  const items: Record<FieldName, string>[] = migration.packages
-    ? Object.entries(migration.packages).map(([name, value]) => ({
-        name,
-        version: value.version,
-        required: value.alwaysAddToPackageJson ? 'true' : 'false',
-      }))
-    : [];
-  const fields: { field: FieldName; label: string }[] = [
-    { field: 'name', label: 'Name' },
-    { field: 'version', label: 'Version' },
-    { field: 'required', label: 'Required' },
-  ];
   return {
     header: renderMarkdown(
       getHeaderMarkdown({
@@ -59,9 +44,6 @@ function getMarkdown(
         filePath: '',
       }
     ).node,
-    packages: renderMarkdown(h2('Packages', table(items, fields)), {
-      filePath: '',
-    }).node,
     customContent: !!migration['examplesFile']
       ? renderMarkdown(migration['examplesFile'], { filePath: '' }).node
       : null,
@@ -82,7 +64,6 @@ export function MigrationViewer({
     markdown?: {
       header: ReactNode;
       customContent: ReactNode;
-      packages: ReactNode;
     };
   } = {
     // Process the request and make available the needed schema information
@@ -156,9 +137,64 @@ export function MigrationViewer({
             {/* We remove the top description on sub property lookup */}
             <div className="prose prose-slate dark:prose-invert max-w-none">
               {vm.markdown?.header}
-              <Heading2 title="Version"></Heading2>
-              {schema.version}
-              {schema.packages && vm.markdown?.packages}
+              <div className="my-1">
+                <Heading2 title="Version"></Heading2>
+                {schema.version}
+              </div>
+              {schema.requires && (
+                <>
+                  <Heading2 title="Requires"></Heading2>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th align="left">Name</th>
+                        <th align="left">Version</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(schema.requires).map(
+                        ([name, version]) => (
+                          <tr>
+                            <td>{name}</td>
+                            <td>{version}</td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </>
+              )}
+              {schema.packages && (
+                <>
+                  <Heading2 title="Packages"></Heading2>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th align="left">Name</th>
+                        <th align="left">Version</th>
+                        <th align="left">
+                          Always Add to <code>package.json</code>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(schema.packages).map(
+                        ([name, { version, alwaysAddToPackageJson }]) => (
+                          <tr>
+                            <td>{name}</td>
+                            <td>{version}</td>
+                            <td>
+                              {alwaysAddToPackageJson
+                                ? 'Add if not installed'
+                                : 'Update only'}
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </>
+              )}
               {vm.markdown?.customContent}
             </div>
           </div>
