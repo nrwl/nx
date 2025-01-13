@@ -106,6 +106,46 @@
           "version": "^7.16.0"
         }
       }
+    },
+    "20.4.0-typescript-eslint": {
+      "version": "20.4.0-beta.0",
+      "requires": {
+        "typescript-eslint": "<8.19.0"
+      },
+      "packages": {
+        "typescript-eslint": {
+          "version": "^8.19.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.19.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.19.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.19.0"
+        }
+      }
+    },
+    "20.4.0-@typescript-eslint": {
+      "version": "20.4.0-beta.0",
+      "requires": {
+        "@typescript-eslint/eslint-plugin": "<8.19.0"
+      },
+      "packages": {
+        "typescript-eslint": {
+          "version": "^8.19.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.19.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.19.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.19.0"
+        }
+      }
     }
   }
 }
