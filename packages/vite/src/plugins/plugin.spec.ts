@@ -316,6 +316,11 @@ describe('@nx/vite/plugin', () => {
                         "{workspaceRoot}/dist/{projectRoot}",
                       ],
                     },
+                    "build-deps": {
+                      "dependsOn": [
+                        "^build",
+                      ],
+                    },
                     "preview": {
                       "command": "vite preview",
                       "dependsOn": [
@@ -365,6 +370,12 @@ describe('@nx/vite/plugin', () => {
                         "buildTarget": "build",
                         "spa": true,
                       },
+                    },
+                    "watch-deps": {
+                      "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "dependsOn": [
+                        "build-deps",
+                      ],
                     },
                   },
                 },

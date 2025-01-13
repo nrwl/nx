@@ -145,6 +145,27 @@ module.exports = {
         // ASSERT
         expect(nodes).toMatchSnapshot();
       });
+
+      it('should infer watch-deps target', async () => {
+        tempFs.createFileSync(
+          'my-app/package.json',
+          JSON.stringify('{"name": "my-app"}')
+        );
+
+        const nodes = await createNodesFunction(
+          ['my-app/remix.config.cjs'],
+          {
+            buildTargetName: 'build',
+            devTargetName: 'dev',
+            startTargetName: 'start',
+            typecheckTargetName: 'tsc',
+            staticServeTargetName: 'static-serve',
+          },
+          context
+        );
+
+        expect(nodes).toMatchSnapshot();
+      });
     });
   });
 

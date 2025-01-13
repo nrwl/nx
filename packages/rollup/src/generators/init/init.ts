@@ -41,6 +41,16 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
       createNodes,
       {
         buildTargetName: ['build', 'rollup:build', 'rollup-build'],
+        buildDepsTargetName: [
+          'build-deps',
+          'rollup:build-deps',
+          'rollup-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'rollup:watch-deps',
+          'rollup-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );
