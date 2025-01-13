@@ -24,7 +24,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
   ) {
     super(
       tree,
-      '@angular-devkit/build-angular:ng-packagr',
+      ['@angular-devkit/build-angular:ng-packagr', '@angular/build:ng-packagr'],
       undefined,
       project,
       projectConfig,
@@ -39,8 +39,11 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
 
     if (!this.targets.size) {
       this.logger.warn(
-        `There is no target in the project configuration using the ${this.builderName} builder. This might not be an issue. ` +
-          `Skipping updating the build configuration.`
+        `There is no target in the project configuration using the ${this.possibleBuilderNames
+          .map((b) => `"${b}"`)
+          .join(', ')} builder${
+          this.possibleBuilderNames.length > 1 ? 's' : ''
+        }. This might not be an issue. Skipping updating the build configuration.`
       );
       return;
     }
