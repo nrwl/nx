@@ -1,4 +1,9 @@
-import { Dialog, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import { Fragment, ReactElement } from 'react';
 
 export interface VideoModalProps {
@@ -22,7 +27,7 @@ export function VideoModal({
         onClose={onClose}
         className="relative z-50"
       >
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -32,10 +37,10 @@ export function VideoModal({
           leaveTo="opacity-0"
         >
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-        </Transition.Child>
+        </TransitionChild>
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
@@ -44,7 +49,7 @@ export function VideoModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-white/10 bg-black text-left align-middle shadow-xl transition-all focus:outline-none">
+              <DialogPanel className="relative w-auto transform overflow-hidden rounded-2xl border border-white/10 bg-black text-left align-middle shadow-xl transition-all focus:outline-none">
                 <iframe
                   width="808"
                   height="454"
@@ -55,8 +60,8 @@ export function VideoModal({
                   allowFullScreen
                   className="max-w-full"
                 />
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>
