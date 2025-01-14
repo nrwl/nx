@@ -22,7 +22,10 @@ import { ErrorPage } from './app/ui-components/error-page';
 import { ProjectDetailsApp } from './app/console-project-details/project-details.app';
 import { interpret } from 'xstate';
 import { MigrateApp } from './app/console-migrate/migrate.app';
-import { migrateMachine } from './app/console-migrate/migrate.machine';
+import {
+  migrateMachine,
+  NxConsoleMigrateMetadata,
+} from './app/console-migrate/migrate.machine';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
   window.externalApi = new ExternalApiImpl();
@@ -63,7 +66,10 @@ if (window.__NX_RENDER_GRAPH__ === false) {
     );
   };
 
-  window.renderMigrate = (data: { migrations: MigrationsJsonEntry[] }) => {
+  window.renderMigrate = (data: {
+    migrations: MigrationsJsonEntry[];
+    'nx-console': NxConsoleMigrateMetadata;
+  }) => {
     const service = interpret(migrateMachine).start();
 
     service.send({

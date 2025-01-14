@@ -5,18 +5,18 @@ import type { MigrationsJsonEntry } from 'nx/src/config/misc-interfaces';
 import { createMachine } from 'xstate';
 import { assign } from '@xstate/immer';
 
-type NxConsoleMetadata = {
+export type NxConsoleMigrateMetadata = {
   successfulMigrations?: string[];
 };
 export interface MigrateState {
   migrations: MigrationsJsonEntry[];
-  nxConsoleMetadata: NxConsoleMetadata;
+  nxConsoleMetadata: NxConsoleMigrateMetadata;
 }
 
 export type MigrateEvents = {
   type: 'loadData';
   migrations: MigrationsJsonEntry[];
-  'nx-console': NxConsoleMetadata;
+  'nx-console': NxConsoleMigrateMetadata;
 };
 
 const initialContext: MigrateState = {
