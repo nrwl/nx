@@ -547,6 +547,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
     }
 
+    if (args.gitPush ?? nxReleaseConfig.version.git.push) {
+      output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+      await gitPush({
+        gitRemote: args.gitRemote,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+    }
+
     return {
       workspaceVersion,
       projectsVersionData: versionData,
