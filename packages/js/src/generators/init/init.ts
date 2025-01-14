@@ -105,9 +105,24 @@ export async function initGeneratorInternal(
           { targetName: 'tsc-typecheck' },
         ],
         build: [
-          { targetName: 'build', configName: 'tsconfig.lib.json' },
-          { targetName: 'tsc:build', configName: 'tsconfig.lib.json' },
-          { targetName: 'tsc-build', configName: 'tsconfig.lib.json' },
+          {
+            targetName: 'build',
+            configName: 'tsconfig.lib.json',
+            buildDepsName: 'build-deps',
+            watchDepsName: 'watch-deps',
+          },
+          {
+            targetName: 'tsc:build',
+            configName: 'tsconfig.lib.json',
+            buildDepsName: 'tsc:build-deps',
+            watchDepsName: 'tsc:watch-deps',
+          },
+          {
+            targetName: 'tsc-build',
+            configName: 'tsconfig.lib.json',
+            buildDepsName: 'tsc-build-deps',
+            watchDepsName: 'tsc-watch-deps',
+          },
         ],
       },
       schema.updatePackageScripts

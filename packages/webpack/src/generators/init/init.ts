@@ -50,6 +50,16 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
           'webpack-preview',
           'preview-webpack',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'webpack:build-deps',
+          'webpack-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'webpack:watch-deps',
+          'webpack-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );

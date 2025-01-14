@@ -10,6 +10,7 @@ import {
   writeJsonFile,
   createNodesFromFiles,
   logger,
+  getPackageManagerCommand,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 
@@ -21,13 +22,18 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
   serveStaticTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
+
+const pmc = getPackageManagerCommand();
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
@@ -169,6 +175,14 @@ async function buildNextTargets(
   targets[options.startTargetName] = getStartTargetConfig(options, projectRoot);
 
   targets[options.serveStaticTargetName] = getStaticServeTargetConfig(options);
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return targets;
 }

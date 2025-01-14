@@ -9,6 +9,11 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
         "my-app": {
           "root": "my-app",
           "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "my-build": {
               "cache": true,
               "command": "next build",
@@ -57,6 +62,12 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
                 "cwd": "my-app",
               },
             },
+            "watch-deps": {
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
           },
         },
       },
@@ -98,6 +109,11 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
                 "{projectRoot}/.next/!(cache)",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "dev": {
               "command": "next dev",
               "options": {
@@ -121,6 +137,12 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects next --includeDependentProjects -- npx nx build-deps next",
+              "dependsOn": [
+                "build-deps",
+              ],
             },
           },
         },

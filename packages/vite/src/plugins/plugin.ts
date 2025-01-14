@@ -23,6 +23,7 @@ import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -33,6 +34,8 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
+  watchDepsTargetName?: string;
+  buildDepsTargetName?: string;
 }
 
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -276,6 +279,14 @@ async function buildViteTargets(
       projectRoot
     );
   }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   const metadata = {};
   return { targets, metadata, isLibrary: Boolean(viteBuildConfig.build?.lib) };

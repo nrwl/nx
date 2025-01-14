@@ -48,6 +48,17 @@ exports[`@nx/vite/plugin Library mode should exclude serve and preview targets w
                 "{workspaceRoot}/dist/{projectRoot}",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
           },
         },
       },
@@ -67,6 +78,11 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
           "projectType": "application",
           "root": "my-app",
           "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "build-something": {
               "cache": true,
               "command": "vite build",
@@ -153,6 +169,12 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
                 "buildTarget": "build-something",
                 "spa": true,
               },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "dependsOn": [
+                "build-deps",
+              ],
             },
           },
         },

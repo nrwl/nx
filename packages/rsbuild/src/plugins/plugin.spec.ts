@@ -68,6 +68,11 @@ describe('@nx/rsbuild', () => {
                 "metadata": {},
                 "root": "my-app",
                 "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
                   "build-something": {
                     "cache": true,
                     "command": "rsbuild build",
@@ -134,6 +139,12 @@ describe('@nx/rsbuild', () => {
                       ],
                       "cwd": "my-app",
                     },
+                  },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "dependsOn": [
+                      "build-deps",
+                    ],
                   },
                 },
               },

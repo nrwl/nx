@@ -79,12 +79,14 @@ describe('@nx/vite:init', () => {
           "plugins": [
             {
               "options": {
+                "buildDepsTargetName": "build-deps",
                 "buildTargetName": "build",
                 "previewTargetName": "preview",
                 "serveStaticTargetName": "serve-static",
                 "serveTargetName": "serve",
                 "testTargetName": "test",
                 "typecheckTargetName": "typecheck",
+                "watchDepsTargetName": "watch-deps",
               },
               "plugin": "@nx/vite/plugin",
             },
