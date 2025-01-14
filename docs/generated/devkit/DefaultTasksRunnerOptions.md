@@ -9,12 +9,12 @@
 - [cacheableOperations](../../devkit/documents/DefaultTasksRunnerOptions#cacheableoperations): string[]
 - [cacheableTargets](../../devkit/documents/DefaultTasksRunnerOptions#cacheabletargets): string[]
 - [captureStderr](../../devkit/documents/DefaultTasksRunnerOptions#capturestderr): boolean
-- [disableRemoteCache](../../devkit/documents/DefaultTasksRunnerOptions#disableremotecache): boolean
 - [lifeCycle](../../devkit/documents/DefaultTasksRunnerOptions#lifecycle): LifeCycle
 - [parallel](../../devkit/documents/DefaultTasksRunnerOptions#parallel): number
 - [remoteCache](../../devkit/documents/DefaultTasksRunnerOptions#remotecache): RemoteCache
 - [runtimeCacheInputs](../../devkit/documents/DefaultTasksRunnerOptions#runtimecacheinputs): string[]
 - [skipNxCache](../../devkit/documents/DefaultTasksRunnerOptions#skipnxcache): boolean
+- [skipRemoteCache](../../devkit/documents/DefaultTasksRunnerOptions#skipremotecache): boolean
 
 ## Properties
 
@@ -48,12 +48,6 @@
 
 ---
 
-### disableRemoteCache
-
-• `Optional` **disableRemoteCache**: `boolean`
-
----
-
 ### lifeCycle
 
 • **lifeCycle**: `LifeCycle`
@@ -81,3 +75,9 @@
 ### skipNxCache
 
 • `Optional` **skipNxCache**: `boolean`
+
+---
+
+### skipRemoteCache
+
+• `Optional` **skipRemoteCache**: `boolean`
