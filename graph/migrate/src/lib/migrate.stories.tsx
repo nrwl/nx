@@ -12,11 +12,20 @@ export const Primary = {
   args: {
     migrations: [
       {
-        description: 'Migration 1',
+        name: 'migration-1',
+        description: 'This is a migration that does a thing labeled with one.',
         version: '1.0.0',
       },
       {
-        description: 'Migration 2',
+        name: 'migration-2',
+        description:
+          'Funnily, this is another migration that does a thing labeled with two.',
+        version: '1.0.1',
+      },
+      {
+        name: 'migration-3',
+        description:
+          'This is a migration that does a thing labeled with three.',
         version: '1.0.1',
       },
     ],
