@@ -119,11 +119,13 @@ describe('application generator', () => {
     ).toMatchInlineSnapshot(`
       {
         "options": {
+          "buildDepsTargetName": "build-deps",
           "buildTargetName": "build",
           "devTargetName": "dev",
           "inspectTargetName": "inspect",
           "previewTargetName": "preview",
           "typecheckTargetName": "typecheck",
+          "watchDepsTargetName": "watch-deps",
         },
         "plugin": "@nx/rsbuild",
       }

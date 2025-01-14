@@ -79,6 +79,16 @@ export async function initGeneratorInternal(
           'vite-serve-static',
         ],
         typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
+        buildDepsTargetName: [
+          'build-deps',
+          'vite:build-deps',
+          'vite-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'vite:watch-deps',
+          'vite-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );

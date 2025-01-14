@@ -1920,6 +1920,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': JSON.stringify({
+          name: 'my-lib',
           main: 'dist/index.js',
           types: 'dist/index.d.ts',
           exports: {
@@ -1981,6 +1982,17 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
+                  ],
+                },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "dependsOn": [
+                    "build-deps",
                   ],
                 },
               },

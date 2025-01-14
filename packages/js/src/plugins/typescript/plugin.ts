@@ -35,6 +35,7 @@ import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine } from 'typescript';
 import { readTsConfig } from '../../utils/typescript/ts-config';
+import { addBuildAndWatchDepsTargets } from './util';
 
 export interface TscPluginOptions {
   typecheck?:
@@ -47,6 +48,8 @@ export interface TscPluginOptions {
     | {
         targetName?: string;
         configName?: string;
+        buildDepsName?: string;
+        watchDepsName?: string;
       };
 }
 
@@ -61,6 +64,8 @@ interface NormalizedPluginOptions {
     | {
         targetName: string;
         configName: string;
+        buildDepsName?: string;
+        watchDepsName?: string;
       };
 }
 
@@ -373,6 +378,17 @@ function buildTscTargets(
         },
       },
     };
+
+    addBuildAndWatchDepsTargets(
+      context.workspaceRoot,
+      projectRoot,
+      targets,
+      {
+        buildDepsTargetName: options.build.buildDepsName,
+        watchDepsTargetName: options.build.watchDepsName,
+      },
+      pmc
+    );
   }
 
   return { targets };
@@ -975,6 +991,8 @@ function normalizePluginOptions(
   let build: NormalizedPluginOptions['build'] = {
     targetName: defaultBuildTargetName,
     configName: defaultBuildConfigName,
+    buildDepsName: 'build-deps',
+    watchDepsName: 'watch-deps',
   };
   // Build target is not enabled by default
   if (!pluginOptions.build) {
@@ -983,6 +1001,8 @@ function normalizePluginOptions(
     build = {
       targetName: pluginOptions.build.targetName ?? defaultBuildTargetName,
       configName: pluginOptions.build.configName ?? defaultBuildConfigName,
+      buildDepsName: pluginOptions.build.buildDepsName ?? 'build-deps',
+      watchDepsName: pluginOptions.build.watchDepsName ?? 'watch-deps',
     };
   }
 

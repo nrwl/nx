@@ -4,6 +4,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
@@ -19,15 +20,20 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface RspackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
   serveStaticTargetName?: string;
   previewTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
@@ -212,6 +218,14 @@ async function createRspackTargets(
       '@nx/js:typescript-sync',
     ];
   }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return { targets, metadata: {} };
 }

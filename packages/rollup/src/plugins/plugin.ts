@@ -21,6 +21,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -46,6 +47,8 @@ export const createDependencies: CreateDependencies = () => {
 
 export interface RollupPluginOptions {
   buildTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
@@ -218,6 +221,14 @@ async function buildRollupTarget(
     ];
   }
 
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
+
   return targets;
 }
 
@@ -261,5 +272,7 @@ function normalizeOptions(
 ): Required<RollupPluginOptions> {
   return {
     buildTargetName: options.buildTargetName ?? 'build',
+    buildDepsTargetName: options.buildDepsTargetName ?? 'build-deps',
+    watchDepsTargetName: options.watchDepsTargetName ?? 'watch-deps',
   };
 }

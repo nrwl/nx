@@ -67,6 +67,16 @@ export async function nextInitGeneratorInternal(
           'next:serve-static',
           'next-serve-static',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'next:build-deps',
+          'next-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'next:watch-deps',
+          'next-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );
