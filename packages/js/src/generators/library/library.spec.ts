@@ -1708,6 +1708,7 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-ts-lib",
           "private": true,
+          "type": "module",
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
@@ -1722,6 +1723,7 @@ describe('lib', () => {
           "main": "./src/index.js",
           "name": "@proj/my-js-lib",
           "private": true,
+          "type": "module",
           "types": "./src/index.js",
           "version": "0.0.1",
         }
@@ -1869,6 +1871,36 @@ describe('lib', () => {
       expect(
         tree.read('my-ts-lib/src/lib/my-ts-lib.spec.ts', 'utf-8')
       ).toContain(`import { myTsLib } from './my-ts-lib.js';`);
+    });
+
+    it('should generate non-buildable setup', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/my-lib",
+          "private": true,
+          "type": "module",
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
     });
   });
 });

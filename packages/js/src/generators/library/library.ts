@@ -499,10 +499,7 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
   createProjectTsConfigs(tree, options);
 
   let fileNameImport = options.fileName;
-  if (
-    options.bundler === 'vite' ||
-    (options.isUsingTsSolutionConfig && options.bundler !== 'none')
-  ) {
+  if (options.bundler === 'vite' || options.isUsingTsSolutionConfig) {
     const tsConfig = readTsConfigFromTree(
       tree,
       join(options.projectRoot, 'tsconfig.lib.json')
@@ -613,10 +610,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         ...determineEntryFields(options),
       };
 
-      if (
-        options.isUsingTsSolutionConfig &&
-        !['none', 'rollup', 'vite'].includes(options.bundler)
-      ) {
+      if (options.bundler === 'none') {
+        updatedPackageJson.type = 'module';
+      } else if (options.bundler !== 'vite' && options.bundler !== 'rollup') {
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -646,19 +642,20 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       packageJson.files = ['dist', '!**/*.tsbuildinfo'];
     }
 
-    if (
-      options.isUsingTsSolutionConfig &&
-      !['none', 'rollup', 'vite'].includes(options.bundler)
-    ) {
-      packageJson = getUpdatedPackageJsonContent(packageJson, {
-        main: join(options.projectRoot, 'src/index.ts'),
-        outputPath: joinPathFragments(options.projectRoot, 'dist'),
-        projectRoot: options.projectRoot,
-        rootDir: join(options.projectRoot, 'src'),
-        generateExportsField: true,
-        packageJsonPath,
-        format: ['esm'],
-      });
+    if (options.isUsingTsSolutionConfig) {
+      if (options.bundler === 'none') {
+        packageJson.type = 'module';
+      } else if (options.bundler !== 'vite' && options.bundler !== 'rollup') {
+        packageJson = getUpdatedPackageJsonContent(packageJson, {
+          main: join(options.projectRoot, 'src/index.ts'),
+          outputPath: joinPathFragments(options.projectRoot, 'dist'),
+          projectRoot: options.projectRoot,
+          rootDir: join(options.projectRoot, 'src'),
+          generateExportsField: true,
+          packageJsonPath,
+          format: ['esm'],
+        });
+      }
     }
 
     writeJson<PackageJson>(tree, packageJsonPath, packageJson);
