@@ -34,7 +34,12 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
+import {
+  CompositeLifeCycle,
+  LifeCycle,
+  TaskResult,
+  TaskResults,
+} from './life-cycle';
 import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
@@ -55,6 +60,10 @@ import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
 import type { Observable } from 'rxjs';
 import { printPowerpackLicense } from '../utils/powerpack';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../project-graph/plugins/tasks-execution-hooks';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -177,23 +186,41 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
+      await runPreTasksExecution({
+        workspaceRoot,
+        nxJsonConfiguration: nxJson,
+      });
+
       const taskResults = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
         { nxJson },
-        nxArgs,
+        {
+          ...nxArgs,
+          skipNxCache:
+            process.env.NX_SKIP_NX_CACHE === 'true' ||
+            process.env.DISABLE_NX_CACHE === 'true',
+        },
         overrides,
         initiatingProject,
         extraTargetDependencies,
         extraOptions
       );
 
-      return Object.values(taskResults).some(
+      const result = Object.values(taskResults).some(
         (taskResult) =>
           taskResult.status === 'failure' || taskResult.status === 'skipped'
       )
         ? 1
         : 0;
+
+      await runPostTasksExecution({
+        taskResults,
+        workspaceRoot,
+        nxJsonConfiguration: nxJson,
+      });
+
+      return result;
     }
   );
 
@@ -209,7 +236,7 @@ export async function runCommandForTasks(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<{ [id: string]: TaskResult }> {
+): Promise<TaskResults> {
   const projectNames = projectsToRun.map((t) => t.name);
 
   const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(

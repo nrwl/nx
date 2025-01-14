@@ -13,6 +13,7 @@ import {
   cleanupPluginTSTranspiler,
   pluginTranspilerIsRegistered,
 } from './transpiler';
+import { isIsolationEnabled } from './isolation/enabled';
 
 /**
  * Stuff for specified NX Plugins.
@@ -96,23 +97,6 @@ export function cleanupPlugins() {
 /**
  * Stuff for generic loading
  */
-
-function isIsolationEnabled() {
-  // Explicitly enabled, regardless of further conditions
-  if (process.env.NX_ISOLATE_PLUGINS === 'true') {
-    return true;
-  }
-  if (
-    // Explicitly disabled
-    process.env.NX_ISOLATE_PLUGINS === 'false' ||
-    // Isolation is disabled on WASM builds currently.
-    IS_WASM
-  ) {
-    return false;
-  }
-  // Default value
-  return true;
-}
 
 const loadingMethod = isIsolationEnabled()
   ? loadNxPluginInIsolation

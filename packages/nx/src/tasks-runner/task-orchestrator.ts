@@ -230,7 +230,6 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
-    task.startTime = Date.now();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -241,7 +240,6 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
-    task.endTime = Date.now();
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
@@ -545,6 +543,10 @@ export class TaskOrchestrator {
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
+    const now = Date.now();
+    for (const task of tasks) {
+      task.startTime = now;
+    }
     await this.options.lifeCycle.startTasks(tasks, metadata);
   }
 
@@ -558,7 +560,9 @@ export class TaskOrchestrator {
     doNotSkipCache: boolean,
     { groupId }: { groupId: number }
   ) {
+    const now = Date.now();
     for (const task of tasks) {
+      task.endTime = now;
       await this.recordOutputsHash(task);
     }
 

@@ -2,4 +2,4 @@
 
 Ƭ **NxPlugin**: [`NxPluginV2`](../../devkit/documents/NxPluginV2)
 
-A plugin for Nx
+A plugin which enhances the behavior of Nx

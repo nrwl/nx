@@ -110,6 +110,16 @@ import {
   isHandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import {
+  isHandlePostTasksExecutionMessage,
+  isHandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
+import {
+  handleRunPostTasksExecution,
+  handleRunPreTasksExecution,
+} from './handle-tasks-execution-hooks';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -280,6 +290,14 @@ async function handleMessage(socket, data: string) {
         payload.updatedFiles,
         payload.deletedFiles
       )
+    );
+  } else if (isHandlePreTasksExecutionMessage(payload)) {
+    await handleResult(socket, PRE_TASKS_EXECUTION, () =>
+      handleRunPreTasksExecution(payload.context)
+    );
+  } else if (isHandlePostTasksExecutionMessage(payload)) {
+    await handleResult(socket, POST_TASKS_EXECUTION, () =>
+      handleRunPostTasksExecution(payload.context)
     );
   } else {
     await respondWithErrorAndExit(
