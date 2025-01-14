@@ -28,6 +28,7 @@ import {
   isProjectWithNoNameError,
   isAggregateCreateNodesError,
   AggregateCreateNodesError,
+  formatAggregateCreateNodesError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
@@ -392,31 +393,12 @@ export async function createProjectConfigurations(
       workspaceRoot: root,
     })
       .catch((e: Error) => {
-        const errorBodyLines = [
-          `An error occurred while processing files for the ${pluginName} plugin.`,
-        ];
         const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
           ? // This is an expected error if something goes wrong while processing files.
             e
           : // This represents a single plugin erroring out with a hard error.
             new AggregateCreateNodesError([[null, e]], []);
-
-        const innerErrors = error.errors;
-        for (const [file, e] of innerErrors) {
-          if (file) {
-            errorBodyLines.push(`  - ${file}: ${e.message}`);
-          } else {
-            errorBodyLines.push(`  - ${e.message}`);
-          }
-          if (e.stack) {
-            const innerStackTrace =
-              '    ' + e.stack.split('\n')?.join('\n    ');
-            errorBodyLines.push(innerStackTrace);
-          }
-        }
-
-        error.stack = errorBodyLines.join('\n');
-
+        formatAggregateCreateNodesError(error, pluginName);
         // This represents a single plugin erroring out with a hard error.
         errors.push(error);
         // The plugin didn't return partial results, so we return an empty array.
