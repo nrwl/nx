@@ -29,6 +29,7 @@ export const Primary = {
         version: '1.0.1',
       },
     ],
+    successfulMigrations: ['migration-1'],
     onRunMigration: (migration: any) => {
       console.log(migration);
     },

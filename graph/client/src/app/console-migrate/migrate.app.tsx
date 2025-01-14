@@ -26,10 +26,15 @@ export function MigrateApp({
   };
 
   const migrations = useSelector(service, (state) => state.context.migrations);
+  const nxConsoleMetadata = useSelector(
+    service,
+    (state) => state.context.nxConsoleMetadata
+  );
 
   return (
     <MigrateUI
       migrations={migrations}
+      successfulMigrations={nxConsoleMetadata.successfulMigrations ?? []}
       onRunMigration={onRunMigration}
     ></MigrateUI>
   );

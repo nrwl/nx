@@ -1,4 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
+/* eslint-enable @nx/enforce-module-boundaries */
 const { join } = require('path');
 
 /** @type {import('tailwindcss').Config} */
