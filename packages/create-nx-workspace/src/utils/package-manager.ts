@@ -1,8 +1,6 @@
 import { execSync } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
-import { join } from 'path';
-
-import { sep } from 'node:path';
+import { sep, join } from 'path';
 
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
@@ -17,10 +15,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
-    ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'yarn'
+      : existsSync(join(dir, 'pnpm-lock.yaml'))
+        ? 'pnpm'
+        : 'npm';
 }
 
 /**
