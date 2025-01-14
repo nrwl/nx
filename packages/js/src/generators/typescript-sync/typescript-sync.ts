@@ -505,7 +505,7 @@ function collectProjectDependencies(
       collectedDependencies.get(projectName).push(targetProjectNode);
     }
 
-    if (process.env.NX_DISABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES === 'true') {
+    if (process.env.NX_ENABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES !== 'true') {
       continue;
     }
 
