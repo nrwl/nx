@@ -20,22 +20,24 @@ export interface LinterInitOptions {
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
   addPlugin?: boolean;
+  // Internal option
+  eslintConfigFormat?: 'mjs' | 'cjs';
 }
 
-function updateProductionFileset(tree: Tree) {
+function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
-    productionFileSet.push('!{projectRoot}/eslint.config.cjs');
+    productionFileSet.push(`!{projectRoot}/eslint.config.${format}`);
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
   updateNxJson(tree, nxJson);
 }
 
-function addTargetDefaults(tree: Tree) {
+function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
@@ -45,7 +47,7 @@ function addTargetDefaults(tree: Tree) {
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
-    `{workspaceRoot}/eslint.config.cjs`,
+    `{workspaceRoot}/eslint.config.${format}`,
   ];
   updateNxJson(tree, nxJson);
 }
@@ -74,8 +76,17 @@ export async function initEsLint(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
+  options.eslintConfigFormat ??= 'mjs';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
+
+  if (rootEslintFile) {
+    const rootEslintContent = tree.read(rootEslintFile, 'utf-8');
+    // We do not want to mix the formats
+    options.eslintConfigFormat = rootEslintContent.includes('export default')
+      ? 'mjs'
+      : 'cjs';
+  }
 
   const graph = await createProjectGraphAsync();
 
@@ -107,7 +118,7 @@ export async function initEsLint(
     return () => {};
   }
 
-  updateProductionFileset(tree);
+  updateProductionFileset(tree, options.eslintConfigFormat);
 
   updateVsCodeRecommendedExtensions(tree);
 
@@ -123,7 +134,7 @@ export async function initEsLint(
       options.updatePackageScripts
     );
   } else {
-    addTargetDefaults(tree);
+    addTargetDefaults(tree, options.eslintConfigFormat);
   }
 
   const tasks: GeneratorCallback[] = [];

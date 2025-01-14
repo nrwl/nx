@@ -39,11 +39,12 @@ export async function convertToFlatConfigGenerator(
       'Only json and yaml eslint config files are supported for conversion'
     );
   }
+  options.eslintConfigFormat ??= 'mjs';
 
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
 
-  // convert root eslint config to eslint.config.cjs
-  convertRootToFlatConfig(tree, eslintFile);
+  // convert root eslint config to eslint.config.cjs or eslint.base.config.mjs based on eslintConfigFormat
+  convertRootToFlatConfig(tree, eslintFile, options.eslintConfigFormat);
 
   // convert project eslint files to eslint.config.cjs
   const projects = getProjects(tree);
@@ -53,7 +54,8 @@ export async function convertToFlatConfigGenerator(
       project,
       projectConfig,
       readNxJson(tree),
-      eslintIgnoreFiles
+      eslintIgnoreFiles,
+      options.eslintConfigFormat
     );
   }
 
@@ -63,7 +65,7 @@ export async function convertToFlatConfigGenerator(
   }
 
   // replace references in nx.json
-  updateNxJsonConfig(tree);
+  updateNxJsonConfig(tree, options.eslintConfigFormat);
   // install missing packages
 
   if (!options.skipFormat) {
@@ -75,15 +77,26 @@ export async function convertToFlatConfigGenerator(
 
 export default convertToFlatConfigGenerator;
 
-function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
+function convertRootToFlatConfig(
+  tree: Tree,
+  eslintFile: string,
+  format: 'cjs' | 'mjs'
+) {
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
-    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.cjs');
+    convertConfigToFlatConfig(
+      tree,
+      '',
+      eslintFile,
+      `eslint.base.config.${format}`,
+      format
+    );
   }
   convertConfigToFlatConfig(
     tree,
     '',
     eslintFile.replace('.base.', '.'),
-    'eslint.config.cjs'
+    `eslint.config.${format}`,
+    format
   );
 }
 
@@ -92,7 +105,8 @@ function convertProjectToFlatConfig(
   project: string,
   projectConfig: ProjectConfiguration,
   nxJson: NxJsonConfiguration,
-  eslintIgnoreFiles: Set<string>
+  eslintIgnoreFiles: Set<string>,
+  format: 'cjs' | 'mjs'
 ) {
   const eslintFile = findEslintFile(tree, projectConfig.root);
   if (eslintFile && !eslintFile.endsWith('.js')) {
@@ -132,7 +146,8 @@ function convertProjectToFlatConfig(
           tree,
           projectConfig.root,
           eslintFile,
-          'eslint.config.cjs',
+          `eslint.config.${format}`,
+          format,
           ignorePath
         );
         eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
@@ -146,22 +161,22 @@ function convertProjectToFlatConfig(
 
 // update names of eslint files in nx.json
 // and remove eslintignore
-function updateNxJsonConfig(tree: Tree) {
+function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
   if (tree.exists('nx.json')) {
     updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
       if (json.targetDefaults?.lint?.inputs) {
         const inputSet = new Set(json.targetDefaults.lint.inputs);
-        inputSet.add('{workspaceRoot}/eslint.config.cjs');
+        inputSet.add(`{workspaceRoot}/eslint.config.${format}`);
         json.targetDefaults.lint.inputs = Array.from(inputSet);
       }
       if (json.targetDefaults?.['@nx/eslint:lint']?.inputs) {
         const inputSet = new Set(json.targetDefaults['@nx/eslint:lint'].inputs);
-        inputSet.add('{workspaceRoot}/eslint.config.cjs');
+        inputSet.add(`{workspaceRoot}/eslint.config.${format}`);
         json.targetDefaults['@nx/eslint:lint'].inputs = Array.from(inputSet);
       }
       if (json.namedInputs?.production) {
         const inputSet = new Set(json.namedInputs.production);
-        inputSet.add('!{projectRoot}/eslint.config.cjs');
+        inputSet.add(`!{projectRoot}/eslint.config.${format}`);
         json.namedInputs.production = Array.from(inputSet);
       }
       return json;
@@ -174,6 +189,7 @@ function convertConfigToFlatConfig(
   root: string,
   source: string,
   target: string,
+  format: 'cjs' | 'mjs',
   ignorePath?: string
 ) {
   const ignorePaths = ignorePath
@@ -186,7 +202,8 @@ function convertConfigToFlatConfig(
       tree,
       root,
       config,
-      ignorePaths
+      ignorePaths,
+      format
     );
     return processConvertedConfig(tree, root, source, target, conversionResult);
   }
@@ -201,7 +218,8 @@ function convertConfigToFlatConfig(
       tree,
       root,
       config,
-      ignorePaths
+      ignorePaths,
+      format
     );
     return processConvertedConfig(tree, root, source, target, conversionResult);
   }

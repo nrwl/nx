@@ -19,7 +19,7 @@ export const ESLINT_CONFIG_FILENAMES = [
 ];
 
 export const baseEsLintConfigFile = '.eslintrc.base.json';
-export const baseEsLintFlatConfigFile = 'eslint.base.config.cjs';
+export const baseEsLintFlatConfigFile = 'eslint.base.config.mjs';
 // Make sure we can handle previous file extension as well for migrations or custom generators.
 export const legacyBaseEsLintFlatConfigFile = 'eslint.base.config.js';
 

@@ -277,7 +277,7 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 ]
 `;
 
-exports[`library should support eslint flat config 1`] = `
+exports[`library should support eslint flat config CJS 1`] = `
 "const vue = require('eslint-plugin-vue');
 const baseConfig = require('../eslint.config.cjs');
 
@@ -289,6 +289,30 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+];
+"
+`;
+
+exports[`library should support eslint flat config ESM 1`] = `
+"import vue from 'eslint-plugin-vue';
+import baseConfig from '../eslint.config.mjs';
+export default [
+  ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
       },
     },
   },

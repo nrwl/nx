@@ -42,7 +42,7 @@ describe('@nx/eslint:lint-project', () => {
     });
   });
 
-  it('should generate a flat eslint base config', async () => {
+  it('should generate a flat eslint base config ESM', async () => {
     const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await lintProjectGenerator(tree, {
@@ -51,6 +51,75 @@ describe('@nx/eslint:lint-project', () => {
       project: 'test-lib',
       setParserOptionsProject: false,
       skipFormat: true,
+      eslintConfigFormat: 'mjs',
+    });
+
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
+      "import nx from "@nx/eslint-plugin";
+      export default [
+          ...nx.configs["flat/base"],
+          ...nx.configs["flat/typescript"],
+          ...nx.configs["flat/javascript"],
+          {
+              ignores: [
+                  "**/dist"
+              ]
+          },
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              rules: {
+                  "@nx/enforce-module-boundaries": [
+                      "error",
+                      {
+                          enforceBuildableLibDependency: true,
+                          allow: [
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                          ],
+                          depConstraints: [
+                              {
+                                  sourceTag: "*",
+                                  onlyDependOnLibsWithTags: [
+                                      "*"
+                                  ]
+                              }
+                          ]
+                      }
+                  ]
+              }
+          },
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx",
+                  "**/*.cjs",
+                  "**/*.mjs"
+              ],
+              // Override or add rules here
+              rules: {}
+          }
+      ];
+      "
+    `);
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
+  it('should generate a flat eslint base config CJS', async () => {
+    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+      skipFormat: true,
+      eslintConfigFormat: 'cjs',
     });
 
     expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`

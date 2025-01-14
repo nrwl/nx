@@ -75,7 +75,8 @@ export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   return (
     eslintFile.endsWith('.json') ||
     eslintFile.endsWith('.config.js') ||
-    eslintFile.endsWith('.config.cjs')
+    eslintFile.endsWith('.config.cjs') ||
+    eslintFile.endsWith('.config.mjs')
   );
 }
 
@@ -207,8 +208,10 @@ export function addOverrideToLintConfig(
       }
     }
 
-    const flatOverride = generateFlatOverride(override);
     let content = tree.read(fileName, 'utf8');
+    const format = content.includes('export default') ? 'mjs' : 'cjs';
+
+    const flatOverride = generateFlatOverride(override, format);
     // Check if the provided override using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrideNeedsCompat(override)) {
       content = addFlatCompatToFlatConfig(content);
@@ -343,13 +346,14 @@ export function replaceOverridesInLintConfig(
       }
     }
     let content = tree.read(fileName, 'utf8');
+    const format = content.includes('export default') ? 'mjs' : 'cjs';
     // Check if any of the provided overrides using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrides.some(overrideNeedsCompat)) {
       content = addFlatCompatToFlatConfig(content);
     }
     content = removeOverridesFromLintConfig(content);
     overrides.forEach((override) => {
-      const flatOverride = generateFlatOverride(override);
+      const flatOverride = generateFlatOverride(override, format);
       content = addBlockToFlatConfigExport(content, flatOverride);
     });
 
@@ -381,6 +385,14 @@ export function addExtendsToLintConfig(
         break;
       }
     }
+    // Check the file extension to determine the format of the config if it is .js we look for the export
+    const eslintConfigFormat = fileName.endsWith('.mjs')
+      ? 'mjs'
+      : fileName.endsWith('.cjs')
+      ? 'cjs'
+      : tree.read(fileName, 'utf-8').includes('module.exports')
+      ? 'cjs'
+      : 'mjs';
 
     let shouldImportEslintCompat = false;
     // assume eslint version is 9 if not found, as it's what we'd be generating by default

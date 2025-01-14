@@ -5,6 +5,7 @@ import { gte } from 'semver';
 export const eslintFlatConfigFilenames = [
   'eslint.config.cjs',
   'eslint.config.js',
+  'eslint.config.mjs',
 ];
 
 export function getRootESLintFlatConfigFilename(tree: Tree): string {

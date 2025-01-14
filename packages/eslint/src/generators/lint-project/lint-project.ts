@@ -49,6 +49,7 @@ interface LintProjectOptions {
   rootProject?: boolean;
   keepExistingVersions?: boolean;
   addPlugin?: boolean;
+  eslintConfigFormat?: 'mjs' | 'cjs';
 
   /**
    * @internal
@@ -66,6 +67,7 @@ export async function lintProjectGeneratorInternal(
   options: LintProjectOptions
 ) {
   const nxJson = readNxJson(tree);
+  options.eslintConfigFormat ??= 'mjs';
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
@@ -74,12 +76,14 @@ export async function lintProjectGeneratorInternal(
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     addPlugin: options.addPlugin,
+    eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(initTask);
   const rootEsLintTask = setupRootEsLint(tree, {
     unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
     rootProject: options.rootProject,
+    eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(rootEsLintTask);
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -146,6 +150,7 @@ export async function lintProjectGeneratorInternal(
         filteredProjects,
         tree,
         options.unitTestRunner,
+        options.eslintConfigFormat,
         options.keepExistingVersions
       );
       tasks.push(migrateTask);
@@ -199,6 +204,15 @@ function createEsLintConfiguration(
   const pathToRootConfig = extendedRootConfig
     ? `${offsetFromRoot(projectConfig.root)}${extendedRootConfig}`
     : undefined;
+
+  if (extendedRootConfig) {
+    // We do not want to mix the formats
+    options.eslintConfigFormat = tree
+      .read(extendedRootConfig, 'utf-8')
+      .includes('export default')
+      ? 'mjs'
+      : 'cjs';
+  }
   const addDependencyChecks =
     options.addPackageJsonDependencyChecks ||
     isBuildableLibraryProject(projectConfig);
@@ -269,11 +283,18 @@ function createEsLintConfiguration(
       nodes.push(generateSpreadElement('baseConfig'));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override));
+      nodes.push(generateFlatOverride(override, options.eslintConfigFormat));
     });
-    const nodeList = createNodeList(importMap, nodes);
+    const nodeList = createNodeList(
+      importMap,
+      nodes,
+      options.eslintConfigFormat
+    );
     const content = stringifyNodeList(nodeList);
-    tree.write(join(projectConfig.root, `eslint.config.cjs`), content);
+    tree.write(
+      join(projectConfig.root, `eslint.config.${options.eslintConfigFormat}`),
+      content
+    );
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
       extends: extendedRootConfig ? [pathToRootConfig] : undefined,
