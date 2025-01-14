@@ -268,17 +268,10 @@ export function getSyncGeneratorSuccessResultsMessageLines(
     }
 
     messageLines.push(
-      `The ${chalk.bold(
-        result.generatorName
-      )} sync generator identified ${chalk.bold(result.changes.length)} file${
-        result.changes.length === 1 ? '' : 's'
-      } in the workspace that ${
-        result.changes.length === 1 ? 'is' : 'are'
-      } out of sync${result.outOfSyncMessage ? ':' : '.'}`
+      `[${chalk.bold(result.generatorName)}]: ${
+        result.outOfSyncMessage ?? `Some files are out of sync.`
+      }`
     );
-    if (result.outOfSyncMessage) {
-      messageLines.push(result.outOfSyncMessage);
-    }
   }
 
   return messageLines;
@@ -295,16 +288,15 @@ export function getFailedSyncGeneratorsFixMessageLines(
   let isFirst = true;
   for (const result of results) {
     if ('error' in result) {
-      if (!isFirst) {
+      if (!isFirst && verbose) {
         messageLines.push('');
       }
       isFirst = false;
       messageLines.push(
-        `The ${chalk.bold(
-          result.generatorName
-        )} sync generator reported the following error:`,
-        '',
-        errorToString(result.error, verbose)
+        `[${chalk.bold(result.generatorName)}]: ${errorToString(
+          result.error,
+          verbose
+        )}`
       );
 
       if (globalGeneratorSet.has(result.generatorName)) {
@@ -336,16 +328,15 @@ export function getFlushFailureMessageLines(
   const taskGenerators: string[] = [];
   let isFirst = true;
   for (const failure of result.generatorFailures) {
-    if (!isFirst) {
+    if (!isFirst && verbose) {
       messageLines.push('');
     }
     isFirst = false;
     messageLines.push(
-      `The ${chalk.bold(
-        failure.generator
-      )} sync generator failed to apply its changes with the following error:`,
-      '',
-      errorToString(failure.error, verbose)
+      `[${chalk.bold(failure.generator)}]: ${errorToString(
+        failure.error,
+        verbose
+      )}`
     );
 
     if (globalGeneratorSet.has(failure.generator)) {
@@ -375,13 +366,11 @@ export function getFlushFailureMessageLines(
       ...[
         '',
         result.generalFailure.message,
-        ...(verbose && !!result.generalFailure.stack
+        ...(!!result.generalFailure.stack
           ? [`\n${result.generalFailure.stack}`]
           : []),
         '',
-        verbose
-          ? 'Please report the error at: https://github.com/nrwl/nx/issues/new/choose'
-          : 'Please run with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
+        'Please report the error at: https://github.com/nrwl/nx/issues/new/choose',
       ]
     );
   }
@@ -545,7 +534,7 @@ function getFailedSyncGeneratorsMessageLines(
 
 function errorToString(error: SerializableSimpleError, verbose: boolean) {
   if (error.title) {
-    let message = `  ${chalk.red(error.title)}`;
+    let message = `${chalk.red(error.title)}`;
     if (error.bodyLines?.length) {
       message += `
 
@@ -557,7 +546,7 @@ function errorToString(error: SerializableSimpleError, verbose: boolean) {
     }
   }
 
-  return `  ${chalk.red(error.message)}${
+  return `${chalk.red(error.message)}${
     verbose && error.stack ? '\n  ' + error.stack : ''
   }`;
 }

@@ -10,7 +10,7 @@ import {
 import * as pathPosix from 'node:path/posix';
 import * as path from 'node:path';
 import ignore from 'ignore';
-import * as fg from 'fast-glob';
+import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
 import { logger } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
@@ -115,10 +115,11 @@ export class CopyAssetsHandler {
       this.assetGlobs.map(async (ag) => {
         const pattern = this.normalizeAssetPattern(ag);
 
-        // fast-glob only supports Unix paths
-        const files = await fg(pattern.replace(/\\/g, '/'), {
+        // globbing only supports Unix paths
+        const files = await globSync(pattern.replace(/\\/g, '/'), {
           cwd: this.rootDir,
           dot: true, // enable hidden files
+          expandDirectories: false,
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -130,10 +131,11 @@ export class CopyAssetsHandler {
     this.assetGlobs.forEach((ag) => {
       const pattern = this.normalizeAssetPattern(ag);
 
-      // fast-glob only supports Unix paths
-      const files = fg.sync(pattern.replace(/\\/g, '/'), {
+      // globbing only supports Unix paths
+      const files = globSync(pattern.replace(/\\/g, '/'), {
         cwd: this.rootDir,
         dot: true, // enable hidden files
+        expandDirectories: false,
       });
 
       this.callback(this.filesToEvent(files, ag));

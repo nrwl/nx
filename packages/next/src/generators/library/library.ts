@@ -9,13 +9,17 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
 
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
+import {
+  isUsingTsSolutionSetup,
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -25,8 +29,6 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'next', 'library');
-
   const options = await normalizeOptions(host, rawOptions);
   const tasks: GeneratorCallback[] = [];
 
@@ -45,7 +47,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   const libTask = await reactLibraryGenerator(host, {
     ...options,
-    compiler: 'swc',
+    bundler: 'none',
     skipFormat: true,
   });
   tasks.push(libTask);
@@ -108,7 +110,11 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       }
     `
   );
-  addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
+
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
+  if (!options.skipTsConfig && !isTsSolutionSetup) {
+    addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
+  }
 
   updateJson(
     host,
@@ -141,6 +147,24 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       return json;
     }
   );
+
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

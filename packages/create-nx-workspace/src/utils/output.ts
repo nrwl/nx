@@ -167,8 +167,6 @@ export class CLIOutput {
     });
 
     this.writeOptionalOutputBody(bodyLines);
-
-    this.addNewline();
   }
 
   logSingleLine(message: string) {

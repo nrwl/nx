@@ -20,6 +20,8 @@ import { assertSupportedPlatform } from '../src/native/assert-supported-platform
 import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
+import { removeDbConnections } from '../src/utils/db-connection';
+import { signalToCode } from '../src/utils/exit-codes';
 
 function main() {
   if (
@@ -273,5 +275,27 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   let cache: string = null;
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
+
+function nxCleanup(signal?: NodeJS.Signals) {
+  removeDbConnections();
+  if (signal) {
+    process.exit(signalToCode(signal));
+  } else {
+    process.exit();
+  }
+}
+
+process.on('exit', () => {
+  nxCleanup();
+});
+process.on('SIGINT', () => {
+  nxCleanup('SIGINT');
+});
+process.on('SIGTERM', () => {
+  nxCleanup('SIGTERM');
+});
+process.on('SIGHUP', () => {
+  nxCleanup('SIGHUP');
+});
 
 main();

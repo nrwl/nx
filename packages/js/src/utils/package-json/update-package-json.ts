@@ -242,7 +242,7 @@ export function getExports(
 ): Exports {
   const outputDir = getOutputDir(options);
   const mainFile = options.outputFileName
-    ? options.outputFileName.replace(/\.[tj]s$/, '')
+    ? basename(options.outputFileName).replace(/\.[tj]s$/, '')
     : basename(options.main).replace(/\.[tj]s$/, '');
   const exports: Exports = {
     '.': outputDir + mainFile + options.fileExt,
@@ -326,6 +326,9 @@ export function getUpdatedPackageJsonContent(
             : filePath;
         } else if (typeof packageJson.exports[exportEntry] === 'object') {
           packageJson.exports[exportEntry].import ??= filePath;
+          if (!hasCjsFormat) {
+            packageJson.exports[exportEntry].default ??= filePath;
+          }
         }
       }
     }
@@ -377,9 +380,9 @@ export function getOutputDir(
     : options.outputPath;
   const relativeOutputPath = relative(packageJsonDir, options.outputPath);
   const relativeMainDir = options.outputFileName
-    ? ''
+    ? dirname(options.outputFileName)
     : relative(options.rootDir ?? options.projectRoot, dirname(options.main));
-  const outputDir = join(relativeOutputPath, relativeMainDir);
+  const outputDir = joinPathFragments(relativeOutputPath, relativeMainDir);
 
   return outputDir === '.' ? `./` : `./${outputDir}/`;
 }

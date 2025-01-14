@@ -423,8 +423,7 @@ to have the following targets:
   "executor": "@nx/angular:package",
   "outputs": ["{workspaceRoot}/dist/libs/lib1"],
   "options": {
-    "project": "libs/lib1/ng-package.json",
-    "tailwindConfig": "libs/lib1/tailwind.config.js"
+    "project": "libs/lib1/ng-package.json"
   },
   "configurations": {
     "production": {

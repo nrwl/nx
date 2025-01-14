@@ -66,8 +66,6 @@ const schemaUrls = {
     '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
-  '/react/component-cypress-spec':
-    '/packages/react/generators/component-cypress-spec',
   '/react/component-story': '/packages/react/generators/component-story',
   '/react/library': '/packages/react/generators/library',
   '/react/redux': '/packages/react/generators/redux',
@@ -385,6 +383,9 @@ const recipesUrls = {
   '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
   '/recipes/nx-console/console-add-dependency-command':
     '/getting-started/editor-setup',
+  // This one was folded into a more holistic recipe around managing version reference updates
+  '/recipes/nx-release/publish-custom-dist-directory':
+    '/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files',
 };
 
 /**
@@ -433,62 +434,56 @@ const nxCloudUrls = {
   '/nx-cloud/private-cloud/get-started':
     '/ci/recipes/enterprise/single-tenant/overview',
   '/ci/recipes/enterprise/on-premise/on-premise':
-    '/ci/recipes/enterprise/single-tenant/overview',
-  '/ci/features/on-premise': '/ci/recipes/enterprise/on-premise/on-premise',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/features/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
-  '/ci/recipes/on-premise': '/ci/recipes/enterprise/single-tenant',
-  '/ci/recipes/enterprise/on-premise': '/ci/recipes/enterprise/single-tenant',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-single-admin':
-    '/ci/recipes/enterprise/single-tenant/overview',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/ami-setup':
-    '/ci/recipes/enterprise/single-tenant/overview',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/advanced-config':
-    '/ci/recipes/enterprise/single-tenant/overview',
-  '/ci/recipes/on-premise/auth-github':
-    '/ci/recipes/enterprise/single-tenant/auth-github',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-github': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-github':
-    '/ci/recipes/enterprise/single-tenant/auth-github',
-  '/ci/recipes/on-premise/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
-  '/ci/recipes/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/single-tenant/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-gitlab': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/single-tenant/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/single-tenant/auth-bitbucket',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/single-tenant/auth-bitbucket',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center':
-    '/ci/recipes/enterprise/single-tenant/auth-bitbucket-data-center',
-  '/ci/recipes/on-premise/auth-saml':
-    '/ci/recipes/enterprise/single-tenant/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-saml':
-    '/ci/recipes/enterprise/single-tenant/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/custom-github-app':
-    '/ci/recipes/enterprise/single-tenant/custom-github-app',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
@@ -1107,6 +1102,7 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
   '/deprecated/storybook/upgrade-storybook-v6-react':
     '/recipes/storybook/overview-react', // 80 views
+  '/deprecated/custom-task-runners': '/deprecated/legacy-cache',
 };
 
 const decisionsSection = {

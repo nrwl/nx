@@ -7,12 +7,6 @@ applications.
 
 To enable incremental builds you need to use buildable libraries.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an
-earlier version of Nx or using the `derived` option, omit the `--directory` flag. See
-the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 You can generate a new buildable library with:
 
 ```shell
@@ -198,7 +192,7 @@ serve" target executor to `@nx/angular:dev-server` as shown below.
 ### Add Executor to Target Defaults
 
 If you'd like to avoid adding `"dependsOn": ["^build"]` to every application in your workspace that uses one of the
-required executors you can add it to the `"targetDefaults"` section of the `nx.json`:
+required executors you can add it to the `targetDefaults` section of the `nx.json`:
 
 {% tabs %}
 {% tab label="@nx/angular:application" %}

@@ -65,10 +65,6 @@ nx add @nx/web
 
 ## Create an Application
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 We'll start with a web application and then tweak the settings to match what we need. Add a new web application to your
 workspace with the following command:
 
@@ -243,10 +239,6 @@ export default defineConfig({
 You can now run `nx serve my-solid-app` and your Solid application can be viewed in your browser!
 
 ## Create a Library
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 Let's create a library that our Solid application is going to consume. To create a new library, install the `@nx/js`
 package and run:

@@ -37,44 +37,54 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
 }
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let mut c = open_database_connection(db_path)?;
+    match open_database_connection(db_path) {
+        Ok(mut c) => {
+            trace!(
+                "Checking if current existing database is compatible with Nx {}",
+                nx_version
+            );
+            let db_version = c.query_row(
+                "SELECT value FROM metadata WHERE key='NX_VERSION'",
+                [],
+                |row| {
+                    let r: String = row.get(0)?;
+                    Ok(r)
+                },
+            );
+            let c = match db_version {
+                Ok(Some(version)) if version == nx_version => {
+                    trace!("Database is compatible with Nx {}", nx_version);
+                    c
+                }
+                // If there is no metadata, it means that this database is new
+                Err(s) if s.to_string().contains("metadata") => {
+                    configure_database(&c)?;
+                    create_metadata_table(&mut c, &nx_version)?;
+                    c
+                }
+                reason => {
+                    trace!("Incompatible database because: {:?}", reason);
+                    trace!("Disconnecting from existing incompatible database");
+                    c.close()?;
+                    trace!("Removing existing incompatible database");
+                    remove_file(db_path)?;
 
-    trace!(
-        "Checking if current existing database is compatible with Nx {}",
-        nx_version
-    );
-    let db_version = c.query_row(
-        "SELECT value FROM metadata WHERE key='NX_VERSION'",
-        [],
-        |row| {
-            let r: String = row.get(0)?;
-            Ok(r)
-        },
-    );
-    let c = match db_version {
-        Ok(Some(version)) if version == nx_version => {
-            trace!("Database is compatible with Nx {}", nx_version);
-            c
+                    trace!("Initializing a new database");
+                    initialize_db(nx_version, db_path)?
+                }
+            };
+
+            Ok(c)
         }
-        // If there is no metadata, it means that this database is new
-        Err(s) if s.to_string().contains("metadata") => {
-            configure_database(&c)?;
-            create_metadata_table(&mut c, &nx_version)?;
-            c
-        }
-        check @ _ => {
-            trace!("Incompatible database because: {:?}", check);
-            trace!("Disconnecting from existing incompatible database");
-            c.close().map_err(|(_, error)| anyhow::Error::from(error))?;
+        Err(reason) => {
+            trace!("Unable to connect to existing database because: {:?}", reason);
             trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 
             trace!("Initializing a new database");
-            initialize_db(nx_version, db_path)?
+            initialize_db(nx_version, db_path)
         }
-    };
-
-    Ok(c)
+    }
 }
 
 fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Result<()> {
@@ -99,25 +109,13 @@ fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Re
 }
 
 fn open_database_connection(db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let conn = if cfg!(target_family = "unix") && ci_info::is_ci() {
-        trace!("Opening connection with unix-dotfile");
-        Connection::open_with_flags_and_vfs(
-            db_path,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_URI
-                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-            "unix-dotfile",
-        )
-    } else {
-        Connection::open_with_flags(
-            db_path,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_URI
-                | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
-        )
-    };
+    let conn = Connection::open_with_flags(
+        db_path,
+        OpenFlags::SQLITE_OPEN_READ_WRITE
+            | OpenFlags::SQLITE_OPEN_CREATE
+            | OpenFlags::SQLITE_OPEN_URI
+            | OpenFlags::SQLITE_OPEN_FULL_MUTEX,
+    );
 
     conn.map_err(|e| anyhow::anyhow!("Error creating connection {:?}", e))
         .map(NxDbConnection::new)
@@ -138,7 +136,6 @@ fn configure_database(connection: &NxDbConnection) -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-
     use crate::native::logger::enable_logger;
 
     use super::*;

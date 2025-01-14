@@ -48,6 +48,7 @@ export * from './lib/customers/paramount';
 export * from './lib/customers/payfit';
 export * from './lib/customers/paylocity';
 export * from './lib/customers/philips';
+export * from './lib/customers/plex';
 export * from './lib/customers/react-query';
 export * from './lib/customers/red-bull';
 export * from './lib/customers/redwood-js';
@@ -56,6 +57,7 @@ export * from './lib/customers/sainsburys';
 export * from './lib/customers/sentry';
 export * from './lib/customers/sharp';
 export * from './lib/customers/shopify';
+export * from './lib/customers/siriusxm';
 export * from './lib/customers/splice';
 // export * from './lib/customers/storybook'; // Present in "Technologies".
 export * from './lib/customers/strapi';
@@ -78,6 +80,9 @@ export * from './lib/editors/visual-studio-code';
 // OTHERS
 export * from './lib/monorepo-world';
 export * from './lib/others/amazon-s3';
+export * from './lib/others/linux';
+export * from './lib/others/min-io';
+export * from './lib/others/windows';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';

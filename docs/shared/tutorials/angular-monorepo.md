@@ -200,7 +200,6 @@ NX   Capabilities in @nx/angular:
    add-linting : Adds linting configuration to an Angular project.
    application : Creates an Angular application.
    component : Generate an Angular Component.
-   component-cypress-spec : Creates a Cypress spec for a UI component that has a story.
    component-story : Creates a stories.ts file for a component.
    component-test : Creates a cypress component test file for a component.
    convert-tslint-to-eslint : Converts a project from TSLint to ESLint.
@@ -1346,6 +1345,7 @@ Here's some things you can dive into next:
 
 Also, make sure you
 
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)

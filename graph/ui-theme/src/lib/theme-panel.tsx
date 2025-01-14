@@ -1,4 +1,10 @@
-import { Menu, Transition } from '@headlessui/react';
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from '@headlessui/react';
 import {
   ComputerDesktopIcon,
   MoonIcon,
@@ -28,7 +34,7 @@ export function ThemePanel({
   return (
     <Menu as="div" className="relative inline-block text-left">
       <div>
-        <Menu.Button
+        <MenuButton
           className="inline-flex w-full justify-center rounded-md p-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 dark:text-sky-500"
           data-cy="theme-open-modal-button"
         >
@@ -42,7 +48,7 @@ export function ThemePanel({
           {theme === 'dark' && (
             <MoonIcon className="h-4 w-4" aria-hidden="true" />
           )}
-        </Menu.Button>
+        </MenuButton>
       </div>
       <Transition
         as={Fragment}
@@ -53,15 +59,15 @@ export function ThemePanel({
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className="absolute right-0 z-50 mt-2 w-36 origin-top-right rounded-md bg-white text-slate-500 shadow-lg ring-1 ring-slate-900/10 ring-opacity-5 focus:outline-none dark:bg-slate-800 dark:text-slate-400 dark:ring-0">
+        <MenuItems className="absolute right-0 z-50 mt-2 w-36 origin-top-right rounded-md bg-white text-slate-500 shadow-lg ring-1 ring-slate-900/10 ring-opacity-5 focus:outline-none dark:bg-slate-800 dark:text-slate-400 dark:ring-0">
           <div className="px-1 py-1">
-            <Menu.Item>
-              {({ active }) => (
+            <MenuItem>
+              {({ focus }) => (
                 <button
                   data-cy="system-theme-button"
                   className={classNames(
                     theme === 'system' ? 'text-blue-500 dark:text-sky-500' : '',
-                    active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
+                    focus ? 'bg-slate-50 dark:bg-slate-600/30' : '',
                     'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                   )}
                   onClick={() => setTheme('system')}
@@ -73,14 +79,14 @@ export function ThemePanel({
                   System
                 </button>
               )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
                 <button
                   data-cy="light-theme-button"
                   className={classNames(
                     theme === 'light' ? 'text-blue-500 dark:text-sky-500' : '',
-                    active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
+                    focus ? 'bg-slate-50 dark:bg-slate-600/30' : '',
                     'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                   )}
                   onClick={() => setTheme('light')}
@@ -89,14 +95,14 @@ export function ThemePanel({
                   Light
                 </button>
               )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
                 <button
                   data-cy="dark-theme-button"
                   className={classNames(
                     theme === 'dark' ? 'text-blue-500 dark:text-sky-500' : '',
-                    active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
+                    focus ? 'bg-slate-50 dark:bg-slate-600/30' : '',
                     'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                   )}
                   onClick={() => setTheme('dark')}
@@ -105,9 +111,9 @@ export function ThemePanel({
                   Dark
                 </button>
               )}
-            </Menu.Item>
+            </MenuItem>
           </div>
-        </Menu.Items>
+        </MenuItems>
       </Transition>
     </Menu>
   );

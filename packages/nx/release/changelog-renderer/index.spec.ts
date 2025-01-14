@@ -168,7 +168,7 @@ describe('ChangelogRenderer', () => {
                   - all packages fixed
                   - **pkg-a:** squashing bugs
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -235,7 +235,7 @@ describe('ChangelogRenderer', () => {
                   - all packages fixed
                   - **pkg-a:** squashing bugs
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -279,7 +279,7 @@ describe('ChangelogRenderer', () => {
 
                   - all packages fixed
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -427,7 +427,7 @@ describe('ChangelogRenderer', () => {
                   - all packages fixed
                   - **pkg-a:** squashing bugs
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - Author 1
                   - Author 3
@@ -451,7 +451,7 @@ describe('ChangelogRenderer', () => {
 
                   - all packages fixed
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - Author 1
                   - Author 2
@@ -575,7 +575,7 @@ describe('ChangelogRenderer', () => {
 
                   - **release:** Revert "fix(release): do not update dependents when they already use "*" (#20607)"
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -699,7 +699,7 @@ describe('ChangelogRenderer', () => {
 
                   - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -752,7 +752,7 @@ describe('ChangelogRenderer', () => {
 
                   - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead.
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -795,7 +795,7 @@ describe('ChangelogRenderer', () => {
 
                   - Updated pkg-b to 2.0.0
 
-                  ### ❤️  Thank You
+                  ### ❤️ Thank You
 
                   - James Henry"
               `);
@@ -867,7 +867,7 @@ describe('ChangelogRenderer', () => {
         - all packages fixed
         - **pkg-a:** squashing bugs
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry"
       `);

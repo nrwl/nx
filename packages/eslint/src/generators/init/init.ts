@@ -6,6 +6,7 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateNxJson,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
@@ -27,7 +28,7 @@ function updateProductionFileset(tree: Tree) {
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
-    productionFileSet.push('!{projectRoot}/eslint.config.js');
+    productionFileSet.push('!{projectRoot}/eslint.config.cjs');
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
@@ -44,9 +45,24 @@ function addTargetDefaults(tree: Tree) {
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
-    `{workspaceRoot}/eslint.config.js`,
+    `{workspaceRoot}/eslint.config.cjs`,
   ];
   updateNxJson(tree, nxJson);
+}
+
+function updateVsCodeRecommendedExtensions(host: Tree) {
+  if (!host.exists('.vscode/extensions.json')) {
+    return;
+  }
+
+  updateJson(host, '.vscode/extensions.json', (json) => {
+    json.recommendations = json.recommendations || [];
+    const extension = 'dbaeumer.vscode-eslint';
+    if (!json.recommendations.includes(extension)) {
+      json.recommendations.push(extension);
+    }
+    return json;
+  });
 }
 
 export async function initEsLint(
@@ -92,6 +108,8 @@ export async function initEsLint(
   }
 
   updateProductionFileset(tree);
+
+  updateVsCodeRecommendedExtensions(tree);
 
   if (options.addPlugin) {
     await addPlugin(

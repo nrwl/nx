@@ -2,7 +2,7 @@
 import { Component } from 'react';
 <%_ } if (!minimal) { _%>
 import NxWelcome from "./nx-welcome";
-<%_ } if (bundler === "rspack") { _%>
+<%_ } if (bundler === "rspack" || bundler === 'rsbuild') { _%>
 import '../styles.css';
 <%_ } _%>
 

@@ -8,6 +8,7 @@ import {
   listFiles,
   newProject,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
   runE2ETests,
@@ -20,7 +21,6 @@ import { join } from 'path';
 
 describe('React Applications', () => {
   let proj: string;
-
   describe('Crystal Supported Tests', () => {
     beforeAll(() => {
       proj = newProject({ packages: ['@nx/react'] });
@@ -28,16 +28,15 @@ describe('React Applications', () => {
     });
 
     afterAll(() => cleanupProject());
-
     it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat`
+        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
       );
       runCLI(
-        `generate @nx/react:lib libs/${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
+        `generate @nx/react:lib libs/${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
       );
 
       // Library generated with Vite
@@ -68,10 +67,10 @@ describe('React Applications', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=vitest --no-interactive --skipFormat`
+        `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint`
       );
       runCLI(
-        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
+        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
       );
 
       // Library generated with Vite
@@ -86,13 +85,15 @@ describe('React Applications', () => {
       `
       );
 
-      runCLI(`build ${appName}`);
+      runCLI(`build ${appName}`, { verbose: true });
 
       checkFilesExist(`dist/${appName}/index.html`);
 
       if (runE2ETests()) {
         // TODO(Colum): investigate why webkit is failing
-        const e2eResults = runCLI(`e2e ${appName}-e2e -- --project=chromium`);
+        const e2eResults = runCLI(`e2e ${appName}-e2e -- --project=chromium`, {
+          verbose: true,
+        });
         expect(e2eResults).toContain('Successfully ran target e2e for project');
         expect(await killPorts()).toBeTruthy();
       }
@@ -107,13 +108,13 @@ describe('React Applications', () => {
       const redSvg = `<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" viewBox="0 0 30 30"><rect x="10" y="10" width="10" height="10" fill="red"/></svg>`;
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --style=css --bundler=webpack --unit-test-runner=jest --no-interactive --skipFormat`
+        `generate @nx/react:app apps/${appName} --style=css --bundler=webpack --unit-test-runner=jest --no-interactive --skipFormat --linter=eslint`
       );
       runCLI(
-        `generate @nx/react:lib libs/${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`
+        `generate @nx/react:lib libs/${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat --linter=eslint`
       );
       runCLI(
-        `generate @nx/react:lib libs/${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat`
+        `generate @nx/react:lib libs/${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat --linter=eslint`
       );
 
       // Libs should not include package.json by default
@@ -199,7 +200,7 @@ describe('React Applications', () => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --routing --bundler=webpack --no-interactive --skipFormat`
+        `generate @nx/react:app apps/${appName} --routing --bundler=webpack --no-interactive --skipFormat --linter=eslint --unitTestRunner=jest`
       );
 
       runCLI(`build ${appName}`);
@@ -216,7 +217,7 @@ describe('React Applications', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `g @nx/react:app apps/${appName} --bundler=webpack --no-interactive --skipFormat`
+        `g @nx/react:app apps/${appName} --bundler=webpack --no-interactive --skipFormat --unitTestRunner=jest --linter=eslint`
       );
       runCLI(
         `g @nx/react:redux apps/${appName}/src/app/lemon/lemon --skipFormat`
@@ -252,7 +253,7 @@ describe('React Applications', () => {
       const libName = uniq('@my-org/lib1');
 
       runCLI(
-        `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`
+        `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat --linter=eslint --unitTestRunner=jest`
       );
 
       // check files are generated without the layout directory ("apps/") and
@@ -269,7 +270,7 @@ describe('React Applications', () => {
       );
 
       runCLI(
-        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --no-interactive --skipFormat`
+        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --no-interactive --skipFormat --linter=eslint`
       );
 
       // check files are generated without the layout directory ("libs/") and
@@ -291,7 +292,7 @@ describe('React Applications', () => {
       xit('should support styled-jsx', async () => {
         const appName = uniq('app');
         runCLI(
-          `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive --skipFormat`
+          `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
         );
 
         // update app to use styled-jsx
@@ -340,7 +341,7 @@ describe('React Applications', () => {
       it('should support tailwind', async () => {
         const appName = uniq('app');
         runCLI(
-          `generate @nx/react:app apps/${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat`
+          `generate @nx/react:app apps/${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
         );
 
         // update app to use styled-jsx
@@ -384,7 +385,7 @@ describe('React Applications', () => {
       it('should be formatted on freshly created apps', async () => {
         const appName = uniq('app');
         runCLI(
-          `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`
+          `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest`
         );
 
         const stdout = runCLI(`format:check --projects=${appName}`, {
@@ -414,15 +415,15 @@ describe('React Applications', () => {
       const plainJsLib = uniq('jslib');
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --bundler=webpack --unit-test-runner=jest --no-interactive --js --skipFormat`
+        `generate @nx/react:app apps/${appName} --bundler=webpack --unit-test-runner=jest --no-interactive --js --skipFormat --linter=eslint`
       );
       runCLI(
-        `generate @nx/react:lib libs/${libName} --no-interactive --js --unit-test-runner=none --skipFormat`
+        `generate @nx/react:lib libs/${libName} --no-interactive --js --unit-test-runner=none --skipFormat --linter=eslint`
       );
       // Make sure plain JS libs can be imported as well.
       // There was an issue previously: https://github.com/nrwl/nx/issues/10990
       runCLI(
-        `generate @nx/js:lib libs/${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive --skipFormat`
+        `generate @nx/js:lib libs/${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive --skipFormat --linter=eslint`
       );
 
       const mainPath = `apps/${appName}/src/main.js`;
@@ -448,7 +449,7 @@ describe('React Applications', () => {
     `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(
-        `generate @nx/react:app apps/${appName} --style=${style} --bundler=webpack --no-interactive --skipFormat`
+        `generate @nx/react:app apps/${appName} --style=${style} --bundler=webpack --no-interactive --skipFormat --linter=eslint --unitTestRunner=jest`
       );
 
       // make sure stylePreprocessorOptions works

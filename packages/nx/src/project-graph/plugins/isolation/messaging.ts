@@ -5,7 +5,7 @@ import {
   CreateMetadataContext,
   CreateNodesContextV2,
 } from '../public-api';
-import { LoadedNxPlugin } from '../internal-api';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { Serializable } from 'child_process';
 import { Socket } from 'net';
 
@@ -14,6 +14,9 @@ export interface PluginWorkerLoadMessage {
   payload: {
     plugin: PluginConfiguration;
     root: string;
+    name: string;
+    pluginPath: string;
+    shouldRegisterTSTranspiler: boolean;
   };
 }
 
@@ -81,7 +84,7 @@ export interface PluginCreateDependenciesResult {
   type: 'createDependenciesResult';
   payload:
     | {
-        dependencies: ReturnType<LoadedNxPlugin['createDependencies']>;
+        dependencies: Awaited<ReturnType<LoadedNxPlugin['createDependencies']>>;
         success: true;
         tx: string;
       }
@@ -96,7 +99,7 @@ export interface PluginCreateMetadataResult {
   type: 'createMetadataResult';
   payload:
     | {
-        metadata: ReturnType<LoadedNxPlugin['createMetadata']>;
+        metadata: Awaited<ReturnType<LoadedNxPlugin['createMetadata']>>;
         success: true;
         tx: string;
       }
@@ -107,14 +110,8 @@ export interface PluginCreateMetadataResult {
       };
 }
 
-export interface PluginWorkerShutdownMessage {
-  type: 'shutdown';
-  payload: {};
-}
-
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
-  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginCreateMetadataMessage;

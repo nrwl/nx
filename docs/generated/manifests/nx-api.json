@@ -108,7 +108,7 @@
         "type": "executor"
       },
       "/nx-api/angular/executors/application": {
-        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.",
         "file": "generated/packages/angular/executors/application.json",
         "hidden": false,
         "name": "application",
@@ -200,7 +200,7 @@
         "type": "generator"
       },
       "/nx-api/angular/generators/convert-to-application-executor": {
-        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder.",
         "file": "generated/packages/angular/generators/convert-to-application-executor.json",
         "hidden": false,
         "name": "convert-to-application-executor",
@@ -1306,6 +1306,18 @@
     },
     "path": "/nx-api/js"
   },
+  "module-federation": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "module-federation",
+    "packageName": "@nx/module-federation",
+    "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+    "documents": {},
+    "root": "/packages/module-federation",
+    "source": "/packages/module-federation/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/module-federation"
+  },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",
@@ -1736,7 +1748,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/create-nx-workspace",
-        "tags": [],
+        "tags": ["installation"],
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       "/nx-api/nx/documents/init": {
@@ -1747,7 +1759,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/init",
-        "tags": [],
+        "tags": ["init"],
         "originalFilePath": "generated/cli/init"
       },
       "/nx-api/nx/documents/generate": {
@@ -1780,7 +1792,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/daemon",
-        "tags": [],
+        "tags": ["daemon"],
         "originalFilePath": "generated/cli/daemon"
       },
       "/nx-api/nx/documents/dep-graph": {
@@ -1912,7 +1924,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/sync",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync"
       },
       "/nx-api/nx/documents/sync-check": {
@@ -1923,7 +1935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/sync-check",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync-check"
       },
       "/nx-api/nx/documents/import": {
@@ -1934,7 +1946,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/import",
-        "tags": [],
+        "tags": ["import"],
         "originalFilePath": "generated/cli/import"
       },
       "/nx-api/nx/documents/exec": {
@@ -1945,7 +1957,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/exec",
-        "tags": [],
+        "tags": ["exec"],
         "originalFilePath": "generated/cli/exec"
       },
       "/nx-api/nx/documents/watch": {
@@ -1967,7 +1979,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/show",
-        "tags": [],
+        "tags": ["explore-graph"],
         "originalFilePath": "generated/cli/show"
       },
       "/nx-api/nx/documents/view-logs": {
@@ -2000,7 +2012,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/add",
-        "tags": [],
+        "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
       "/nx-api/nx/documents/login": {
@@ -2011,7 +2023,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/login",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/login"
       },
       "/nx-api/nx/documents/logout": {
@@ -2022,7 +2034,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/logout",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
       }
     },
@@ -2879,6 +2891,37 @@
     },
     "path": "/nx-api/rollup"
   },
+  "rsbuild": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "rsbuild",
+    "packageName": "@nx/rsbuild",
+    "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
+    "documents": {},
+    "root": "/packages/rsbuild",
+    "source": "/packages/rsbuild/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/rsbuild/generators/init": {
+        "description": "Initialize the `@nx/rsbuild` plugin.",
+        "file": "generated/packages/rsbuild/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
+        "path": "/nx-api/rsbuild/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/rsbuild/generators/configuration": {
+        "description": "Add an Rsbuild configuration for the provided project.",
+        "file": "generated/packages/rsbuild/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/rsbuild/src/generators/configuration/schema.json",
+        "path": "/nx-api/rsbuild/generators/configuration",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/rsbuild"
+  },
   "rspack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "rspack",
@@ -2999,6 +3042,24 @@
         "name": "convert-webpack",
         "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
         "path": "/nx-api/rspack/generators/convert-webpack",
+        "type": "generator"
+      },
+      "/nx-api/rspack/generators/convert-config-to-rspack-plugin": {
+        "description": "Convert the project to use the `NxAppRspackPlugin` and `NxReactRspackPlugin`.",
+        "file": "generated/packages/rspack/generators/convert-config-to-rspack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-rspack-plugin",
+        "originalFilePath": "/packages/rspack/src/generators/convert-config-to-rspack-plugin/schema.json",
+        "path": "/nx-api/rspack/generators/convert-config-to-rspack-plugin",
+        "type": "generator"
+      },
+      "/nx-api/rspack/generators/convert-to-inferred": {
+        "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
+        "file": "generated/packages/rspack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rspack/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/rspack/generators/convert-to-inferred",
         "type": "generator"
       }
     },
@@ -3606,6 +3667,30 @@
     },
     "path": "/nx-api/workspace"
   },
+  "powerpack-azure-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-azure-cache",
+    "packageName": "@nx/powerpack-azure-cache",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+    "documents": {
+      "/nx-api/powerpack-azure-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+        "file": "external-generated/packages/powerpack-azure-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-azure-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-azure-cache",
+    "source": "/libs/nx-packages/powerpack-azure-cache/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-azure-cache"
+  },
   "powerpack-conformance": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
@@ -3622,23 +3707,90 @@
         "path": "/nx-api/powerpack-conformance/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      },
+      "/nx-api/powerpack-conformance/documents/create-conformance-rule": {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/powerpack-conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/create-conformance-rule"
       }
     },
     "root": "/libs/nx-packages/powerpack-conformance",
     "source": "/libs/nx-packages/powerpack-conformance/src",
     "executors": {
-      "/nx-api/powerpack-conformance/executors/bundle-rule": {
-        "description": "Compile and bundle an Nx Conformance Rule",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rule.json",
+      "/nx-api/powerpack-conformance/executors/bundle-rules": {
+        "description": "Compile and bundle one or more Nx Conformance Rules",
+        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
         "hidden": false,
-        "name": "bundle-rule",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rule/schema.json",
-        "path": "/nx-api/powerpack-conformance/executors/bundle-rule",
+        "name": "bundle-rules",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
+        "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
         "type": "executor"
       }
     },
-    "generators": {},
+    "generators": {
+      "/nx-api/powerpack-conformance/generators/create-rule": {
+        "description": "Create a new conformance rule",
+        "file": "external-generated/packages/powerpack-conformance/generators/create-rule.json",
+        "hidden": false,
+        "name": "create-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/generators/create-rule/schema.json",
+        "path": "/nx-api/powerpack-conformance/generators/create-rule",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/powerpack-conformance"
+  },
+  "powerpack-enterprise-cloud": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-enterprise-cloud",
+    "packageName": "@nx/powerpack-enterprise-cloud",
+    "description": "A Nx Powerpack plugin which is specific to Nx Enterprise Cloud workspaces.",
+    "documents": {},
+    "root": "/libs/nx-packages/powerpack-enterprise-cloud",
+    "source": "/libs/nx-packages/powerpack-enterprise-cloud/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/powerpack-enterprise-cloud/generators/init": {
+        "description": "Initialize Nx Powerpack Enterprise Cloud config",
+        "file": "external-generated/packages/powerpack-enterprise-cloud/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/libs/nx-packages/powerpack-enterprise-cloud/src/generators/init/schema.json",
+        "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/powerpack-enterprise-cloud"
+  },
+  "powerpack-gcs-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "powerpack-gcs-cache",
+    "packageName": "@nx/powerpack-gcs-cache",
+    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+    "documents": {
+      "/nx-api/powerpack-gcs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+        "file": "external-generated/packages/powerpack-gcs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/powerpack-gcs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/powerpack-gcs-cache",
+    "source": "/libs/nx-packages/powerpack-gcs-cache/src",
+    "executors": {},
+    "generators": {},
+    "path": "/nx-api/powerpack-gcs-cache"
   },
   "powerpack-license": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

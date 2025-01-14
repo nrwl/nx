@@ -35,6 +35,20 @@ describe('directive generator', () => {
     ).toMatchSnapshot();
   });
 
+  it('should handle path with file extension', async () => {
+    await generateDirectiveWithDefaultOptions(tree, {
+      path: 'test/src/app/test.directive.ts',
+      skipFormat: false,
+    });
+
+    expect(
+      tree.read('test/src/app/test.directive.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
   it('should not import the directive into an existing module', async () => {
     // ARRANGE
     addModule(tree);
@@ -61,6 +75,12 @@ describe('directive generator', () => {
     expect(
       tree.exists('test/src/app/my-directives/test/test.directive.spec.ts')
     ).toBeFalsy();
+  });
+
+  it('should error when the class name is invalid', async () => {
+    await expect(
+      generateDirectiveWithDefaultOptions(tree, { name: '404' })
+    ).rejects.toThrow('Class name "404Directive" is invalid.');
   });
 
   describe('--no-standalone', () => {

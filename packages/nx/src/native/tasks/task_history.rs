@@ -33,7 +33,12 @@ impl NxTaskHistory {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        array::load_module(&self.db.conn)?;
+        array::load_module(
+            self.db
+                .conn
+                .as_ref()
+                .expect("Database connection should be available"),
+        )?;
         self.db
             .execute_batch(
                 "

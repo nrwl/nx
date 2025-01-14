@@ -8,6 +8,7 @@ import {
   ProjectConfiguration,
   readJson,
   readNxJson,
+  removeDependenciesFromPackageJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -41,10 +42,10 @@ export async function convertToFlatConfigGenerator(
 
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
 
-  // convert root eslint config to eslint.config.js
+  // convert root eslint config to eslint.config.cjs
   convertRootToFlatConfig(tree, eslintFile);
 
-  // convert project eslint files to eslint.config.js
+  // convert project eslint files to eslint.config.cjs
   const projects = getProjects(tree);
   for (const [project, projectConfig] of projects) {
     convertProjectToFlatConfig(
@@ -76,13 +77,13 @@ export default convertToFlatConfigGenerator;
 
 function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
-    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.js');
+    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.cjs');
   }
   convertConfigToFlatConfig(
     tree,
     '',
     eslintFile.replace('.base.', '.'),
-    'eslint.config.js'
+    'eslint.config.cjs'
   );
 }
 
@@ -131,7 +132,7 @@ function convertProjectToFlatConfig(
           tree,
           projectConfig.root,
           eslintFile,
-          'eslint.config.js',
+          'eslint.config.cjs',
           ignorePath
         );
         eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
@@ -150,17 +151,17 @@ function updateNxJsonConfig(tree: Tree) {
     updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
       if (json.targetDefaults?.lint?.inputs) {
         const inputSet = new Set(json.targetDefaults.lint.inputs);
-        inputSet.add('{workspaceRoot}/eslint.config.js');
+        inputSet.add('{workspaceRoot}/eslint.config.cjs');
         json.targetDefaults.lint.inputs = Array.from(inputSet);
       }
       if (json.targetDefaults?.['@nx/eslint:lint']?.inputs) {
         const inputSet = new Set(json.targetDefaults['@nx/eslint:lint'].inputs);
-        inputSet.add('{workspaceRoot}/eslint.config.js');
+        inputSet.add('{workspaceRoot}/eslint.config.cjs');
         json.targetDefaults['@nx/eslint:lint'].inputs = Array.from(inputSet);
       }
       if (json.namedInputs?.production) {
         const inputSet = new Set(json.namedInputs.production);
-        inputSet.add('!{projectRoot}/eslint.config.js');
+        inputSet.add('!{projectRoot}/eslint.config.cjs');
         json.namedInputs.production = Array.from(inputSet);
       }
       return json;
@@ -240,4 +241,10 @@ function processConvertedConfig(
   }
 
   addDependenciesToPackageJson(tree, {}, devDependencies);
+
+  removeDependenciesFromPackageJson(
+    tree,
+    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser'],
+    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser']
+  );
 }

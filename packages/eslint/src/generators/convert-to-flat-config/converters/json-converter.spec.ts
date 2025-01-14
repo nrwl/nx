@@ -41,6 +41,12 @@ describe('convertEslintJsonToFlatConfig', () => {
             rules: {},
           },
           {
+            files: ['*.js', '*.jsx'],
+            extends: ['plugin:@nx/javascript'],
+            rules: {},
+          },
+
+          {
             files: [
               '**/*.spec.ts',
               '**/*.spec.tsx',
@@ -76,6 +82,11 @@ describe('convertEslintJsonToFlatConfig', () => {
       });
 
       module.exports = [
+          {
+              ignores: [
+                  "**/dist"
+              ]
+          },
           { plugins: { "@nx": nxEslintPlugin } },
           {
               files: [
@@ -110,7 +121,25 @@ describe('convertEslintJsonToFlatConfig', () => {
               ...config,
               files: [
                   "**/*.ts",
-                  "**/*.tsx"
+                  "**/*.tsx",
+                  "**/*.cts",
+                  "**/*.mts"
+              ],
+              rules: {
+                  ...config.rules
+              }
+          })),
+          ...compat.config({
+              extends: [
+                  "plugin:@nx/javascript"
+              ]
+          }).map(config => ({
+              ...config,
+              files: [
+                  "**/*.js",
+                  "**/*.jsx",
+                  "**/*.cjs",
+                  "**/*.mjs"
               ],
               rules: {
                   ...config.rules
@@ -205,7 +234,7 @@ describe('convertEslintJsonToFlatConfig', () => {
     expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const js = require("@eslint/js");
-      const baseConfig = require("../../eslint.config.js");
+      const baseConfig = require("../../eslint.config.cjs");
       const globals = require("globals");
 
       const compat = new FlatCompat({
@@ -214,6 +243,11 @@ describe('convertEslintJsonToFlatConfig', () => {
       });
 
       module.exports = [
+          {
+              ignores: [
+                  "**/dist"
+              ]
+          },
           ...baseConfig,
           ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
           { languageOptions: { globals: { ...globals.jest } } },

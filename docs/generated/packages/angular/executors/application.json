@@ -4,7 +4,7 @@
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Nx Application Executor",
-    "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+    "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.",
     "examplesFile": "This executor is a drop-in replacement for the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.\n\nIn addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:\n\n- Providing esbuild plugins\n- Providing a function to transform the application's `index.html` file\n- Incremental builds\n\n{% callout type=\"check\" title=\"Dev Server\" %}\nThe [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.\n{% /callout %}\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Providing esbuild plugins\" %}\n\nThe executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[\"8-16\"] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"plugins\": [\n          \"apps/my-app/plugins/plugin1.js\",\n          {\n            \"path\": \"apps/my-app/plugins/plugin2.js\",\n            \"options\": {\n              \"someOption\": \"some value\"\n            }\n          }\n        ]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin1.js\" %}\nconst plugin1 = {\n  name: 'plugin1',\n  setup(build) {\n    const options = build.initialOptions;\n    options.define.PLUGIN1_TEXT = '\"Value was provided at build time\"';\n  },\n};\n\nmodule.exports = plugin1;\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin2.js\" %}\nfunction plugin2({ someOption }) {\n  return {\n    name: 'plugin2',\n    setup(build) {\n      const options = build.initialOptions;\n      options.define.PLUGIN2_TEXT = JSON.stringify(someOption);\n    },\n  };\n}\n\nmodule.exports = plugin2;\n```\n\nAdditionally, we need to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this by creating or updating a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with the following content:\n\n```ts {% fileName=\"apps/my-app/src/types.d.ts\" %}\ndeclare const PLUGIN1_TEXT: number;\ndeclare const PLUGIN2_TEXT: string;\n```\n\n{% /tab %}\n\n{% tab label=\"Transforming the 'index.html' file\" %}\n\nThe executor accepts an `indexHtmlTransformer` option to provide a path to a file with a default export for a function that receives the application's `index.html` file contents and outputs the updated contents.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"indexHtmlTransformer\": \"apps/my-app/index-html.transformer.ts\"\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/index-html.transformer.ts\" %}\nexport default function (indexContent: string) {\n  return indexContent.replace(\n    '<title>my-app</title>',\n    '<title>my-app (transformed)</title>'\n  );\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "outputCapture": "direct-nodejs",
     "type": "object",
@@ -55,7 +55,18 @@
       },
       "server": {
         "type": "string",
-        "description": "The full path for the server entry point to the application, relative to the current workspace."
+        "description": "The full path for the server entry point to the application, relative to the current workspace.",
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "The full path for the server entry point to the application, relative to the current workspace."
+          },
+          {
+            "const": false,
+            "type": "boolean",
+            "description": "Indicates that a server entry point is not provided. _Note: this is only supported in Angular versions >= 19.0.0_."
+          }
+        ]
       },
       "polyfills": {
         "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
@@ -70,6 +81,29 @@
       "deployUrl": {
         "type": "string",
         "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations. _Note: this is only supported in Angular versions >= 17.3.0_."
+      },
+      "security": {
+        "description": "Security features to protect against XSS and other common attacks. _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "autoCsp": {
+            "description": "Enables automatic generation of a hash-based Strict Content Security Policy (https://web.dev/articles/strict-csp#choose-hash) based on scripts in index.html. Will default to true once we are out of experimental/preview phases. It defaults to `false`.",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "unsafeEval": {
+                    "type": "boolean",
+                    "description": "Include the `unsafe-eval` directive (https://web.dev/articles/strict-csp#remove-eval) in the auto-CSP. Please only enable this if you are absolutely sure that you need to, as allowing calls to eval will weaken the XSS defenses provided by the auto-CSP. It default to `false`."
+                  }
+                },
+                "additionalProperties": false
+              },
+              { "type": "boolean" }
+            ]
+          }
+        }
       },
       "scripts": {
         "description": "Global scripts to be included in the build.",
@@ -157,6 +191,28 @@
             "type": "array",
             "items": { "type": "string" },
             "default": []
+          },
+          "sass": {
+            "description": "Options to pass to the sass preprocessor. _Note: this is only supported in Angular versions >= 19.0.0_.",
+            "type": "object",
+            "properties": {
+              "fatalDeprecations": {
+                "description": "A set of deprecations to treat as fatal. If a deprecation warning of any provided type is encountered during compilation, the compiler will error instead. If a Version is provided, then all deprecations that were active in that compiler version will be treated as fatal.",
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "silenceDeprecations": {
+                "description": " A set of active deprecations to ignore. If a deprecation warning of any provided type is encountered during compilation, the compiler will ignore it instead.",
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "futureDeprecations": {
+                "description": "A set of future deprecations to opt into early. Future deprecations passed here will be treated as active by the compiler, emitting warnings as necessary.",
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
@@ -175,7 +231,6 @@
       "optimization": {
         "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.dev/reference/configs/workspace-config#optimization-configuration.",
         "default": true,
-        "x-user-analytics": "ep.ng_optimization",
         "oneOf": [
           {
             "type": "object",
@@ -304,7 +359,6 @@
       "aot": {
         "type": "boolean",
         "description": "Build using Ahead of Time compilation.",
-        "x-user-analytics": "ep.ng_aot",
         "default": true
       },
       "sourceMap": {
@@ -548,8 +602,7 @@
         "default": []
       },
       "prerender": {
-        "description": "Prerender (SSG) pages of your application during build time.",
-        "default": false,
+        "description": "Prerender (SSG) pages of your application during build time. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`.",
         "oneOf": [
           {
             "type": "boolean",
@@ -586,6 +639,11 @@
               "entry": {
                 "type": "string",
                 "description": "The server entry-point that when executed will spawn the web server."
+              },
+              "experimentalPlatform": {
+                "description": "Specifies the platform for which the server bundle is generated. This affects the APIs and modules available in the server-side code. \n\n- `node`:  (Default) Generates a bundle optimized for Node.js environments. \n- `neutral`: Generates a platform-neutral bundle suitable for environments like edge workers, and other serverless platforms. This option avoids using Node.js-specific APIs, making the bundle more portable. \n\nPlease note that this feature does not provide polyfills for Node.js modules. Additionally, it is experimental, and the feature may undergo changes in future versions. _Note: this is only supported in Angular versions >= 19.0.0_.",
+                "default": "node",
+                "enum": ["node", "neutral"]
               }
             },
             "additionalProperties": false
@@ -594,8 +652,12 @@
       },
       "appShell": {
         "type": "boolean",
-        "description": "Generates an application shell during build time.",
-        "default": false
+        "description": "Generates an application shell during build time. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
+      },
+      "outputMode": {
+        "type": "string",
+        "description": "Defines the build output target. 'static': Generates a static site for deployment on any static hosting service. 'server': Produces an application designed for deployment on a server that supports server-side rendering (SSR). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "enum": ["static", "server"]
       },
       "buildLibsFromSource": {
         "type": "boolean",
@@ -741,7 +803,7 @@
     },
     "presets": []
   },
-  "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+  "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/executors/application/schema.json",

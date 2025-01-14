@@ -1,15 +1,23 @@
 # Enterprise Release Notes
 
+### 2024.10.2
+
+- Fix: AWS S3 bucket connections when using STS role-based authentication
+
+### 2024.10.1
+
+- Fix: GitHub and external bucket connection issues when using a proxy
+
 ### 2024.10
 
 This is a big release so let's go through the highlights first. There is also an important "Breaking changes" section at the end.
 
-## New Version Structure
+##### New Version Structure
 
 We have changed our version structure to a more simplified tag: `YEAR.MM.PATCH_NUMBER`
 The goal is to make it easier to spot how old/recent your existing NxCloud version is and compare it against newer deployments.
 
-## DTE Summary Table on Main Agent
+##### DTE Summary Table on Main Agent
 
 When distributing with DTE, up until now, we have been replaying all your tasks logs "as they come in" from the DTE agents back onto your main job.
 
@@ -19,7 +27,7 @@ This release contains the new "CI Table Log View" summary, and you can read all 
 
 If you prefer the old logs style, you can always disable the feature via your workspace's settings screen.
 
-## Personal Access Tokens
+##### Personal Access Tokens
 
 Up until now, for developers to get access to read (and maybe write) to the cache you always needed an access token to be made available locally: either
 committed to the repo via `nx.json` or made available as an env variable via a `.local.env` file.
@@ -34,7 +42,7 @@ The moment they get removed as a member from your workspace, they won't be able 
 
 Please read the full announcement post here, as it contains details on how to migrate your team to using [Personal Access Tokens](/blog/personal-access-tokens).
 
-## GitHub App Integration
+##### GitHub App Integration
 
 If you are using GitHub, setting up a custom GitHub app for your org is the best way to take advantage of all the latest "GitHub-specific" features we offer.
 Please see instructions [here](/ci/recipes/enterprise/single-tenant/custom-github-app) on setting up an app.
@@ -43,7 +51,7 @@ You will then need to make sure you set up your VCS integration again through yo
 As part of this, you will also get the "GitHub membership management" feature, where everybody who is a collaborator of your GitHub repo will also get "read" access to your NxCloud workspace,
 without you having to explicitly invite them.
 
-## Misc Items
+##### Misc Items
 
 - Improved docker agents support
   - We fixed a few issues related to running docker builds in Nx Agents
@@ -54,7 +62,7 @@ without you having to explicitly invite them.
 - Various SAML fixes and improvements
   - One highlight is that users can now login from Okta directly (while before they had to initiate login through NxCloud web app)
 
-## Breaking Changes
+##### Breaking Changes
 
 Most workspaces will not be affected by this, but if you have these values configured in your `helm-config.yaml`:
 
@@ -63,6 +71,8 @@ Most workspaces will not be affected by this, but if you have these values confi
 
 they will stop working with this release (see [this](https://github.com/nrwl/nx-cloud-helm/pull/141/files) for details on what was removed).
 Please go to your workspace settings and you should be able to configure all the above values when you setup a VCS integration.
+
+_Terminal outputs_ in the web app will now be fully served from storage bucket (either S3/Gcloud/Azure, or your internal file-server). This means your NxCloud cluster needs to have an open/healthy connection to the bucket. You can test this by ssh'ing into the `nx-cloud-frontend` pod and trying to `wget` one of your bucket artefacts. Any proxy or firewall constraints will need to be handled. Additionally, if your bucket is hosted at a self-signed https URL, any fetch calls from the frontend pod to your bucket will fail. If you think any of this applies to you, please contact your DPE to discuss options.
 
 ### 2406.29.1.patch1
 

@@ -77,6 +77,7 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -194,6 +195,14 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
+    let spinner: DelayedSpinner;
+    // If the graph takes a while to load, we want to show a spinner.
+    spinner = new DelayedSpinner(
+      'Calculating the project graph on the Nx Daemon'
+    ).scheduleMessageUpdate(
+      'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
+      { ciDelay: 60_000, delay: 30_000 }
+    );
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -208,6 +217,8 @@ export class DaemonClient {
       } else {
         throw e;
       }
+    } finally {
+      spinner?.cleanup();
     }
   }
 
@@ -579,6 +590,12 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
+    if (global.NX_PLUGIN_WORKER) {
+      throw new Error(
+        'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
+      );
+    }
+
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
     if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');

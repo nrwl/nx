@@ -7,6 +7,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { updateTsconfig } from './update-tsconfig';
+import * as tsSolution from '../../../utilities/typescript/ts-solution-setup';
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -211,5 +212,45 @@ describe('updateTsconfig', () => {
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/nested/whatever-name': ['libs/my-lib/nested-lib/src/index.ts'],
     });
+  });
+
+  it('should work with tsSolution setup', async () => {
+    jest.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
+
+    await libraryGenerator(tree, {
+      directory: 'my-lib',
+    });
+
+    const tsconfigContent = {
+      extends: './tsconfig.base.json',
+      compilerOptions: {},
+      files: [],
+      include: [],
+      references: [
+        {
+          path: './my-lib',
+        },
+      ],
+    };
+
+    tree.write('tsconfig.json', JSON.stringify(tsconfigContent, null, 2));
+
+    graph = {
+      nodes: {
+        'my-lib': {
+          name: 'my-lib',
+          type: 'lib',
+          data: {
+            root: readProjectConfiguration(tree, 'my-lib').root,
+          } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await updateTsconfig(tree, schema);
+
+    const tsConfig = readJson(tree, 'tsconfig.json');
+    expect(tsConfig.references).toEqual([]);
   });
 });

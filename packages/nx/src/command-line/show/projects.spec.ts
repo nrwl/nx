@@ -20,9 +20,13 @@ jest.mock('../../project-graph/project-graph', () => ({
     .mockImplementation(() => Promise.resolve(graph)),
 }));
 
+performance.mark = jest.fn();
+performance.measure = jest.fn();
+
 describe('show projects', () => {
   beforeEach(() => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
+    performance.mark('init-local');
   });
   afterEach(() => {
     jest.clearAllMocks();

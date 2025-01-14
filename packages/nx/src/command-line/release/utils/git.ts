@@ -2,6 +2,7 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
+import { relative } from 'node:path';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
@@ -122,25 +123,33 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
-  // Use a unique enough separator that we can be relatively certain will not occur within the commit message itself
-  const separator = '§§§';
-
+  // Use unique enough separators that we can be relatively certain will not occur within the commit message itself
+  const commitMetadataSeparator = '§§§';
+  const commitsSeparator = '|@-------@|';
   // https://git-scm.com/docs/pretty-formats
-  const r = await execCommand('git', [
+  const args = [
     '--no-pager',
     'log',
     range,
-    `--pretty="----%n%s${separator}%h${separator}%an${separator}%ae%n%b"`,
+    `--pretty="${commitsSeparator}%n%s${commitMetadataSeparator}%h${commitMetadataSeparator}%an${commitMetadataSeparator}%ae%n%b"`,
     '--name-status',
-  ]);
+  ];
+  // Support cases where the nx workspace root is located at a nested path within the git repo
+  const relativePath = await getGitRootRelativePath();
+  if (relativePath) {
+    args.push(`--relative=${relativePath}`);
+  }
+
+  const r = await execCommand('git', args);
 
   return r
-    .split('----\n')
+    .split(`${commitsSeparator}\n`)
     .splice(1)
     .map((line) => {
       const [firstLine, ..._body] = line.split('\n');
-      const [message, shortHash, authorName, authorEmail] =
-        firstLine.split(separator);
+      const [message, shortHash, authorName, authorEmail] = firstLine.split(
+        commitMetadataSeparator
+      );
       const r: RawGitCommit = {
         message,
         shortHash,
@@ -557,4 +566,21 @@ export async function getFirstGitCommit() {
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);
   }
+}
+
+async function getGitRoot() {
+  try {
+    return (await execCommand('git', ['rev-parse', '--show-toplevel'])).trim();
+  } catch (e) {
+    throw new Error('Unable to find git root');
+  }
+}
+
+let gitRootRelativePath: string;
+async function getGitRootRelativePath() {
+  if (!gitRootRelativePath) {
+    const gitRoot = await getGitRoot();
+    gitRootRelativePath = relative(gitRoot, workspaceRoot);
+  }
+  return gitRootRelativePath;
 }

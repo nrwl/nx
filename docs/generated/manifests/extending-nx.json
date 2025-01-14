@@ -160,7 +160,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/create-sync-generator",
-        "tags": ["generate-code"]
+        "tags": ["generate-code", "sync"]
       },
       {
         "id": "migration-generators",
@@ -308,7 +308,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/create-sync-generator",
-    "tags": ["generate-code"]
+    "tags": ["generate-code", "sync"]
   },
   "/extending-nx/recipes/migration-generators": {
     "id": "migration-generators",

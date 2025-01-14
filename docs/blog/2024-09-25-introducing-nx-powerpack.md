@@ -125,7 +125,7 @@ Read all about how to [configure Codeowners for your project in our docs](/nx-en
 
 A continuous effort on our Nx core is to improve speed. Last year, we began **rewriting performance-critical parts of Nx into Rust**, and more core components are being rewritten. As part of this effort, we also changed how we manage local cache, moving from a **file-based to a database-based approach**. In addition to small performance gains from reduced I/O, this opens up many opportunities for improving local cache handling, such as keeping only relevant cache based on usage, more easily controlling maximum cache size, and optimizing task orchestration by running failed tasks earlier.
 
-As part of this new approach we're also going to [deprecate custom task runners](/deprecated/custom-task-runners) in Nx 20. I bring this up because it might affect users that relied on 3rd party tools that hooked into the task runners API.
+As part of this new approach we're also going to [deprecate custom task runners](/deprecated/legacy-cache) in Nx 20. I bring this up because it might affect users that relied on 3rd party tools that hooked into the task runners API.
 
 To fill in on the custom task runner API we're providing a new Powerpack plugin that allows you to use S3 or a network drive as your storing mechanism for your Nx cache.
 
@@ -155,9 +155,6 @@ name: CI
 permissions:
   id-token: write
   ...
-
-env:
-  NX_DB_CACHE: true
 
 jobs:
   main:

@@ -60,7 +60,7 @@ jobs:
 
       - script: <%= packageManagerInstall %><% if(hasCypress){ %>
       - script: <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
-      - script: <%= packageManagerPrefix %> playwright install<% } %>
+      - script: <%= packageManagerPrefix %> playwright install --with-deps<% } %>
       - script: git branch --track <%= mainBranch %> origin/<%= mainBranch %>
         condition: eq(variables['Build.Reason'], 'PullRequest')
 

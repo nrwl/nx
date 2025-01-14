@@ -80,7 +80,7 @@ export default function RootLayout({
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
         {children}
-        <LiveStreamNotifier />
+        {/* <LiveStreamNotifier /> */}
         <GlobalScripts gaMeasurementId={gaMeasurementId} />
       </body>
     </html>

@@ -38,6 +38,11 @@ const pmc = getPackageManagerCommand();
 export interface JestPluginOptions {
   targetName?: string;
   ciTargetName?: string;
+
+  /**
+   * The name that should be used to group atomized tasks on CI
+   */
+  ciGroupName?: string;
   /**
    *  Whether to use jest-config and jest-runtime to load Jest configuration and context.
    *  Disabling this is much faster but could be less correct since we are using our own config loader
@@ -192,6 +197,9 @@ async function buildJestTargets(
     command: 'jest',
     options: {
       cwd: projectRoot,
+      // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
+      // We want to support of ESM via 'module':'nodenext', we need to override the resolution until Jest supports it.
+      env: { TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}' },
     },
     metadata: {
       technologies: ['jest'],
@@ -218,7 +226,8 @@ async function buildJestTargets(
 
   let metadata: ProjectConfiguration['metadata'];
 
-  const groupName = 'E2E (CI)';
+  const groupName =
+    options?.ciGroupName ?? deductGroupNameFromTarget(options?.ciTargetName);
 
   if (options.disableJestRuntime) {
     const outputs = (target.outputs = getOutputs(
@@ -269,6 +278,7 @@ async function buildJestTargets(
           outputs,
           options: {
             cwd: projectRoot,
+            env: { TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}' },
           },
           metadata: {
             technologies: ['jest'],
@@ -403,6 +413,9 @@ async function buildJestTargets(
             outputs,
             options: {
               cwd: projectRoot,
+              env: {
+                TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}',
+              },
             },
             metadata: {
               technologies: ['jest'],
@@ -682,4 +695,29 @@ async function getJestOption<T = any>(
   }
 
   return undefined;
+}
+
+/**
+ * Helper that tries to deduct the name of the CI group, based on the related target name.
+ *
+ * This will work well, when the CI target name follows the documented naming convention or similar (for e.g `test-ci`, `e2e-ci`, `ny-e2e-ci`, etc).
+ *
+ * For example, `test-ci` => `TEST (CI)`,  `e2e-ci` => `E2E (CI)`,  `my-e2e-ci` => `MY E2E (CI)`
+ *
+ *
+ * @param ciTargetName name of the CI target
+ * @returns the deducted group name or `${ciTargetName.toUpperCase()} (CI)` if cannot be deducted automatically
+ */
+function deductGroupNameFromTarget(ciTargetName: string | undefined) {
+  if (!ciTargetName) {
+    return null;
+  }
+
+  const parts = ciTargetName.split('-').map((v) => v.toUpperCase());
+
+  if (parts.length > 1) {
+    return `${parts.slice(0, -1).join(' ')} (${parts[parts.length - 1]})`;
+  }
+
+  return `${parts[0]} (CI)`; // default group name when there is a single segment
 }

@@ -7,6 +7,71 @@ describe('extract-rollup-config-from-executor-options', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
+      `apps/myapp/rollup.config.cjs`,
+      `export default (config) => {return config;}`
+    );
+    // ACT
+    const defaultValues = extractRollupConfigFromExecutorOptions(
+      tree,
+      {
+        outputPath: 'dist/apps/myapp',
+        tsConfig: 'apps/myapp/tsconfig.json',
+        project: '',
+        main: 'src/lib/index.ts',
+        rollupConfig: 'apps/myapp/rollup.config.cjs',
+        watch: true,
+        format: ['esm', 'cjs'],
+      },
+      {},
+      'apps/myapp'
+    );
+
+    // ASSERT
+    const configFile = tree.read('apps/myapp/rollup.config.cjs', 'utf-8');
+    expect(configFile).toMatchInlineSnapshot(`
+      "const { withNx } = require('@nx/rollup/with-nx');
+
+      // These options were migrated by @nx/rollup:convert-to-inferred from project.json
+      const options = {
+      "outputPath": "../../dist/apps/myapp",
+      "tsConfig": "./tsconfig.json",
+      "project": "",
+      "main": "../../src/lib/index.ts",
+      "format": [
+      "esm",
+      "cjs"
+      ]
+      };
+
+      let config = withNx(options, {
+      // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+      // e.g.
+      // output: { sourcemap: true },
+      });
+
+      config = require('./rollup.migrated.config.cjs')(config, options);
+
+      module.exports = config;"
+    `);
+    expect(tree.exists('apps/myapp/rollup.migrated.config.cjs')).toBeTruthy();
+    expect(defaultValues).toMatchInlineSnapshot(`
+      {
+        "format": [
+          "esm",
+          "cjs",
+        ],
+        "main": "../../src/lib/index.ts",
+        "outputPath": "../../dist/apps/myapp",
+        "project": "",
+        "tsConfig": "./tsconfig.json",
+      }
+    `);
+  });
+
+  it('should extract the options correctly (rollup.config.js)', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
       `apps/myapp/rollup.config.js`,
       `export default (config) => {return config;}`
     );
@@ -27,7 +92,7 @@ describe('extract-rollup-config-from-executor-options', () => {
     );
 
     // ASSERT
-    const configFile = tree.read('apps/myapp/rollup.config.js', 'utf-8');
+    const configFile = tree.read('apps/myapp/rollup.config.cjs', 'utf-8');
     expect(configFile).toMatchInlineSnapshot(`
       "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -68,11 +133,11 @@ describe('extract-rollup-config-from-executor-options', () => {
     `);
   });
 
-  it('should extract configurations that do not defined a rollupConfig into the rollup.config.js file', () => {
+  it('should extract configurations that do not defined a rollupConfig into the rollup.config.cjs file', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
-      `apps/myapp/rollup.config.js`,
+      `apps/myapp/rollup.config.cjs`,
       `export default (config) => {return config;}`
     );
     tree.write(
@@ -87,7 +152,7 @@ describe('extract-rollup-config-from-executor-options', () => {
         tsConfig: 'apps/myapp/tsconfig.json',
         project: '',
         main: 'src/lib/index.ts',
-        rollupConfig: 'apps/myapp/rollup.config.js',
+        rollupConfig: 'apps/myapp/rollup.config.cjs',
         watch: true,
         format: ['esm', 'cjs'],
       },
@@ -100,7 +165,7 @@ describe('extract-rollup-config-from-executor-options', () => {
     );
 
     // ASSERT
-    const configFile = tree.read('apps/myapp/rollup.config.js', 'utf-8');
+    const configFile = tree.read('apps/myapp/rollup.config.cjs', 'utf-8');
     expect(configFile).toMatchInlineSnapshot(`
       "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -137,11 +202,11 @@ describe('extract-rollup-config-from-executor-options', () => {
       // output: { sourcemap: true },
       });
 
-      config = require('./rollup.migrated.config.js')(config, options);
+      config = require('./rollup.migrated.config.cjs')(config, options);
 
       module.exports = config;"
     `);
-    expect(tree.exists('apps/myapp/rollup.migrated.config.js')).toBeTruthy();
+    expect(tree.exists('apps/myapp/rollup.migrated.config.cjs')).toBeTruthy();
     expect(defaultValues).toMatchInlineSnapshot(`
       {
         "format": [
@@ -160,7 +225,7 @@ describe('extract-rollup-config-from-executor-options', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
-      `apps/myapp/rollup.config.js`,
+      `apps/myapp/rollup.config.cjs`,
       `export default (config) => {return config;}`
     );
     tree.write(
@@ -175,7 +240,7 @@ describe('extract-rollup-config-from-executor-options', () => {
         tsConfig: 'apps/myapp/tsconfig.json',
         project: '',
         main: 'src/lib/index.ts',
-        rollupConfig: 'apps/myapp/rollup.config.js',
+        rollupConfig: 'apps/myapp/rollup.config.cjs',
         watch: true,
         format: ['esm', 'cjs'],
       },

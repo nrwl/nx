@@ -8,10 +8,6 @@
   "type": "object",
   "presets": [
     {
-      "name": "Buildable Library with Tailwind",
-      "keys": ["project", "tailwindConfig"]
-    },
-    {
       "name": "Updating Project Dependencies for Buildable Library",
       "keys": ["project"]
     }
@@ -33,9 +29,9 @@
       "description": "Whether to run a build when any file changes.",
       "default": false
     },
-    "tailwindConfig": {
-      "type": "string",
-      "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured."
+    "poll": {
+      "type": "number",
+      "description": "Enable and define the file watching poll time period in milliseconds. _Note: this is only supported in Angular versions >= 18.0.0_."
     }
   },
   "additionalProperties": false,

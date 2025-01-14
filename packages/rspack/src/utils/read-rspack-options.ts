@@ -25,6 +25,13 @@ export async function readRspackOptions(
           root: workspaceRoot,
           projectRoot: '',
           sourceRoot: '',
+          outputFileName: '',
+          assets: [],
+          main: '',
+          tsConfig: '',
+          outputPath: '',
+          rspackConfig: '',
+          useTsconfigPaths: undefined,
         },
         context: {
           root: workspaceRoot,

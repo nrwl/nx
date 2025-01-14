@@ -157,6 +157,7 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },
@@ -268,6 +269,7 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },
@@ -399,6 +401,38 @@ describe('getUpdatedPackageJsonContent', () => {
       exports: {
         '.': {
           default: './src/index.cjs',
+          types: './src/index.d.ts',
+        },
+        './package.json': './package.json',
+      },
+    });
+  });
+
+  it('should handle outputFileName correctly', () => {
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          generateExportsField: true,
+          outputFileName: 'src/index.js',
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      type: 'commonjs',
+      exports: {
+        '.': {
+          default: './src/index.js',
           types: './src/index.d.ts',
         },
         './package.json': './package.json',

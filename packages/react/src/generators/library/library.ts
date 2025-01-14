@@ -4,15 +4,18 @@ import {
   ensurePackage,
   formatFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
+  readNxJson,
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { nxVersion } from '../../utils/versions';
 import { maybeJs } from '../../utils/maybe-js';
@@ -28,6 +31,11 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -37,9 +45,13 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'react', 'library');
-
   const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -51,30 +63,39 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
-
   const initTask = await initGenerator(host, {
     ...options,
     skipFormat: true,
   });
   tasks.push(initTask);
 
-  addProjectConfiguration(host, options.name, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'library',
-    tags: options.parsedTags,
-    targets: {},
-  });
+  if (options.isUsingTsSolutionConfig) {
+    writeJson(host, `${options.projectRoot}/package.json`, {
+      name: options.importPath,
+      version: '0.0.1',
+      ...determineEntryFields(options),
+      nx: {
+        name: options.importPath === options.name ? undefined : options.name,
+        projectType: 'library',
+        sourceRoot: `${options.projectRoot}/src`,
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+    });
+  } else {
+    addProjectConfiguration(host, options.name, {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'library',
+      tags: options.parsedTags,
+      targets: {},
+    });
+  }
+
+  createFiles(host, options);
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
-
-  createFiles(host, options);
 
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
@@ -228,7 +249,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   extractTsConfigBase(host);
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       maybeJs(
         options,
@@ -237,8 +258,30 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     ]);
   }
 
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {

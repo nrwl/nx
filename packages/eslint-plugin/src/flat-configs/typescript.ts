@@ -15,10 +15,9 @@ const isPrettierAvailable =
  */
 export default tseslint.config(
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
   },
-  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
   {
     plugins: { '@typescript-eslint': tseslint.plugin },
     languageOptions: {
@@ -31,7 +30,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', , '**/*.cts', '**/*.mts'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -64,5 +63,9 @@ export default tseslint.config(
        */
       '@typescript-eslint/no-require-imports': 'off',
     },
-  }
+  },
+  /**
+   * We include it last so it overrides the conflicting rules from the configuration blocks above.
+   */
+  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );

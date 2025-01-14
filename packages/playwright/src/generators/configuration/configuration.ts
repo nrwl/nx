@@ -20,8 +20,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
@@ -95,12 +95,21 @@ export async function configurationGeneratorInternal(
     };
 
     if (isTsSolutionSetup) {
-      tsconfig.compilerOptions.outDir = 'dist';
-      tsconfig.compilerOptions.tsBuildInfoFile = 'dist/tsconfig.tsbuildinfo';
+      tsconfig.exclude = ['out-tsc', 'test-output'];
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
+      }
+
+      tsconfig.compilerOptions.outDir = 'out-tsc/playwright';
 
       if (!options.rootProject) {
-        // add the project tsconfog to the workspace root tsconfig.json references
         updateJson(tree, 'tsconfig.json', (json) => {
+          // add the project tsconfig to the workspace root tsconfig.json references
           json.references ??= [];
           json.references.push({ path: './' + projectConfig.root });
           return json;
@@ -130,6 +139,9 @@ export async function configurationGeneratorInternal(
         name: importPath,
         version: '0.0.1',
         private: true,
+        nx: {
+          name: options.project,
+        },
       };
       writeJson(tree, packageJsonPath, packageJson);
     }
@@ -216,36 +228,7 @@ async function normalizeOptions(
     (process.env.NX_ADD_PLUGINS !== 'false' &&
       nxJson.useInferencePlugins !== false);
 
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-
-  let linter = options.linter;
-  if (isTsSolutionSetup) {
-    linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'none' }, { name: 'eslint' }],
-        initial: 0,
-      },
-      { linter: 'none' }
-    ).then(({ linter }) => linter);
-  } else {
-    linter ??= await promptWhenInteractive<{
-      linter: 'none' | 'eslint';
-    }>(
-      {
-        type: 'select',
-        name: 'linter',
-        message: `Which linter would you like to use?`,
-        choices: [{ name: 'eslint' }, { name: 'none' }],
-        initial: 0,
-      },
-      { linter: 'eslint' }
-    ).then(({ linter }) => linter);
-  }
+  const linter = await normalizeLinterOption(tree, options.linter);
 
   return {
     ...options,

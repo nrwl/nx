@@ -31,7 +31,6 @@ import {
   nxVersion,
 } from '../../utils/versions';
 import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -95,8 +94,6 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'react', 'remote');
-
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, schema)),
@@ -137,6 +134,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     name: options.projectName,
     skipFormat: true,
+    alwaysGenerateProjectJson: true,
   });
   tasks.push(initAppTask);
 
@@ -220,7 +218,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
@@ -228,6 +226,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
     }
   );
   tasks.push(installTask);

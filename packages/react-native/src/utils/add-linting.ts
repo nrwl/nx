@@ -37,6 +37,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: options.tsConfigPaths,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
+    setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
   });
 
@@ -69,7 +70,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.skipPackageJson) {
-    const installTask = await addDependenciesToPackageJson(
+    const installTask = addDependenciesToPackageJson(
       host,
       extraEslintDependencies.dependencies,
       extraEslintDependencies.devDependencies

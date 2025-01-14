@@ -103,7 +103,7 @@
         "type": "executor"
       },
       {
-        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.",
         "file": "generated/packages/angular/executors/application.json",
         "hidden": false,
         "name": "application",
@@ -195,7 +195,7 @@
         "type": "generator"
       },
       {
-        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder.",
         "file": "generated/packages/angular/generators/convert-to-application-executor.json",
         "hidden": false,
         "name": "convert-to-application-executor",
@@ -1293,6 +1293,17 @@
     "source": "/packages/js/src"
   },
   {
+    "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "module-federation",
+    "packageName": "@nx/module-federation",
+    "root": "/packages/module-federation",
+    "source": "/packages/module-federation/src"
+  },
+  {
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "documents": [
       {
@@ -1715,7 +1726,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/create-nx-workspace",
-        "tags": [],
+        "tags": ["installation"],
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       {
@@ -1726,7 +1737,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/init",
-        "tags": [],
+        "tags": ["init"],
         "originalFilePath": "generated/cli/init"
       },
       {
@@ -1759,7 +1770,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/daemon",
-        "tags": [],
+        "tags": ["daemon"],
         "originalFilePath": "generated/cli/daemon"
       },
       {
@@ -1891,7 +1902,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/sync",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync"
       },
       {
@@ -1902,7 +1913,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/sync-check",
-        "tags": [],
+        "tags": ["sync"],
         "originalFilePath": "generated/cli/sync-check"
       },
       {
@@ -1913,7 +1924,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/import",
-        "tags": [],
+        "tags": ["import"],
         "originalFilePath": "generated/cli/import"
       },
       {
@@ -1924,7 +1935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/exec",
-        "tags": [],
+        "tags": ["exec"],
         "originalFilePath": "generated/cli/exec"
       },
       {
@@ -1946,7 +1957,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/show",
-        "tags": [],
+        "tags": ["explore-graph"],
         "originalFilePath": "generated/cli/show"
       },
       {
@@ -1979,7 +1990,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/add",
-        "tags": [],
+        "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
       {
@@ -1990,7 +2001,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/login",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/login"
       },
       {
@@ -2001,7 +2012,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/logout",
-        "tags": [],
+        "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
       }
     ],
@@ -2855,6 +2866,36 @@
     "source": "/packages/rollup/src"
   },
   {
+    "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
+    "documents": [],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/rsbuild` plugin.",
+        "file": "generated/packages/rsbuild/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/rsbuild/src/generators/init/schema.json",
+        "path": "rsbuild/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Add an Rsbuild configuration for the provided project.",
+        "file": "generated/packages/rsbuild/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/rsbuild/src/generators/configuration/schema.json",
+        "path": "rsbuild/generators/configuration",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "rsbuild",
+    "packageName": "@nx/rsbuild",
+    "root": "/packages/rsbuild",
+    "source": "/packages/rsbuild/src"
+  },
+  {
     "description": "The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.",
     "documents": [
       {
@@ -2969,6 +3010,24 @@
         "name": "convert-webpack",
         "originalFilePath": "/packages/rspack/src/generators/convert-webpack/schema.json",
         "path": "rspack/generators/convert-webpack",
+        "type": "generator"
+      },
+      {
+        "description": "Convert the project to use the `NxAppRspackPlugin` and `NxReactRspackPlugin`.",
+        "file": "generated/packages/rspack/generators/convert-config-to-rspack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-rspack-plugin",
+        "originalFilePath": "/packages/rspack/src/generators/convert-config-to-rspack-plugin/schema.json",
+        "path": "rspack/generators/convert-config-to-rspack-plugin",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
+        "file": "generated/packages/rspack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rspack/src/generators/convert-to-inferred/schema.json",
+        "path": "rspack/generators/convert-to-inferred",
         "type": "generator"
       }
     ],

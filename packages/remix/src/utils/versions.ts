@@ -2,14 +2,14 @@ import { readJson, Tree } from '@nx/devkit';
 
 export const nxVersion = require('../../package.json').version;
 
-export const remixVersion = '^2.13.1';
+export const remixVersion = '^2.14.0';
 export const isbotVersion = '^4.4.0';
 export const reactVersion = '^18.2.0';
 export const reactDomVersion = '^18.2.0';
 export const typesReactVersion = '^18.2.0';
 export const typesReactDomVersion = '^18.2.0';
 export const eslintVersion = '^8.56.0';
-export const typescriptVersion = '~5.5.2';
+export const typescriptVersion = '~5.6.2';
 export const tailwindVersion = '^3.3.0';
 export const postcssVersion = '^8.4.38';
 export const autoprefixerVersion = '^10.4.19';

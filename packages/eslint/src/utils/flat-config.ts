@@ -3,8 +3,8 @@ import { gte } from 'semver';
 
 // todo: add support for eslint.config.mjs,
 export const eslintFlatConfigFilenames = [
-  'eslint.config.js',
   'eslint.config.cjs',
+  'eslint.config.js',
 ];
 
 export function getRootESLintFlatConfigFilename(tree: Tree): string {

@@ -23,5 +23,6 @@ export async function addJest(
     setupFile: 'none',
     compiler: options.compiler,
     skipFormat: true,
+    runtimeTsconfigFileName: 'tsconfig.app.json',
   });
 }
