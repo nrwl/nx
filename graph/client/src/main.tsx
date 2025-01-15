@@ -22,10 +22,8 @@ import { ErrorPage } from './app/ui-components/error-page';
 import { ProjectDetailsApp } from './app/console-project-details/project-details.app';
 import { interpret } from 'xstate';
 import { MigrateApp } from './app/console-migrate/migrate.app';
-import {
-  migrateMachine,
-  NxConsoleMigrateMetadata,
-} from './app/console-migrate/migrate.machine';
+import { migrateMachine } from './app/console-migrate/migrate.machine';
+import { NxConsoleMigrateMetadata } from '@nx/graph-migrate';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
   window.externalApi = new ExternalApiImpl();

@@ -74,6 +74,7 @@ export interface MigrationsJsonEntry {
   implementation?: string;
   factory?: string;
   requires?: Record<string, string>;
+  package?: string;
 }
 
 export interface MigrationsJson {

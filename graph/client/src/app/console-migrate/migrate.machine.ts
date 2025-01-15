@@ -4,10 +4,8 @@ import type { MigrationsJsonEntry } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { createMachine } from 'xstate';
 import { assign } from '@xstate/immer';
+import { NxConsoleMigrateMetadata } from '@nx/graph-migrate';
 
-export type NxConsoleMigrateMetadata = {
-  successfulMigrations?: string[];
-};
 export interface MigrateState {
   migrations: MigrationsJsonEntry[];
   nxConsoleMetadata: NxConsoleMigrateMetadata;

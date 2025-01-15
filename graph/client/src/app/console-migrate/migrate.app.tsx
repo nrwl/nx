@@ -34,7 +34,7 @@ export function MigrateApp({
   return (
     <MigrateUI
       migrations={migrations}
-      successfulMigrations={nxConsoleMetadata.successfulMigrations ?? []}
+      nxConsoleMetadata={nxConsoleMetadata}
       onRunMigration={onRunMigration}
     ></MigrateUI>
   );
