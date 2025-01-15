@@ -67,6 +67,7 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
+import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 
 const defaultOutputDirectory = 'dist';
 
@@ -221,6 +222,8 @@ export async function libraryGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
+
+  sortPackageJsonFields(tree, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
