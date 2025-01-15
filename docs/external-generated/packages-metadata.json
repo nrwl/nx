@@ -189,17 +189,7 @@
       }
     ],
     "executors": [],
-    "generators": [
-      {
-        "description": "Initialize the S3 Cache",
-        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
-        "path": "powerpack-s3-cache/generators/init",
-        "type": "generator"
-      }
-    ],
+    "generators": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-s3-cache",
     "packageName": "@nx/powerpack-s3-cache",

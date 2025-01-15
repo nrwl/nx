@@ -81,3 +81,18 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 | --------------- | -------------------------------- |
 | **container**   | The name of the container to use |
 | **accountName** | The name of blob storage account |
+
+## Accessing the remote cache locally
+
+By default the remote cache will try to write and read from the remote cache while running locally. This means that permissions must be set for users who are expected to access the remote cache.
+
+We will only show warnings when the remote cache is not writable. You can disable these warnings by setting `disableRemoteWritesLocally` to true in the `nx.json` file.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "azure": {
+    // ...
+    "disableRemoteWritesLocally": true
+  }
+}
+```
