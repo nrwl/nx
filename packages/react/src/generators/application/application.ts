@@ -66,6 +66,7 @@ export async function applicationGeneratorInternal(
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 

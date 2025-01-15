@@ -5,9 +5,11 @@
     "emitDeclarationOnly": true,
     "importHelpers": true,
     "isolatedModules": true,
-    "lib": ["es2022"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "lib": ["es2022"],<% if (platform === 'node') { %>
+    "module": "nodenext",
+    "moduleResolution": "nodenext",<% } else { %>
+    "module": "esnext",
+    "moduleResolution": "bundler",<% } %>
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

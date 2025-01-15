@@ -259,7 +259,6 @@ describe('app', () => {
       expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": true,
             "jsx": "preserve",
             "jsxImportSource": "vue",
             "module": "esnext",
@@ -298,7 +297,6 @@ describe('app', () => {
       expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": true,
             "jsx": "preserve",
             "jsxImportSource": "vue",
             "module": "esnext",

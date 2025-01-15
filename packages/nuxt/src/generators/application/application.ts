@@ -46,6 +46,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 

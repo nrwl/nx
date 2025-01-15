@@ -50,6 +50,7 @@ export async function reactNativeApplicationGeneratorInternal(
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 

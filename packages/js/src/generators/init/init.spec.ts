@@ -199,8 +199,8 @@ describe('js init generator', () => {
           "importHelpers": true,
           "isolatedModules": true,
           "lib": ["es2022"],
-          "module": "NodeNext",
-          "moduleResolution": "NodeNext",
+          "module": "nodenext",
+          "moduleResolution": "nodenext",
           "noEmitOnError": true,
           "noFallthroughCasesInSwitch": true,
           "noImplicitOverride": true,
@@ -214,4 +214,21 @@ describe('js init generator', () => {
       "
     `);
   });
+
+  it.each`
+    platform  | module        | moduleResolution
+    ${'web'}  | ${'esnext'}   | ${'bundler'}
+    ${'node'} | ${'nodenext'} | ${'nodenext'}
+  `(
+    'should set module: $module and moduleResolution: $moduleResolution in tsconfig.base.json for platform: $platform',
+    async ({ platform, module, moduleResolution }) => {
+      await init(tree, { addTsPlugin: true, platform });
+
+      const tsconfigBaseJson = readJson(tree, 'tsconfig.base.json');
+      expect(tsconfigBaseJson.compilerOptions.module).toBe(module);
+      expect(tsconfigBaseJson.compilerOptions.moduleResolution).toBe(
+        moduleResolution
+      );
+    }
+  );
 });

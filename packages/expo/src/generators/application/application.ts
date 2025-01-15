@@ -45,6 +45,7 @@ export async function expoApplicationGeneratorInternal(
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
 
   const options = await normalizeOptions(host, schema);
