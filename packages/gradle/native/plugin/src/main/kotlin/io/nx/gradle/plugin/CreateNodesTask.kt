@@ -8,18 +8,22 @@ import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.ExternalModuleDependency
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import java.lang.Error
 import java.nio.file.Path
 import org.gradle.api.logging.Logger
+import java.lang.Exception
 
 
 data class GradleTargets(val targets: MutableMap<String, Any>, val targetGroups: MutableMap<String, MutableList<String>>)
 data class Metadata(val targetGroups: MutableMap<String, MutableList<String>>, val technologies: Array<String>, val description: String?)
 data class Node(val targets: MutableMap<String, Any>, val metadata: Metadata, val name: String)
 data class Dependency(val source: String, val target: String, val sourceFile: String)
-data class GradleNodesReport(val nodes: MutableMap<String, Node>, val dependencies: MutableSet<Dependency>)
+data class ExternalDepData(val version: String?, val packageName: String)
+data class ExternalNode(var type: String?, val name: String, var data: ExternalDepData)
+data class GradleNodesReport(val nodes: MutableMap<String, Node>, val dependencies: MutableSet<Dependency>, val externalNodes: MutableMap<String, ExternalNode>)
+
 
 abstract class CreateNodesTask : DefaultTask() {
     @Option(option = "outputDirectory", description = "Output directory, default to {workspaceRoot}/.nx/cache")
@@ -51,13 +55,26 @@ abstract class CreateNodesTask : DefaultTask() {
         }
 
         val projectNodes = mutableMapOf<String, Node>()
+        val externalNodes = mutableMapOf<String, ExternalNode>()
         var dependencies = mutableSetOf<Dependency>()
         val allProjects = currentProject.getAllprojects()
         allProjects.forEach { project ->
             logger.info("CreateNodes: get nodes and dependencies for ${project}")
             try {
+                project.getConfigurations().forEach {
+                    it.getAllDependencies().filter {
+                        it is ExternalModuleDependency
+                    }.forEach {
+                        val data = ExternalDepData(it.getVersion(), "${it.getGroup()}.${it.name}")
+                        val externalNode = ExternalNode("gradle", it.name, data)
+                        externalNodes.put(it.name, externalNode)
+                    }
+                }
+                logger.info("CreateNodes: get external deps for ${project}")
+
                 // get dependencies of project
                 getDependenciesForProject(project, dependencies, allProjects)
+                logger.info("CreateNodes: get dependencies for ${project}")
 
                 val gradleTargets = this.processTargetsForProject(project, workspaceRoot, rootProjectDirectory)
                 var projectRoot = project.getProjectDir().getPath()
@@ -68,13 +85,13 @@ abstract class CreateNodesTask : DefaultTask() {
                 )
                 logger.info("CreateNodes: get nodes for ${projectRoot}")
                 projectNodes.put(projectRoot, projectNode)
-            } catch (e: Error) {
+            } catch (e: Exception) {
                 logger.info("CreateNodes: error ${e.toString()}")
             } // ignore errors
         }
 
         val gson = Gson()
-        val json = gson.toJson(GradleNodesReport(projectNodes, dependencies))
+        val json = gson.toJson(GradleNodesReport(projectNodes, dependencies, externalNodes))
         val file = File(outputDirectory, "${currentProject.name}${hash}.json")
         file.writeText(json)
         println(file)
@@ -89,6 +106,8 @@ abstract class CreateNodesTask : DefaultTask() {
         val targetGroups = mutableMapOf<String, MutableList<String>>()
         val projectRoot = project.getProjectDir().getPath()
 
+        logger.info("CreateNodes: process targets for ${projectRoot}")
+
         var gradlewCommand: String;
         val operSys = System.getProperty("os.name").lowercase();
         if (operSys.contains("win")) {
@@ -102,6 +121,7 @@ abstract class CreateNodesTask : DefaultTask() {
         }
 
         project.getTasks().forEach { task ->
+            logger.info("  >> CreateNodes: process ${task} for ${projectRoot}")
             val target = mutableMapOf<String, Any?>()
 
             val group: String? = task.getGroup();
@@ -114,31 +134,41 @@ abstract class CreateNodesTask : DefaultTask() {
             }
 
             val inputs = task.getInputs().getSourceFiles()
-            println(task.getInputs())
             if (!inputs.isEmpty()) {
                 target.put("inputs", inputs.mapNotNull { file ->
                     val path: String = file.getPath()
                     replaceRootInPath(path, projectRoot, workspaceRoot)
                 })
+                logger.info("    >> CreateNodes: process ${task} inputs")
             }
-            val outputs = task.getOutputs().getFiles()
-            if (!outputs.isEmpty()) {
-                target.put("outputs", outputs.mapNotNull { file ->
-                    val path: String = file.getPath()
-                    replaceRootInPath(path, projectRoot, workspaceRoot)
-                })
-            }
-            target.put("cache", true)
 
-            val dependsOn = task.getTaskDependencies().getDependencies(task)
-            if (!dependsOn.isEmpty()) {
-                target.put("dependsOn", dependsOn.map { depTask ->
-                    val depProject = depTask.getProject()
-                    if (depProject == project) {
-                        depTask.name
-                    }
-                    "${depProject.name}:${depTask.name}"
-                })
+            try {
+                val outputs = task.getOutputs().getFiles()
+                if (!outputs.isEmpty()) {
+                    target.put("outputs", outputs.mapNotNull { file ->
+                        val path: String = file.getPath()
+                        replaceRootInPath(path, projectRoot, workspaceRoot)
+                    })
+                    logger.info("    >> CreateNodes: process ${task} outputs")
+                }
+            } catch (e: Exception) {
+                logger.info("CreateNodes: get outputs error ${e.toString()}")
+            }
+
+            try {
+                val dependsOn = task.getTaskDependencies().getDependencies(task)
+                if (!dependsOn.isEmpty()) {
+                    target.put("dependsOn", dependsOn.map { depTask ->
+                        val depProject = depTask.getProject()
+                        if (depProject == project) {
+                            depTask.name
+                        }
+                        "${depProject.name}:${depTask.name}"
+                    })
+                    logger.info("    >> CreateNodes: process task ${task} dependsOn")
+                }
+            } catch (e: Exception) {
+                logger.info("CreateNodes: get dependsOn error ${e.toString()}")
             }
 
             var cwd = rootProjectDirectory.getPath()
@@ -153,6 +183,7 @@ abstract class CreateNodesTask : DefaultTask() {
                 addTestCiTarget(inputs, gradlewCommand, gradleProject, target, targets, targetGroups, projectRoot, workspaceRoot)
             }
 
+            target.put("cache", true)
             target.put("command", "${gradlewCommand} ${gradleProject}${task.name}")
 
             val metadata = mapOf(

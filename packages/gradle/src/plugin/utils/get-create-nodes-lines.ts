@@ -25,6 +25,7 @@ export async function getCreateNodesLines(gradlewFile: string) {
       cacheDirectoryForWorkspace(workspaceRoot),
       '--workspaceRoot',
       workspaceRoot,
+      '--no-parallel' // we need to run this task sequentially because tasks need to be processed in order
     ]);
   } catch (e) {
     throw new AggregateCreateNodesError(
@@ -32,7 +33,7 @@ export async function getCreateNodesLines(gradlewFile: string) {
         [
           gradlewFile,
           new Error(
-            `Could not run 'createNodes' task using ${gradlewFile}. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks. ${e.message}`,
+            `Could not run 'createNodes' task using ${gradlewFile}. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks. ${e.message ?? e}`,
             { cause: e }
           ),
         ],
