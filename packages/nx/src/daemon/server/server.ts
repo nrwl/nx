@@ -17,6 +17,7 @@ import {
   killSocketOrPath,
 } from '../socket-utils';
 import {
+  hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
@@ -311,9 +312,9 @@ export async function handleResult(
 }
 
 function handleInactivityTimeout() {
-  if (numberOfOpenConnections > 0) {
+  if (hasRegisteredFileWatcherSockets()) {
     serverLogger.log(
-      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`
+      `There are open file watchers. Resetting inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {
