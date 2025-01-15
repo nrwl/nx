@@ -74,7 +74,46 @@ export async function configurationGeneratorInternal(
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
-  if (!tree.exists(tsconfigPath)) {
+  if (tree.exists(tsconfigPath)) {
+    if (isTsSolutionSetup) {
+      const tsconfig: any = {
+        extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
+        compilerOptions: {
+          allowJs: true,
+          outDir: 'out-tsc/playwright',
+          sourceMap: false,
+        },
+        include: [
+          joinPathFragments(options.directory, '**/*.ts'),
+          joinPathFragments(options.directory, '**/*.js'),
+          'playwright.config.ts',
+        ],
+        exclude: ['out-tsc', 'test-output'],
+      };
+
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
+      }
+
+      writeJson(
+        tree,
+        joinPathFragments(projectConfig.root, 'tsconfig.e2e.json'),
+        tsconfig
+      );
+
+      updateJson(tree, tsconfigPath, (json) => {
+        // add the project tsconfig to the workspace root tsconfig.json references
+        json.references ??= [];
+        json.references.push({ path: './tsconfig.e2e.json' });
+        return json;
+      });
+    }
+  } else {
     const tsconfig: any = {
       extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
       compilerOptions: {

@@ -5,6 +5,8 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint/src/generators/utils/linter';
@@ -396,8 +398,38 @@ describe('detox application generator', () => {
         addPlugin: true,
       });
 
-      const tsConfig = readJson(tree, 'my-app-e2e/tsconfig.json');
-      expect(tsConfig.extends).toEqual('../tsconfig.base.json');
+      expect(readJson(tree, 'my-app-e2e/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.e2e.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-app-e2e/tsconfig.e2e.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "../dist/out-tsc",
+            "sourceMap": false,
+            "types": [
+              "node",
+              "jest",
+              "detox",
+            ],
+          },
+          "extends": "./tsconfig.json",
+          "include": [
+            "src/**/*.ts",
+            "src/**/*.js",
+          ],
+        }
+      `);
     });
 
     it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
@@ -411,8 +443,120 @@ describe('detox application generator', () => {
         addPlugin: true,
       });
 
-      const tsConfig = readJson(tree, 'my-app-e2e/tsconfig.json');
-      expect(tsConfig.extends).toEqual('../tsconfig.json');
+      expect(readJson(tree, 'my-app-e2e/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.e2e.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-app-e2e/tsconfig.e2e.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "allowJs": true,
+            "outDir": "../dist/out-tsc",
+            "sourceMap": false,
+            "types": [
+              "node",
+              "jest",
+              "detox",
+            ],
+          },
+          "extends": "./tsconfig.json",
+          "include": [
+            "src/**/*.ts",
+            "src/**/*.js",
+          ],
+        }
+      `);
+    });
+  });
+
+  describe('TS Solution Setup', () => {
+    beforeEach(() => {
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should create tsconfig.json and update project references', async () => {
+      writeJson(tree, 'apps/my-app/package.json', {
+        name: 'my-app',
+      });
+
+      await detoxApplicationGenerator(tree, {
+        e2eDirectory: 'apps/my-app-e2e',
+        appProject: 'my-app',
+        linter: Linter.None,
+        framework: 'react-native',
+        addPlugin: true,
+      });
+
+      expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.base.json",
+          "files": [],
+          "references": [
+            {
+              "path": "./apps/my-app-e2e"
+            }
+          ]
+        }
+        "
+      `);
+      expect(tree.read('apps/my-app-e2e/package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "name": "my-app-e2e",
+          "version": "0.0.1",
+          "private": true,
+          "nx": {
+            "sourceRoot": "apps/my-app-e2e/src",
+            "projectType": "application",
+            "implicitDependencies": [
+              "my-app"
+            ]
+          }
+        }
+        "
+      `);
+      expect(tree.read('apps/my-app-e2e/tsconfig.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "../../tsconfig.base.json",
+          "compilerOptions": {
+            "sourceMap": false,
+            "outDir": "out-tsc/detox",
+            "allowJs": true,
+            "types": ["node", "jest", "detox"],
+            "rootDir": "src",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "tsBuildInfoFile": "out-tsc/detox/tsconfig.tsbuildinfo"
+          },
+          "include": ["src/**/*.ts", "src/**/*.js"],
+          "exclude": ["out-tsc", "dist", "test-output"]
+        }
+        "
+      `);
     });
   });
 });
