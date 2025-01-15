@@ -207,10 +207,23 @@ export async function libraryGeneratorInternal(
         json.references ??= [];
         json.references.push({ path: './tsconfig.lib.json' });
 
-        if (options.isUsingTsSolutionConfig && options.bundler === 'rollup') {
-          json.compilerOptions.module = 'esnext';
-          json.compilerOptions.moduleResolution = 'bundler';
+        const compilerOptions = getCompilerOptions(options);
+        // respect the module and moduleResolution set by the test runner generator
+        if (json.compilerOptions.module) {
+          compilerOptions.module = json.compilerOptions.module;
         }
+        if (json.compilerOptions.moduleResolution) {
+          compilerOptions.moduleResolution =
+            json.compilerOptions.moduleResolution;
+        }
+
+        // filter out options already set with the same value in root tsconfig file that we're going to extend from
+        json.compilerOptions = getNeededCompilerOptionOverrides(
+          tree,
+          { ...json.compilerOptions, ...compilerOptions },
+          // must have been created by now
+          getRootTsConfigFileName(tree)!
+        );
 
         return json;
       }
@@ -968,34 +981,8 @@ function createProjectTsConfigs(
 ) {
   const rootOffset = offsetFromRoot(options.projectRoot);
 
-  let compilerOptionOverrides: Record<keyof CompilerOptions, any> = {
-    module: options.isUsingTsSolutionConfig
-      ? options.bundler === 'rollup'
-        ? 'esnext'
-        : 'nodenext'
-      : 'commonjs',
-    ...(options.isUsingTsSolutionConfig
-      ? options.bundler === 'rollup'
-        ? { moduleResolution: 'bundler' }
-        : { moduleResolution: 'nodenext' }
-      : {}),
-    ...(options.js ? { allowJs: true } : {}),
-    ...(options.strict
-      ? {
-          forceConsistentCasingInFileNames: true,
-          strict: true,
-          importHelpers: true,
-          noImplicitOverride: true,
-          noImplicitReturns: true,
-          noFallthroughCasesInSwitch: true,
-          ...(!options.isUsingTsSolutionConfig
-            ? { noPropertyAccessFromIndexSignature: true }
-            : {}),
-        }
-      : {}),
-  };
-
-  if (!options.rootProject || options.isUsingTsSolutionConfig) {
+  let compilerOptionOverrides = getCompilerOptions(options);
+  if (options.isUsingTsSolutionConfig) {
     // filter out options already set with the same value in root tsconfig file that we're going to extend from
     compilerOptionOverrides = getNeededCompilerOptionOverrides(
       tree,
@@ -1091,6 +1078,38 @@ function createProjectTsConfigs(
     joinPathFragments(options.projectRoot, 'tsconfig.json'),
     tsconfig
   );
+}
+
+function getCompilerOptions(
+  options: NormalizedLibraryGeneratorOptions
+): Record<keyof CompilerOptions, any> {
+  return {
+    module: options.isUsingTsSolutionConfig
+      ? options.bundler === 'rollup'
+        ? 'esnext'
+        : 'nodenext'
+      : 'commonjs',
+    ...(options.isUsingTsSolutionConfig
+      ? {
+          moduleResolution:
+            options.bundler === 'rollup' ? 'bundler' : 'nodenext',
+        }
+      : {}),
+    ...(options.js ? { allowJs: true } : {}),
+    ...(options.strict
+      ? {
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          importHelpers: true,
+          noImplicitOverride: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+          ...(!options.isUsingTsSolutionConfig
+            ? { noPropertyAccessFromIndexSignature: true }
+            : {}),
+        }
+      : {}),
+  };
 }
 
 function determineDependencies(

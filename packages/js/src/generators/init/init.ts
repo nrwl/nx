@@ -131,7 +131,9 @@ export async function initGeneratorInternal(
 
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
     if (schema.addTsPlugin) {
+      const platform = schema.platform ?? 'node';
       generateFiles(tree, join(__dirname, './files/ts-solution'), '.', {
+        platform,
         tmpl: '',
       });
     } else {
