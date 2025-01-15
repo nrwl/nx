@@ -553,6 +553,20 @@ describe('lib', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "main",
+          "types",
+          "exports",
+          "nx",
+          "dependencies",
+        ]
+      `);
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},

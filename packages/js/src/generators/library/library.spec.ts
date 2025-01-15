@@ -1694,6 +1694,20 @@ describe('lib', () => {
         linter: 'none',
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'my-ts-lib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "type",
+          "main",
+          "types",
+          "exports",
+          "dependencies",
+        ]
+      `);
       expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},

@@ -27,6 +27,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
@@ -149,6 +150,8 @@ export async function applicationGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
 
   if (!options.skipFormat) await formatFiles(tree);
 

@@ -24,6 +24,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function expoApplicationGenerator(
   host: Tree,
@@ -103,6 +104,8 @@ export async function expoApplicationGeneratorInternal(
   if (options.useTsSolution) {
     addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
+
+  sortPackageJsonFields(host, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);
