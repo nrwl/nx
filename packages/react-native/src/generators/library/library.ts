@@ -40,6 +40,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -134,6 +135,8 @@ export async function reactNativeLibraryGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
+
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);
