@@ -74,6 +74,7 @@ export async function remixApplicationGeneratorInternal(
       skipFormat: true,
       addTsPlugin: _options.useTsSolution,
       formatter: _options.formatter,
+      platform: 'web',
     }),
   ];
 

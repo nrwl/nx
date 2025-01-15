@@ -293,6 +293,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const jsInitTask = await jsInitGenerator(host, {
     js: false,
     skipFormat: true,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
