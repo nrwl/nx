@@ -75,6 +75,7 @@ export interface DefaultTasksRunnerOptions {
   lifeCycle: LifeCycle;
   captureStderr?: boolean;
   skipNxCache?: boolean;
+  skipRemoteCache?: boolean;
   batch?: boolean;
 }
 
