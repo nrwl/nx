@@ -13,6 +13,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -79,6 +80,8 @@ export async function remixLibraryGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
+
+  sortPackageJsonFields(tree, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -34,6 +34,7 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -116,6 +117,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
+
+  sortPackageJsonFields(tree, options.projectRoot);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
