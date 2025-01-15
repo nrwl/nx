@@ -81,6 +81,7 @@ describe('@nx/vite:init', () => {
               "options": {
                 "buildDepsTargetName": "build-deps",
                 "buildTargetName": "build",
+                "devTargetName": "dev",
                 "previewTargetName": "preview",
                 "serveStaticTargetName": "serve-static",
                 "serveTargetName": "serve",

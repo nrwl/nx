@@ -321,6 +321,26 @@ describe('@nx/vite/plugin', () => {
                         "^build",
                       ],
                     },
+                    "dev": {
+                      "command": "vite",
+                      "metadata": {
+                        "description": "Starts Vite dev server",
+                        "help": {
+                          "command": "npx vite --help",
+                          "example": {
+                            "options": {
+                              "port": 3000,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "vite",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "my-lib",
+                      },
+                    },
                     "preview": {
                       "command": "vite preview",
                       "dependsOn": [
@@ -345,8 +365,9 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "serve": {
-                      "command": "vite serve",
+                      "command": "vite",
                       "metadata": {
+                        "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
                         "help": {
                           "command": "npx vite --help",
