@@ -72,6 +72,7 @@ export async function initGeneratorInternal(
         buildTargetName: ['build', 'vite:build', 'vite-build'],
         testTargetName: ['test', 'vite:test', 'vite-test'],
         serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
+        devTargetName: ['dev', 'vite:dev', 'vite-dev'],
         previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
         serveStaticTargetName: [
           'serve-static',
