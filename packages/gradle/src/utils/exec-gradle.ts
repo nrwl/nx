@@ -23,7 +23,7 @@ export function execGradleAsync(
   args: ReadonlyArray<string>,
   execOptions: ExecFileOptions = {}
 ): Promise<Buffer> {
-  return new Promise<Buffer>((res, rej) => {
+  return new Promise<Buffer>((res, rej: (stdout: Buffer) => void) => {
     const cp = execFile(gradleBinaryPath, args, {
       cwd: dirname(gradleBinaryPath),
       shell: true,
@@ -36,18 +36,15 @@ export function execGradleAsync(
     cp.stdout?.on('data', (data) => {
       stdout += data;
     });
+    cp.stderr?.on('data', (data) => {
+      stdout += data;
+    });
 
     cp.on('exit', (code) => {
       if (code === 0) {
         res(stdout);
       } else {
-        rej(
-          new Error(
-            `Executing Gradle with ${args.join(
-              ' '
-            )} failed with code: ${code}. \nLogs: ${stdout}`
-          )
-        );
+        rej(stdout);
       }
     });
   });
