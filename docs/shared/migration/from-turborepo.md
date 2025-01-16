@@ -16,7 +16,7 @@ See the [Adding Nx to NPM/Yarn/PNPM Workspace](/recipes/adopting-nx/adding-to-mo
 
 ## Convert turbo.json into Nx Configuration
 
-Most of the settings in your `turbo.json` file can be converted directly into `nx.json` equivalents. The key configuration properties of `dependsOn`, `inputs` and `outputs` have a very similar syntax and can probably be copied over directly from the `turbo.json` `pipeline` into the `nx.json` `targetDefaults`.
+Most of the settings in your `turbo.json` file can be converted directly into `nx.json` equivalents. The key configuration properties of `dependsOn`, `inputs` and `outputs` have a very similar syntax and can probably be copied over directly from the `turbo.json` `tasks` into the `nx.json` `targetDefaults`.
 
 If you have project-specific tasks defined in the root `turbo.json` (i.e. `myreactapp#build`) or in project-level `turbo.json` files (i.e. `/packages/myreactapp/turbo.json`), those settings should go in the `nx` property of the project's `package.json` (i.e. `/packages/myreactapp/package.json`).
 
@@ -29,7 +29,7 @@ Let's say you start with the following `turbo.json` file:
 ```json {% fileName="/turbo.json" %}
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
@@ -105,20 +105,19 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                              |
 | `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs) as an [`env` input](/reference/inputs#environment-variables) |
 | `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                  |
-| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                              |
 
-| **Task Configuration:**         |                                                                                                |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `extends`                       | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.  |
-| `pipeline[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                     |
-| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/inputs#source-files)                                         |
-| `pipeline[task].env`            | Define [env `inputs`](/reference/inputs#environment-variables)                                 |
-| `pipeline[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables) |
-| `pipeline[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                       |
-| `pipeline[task].cache`          | [Same syntax](/reference/project-configuration#cache)                                          |
-| `pipeline[task].inputs`         | [Same syntax](/reference/inputs#source-files).                                                 |
-| `pipeline[task].outputMode`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)       |
-| `pipeline[task].persistent`     | N/A.                                                                                           |
+| **Task Configuration:**      |                                                                                                |
+| ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| `extends`                    | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.  |
+| `tasks[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                     |
+| `tasks[task].env`            | Define [env `inputs`](/reference/inputs#environment-variables)                                 |
+| `tasks[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables) |
+| `tasks[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                       |
+| `tasks[task].cache`          | [Same syntax](/reference/project-configuration#cache)                                          |
+| `tasks[task].inputs`         | [Same syntax](/reference/inputs#source-files).                                                 |
+| `tasks[task].outputLogs`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)       |
+| `tasks[task].persistent`     | N/A.                                                                                           |
+| `tasks[task].interactive`    | N/A.                                                                                           |
 
 ## Command Equivalents
 
