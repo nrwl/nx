@@ -458,25 +458,25 @@ export async function addLint(
           ruleSeverity = value;
           ruleOptions = {};
         }
-        if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
-          ruleOptions.ignoredFiles ??= [];
-          ruleOptions.ignoredFiles.push(
-            '{projectRoot}/vite.config.{js,ts,mjs,mts}'
-          );
-          o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
+        const ignoredFiles = new Set(ruleOptions.ignoredFiles ?? []);
+        if (options.bundler === 'vite') {
+          ignoredFiles.add('{projectRoot}/vite.config.{js,ts,mjs,mts}');
         } else if (options.bundler === 'rollup') {
-          ruleOptions.ignoredFiles ??= [];
-          ruleOptions.ignoredFiles.push(
+          ignoredFiles.add(
             '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}'
           );
-          o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         } else if (options.bundler === 'esbuild') {
-          ruleOptions.ignoredFiles ??= [];
-          ruleOptions.ignoredFiles.push(
-            '{projectRoot}/esbuild.config.{js,ts,mjs,mts}'
-          );
+          ignoredFiles.add('{projectRoot}/esbuild.config.{js,ts,mjs,mts}');
+        }
+        if (options.unitTestRunner === 'vitest') {
+          ignoredFiles.add('{projectRoot}/vite.config.{js,ts,mjs,mts}');
+        }
+
+        if (ignoredFiles.size) {
+          ruleOptions.ignoredFiles = Array.from(ignoredFiles);
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         }
+
         return o;
       }
     );
