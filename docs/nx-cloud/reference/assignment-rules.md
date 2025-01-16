@@ -95,7 +95,7 @@ assignment-rules:
       - linux-large
 ```
 
-Note that the agent types supplied in the `runs-ons` property will be used to determine which agents will have rules applied to them.
+Note that the agent types supplied in the `runs-on` property will be used to determine which agents will have rules applied to them.
 You can choose to name your agent types anything you want, but they must be set on your agents via the `NX_AGENT_LAUNCH_TEMPLATE` environment variable.
 
 You can then reference your assignment rules file within your `start-ci-run` command:
