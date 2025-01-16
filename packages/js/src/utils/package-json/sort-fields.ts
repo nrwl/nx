@@ -14,7 +14,7 @@ export function sortPackageJsonFields(tree: Tree, projectRoot: string) {
       'main',
       'module',
       'types',
-      'exported',
+      'exports',
     ]);
     const orderedBottomFields = new Set([
       'dependencies',
