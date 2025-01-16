@@ -1473,11 +1473,11 @@
           "alwaysAddToPackageJson": true
         },
         "@angular/material": {
-          "version": "~19.0.5",
+          "version": "~19.1.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/cdk": {
-          "version": "~19.0.5",
+          "version": "~19.1.0",
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
