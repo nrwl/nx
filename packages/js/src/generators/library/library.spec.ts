@@ -1448,6 +1448,19 @@ describe('lib', () => {
     });
   });
 
+  describe('--bundler=none', () => {
+    it('should not generate a package.json when bundler is none', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+      });
+
+      expect(tree.exists('my-lib/package.json')).toBe(false);
+    });
+  });
+
   describe('--minimal', () => {
     it('should generate a README.md when minimal is set to false', async () => {
       await libraryGenerator(tree, {
@@ -1602,14 +1615,7 @@ describe('lib', () => {
           },
         }
       `);
-      expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
-        {
-          "dependencies": {},
-          "name": "@proj/my-lib",
-          "private": true,
-          "version": "0.0.1",
-        }
-      `);
+      expect(tree.exists('my-lib/package.json')).toBe(false);
     });
   });
 
