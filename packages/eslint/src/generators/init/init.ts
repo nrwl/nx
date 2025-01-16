@@ -11,9 +11,13 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
-import { findEslintFile } from '../utils/eslint-file';
+import {
+  determineEslintConfigFormat,
+  findEslintFile,
+} from '../utils/eslint-file';
 import { createNodesV2 } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
+import { extname } from 'path';
 
 export interface LinterInitOptions {
   skipPackageJson?: boolean;
@@ -81,11 +85,14 @@ export async function initEsLint(
   const rootEslintFile = findEslintFile(tree);
 
   if (rootEslintFile) {
-    const rootEslintContent = tree.read(rootEslintFile, 'utf-8');
-    // We do not want to mix the formats
-    options.eslintConfigFormat = rootEslintContent.includes('export default')
-      ? 'mjs'
-      : 'cjs';
+    const fileExtension = extname(rootEslintFile);
+    if (fileExtension === '.mjs' || fileExtension === '.cjs') {
+      options.eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
+    } else {
+      options.eslintConfigFormat = determineEslintConfigFormat(
+        tree.read(rootEslintFile, 'utf-8')
+      );
+    }
   }
 
   const graph = await createProjectGraphAsync();
