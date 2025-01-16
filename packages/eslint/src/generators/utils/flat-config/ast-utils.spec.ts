@@ -211,6 +211,7 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
+
         export default [
             ...baseConfig,
             {
@@ -254,6 +255,7 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
+
         export default [
             ...config,
             ...baseConfig,

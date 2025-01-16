@@ -56,6 +56,7 @@ describe('@nx/eslint:lint-project', () => {
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "import nx from "@nx/eslint-plugin";
+
       export default [
           ...nx.configs["flat/base"],
           ...nx.configs["flat/typescript"],

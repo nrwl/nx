@@ -29,7 +29,7 @@ export function removeOverridesFromLintConfig(content: string): string {
   const format = content.includes('export default') ? 'mjs' : 'cjs';
 
   const exportsArray =
-    format === 'mjs' ? findAllBlocks(source) : findModuleExports(source);
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return content;
   }
@@ -51,7 +51,7 @@ export function removeOverridesFromLintConfig(content: string): string {
 }
 
 // TODO Change name
-function findAllBlocks(source: ts.SourceFile): ts.NodeArray<ts.Node> {
+function findExportDefault(source: ts.SourceFile): ts.NodeArray<ts.Node> {
   return ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExportAssignment(node) &&
@@ -103,7 +103,7 @@ export function hasOverride(
   );
   const format = content.includes('export default') ? 'mjs' : 'cjs';
   const exportsArray =
-    format === 'mjs' ? findAllBlocks(source) : findModuleExports(source);
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return false;
   }
@@ -161,7 +161,7 @@ export function replaceOverride(
   );
   const format = content.includes('export default') ? 'mjs' : 'cjs';
   const exportsArray =
-    format === 'mjs' ? findAllBlocks(source) : findModuleExports(source);
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return content;
   }
@@ -683,7 +683,9 @@ function addBlockToFlatConfigExportESM(
 
   const updatedSource = ts.factory.updateSourceFile(source, updatedStatements);
 
-  return printer.printFile(updatedSource);
+  return printer
+    .printFile(updatedSource)
+    .replace(/export default/, '\nexport default');
 }
 
 function addBlockToFlatConfigExportCJS(
@@ -918,7 +920,7 @@ export function removeCompatExtends(
   const changes: StringChange[] = [];
   const format = content.includes('export default') ? 'mjs' : 'cjs';
   const exportsArray =
-    format === 'mjs' ? findAllBlocks(source) : findModuleExports(source);
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
 
   if (!exportsArray) {
     return content;
@@ -989,7 +991,7 @@ export function removePredefinedConfigs(
   const changes: StringChange[] = [];
   let removeImport = true;
   const exportsArray =
-    format === 'mjs' ? findAllBlocks(source) : findModuleExports(source);
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return content;
   }

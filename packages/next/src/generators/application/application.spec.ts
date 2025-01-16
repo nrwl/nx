@@ -644,6 +644,7 @@ describe('app', () => {
             baseDirectory: dirname(fileURLToPath(import.meta.url)),
             recommendedConfig: js.configs.recommended,
           });
+
           export default [
             ...compat.extends('next', 'next/core-web-vitals'),
             ...baseConfig,

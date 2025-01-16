@@ -149,6 +149,19 @@ function replaceFlatConfigPaths(
       `require('${newPath}')` +
       newConfig.slice(match.index + match[0].length);
   }
+
+  // Handle import statements
+  const importRegex = RegExp(/import\s+.*?\s+from\s+['"](.*)['"]/g);
+  while ((match = importRegex.exec(newConfig)) !== null) {
+    const oldPath = match[1];
+    const newPath = offsetFilePath(sourceRoot, oldPath, offset, tree);
+
+    // Replace the old path with the updated path
+    newConfig =
+      newConfig.slice(0, match.index + match[0].indexOf(oldPath)) +
+      newPath +
+      newConfig.slice(match.index + match[0].indexOf(oldPath) + oldPath.length);
+  }
   // replace projects
   const projectRegex = RegExp(/project:\s?\[?['"](.*)['"]\]?/g);
   while ((match = projectRegex.exec(newConfig)) !== null) {
