@@ -338,6 +338,15 @@
       "version": "20.3.0-beta.2",
       "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
       "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    },
+    "update-angular-cli-version-19-1-0": {
+      "cli": "nx",
+      "version": "20.4.0-beta.1",
+      "requires": {
+        "@angular/core": ">=19.1.0"
+      },
+      "description": "Update the @angular/cli package version to ~19.1.0.",
+      "factory": "./src/migrations/update-20-4-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1412,6 +1421,67 @@
       "packages": {
         "@ngrx/store": {
           "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.4.0": {
+      "version": "20.4.0-beta.1",
+      "x-prompt": "Do you want to update the Angular version to v19.1?",
+      "requires": {
+        "@angular/core": ">=19.0.0 <19.1.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1901.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~19.1.0",
           "alwaysAddToPackageJson": false
         }
       }
