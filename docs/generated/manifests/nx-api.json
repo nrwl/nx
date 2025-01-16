@@ -72,7 +72,7 @@
         "type": "executor"
       },
       "/nx-api/angular/executors/package": {
-        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
+        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.",
         "file": "generated/packages/angular/executors/package.json",
         "hidden": false,
         "name": "package",
