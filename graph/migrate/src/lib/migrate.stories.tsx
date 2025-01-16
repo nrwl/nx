@@ -37,6 +37,25 @@ export const Primary = {
         version: '1.0.2',
         package: 'nx',
       },
+      {
+        name: 'migration-5',
+        description: 'This is a migration that does a thing labeled with five.',
+        version: '1.0.2',
+        package: '@nx/angular',
+      },
+      {
+        name: 'migration-6',
+        description: 'This migration performs updates labeled as number six.',
+        version: '1.0.3',
+        package: '@nx/workspace',
+      },
+      {
+        name: 'migration-7',
+        description:
+          'Lucky number seven migration that updates configurations.',
+        version: '1.0.3',
+        package: '@nx/devkit',
+      },
     ],
     nxConsoleMetadata: {
       successfulMigrations: [

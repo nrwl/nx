@@ -19,6 +19,8 @@ export interface MigrateUIProps {
   migrations: MigrationsJsonEntry[];
   nxConsoleMetadata: NxConsoleMigrateMetadata;
   onRunMigration: (migration: MigrationsJsonEntry) => void;
+  onCancel: () => void;
+  onFinish: () => void;
 }
 
 export function MigrateUI(props: MigrateUIProps) {
@@ -139,6 +141,24 @@ export function MigrateUI(props: MigrateUIProps) {
           </div>
         );
       })}
+      <div className="sticky bottom-0 flex justify-end gap-2 bg-white p-4 dark:bg-slate-900">
+        <div className="flex gap-2">
+          <button
+            onClick={props.onCancel}
+            type="button"
+            className="flex w-full items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={props.onFinish}
+            type="button"
+            className="flex w-full items-center rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+          >
+            Finish
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

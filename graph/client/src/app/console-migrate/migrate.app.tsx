@@ -25,6 +25,18 @@ export function MigrateApp({
     });
   };
 
+  const onCancel = () => {
+    externalApiService.postEvent({
+      type: 'cancel',
+    });
+  };
+
+  const onFinish = () => {
+    externalApiService.postEvent({
+      type: 'finish',
+    });
+  };
+
   const migrations = useSelector(service, (state) => state.context.migrations);
   const nxConsoleMetadata = useSelector(
     service,
@@ -36,6 +48,8 @@ export function MigrateApp({
       migrations={migrations}
       nxConsoleMetadata={nxConsoleMetadata}
       onRunMigration={onRunMigration}
+      onCancel={onCancel}
+      onFinish={onFinish}
     ></MigrateUI>
   );
 }
