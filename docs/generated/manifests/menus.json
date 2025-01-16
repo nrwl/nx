@@ -631,6 +631,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "TypeScript Project Linking",
+            "path": "/concepts/typescript-project-linking",
+            "id": "typescript-project-linking",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx and Turborepo",
             "path": "/concepts/turbo-and-nx",
             "id": "turbo-and-nx",
@@ -839,6 +847,14 @@
         "name": "Sync Generators",
         "path": "/concepts/sync-generators",
         "id": "sync-generators",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "TypeScript Project Linking",
+        "path": "/concepts/typescript-project-linking",
+        "id": "typescript-project-linking",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1950,6 +1966,14 @@
                 "name": "Configuring ESLint with Typescript",
                 "path": "/recipes/tips-n-tricks/eslint",
                 "id": "eslint",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Switch to Workspaces and TS Project References",
+                "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+                "id": "switch-to-workspaces-project-references",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3681,6 +3705,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Switch to Workspaces and TS Project References",
+            "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "id": "switch-to-workspaces-project-references",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Enable Typescript Batch Mode",
             "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
             "id": "enable-tsc-batch-mode",
@@ -3807,6 +3839,14 @@
         "name": "Configuring ESLint with Typescript",
         "path": "/recipes/tips-n-tricks/eslint",
         "id": "eslint",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Switch to Workspaces and TS Project References",
+        "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "id": "switch-to-workspaces-project-references",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8232,14 +8272,6 @@
                 "name": "Overview",
                 "path": "/nx-api/js/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Configure TypeScript Project References in an Nx Workspace",
-                "path": "/nx-api/js/documents/typescript-project-references",
-                "id": "typescript-project-references",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
