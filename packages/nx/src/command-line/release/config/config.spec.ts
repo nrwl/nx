@@ -159,6 +159,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -338,6 +345,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -520,6 +534,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -733,6 +754,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -930,6 +958,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1136,6 +1171,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1340,6 +1382,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1529,6 +1578,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1713,6 +1769,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1899,6 +1962,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2101,6 +2171,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2291,6 +2368,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2504,6 +2588,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2703,6 +2794,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2892,6 +2990,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3080,6 +3185,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3264,6 +3376,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3453,6 +3572,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3655,6 +3781,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3837,6 +3970,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4031,6 +4171,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4219,6 +4366,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4425,6 +4579,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4632,6 +4793,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4828,6 +4996,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5021,6 +5196,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5215,6 +5397,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5471,6 +5660,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5681,6 +5877,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6071,6 +6274,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6254,6 +6464,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6459,6 +6676,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6661,6 +6885,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6859,6 +7090,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7058,6 +7296,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7260,6 +7505,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7481,6 +7733,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7751,6 +8010,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7977,6 +8243,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8184,6 +8457,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8624,6 +8904,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8990,6 +9277,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9177,6 +9471,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9365,6 +9666,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9556,6 +9864,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9746,6 +10061,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9944,6 +10266,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -10132,6 +10461,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -10367,6 +10703,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -10558,6 +10901,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -10755,6 +11105,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -10955,6 +11312,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -11159,6 +11523,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -11363,6 +11734,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
