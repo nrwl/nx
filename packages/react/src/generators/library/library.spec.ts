@@ -1027,8 +1027,8 @@ module.exports = withNx(
           "main",
           "module",
           "types",
-          "nx",
           "exports",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
