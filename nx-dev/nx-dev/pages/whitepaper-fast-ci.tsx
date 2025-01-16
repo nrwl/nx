@@ -83,7 +83,7 @@ export function WhitePaperFastCI(): ReactElement {
                     </SectionHeading>
                     <ButtonLink
                       href="/assets/enterprise/Fast-CI-Whitepaper.pdf"
-                      title="Download the ebook"
+                      title="Download the guide"
                       target="_blank"
                       variant="secondary"
                       size="small"
@@ -100,7 +100,7 @@ export function WhitePaperFastCI(): ReactElement {
                         aria-hidden="true"
                         className="size-5 shrink-0"
                       />
-                      <span>Download the ebook</span>
+                      <span>Download the guide</span>
                     </ButtonLink>
                   </div>
 

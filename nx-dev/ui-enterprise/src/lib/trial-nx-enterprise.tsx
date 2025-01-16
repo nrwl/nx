@@ -38,7 +38,7 @@ export function TrialNxEnterprise(): ReactElement {
               </SectionHeading>
               <ButtonLink
                 href="/assets/enterprise/Nx-Enterprise-POV.pdf"
-                title="Download the ebook"
+                title="Download the guide"
                 target="_blank"
                 variant="secondary"
                 size="small"
@@ -55,7 +55,7 @@ export function TrialNxEnterprise(): ReactElement {
                   aria-hidden="true"
                   className="size-5 shrink-0"
                 />
-                <span>Download the ebook</span>
+                <span>Download the guide</span>
               </ButtonLink>
             </div>
             <figure className="mt-16 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
