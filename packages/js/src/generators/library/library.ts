@@ -685,6 +685,13 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       };
       return json;
     });
+  } else if (
+    !options.isUsingTsSolutionConfig &&
+    options.useProjectJson &&
+    (!options.bundler || options.bundler === 'none') &&
+    !(options.projectRoot === '.')
+  ) {
+    tree.delete(packageJsonPath);
   }
 
   if (options.minimal && !(options.projectRoot === '.')) {
