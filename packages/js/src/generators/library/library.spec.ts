@@ -440,6 +440,95 @@ describe('lib', () => {
       expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     });
 
+    it.each`
+      bundler      | expectedIgnoredFile
+      ${'rollup'}  | ${'{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}'}
+      ${'esbuild'} | ${'{projectRoot}/esbuild.config.{js,ts,mjs,mts}'}
+      ${'vite'}    | ${'{projectRoot}/vite.config.{js,ts,mjs,mts}'}
+    `(
+      'should ignore $expectedIgnoredFile when bundler=$bundler',
+      async ({ bundler, expectedIgnoredFile }) => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          linter: 'eslint',
+          bundler,
+        });
+
+        expect(
+          readJson(tree, 'my-lib/.eslintrc.json').overrides
+        ).toContainEqual({
+          files: ['*.json'],
+          parser: 'jsonc-eslint-parser',
+          rules: {
+            '@nx/dependency-checks': [
+              'error',
+              {
+                ignoredFiles: [
+                  '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                  expectedIgnoredFile,
+                ],
+              },
+            ],
+          },
+        });
+      }
+    );
+
+    it('should ignore rollup and vite config files when bundler=rollup and unitTestRunner=vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        linter: 'eslint',
+        bundler: 'rollup',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
+                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+              ],
+            },
+          ],
+        },
+      });
+    });
+
+    it('should ignore esbuild and vite config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        linter: 'eslint',
+        bundler: 'esbuild',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+              ],
+            },
+          ],
+        },
+      });
+    });
+
     describe('not nested', () => {
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
