@@ -198,6 +198,22 @@ function offsetFilePath(
   return joinPathFragments(offset, projectRoot, pathToFile);
 }
 
+export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
+  const sourceFile = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  // Check if there's an `export default` in the AST
+  const hasExportDefault = sourceFile.statements.some(
+    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+
+  return hasExportDefault ? 'mjs' : 'cjs';
+}
+
 export function addOverrideToLintConfig(
   tree: Tree,
   root: string,

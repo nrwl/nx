@@ -9,8 +9,12 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { dirname } from 'path';
-import { findEslintFile, isEslintConfigSupported } from '../utils/eslint-file';
+import { dirname, extname } from 'path';
+import {
+  determineEslintConfigFormat,
+  findEslintFile,
+  isEslintConfigSupported,
+} from '../utils/eslint-file';
 import {
   getGlobalEsLintConfiguration,
   getGlobalFlatEslintConfiguration,
@@ -40,11 +44,14 @@ export function migrateConfigToMonorepoStyle(
 
   if (rootEslintConfig) {
     // We do not want to mix the formats
-    eslintConfigFormat = tree
-      .read(rootEslintConfig, 'utf-8')
-      .includes('export default')
-      ? 'mjs'
-      : 'cjs';
+    const fileExtension = extname(rootEslintConfig);
+    if (fileExtension === '.mjs' || fileExtension === '.cjs') {
+      eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
+    } else {
+      eslintConfigFormat = determineEslintConfigFormat(
+        tree.read(rootEslintConfig, 'utf-8')
+      );
+    }
   }
 
   if (

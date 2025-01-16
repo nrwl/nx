@@ -17,8 +17,11 @@ import {
 } from '@nx/devkit';
 
 import { Linter as LinterEnum, LinterType } from '../utils/linter';
-import { findEslintFile } from '../utils/eslint-file';
-import { join } from 'path';
+import {
+  determineEslintConfigFormat,
+  findEslintFile,
+} from '../utils/eslint-file';
+import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
@@ -207,12 +210,19 @@ function createEsLintConfiguration(
 
   if (extendedRootConfig) {
     // We do not want to mix the formats
-    options.eslintConfigFormat = tree
-      .read(extendedRootConfig, 'utf-8')
-      .includes('export default')
-      ? 'mjs'
-      : 'cjs';
+    // if the base file extension is `.mjs` we should use `mjs` for the new file
+    // or if base the file extension is `.cjs` then the format should be `cjs`
+
+    const fileExtension = extname(extendedRootConfig);
+    if (fileExtension === '.mjs' || fileExtension === '.cjs') {
+      options.eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
+    } else {
+      options.eslintConfigFormat = determineEslintConfigFormat(
+        tree.read(extendedRootConfig, 'utf-8')
+      );
+    }
   }
+
   const addDependencyChecks =
     options.addPackageJsonDependencyChecks ||
     isBuildableLibraryProject(projectConfig);
