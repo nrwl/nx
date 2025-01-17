@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
@@ -269,11 +270,49 @@ async function normalizeOptions(
 
   const linter = await normalizeLinterOption(tree, options.linter);
 
+  if (!options.webServerCommand || !options.webServerAddress) {
+    const { webServerCommand, webServerAddress } =
+      await promptForMissingServeData(options.project);
+    options.webServerCommand = webServerCommand;
+    options.webServerAddress = webServerAddress;
+  }
+
   return {
     ...options,
     addPlugin,
     linter,
     directory: options.directory ?? 'e2e',
+  };
+}
+
+async function promptForMissingServeData(projectName: string) {
+  const { command, port } = await promptWhenInteractive<{
+    command: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'command',
+        message: 'What command should be run to serve the application locally?',
+        initial: `npx nx serve ${projectName}`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      command: `npx nx serve ${projectName}`,
+      port: 3000,
+    }
+  );
+
+  return {
+    webServerCommand: command,
+    webServerAddress: `http://localhost:${port}`,
   };
 }
 
