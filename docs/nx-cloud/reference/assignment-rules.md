@@ -27,7 +27,7 @@ You can mix and match any of the criteria in an assignment rule provided that yo
 - Every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `runs-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
 
 {% callout type="note" title="If you are using self-hosted agents, you must define your own agent types" %}
-You can define your own agent types and attach them to your self-hosted agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `runs-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
+You must define your own agent types and attach them to your self-hosted agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `runs-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
 See below for an [example](#using-assignment-rules-with-selfhosted-agents) of how to define your own agent types when using self-hosted agents.
 {% /callout %}
 
