@@ -8,11 +8,8 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { setupTailwindGenerator } from '@nx/react';
-import {
-  testingLibraryReactVersion,
-  typesReactDomVersion,
-  typesReactVersion,
-} from '@nx/react/src/utils/versions';
+import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
+import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
@@ -104,9 +101,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
+    const reactVersions = await getReactDependenciesVersionsToInstall(host);
     const devDependencies: Record<string, string> = {
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
+      '@types/react': reactVersions['@types/react'],
+      '@types/react-dom': reactVersions['@types/react-dom'],
     };
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {

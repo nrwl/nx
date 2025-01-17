@@ -6,21 +6,22 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { nxVersion, reactDomVersion, reactVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
+import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
 
-export async function reactInitGenerator(host: Tree, schema: InitSchema) {
+export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
 
   if (!schema.skipPackageJson) {
-    tasks.push(removeDependenciesFromPackageJson(host, ['@nx/react'], []));
-
+    tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/react'], []));
+    const reactDeps = await getReactDependenciesVersionsToInstall(tree);
     tasks.push(
       addDependenciesToPackageJson(
-        host,
+        tree,
         {
-          react: reactVersion,
-          'react-dom': reactDomVersion,
+          react: reactDeps.react,
+          'react-dom': reactDeps['react-dom'],
         },
         {
           '@nx/react': nxVersion,
@@ -32,7 +33,7 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   }
 
   if (!schema.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);
