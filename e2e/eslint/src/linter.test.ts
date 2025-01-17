@@ -615,8 +615,8 @@ describe('Linter', () => {
         runCLI(`generate @nx/js:lib ${jsLib} --linter eslint`);
 
         checkFilesExist(
-          `${reactLib}/eslint.config.cjs`,
-          `${jsLib}/eslint.config.cjs`
+          `${reactLib}/eslint.config.mjs`,
+          `${jsLib}/eslint.config.mjs`
         );
         checkFilesDoNotExist(
           `${reactLib}/.eslintrc.json`,
