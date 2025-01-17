@@ -153,18 +153,28 @@ Below is an example on how to connect to MinIO:
 | **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
 | **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |
 
-## Accessing the remote cache locally
+# Cache Modes
 
 By default the remote cache will try to write and read from the remote cache while running locally. This means that permissions must be set for users who are expected to access the remote cache.
 
-Nx will only show warnings when the remote cache is not writable. You can disable these warnings by setting `disableRemoteWritesLocally` to true in the `nx.json` file.
-
+Nx will only show warnings when the remote cache is not writable. You can disable these warnings by setting `localMode` to `read` or `no-cache` in the `nx.json` file.
 ```jsonc {% fileName="nx.json" %}
 {
   "s3": {
     "region": "us-east-1",
     "bucket": "my-bucket",
-    "disableRemoteWritesLocally": true
+    "localMode": "read"
+  }
+}
+```
+
+The cache mode in CI can also be configured by setting `ciMode` to `read` or `no-cache` in the `nx.json` file. Or setting `NX_POWERPACK_CACHE_MODE` to `read` or `no-cache` in the CI environment.
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "ciMode": "read"
   }
 }
 ```
