@@ -39,6 +39,7 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 import cypressInitGenerator, { addPlugin } from '../init/init';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -199,6 +200,18 @@ Rename or remove the existing e2e target.`);
     !options.devServerTarget &&
     !projectConfig?.targets?.serve
   ) {
+    const { devServerTarget, baseUrl } = await promptForMissingServeData(
+      options.project
+    );
+    options.devServerTarget = devServerTarget;
+    options.baseUrl = baseUrl;
+  }
+
+  if (
+    !options.baseUrl &&
+    !options.devServerTarget &&
+    !projectConfig?.targets?.serve
+  ) {
     throw new Error(`The project ${options.project} does not have a 'serve' target.
 In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:<configName>]', or a baseUrl option`);
   }
@@ -225,6 +238,38 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
     rootProject: options.rootProject ?? projectConfig.root === '.',
     linter,
     devServerTarget,
+  };
+}
+
+async function promptForMissingServeData(projectName: string) {
+  const { devServerTarget, port } = await promptWhenInteractive<{
+    devServerTarget: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'devServerTarget',
+        message:
+          'What is the name of the target used to serve the application locally?',
+        initial: `${projectName}:serve`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      devServerTarget: `${projectName}:serve`,
+      port: 3000,
+    }
+  );
+
+  return {
+    devServerTarget,
+    baseUrl: `http://localhost:${port}`,
   };
 }
 
