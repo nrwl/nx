@@ -12,9 +12,8 @@ import type { Linter } from 'eslint';
 import { gte } from 'semver';
 import {
   baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
   ESLINT_CONFIG_FILENAMES,
-  legacyBaseEsLintFlatConfigFile,
+  BASE_ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import {
   eslintFlatConfigFilenames,
@@ -45,17 +44,15 @@ export function findEslintFile(
   tree: Tree,
   projectRoot?: string
 ): string | null {
-  if (projectRoot === undefined && tree.exists(baseEsLintConfigFile)) {
-    return baseEsLintConfigFile;
-  }
-  if (projectRoot === undefined && tree.exists(baseEsLintFlatConfigFile)) {
-    return baseEsLintFlatConfigFile;
-  }
-  if (
-    projectRoot === undefined &&
-    tree.exists(legacyBaseEsLintFlatConfigFile)
-  ) {
-    return legacyBaseEsLintFlatConfigFile;
+  if (projectRoot === undefined) {
+    for (const file of [
+      baseEsLintConfigFile,
+      ...BASE_ESLINT_CONFIG_FILENAMES,
+    ]) {
+      if (tree.exists(file)) {
+        return file;
+      }
+    }
   }
   projectRoot ??= '';
   for (const file of ESLINT_CONFIG_FILENAMES) {
@@ -227,7 +224,12 @@ export function addOverrideToLintConfig(
   if (useFlatConfig(tree)) {
     let fileName: string;
     if (isBase) {
-      fileName = joinPathFragments(root, baseEsLintFlatConfigFile);
+      for (const file of BASE_ESLINT_CONFIG_FILENAMES) {
+        if (tree.exists(joinPathFragments(root, file))) {
+          fileName = joinPathFragments(root, file);
+          break;
+        }
+      }
     } else {
       for (const f of eslintFlatConfigFilenames) {
         if (tree.exists(joinPathFragments(root, f))) {
@@ -338,7 +340,12 @@ export function lintConfigHasOverride(
     checkBaseConfig &&
     findEslintFile(tree, root).includes('.base');
   if (isBase) {
-    fileName = joinPathFragments(root, baseEsLintFlatConfigFile);
+    for (const file of BASE_ESLINT_CONFIG_FILENAMES) {
+      if (tree.exists(joinPathFragments(root, file))) {
+        fileName = joinPathFragments(root, file);
+        break;
+      }
+    }
   }
   if (useFlatConfig(tree)) {
     if (!fileName) {

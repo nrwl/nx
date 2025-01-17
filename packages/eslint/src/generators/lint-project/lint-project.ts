@@ -35,7 +35,7 @@ import {
 } from '../utils/flat-config/ast-utils';
 import {
   baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
+  BASE_ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
 import { setupRootEsLint } from './setup-root-eslint';
@@ -344,8 +344,9 @@ function isBuildableLibraryProject(
 function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
   // the base config is already created, migration has been done
   if (
-    tree.exists(baseEsLintConfigFile) ||
-    tree.exists(baseEsLintFlatConfigFile)
+    [baseEsLintConfigFile, ...BASE_ESLINT_CONFIG_FILENAMES].some((f) =>
+      tree.exists(f)
+    )
   ) {
     return false;
   }

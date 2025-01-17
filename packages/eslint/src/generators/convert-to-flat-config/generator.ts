@@ -39,6 +39,7 @@ export async function convertToFlatConfigGenerator(
       'Only json and yaml eslint config files are supported for conversion'
     );
   }
+
   options.eslintConfigFormat ??= 'mjs';
 
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);

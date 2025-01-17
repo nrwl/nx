@@ -13,12 +13,6 @@
         "description": "Skip formatting files.",
         "default": false,
         "x-priority": "internal"
-      },
-      "eslintConfigFormat": {
-        "type": "string",
-        "description": "The format of the ESLint configuration file",
-        "enum": ["cjs", "mjs"],
-        "default": "mjs"
       }
     },
     "additionalProperties": false,
