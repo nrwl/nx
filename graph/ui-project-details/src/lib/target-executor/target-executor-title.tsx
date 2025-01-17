@@ -34,10 +34,7 @@ export function TargetExecutorTitle({
       <span className="font-medium">
         Command
         <span className="mb-1 ml-2 hidden group-hover:inline">
-          <CopyToClipboardButton
-            text={`"command": "${command}"`}
-            tooltipText="Copy Command"
-          />
+          <CopyToClipboardButton text={command} tooltipText="Copy Command" />
         </span>
       </span>
     );
