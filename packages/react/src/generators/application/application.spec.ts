@@ -1,9 +1,8 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   getPackageManagerCommand,
   getProjects,
+  ProjectGraph,
   readJson,
   readNxJson,
   Tree,
@@ -20,6 +19,17 @@ const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
+
+let projectGraph: ProjectGraph;
+jest.mock('@nx/devkit', () => {
+  const original = jest.requireActual('@nx/devkit');
+  return {
+    ...original,
+    createProjectGraphAsync: jest
+      .fn()
+      .mockImplementation(() => Promise.resolve(projectGraph)),
+  };
+});
 
 const packageCmd = getPackageManagerCommand().exec;
 
@@ -41,6 +51,7 @@ describe('app', () => {
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
+    projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
   });
 
   describe('not nested', () => {
@@ -1568,5 +1579,56 @@ describe('app', () => {
         expect(configContents).toMatchSnapshot();
       }
     );
+  });
+
+  describe('react 19 support', () => {
+    beforeEach(() => {
+      projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
+    });
+
+    it('should add react 19 dependencies when react version is not found', async () => {
+      projectGraph.externalNodes['npm:react'] = undefined;
+      const tree = createTreeWithEmptyWorkspace();
+
+      await applicationGenerator(tree, {
+        ...schema,
+        directory: 'my-dir/my-app',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
+        `"19.0.0"`
+      );
+      expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
+        `"19.0.0"`
+      );
+    });
+
+    it('should add react 18 dependencies when react version is already 18', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+
+      projectGraph.externalNodes['npm:react'] = {
+        type: 'npm',
+        name: 'npm:react',
+        data: {
+          version: '18.3.1',
+          packageName: 'react',
+          hash: 'sha512-4+0/v9+l9/3+3/2+2/1+1/0',
+        },
+      };
+
+      await applicationGenerator(tree, {
+        ...schema,
+        directory: 'my-dir/my-app',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
+        `"18.3.1"`
+      );
+      expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
+        `"18.3.1"`
+      );
+    });
   });
 });

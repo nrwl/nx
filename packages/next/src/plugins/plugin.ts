@@ -28,6 +28,9 @@ export interface NextPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
+  /**
+   * @deprecated Use `startTargetName` instead.
+   */
   serveStaticTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
@@ -172,9 +175,11 @@ async function buildNextTargets(
 
   targets[options.devTargetName] = getDevTargetConfig(projectRoot);
 
-  targets[options.startTargetName] = getStartTargetConfig(options, projectRoot);
+  const startTarget = getStartTargetConfig(options, projectRoot);
 
-  targets[options.serveStaticTargetName] = getStaticServeTargetConfig(options);
+  targets[options.startTargetName] = startTarget;
+
+  targets[options.serveStaticTargetName] = startTarget;
 
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,

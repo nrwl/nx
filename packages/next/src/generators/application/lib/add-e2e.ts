@@ -224,12 +224,12 @@ async function getNextE2EWebServerInfo(
     {
       plugin: '@nx/next/plugin',
       serveTargetName: 'devTargetName',
-      serveStaticTargetName: 'serveStaticTargetName',
+      serveStaticTargetName: 'startTargetName',
       configFilePath,
     },
     {
       defaultServeTargetName: defaultServeTarget,
-      defaultServeStaticTargetName: 'serve-static',
+      defaultServeStaticTargetName: 'start',
       defaultE2EWebServerAddress: `http://127.0.0.1:${e2ePort}`,
       defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
