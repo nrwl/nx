@@ -65,8 +65,21 @@ describe('app', () => {
           ).toMatchSnapshot();
         });
 
-        it('should configure eslint correctly (flat config)', async () => {
-          tree.write('eslint.config.cjs', '');
+        it('should configure eslint correctly (flat config ESM)', async () => {
+          tree.write('eslint.config.mjs', 'export default {};');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+          });
+
+          expect(
+            tree.read(`${name}/eslint.config.mjs`, 'utf-8')
+          ).toMatchSnapshot();
+        });
+
+        it('should configure eslint correctly (flat config CJS)', async () => {
+          tree.write('eslint.config.cjs', 'module.exports = {};');
 
           await applicationGenerator(tree, {
             directory: name,

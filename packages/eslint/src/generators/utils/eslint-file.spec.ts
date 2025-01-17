@@ -2,8 +2,8 @@ import { readJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as devkitInternals from 'nx/src/devkit-internals';
 import {
+  BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_CONFIG_FILENAMES,
-  baseEsLintConfigFile,
 } from '../../utils/config-file';
 import {
   addExtendsToLintConfig,
@@ -32,12 +32,11 @@ describe('@nx/eslint:lint-file', () => {
       }
     );
 
-    test.each(ESLINT_CONFIG_FILENAMES)(
-      'should return base file instead %p when calling findEslintFile',
+    test.each(BASE_ESLINT_CONFIG_FILENAMES)(
+      'should return base file %p when calling findEslintFile',
       (eslintFileName) => {
-        tree.write(baseEsLintConfigFile, '{}');
         tree.write(eslintFileName, '{}');
-        expect(findEslintFile(tree)).toBe(baseEsLintConfigFile);
+        expect(findEslintFile(tree)).toBe(eslintFileName);
       }
     );
   });

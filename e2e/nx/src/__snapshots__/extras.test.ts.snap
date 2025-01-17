@@ -26,7 +26,7 @@ exports[`Extra Nx Misc Tests task graph inputs should correctly expand dependent
   ],
   "lib-base-123": [
     "libs/lib-base-123/README.md",
-    "libs/lib-base-123/eslint.config.cjs",
+    "libs/lib-base-123/eslint.config.mjs",
     "libs/lib-base-123/jest.config.ts",
     "libs/lib-base-123/package.json",
     "libs/lib-base-123/project.json",
@@ -39,7 +39,7 @@ exports[`Extra Nx Misc Tests task graph inputs should correctly expand dependent
   ],
   "lib-dependent-123": [
     "libs/lib-dependent-123/README.md",
-    "libs/lib-dependent-123/eslint.config.cjs",
+    "libs/lib-dependent-123/eslint.config.mjs",
     "libs/lib-dependent-123/jest.config.ts",
     "libs/lib-dependent-123/package.json",
     "libs/lib-dependent-123/project.json",
