@@ -9,5 +9,5 @@
   "path": "/packages/nx",
   "schema": null,
   "type": "migration",
-  "examplesFile": "## Sample Code Changes\n\nAdd `.nx/cache` to the `.gitignore` file.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```{% fileName=\".gitignore\" %}\nnode_modules\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```{% highlightLines=[2] fileName=\".gitignore\" %}\nnode_modules\n.nx/cache\n```\n\n{% /tab %}\n{% /tabs %}\n\nAdd `.nx/cache` to the `.prettierignore` file.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\".prettierignore\" %}\n/dist\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```ts {% highlightLines=[2] fileName=\".prettierignore\" %}\n/dist\n.nx/cache\n```\n\n{% /tab %}\n{% /tabs %}\n"
+  "examplesFile": "#### Sample Code Changes\n\nAdd `.nx/cache` to the `.gitignore` file.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```{% fileName=\".gitignore\" %}\nnode_modules\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```{% highlightLines=[2] fileName=\".gitignore\" %}\nnode_modules\n.nx/cache\n```\n\n{% /tab %}\n{% /tabs %}\n\nAdd `.nx/cache` to the `.prettierignore` file.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\".prettierignore\" %}\n/dist\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```ts {% highlightLines=[2] fileName=\".prettierignore\" %}\n/dist\n.nx/cache\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }
