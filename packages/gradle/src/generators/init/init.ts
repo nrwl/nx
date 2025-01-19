@@ -9,7 +9,7 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { gradlePluginVersion, nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { dirname, join, basename } from 'path';
@@ -93,10 +93,10 @@ function addCreateNodesPluginToBuildGradle(
   }
 
   const nodesPlugin = filename.endsWith('.kts')
-    ? ` id("io.nx.gradle.plugin.Nodes") version("${gradlePluginVersion}")`
-    : ` id "io.nx.gradle.plugin.Nodes" version "${gradlePluginVersion}"`;
+    ? ` id("io.nx.gradle.native") version("+")`
+    : ` id "io.nx.gradle.native" version "+"`;
   if (buildGradleContent.includes('plugins {')) {
-    if (!buildGradleContent.includes('"io.nx.gradle.plugin.Nodes"')) {
+    if (!buildGradleContent.includes('"io.nx.gradle.native"')) {
       buildGradleContent = buildGradleContent.replace(
         'plugins {',
         `plugins {

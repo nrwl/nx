@@ -1,4 +1,4 @@
-package io.nx.gradle.plugin
+package io.nx.gradle.native
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project

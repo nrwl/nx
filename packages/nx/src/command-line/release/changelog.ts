@@ -5,7 +5,6 @@ import { ReleaseType, valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import {
-  NxReleaseChangelogConfiguration,
   NxReleaseConfiguration,
   readNxJson,
 } from '../../config/nx-json';

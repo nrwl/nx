@@ -18,8 +18,8 @@ export function createGradleProject(
 ) {
   e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
   const gradleCommand = isWindows()
-    ? resolve(`${__dirname}/../../../../packages/gradle/native/gradlew.bat`)
-    : resolve(`${__dirname}/../../../../packages/gradle/native/gradlew`);
+    ? resolve(`${__dirname}/../../../../gradlew.bat`)
+    : resolve(`${__dirname}/../../../../gradlew`);
   e2eConsoleLogger(
     'Using gradle version: ' +
       execSync(`${gradleCommand} --version`, {
