@@ -11,7 +11,7 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 // nx-ignore-next-line
 import type { GraphError } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
-import { MigrationsJsonEntry } from 'nx/src/config/misc-interfaces';
+import { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { StrictMode } from 'react';
 import { inspect } from '@xstate/inspect';
@@ -65,7 +65,7 @@ if (window.__NX_RENDER_GRAPH__ === false) {
   };
 
   window.renderMigrate = (data: {
-    migrations: MigrationsJsonEntry[];
+    migrations: GeneratedMigrationDetails[];
     'nx-console': NxConsoleMigrateMetadata;
   }) => {
     const service = interpret(migrateMachine).start();

@@ -64,8 +64,11 @@ export const Primary = {
       ],
       failedMigrations: [{ name: 'migration-3', error: 'This is an error' }],
     },
-    onRunMigration: (migration: any) => {
-      console.log(migration);
+    onRunMigration: (
+      migration: any,
+      configuration: { createCommits: boolean }
+    ) => {
+      console.log(migration, configuration);
     },
   },
 };

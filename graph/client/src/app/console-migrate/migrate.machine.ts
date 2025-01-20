@@ -1,19 +1,19 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { MigrationsJsonEntry } from 'nx/src/config/misc-interfaces';
+import type { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { createMachine } from 'xstate';
 import { assign } from '@xstate/immer';
 import { NxConsoleMigrateMetadata } from '@nx/graph-migrate';
 
 export interface MigrateState {
-  migrations: MigrationsJsonEntry[];
+  migrations: GeneratedMigrationDetails[];
   nxConsoleMetadata: NxConsoleMigrateMetadata;
 }
 
 export type MigrateEvents = {
   type: 'loadData';
-  migrations: MigrationsJsonEntry[];
+  migrations: GeneratedMigrationDetails[];
   'nx-console': NxConsoleMigrateMetadata;
 };
 

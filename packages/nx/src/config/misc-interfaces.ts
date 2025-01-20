@@ -67,14 +67,19 @@ export type PackageJsonUpdates = {
 };
 
 export interface MigrationsJsonEntry {
-  name: string;
   version: string;
   description?: string;
   cli?: string;
   implementation?: string;
   factory?: string;
   requires?: Record<string, string>;
-  package?: string;
+}
+
+export interface GeneratedMigrationDetails {
+  name: string;
+  version: string;
+  package: string;
+  description: string;
 }
 
 export interface MigrationsJson {

@@ -23,7 +23,12 @@ import {
   PackageJsonUpdates,
 } from '../../config/misc-interfaces';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { flushChanges, FsTree, printChanges } from '../../generators/tree';
+import {
+  FileChange,
+  flushChanges,
+  FsTree,
+  printChanges,
+} from '../../generators/tree';
 import {
   extractFileFromTarball,
   fileExists,
@@ -1311,31 +1316,38 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // If for some reason it fails, it shouldn't affect the overall migration process
     }
 
+    const bodyLines = process.env['NX_CONSOLE']
+      ? [
+          '- Inspect the package.json changes in the built-in diff editor [Click to open]',
+          '- Confirm the changes to install the new dependencies and continue the migration',
+        ]
+      : [
+          `- Make sure package.json changes make sense and then run '${pmc.install}',`,
+          ...(migrations.length > 0
+            ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
+            : []),
+          ...(opts.interactive && minVersionWithSkippedUpdates
+            ? [
+                `- You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:`,
+                `  nx migrate ${opts.targetVersion} --from ${opts.targetPackage}@${minVersionWithSkippedUpdates} --exclude-applied-migrations`,
+                `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
+              ]
+            : [
+                `- To learn more go to https://nx.dev/features/automate-updating-dependencies`,
+              ]),
+          ...(showConnectToCloudMessage()
+            ? [
+                `- You may run '${pmc.run(
+                  'nx',
+                  'connect-to-nx-cloud'
+                )}' to get faster builds, GitHub integration, and more. Check out https://nx.app`,
+              ]
+            : []),
+        ];
+
     output.log({
       title: 'Next steps:',
-      bodyLines: [
-        `- Make sure package.json changes make sense and then run '${pmc.install}',`,
-        ...(migrations.length > 0
-          ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
-          : []),
-        ...(opts.interactive && minVersionWithSkippedUpdates
-          ? [
-              `- You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:`,
-              `  nx migrate ${opts.targetVersion} --from ${opts.targetPackage}@${minVersionWithSkippedUpdates} --exclude-applied-migrations`,
-              `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
-            ]
-          : [
-              `- To learn more go to https://nx.dev/features/automate-updating-dependencies`,
-            ]),
-        ...(showConnectToCloudMessage()
-          ? [
-              `- You may run '${pmc.run(
-                'nx',
-                'connect-to-nx-cloud'
-              )}' to get faster builds, GitHub integration, and more. Check out https://nx.app`,
-            ]
-          : []),
-      ],
+      bodyLines,
     });
   } catch (e) {
     output.error({
@@ -1461,75 +1473,16 @@ export async function executeMigrations(
   for (const m of sortedMigrations) {
     logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
-      const { collection, collectionPath } = readMigrationCollection(
-        m.package,
-        root
+      const changes = await runNxOrAngularMigration(
+        root,
+        m,
+        isVerbose,
+        shouldCreateCommits,
+        commitPrefix,
+        installDepsIfChanged
       );
-      if (!isAngularMigration(collection, collectionPath, m.name)) {
-        const changes = await runNxMigration(
-          root,
-          collectionPath,
-          collection,
-          m.name
-        );
-
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
-        if (changes.length < 1) {
-          logger.info(`No changes were made\n`);
-          migrationsWithNoChanges.push(m);
-          continue;
-        }
-
-        logger.info('Changes:');
-        printChanges(changes, '  ');
-        logger.info('');
-      } else {
-        const ngCliAdapter = await getNgCompatLayer();
-        const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
-          root,
-          m.package,
-          m.name,
-          readProjectsConfigurationFromProjectGraph(
-            await createProjectGraphAsync()
-          ).projects,
-          isVerbose
-        );
-
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
-        if (!madeChanges) {
-          logger.info(`No changes were made\n`);
-          migrationsWithNoChanges.push(m);
-          continue;
-        }
-
-        logger.info('Changes:');
-        loggingQueue.forEach((log) => logger.info('  ' + log));
-        logger.info('');
-      }
-
-      if (shouldCreateCommits) {
-        installDepsIfChanged();
-
-        const commitMessage = `${commitPrefix}${m.name}`;
-        try {
-          const committedSha = commitChanges(commitMessage);
-
-          if (committedSha) {
-            logger.info(
-              chalk.dim(`- Commit created for changes: ${committedSha}`)
-            );
-          } else {
-            logger.info(
-              chalk.red(
-                `- A commit could not be created/retrieved for an unknown reason`
-              )
-            );
-          }
-        } catch (e) {
-          logger.info(chalk.red(`- ${e.message}`));
-        }
+      if (changes.length === 0) {
+        migrationsWithNoChanges.push(m);
       }
       logger.info(`---------------------------------------------------------`);
     } catch (e) {
@@ -1545,6 +1498,90 @@ export async function executeMigrations(
   }
 
   return migrationsWithNoChanges;
+}
+
+export async function runNxOrAngularMigration(
+  root: string,
+  migration: {
+    package: string;
+    name: string;
+    description?: string;
+    version: string;
+    cli?: 'nx' | 'angular';
+  },
+  isVerbose: boolean,
+  shouldCreateCommits: boolean,
+  commitPrefix: string,
+  installDepsIfChanged: () => void
+): Promise<FileChange[]> {
+  const { collection, collectionPath } = readMigrationCollection(
+    migration.package,
+    root
+  );
+  let changes: FileChange[] = [];
+  if (!isAngularMigration(collection, collectionPath, migration.name)) {
+    changes = await runNxMigration(
+      root,
+      collectionPath,
+      collection,
+      migration.name
+    );
+
+    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(`  ${migration.description}\n`);
+    if (changes.length < 1) {
+      logger.info(`No changes were made\n`);
+      return [];
+    }
+
+    logger.info('Changes:');
+    printChanges(changes, '  ');
+    logger.info('');
+  } else {
+    const ngCliAdapter = await getNgCompatLayer();
+    const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
+      root,
+      migration.package,
+      migration.name,
+      readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
+        .projects,
+      isVerbose
+    );
+
+    logger.info(`Ran ${migration.name} from ${migration.package}`);
+    logger.info(`  ${migration.description}\n`);
+    if (!madeChanges) {
+      logger.info(`No changes were made\n`);
+      return [];
+    }
+
+    logger.info('Changes:');
+    loggingQueue.forEach((log) => logger.info('  ' + log));
+    logger.info('');
+  }
+
+  if (shouldCreateCommits) {
+    installDepsIfChanged();
+
+    const commitMessage = `${commitPrefix}${migration.name}`;
+    try {
+      const committedSha = commitChanges(commitMessage);
+
+      if (committedSha) {
+        logger.info(chalk.dim(`- Commit created for changes: ${committedSha}`));
+      } else {
+        logger.info(
+          chalk.red(
+            `- A commit could not be created/retrieved for an unknown reason`
+          )
+        );
+      }
+    } catch (e) {
+      logger.info(chalk.red(`- ${e.message}`));
+    }
+  }
+
+  return changes;
 }
 
 async function runMigrations(

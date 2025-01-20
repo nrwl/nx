@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { MigrationsJsonEntry } from 'nx/src/config/misc-interfaces';
+import type { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import { Interpreter } from 'xstate';
@@ -16,11 +16,17 @@ export function MigrateApp({
 }) {
   const externalApiService = getExternalApiService();
 
-  const onRunMigration = (migration: MigrationsJsonEntry) => {
+  const onRunMigration = (
+    migration: GeneratedMigrationDetails,
+    configuration: {
+      createCommits: boolean;
+    }
+  ) => {
     externalApiService.postEvent({
       type: 'run-migration',
       payload: {
         migration,
+        configuration,
       },
     });
   };
