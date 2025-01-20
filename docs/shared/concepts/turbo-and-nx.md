@@ -8,7 +8,7 @@ Note that the relationship between Nx and Turborepo isn’t the same as with Nx 
 
 We do our best to be unbiased, but, of course you should do your own research. Read the docs, try things out and build your own opinion.
 
-We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples). That said, you don’t have to use Nx Cloud to get features such as remote caching and distributed task execution. We provide public APIs so you can build your own, if you'd prefer not to use Nx Cloud.
+We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples).
 
 We are going to compare the tools in three different ways: **features**, **tech and performance**, and **community**.
 
@@ -80,7 +80,6 @@ A crucial feature in Nx is the ability to not only parallelize your tasks on a s
 - **Turborepo doesn’t support it.** The best thing you can do when using Turborepo is binning/sharding, and that doesn’t work for non-trivial workspaces.
 - **Distributed task execution has a significantly higher impact on the ability to scale the repo than the computation cache.** You can scale without the cache, you cannot scale without the distribution.
 - This is the biggest feature related to performance and scaling that Turborepo is missing. And it’s by far the hardest one to build.
-- As with the rest of Nx, you can build your own version of the distributed task execution given the provided public API. If you choose not to implement your own version of the remote cache, you can use Nx Cloud. There is an [on-prem version of Nx Cloud](https://nx.app/private-cloud), so you have full control over where the artifacts are stored.
 
 If you want to learn more, check out our article on [Distributing CI - Binning and Distributed Task Execution](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953)
 
@@ -147,7 +146,7 @@ Benchmarking is hard because a lot depends on what you are trying to run, in wha
 This is the result:
 ![nx and turbo benchmark](/shared/concepts/turbo-nx-perf.gif)
 
-Nx is 9.4 times faster on the latest MBP. We have made several changes to [the benchmark](https://github.com/vsavkin/large-monorepo/) since it was released (removed the usage `npx` and addressed other concerns folks had), but the result remained roughly the same. Please check out the benchmark.
+Nx is 4 times faster on the latest MBP. We have made several changes to [the benchmark](https://github.com/vsavkin/large-monorepo/) since it was released (removed the usage `npx` and addressed other concerns folks had), but the result remained roughly the same. Please check out the benchmark.
 
 Why is it faster? Nx is in many ways akin to React in that it's doing tree diffing when restoring files from the cache. If the right files are in the right place, Nx won't touch them. Turbo blows everything away every time. Nx's version isn't just faster, it's also more useful (again similarly to tree diffing in React). Blowing everything away on every restoration means that if any tools watch the folders (which is common when you build large apps or build microfrontends), they are going to get confused or triggered for no reason. This is similar to how recreating the DOM from scratch isn't just slower, but results in worse UX. But even if you disable tree-diffing and make Nx do what Turbo does, it is still 1.7 times faster.
 
@@ -163,7 +162,7 @@ The one advantage Turbo's Go implementation has, is that any time you run an Nx 
 
 **The reason why we stuck with TypeScript is that our focus was always on extensibility.** If the rise of VSCode taught us anything, it is that it’s easier to extend things when they are written in JavaScript/TypeScript. Also, 5 years of **working with Fortune 500 companies** clearly showed us that **extensibility is key**!
 
-It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This is because the only contributors to our API, work at Nrwl, and we decided it was the best technology for the job.
+It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This is because the only contributors to our API work at Nx, and we decided it was the best technology for the job.
 
 ## Community
 
@@ -172,8 +171,6 @@ Nx was released in 2016. Turborepo was open sourced in December of 2021. Turbore
 - There are about [4 million downloads per week](https://www.npmjs.com/package/nx).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
 - There is a rich ecosystem of [third-party plugins](/plugin-registry).
-
-From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.
 
 ## Switch to Nx
 

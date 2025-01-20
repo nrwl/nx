@@ -1017,6 +1017,20 @@ module.exports = withNx(
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "type",
+          "main",
+          "module",
+          "types",
+          "exports",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",

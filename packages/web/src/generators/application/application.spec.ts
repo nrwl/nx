@@ -194,7 +194,7 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: 'npx nx run cool-app:serve',
+                default: 'npx nx run cool-app:dev',
                 production: 'npx nx run cool-app:preview',
               },
               ciWebServerCommand: 'npx nx run cool-app:preview',

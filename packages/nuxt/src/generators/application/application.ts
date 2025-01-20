@@ -37,6 +37,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -46,6 +47,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 
@@ -196,6 +198,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
 
   if (!options.skipFormat) await formatFiles(tree);
 

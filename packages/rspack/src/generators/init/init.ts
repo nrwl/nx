@@ -60,6 +60,16 @@ export async function rspackInitGenerator(
           'rspack-preview',
           'preview-rspack',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'rspack:build-deps',
+          'rspack-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'rspack:watch-deps',
+          'rspack-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );

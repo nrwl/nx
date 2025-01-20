@@ -37,14 +37,25 @@ export function addBaseCypressSetup(
   }
 
   const opts = normalizeOptions(tree, projectConfig, options);
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   const templateVars = {
     ...opts,
     jsx: !!opts.jsx,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
     offsetFromProjectRoot: opts.hasTsConfig ? opts.offsetFromProjectRoot : '',
-    tsConfigPath: opts.hasTsConfig
-      ? `${opts.offsetFromProjectRoot}tsconfig.json`
-      : getRelativePathToRootTsConfig(tree, projectConfig.root),
+    tsConfigPath:
+      // TS solution setup should always extend from tsconfig.base.json to use shared compilerOptions, the project's tsconfig.json will not have compilerOptions.
+      isUsingTsSolutionConfig
+        ? getRelativePathToRootTsConfig(
+            tree,
+            opts.hasTsConfig
+              ? joinPathFragments(projectConfig.root, options.directory)
+              : // If an existing tsconfig.json file does not exist, then cypress tsconfig will be moved to the project root.
+                projectConfig.root
+          )
+        : opts.hasTsConfig
+        ? `${opts.offsetFromProjectRoot}tsconfig.json`
+        : getRelativePathToRootTsConfig(tree, projectConfig.root),
     linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
   };
@@ -58,7 +69,7 @@ export function addBaseCypressSetup(
 
   generateFiles(
     tree,
-    isUsingTsSolutionSetup(tree)
+    isUsingTsSolutionConfig
       ? join(__dirname, 'files/tsconfig/ts-solution')
       : join(__dirname, 'files/tsconfig/non-ts-solution'),
     projectConfig.root,

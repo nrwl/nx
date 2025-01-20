@@ -36,6 +36,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { determineEntryFields } from './lib/determine-entry-fields';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -275,6 +276,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
+
+  sortPackageJsonFields(host, options.projectRoot);
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }

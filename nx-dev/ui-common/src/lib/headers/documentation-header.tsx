@@ -11,7 +11,12 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
-import { Popover, Transition } from '@headlessui/react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
@@ -248,7 +253,7 @@ export function DocumentationHeader({
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -266,7 +271,7 @@ export function DocumentationHeader({
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -277,9 +282,9 @@ export function DocumentationHeader({
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <PopoverPanel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
                       <SectionsMenu sections={resourceMenuItems} />
-                    </Popover.Panel>
+                    </PopoverPanel>
                   </Transition>
                 </>
               )}
