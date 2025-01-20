@@ -149,10 +149,12 @@ async function createRspackTargets(
 
   const rspackOptions = await readRspackOptions(rspackConfig);
 
-  const outputPath = normalizeOutputPath(
-    rspackOptions.output?.path,
-    projectRoot
-  );
+  const outputs = [];
+  for (const config of rspackOptions) {
+    if (config.output?.path) {
+      outputs.push(normalizeOutputPath(config.output.path, projectRoot));
+    }
+  }
 
   const targets = {};
 
@@ -177,7 +179,7 @@ async function createRspackTargets(
               externalDependencies: ['@rspack/cli'],
             },
           ],
-    outputs: [outputPath],
+    outputs,
   };
 
   targets[options.serveTargetName] = {
