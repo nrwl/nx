@@ -12,9 +12,10 @@ plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
     `maven-publish`
+    id("com.gradle.plugin-publish") version "1.3.0"
 
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm") version "2.0.21"
+    // id("java-library")
+    // id("org.jetbrains.kotlin.jvm") version "2.0.21"
 
     // Apply the Kotlin JVM plugin to add support for Kotlin.
     // alias(libs.plugins.jvm)
@@ -26,10 +27,17 @@ repositories {
 }
 
 gradlePlugin {
+    website = "https://nx.dev/" 
+    vcsUrl = "https://github.com/nrwl/nx" 
     // Define the plugin
-    val Nodes by plugins.creating {
-        id = "io.nx.gradle.native"
-        implementationClass = "io.nx.gradle.native.Nodes"
+    plugins {
+        create("nxGradleNodesPlugin") {
+            id = "io.nx.gradle.native"
+            implementationClass = "io.nx.gradle.native.Nodes"
+            displayName = "The Nx Plugin for Gradle to generate nodes, dependencies and external nodes"
+            description = "A plugin to generate a json file with nodes, dependencies and external nodes for Nx"
+            tags = listOf("nx", "monorepo", "javascript", "typescript")
+        }
     }
 }
 
