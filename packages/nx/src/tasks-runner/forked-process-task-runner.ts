@@ -342,11 +342,17 @@ export class ForkedProcessTaskRunner {
         let stdoutHasEnded = false;
         let stderrHasEnded = false;
         let processHasExited = false;
+        let handleProcessEndTimeout: NodeJS.Timeout | null = null;
 
-        const handleProcessEnd = () => {
+        const handleProcessEnd = (force: boolean = false) => {
           // ensure process has exited and both stdout and stderr have ended before we pass along the logs
           // if we only wait for the process to exit, we might miss some logs as stdout and stderr might still be streaming
-          if (stdoutHasEnded && stderrHasEnded && processHasExited) {
+          if ((stdoutHasEnded && stderrHasEnded && processHasExited) || force) {
+            if (handleProcessEndTimeout) {
+              clearTimeout(handleProcessEndTimeout);
+              handleProcessEndTimeout = null;
+            }
+
             // we didn't print any output as we were running the command
             // print all the collected output|
             const terminalOutput = outWithErr.join('');
@@ -361,6 +367,15 @@ export class ForkedProcessTaskRunner {
             }
             this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
             res({ code, terminalOutput });
+          } else if (processHasExited) {
+            // if the process has exited, but we are still waiting for stdout
+            // and/or stderr to end, we await them to end up to a maximum of
+            // 100ms to prevent hanging tasks
+            if (!handleProcessEndTimeout) {
+              handleProcessEndTimeout = setTimeout(() => {
+                handleProcessEnd(true);
+              }, 100);
+            }
           }
         };
 

@@ -64,7 +64,10 @@ export default async function cypressExecutor(
         ...options,
         portLockFilePath: devServerValues.portLockFilePath,
       });
-      if (!options.watch) break;
+      if (!options.watch) {
+        await devServerValues.exit?.();
+        break;
+      }
     } catch (e) {
       logger.error(e.message);
       success = false;

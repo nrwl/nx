@@ -65,6 +65,7 @@ If the port is in use, try using a different port value or passing --port='cypre
     baseUrl?: string;
     port?: string;
     info?: { port: number; baseUrl?: string };
+    exit?: () => Promise<void>;
   }>(parsedDevServerTarget, overrides, context)) {
     if (!output.success && !opts.watch)
       throw new Error('Could not compile application files');
@@ -80,6 +81,7 @@ If the port is in use, try using a different port value or passing --port='cypre
       baseUrl: opts.baseUrl || output.baseUrl || output.info?.baseUrl,
       portLockFilePath:
         overrides.port && join(__dirname, `${overrides.port}.txt`),
+      exit: output.exit,
     };
   }
 }

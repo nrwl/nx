@@ -36,7 +36,11 @@ async function* runCustomServer(
     options.port
   }`;
 
-  const customServerBuild = await runExecutor(
+  const customServerBuild = await runExecutor<{
+    success: boolean;
+    baseUrl?: string;
+    exit?: () => Promise<void>;
+  }>(
     parseTargetString(options.customServerTarget, context),
     {
       watch: options.dev ? true : false,
@@ -51,6 +55,7 @@ async function* runCustomServer(
     yield {
       success: true,
       baseUrl,
+      exit: result.exit,
     };
   }
 
