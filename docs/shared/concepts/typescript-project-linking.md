@@ -43,6 +43,16 @@ The configuration for package manager workspaces varies based on which package m
 
 Defining the `workspaces` property in the root `package.json` file lets npm know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `npm install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available.
+
+```json {% fileName="/apps/my-app/package.json" %}
+{
+  "devDependencies": {
+    "@my-org/some-project": "*"
+  }
+}
+```
+
 {% /tab %}
 {% tab label="yarn" %}
 
@@ -54,6 +64,16 @@ Defining the `workspaces` property in the root `package.json` file lets npm know
 
 Defining the `workspaces` property in the root `package.json` file lets yarn know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `yarn` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells yarn to use whatever version of the project is available.
+
+```json {% fileName="/apps/my-app/package.json" %}
+{
+  "devDependencies": {
+    "@my-org/some-project": "*"
+  }
+}
+```
+
 {% /tab %}
 {% tab label="bun" %}
 
@@ -64,6 +84,16 @@ Defining the `workspaces` property in the root `package.json` file lets yarn kno
 ```
 
 Defining the `workspaces` property in the root `package.json` file lets bun know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `bun install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
+
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells bun to use whatever version of the project is available.
+
+```json {% fileName="/apps/my-app/package.json" %}
+{
+  "devDependencies": {
+    "@my-org/some-project": "*"
+  }
+}
+```
 
 {% /tab %}
 {% tab label="pnpm" %}
@@ -252,8 +282,8 @@ When using project references, you can not define path aliases in the root `tsco
 
 ## Project Linking with TypeScript Path Aliases
 
-{% callout type="warning" title="Incompatible with TypeScript Project References" %}
-You can not use TypeScript project references with this style of project linking. When TypeScript incrementally builds the individual projects, it doesn't merge the path aliases from the root tsconfig files.
+{% callout type="warning" title="Path Aliases Overwrite Extended Configuration Files" %}
+If you define path aliases in a project's specific `tsconfig.*.json` file, those path aliases will overwrite the path aliases defined in the root `tsconfig.base.json`. You can't use both project-level path aliases and root path aliases.
 {% /callout %}
 
 Linking projects with TypeScript path aliases is configured entirely in the tsconfig files. You can still use package manager workspaces to enable you to define separate third-party dependencies for individual projects, but the local project linking is done by TypeScript instead of the package manager.
