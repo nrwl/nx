@@ -912,8 +912,12 @@ export function getRunnerOptions(
 
   return result;
 }
+
 function isCustomRunnerPath(modulePath: string) {
-  return !['nx-cloud', '@nrwl/nx-cloud', defaultTasksRunnerPath].includes(
-    modulePath
-  );
+  return ![
+    'nx-cloud',
+    '@nrwl/nx-cloud',
+    'nx/tasks-runners/default',
+    defaultTasksRunnerPath,
+  ].includes(modulePath);
 }
