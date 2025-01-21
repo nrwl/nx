@@ -8,6 +8,7 @@ import {
   CreateNodesFunction,
   joinPathFragments,
   workspaceRoot,
+  ProjectGraphExternalNode,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
@@ -61,11 +62,11 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       context.workspaceRoot,
       gradlewFiles.map((f) => join(context.workspaceRoot, f))
     );
-    const { nodes } = getCurrentNodesReport();
+    const { nodes, externalNodes } = getCurrentNodesReport();
 
     try {
       return createNodesFromFiles(
-        makeCreateNodesForGradleConfigFile(nodes, targetsCache),
+        makeCreateNodesForGradleConfigFile(nodes, targetsCache, externalNodes),
         buildFiles,
         options,
         context
@@ -79,7 +80,8 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 export const makeCreateNodesForGradleConfigFile =
   (
     projects: Record<string, Partial<ProjectConfiguration>>,
-    targetsCache: GradleTargets = {}
+    targetsCache: GradleTargets = {},
+    externalNodes: Record<string, ProjectGraphExternalNode> = {}
   ): CreateNodesFunction =>
   async (
     gradleFilePath,
@@ -153,5 +155,6 @@ export const makeCreateNodesForGradleConfigFile =
       projects: {
         [projectRoot]: project,
       },
+      externalNodes: externalNodes,
     };
   };

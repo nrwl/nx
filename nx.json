@@ -52,7 +52,11 @@
     ]
   },
   "release": {
-    "projects": ["packages/*", "packages/nx/native-packages/*"],
+    "projects": [
+      "packages/*",
+      "packages/nx/native-packages/*",
+      "packages/gradle/native/*"
+    ],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
@@ -240,8 +244,7 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    "@nx/powerpack-enterprise-cloud",
-    "@nx/gradle/plugin-v1"
+    "@nx/powerpack-enterprise-cloud"
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",

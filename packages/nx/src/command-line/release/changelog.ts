@@ -4,10 +4,7 @@ import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { ReleaseType, valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
-import {
-  NxReleaseConfiguration,
-  readNxJson,
-} from '../../config/nx-json';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import {
   FileData,
   ProjectFileMap,

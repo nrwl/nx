@@ -1,7 +1,7 @@
-group = "io.nx"
+group = "dev.nx"
 
 plugins {
-    id("io.nx.gradle.native") version("+")
+    // id("dev.nx.gradle.native") version("+")
 }
 
 allprojects {

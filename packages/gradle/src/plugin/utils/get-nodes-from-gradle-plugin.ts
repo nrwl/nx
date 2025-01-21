@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   AggregateCreateNodesError,
   ProjectConfiguration,
+  ProjectGraphExternalNode,
   readJsonFile,
   StaticDependency,
   writeJsonFile,
@@ -20,6 +21,7 @@ export interface NodesReport {
     [appRoot: string]: Partial<ProjectConfiguration>;
   };
   dependencies: Array<StaticDependency>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
 }
 
 export interface NodesReportCache extends NodesReport {
@@ -58,7 +60,7 @@ let nodesReportCachePath: string = join(
   'gradle-nodes.hash'
 );
 
-export function getCurrentNodesReport() {
+export function getCurrentNodesReport(): NodesReport {
   if (!nodesReportCache) {
     throw new AggregateCreateNodesError(
       [
@@ -111,7 +113,10 @@ export async function populateNodes(
       gradlewFile: string
     ): Promise<string[]> => {
       const allLines = await createNodesLines;
-      const currentLines = await getCreateNodesLines(gradlewFile);
+      const currentLines = await getCreateNodesLines(
+        gradlewFile,
+        gradleConfigHash
+      );
       return [...allLines, ...currentLines];
     },
     Promise.resolve([])
@@ -133,8 +138,8 @@ export function processCreateNodes(createNodesLines: string[]): NodesReport {
   let nodesReportForAllProjects: NodesReport = {
     nodes: {},
     dependencies: [],
+    externalNodes: {},
   };
-  let dependencies: Array<StaticDependency> = [];
   while (index < createNodesLines.length) {
     const line = createNodesLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':createNodes')) {
@@ -150,10 +155,17 @@ export function processCreateNodes(createNodesLines: string[]): NodesReport {
         ...nodesReportForAllProjects.nodes,
         ...nodesReportJson.nodes,
       };
-      nodesReportForAllProjects.dependencies = [
-        ...nodesReportJson.dependencies,
-        ...dependencies,
-      ];
+      if (nodesReportJson.dependencies) {
+        nodesReportForAllProjects.dependencies.push(
+          ...nodesReportJson.dependencies
+        );
+      }
+      if (Object.keys(nodesReportJson.externalNodes)) {
+        nodesReportForAllProjects.externalNodes = {
+          ...nodesReportForAllProjects.externalNodes,
+          ...nodesReportJson.externalNodes,
+        };
+      }
     }
     index++;
   }

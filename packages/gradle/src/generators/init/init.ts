@@ -93,10 +93,10 @@ function addCreateNodesPluginToBuildGradle(
   }
 
   const nodesPlugin = filename.endsWith('.kts')
-    ? ` id("io.nx.gradle.native") version("+")`
-    : ` id "io.nx.gradle.native" version "+"`;
+    ? ` id("dev.nx.gradle.native") version("+")`
+    : ` id "dev.nx.gradle.native" version "+"`;
   if (buildGradleContent.includes('plugins {')) {
-    if (!buildGradleContent.includes('"io.nx.gradle.native"')) {
+    if (!buildGradleContent.includes('"dev.nx.gradle.native"')) {
       buildGradleContent = buildGradleContent.replace(
         'plugins {',
         `plugins {

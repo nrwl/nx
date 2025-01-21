@@ -4,7 +4,10 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { cacheDirectoryForWorkspace } from 'nx/src/utils/cache-directory';
 
-export async function getCreateNodesLines(gradlewFile: string) {
+export async function getCreateNodesLines(
+  gradlewFile: string,
+  gradleConfigHash: string
+): Promise<string[]> {
   let createNodesBuffer: Buffer;
 
   // if there is no build.gradle or build.gradle.kts file, we cannot run the createNodes task
@@ -25,7 +28,9 @@ export async function getCreateNodesLines(gradlewFile: string) {
       cacheDirectoryForWorkspace(workspaceRoot),
       '--workspaceRoot',
       workspaceRoot,
-      '--no-parallel' // we need to run this task sequentially because tasks need to be processed in order
+      '--hash',
+      gradleConfigHash,
+      '--no-parallel', // we need to run this task sequentially because tasks need to be processed in order
     ]);
   } catch (e) {
     throw new AggregateCreateNodesError(
@@ -33,7 +38,9 @@ export async function getCreateNodesLines(gradlewFile: string) {
         [
           gradlewFile,
           new Error(
-            `Could not run 'createNodes' task using ${gradlewFile}. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks. ${e.message ?? e}`,
+            `Could not run 'createNodes' task using ${gradlewFile}. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks. ${
+              e.message ?? e
+            }`,
             { cause: e }
           ),
         ],
