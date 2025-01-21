@@ -150,10 +150,10 @@ describe('Linter (legacy)', () => {
         env: { NX_ADD_PLUGINS: 'false' },
       });
       checkFilesExist(
-        'eslint.config.cjs',
-        `apps/${myapp}/eslint.config.cjs`,
-        `libs/${mylib}/eslint.config.cjs`,
-        `libs/${mylib2}/eslint.config.cjs`
+        'eslint.config.mjs',
+        `apps/${myapp}/eslint.config.mjs`,
+        `libs/${mylib}/eslint.config.mjs`,
+        `libs/${mylib2}/eslint.config.mjs`
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
@@ -164,12 +164,12 @@ describe('Linter (legacy)', () => {
 
       // move eslint.config one step up
       // to test the absence of the flat eslint config in the project root folder
-      renameFile(`libs/${mylib2}/eslint.config.cjs`, `libs/eslint.config.cjs`);
+      renameFile(`libs/${mylib2}/eslint.config.mjs`, `libs/eslint.config.mjs`);
       updateFile(
-        `libs/eslint.config.cjs`,
-        readFile(`libs/eslint.config.cjs`).replace(
-          `../../eslint.config.cjs`,
-          `../eslint.config.cjs`
+        `libs/eslint.config.mjs`,
+        readFile(`libs/eslint.config.mjs`).replace(
+          `../../eslint.config.mjs`,
+          `../eslint.config.mjs`
         )
       );
 
@@ -202,9 +202,9 @@ describe('Linter (legacy)', () => {
         env: { NX_ADD_PLUGINS: 'false' },
       });
       checkFilesExist(
-        'eslint.config.cjs',
-        `${mylib}/eslint.config.cjs`,
-        'eslint.base.config.cjs'
+        'eslint.config.mjs',
+        `${mylib}/eslint.config.mjs`,
+        'eslint.base.config.mjs'
       );
       checkFilesDoNotExist(
         '.eslintrc.json',

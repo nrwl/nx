@@ -23,16 +23,23 @@ import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
 export interface VitePluginOptions {
   buildTargetName?: string;
   testTargetName?: string;
+  /**
+   * @deprecated Use devTargetName instead. This option will be removed in Nx 22.
+   */
   serveTargetName?: string;
+  devTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
+  watchDepsTargetName?: string;
+  buildDepsTargetName?: string;
 }
 
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -150,7 +157,7 @@ async function createNodesInternal(
 
   // If project is buildable, then the project type.
   // If it is not buildable, then leave it to other plugins/project.json to set the project type.
-  if (project.targets[options.buildTargetName]) {
+  if (project.targets[normalizedOptions.buildTargetName]) {
     project.projectType = isLibrary ? 'library' : 'application';
   }
 
@@ -216,10 +223,17 @@ async function buildViteTargets(
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      targets[options.serveTargetName] = serveTarget(
-        projectRoot,
-        isUsingTsSolutionSetup
-      );
+      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup);
+
+      targets[options.serveTargetName] = {
+        ...devTarget,
+        metadata: {
+          ...devTarget.metadata,
+          deprecated:
+            'Use devTargetName instead. This option will be removed in Nx 22.',
+        },
+      };
+      targets[options.devTargetName] = devTarget;
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
         options.buildTargetName
@@ -277,6 +291,14 @@ async function buildViteTargets(
     );
   }
 
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
+
   const metadata = {};
   return { targets, metadata, isLibrary: Boolean(viteBuildConfig.build?.lib) };
 }
@@ -328,7 +350,7 @@ async function buildTarget(
 
 function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
-    command: `vite serve`,
+    command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
@@ -505,6 +527,7 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
+  options.devTargetName ??= 'dev';
   options.previewTargetName ??= 'preview';
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';

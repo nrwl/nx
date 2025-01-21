@@ -21,7 +21,7 @@ import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
 import {
   baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
+  BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
@@ -405,7 +405,7 @@ function getProjectUsingESLintConfig(
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
-    baseEsLintFlatConfigFile,
+    ...BASE_ESLINT_CONFIG_FILENAMES,
     ...ESLINT_CONFIG_FILENAMES,
   ].find((f) => existsSync(join(context.workspaceRoot, f)));
 

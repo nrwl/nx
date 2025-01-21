@@ -440,6 +440,95 @@ describe('lib', () => {
       expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     });
 
+    it.each`
+      bundler      | expectedIgnoredFile
+      ${'rollup'}  | ${'{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}'}
+      ${'esbuild'} | ${'{projectRoot}/esbuild.config.{js,ts,mjs,mts}'}
+      ${'vite'}    | ${'{projectRoot}/vite.config.{js,ts,mjs,mts}'}
+    `(
+      'should ignore $expectedIgnoredFile when bundler=$bundler',
+      async ({ bundler, expectedIgnoredFile }) => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          linter: 'eslint',
+          bundler,
+        });
+
+        expect(
+          readJson(tree, 'my-lib/.eslintrc.json').overrides
+        ).toContainEqual({
+          files: ['*.json'],
+          parser: 'jsonc-eslint-parser',
+          rules: {
+            '@nx/dependency-checks': [
+              'error',
+              {
+                ignoredFiles: [
+                  '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                  expectedIgnoredFile,
+                ],
+              },
+            ],
+          },
+        });
+      }
+    );
+
+    it('should ignore rollup and vite config files when bundler=rollup and unitTestRunner=vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        linter: 'eslint',
+        bundler: 'rollup',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
+                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+              ],
+            },
+          ],
+        },
+      });
+    });
+
+    it('should ignore esbuild and vite config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        linter: 'eslint',
+        bundler: 'esbuild',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: [
+                '{projectRoot}/eslint.config.{js,cjs,mjs}',
+                '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+              ],
+            },
+          ],
+        },
+      });
+    });
+
     describe('not nested', () => {
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
@@ -1448,6 +1537,19 @@ describe('lib', () => {
     });
   });
 
+  describe('--bundler=none', () => {
+    it('should not generate a package.json when bundler is none', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+      });
+
+      expect(tree.exists('my-lib/package.json')).toBe(false);
+    });
+  });
+
   describe('--minimal', () => {
     it('should generate a README.md when minimal is set to false', async () => {
       await libraryGenerator(tree, {
@@ -1602,14 +1704,7 @@ describe('lib', () => {
           },
         }
       `);
-      expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
-        {
-          "dependencies": {},
-          "name": "@proj/my-lib",
-          "private": true,
-          "version": "0.0.1",
-        }
-      `);
+      expect(tree.exists('my-lib/package.json')).toBe(false);
     });
   });
 
@@ -1694,6 +1789,20 @@ describe('lib', () => {
         linter: 'none',
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'my-ts-lib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "type",
+          "main",
+          "types",
+          "exports",
+          "dependencies",
+        ]
+      `);
       expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
@@ -1708,6 +1817,7 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-ts-lib",
           "private": true,
+          "type": "module",
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
@@ -1722,6 +1832,7 @@ describe('lib', () => {
           "main": "./src/index.js",
           "name": "@proj/my-js-lib",
           "private": true,
+          "type": "module",
           "types": "./src/index.js",
           "version": "0.0.1",
         }
@@ -1869,6 +1980,36 @@ describe('lib', () => {
       expect(
         tree.read('my-ts-lib/src/lib/my-ts-lib.spec.ts', 'utf-8')
       ).toContain(`import { myTsLib } from './my-ts-lib.js';`);
+    });
+
+    it('should generate non-buildable setup', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/my-lib",
+          "private": true,
+          "type": "module",
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
     });
   });
 });

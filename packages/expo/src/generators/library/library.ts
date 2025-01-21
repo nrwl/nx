@@ -41,6 +41,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -136,6 +137,8 @@ export async function expoLibraryGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
+
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

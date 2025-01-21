@@ -1,6 +1,9 @@
 import { existsSync, statSync } from 'fs';
 import { basename, dirname, join, resolve } from 'path';
-import { eslintFlatConfigFilenames } from './flat-config';
+import {
+  baseEslintConfigFilenames,
+  eslintFlatConfigFilenames,
+} from './flat-config';
 
 export const ESLINT_FLAT_CONFIG_FILENAMES = eslintFlatConfigFilenames;
 
@@ -18,8 +21,10 @@ export const ESLINT_CONFIG_FILENAMES = [
   ...ESLINT_FLAT_CONFIG_FILENAMES,
 ];
 
+export const BASE_ESLINT_CONFIG_FILENAMES = baseEslintConfigFilenames;
+
 export const baseEsLintConfigFile = '.eslintrc.base.json';
-export const baseEsLintFlatConfigFile = 'eslint.base.config.cjs';
+export const baseEsLintFlatConfigFile = 'eslint.base.config.mjs';
 // Make sure we can handle previous file extension as well for migrations or custom generators.
 export const legacyBaseEsLintFlatConfigFile = 'eslint.base.config.js';
 

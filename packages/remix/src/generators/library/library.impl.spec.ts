@@ -164,9 +164,29 @@ describe('Remix Library Generator', () => {
         addPlugin: true,
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'packages/foo/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "main",
+          "types",
+          "exports",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'packages/foo/package.json'))
         .toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/foo",
           "nx": {

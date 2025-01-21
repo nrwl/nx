@@ -102,43 +102,103 @@ describe('@nx/eslint:init', () => {
   });
 
   describe('(legacy)', () => {
-    it('should add the root eslint config to the lint targetDefaults for lint', async () => {
-      await lintInitGenerator(tree, { ...options, addPlugin: false });
+    describe('CJS', () => {
+      it('should add the root eslint config to the lint targetDefaults for lint', async () => {
+        await lintInitGenerator(tree, {
+          ...options,
+          addPlugin: false,
+          eslintConfigFormat: 'cjs',
+        });
 
-      expect(
-        readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
-      ).toEqual({
-        cache: true,
-        inputs: [
-          'default',
-          '{workspaceRoot}/.eslintrc.json',
-          '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.cjs',
-        ],
+        expect(
+          readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
+        ).toEqual({
+          cache: true,
+          inputs: [
+            'default',
+            '{workspaceRoot}/.eslintrc.json',
+            '{workspaceRoot}/.eslintignore',
+            '{workspaceRoot}/eslint.config.cjs',
+          ],
+        });
+      });
+
+      it('should setup lint target defaults', async () => {
+        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+          json.namedInputs ??= {};
+          json.namedInputs.production = ['default'];
+          return json;
+        });
+
+        await lintInitGenerator(tree, {
+          ...options,
+          addPlugin: false,
+          eslintConfigFormat: 'cjs',
+        });
+
+        expect(
+          readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+            '@nx/eslint:lint'
+          ]
+        ).toEqual({
+          cache: true,
+          inputs: [
+            'default',
+            '{workspaceRoot}/.eslintrc.json',
+            '{workspaceRoot}/.eslintignore',
+            '{workspaceRoot}/eslint.config.cjs',
+          ],
+        });
       });
     });
 
-    it('should setup lint target defaults', async () => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.namedInputs ??= {};
-        json.namedInputs.production = ['default'];
-        return json;
+    describe('MJS', () => {
+      it('should add the root eslint config to the lint targetDefaults for lint', async () => {
+        await lintInitGenerator(tree, {
+          ...options,
+          addPlugin: false,
+          eslintConfigFormat: 'mjs',
+        });
+
+        expect(
+          readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
+        ).toEqual({
+          cache: true,
+          inputs: [
+            'default',
+            '{workspaceRoot}/.eslintrc.json',
+            '{workspaceRoot}/.eslintignore',
+            '{workspaceRoot}/eslint.config.mjs',
+          ],
+        });
       });
 
-      await lintInitGenerator(tree, { ...options, addPlugin: false });
+      it('should setup lint target defaults', async () => {
+        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+          json.namedInputs ??= {};
+          json.namedInputs.production = ['default'];
+          return json;
+        });
 
-      expect(
-        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
-          '@nx/eslint:lint'
-        ]
-      ).toEqual({
-        cache: true,
-        inputs: [
-          'default',
-          '{workspaceRoot}/.eslintrc.json',
-          '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.cjs',
-        ],
+        await lintInitGenerator(tree, {
+          ...options,
+          addPlugin: false,
+          eslintConfigFormat: 'mjs',
+        });
+
+        expect(
+          readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+            '@nx/eslint:lint'
+          ]
+        ).toEqual({
+          cache: true,
+          inputs: [
+            'default',
+            '{workspaceRoot}/.eslintrc.json',
+            '{workspaceRoot}/.eslintignore',
+            '{workspaceRoot}/eslint.config.mjs',
+          ],
+        });
       });
     });
   });

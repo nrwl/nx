@@ -37,11 +37,13 @@ describe('Remix Init Generator', () => {
         "plugins": [
           {
             "options": {
+              "buildDepsTargetName": "build-deps",
               "buildTargetName": "build",
               "devTargetName": "dev",
               "serveStaticTargetName": "serve-static",
               "startTargetName": "start",
               "typecheckTargetName": "typecheck",
+              "watchDepsTargetName": "watch-deps",
             },
             "plugin": "@nx/remix/plugin",
           },

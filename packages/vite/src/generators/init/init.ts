@@ -72,6 +72,7 @@ export async function initGeneratorInternal(
         buildTargetName: ['build', 'vite:build', 'vite-build'],
         testTargetName: ['test', 'vite:test', 'vite-test'],
         serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
+        devTargetName: ['dev', 'vite:dev', 'vite-dev'],
         previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
         serveStaticTargetName: [
           'serve-static',
@@ -79,6 +80,16 @@ export async function initGeneratorInternal(
           'vite-serve-static',
         ],
         typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
+        buildDepsTargetName: [
+          'build-deps',
+          'vite:build-deps',
+          'vite-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'vite:watch-deps',
+          'vite-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );

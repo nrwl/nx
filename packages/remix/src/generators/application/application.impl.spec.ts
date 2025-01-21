@@ -346,6 +346,21 @@ describe('Remix Application', () => {
         tags: 'foo',
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "private",
+          "type",
+          "scripts",
+          "engines",
+          "sideEffects",
+          "nx",
+          "dependencies",
+          "devDependencies",
+        ]
+      `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {

@@ -28,6 +28,7 @@ import {
   isProjectWithNoNameError,
   isAggregateCreateNodesError,
   AggregateCreateNodesError,
+  formatAggregateCreateNodesError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
@@ -358,7 +359,14 @@ export async function createProjectConfigurations(
     `Creating project graph nodes with ${plugins.length} plugins`
   );
 
-  const results: Array<ReturnType<LoadedNxPlugin['createNodes'][1]>> = [];
+  const results: Promise<
+    (readonly [
+      plugin: string,
+      file: string,
+      result: CreateNodesResult,
+      index?: number
+    ])[]
+  >[] = [];
   const errors: Array<
     | AggregateCreateNodesError
     | MergeNodesError
@@ -367,12 +375,10 @@ export async function createProjectConfigurations(
   > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const {
-    createNodes: createNodesTuple,
-    include,
-    exclude,
-    name: pluginName,
-  } of plugins) {
+  for (const [
+    index,
+    { createNodes: createNodesTuple, include, exclude, name: pluginName },
+  ] of plugins.entries()) {
     const [pattern, createNodes] = createNodesTuple ?? [];
 
     if (!pattern) {
@@ -392,36 +398,18 @@ export async function createProjectConfigurations(
       workspaceRoot: root,
     })
       .catch((e: Error) => {
-        const errorBodyLines = [
-          `An error occurred while processing files for the ${pluginName} plugin.`,
-        ];
         const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
           ? // This is an expected error if something goes wrong while processing files.
             e
           : // This represents a single plugin erroring out with a hard error.
             new AggregateCreateNodesError([[null, e]], []);
-
-        const innerErrors = error.errors;
-        for (const [file, e] of innerErrors) {
-          if (file) {
-            errorBodyLines.push(`  - ${file}: ${e.message}`);
-          } else {
-            errorBodyLines.push(`  - ${e.message}`);
-          }
-          if (e.stack) {
-            const innerStackTrace =
-              '    ' + e.stack.split('\n')?.join('\n    ');
-            errorBodyLines.push(innerStackTrace);
-          }
-        }
-
-        error.stack = errorBodyLines.join('\n');
-
+        formatAggregateCreateNodesError(error, pluginName);
+        error.pluginIndex = index;
         // This represents a single plugin erroring out with a hard error.
         errors.push(error);
         // The plugin didn't return partial results, so we return an empty array.
         return error.partialResults.map(
-          (r) => [pluginName, r[0], r[1]] as const
+          (r) => [pluginName, r[0], r[1], index] as const
         );
       })
       .finally(() => {
@@ -469,7 +457,8 @@ function mergeCreateNodesResults(
   results: (readonly [
     plugin: string,
     file: string,
-    result: CreateNodesResult
+    result: CreateNodesResult,
+    index?: number
   ])[][],
   nxJsonConfiguration: NxJsonConfiguration,
   errors: (
@@ -488,7 +477,7 @@ function mergeCreateNodesResults(
   > = {};
 
   for (const result of results.flat()) {
-    const [pluginName, file, nodes] = result;
+    const [pluginName, file, nodes, index] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
       nodes;
@@ -517,6 +506,7 @@ function mergeCreateNodesResults(
             file,
             pluginName,
             error,
+            pluginIndex: index,
           })
         );
       }

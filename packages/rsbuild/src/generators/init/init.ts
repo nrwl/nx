@@ -55,7 +55,18 @@ export async function initGeneratorInternal(
           'rsbuild:typecheck',
           'rsbuild-typecheck',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'rsbuild:build-deps',
+          'rsbuild-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'rsbuild:watch-deps',
+          'rsbuild-watch-deps',
+        ],
       },
+
       schema.updatePackageScripts
     );
   }

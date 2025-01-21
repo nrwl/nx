@@ -178,9 +178,6 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {
       let title = e.message;
-      if (isVerbose) {
-        title += ' See errors below.';
-      }
 
       const bodyLines = isVerbose
         ? [e.stack]

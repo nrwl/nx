@@ -34,6 +34,7 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -116,6 +117,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
+
+  sortPackageJsonFields(tree, options.projectRoot);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
@@ -248,10 +251,15 @@ function ensureDependencies(tree: Tree): GeneratorCallback {
 }
 
 function updatePackageJson(tree: Tree, options: NormalizedSchema) {
-  const packageJson = readJson(
-    tree,
-    joinPathFragments(options.projectRoot, 'package.json')
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
   );
+  if (!tree.exists(packageJsonPath)) {
+    return;
+  }
+
+  const packageJson = readJson(tree, packageJsonPath);
 
   if (packageJson.type === 'module') {
     // The @nx/js:lib generator can set the type to 'module' which would
@@ -259,9 +267,5 @@ function updatePackageJson(tree: Tree, options: NormalizedSchema) {
     delete packageJson.type;
   }
 
-  writeJson(
-    tree,
-    joinPathFragments(options.projectRoot, 'package.json'),
-    packageJson
-  );
+  writeJson(tree, packageJsonPath, packageJson);
 }

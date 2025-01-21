@@ -4,6 +4,7 @@ import {
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Schema {
   appFileName: string; // the file name of app to be tested in kebab case
@@ -12,6 +13,7 @@ export interface NormalizedSchema extends Schema {
   appRoot: string; // the root path of e2e project. e.g. apps/app-directory/app
   e2eProjectName: string; // the name of e2e project
   e2eProjectRoot: string; // the root path of e2e project. e.g. apps/e2e-directory/e2e-app
+  isUsingTsSolutionConfig?: boolean;
 }
 
 export async function normalizeOptions(
@@ -45,5 +47,6 @@ export async function normalizeOptions(
     e2eName: e2eProjectName,
     e2eProjectName,
     e2eProjectRoot,
+    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
   };
 }

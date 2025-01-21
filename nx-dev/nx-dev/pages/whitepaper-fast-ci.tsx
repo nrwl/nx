@@ -1,7 +1,12 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
-import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
+import {
+  ButtonLink,
+  Footer,
+  Header,
+  HubspotForm,
+  SectionHeading,
+} from '@nx/nx-dev/ui-common';
 import {
   CapitalOneIcon,
   CaterpillarIcon,
@@ -10,7 +15,8 @@ import {
   SiriusxmAlternateIcon,
 } from '@nx/nx-dev/ui-icons';
 import { type ReactElement } from 'react';
-import { ArrowLongRightIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 export function WhitePaperFastCI(): ReactElement {
   const router = useRouter();
@@ -70,22 +76,35 @@ export function WhitePaperFastCI(): ReactElement {
                     monorepos can result in slow builds, operational complexity,
                     increased costs and test bottlenecks.
                   </p>
-                  <div className="py-10 italic">
-                    <a
-                      target="_blank"
-                      className="group text-lg font-semibold leading-relaxed underline"
+
+                  <div className="mt-12 text-center">
+                    <SectionHeading as="p" variant="subtitle">
+                      See how to get fast CI, built for monorepos
+                    </SectionHeading>
+                    <ButtonLink
                       href="/assets/enterprise/Fast-CI-Whitepaper.pdf"
+                      title="Download the guide"
+                      target="_blank"
+                      variant="secondary"
+                      size="small"
+                      onClick={() =>
+                        sendCustomEvent(
+                          'download-ebook-click',
+                          'whitepaper-fast-ci-hero',
+                          'whitepaper-fast-ci'
+                        )
+                      }
+                      className="mt-2"
                     >
-                      See how to get fast CI, built for monorepos{' '}
-                      <ArrowLongRightIcon
-                        className="inline-block h-6 w-6 transition group-hover:translate-x-1"
+                      <ArrowDownTrayIcon
                         aria-hidden="true"
+                        className="size-5 shrink-0"
                       />
-                    </a>
-                    <p className="mt-2">(download pdf)</p>
+                      <span>Download the guide</span>
+                    </ButtonLink>
                   </div>
 
-                  <figure className="mt-4 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
+                  <figure className="mt-16 rounded-lg bg-slate-100 p-4 pl-8 dark:bg-slate-800">
                     <blockquote className="text-base/7">
                       <p>
                         “The decision to jump to Nx Cloud was really something
@@ -111,7 +130,7 @@ export function WhitePaperFastCI(): ReactElement {
                       </div>
                       <SiriusxmAlternateIcon
                         aria-hidden="true"
-                        className="ml-auto size-10 text-[#0000EB]"
+                        className="ml-auto size-10 rounded text-[#0000EB] dark:bg-slate-200"
                       />
                     </figcaption>
                   </figure>

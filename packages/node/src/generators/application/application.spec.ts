@@ -599,6 +599,16 @@ describe('app', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "name": "@proj/myapp",
