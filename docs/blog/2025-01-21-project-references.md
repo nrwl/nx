@@ -6,28 +6,25 @@ tags: [typescript, monorepo, nx]
 cover_image: /blog/images/2025-01-21/ts-islands.png
 ---
 
-## Connecting Projects At The Typescript Level
+## Connecting Projects At The TypeScript Level
 
 Consider the following workspace:
 
-```filesysten
+```filesystem
 is-even
   index.ts
   tsconfig.json
 is-odd
-  index.tx
+  index.ts
   tsconfig.json
 tsconfig.base.json
 ```
 
-If we try to run our build script on the `is-odd` project, we see that Typescript is unable to run the `tsc` command because at the typescript level, `is-odd` is not aware of the `is-even` module:
+If we try to run our build script on the `is-odd` project, we see that TypeScript is unable to run the `tsc` command because at the TypeScript level, `is-odd` is not aware of the `is-even` module:
 
 ```shell
  . > cd is-odd
- is-odd > npm run build
-
-> build
-> tsc
+ is-odd > tsc
 
 index.ts:1:24 - error TS2792: Cannot find module 'is-even'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 
@@ -45,7 +42,7 @@ As we can see, there's an error associated with this line:
 import { isEven } from 'is-even';
 ```
 
-Typescript needs to be informed as to how to find the module named `is-even`. The error message here actually recomends here that we may have forgotten to add aliases to the 'paths' option. To do this we can adjust our `tsconfig.base.json` file:
+TypeScript needs to be informed as to how to find the module named `is-even`. The error message here actually suggests that we may have forgotten to add aliases to the 'paths' option. To do this we can adjust our `tsconfig.json` file at the root of the monorepo:
 
 ```json
 {
@@ -61,23 +58,20 @@ Typescript needs to be informed as to how to find the module named `is-even`. Th
 By having the individual `tsconfig.json` files `extend` this base config, they will all get these paths, and now our build command will work:
 
 ```shell
-is-odd > npm run build
-
-> build
-> tsc
+is-odd > tsc
 ```
 
-This solution that we just implemented is how Nx has set up tsconfigs in the past. Before the new "Project References" feature that this article will look at next, this was the best option available for allowing you to import from a another named project inside of your monorepo.
+This solution that we just implemented is how Nx has set up tsconfigs in the past. Before the new "Project References" feature that this article will look at next, this was the best option available for allowing you to import from another named project inside of your monorepo.
 
 Before we look at project references though - one of the important things we should do is understand the downsides of this "paths"-based approach.
 
-The biggest one being that this approach does not enforce any boundaries within your monorepo at the Typescript level - instead we treat the entire monorepo as one "unit", but by adding `paths` we are adding aliases to specific files (usually the `index.ts` barrel files for each project in our monorepo) so we can reference them in our import statements.
+The biggest one being that this approach does not enforce any boundaries within your monorepo at the TypeScript level - instead, we treat the entire monorepo as one "unit," but by adding `paths`, we are adding aliases to specific files (usually the `index.ts` barrel files for each project in our monorepo) so we can reference them in our import statements.
 
-## Typescript Project References
+## TypeScript Project References
 
-By adding boundaries at the Typescript level, we can significantly cut down on the "surface area" that Typescript has to contend with when doing it's job. This way, rather than Typescript seeing our entire monorepo as one unit, it can now understand our workspace as a series of connected "islands" or nodes.
+By adding boundaries at the TypeScript level, we can significantly cut down on the "surface area" that TypeScript has to contend with when doing its job. This way, rather than TypeScript seeing our entire monorepo as one unit, it can now understand our workspace as a series of connected "islands" or nodes.
 
-![Islands of Typescript](/blog/images/2025-01-21/ts-islands.png)
+![Islands of TypeScript](/blog/images/2025-01-21/ts-islands.png)
 
 To add this to our previous example, we'll adjust the `tsconfig.json` file for `is-odd` since it depends on `is-even`:
 
@@ -101,7 +95,7 @@ Note that we still actually need path aliases for our example. This is because w
 import { isEven } from 'is-even';
 ```
 
-There are alternatives to path aliases to allow for this name to be resolved. The most recent enhancements at Nx we use the `workspaces` functionality your package-manager of choice (npm/pnpm/yarn/bun) as the way of resolving these names.
+There are alternatives to path aliases to allow for this name to be resolved. The most recent enhancements in Nx use the `workspaces` functionality of your package manager of choice (npm/pnpm/yarn/bun) as the way of resolving these names.
 
 With this set up, we can now use the `-b` or `--build` option when building `is-odd` - let's run it now with the `--verbose` flag on:
 
@@ -122,7 +116,7 @@ Building project '/Users/zackderose/monorepo-project-references/is-odd/tsconfig.
 
 Notice our filesystem now:
 
-```filesysten
+```filesystem
 is-even
   index.d.ts
   index.js
@@ -138,7 +132,7 @@ is-odd
 tsconfig.base.json
 ```
 
-Notice how both `is-even` AND `is-odd` now have a compiled `index.d.ts` declaration file and `index.js`. They also both have a `tsconfig.base.json` file now (this holds the additional data typescript needs to determine which builds are needed). With the `--build` option, Typescript is now operating as a build orchestrator - by finding all referenced projects, determining if they are out-of-date, and then building them in the correct order.
+Notice how both `is-even` AND `is-odd` now have a compiled `index.d.ts` declaration file and `index.js`. They also both have a `tsconfig.base.json` file now (this holds the additional data TypeScript needs to determine which builds are needed). With the `--build` option, TypeScript is now operating as a build orchestrator - by finding all referenced projects, determining if they are out-of-date, and then building them in the correct order.
 
 ## So What Does This Mean For You
 
@@ -148,7 +142,7 @@ We've put together [a repo to demonstrate the perfomance gains](https://github.c
 
 ![results](/blog/images/2025-01-21/results.png)
 
-In addition to the time savings we saw reduced memory usage (~ < 1GB vs 3 GB). This makes sense given what we saw about how project references work. This is actually a very good thing for CI pipelines, as exceeding memory usuage is a common issue we see with our clients for their Typescript builds. Less memory usuage means we can use smaller machines, which saves on the CI costs.
+In addition to the time savings we saw reduced memory usage (~< 1GB vs 3 GB). This makes sense given what we saw about how project references work. This is actually a very good thing for CI pipelines, as exceeding memory usuage is a common issue we see with our clients for their TypeScript builds. Less memory usuage means we can use smaller machines, which saves on the CI costs.
 
 In general, while it's good to understand the mechanics around everything, we believe it's better to use tools for this (like Nx!). This way you can off-shore your mental capacity to the tool and instead focus on building your solution.
 
@@ -180,4 +174,4 @@ You can skip this prompt by setting the `sync.applyChanges` option to `true` in 
 For more information, refer to the docs: https://nx.dev/concepts/sync-generators.
 ```
 
-So, offshore the mental load to your tools, focus on building your solution, and you should have the best of all worlds.
+So, offload the mental load to your tools, focus on building your solution, and you should have the best of all worlds.
