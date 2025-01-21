@@ -37,9 +37,12 @@ export function MigrateApp({
     });
   };
 
-  const onFinish = () => {
+  const onFinish = (squashCommits: boolean) => {
     externalApiService.postEvent({
       type: 'finish',
+      payload: {
+        squashCommits,
+      },
     });
   };
 

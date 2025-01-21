@@ -51,6 +51,8 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManager,
+  PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
@@ -1414,17 +1416,28 @@ function showConnectToCloudMessage() {
   }
 }
 
-function runInstall() {
-  const pmCommands = getPackageManagerCommand();
+function runInstall(nxWorkspaceRoot?: string) {
+  let packageManager: PackageManager;
+  let pmCommands: PackageManagerCommands;
+  if (nxWorkspaceRoot) {
+    packageManager = detectPackageManager(nxWorkspaceRoot);
+    pmCommands = getPackageManagerCommand(packageManager, nxWorkspaceRoot);
+  } else {
+    pmCommands = getPackageManagerCommand();
+  }
 
   // TODO: remove this
-  if (detectPackageManager() === 'npm') {
+  if (packageManager ?? detectPackageManager() === 'npm') {
     process.env.npm_config_legacy_peer_deps ??= 'true';
   }
   output.log({
     title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
   });
-  execSync(pmCommands.install, { stdio: [0, 1, 2], windowsHide: false });
+  execSync(pmCommands.install, {
+    stdio: [0, 1, 2],
+    windowsHide: false,
+    cwd: nxWorkspaceRoot ?? process.cwd(),
+  });
 }
 
 export async function executeMigrations(
@@ -1440,14 +1453,7 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string
 ) {
-  let initialDeps = getStringifiedPackageJsonDeps(root);
-  const installDepsIfChanged = () => {
-    const currentDeps = getStringifiedPackageJsonDeps(root);
-    if (initialDeps !== currentDeps) {
-      runInstall();
-    }
-    initialDeps = currentDeps;
-  };
+  const changedDepInstaller = new ChangedDepInstaller(root);
 
   const migrationsWithNoChanges: typeof migrations = [];
   const sortedMigrations = migrations.sort((a, b) => {
@@ -1479,7 +1485,7 @@ export async function executeMigrations(
         isVerbose,
         shouldCreateCommits,
         commitPrefix,
-        installDepsIfChanged
+        () => changedDepInstaller.installDepsIfChanged()
       );
       if (changes.length === 0) {
         migrationsWithNoChanges.push(m);
@@ -1494,10 +1500,25 @@ export async function executeMigrations(
   }
 
   if (!shouldCreateCommits) {
-    installDepsIfChanged();
+    changedDepInstaller.installDepsIfChanged();
   }
 
   return migrationsWithNoChanges;
+}
+
+class ChangedDepInstaller {
+  private initialDeps: string;
+  constructor(private readonly root: string) {
+    this.initialDeps = getStringifiedPackageJsonDeps(root);
+  }
+
+  public installDepsIfChanged() {
+    const currentDeps = getStringifiedPackageJsonDeps(this.root);
+    if (this.initialDeps !== currentDeps) {
+      runInstall(this.root);
+    }
+    this.initialDeps = currentDeps;
+  }
 }
 
 export async function runNxOrAngularMigration(
@@ -1512,8 +1533,12 @@ export async function runNxOrAngularMigration(
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
-  installDepsIfChanged: () => void
+  installDepsIfChanged?: () => void
 ): Promise<FileChange[]> {
+  if (!installDepsIfChanged) {
+    const changedDepInstaller = new ChangedDepInstaller(root);
+    installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
+  }
   const { collection, collectionPath } = readMigrationCollection(
     migration.package,
     root
@@ -1565,7 +1590,7 @@ export async function runNxOrAngularMigration(
 
     const commitMessage = `${commitPrefix}${migration.name}`;
     try {
-      const committedSha = commitChanges(commitMessage);
+      const committedSha = commitChanges(commitMessage, root);
 
       if (committedSha) {
         logger.info(chalk.dim(`- Commit created for changes: ${committedSha}`));
@@ -1792,7 +1817,7 @@ function getImplementationPath(
   return { path: implPath, fnSymbol };
 }
 
-function nxCliPath() {
+export function nxCliPath(nxWorkspaceRoot?: string) {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   try {
     const packageManager = detectPackageManager();
@@ -1806,7 +1831,10 @@ function nxCliPath() {
       },
       license: 'MIT',
     });
-    copyPackageManagerConfigurationFiles(workspaceRoot, tmpDir);
+    copyPackageManagerConfigurationFiles(
+      nxWorkspaceRoot ?? workspaceRoot,
+      tmpDir
+    );
     if (pmc.preInstall) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
       execSync(pmc.preInstall, {
@@ -1832,7 +1860,7 @@ function nxCliPath() {
 
     // Set NODE_PATH so that these modules can be used for module resolution
     addToNodePath(join(tmpDir, 'node_modules'));
-    addToNodePath(join(workspaceRoot, 'node_modules'));
+    addToNodePath(join(nxWorkspaceRoot ?? workspaceRoot, 'node_modules'));
 
     return join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {

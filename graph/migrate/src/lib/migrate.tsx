@@ -1,6 +1,8 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
+import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
   ArrowPathIcon,
@@ -11,9 +13,25 @@ import {
 import { Pill } from '@nx/graph-internal/ui-project-details';
 import { useState } from 'react';
 
+export type SuccessfulMigration = {
+  type: 'successful';
+  name: string;
+  changedFiles: FileChange[];
+};
+
+export type FailedMigration = {
+  type: 'failed';
+  name: string;
+  error: string;
+};
+
 export type NxConsoleMigrateMetadata = {
-  successfulMigrations?: { name: string; changes: string[] }[];
-  failedMigrations?: { name: string; error: unknown }[];
+  completedMigrations?: Record<string, SuccessfulMigration | FailedMigration>;
+  initialGitRef?: {
+    ref: string;
+    subject: string;
+  };
+  confirmedPackageUpdates?: boolean;
 };
 
 export interface MigrateUIProps {
@@ -26,11 +44,12 @@ export interface MigrateUIProps {
     }
   ) => void;
   onCancel: () => void;
-  onFinish: () => void;
+  onFinish: (squashCommits: boolean) => void;
 }
 
 export function MigrateUI(props: MigrateUIProps) {
   const [createCommits, setCreateCommits] = useState(true);
+  const [squashCommits, setSquashCommits] = useState(true);
 
   return (
     <div className="p-2">
@@ -48,17 +67,13 @@ export function MigrateUI(props: MigrateUIProps) {
       </div>
       <div>
         {props.migrations.map((migration) => {
-          const successfulMigration =
-            props.nxConsoleMetadata.successfulMigrations?.find(
-              (successfulMigration) =>
-                successfulMigration.name === migration.name
-            );
-          const succeeded = !!successfulMigration;
-          const madeChanges = !!successfulMigration?.changes.length;
+          const migrationResult =
+            props.nxConsoleMetadata.completedMigrations?.[migration.name];
+          const succeeded = migrationResult?.type === 'successful';
+          const madeChanges =
+            succeeded && !!migrationResult?.changedFiles.length;
 
-          const failed = !!props.nxConsoleMetadata.failedMigrations?.find(
-            (failedMigration) => failedMigration.name === migration.name
-          );
+          const failed = migrationResult?.type === 'failed';
           return (
             <div
               key={migration.name}
@@ -135,6 +150,12 @@ export function MigrateUI(props: MigrateUIProps) {
                   {succeeded && !madeChanges && (
                     <Pill text="No changes made" color="green" />
                   )}
+                  {succeeded && madeChanges && (
+                    <Pill
+                      text={`${migrationResult?.changedFiles.length} changes`}
+                      color="green"
+                    />
+                  )}
                   <span
                     className={`rounded-md p-1 text-sm ring-1 ring-inset transition-colors ${
                       succeeded
@@ -171,7 +192,7 @@ export function MigrateUI(props: MigrateUIProps) {
             </div>
           );
         })}
-        <div className="sticky bottom-0 flex justify-end gap-2 bg-white p-4 dark:bg-slate-900">
+        <div className="sticky bottom-0 flex justify-end gap-2 bg-white py-4 dark:bg-slate-900">
           <div className="flex gap-2">
             <button
               onClick={props.onCancel}
@@ -181,13 +202,25 @@ export function MigrateUI(props: MigrateUIProps) {
               Cancel
             </button>
             <button
-              onClick={props.onFinish}
+              onClick={() => props.onFinish(squashCommits)}
               type="button"
               className="flex w-full items-center rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
             >
               Finish
             </button>
           </div>
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <label htmlFor="create-commits">Squash commits</label>
+          <input
+            checked={squashCommits}
+            onChange={(e) => setSquashCommits((e.target as any).checked)}
+            id="squash-commits"
+            name="squash-commits"
+            value="squash-commits"
+            type="checkbox"
+            className={`h-4 w-4`}
+          />
         </div>
       </div>
     </div>
