@@ -39,7 +39,7 @@ async function* runCustomServer(
   const customServerBuild = await runExecutor<{
     success: boolean;
     baseUrl?: string;
-    exit?: () => Promise<void>;
+    cleanup?: () => Promise<void>;
   }>(
     parseTargetString(options.customServerTarget, context),
     {
@@ -55,7 +55,7 @@ async function* runCustomServer(
     yield {
       success: true,
       baseUrl,
-      exit: result.exit,
+      cleanup: result.cleanup,
     };
   }
 

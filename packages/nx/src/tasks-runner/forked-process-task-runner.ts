@@ -342,15 +342,24 @@ export class ForkedProcessTaskRunner {
         let stdoutHasEnded = false;
         let stderrHasEnded = false;
         let processHasExited = false;
-        let handleProcessEndTimeout: NodeJS.Timeout | null = null;
+        let forcedFinishTaskProcessingTimeout: NodeJS.Timeout | null = null;
 
-        const handleProcessEnd = (force: boolean = false) => {
+        const rescheduleForcedFinishTaskProcessing = () => {
+          if (forcedFinishTaskProcessingTimeout) {
+            clearTimeout(forcedFinishTaskProcessingTimeout);
+            forcedFinishTaskProcessingTimeout = null;
+          }
+          forcedFinishTaskProcessingTimeout = setTimeout(() => {
+            finishTaskProcessing(true);
+          }, 100);
+        };
+        const finishTaskProcessing = (force: boolean = false) => {
           // ensure process has exited and both stdout and stderr have ended before we pass along the logs
           // if we only wait for the process to exit, we might miss some logs as stdout and stderr might still be streaming
           if ((stdoutHasEnded && stderrHasEnded && processHasExited) || force) {
-            if (handleProcessEndTimeout) {
-              clearTimeout(handleProcessEndTimeout);
-              handleProcessEndTimeout = null;
+            if (forcedFinishTaskProcessingTimeout) {
+              clearTimeout(forcedFinishTaskProcessingTimeout);
+              forcedFinishTaskProcessingTimeout = null;
             }
 
             // we didn't print any output as we were running the command
@@ -371,27 +380,31 @@ export class ForkedProcessTaskRunner {
             // if the process has exited, but we are still waiting for stdout
             // and/or stderr to end, we await them to end up to a maximum of
             // 100ms to prevent hanging tasks
-            if (!handleProcessEndTimeout) {
-              handleProcessEndTimeout = setTimeout(() => {
-                handleProcessEnd(true);
-              }, 100);
+            if (!forcedFinishTaskProcessingTimeout) {
+              rescheduleForcedFinishTaskProcessing();
             }
           }
         };
 
         p.stdout.on('data', (chunk) => {
           outWithErr.push(chunk.toString());
+          if (processHasExited) {
+            rescheduleForcedFinishTaskProcessing();
+          }
         });
         p.stdout.on('end', () => {
           stdoutHasEnded = true;
-          handleProcessEnd();
+          finishTaskProcessing();
         });
         p.stderr.on('data', (chunk) => {
           outWithErr.push(chunk.toString());
+          if (processHasExited) {
+            rescheduleForcedFinishTaskProcessing();
+          }
         });
         p.stderr.on('end', () => {
           stderrHasEnded = true;
-          handleProcessEnd();
+          finishTaskProcessing();
         });
 
         p.on('exit', (code, signal) => {
@@ -399,7 +412,7 @@ export class ForkedProcessTaskRunner {
           if (code === null) code = signalToCode(signal);
           exitCode = code;
           processHasExited = true;
-          handleProcessEnd();
+          finishTaskProcessing();
         });
       } catch (e) {
         console.error(e);

@@ -116,7 +116,7 @@ export async function* nodeExecutor(
   yield* createAsyncIterable<{
     success: boolean;
     options?: Record<string, any>;
-    exit: () => void;
+    cleanup: () => Promise<void>;
   }>(async ({ done, next, error }) => {
     const processQueue = async () => {
       if (tasks.length === 0) return;
@@ -207,7 +207,7 @@ export async function* nodeExecutor(
             next({
               success: true,
               options: buildOptions,
-              exit: async () => {
+              cleanup: async () => {
                 await stopAllTasks();
               },
             });
