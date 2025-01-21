@@ -106,7 +106,8 @@ The root `tsconfig.base.json` should contain a `compilerOptions` property and no
   "compilerOptions": {
     // Required compiler options
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "declarationMaps": true
     // Other options...
   }
 }
@@ -252,7 +253,7 @@ When using project references, you can not define path aliases in the root `tsco
 ## Project Linking with TypeScript Path Aliases
 
 {% callout type="warning" title="Incompatible with TypeScript Project References" %}
-You can not use TypeScript project references with this style of project linking.
+You can not use TypeScript project references with this style of project linking. When TypeScript incrementally builds the individual projects, it doesn't merge the path aliases from the root tsconfig files.
 {% /callout %}
 
 Linking projects with TypeScript path aliases is configured entirely in the tsconfig files. You can still use package manager workspaces to enable you to define separate third-party dependencies for individual projects, but the local project linking is done by TypeScript instead of the package manager.
