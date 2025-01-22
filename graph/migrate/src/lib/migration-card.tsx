@@ -122,7 +122,6 @@ export function MigrationCard({
               <div
                 className="cursor-pointer"
                 onClick={() => {
-                  console.log('expanding', !isExpanded);
                   setIsExpanded(!isExpanded);
                 }}
               >
@@ -149,6 +148,16 @@ export function MigrationCard({
                   })}
                 </ul>
               )}
+            </div>
+          )}
+          {failed && (
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              <Pill text="Failed" color="red" />
             </div>
           )}
           <span
@@ -181,6 +190,11 @@ export function MigrationCard({
           </span>
         </div>
       </div>
+      {failed && isExpanded && (
+        <div className="flex pl-8 pt-2">
+          <pre>{migrationResult?.error}</pre>
+        </div>
+      )}
     </div>
   );
 }
