@@ -58,14 +58,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "npm-workspaces-tutorial",
-            "name": "NPM Workspaces Monorepo",
+            "id": "typescript-packages-tutorial",
+            "name": "TypeScript Packages",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/npm-workspaces",
+            "file": "shared/tutorials/typescript-packages",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+            "path": "/getting-started/tutorials/typescript-packages-tutorial",
             "tags": []
           },
           {
@@ -196,14 +196,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "npm-workspaces-tutorial",
-        "name": "NPM Workspaces Monorepo",
+        "id": "typescript-packages-tutorial",
+        "name": "TypeScript Packages",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/npm-workspaces",
+        "file": "shared/tutorials/typescript-packages",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+        "path": "/getting-started/tutorials/typescript-packages-tutorial",
         "tags": []
       },
       {
@@ -277,15 +277,15 @@
     "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/npm-workspaces-tutorial": {
-    "id": "npm-workspaces-tutorial",
-    "name": "NPM Workspaces Monorepo",
+  "/getting-started/tutorials/typescript-packages-tutorial": {
+    "id": "typescript-packages-tutorial",
+    "name": "TypeScript Packages",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/npm-workspaces",
+    "file": "shared/tutorials/typescript-packages",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+    "path": "/getting-started/tutorials/typescript-packages-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {

@@ -1,11 +1,11 @@
 ---
-title: 'NPM Workspaces Tutorial'
-description: In this tutorial you'll add Nx to an existing NPM workspaces repo
+title: 'TypeScript Packages Tutorial'
+description: In this tutorial you'll add Nx to an existing TypeScript repo
 ---
 
-# NPM Workspaces Tutorial
+# TypeScript Packages Tutorial
 
-In this tutorial, you'll learn how to add Nx to a repository with an existing [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) setup.
+In this tutorial, you'll learn how to add Nx to a repository with an existing TypeScript project. The starting repository uses [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for project linking and is configured to build with [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html).
 
 What will you learn?
 
@@ -20,7 +20,7 @@ What will you learn?
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces" /%} -->
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/typescript-packages" /%} -->
 
 <!-- {% youtube
 src="https://www.youtube.com/embed/ZA9K4iT3ANc"
@@ -114,7 +114,7 @@ If you run `nx graph` as instructed, you'll see the dependencies between your pr
 npx nx graph --focus=@tuskdesign/zoo
 ```
 
-{% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/npm-workspaces-project-graph.json" %}
+{% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/typescript-packages-project-graph.json" %}
 {% /graph %}
 
 Nx uses this graph to determine the order tasks are run and enforce module boundaries. You can also leverage this graph to gain an accurate understanding of the architecture of your codebase. Part of what makes this graph invaluable is that it is derived directly from your codebase, so it will never become out of date.
@@ -199,7 +199,7 @@ Alternatively, you can pass the `--graph` option to the run command to inspect t
 npx nx run @tuskdesign/zoo:build --graph
 ```
 
-{% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks1.json" %}
+{% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/typescript-packages-build-tasks1.json" %}
 {% /graph %}
 
 ### Create a Task Pipeline
@@ -287,7 +287,7 @@ The `nx add` command installs the version of the plugin that matches your repo's
 npx nx show project @tuskdesign/zoo
 ```
 
-{% project-details title="Project Details View" jsonFile="shared/tutorials/npm-workspaces-pdv.json" %}
+{% project-details title="Project Details View" jsonFile="shared/tutorials/typescript-packages-pdv.json" %}
 {% /project-details %}
 
 Notice that the `inputs` that are inferred for the `build` task match the `include` and `exclude` settings in the `tsconfig.lib.json` file. As those settings are changed, the cache `inputs` will automatically update to the correct values.
@@ -350,7 +350,7 @@ Open up the task graph for `zoo` app's `serve` task again to see the changes.
 npx nx run @tuskdesign/zoo:serve --graph
 ```
 
-{% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks2.json" %}
+{% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/typescript-packages-build-tasks2.json" %}
 {% /graph %}
 
 ## Manage Releases
@@ -390,7 +390,7 @@ After this first release, you can remove the `--first-release` flag and just run
 <!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%} -->
 
 {% callout type="check" title="Forked repository with Nx" %}
-Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can fork the [sample repository with Nx already added](https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces).
+Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can fork the [sample repository with Nx already added](https://github.com/nrwl/nx-recipes/tree/main/typescript-packages).
 {% /callout %}
 
 So far in this tutorial you've seen how Nx improves the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
