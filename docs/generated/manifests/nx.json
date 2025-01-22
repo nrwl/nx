@@ -5458,6 +5458,17 @@
         "file": "shared/features/powerpack/index",
         "itemList": [
           {
+            "id": "free-licenses-and-trials",
+            "name": "Free Licenses & Trials",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/free-licenses-and-trials",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+            "tags": []
+          },
+          {
             "id": "conformance",
             "name": "Run Language-Agnostic Conformance Rules",
             "description": "Write and apply rules for your Nx workspace",
@@ -5519,6 +5530,17 @@
     "file": "shared/features/powerpack/index",
     "itemList": [
       {
+        "id": "free-licenses-and-trials",
+        "name": "Free Licenses & Trials",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/free-licenses-and-trials",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+        "tags": []
+      },
+      {
         "id": "conformance",
         "name": "Run Language-Agnostic Conformance Rules",
         "description": "Write and apply rules for your Nx workspace",
@@ -5554,6 +5576,17 @@
     ],
     "isExternal": false,
     "path": "/nx-enterprise/powerpack",
+    "tags": []
+  },
+  "/nx-enterprise/powerpack/free-licenses-and-trials": {
+    "id": "free-licenses-and-trials",
+    "name": "Free Licenses & Trials",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/free-licenses-and-trials",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
     "tags": []
   },
   "/nx-enterprise/powerpack/conformance": {
@@ -6693,6 +6726,17 @@
         "tags": []
       },
       {
+        "id": "custom-tasks-runner",
+        "name": "Custom Tasks Runner",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-tasks-runner",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-tasks-runner",
+        "tags": []
+      },
+      {
         "id": "workspace-executors",
         "name": "Workspace Executors",
         "description": "",
@@ -6860,6 +6904,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/legacy-cache",
+    "tags": []
+  },
+  "/deprecated/custom-tasks-runner": {
+    "id": "custom-tasks-runner",
+    "name": "Custom Tasks Runner",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-tasks-runner",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-tasks-runner",
     "tags": []
   },
   "/deprecated/workspace-executors": {

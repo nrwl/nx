@@ -104,7 +104,7 @@ export function Faq(): ReactElement {
         'We have a helpful comparison above. If you have additional questions, or these plans don’t fit your needs please reach out to https://nx.dev/contact/sales and we will do our best to help.',
     },
     {
-      question: 'What if I need more than 70 active contributors?',
+      question: 'What if I need more than 30 active contributors?',
       answer: 'Please reach out to https://nx.dev/contact/sales',
     },
     {

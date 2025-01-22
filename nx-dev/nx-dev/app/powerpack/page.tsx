@@ -1,6 +1,7 @@
 import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
 import {
   CallToAction,
+  Faq,
   GetStarted,
   Hero,
   PowerpackFeatures,
@@ -53,6 +54,10 @@ export default function NxPowerPackPage(): ReactElement {
 
       <div className="mt-32 scroll-mt-32 lg:mt-56">
         <GetStarted />
+      </div>
+
+      <div className="mt-32 scroll-mt-32 lg:mt-56">
+        <Faq />
       </div>
 
       <div className="mt-32 lg:mt-56">
