@@ -1,6 +1,8 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
+import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import { Interpreter } from 'xstate';
@@ -66,6 +68,14 @@ export function MigrateApp({
     service,
     (state) => state.context.nxConsoleMetadata
   );
+  const onFileClick = (file: FileChange) => {
+    externalApiService.postEvent({
+      type: 'file-click',
+      payload: {
+        path: file.path,
+      },
+    });
+  };
 
   return (
     <MigrateUI
@@ -75,6 +85,7 @@ export function MigrateApp({
       onRunMany={onRunMany}
       onCancel={onCancel}
       onFinish={onFinish}
+      onFileClick={onFileClick}
     ></MigrateUI>
   );
 }

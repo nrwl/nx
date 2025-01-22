@@ -65,7 +65,13 @@ export const Primary = {
         },
         'migration-4': {
           type: 'successful',
-          changedFiles: ['blub.ts'],
+          changedFiles: [
+            { path: 'blub.ts', type: 'CREATE' },
+            { path: 'blub2.ts', type: 'UPDATE' },
+            { path: 'blub3.ts', type: 'DELETE' },
+            { path: 'blub4.ts', type: 'UPDATE' },
+            { path: 'blub5.ts', type: 'CREATE' },
+          ],
         },
         'migration-3': {
           type: 'failed',
@@ -86,6 +92,9 @@ export const Primary = {
       configuration: { createCommits: boolean }
     ) => {
       console.log(migrations, configuration);
+    },
+    onFileClick: (file: any) => {
+      console.log(file);
     },
   },
 };
