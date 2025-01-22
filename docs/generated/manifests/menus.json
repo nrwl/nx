@@ -10980,23 +10980,6 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
-          },
-          {
-            "id": "generators",
-            "path": "/nx-api/powerpack-s3-cache/generators",
-            "name": "generators",
-            "children": [
-              {
-                "id": "init",
-                "path": "/nx-api/powerpack-s3-cache/generators/init",
-                "name": "init",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
           }
         ],
         "isExternal": false,
