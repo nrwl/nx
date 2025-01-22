@@ -1125,6 +1125,11 @@
               "file": "shared/features/powerpack/index",
               "itemList": [
                 {
+                  "name": "Free Licenses & Trials",
+                  "id": "free-licenses-and-trials",
+                  "file": "shared/features/powerpack/free-licenses-and-trials"
+                },
+                {
                   "name": "Run Language-Agnostic Conformance Rules",
                   "description": "Write and apply rules for your Nx workspace",
                   "id": "conformance",
@@ -1415,6 +1420,11 @@
               "name": "Legacy Cache",
               "id": "legacy-cache",
               "file": "shared/deprecated/legacy-cache"
+            },
+            {
+              "name": "Custom Tasks Runner",
+              "id": "custom-tasks-runner",
+              "file": "shared/deprecated/custom-tasks-runner"
             },
             {
               "name": "Workspace Executors",
