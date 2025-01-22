@@ -31,6 +31,21 @@ export function MigrateApp({
     });
   };
 
+  const onRunMany = (
+    migrations: GeneratedMigrationDetails[],
+    configuration: {
+      createCommits: boolean;
+    }
+  ) => {
+    externalApiService.postEvent({
+      type: 'run-many',
+      payload: {
+        migrations,
+        configuration,
+      },
+    });
+  };
+
   const onCancel = () => {
     externalApiService.postEvent({
       type: 'cancel',
@@ -57,6 +72,7 @@ export function MigrateApp({
       migrations={migrations}
       nxConsoleMetadata={nxConsoleMetadata}
       onRunMigration={onRunMigration}
+      onRunMany={onRunMany}
       onCancel={onCancel}
       onFinish={onFinish}
     ></MigrateUI>

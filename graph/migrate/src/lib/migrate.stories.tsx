@@ -58,17 +58,34 @@ export const Primary = {
       },
     ],
     nxConsoleMetadata: {
-      successfulMigrations: [
-        { name: 'migration-1', changes: [] },
-        { name: 'migration-4', changes: ['blub.ts'] },
-      ],
-      failedMigrations: [{ name: 'migration-3', error: 'This is an error' }],
+      completedMigrations: {
+        'migration-1': {
+          type: 'successful',
+          changedFiles: [],
+        },
+        'migration-4': {
+          type: 'successful',
+          changedFiles: ['blub.ts'],
+        },
+        'migration-3': {
+          type: 'failed',
+          error: 'This is an error',
+        },
+      },
+      runningMigrations: ['migration-2'],
+      targetVersion: '20.3.2',
     },
     onRunMigration: (
       migration: any,
       configuration: { createCommits: boolean }
     ) => {
       console.log(migration, configuration);
+    },
+    onRunMany: (
+      migrations: any[],
+      configuration: { createCommits: boolean }
+    ) => {
+      console.log(migrations, configuration);
     },
   },
 };

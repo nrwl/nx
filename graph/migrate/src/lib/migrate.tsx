@@ -11,7 +11,7 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal/ui-project-details';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export type SuccessfulMigration = {
   type: 'successful';
@@ -27,11 +27,13 @@ export type FailedMigration = {
 
 export type NxConsoleMigrateMetadata = {
   completedMigrations?: Record<string, SuccessfulMigration | FailedMigration>;
+  runningMigrations?: string[];
   initialGitRef?: {
     ref: string;
     subject: string;
   };
   confirmedPackageUpdates?: boolean;
+  targetVersion?: string;
 };
 
 export interface MigrateUIProps {
@@ -39,6 +41,12 @@ export interface MigrateUIProps {
   nxConsoleMetadata: NxConsoleMigrateMetadata;
   onRunMigration: (
     migration: GeneratedMigrationDetails,
+    configuration: {
+      createCommits: boolean;
+    }
+  ) => void;
+  onRunMany: (
+    migrations: GeneratedMigrationDetails[],
     configuration: {
       createCommits: boolean;
     }
@@ -51,29 +59,155 @@ export function MigrateUI(props: MigrateUIProps) {
   const [createCommits, setCreateCommits] = useState(true);
   const [squashCommits, setSquashCommits] = useState(true);
 
+  const [selectedMigrations, setSelectedMigrations] = useState<
+    Record<string, boolean>
+  >(
+    props.migrations.reduce((acc, migration) => {
+      acc[migration.name] = false;
+      return acc;
+    }, {} as Record<string, boolean>)
+  );
+
+  const numberSelected = useMemo(
+    () =>
+      Object.values(selectedMigrations).filter((selected) => selected).length,
+    [selectedMigrations]
+  );
+
+  const anySelected = useMemo(
+    () =>
+      Object.values(selectedMigrations).filter((selected) => selected).length >
+      0,
+    [selectedMigrations]
+  );
+
+  const allSelected = useMemo(
+    () => props.migrations.length === numberSelected,
+    [props.migrations, numberSelected]
+  );
+
+  const numberFailed = useMemo(
+    () =>
+      Object.values(props.nxConsoleMetadata.completedMigrations ?? {}).filter(
+        (migration) => migration.type === 'failed'
+      ).length,
+    [props.nxConsoleMetadata.completedMigrations]
+  );
+
+  const handleHeaderCheckboxClick = () => {
+    const newSelectedState = !anySelected;
+    setSelectedMigrations(
+      Object.keys(selectedMigrations).reduce((acc, migrationName) => {
+        acc[migrationName] = newSelectedState;
+        return acc;
+      }, {} as Record<string, boolean>)
+    );
+  };
+
+  const selectAllCheckboxRef = useCallback(
+    (el: HTMLInputElement | null) => {
+      if (!el) return;
+      el.checked = allSelected;
+      el.indeterminate = anySelected && !allSelected;
+    },
+    [allSelected, anySelected]
+  );
+
+  const handleRunMany = () => {
+    props.onRunMany(
+      props.migrations.filter(
+        (migration) => selectedMigrations[migration.name]
+      ),
+      {
+        createCommits,
+      }
+    );
+  };
+
+  const handleRerunFailed = () => {
+    props.onRunMany(
+      props.migrations.filter(
+        (migration) =>
+          props.nxConsoleMetadata.completedMigrations?.[migration.name]
+            ?.type === 'failed'
+      ),
+      {
+        createCommits,
+      }
+    );
+  };
+
   return (
     <div className="p-2">
-      <div className="flex items-center justify-end gap-2">
-        <label htmlFor="create-commits">Create commits</label>
-        <input
-          checked={createCommits}
-          onChange={(e) => setCreateCommits((e.target as any).checked)}
-          id="create-commits"
-          name="create-commits"
-          value="create-commits"
-          type="checkbox"
-          className={`h-4 w-4`}
-        />
+      {/* Page Header */}
+      <div className="flex items-center justify-between pb-4">
+        <h2 className="text-xl font-semibold">
+          Migrating to {props.nxConsoleMetadata.targetVersion}
+        </h2>
+        <div className="flex items-center gap-2">
+          <label htmlFor="create-commits">Create commits</label>
+          <input
+            checked={createCommits}
+            onChange={(e) => setCreateCommits((e.target as any).checked)}
+            id="create-commits"
+            name="create-commits"
+            value="create-commits"
+            type="checkbox"
+            className={`h-4 w-4`}
+          />
+        </div>
+      </div>
+      {/* Migration List */}
+      <div
+        className={`my-2 gap-2 rounded-md border border-slate-200 p-2 dark:border-slate-700/60`}
+      >
+        <div className="flex h-4 w-4 w-full items-center gap-4">
+          <input
+            ref={selectAllCheckboxRef}
+            onClick={handleHeaderCheckboxClick}
+            id="select-all"
+            name="select-all"
+            value="select-all"
+            type="checkbox"
+            className={`h-4 w-4 accent-blue-500 dark:accent-sky-500`}
+          />
+          <label htmlFor="select-all">
+            {allSelected || anySelected
+              ? `${numberSelected} selected`
+              : 'Select all'}
+          </label>
+          {anySelected && (
+            <button
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              onClick={handleRunMany}
+            >
+              <PlayIcon className="h-5 w-5"></PlayIcon>
+              Run selected migrations
+            </button>
+          )}
+          {numberFailed > 0 && (
+            <button
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              onClick={handleRerunFailed}
+            >
+              <PlayIcon className="h-5 w-5"></PlayIcon>
+              Rerun failed migrations
+            </button>
+          )}
+        </div>
       </div>
       <div>
         {props.migrations.map((migration) => {
           const migrationResult =
             props.nxConsoleMetadata.completedMigrations?.[migration.name];
           const succeeded = migrationResult?.type === 'successful';
+          const failed = migrationResult?.type === 'failed';
+          const inProgress =
+            props.nxConsoleMetadata.runningMigrations?.includes(migration.name);
+
           const madeChanges =
             succeeded && !!migrationResult?.changedFiles.length;
 
-          const failed = migrationResult?.type === 'failed';
           return (
             <div
               key={migration.name}
@@ -87,8 +221,15 @@ export function MigrateUI(props: MigrateUIProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="relative h-4 w-4">
+                  <div className="h-4 w-4">
                     <input
+                      checked={selectedMigrations[migration.name]}
+                      onChange={(e) =>
+                        setSelectedMigrations({
+                          ...selectedMigrations,
+                          [migration.name]: (e.target as any).checked,
+                        })
+                      }
                       id={migration.name}
                       name={migration.name}
                       value={migration.name}
@@ -165,7 +306,12 @@ export function MigrateUI(props: MigrateUIProps) {
                         : 'bg-inherit text-slate-600 ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60'
                     }`}
                   >
-                    {!succeeded && !failed ? (
+                    {inProgress ? (
+                      <ArrowPathIcon
+                        className="h-6 w-6 animate-spin cursor-not-allowed text-blue-500"
+                        aria-label="Migration in progress"
+                      />
+                    ) : !succeeded && !failed ? (
                       <PlayIcon
                         onClick={() =>
                           props.onRunMigration(migration, {
