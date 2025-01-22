@@ -47,9 +47,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "NPM Workspaces Monorepo",
-                "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-                "id": "npm-workspaces-tutorial",
+                "name": "TypeScript Packages",
+                "path": "/getting-started/tutorials/typescript-packages-tutorial",
+                "id": "typescript-packages-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -147,9 +147,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "NPM Workspaces Monorepo",
-            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-            "id": "npm-workspaces-tutorial",
+            "name": "TypeScript Packages",
+            "path": "/getting-started/tutorials/typescript-packages-tutorial",
+            "id": "typescript-packages-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -206,9 +206,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "NPM Workspaces Monorepo",
-        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-        "id": "npm-workspaces-tutorial",
+        "name": "TypeScript Packages",
+        "path": "/getting-started/tutorials/typescript-packages-tutorial",
+        "id": "typescript-packages-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
