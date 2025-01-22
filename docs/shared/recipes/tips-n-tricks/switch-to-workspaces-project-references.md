@@ -1,6 +1,6 @@
 # Switch to Workspaces and Project References
 
-In order to take advantage of the [performance benefits](/concepts/typescript-project-linking#typescript-project-references-performance-benefits) of TypeScript project references, you need to use package manager workspaces for local [project linking](/concepts/typescript-project-linking). If you are currently using TypeScript path aliases for project linking, follow the steps in this guide to switch to workspaces project linking and enable TypeScript project references.
+If you want to take advantage of the [performance benefits](/concepts/typescript-project-linking#typescript-project-references-performance-benefits) of TypeScript project references, it is recommended to use package manager workspaces for local [project linking](/concepts/typescript-project-linking). If you are currently using TypeScript path aliases for project linking, follow the steps in this guide to switch to workspaces project linking and enable TypeScript project references.
 
 ## Enable Package Manager Workspaces
 
@@ -17,6 +17,16 @@ Follow the specific instructions for your package manager to enable workspaces p
 
 Defining the `workspaces` property in the root `package.json` file lets npm know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `npm install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
+If you reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells npm to use whatever version of the project is available.
+
+```json {% fileName="/apps/my-app/package.json" %}
+{
+  "devDependencies": {
+    "@my-org/some-project": "*"
+  }
+}
+```
+
 {% /tab %}
 {% tab label="yarn" %}
 
@@ -27,6 +37,16 @@ Defining the `workspaces` property in the root `package.json` file lets npm know
 ```
 
 Defining the `workspaces` property in the root `package.json` file lets yarn know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `yarn` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
+
+If you reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+
+```json {% fileName="/apps/my-app/package.json" %}
+{
+  "devDependencies": {
+    "@my-org/some-project": "*"
+  }
+}
+```
 
 {% /tab %}
 {% tab label="bun" %}
@@ -39,24 +59,28 @@ Defining the `workspaces` property in the root `package.json` file lets yarn kno
 
 Defining the `workspaces` property in the root `package.json` file lets bun know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `bun install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
+If you reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+
+```json {% fileName="/apps/my-app/package.json" %}
+{
+  "devDependencies": {
+    "@my-org/some-project": "workspace:*"
+  }
+}
+```
+
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```yaml {% fileName="pnpm-workspace.yaml" %}
 packages:
-  # specify a package in a direct subdir of the root
-  - 'my-app'
-  # all packages in direct subdirs of packages/
-  - 'packages/*'
-  # all packages in subdirs of libs/
+  - 'apps/**'
   - 'libs/**'
-  # exclude packages that are inside test directories
-  - '!**/test/**'
 ```
 
 Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
 
-If you want to reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. `workspace:*` tells pnpm that the project is in the same repository and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells pnpm that the project is in the same repository](https://pnpm.io/workspaces#workspace-protocol-workspace) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
 
 ```json {% fileName="/apps/my-app/package.json" %}
 {
@@ -71,9 +95,9 @@ If you want to reference a local library project from an application, you need t
 
 ## Update Root TypeScript Configuration
 
-The root `tsconfig.base.json` should contain a `compilerOptions` property and no other properties. `compilerOptions.composite` and `compilerOptions.declaration` should be set to `true`. `compilerOptions.paths` should not be set.
+The root `tsconfig.base.json` should contain a `compilerOptions` property and no other properties. `compilerOptions.composite` and `compilerOptions.declaration` should be set to `true`. `compilerOptions.paths` and `compilerOptions.rootDir` should not be set.
 
-Note: Before you delete the `paths` property, copy the project paths for use in the `tsconfig.json` file.
+Note: Before you delete the `paths` property, copy the project paths for use as `references` in the `tsconfig.json` file.
 
 {% tabs %}
 {% tab label="Before" %}
@@ -100,7 +124,7 @@ Note: Before you delete the `paths` property, copy the project paths for use in 
   "compilerOptions": {
     // Required compiler options
     "composite": true,
-    "declaration": true,
+    "declaration": true, // defaults to true when composite is true
     // Delete the paths property
     // Other options...
     "allowJs": false,
@@ -150,11 +174,14 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
 
 ## Create Individual Project package.json files
 
-When using package manager project linking, every project needs to have a `package.json` file. The only required property of the `package.json` is the `name`, so you can leave all the task configuration in the existing `project.json` file.
+When using package manager project linking, every project needs to have a `package.json` file. You can leave all the task configuration in the existing `project.json` file. For application projects, you only need to specify the `name` property. For library projects, you should add an `exports` property that accounts for any TypeScript path aliases that referenced the project. A typical configuration is shown below:
 
 ```json {% fileName="libs/ui/package.json" %}
 {
-  "name": "@myorg/ui"
+  "name": "@myorg/ui",
+  "exports": {
+    ".": "./src/index.js"
+  }
 }
 ```
 

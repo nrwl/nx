@@ -18,7 +18,7 @@ import { someFunction } from '@myorg/otherProject';
 const result = someFunction();
 ```
 
-There are two different methods that Nx supports for linking TypeScript projects: package manager workspaces and TypeScript path aliases. Project linking with TS path aliases was available with Nx before package managers offered a workspaces project linking approach. The Nx Team has since added full support for workspaces because (1) it has become more common across the TypeScript ecosystem and (2) using workspaces allows Nx to also enable TypeScript project references for improved build performance.
+There are two different methods that Nx supports for linking TypeScript projects: package manager workspaces and TypeScript path aliases. Project linking with TS path aliases was available with Nx before package managers offered a workspaces project linking approach. The Nx Team has since added full support for workspaces because (1) it has become more common across the TypeScript ecosystem and (2) packages will be resolved using native node module resolution instead of relying on TypeScript. Nx provides a cohesive experience for repositories using TypeScript path aliases without project references or repositories using package manager workspaces with TypeScript project references enabled.
 
 ## Project Linking with Workspaces
 
@@ -64,7 +64,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 Defining the `workspaces` property in the root `package.json` file lets yarn know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `yarn` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells yarn to use whatever version of the project is available.
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells yarn that the project is in the same repository](https://yarnpkg.com/features/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
 
 ```json {% fileName="/apps/my-app/package.json" %}
 {
@@ -85,12 +85,12 @@ If you want to reference a local library project with its own `build` task, you 
 
 Defining the `workspaces` property in the root `package.json` file lets bun know to look for other `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `bun install` is run in the root folder. Also, the projects themselves will be linked in the root `node_modules` folder to be accessed as if they were npm packages.
 
-If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `*` specified as the library's version. `*` tells bun to use whatever version of the project is available.
+If you want to reference a local library project with its own `build` task, you should include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells bun that the project is in the same repository](https://bun.sh/docs/install/workspaces) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
 
 ```json {% fileName="/apps/my-app/package.json" %}
 {
   "devDependencies": {
-    "@my-org/some-project": "*"
+    "@my-org/some-project": "workspace:*"
   }
 }
 ```
@@ -100,19 +100,13 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```yaml {% fileName="pnpm-workspace.yaml" %}
 packages:
-  # specify a package in a direct subdir of the root
-  - 'my-app'
-  # all packages in direct subdirs of packages/
-  - 'packages/*'
-  # all packages in subdirs of components/
-  - 'components/**'
-  # exclude packages that are inside test directories
-  - '!**/test/**'
+  - 'apps/**'
+  - 'packages/**'
 ```
 
 Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
 
-If you want to reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. `workspace:*` tells pnpm that the project is in the same repository and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
+If you want to reference a local library project from an application, you need to include the library in the `devDependencies` of the application's `package.json` with `workspace:*` specified as the library's version. [`workspace:*` tells pnpm that the project is in the same repository](https://pnpm.io/workspaces#workspace-protocol-workspace) and not an npm package. You want to specify local projects as `devDependencies` instead of `dependencies` so that the library is not included twice in the production bundle of the application.
 
 ```json {% fileName="/apps/my-app/package.json" %}
 {
@@ -263,7 +257,7 @@ These performance benefits will be more noticeable for larger repositories, but 
 
 ### Local TypeScript Path Aliases
 
-When using project references, you can not define path aliases in the root `tsconfig.base.json` file because TypeScript does not merge the path aliases when doing the typecheck calculation, but you can set path aliases in an individual project's `tsconfig.app.json` file. For instance, you could define paths like this in an application's tsconfig file.
+If you define TS path aliases in an individual project's tsconfig files, you should not define them also in the root `tsconfig.base.json` file because TypeScript does not merge the paths. The paths defined in the root file would be completely overwritten by the ones defined in the project tsconfig. For instance, you could define paths like this in an application's tsconfig file.
 
 ```jsonc {% fileName="/apps/my-remix-app/tsconfig.app.json" %}
 {
