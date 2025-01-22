@@ -276,7 +276,7 @@ export function PlansDisplay(): ReactElement {
               </p>
               <div className="my-12">
                 <ButtonLink
-                  href="/contact/sales"
+                  href="/enterprise/trial"
                   aria-describedby="enterprise-plan"
                   title="Enterprise"
                   size="default"
