@@ -3868,17 +3868,7 @@
     "root": "/libs/nx-packages/powerpack-s3-cache",
     "source": "/libs/nx-packages/powerpack-s3-cache/src",
     "executors": {},
-    "generators": {
-      "/nx-api/powerpack-s3-cache/generators/init": {
-        "description": "Initialize the S3 Cache",
-        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-s3-cache/generators/init",
-        "type": "generator"
-      }
-    },
+    "generators": {},
     "path": "/nx-api/powerpack-s3-cache"
   },
   "powerpack-shared-fs-cache": {
