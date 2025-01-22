@@ -3984,6 +3984,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Free Licenses & Trials",
+                "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+                "id": "free-licenses-and-trials",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Language-Agnostic Conformance Rules",
                 "path": "/nx-enterprise/powerpack/conformance",
                 "id": "conformance",
@@ -4028,6 +4036,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Free Licenses & Trials",
+            "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+            "id": "free-licenses-and-trials",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Language-Agnostic Conformance Rules",
             "path": "/nx-enterprise/powerpack/conformance",
             "id": "conformance",
@@ -4052,6 +4068,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Free Licenses & Trials",
+        "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+        "id": "free-licenses-and-trials",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -4884,6 +4908,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Custom Tasks Runner",
+            "path": "/deprecated/custom-tasks-runner",
+            "id": "custom-tasks-runner",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Workspace Executors",
             "path": "/deprecated/workspace-executors",
             "id": "workspace-executors",
@@ -5002,6 +5034,14 @@
         "name": "Legacy Cache",
         "path": "/deprecated/legacy-cache",
         "id": "legacy-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom Tasks Runner",
+        "path": "/deprecated/custom-tasks-runner",
+        "id": "custom-tasks-runner",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
