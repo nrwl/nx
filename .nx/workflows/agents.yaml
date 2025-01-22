@@ -11,6 +11,8 @@ launch-templates:
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
+      - name: pull mongo docker
+        script: docker pull mongo:latest
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Cache restore
@@ -19,10 +21,6 @@ launch-templates:
           key: 'pnpm-lock.yaml'
           paths: .pnpm-store
           base-branch: 'master'
-      - name: sleep 30
-        script: sleep 30
-      - name: pull mongo docker
-        script: docker pull mongo:latest
       - name: Install e2e deps
         script: |
           sudo apt-get update
@@ -68,6 +66,8 @@ launch-templates:
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
+      - name: pull mongo docker
+        script: docker pull mongo:latest
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Cache restore
@@ -76,10 +76,6 @@ launch-templates:
           key: 'pnpm-lock.yaml'
           paths: .pnpm-store
           base-branch: 'master'
-      - name: sleep 30
-        script: sleep 30
-      - name: pull mongo docker
-        script: docker pull mongo:latest
       - name: Install e2e deps
         script: |
           sudo apt-get update
