@@ -865,6 +865,17 @@
         "tags": ["sync"]
       },
       {
+        "id": "typescript-project-linking",
+        "name": "TypeScript Project Linking",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/typescript-project-linking",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/typescript-project-linking",
+        "tags": ["project-linking"]
+      },
+      {
         "id": "turbo-and-nx",
         "name": "Nx and Turborepo",
         "description": "",
@@ -1156,6 +1167,17 @@
     "isExternal": false,
     "path": "/concepts/sync-generators",
     "tags": ["sync"]
+  },
+  "/concepts/typescript-project-linking": {
+    "id": "typescript-project-linking",
+    "name": "TypeScript Project Linking",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/typescript-project-linking",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/typescript-project-linking",
+    "tags": ["project-linking"]
   },
   "/concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
@@ -2674,6 +2696,17 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/eslint",
             "tags": []
+          },
+          {
+            "id": "switch-to-workspaces-project-references",
+            "name": "Switch to Workspaces and TS Project References",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "tags": ["project-linking"]
           },
           {
             "id": "enable-tsc-batch-mode",
@@ -5043,6 +5076,17 @@
         "tags": []
       },
       {
+        "id": "switch-to-workspaces-project-references",
+        "name": "Switch to Workspaces and TS Project References",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "tags": ["project-linking"]
+      },
+      {
         "id": "enable-tsc-batch-mode",
         "name": "Enable Typescript Batch Mode",
         "description": "",
@@ -5222,6 +5266,17 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/eslint",
     "tags": []
+  },
+  "/recipes/tips-n-tricks/switch-to-workspaces-project-references": {
+    "id": "switch-to-workspaces-project-references",
+    "name": "Switch to Workspaces and TS Project References",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+    "tags": ["project-linking"]
   },
   "/recipes/tips-n-tricks/enable-tsc-batch-mode": {
     "id": "enable-tsc-batch-mode",
