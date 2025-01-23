@@ -10,7 +10,5 @@
     "jest.config.ts",
     "src/**/*.ts"
   ],
-  "references": [
-   { "path": "<%= relativeProjectReferencePath %>" }
-  ]
+  "references": []
 }
