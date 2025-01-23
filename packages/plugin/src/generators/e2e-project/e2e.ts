@@ -148,6 +148,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     skipSerializers: true,
     skipFormat: true,
     addPlugin: options.addPlugin,
+    compiler: options.isTsSolutionSetup ? 'swc' : undefined,
   });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
