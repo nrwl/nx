@@ -116,8 +116,7 @@ export async function* nodeExecutor(
   yield* createAsyncIterable<{
     success: boolean;
     options?: Record<string, any>;
-    cleanup: () => Promise<void>;
-  }>(async ({ done, next, error }) => {
+  }>(async ({ done, next, error, onCleanup }) => {
     const processQueue = async () => {
       if (tasks.length === 0) return;
 
@@ -204,13 +203,7 @@ export async function* nodeExecutor(
               resolve();
             });
 
-            next({
-              success: true,
-              options: buildOptions,
-              cleanup: async () => {
-                await stopAllTasks();
-              },
-            });
+            next({ success: true, options: buildOptions });
           });
         },
         stop: async (signal = 'SIGTERM') => {
@@ -251,6 +244,10 @@ export async function* nodeExecutor(
     process.on('SIGHUP', async () => {
       await stopAllTasks('SIGHUP');
       process.exit(128 + 1);
+    });
+
+    onCleanup(async () => {
+      await stopAllTasks('SIGTERM');
     });
 
     if (options.runBuildTargetDependencies) {
