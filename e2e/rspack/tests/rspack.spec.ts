@@ -9,8 +9,10 @@ import {
   updateFile,
   runCLI,
   runCommand,
+  createFile,
+  readJson,
 } from '@nx/e2e/utils';
-import { execSync } from 'child_process';
+
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -24,12 +26,28 @@ describe('rspack e2e', () => {
   // on a unique project in the workspace, such that they
   // are not dependant on one another.
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/rspack'] });
+    proj = newProject({ packages: ['@nx/rspack', '@nx/react'] });
   });
 
   afterAll(() => cleanupProject());
 
-  it('should create rspack root project and additional apps', async () => {
+  it('should be inferred (crystal) by default', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
+    );
+
+    const nxJSON = readJson('nx.json');
+    const rspackPlugin = nxJSON.plugins.find(
+      (plugin) => plugin.plugin === '@nx/rspack/plugin'
+    );
+
+    expect(rspackPlugin).toBeDefined();
+  });
+
+  // This is disabled as the generator is no longer relevant
+  xit('should create rspack root project and additional apps', async () => {
     const project = uniq('myapp');
     runCLI(
       `generate @nx/rspack:preset ${project} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress --verbose`
@@ -146,4 +164,264 @@ describe('rspack e2e', () => {
     // Make sure expected files are present.
     expect(listFiles(`dist/${app3}`)).toHaveLength(4);
   }, 200_000);
+
+  describe('config types', () => {
+    it('should support a standard config object', () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
+      );
+
+      updateFile(
+        `apps/${appName}/rspack.config.js`,
+        `
+        const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+        const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+        const { join } = require('path');
+  
+        module.exports = {
+          output: {
+            path: join(__dirname, '../../dist/${appName}'),
+          },
+          devServer: {
+            port: 4200,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ['./src/favicon.ico', './src/assets'],
+              styles: ['./src/styles.scss'],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        };`
+      );
+
+      const result = runCLI(`build ${appName}`);
+
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+
+    it('should support a standard function that returns a config object', () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
+      );
+
+      updateFile(
+        `apps/${appName}/rspack.config.js`,
+        `
+        const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+        const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+        const { join } = require('path');
+  
+        module.exports = () => {
+          return {
+          output: {
+            path: join(__dirname, '../../dist/${appName}'),
+          },
+          devServer: {
+            port: 4200,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ['./src/favicon.ico', './src/assets'],
+              styles: ['./src/styles.scss'],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        };
+      };`
+      );
+
+      const result = runCLI(`build ${appName}`);
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+
+    it('should support an array of standard config objects', () => {
+      const appName = uniq('app');
+      const serverName = uniq('server');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
+      );
+
+      // Create server index file
+      createFile(
+        `apps/${serverName}/index.js`,
+        `console.log('Hello from ${serverName}');\n`
+      );
+
+      updateFile(
+        `apps/${appName}/rspack.config.js`,
+        `
+        const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+        const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+        const { join } = require('path');
+  
+        module.exports = [
+         {
+          name: 'client',
+          output: {
+            path: join(__dirname, '../../dist/${appName}'),
+          },
+          devServer: {
+            port: 4200,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ['./src/favicon.ico', './src/assets'],
+              styles: ['./src/styles.scss'],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        }, {
+       name: 'server',
+      target: 'node',
+      entry: '../${serverName}/index.js',
+      output: {
+        path: join(__dirname, '../../dist/${serverName}'),
+        filename: 'index.js',
+      },
+      }
+      ];
+      `
+      );
+
+      const result = runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/${appName}/main.js`);
+      checkFilesExist(`dist/${serverName}/index.js`);
+
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+
+    it('should support a function that returns an array of standard config objects', () => {
+      const appName = uniq('app');
+      const serverName = uniq('server');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
+      );
+
+      // Create server index file
+      createFile(
+        `apps/${serverName}/index.js`,
+        `console.log('Hello from ${serverName}');\n`
+      );
+
+      updateFile(
+        `apps/${appName}/rspack.config.js`,
+        `
+        const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+        const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+        const { join } = require('path');
+  
+        module.exports = () => {
+          return [
+            {
+          name: 'client',
+          output: {
+            path: join(__dirname, '../../dist/${appName}'),
+          },
+          devServer: {
+            port: 4200,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ['./src/favicon.ico', './src/assets'],
+              styles: ['./src/styles.scss'],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        }, 
+            {
+              name: 'server',
+              target: 'node',
+              entry: '../${serverName}/index.js',
+              output: {
+                path: join(__dirname, '../../dist/${serverName}'),
+                filename: 'index.js',
+              }
+            }
+      ];
+      };`
+      );
+      const result = runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/${serverName}/index.js`);
+      checkFilesExist(`dist/${appName}/main.js`);
+
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+  });
 });
