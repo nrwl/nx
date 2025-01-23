@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
@@ -457,6 +458,142 @@ describe('lib', () => {
       });
 
       expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    it('should add project references when using TS solution', async () => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(appTree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(appTree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+      });
+
+      expect(readJson(appTree, 'tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-lib",
+          },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(appTree, 'my-lib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "main",
+          "types",
+          "exports",
+          "nx",
+        ]
+      `);
+      expect(readJson(appTree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'my-lib/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/my-lib",
+            "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/test-setup.ts",
+            "jest.config.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'my-lib/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "files": [
+            "src/test-setup.ts",
+          ],
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });

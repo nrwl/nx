@@ -49,6 +49,7 @@ import {
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -73,6 +74,7 @@ export async function remixApplicationGeneratorInternal(
       skipFormat: true,
       addTsPlugin: _options.useTsSolution,
       formatter: _options.formatter,
+      platform: 'web',
     }),
   ];
 
@@ -310,9 +312,6 @@ export default {...nxPreset};
   tasks.push(await addE2E(tree, options));
 
   addViteTempFilesToGitIgnore(tree);
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
 
   updateTsconfigFiles(
     tree,
@@ -333,6 +332,12 @@ export default {...nxPreset};
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.useTsSolution) {
     addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
+  sortPackageJsonFields(tree, options.projectRoot);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   tasks.push(() => {

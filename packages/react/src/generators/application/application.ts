@@ -43,6 +43,7 @@ import {
   setupVitestConfiguration,
 } from './lib/bundlers/add-vite';
 import { Schema } from './schema';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -66,6 +67,7 @@ export async function applicationGeneratorInternal(
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 
@@ -151,7 +153,7 @@ export async function applicationGeneratorInternal(
 
   // Handle tsconfig.spec.json for jest or vitest
   updateSpecConfig(tree, options);
-  const stylePreprocessorTask = installCommonDependencies(tree, options);
+  const stylePreprocessorTask = await installCommonDependencies(tree, options);
   tasks.push(stylePreprocessorTask);
   const styledTask = addStyledModuleDependencies(tree, options);
   tasks.push(styledTask);
@@ -182,6 +184,8 @@ export async function applicationGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

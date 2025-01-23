@@ -433,7 +433,15 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "forceConsistentCasingInFileNames": true,
+            "importHelpers": true,
+            "module": "commonjs",
+            "moduleResolution": "node10",
+            "noFallthroughCasesInSwitch": true,
+            "noImplicitOverride": true,
+            "noImplicitReturns": true,
             "outDir": "./out-tsc/jest",
+            "strict": true,
             "types": [
               "jest",
               "node",

@@ -6,14 +6,16 @@ import {
   sassVersion,
   swcLoaderVersion,
   testingLibraryReactVersion,
+  testingLibraryDomVersion,
   tsLibVersion,
   typesNodeVersion,
   typesReactDomVersion,
   typesReactVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
+import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
 
-export function installCommonDependencies(
+export async function installCommonDependencies(
   host: Tree,
   options: NormalizedSchema
 ) {
@@ -21,11 +23,13 @@ export function installCommonDependencies(
     return () => {};
   }
 
+  const reactDeps = await getReactDependenciesVersionsToInstall(host);
+
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {
     '@types/node': typesNodeVersion,
-    '@types/react': typesReactVersion,
-    '@types/react-dom': typesReactDomVersion,
+    '@types/react': reactDeps['@types/react'],
+    '@types/react-dom': reactDeps['@types/react-dom'],
   };
 
   if (options.bundler !== 'vite') {
@@ -58,6 +62,7 @@ export function installCommonDependencies(
 
   if (options.unitTestRunner && options.unitTestRunner !== 'none') {
     devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+    devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);

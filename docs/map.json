@@ -41,9 +41,9 @@
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "NPM Workspaces Monorepo",
-                  "id": "npm-workspaces-tutorial",
-                  "file": "shared/tutorials/npm-workspaces"
+                  "name": "TypeScript Packages",
+                  "id": "typescript-packages-tutorial",
+                  "file": "shared/tutorials/typescript-packages"
                 },
                 {
                   "name": "React Standalone",
@@ -253,6 +253,12 @@
               "id": "sync-generators",
               "tags": ["sync"],
               "file": "shared/concepts/sync-generators"
+            },
+            {
+              "name": "TypeScript Project Linking",
+              "id": "typescript-project-linking",
+              "tags": ["project-linking"],
+              "file": "shared/concepts/typescript-project-linking"
             },
             {
               "name": "Nx and Turborepo",
@@ -1011,6 +1017,12 @@
                   "name": "Configuring ESLint with Typescript",
                   "id": "eslint",
                   "file": "shared/eslint"
+                },
+                {
+                  "name": "Switch to Workspaces and TS Project References",
+                  "id": "switch-to-workspaces-project-references",
+                  "tags": ["project-linking"],
+                  "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references"
                 },
                 {
                   "name": "Enable Typescript Batch Mode",
@@ -2303,12 +2315,6 @@
               "id": "overview",
               "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
-            },
-            {
-              "name": "Configure TypeScript Project References in an Nx Workspace",
-              "id": "typescript-project-references",
-              "path": "/nx-api/js/typescript-project-references",
-              "file": "shared/packages/js/typescript-project-references"
             }
           ]
         },

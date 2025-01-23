@@ -1,5 +1,10 @@
 'use client';
-import { Disclosure, Transition } from '@headlessui/react';
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Transition,
+} from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
@@ -145,7 +150,7 @@ export function Faq(): ReactElement {
                   {({ open }) => (
                     <>
                       <dt className="text-lg">
-                        <Disclosure.Button className="flex w-full items-start justify-between text-left text-slate-400">
+                        <DisclosureButton className="flex w-full items-start justify-between text-left text-slate-400">
                           <span className="font-medium text-slate-800 dark:text-slate-300">
                             {faq.question}
                           </span>
@@ -158,7 +163,7 @@ export function Faq(): ReactElement {
                               aria-hidden="true"
                             />
                           </span>
-                        </Disclosure.Button>
+                        </DisclosureButton>
                       </dt>
                       <Transition
                         enter="transition duration-100 ease-out"
@@ -168,11 +173,11 @@ export function Faq(): ReactElement {
                         leaveFrom="transform translate-y-0 opacity-100"
                         leaveTo="transform -translate-y-6 opacity-0"
                       >
-                        <Disclosure.Panel as="dd" className="mt-2 pr-12">
+                        <DisclosurePanel as="dd" className="mt-2 pr-12">
                           <p className="text-base text-slate-500 dark:text-slate-400">
                             {faq.answer}
                           </p>
-                        </Disclosure.Panel>
+                        </DisclosurePanel>
                       </Transition>
                     </>
                   )}

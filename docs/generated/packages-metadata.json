@@ -67,7 +67,7 @@
         "type": "executor"
       },
       {
-        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
+        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.",
         "file": "generated/packages/angular/executors/package.json",
         "hidden": false,
         "name": "package",
@@ -2383,17 +2383,6 @@
         "path": "js/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/js/js-plugin"
-      },
-      {
-        "id": "typescript-project-references",
-        "name": "Configure TypeScript Project References in an Nx Workspace",
-        "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
-        "file": "generated/packages/js/documents/typescript-project-references",
-        "itemList": [],
-        "isExternal": false,
-        "path": "js/documents/typescript-project-references",
-        "tags": [],
-        "originalFilePath": "shared/packages/js/typescript-project-references"
       }
     ],
     "executors": [

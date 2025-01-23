@@ -136,7 +136,7 @@ To avoid potential issues, it is [recommended to update one major version of Nx 
 
 Try one of these tutorials for a full walkthrough of what to do after you install Nx
 
-- [NPM Workspaces Tutorial](/getting-started/tutorials/npm-workspaces-tutorial)
+- [TypeScript Packages Tutorial](/getting-started/tutorials/typescript-packages-tutorial)
 - [Single React App Tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [Single Angular App Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
 - [Single Vue App Tutorial](/getting-started/tutorials/vue-standalone-tutorial)

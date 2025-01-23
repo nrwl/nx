@@ -17,8 +17,11 @@ import {
 } from '@nx/devkit';
 
 import { Linter as LinterEnum, LinterType } from '../utils/linter';
-import { findEslintFile } from '../utils/eslint-file';
-import { join } from 'path';
+import {
+  determineEslintConfigFormat,
+  findEslintFile,
+} from '../utils/eslint-file';
+import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
@@ -32,7 +35,7 @@ import {
 } from '../utils/flat-config/ast-utils';
 import {
   baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
+  BASE_ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
 import { setupRootEsLint } from './setup-root-eslint';
@@ -49,6 +52,7 @@ interface LintProjectOptions {
   rootProject?: boolean;
   keepExistingVersions?: boolean;
   addPlugin?: boolean;
+  eslintConfigFormat?: 'mjs' | 'cjs';
 
   /**
    * @internal
@@ -66,6 +70,7 @@ export async function lintProjectGeneratorInternal(
   options: LintProjectOptions
 ) {
   const nxJson = readNxJson(tree);
+  options.eslintConfigFormat ??= 'mjs';
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
@@ -74,12 +79,14 @@ export async function lintProjectGeneratorInternal(
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     addPlugin: options.addPlugin,
+    eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(initTask);
   const rootEsLintTask = setupRootEsLint(tree, {
     unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
     rootProject: options.rootProject,
+    eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(rootEsLintTask);
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -146,6 +153,7 @@ export async function lintProjectGeneratorInternal(
         filteredProjects,
         tree,
         options.unitTestRunner,
+        options.eslintConfigFormat,
         options.keepExistingVersions
       );
       tasks.push(migrateTask);
@@ -199,6 +207,22 @@ function createEsLintConfiguration(
   const pathToRootConfig = extendedRootConfig
     ? `${offsetFromRoot(projectConfig.root)}${extendedRootConfig}`
     : undefined;
+
+  if (extendedRootConfig) {
+    // We do not want to mix the formats
+    // if the base file extension is `.mjs` we should use `mjs` for the new file
+    // or if base the file extension is `.cjs` then the format should be `cjs`
+
+    const fileExtension = extname(extendedRootConfig);
+    if (fileExtension === '.mjs' || fileExtension === '.cjs') {
+      options.eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
+    } else {
+      options.eslintConfigFormat = determineEslintConfigFormat(
+        tree.read(extendedRootConfig, 'utf-8')
+      );
+    }
+  }
+
   const addDependencyChecks =
     options.addPackageJsonDependencyChecks ||
     isBuildableLibraryProject(projectConfig);
@@ -269,11 +293,18 @@ function createEsLintConfiguration(
       nodes.push(generateSpreadElement('baseConfig'));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override));
+      nodes.push(generateFlatOverride(override, options.eslintConfigFormat));
     });
-    const nodeList = createNodeList(importMap, nodes);
+    const nodeList = createNodeList(
+      importMap,
+      nodes,
+      options.eslintConfigFormat
+    );
     const content = stringifyNodeList(nodeList);
-    tree.write(join(projectConfig.root, `eslint.config.cjs`), content);
+    tree.write(
+      join(projectConfig.root, `eslint.config.${options.eslintConfigFormat}`),
+      content
+    );
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
       extends: extendedRootConfig ? [pathToRootConfig] : undefined,
@@ -313,8 +344,9 @@ function isBuildableLibraryProject(
 function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
   // the base config is already created, migration has been done
   if (
-    tree.exists(baseEsLintConfigFile) ||
-    tree.exists(baseEsLintFlatConfigFile)
+    [baseEsLintConfigFile, ...BASE_ESLINT_CONFIG_FILENAMES].some((f) =>
+      tree.exists(f)
+    )
   ) {
     return false;
   }

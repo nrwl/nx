@@ -1017,6 +1017,20 @@ module.exports = withNx(
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "type",
+          "main",
+          "module",
+          "types",
+          "exports",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",
@@ -1144,6 +1158,14 @@ module.exports = withNx(
 
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
           "nx": {
@@ -1157,6 +1179,10 @@ module.exports = withNx(
       `);
       expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": "./src/index.js",
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.js",
           "name": "@proj/myjslib",
           "nx": {
@@ -1226,6 +1252,7 @@ module.exports = withNx(
         {
           "exports": {
             ".": {
+              "default": "./dist/index.esm.js",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },

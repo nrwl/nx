@@ -5,7 +5,7 @@ import {
   CreateMetadataContext,
   CreateNodesContextV2,
 } from '../public-api';
-import { LoadedNxPlugin } from '../internal-api';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { Serializable } from 'child_process';
 import { Socket } from 'net';
 

@@ -174,10 +174,13 @@ describe('Tailwind support', () => {
 
     const assertLibComponentStyles = (
       lib: string,
-      libSpacing: (typeof spacing)['root']
+      libSpacing: (typeof spacing)['root'],
+      isPublishable: boolean = true
     ) => {
       const builtComponentContent = readFile(
-        `dist/${lib}/fesm2022/${project}-${lib}.mjs`
+        isPublishable
+          ? `dist/${lib}/fesm2022/${project}-${lib}.mjs`
+          : `dist/${lib}/esm2022/lib/foo.component.mjs`
       );
       let expectedStylesRegex = new RegExp(
         `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`
@@ -203,7 +206,8 @@ describe('Tailwind support', () => {
 
       assertLibComponentStyles(
         buildLibWithTailwind.name,
-        spacing.projectVariant1
+        spacing.projectVariant1,
+        false
       );
     });
 
@@ -223,7 +227,11 @@ describe('Tailwind support', () => {
 
       runCLI(`build ${buildLibSetupTailwind}`);
 
-      assertLibComponentStyles(buildLibSetupTailwind, spacing.projectVariant2);
+      assertLibComponentStyles(
+        buildLibSetupTailwind,
+        spacing.projectVariant2,
+        false
+      );
     });
 
     it('should correctly build a buildable library with a tailwind.config.js file in the project root or workspace root', () => {
@@ -241,7 +249,8 @@ describe('Tailwind support', () => {
 
       assertLibComponentStyles(
         buildLibNoProjectConfig,
-        spacing.projectVariant3
+        spacing.projectVariant3,
+        false
       );
 
       // remove tailwind.config.js file from the project root to test the one in the workspace root
@@ -249,7 +258,7 @@ describe('Tailwind support', () => {
 
       runCLI(`build ${buildLibNoProjectConfig}`);
 
-      assertLibComponentStyles(buildLibNoProjectConfig, spacing.root);
+      assertLibComponentStyles(buildLibNoProjectConfig, spacing.root, false);
     });
 
     it('should generate a publishable library with tailwind and build correctly', () => {

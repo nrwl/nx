@@ -553,9 +553,31 @@ describe('lib', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "main",
+          "types",
+          "exports",
+          "nx",
+          "dependencies",
+        ]
+      `);
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
           "nx": {
@@ -612,6 +634,8 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "module": "commonjs",
+            "moduleResolution": "node10",
             "outDir": "./out-tsc/jest",
             "types": [
               "jest",
@@ -648,7 +672,16 @@ describe('lib', () => {
           "dependencies": {
             "tslib": "^2.3.0",
           },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./dist/index.js",
+          "module": "./dist/index.js",
           "name": "@proj/mylib",
           "nx": {
             "name": "mylib",
@@ -671,8 +704,7 @@ describe('lib', () => {
             },
           },
           "private": true,
-          "type": "commonjs",
-          "typings": "./dist/index.d.ts",
+          "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }
       `);

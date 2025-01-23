@@ -2,6 +2,7 @@ import { output } from '../../utils/output';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { ShowProjectOptions } from './command-object';
 import { generateGraph } from '../graph/graph';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 export async function showProjectHandler(
   args: ShowProjectOptions
@@ -9,10 +10,29 @@ export async function showProjectHandler(
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   const graph = await createProjectGraphAsync();
-  const node = graph.nodes[args.projectName];
+  let node = graph.nodes[args.projectName];
   if (!node) {
-    console.log(`Could not find project ${args.projectName}`);
-    process.exit(1);
+    const projects = findMatchingProjects([args.projectName], graph.nodes);
+    if (projects.length === 1) {
+      const projectName = projects[0];
+      node = graph.nodes[projectName];
+    } else if (projects.length > 1) {
+      output.error({
+        title: `Multiple projects matched:`,
+        bodyLines:
+          projects.length > 100 ? [...projects.slice(0, 100), '...'] : projects,
+      });
+      console.log(
+        `Multiple projects matched:\n  ${(projects.length > 100
+          ? [...projects.slice(0, 100), '...']
+          : projects
+        ).join('  \n')}`
+      );
+      process.exit(1);
+    } else {
+      console.log(`Could not find project ${args.projectName}`);
+      process.exit(1);
+    }
   }
   if (args.json) {
     console.log(JSON.stringify(node.data));

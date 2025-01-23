@@ -12,17 +12,13 @@ launch-templates:
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
-          paths: |
-            node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
-            ~/.pnpm-store
-          base_branch: 'master'
+          paths: .pnpm-store
+          base-branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
@@ -69,17 +65,13 @@ launch-templates:
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
-          paths: |
-            node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
-            ~/.pnpm-store
-          base_branch: 'master'
+          paths: .pnpm-store
+          base-branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
