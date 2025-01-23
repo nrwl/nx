@@ -998,7 +998,8 @@ const latestRecipesRefactoring = {
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
-
+  '/nx-api/js/documents/typescript-project-references':
+    '/concepts/typescript-project-linking',
   '/reference/commands': '/reference/nx-commands',
 };
 
