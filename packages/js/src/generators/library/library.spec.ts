@@ -2146,7 +2146,7 @@ describe('lib', () => {
         swcJestConfig.swcrc = false;
 
         export default {
-          displayName: 'my-lib',
+          displayName: '@proj/my-lib',
           preset: '../jest.preset.js',
           transform: {
             '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
