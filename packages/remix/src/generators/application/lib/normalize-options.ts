@@ -3,8 +3,9 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { type NxRemixGeneratorSchema } from '../schema';
 import { Linter } from '@nx/eslint';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { type NxRemixGeneratorSchema } from '../schema';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -50,5 +51,6 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
+    useTsSolution: options.useTsSolution ?? isUsingTsSolutionSetup(tree),
   };
 }

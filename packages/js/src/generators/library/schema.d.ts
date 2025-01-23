@@ -46,4 +46,5 @@ export interface NormalizedLibraryGeneratorOptions
   importPath?: string;
   hasPlugin: boolean;
   isUsingTsSolutionConfig: boolean;
+  shouldUseSwcJest: boolean;
 }

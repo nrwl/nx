@@ -609,7 +609,7 @@ describe('lib', () => {
         {
           "compilerOptions": {
             "baseUrl": ".",
-            "emitDeclarationOnly": false,
+            "emitDeclarationOnly": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
             "outDir": "dist",
@@ -634,8 +634,8 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "module": "commonjs",
-            "moduleResolution": "node10",
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
             "outDir": "./out-tsc/jest",
             "types": [
               "jest",

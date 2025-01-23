@@ -154,7 +154,11 @@ export async function libraryGeneratorInternal(
   if (options.unitTestRunner === 'jest') {
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
-    if (options.bundler === 'swc' || options.bundler === 'rollup') {
+
+    if (
+      !options.isUsingTsSolutionConfig &&
+      (options.bundler === 'swc' || options.bundler === 'rollup')
+    ) {
       replaceJestConfig(tree, options);
     }
   } else if (
@@ -626,9 +630,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         ...determineEntryFields(options),
       };
 
-      if (options.bundler === 'none') {
-        updatedPackageJson.type = 'module';
-      } else if (options.bundler !== 'vite' && options.bundler !== 'rollup') {
+      if (
+        options.isUsingTsSolutionConfig &&
+        !['none', 'rollup', 'vite'].includes(options.bundler)
+      ) {
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -658,20 +663,19 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       packageJson.files = ['dist', '!**/*.tsbuildinfo'];
     }
 
-    if (options.isUsingTsSolutionConfig) {
-      if (options.bundler === 'none') {
-        packageJson.type = 'module';
-      } else if (options.bundler !== 'vite' && options.bundler !== 'rollup') {
-        packageJson = getUpdatedPackageJsonContent(packageJson, {
-          main: join(options.projectRoot, 'src/index.ts'),
-          outputPath: joinPathFragments(options.projectRoot, 'dist'),
-          projectRoot: options.projectRoot,
-          rootDir: join(options.projectRoot, 'src'),
-          generateExportsField: true,
-          packageJsonPath,
-          format: ['esm'],
-        });
-      }
+    if (
+      options.isUsingTsSolutionConfig &&
+      !['none', 'rollup', 'vite'].includes(options.bundler)
+    ) {
+      packageJson = getUpdatedPackageJsonContent(packageJson, {
+        main: join(options.projectRoot, 'src/index.ts'),
+        outputPath: joinPathFragments(options.projectRoot, 'dist'),
+        projectRoot: options.projectRoot,
+        rootDir: join(options.projectRoot, 'src'),
+        generateExportsField: true,
+        packageJsonPath,
+        format: ['esm'],
+      });
     }
 
     writeJson<PackageJson>(tree, packageJsonPath, packageJson);
@@ -710,14 +714,13 @@ async function addJest(
     setupFile: 'none',
     supportTsx: false,
     skipSerializers: true,
-    testEnvironment: options.testEnvironment,
+    testEnvironment: options.testEnvironment ?? 'node',
     skipFormat: true,
-    compiler:
-      options.bundler === 'swc' || options.bundler === 'tsc'
-        ? options.bundler
-        : options.bundler === 'rollup'
-        ? 'swc'
-        : undefined,
+    compiler: options.shouldUseSwcJest
+      ? 'swc'
+      : options.bundler === 'tsc'
+      ? 'tsc'
+      : undefined,
     runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
@@ -886,6 +889,11 @@ async function normalizeOptions(
   // We default to generate a project.json file if the new setup is not being used
   options.useProjectJson ??= !isUsingTsSolutionConfig;
 
+  const shouldUseSwcJest =
+    options.bundler === 'swc' ||
+    options.bundler === 'rollup' ||
+    isUsingTsSolutionConfig;
+
   return {
     ...options,
     fileName,
@@ -896,6 +904,7 @@ async function normalizeOptions(
     importPath,
     hasPlugin,
     isUsingTsSolutionConfig,
+    shouldUseSwcJest,
   };
 }
 
@@ -1020,6 +1029,7 @@ function createProjectTsConfigs(
         options.bundler === 'tsc'
           ? 'dist'
           : `out-tsc/${options.projectRoot.split('/').pop()}`,
+      emitDeclarationOnly: options.bundler === 'tsc' ? false : true,
     }
   );
 
@@ -1201,6 +1211,7 @@ function determineEntryFields(
     case 'none': {
       if (options.isUsingTsSolutionConfig) {
         return {
+          type: 'module',
           main: options.js ? './src/index.js' : './src/index.ts',
           types: options.js ? './src/index.js' : './src/index.ts',
           exports: {

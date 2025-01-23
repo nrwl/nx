@@ -12,6 +12,7 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -148,8 +149,22 @@ getTestBed().initTestEnvironment(
     }
   }
 
-  createFiles(tree, schema, root);
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
+  createFiles(tree, schema, root, isTsSolutionSetup);
   updateTsConfig(tree, schema, root, projectType);
+
+  if (isTsSolutionSetup) {
+    // in the TS solution setup, the test target depends on the build outputs
+    // so we need to setup the task pipeline accordingly
+    const nxJson = readNxJson(tree);
+    const testTarget = schema.testTarget ?? 'test';
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[testTarget] ??= {};
+    nxJson.targetDefaults[testTarget].dependsOn ??= [];
+    nxJson.targetDefaults[testTarget].dependsOn.push('^build');
+    updateNxJson(tree, nxJson);
+  }
 
   const coverageProviderDependency = getCoverageProviderDependency(
     schema.coverageProvider
@@ -304,9 +319,9 @@ function updateTsConfig(
 function createFiles(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string
+  projectRoot: string,
+  isTsSolutionSetup: boolean
 ) {
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const rootOffset = offsetFromRoot(projectRoot);
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {

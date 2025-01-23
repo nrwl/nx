@@ -316,6 +316,9 @@ export default async function () {
 
 If you're using `@swc/jest` and a global setup/teardown file, you have to set the `noInterop: false` and use dynamic imports within the setup function:
 
+{% tabs %}
+{% tab label="Using the config from .swcrc" %}
+
 ```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
 /* eslint-disable */
 import { readFileSync } from 'fs';
@@ -343,6 +346,34 @@ export default {
   // other settings
 };
 ```
+
+{% /tab %}
+
+{% tab label="Using the config from .spec.swcrc" %}
+
+```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
+/* eslint-disable */
+import { readFileSync } from 'fs';
+
+// Reading the SWC compilation config for the spec files
+const swcJestConfig = JSON.parse(
+  readFileSync(`${__dirname}/.spec.swcrc`, 'utf-8')
+);
+
+// Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+swcJestConfig.swcrc = false;
+
+export default {
+  globalSetup: '<rootDir>/src/global-setup-swc.ts',
+  transform: {
+    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+  },
+  // other settings
+};
+```
+
+{% /tab %}
+{% /tabs %}
 
 ```typescript {% fileName="global-setup-swc.ts" %}
 import { registerTsProject } from '@nx/js/src/internal';

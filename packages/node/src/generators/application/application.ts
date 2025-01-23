@@ -634,6 +634,9 @@ async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
+
   return {
     addPlugin,
     ...options,
@@ -651,7 +654,8 @@ async function normalizeOptions(
       'dist',
       options.rootProject ? options.name : appProjectRoot
     ),
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    isUsingTsSolutionConfig,
+    swcJest,
   };
 }
 

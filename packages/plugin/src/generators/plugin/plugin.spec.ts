@@ -7,6 +7,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -192,9 +193,22 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        ['my-plugin/jest.config.ts'].forEach((path) =>
-          expect(tree.exists(path)).toBeTruthy()
-        );
+        expect(tree.exists('my-plugin/jest.config.ts')).toBeTruthy();
+        expect(tree.read('my-plugin/jest.config.ts', 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "export default {
+            displayName: 'my-plugin',
+            preset: '../jest.preset.js',
+            testEnvironment: 'node',
+            transform: {
+              '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+            },
+            moduleFileExtensions: ['ts', 'js', 'html'],
+            coverageDirectory: '../coverage/my-plugin',
+          };
+          "
+        `);
+        expect(tree.exists('my-plugin/.spec.swcrc')).toBeFalsy();
 
         const projectTargets = readProjectConfiguration(
           tree,
@@ -310,6 +324,99 @@ describe('NxPlugin Plugin Generator', () => {
       await pluginGenerator(tree, getSchema({ e2eTestRunner: 'none' }));
       const projects = getProjects(tree);
       expect(projects.has('my-plugin-e2e')).toBe(false);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should generate test files with jest.config.ts', async () => {
+      await pluginGenerator(
+        tree,
+        getSchema({
+          directory: 'my-plugin',
+          unitTestRunner: 'jest',
+        })
+      );
+
+      expect(tree.exists('my-plugin/jest.config.ts')).toBeTruthy();
+      expect(tree.read('my-plugin/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'my-plugin',
+          preset: '../jest.preset.js',
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
+      expect(tree.exists('my-plugin/.spec.swcrc')).toBeTruthy();
+      expect(tree.read('my-plugin/.spec.swcrc', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": []
+        }
+        "
+      `);
+
+      const projectTargets = readProjectConfiguration(
+        tree,
+        'my-plugin'
+      ).targets;
+
+      expect(projectTargets.test).toBeDefined();
+      expect(projectTargets.test?.executor).toEqual('@nx/jest:jest');
     });
   });
 });
