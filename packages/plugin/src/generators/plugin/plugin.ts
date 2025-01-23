@@ -45,7 +45,8 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 
   if (project.targets.build) {
     if (options.isTsSolutionSetup && options.bundler === 'tsc') {
-      project.targets.build.options.rootDir = project.sourceRoot;
+      project.targets.build.options.rootDir =
+        project.sourceRoot ?? joinPathFragments(project.root, 'src');
       project.targets.build.options.generatePackageJson = false;
     }
 
