@@ -5,7 +5,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
-    "emitDeclarationOnly": false,<% if (compilerOptions.length) { %>
+    "emitDeclarationOnly": <%= emitDeclarationOnly %>,<% if (compilerOptions.length) { %>
     <%- compilerOptions %>,<% } %>
     "types": ["node"]
   },
