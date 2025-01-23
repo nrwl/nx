@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
@@ -101,6 +102,17 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       useTscExecutor: true,
     })
   );
+
+  if (options.isTsSolutionSetup) {
+    updateJson(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      (json) => {
+        delete json.type;
+        return json;
+      }
+    );
+  }
 
   if (options.bundler === 'tsc') {
     tasks.push(addTsLibDependencies(host));
