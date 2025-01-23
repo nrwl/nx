@@ -16,7 +16,9 @@ export function getAppTests(options: NormalizedSchema) {
         ? 'const { getByText } = render(<BrowserRouter><App /></BrowserRouter>);'
         : 'const { getByText } = render(<App />);'
     }
-    expect(getByText(/Welcome ${options.projectName}/gi)).toBeTruthy();
+    expect(getByText(new RegExp('Welcome ${
+      options.projectName
+    }', 'gi'))).toBeTruthy();
   });
 `;
 }
