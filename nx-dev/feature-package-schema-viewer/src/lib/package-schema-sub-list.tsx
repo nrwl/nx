@@ -1,4 +1,5 @@
 import {
+  MigrationMetadata,
   PackageMetadata,
   ProcessedPackageMetadata,
 } from '@nx/nx-dev/models-package';
@@ -9,13 +10,17 @@ import React from 'react';
 import { Heading1, Heading2 } from './ui/headings';
 import { DocumentList, SchemaList } from './ui/package-reference';
 import { TopSchemaLayout } from './ui/top.layout';
+import { MigrationViewer } from './migration-viewer';
+import { major, minor } from 'semver';
 
 export function PackageSchemaSubList({
   type,
   pkg,
+  migrations,
 }: {
   type: 'document' | 'executor' | 'generator' | 'migration';
   pkg: ProcessedPackageMetadata;
+  migrations?: MigrationMetadata[];
 }): JSX.Element {
   const router = useRouter();
   const capitalize = (text: string): string =>
@@ -35,7 +40,7 @@ export function PackageSchemaSubList({
         .filter((d) => d.id !== 'overview'),
       executors: Object.keys(pkg.executors).map((k) => pkg.executors[k]),
       generators: Object.keys(pkg.generators).map((k) => pkg.generators[k]),
-      migrations: Object.keys(pkg.migrations).map((k) => pkg.migrations[k]),
+      migrations: [],
     },
     githubUrl: pkg.githubRoot + pkg.root,
     seo: {
@@ -49,6 +54,17 @@ export function PackageSchemaSubList({
     type,
     heading: capitalize(type) + ' References',
   };
+
+  const filesAndLabels: (string | MigrationMetadata)[] = [];
+  let currentVersion = '';
+  ((migrations as any) || []).forEach((file: MigrationMetadata) => {
+    const minorVersion = `${major(file.version)}.${minor(file.version)}.x`;
+    if (currentVersion !== minorVersion) {
+      currentVersion = minorVersion;
+      filesAndLabels.push(minorVersion);
+    }
+    filesAndLabels.push(file);
+  });
 
   return (
     <>
@@ -100,7 +116,21 @@ export function PackageSchemaSubList({
             ) : null}
 
             {vm.type === 'migration' ? (
-              <SchemaList files={vm.package.migrations} type={'migration'} />
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filesAndLabels.map((schema) =>
+                  typeof schema === 'string' ? (
+                    <VersionLabelListItem
+                      key={schema}
+                      label={schema}
+                    ></VersionLabelListItem>
+                  ) : (
+                    <MigrationViewer
+                      key={schema.name}
+                      schema={schema}
+                    ></MigrationViewer>
+                  )
+                )}
+              </ul>
             ) : null}
           </div>
         </div>
@@ -109,3 +139,15 @@ export function PackageSchemaSubList({
     </>
   );
 }
+
+export const VersionLabelListItem = ({ label }: { label: string }) => {
+  return label ? (
+    <li className="relative flex px-1 pt-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">
+      <div className="pt-2">
+        <p className="text-sm font-bold">
+          <Heading2 title={label} />
+        </p>
+      </div>
+    </li>
+  ) : undefined;
+};

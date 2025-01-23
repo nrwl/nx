@@ -1,4 +1,4 @@
-## Sample Code Changes
+#### Sample Code Changes
 
 Add `.nx/cache` to the `.gitignore` file.
 

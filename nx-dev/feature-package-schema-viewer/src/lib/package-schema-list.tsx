@@ -1,4 +1,5 @@
 import {
+  MigrationMetadata,
   PackageMetadata,
   ProcessedPackageMetadata,
 } from '@nx/nx-dev/models-package';
@@ -10,13 +11,18 @@ import React, { ReactNode } from 'react';
 import { Heading1, Heading2 } from './ui/headings';
 import { DocumentList, SchemaList } from './ui/package-reference';
 import { TopSchemaLayout } from './ui/top.layout';
+import { major, minor } from 'semver';
+import { MigrationViewer } from './migration-viewer';
+import { VersionLabelListItem } from './package-schema-sub-list';
 
 export function PackageSchemaList({
   overview,
   pkg,
+  migrations,
 }: {
   overview: string;
   pkg: ProcessedPackageMetadata;
+  migrations?: MigrationMetadata[];
 }): JSX.Element {
   const router = useRouter();
 
@@ -48,6 +54,17 @@ export function PackageSchemaList({
       filePath: pkg.documents['overview'] ? pkg.documents['overview'].file : '',
     }).node,
   };
+
+  const filesAndLabels: (string | MigrationMetadata)[] = [];
+  let currentVersion = '';
+  ((migrations as any) || []).forEach((file: MigrationMetadata) => {
+    const minorVersion = `${major(file.version)}.${minor(file.version)}.x`;
+    if (currentVersion !== minorVersion) {
+      currentVersion = minorVersion;
+      filesAndLabels.push(minorVersion);
+    }
+    filesAndLabels.push(file);
+  });
 
   return (
     <>
@@ -104,7 +121,23 @@ export function PackageSchemaList({
 
             <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Migrations'} />
-            <SchemaList files={vm.package.migrations} type={'migration'} />
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              {!!filesAndLabels.length
+                ? filesAndLabels.map((schema) =>
+                    typeof schema === 'string' ? (
+                      <VersionLabelListItem
+                        key={schema}
+                        label={schema}
+                      ></VersionLabelListItem>
+                    ) : (
+                      <MigrationViewer
+                        key={schema.name}
+                        schema={schema}
+                      ></MigrationViewer>
+                    )
+                  )
+                : undefined}
+            </ul>
           </div>
         </div>
       </div>

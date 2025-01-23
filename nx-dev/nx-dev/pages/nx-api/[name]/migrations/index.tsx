@@ -1,7 +1,10 @@
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import {
+  MigrationMetadata,
+  ProcessedPackageMetadata,
+} from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
@@ -13,9 +16,11 @@ import { ScrollableContent } from '@nx/ui-scrollable-content';
 export default function GeneratorsIndex({
   menu,
   pkg,
+  migrations,
 }: {
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
+  migrations: MigrationMetadata[];
 }): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
 
@@ -51,7 +56,11 @@ export default function GeneratorsIndex({
           toggleNav={toggleNav}
         />
         <ScrollableContent resetScrollOnNavigation={true}>
-          <PackageSchemaSubList pkg={vm.package} type={'migration'} />
+          <PackageSchemaSubList
+            pkg={vm.package}
+            migrations={migrations}
+            type={'migration'}
+          />
         </ScrollableContent>
       </main>
     </div>
@@ -77,6 +86,7 @@ export async function getStaticProps({
   props: {
     menu: MenuItem[];
     pkg: ProcessedPackageMetadata;
+    migrations: MigrationMetadata[];
   };
 }> {
   const pkg = nxPackagesApi.getPackage([params.name]);
@@ -84,6 +94,13 @@ export async function getStaticProps({
     props: {
       menu: menusApi.getMenu('nx-api', 'nx-api'),
       pkg,
+      migrations: Object.keys(pkg.migrations).map((migration) => {
+        return nxPackagesApi.getSchemaMetadata(
+          nxPackagesApi.getPackageFileMetadatas(pkg.name, 'migrations')[
+            migration
+          ]
+        ) as MigrationMetadata;
+      }),
     },
   };
 }
