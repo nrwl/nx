@@ -278,6 +278,7 @@ describe('application generator', () => {
         {
           "compilerOptions": {
             "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
             "outDir": "out-tsc/myapp",
@@ -307,6 +308,8 @@ describe('application generator', () => {
       expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
             "outDir": "./out-tsc/jest",

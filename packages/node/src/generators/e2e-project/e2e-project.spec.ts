@@ -153,11 +153,7 @@ describe('e2eProjectGenerator', () => {
             "jest.config.ts",
             "src/**/*.ts",
           ],
-          "references": [
-            {
-              "path": "../api",
-            },
-          ],
+          "references": [],
         }
       `);
     });
