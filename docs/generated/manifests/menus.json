@@ -8482,7 +8482,16 @@
         "id": "module-federation",
         "path": "/nx-api/module-federation",
         "name": "module-federation",
-        "children": [],
+        "children": [
+          {
+            "id": "migrations",
+            "path": "/nx-api/module-federation/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
         "isExternal": false,
         "disableCollapsible": false
       },

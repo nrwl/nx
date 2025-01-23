@@ -435,6 +435,26 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/update-angular-cli-version-19-1-0": {
+        "description": "Update the @angular/cli package version to ~19.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-19-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-19-1-0",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-19-1-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/ensure-nx-module-federation-package": {
         "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
         "file": "generated/packages/angular/migrations/ensure-nx-module-federation-package.json",
@@ -1658,6 +1678,26 @@
       }
     },
     "migrations": {
+      "/nx-api/eslint/migrations/20.4.0-typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.4.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-typescript-eslint-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/20.4.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/20.4.0-@typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.4.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-@typescript-eslint-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/20.4.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
       "/nx-api/eslint/migrations/add-file-extensions-to-overrides": {
         "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
         "file": "generated/packages/eslint/migrations/add-file-extensions-to-overrides.json",
@@ -2525,6 +2565,16 @@
       }
     },
     "migrations": {
+      "/nx-api/js/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/js/migrations/20.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/js/migrations/20.2.0-package-updates.json",
@@ -2648,7 +2698,18 @@
     "source": "/packages/module-federation/src",
     "executors": {},
     "generators": {},
-    "migrations": {},
+    "migrations": {
+      "/nx-api/module-federation/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.0",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/nx-api/module-federation/migrations/20.4.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/module-federation"
   },
   "nest": {
@@ -4022,6 +4083,16 @@
       }
     },
     "migrations": {
+      "/nx-api/react/migrations/add-mf-env-var-to-target-defaults": {
+        "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
+        "file": "generated/packages/react/migrations/add-mf-env-var-to-target-defaults.json",
+        "hidden": false,
+        "name": "add-mf-env-var-to-target-defaults",
+        "version": "20.4.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/add-mf-env-var-to-target-defaults",
+        "type": "migration"
+      },
       "/nx-api/react/migrations/ensure-nx-module-federation-package": {
         "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
         "file": "generated/packages/react/migrations/ensure-nx-module-federation-package.json",
@@ -4030,6 +4101,16 @@
         "version": "20.3.0-beta.2",
         "originalFilePath": "/packages/react",
         "path": "/nx-api/react/migrations/ensure-nx-module-federation-package",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/20.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/20.3.0-package-updates.json",
+        "hidden": false,
+        "name": "20.3.0-package-updates",
+        "version": "20.3.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/20.3.0-package-updates",
         "type": "migration"
       },
       "/nx-api/react/migrations/20.2.0-package-updates": {
@@ -5972,6 +6053,16 @@
       }
     },
     "migrations": {
+      "/nx-api/workspace/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/workspace",
+        "path": "/nx-api/workspace/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/workspace/migrations/20.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/workspace/migrations/20.2.0-package-updates.json",

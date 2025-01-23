@@ -1,4 +1,4 @@
-import { LinkIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+import { LinkIcon } from '@heroicons/react/24/solid';
 import { slugify } from '../slugify.utils';
 import Link from 'next/link';
 

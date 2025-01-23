@@ -509,6 +509,7 @@
       - [setup-prettier](/nx-api/js/generators/setup-prettier)
     - [migrations](/nx-api/js/migrations)
   - [module-federation](/nx-api/module-federation)
+    - [migrations](/nx-api/module-federation/migrations)
   - [nest](/nx-api/nest)
     - [documents](/nx-api/nest/documents)
       - [Overview](/nx-api/nest/documents/overview)

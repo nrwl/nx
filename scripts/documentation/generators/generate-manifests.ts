@@ -285,14 +285,6 @@ function createPackagesMenu(packages: PackageManifest): {
         path: '/' + ['nx-api', p.name, 'migrations'].join('/'),
         name: 'migrations',
         children: [],
-        // children: Object.values(p.migrations).map((m: any) => ({
-        //   id: m.name,
-        //   path: '/' + ['nx-api', p.name, 'migrations', m.name].join('/'),
-        //   name: m.name,
-        //   children: [],
-        //   isExternal: false,
-        //   disableCollapsible: false,
-        // })),
         isExternal: false,
         disableCollapsible: false,
       });
