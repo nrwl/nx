@@ -54,6 +54,13 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
   const tasks: GeneratorCallback[] = [];
 
   if (options.publishable === true && !schema.importPath) {
@@ -112,12 +119,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     tasks.push(() => installPackagesTask(tree, true));
   }
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
-  }
-
   sortPackageJsonFields(tree, options.projectRoot);
 
   if (!schema.skipFormat) {
@@ -163,14 +164,17 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     fileName,
-    projectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectRoot,
     parsedTags,
     importPath,
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(tree),
+    isUsingTsSolutionConfig,
   };
 }
 

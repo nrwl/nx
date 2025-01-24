@@ -398,7 +398,7 @@ describe('lib', () => {
         {
           "compilerOptions": {
             "baseUrl": ".",
-            "emitDeclarationOnly": false,
+            "emitDeclarationOnly": true,
             "forceConsistentCasingInFileNames": true,
             "importHelpers": true,
             "module": "nodenext",
@@ -435,8 +435,8 @@ describe('lib', () => {
           "compilerOptions": {
             "forceConsistentCasingInFileNames": true,
             "importHelpers": true,
-            "module": "commonjs",
-            "moduleResolution": "node10",
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
             "noFallthroughCasesInSwitch": true,
             "noImplicitOverride": true,
             "noImplicitReturns": true,

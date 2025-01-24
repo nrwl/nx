@@ -1168,17 +1168,6 @@
         "path": "/nx-api/js/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/js/js-plugin"
-      },
-      "/nx-api/js/documents/typescript-project-references": {
-        "id": "typescript-project-references",
-        "name": "Configure TypeScript Project References in an Nx Workspace",
-        "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
-        "file": "generated/packages/js/documents/typescript-project-references",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/js/documents/typescript-project-references",
-        "tags": [],
-        "originalFilePath": "shared/packages/js/typescript-project-references"
       }
     },
     "root": "/packages/js",
@@ -3868,17 +3857,7 @@
     "root": "/libs/nx-packages/powerpack-s3-cache",
     "source": "/libs/nx-packages/powerpack-s3-cache/src",
     "executors": {},
-    "generators": {
-      "/nx-api/powerpack-s3-cache/generators/init": {
-        "description": "Initialize the S3 Cache",
-        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-s3-cache/generators/init",
-        "type": "generator"
-      }
-    },
+    "generators": {},
     "path": "/nx-api/powerpack-s3-cache"
   },
   "powerpack-shared-fs-cache": {

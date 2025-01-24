@@ -17,6 +17,7 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { join } from 'path';
 import { addImport } from '../../utils/ast-utils';
 import { Schema } from './schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 interface NormalizedSchema extends Omit<Schema, 'js'> {
   projectSourceRoot: string;
@@ -127,9 +128,12 @@ async function normalizeOptions(
   const hookTypeName = names(hookName).className;
   const project = getProjects(host).get(projectName);
 
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(host, root, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );

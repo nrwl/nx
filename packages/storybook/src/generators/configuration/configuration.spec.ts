@@ -825,7 +825,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       await configurationGenerator(tree, {
-        project: 'mylib',
+        project: '@proj/mylib',
         standaloneConfig: false,
         uiFramework: '@storybook/react-vite',
         addPlugin: true,

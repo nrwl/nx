@@ -32,11 +32,30 @@ interface ActiveTask {
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
-function debounce(fn: () => void, wait: number) {
+function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   let timeoutId: NodeJS.Timeout;
+  let pendingPromise: Promise<T> | null = null;
+
   return () => {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(fn, wait);
+
+    if (!pendingPromise) {
+      pendingPromise = new Promise<T>((resolve, reject) => {
+        timeoutId = setTimeout(() => {
+          fn()
+            .then((result) => {
+              pendingPromise = null;
+              resolve(result);
+            })
+            .catch((error) => {
+              pendingPromise = null;
+              reject(error);
+            });
+        }, wait);
+      });
+    }
+
+    return pendingPromise;
   };
 }
 
@@ -97,7 +116,7 @@ export async function* nodeExecutor(
   yield* createAsyncIterable<{
     success: boolean;
     options?: Record<string, any>;
-  }>(async ({ done, next, error }) => {
+  }>(async ({ done, next, error, registerCleanup }) => {
     const processQueue = async () => {
       if (tasks.length === 0) return;
 
@@ -225,6 +244,10 @@ export async function* nodeExecutor(
     process.on('SIGHUP', async () => {
       await stopAllTasks('SIGHUP');
       process.exit(128 + 1);
+    });
+
+    registerCleanup(async () => {
+      await stopAllTasks('SIGTERM');
     });
 
     if (options.runBuildTargetDependencies) {

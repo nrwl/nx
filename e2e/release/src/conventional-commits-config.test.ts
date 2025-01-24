@@ -48,7 +48,7 @@ describe('nx release conventional commits config', () => {
   let pkg5: string;
   let pkg6: string;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     newProject({
       packages: ['@nx/js'],
     });
@@ -95,7 +95,7 @@ describe('nx release conventional commits config', () => {
     await runCommandAsync(`git tag -a ${pkg5}@0.0.1 -m "${pkg5}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg6}@0.0.1 -m "${pkg6}@0.0.1"`);
   }, 60000);
-  afterAll(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   it('should respect custom conventional commits configuration', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
@@ -180,6 +180,35 @@ describe('nx release conventional commits config', () => {
       `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
     expect(versionResultNoChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+    );
+
+    // Do an invalid conventional commit to ensure that it is not included in the changelog
+    updateJson(`${pkg6}/package.json`, (json) => ({
+      ...json,
+      license: 'ISC',
+    }));
+    await runCommandAsync(`git add ${pkg6}/package.json`);
+    await runCommandAsync(`git commit -m "This is not a conventional commit"`);
+
+    const versionResultInvalidConventionalCommit = runCLI(`release version -d`);
+
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
       `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
@@ -420,6 +449,149 @@ describe('nx release conventional commits config', () => {
       ### 📦 Build
 
       - this is a build
+    `);
+  });
+
+  it('should allow invalid commits with custom conventional commits configuration', async () => {
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.release = {
+        ...json.release,
+        version: {
+          conventionalCommits: true,
+        },
+        changelog: {
+          projectChangelogs: {
+            renderOptions: {
+              authors: false, // do not show authors in the e2e snapshots
+            },
+          },
+        },
+        conventionalCommits: {
+          types: {
+            __INVALID__: {
+              semverBump: 'patch',
+              changelog: {
+                title: 'Uncategorised changes',
+              },
+            },
+          },
+        },
+      };
+      return json;
+    });
+
+    // The invalid conventional commit should result in a patch bump
+    updateJson(`${pkg1}/package.json`, (json) => ({
+      ...json,
+      license: 'Apache',
+    }));
+    await runCommandAsync(`git add ${pkg1}/package.json`);
+    await runCommandAsync(
+      `git commit -m "This is an invalid conventional commit"`
+    );
+
+    const versionResultInvalidConventionalCommit = runCLI(`release version -d`);
+
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg1} ✍️  New version 0.0.2 written to ${pkg1}/package.json`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg2} ✍️  New version 0.0.2 written to ${pkg2}/package.json`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+    );
+    expect(versionResultInvalidConventionalCommit).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+    );
+
+    // update my-pkg-1 with a feature commit
+    updateJson(`${pkg1}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    await runCommandAsync(`git add ${pkg1}/package.json`);
+    await runCommandAsync(`git commit -m "feat: This is a feature"`);
+
+    const versionResultFixCommit = runCLI(`release version -d`);
+
+    expect(versionResultFixCommit).toContain(
+      `${pkg1} ✍️  New version 0.1.0 written to ${pkg1}/package.json`
+    );
+    expect(versionResultFixCommit).toContain(
+      `${pkg2} ✍️  New version 0.0.2 written to ${pkg2}/package.json`
+    );
+    expect(versionResultFixCommit).toContain(
+      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+    );
+    expect(versionResultFixCommit).toContain(
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+    );
+    expect(versionResultFixCommit).toContain(
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+    );
+    expect(versionResultFixCommit).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+    );
+
+    // Normally, users would use `nx release` or the programmatic api to ensure that
+    // changelogs are generated for the above version bumps, but for the sake of this
+    // test, we just want to ensure that each commit is included/excluded as expected.
+    // Therefore, any version number will work - in this case it's 1.0.0.
+    runCLI(`release changelog 1.0.0`);
+
+    const pkg1Changelog = readFile(`${pkg1}/CHANGELOG.md`);
+    expect(pkg1Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+      ### 🚀 Features
+
+      - This is a feature
+
+      ### Uncategorised changes
+
+      - This is an invalid conventional commit
+    `);
+
+    const pkg2Changelog = readFile(`${pkg2}/CHANGELOG.md`);
+    expect(pkg2Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+      This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+    `);
+
+    const pkg3Changelog = readFile(`${pkg3}/CHANGELOG.md`);
+    expect(pkg3Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+      This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+    `);
+
+    const pkg4Changelog = readFile(`${pkg4}/CHANGELOG.md`);
+    expect(pkg4Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+      This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+    `);
+
+    const pkg5Changelog = readFile(`${pkg5}/CHANGELOG.md`);
+    expect(pkg5Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+      This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+    `);
+
+    const pkg6Changelog = readFile(`${pkg6}/CHANGELOG.md`);
+    expect(pkg6Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+      This was a version bump only for {project-name} to align it with other projects, there were no code changes.
     `);
   });
 });

@@ -170,10 +170,12 @@ async function createWebpackTargets(
 
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
-  const outputPath = normalizeOutputPath(
-    webpackOptions.output?.path,
-    projectRoot
-  );
+  const outputs = [];
+  for (const config of webpackOptions) {
+    if (config.output?.path) {
+      outputs.push(normalizeOutputPath(config.output.path, projectRoot));
+    }
+  }
 
   const targets: Record<string, TargetConfiguration> = {};
 
@@ -198,7 +200,7 @@ async function createWebpackTargets(
               externalDependencies: ['webpack-cli'],
             },
           ],
-    outputs: [outputPath],
+    outputs,
     metadata: {
       technologies: ['webpack'],
       description: 'Runs Webpack build',

@@ -61,7 +61,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
 
-{% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
+{% link-card title="TypeScript Packages" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
 
 {% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
 

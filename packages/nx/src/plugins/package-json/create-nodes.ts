@@ -237,8 +237,14 @@ export function buildProjectConfigurationFromPackageJson(
  */
 export function getGlobPatternsFromPackageManagerWorkspaces(
   root: string,
-  readJson: <T extends Object>(path: string) => T = <T extends Object>(path) =>
-    readJsonFile<T>(join(root, path)) // making this an arg allows us to reuse in devkit
+  // allow overwriting these args so we can use them in devkit
+  readJson: <T extends Object>(path: string) => T = <T extends Object>(
+    path: string
+  ) => readJsonFile<T>(join(root, path)),
+  readYaml: <T extends Object>(path: string) => T = <T extends Object>(
+    path: string
+  ) => readYamlFile<T>(join(root, path)),
+  exists: (path: string) => boolean = (p) => existsSync(join(root, p))
 ): string[] {
   try {
     const patterns: string[] = [];
@@ -252,12 +258,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       )
     );
 
-    if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
+    if (exists('pnpm-workspace.yaml')) {
       try {
         const { packages } =
-          readYamlFile<{ packages: string[] }>(
-            join(root, 'pnpm-workspace.yaml')
-          ) ?? {};
+          readYaml<{ packages: string[] }>('pnpm-workspace.yaml') ?? {};
         patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
