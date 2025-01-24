@@ -75,6 +75,9 @@ export interface MigrationsJsonEntry {
   requires?: Record<string, string>;
 }
 
+export type MigrationDetailsWithId = GeneratedMigrationDetails & {
+  id: string;
+};
 export interface GeneratedMigrationDetails {
   name: string;
   version: string;

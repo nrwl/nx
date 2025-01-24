@@ -1,12 +1,15 @@
-import { readFileSync, writeFileSync, rmSync, existsSync } from 'fs';
-import { FileChange } from '../../generators/tree';
-import { join, resolve } from 'path';
-import { GeneratedMigrationDetails } from '../../config/misc-interfaces';
-import { nxCliPath } from './migrate';
 import { execSync } from 'child_process';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
+import { MigrationDetailsWithId } from '../../config/misc-interfaces';
+import { FileChange } from '../../generators/tree';
+import { nxCliPath } from './migrate';
 
 export type MigrationsJsonMetadata = {
-  completedMigrations?: Record<string, SuccessfulMigration | FailedMigration>;
+  completedMigrations?: Record<
+    string,
+    SuccessfulMigration | FailedMigration | SkippedMigration
+  >;
   runningMigrations?: string[];
   initialGitRef?: {
     ref: string;
@@ -26,6 +29,10 @@ export type FailedMigration = {
   type: 'failed';
   name: string;
   error: string;
+};
+
+export type SkippedMigration = {
+  type: 'skipped';
 };
 
 export function recordInitialMigrationMetadata(
@@ -100,7 +107,7 @@ export function finishMigrationProcess(
 
 export async function runSingleMigration(
   workspacePath: string,
-  migration: GeneratedMigrationDetails,
+  migration: MigrationDetailsWithId,
   configuration: {
     createCommits: boolean;
   }
@@ -108,7 +115,7 @@ export async function runSingleMigration(
   try {
     modifyMigrationsJsonMetadata(
       workspacePath,
-      addRunningMigration(migration.name)
+      addRunningMigration(migration.id)
     );
 
     const gitRefBefore = execSync('git rev-parse HEAD', {
@@ -137,7 +144,9 @@ export async function runSingleMigration(
       migration,
       false,
       configuration.createCommits,
-      'chore: [nx migration] '
+      'chore: [nx migration] ',
+      undefined,
+      true
     );
 
     const gitRefAfter = execSync('git rev-parse HEAD', {
@@ -148,7 +157,7 @@ export async function runSingleMigration(
     modifyMigrationsJsonMetadata(
       workspacePath,
       addSuccessfulMigration(
-        migration.name,
+        migration.id,
         fileChanges.map((change) => ({
           path: change.path,
           type: change.type,
@@ -169,12 +178,12 @@ export async function runSingleMigration(
   } catch (e) {
     modifyMigrationsJsonMetadata(
       workspacePath,
-      addFailedMigration(migration.name, e.message)
+      addFailedMigration(migration.id, e.message)
     );
   } finally {
     modifyMigrationsJsonMetadata(
       workspacePath,
-      removeRunningMigration(migration.name)
+      removeRunningMigration(migration.id)
     );
   }
 }
@@ -191,51 +200,77 @@ export function modifyMigrationsJsonMetadata(
   writeFileSync(migrationsJsonPath, JSON.stringify(migrationsJson, null, 2));
 }
 
-function addSuccessfulMigration(
-  name: string,
+export function addSuccessfulMigration(
+  id: string,
   fileChanges: Omit<FileChange, 'content'>[]
 ) {
-  return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
-    if (!migrationsJsonMetadata.completedMigrations) {
-      migrationsJsonMetadata.completedMigrations = {};
+  return (
+    migrationsJsonMetadata: MigrationsJsonMetadata
+  ): MigrationsJsonMetadata => {
+    const copied = { ...migrationsJsonMetadata };
+    if (!copied.completedMigrations) {
+      copied.completedMigrations = {};
     }
-    migrationsJsonMetadata.completedMigrations[name] = {
-      type: 'successful',
-      name,
-      changedFiles: fileChanges,
+    copied.completedMigrations = {
+      ...copied.completedMigrations,
+      [id]: {
+        type: 'successful',
+        name: id,
+        changedFiles: fileChanges,
+      },
     };
-    return migrationsJsonMetadata;
+    return copied;
   };
 }
 
-function addFailedMigration(name: string, error: string) {
+export function addFailedMigration(id: string, error: string) {
   return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
-    if (!migrationsJsonMetadata.completedMigrations) {
-      migrationsJsonMetadata.completedMigrations = {};
+    const copied = { ...migrationsJsonMetadata };
+    if (!copied.completedMigrations) {
+      copied.completedMigrations = {};
     }
-    migrationsJsonMetadata.completedMigrations[name] = {
-      type: 'failed',
-      name,
-      error,
+    copied.completedMigrations = {
+      ...copied.completedMigrations,
+      [id]: {
+        type: 'failed',
+        name: id,
+        error,
+      },
     };
-    return migrationsJsonMetadata;
+    return copied;
   };
 }
 
-function addRunningMigration(name: string) {
+export function addSkippedMigration(id: string) {
+  return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
+    const copied = { ...migrationsJsonMetadata };
+    if (!copied.completedMigrations) {
+      copied.completedMigrations = {};
+    }
+    copied.completedMigrations = {
+      ...copied.completedMigrations,
+      [id]: {
+        type: 'skipped',
+      },
+    };
+    return copied;
+  };
+}
+
+function addRunningMigration(id: string) {
   return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
     migrationsJsonMetadata.runningMigrations = [
       ...(migrationsJsonMetadata.runningMigrations ?? []),
-      name,
+      id,
     ];
     return migrationsJsonMetadata;
   };
 }
 
-function removeRunningMigration(name: string) {
+function removeRunningMigration(id: string) {
   return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
     migrationsJsonMetadata.runningMigrations =
-      migrationsJsonMetadata.runningMigrations?.filter((n) => n !== name);
+      migrationsJsonMetadata.runningMigrations?.filter((n) => n !== id);
     if (migrationsJsonMetadata.runningMigrations?.length === 0) {
       delete migrationsJsonMetadata.runningMigrations;
     }

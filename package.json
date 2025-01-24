@@ -115,6 +115,7 @@
     "@storybook/react": "8.4.6",
     "@storybook/react-vite": "8.4.6",
     "@storybook/react-webpack5": "8.4.6",
+    "@storybook/test": "^8.5.1",
     "@storybook/types": "^8.4.6",
     "@supabase/supabase-js": "^2.26.0",
     "@svgr/rollup": "^8.1.0",

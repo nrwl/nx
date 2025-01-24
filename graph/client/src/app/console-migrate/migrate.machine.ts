@@ -1,13 +1,16 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
+import type {
+  GeneratedMigrationDetails,
+  MigrationDetailsWithId,
+} from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { createMachine } from 'xstate';
 import { assign } from '@xstate/immer';
 import { NxConsoleMigrateMetadata } from '@nx/graph-migrate';
 
 export interface MigrateState {
-  migrations: GeneratedMigrationDetails[];
+  migrations: MigrationDetailsWithId[];
   nxConsoleMetadata: NxConsoleMigrateMetadata;
 }
 
@@ -38,7 +41,18 @@ export const migrateMachine = createMachine<MigrateState, MigrateEvents>({
         target: 'loaded',
         actions: [
           assign((ctx, event) => {
-            ctx.migrations = event.migrations;
+            ctx.migrations = event.migrations.map((migration, index) => {
+              const duplicateCount = event.migrations
+                .slice(0, index)
+                .filter((m) => m.name === migration.name).length;
+              return {
+                ...migration,
+                id:
+                  duplicateCount === 0
+                    ? migration.name
+                    : `${migration.name}-${duplicateCount}`,
+              };
+            });
             ctx.nxConsoleMetadata = event['nx-console'];
           }),
         ],

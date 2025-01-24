@@ -1533,7 +1533,8 @@ export async function runNxOrAngularMigration(
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
-  installDepsIfChanged?: () => void
+  installDepsIfChanged?: () => void,
+  handleInstallDeps = false
 ): Promise<FileChange[]> {
   if (!installDepsIfChanged) {
     const changedDepInstaller = new ChangedDepInstaller(root);
@@ -1604,6 +1605,9 @@ export async function runNxOrAngularMigration(
     } catch (e) {
       logger.info(chalk.red(`- ${e.message}`));
     }
+    // if we are running this function alone, we need to install deps internally
+  } else if (handleInstallDeps) {
+    installDepsIfChanged();
   }
 
   return changes;

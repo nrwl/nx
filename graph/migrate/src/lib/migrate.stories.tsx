@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MigrateUI } from './migrate';
+import { userEvent, within } from '@storybook/test';
 
 const meta: Meta<typeof MigrateUI> = {
   component: MigrateUI,
@@ -8,16 +9,18 @@ const meta: Meta<typeof MigrateUI> = {
 export default meta;
 type Story = StoryObj<typeof MigrateUI>;
 
-export const Primary = {
+export const Manual: Story = {
   args: {
     migrations: [
       {
+        id: 'migration-1',
         name: 'migration-1',
         description: 'This is a migration that does a thing labeled with one.',
         version: '1.0.0',
         package: 'nx',
       },
       {
+        id: 'migration-2',
         name: 'migration-2',
         description:
           'Funnily, this is another migration that does a thing labeled with two.',
@@ -25,6 +28,7 @@ export const Primary = {
         package: '@nx/react',
       },
       {
+        id: 'migration-3',
         name: 'migration-3',
         description:
           'This is a migration that does a thing labeled with three.',
@@ -32,24 +36,29 @@ export const Primary = {
         package: '@nx/js',
       },
       {
+        id: 'migration-4',
         name: 'migration-4',
         description: 'This is a migration that does a thing labeled with four.',
         version: '1.0.2',
         package: 'nx',
       },
       {
-        name: 'migration-5',
-        description: 'This is a migration that does a thing labeled with five.',
-        version: '1.0.2',
-        package: '@nx/angular',
+        id: 'migration-3-1',
+        name: 'migration-3',
+        description:
+          'This is a migration that does a thing labeled with three.',
+        version: '1.0.1',
+        package: '@nx/js',
       },
       {
+        id: 'migration-6',
         name: 'migration-6',
         description: 'This migration performs updates labeled as number six.',
         version: '1.0.3',
         package: '@nx/workspace',
       },
       {
+        id: 'migration-7',
         name: 'migration-7',
         description:
           'Lucky number seven migration that updates configurations.',
@@ -60,10 +69,12 @@ export const Primary = {
     nxConsoleMetadata: {
       completedMigrations: {
         'migration-1': {
+          name: 'migration-1',
           type: 'successful',
           changedFiles: [],
         },
         'migration-4': {
+          name: 'migration-4',
           type: 'successful',
           changedFiles: [
             { path: 'blub.ts', type: 'CREATE' },
@@ -74,6 +85,7 @@ export const Primary = {
           ],
         },
         'migration-3': {
+          name: 'migration-3',
           type: 'failed',
           error: 'This is an error',
         },
@@ -95,6 +107,81 @@ export const Primary = {
     },
     onFileClick: (file: any) => {
       console.log(file);
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const manualButton = await canvas.findByText('Switch to manual mode');
+    await userEvent.click(manualButton);
+  },
+};
+
+export const Automatic: Story = {
+  args: {
+    migrations: [
+      {
+        id: 'migration-1',
+        name: 'migration-1',
+        description: 'This is a migration that does a thing labeled with one.',
+        version: '1.0.0',
+        package: 'nx',
+      },
+      {
+        id: 'migration-2',
+        name: 'migration-2',
+        description:
+          'Funnily, this is another migration that does a thing labeled with two.',
+        version: '1.0.1',
+        package: '@nx/react',
+      },
+      {
+        id: 'migration-3',
+        name: 'migration-3',
+        description:
+          'This is a migration that does a thing labeled with three.',
+        version: '1.0.1',
+        package: '@nx/js',
+      },
+      {
+        id: 'migration-4',
+        name: 'migration-4',
+        description: 'This is a migration that does a thing labeled with four.',
+        version: '1.0.2',
+        package: 'nx',
+      },
+      {
+        id: 'migration-3-1',
+        name: 'migration-3',
+        description:
+          'This is a migration that does a thing labeled with three.',
+        version: '1.0.1',
+        package: '@nx/js',
+      },
+      {
+        id: 'migration-6',
+        name: 'migration-6',
+        description: 'This migration performs updates labeled as number six.',
+        version: '1.0.3',
+        package: '@nx/workspace',
+      },
+      {
+        id: 'migration-7',
+        name: 'migration-7',
+        description:
+          'Lucky number seven migration that updates configurations.',
+        version: '1.0.3',
+        package: '@nx/devkit',
+      },
+    ],
+    nxConsoleMetadata: {
+      completedMigrations: {
+        'migration-1': {
+          name: 'migration-1',
+          type: 'successful',
+          changedFiles: [],
+        },
+      },
+      targetVersion: '20.3.2',
     },
   },
 };

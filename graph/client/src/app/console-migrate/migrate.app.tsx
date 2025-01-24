@@ -1,6 +1,9 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
+import type {
+  GeneratedMigrationDetails,
+  MigrationDetailsWithId,
+} from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
@@ -19,7 +22,7 @@ export function MigrateApp({
   const externalApiService = getExternalApiService();
 
   const onRunMigration = (
-    migration: GeneratedMigrationDetails,
+    migration: MigrationDetailsWithId,
     configuration: {
       createCommits: boolean;
     }
@@ -34,7 +37,7 @@ export function MigrateApp({
   };
 
   const onRunMany = (
-    migrations: GeneratedMigrationDetails[],
+    migrations: MigrationDetailsWithId[],
     configuration: {
       createCommits: boolean;
     }

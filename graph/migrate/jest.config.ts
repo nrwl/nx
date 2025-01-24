@@ -1,10 +1,19 @@
+/* eslint-disable */
+// nx-ignore-next-line
+const nxPreset = require('@nx/jest/preset').default;
+
 export default {
-  testEnvironment: 'jsdom',
+  ...nxPreset,
   displayName: 'graph-migrate',
-  preset: '../../jest.preset.js',
   transform: {
-    '^.+\\.[tj]sx?$': 'babel-jest',
+    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+    '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/graph/migrate',
+  // The mock for widnow.matchMedia has to be in a separete file and imported before the components to test
+  // for more info check : // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
+  modulePathIgnorePatterns: [
+    '/graph/client/src/app/machines/match-media-mock.spec.ts',
+  ],
 };
