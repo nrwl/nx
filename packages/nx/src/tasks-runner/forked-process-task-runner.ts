@@ -338,53 +338,29 @@ export class ForkedProcessTaskRunner {
         }
 
         let outWithErr = [];
-        let exitCode;
-        let stdoutHasEnded = false;
-        let stderrHasEnded = false;
-        let processHasExited = false;
-
-        const handleProcessEnd = () => {
-          // ensure process has exited and both stdout and stderr have ended before we pass along the logs
-          // if we only wait for the process to exit, we might miss some logs as stdout and stderr might still be streaming
-          if (stdoutHasEnded && stderrHasEnded && processHasExited) {
-            // we didn't print any output as we were running the command
-            // print all the collected output|
-            const terminalOutput = outWithErr.join('');
-            const code = exitCode;
-
-            if (!streamOutput) {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-            }
-            this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
-            res({ code, terminalOutput });
-          }
-        };
-
         p.stdout.on('data', (chunk) => {
           outWithErr.push(chunk.toString());
         });
-        p.stdout.on('end', () => {
-          stdoutHasEnded = true;
-          handleProcessEnd();
-        });
         p.stderr.on('data', (chunk) => {
           outWithErr.push(chunk.toString());
-        });
-        p.stderr.on('end', () => {
-          stderrHasEnded = true;
-          handleProcessEnd();
         });
 
         p.on('exit', (code, signal) => {
           this.processes.delete(p);
           if (code === null) code = signalToCode(signal);
-          exitCode = code;
-          processHasExited = true;
-          handleProcessEnd();
+          // we didn't print any output as we were running the command
+          // print all the collected output|
+          const terminalOutput = outWithErr.join('');
+
+          if (!streamOutput) {
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              code === 0 ? 'success' : 'failure',
+              terminalOutput
+            );
+          }
+          this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
+          res({ code, terminalOutput });
         });
       } catch (e) {
         console.error(e);
