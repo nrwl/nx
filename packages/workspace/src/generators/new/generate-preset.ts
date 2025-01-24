@@ -88,6 +88,9 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
       opts.routing !== undefined ? `--routing=${opts.routing}` : null,
+      opts.unitTestRunner !== undefined
+        ? `--unitTestRunner=${opts.unitTestRunner}`
+        : null,
       opts.e2eTestRunner !== undefined
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
