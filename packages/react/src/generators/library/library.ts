@@ -55,6 +55,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
@@ -75,12 +80,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       name: options.importPath,
       version: '0.0.1',
       ...determineEntryFields(options),
-      nx: {
-        name: options.importPath === options.name ? undefined : options.name,
-        projectType: 'library',
-        sourceRoot: `${options.projectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   } else {
@@ -272,10 +276,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
-
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
 
   sortPackageJsonFields(host, options.projectRoot);
 

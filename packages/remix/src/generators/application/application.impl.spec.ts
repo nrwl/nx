@@ -379,10 +379,8 @@ describe('Remix Application', () => {
           "engines": {
             "node": ">=20",
           },
-          "name": "myapp",
+          "name": "@proj/myapp",
           "nx": {
-            "projectType": "application",
-            "sourceRoot": "myapp",
             "tags": [
               "foo",
             ],
@@ -537,6 +535,41 @@ describe('Remix Application', () => {
             "src/**/*.test.js",
             "src/**/*.d.ts",
           ],
+        }
+      `);
+    });
+
+    it('should skip nx property in package.json when no tags are provided', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'apps/myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "@remix-run/node": "^2.14.0",
+            "@remix-run/react": "^2.14.0",
+            "@remix-run/serve": "^2.14.0",
+            "isbot": "^4.4.0",
+            "react": "^18.2.0",
+            "react-dom": "^18.2.0",
+          },
+          "devDependencies": {
+            "@remix-run/dev": "^2.14.0",
+            "@types/react": "^18.2.0",
+            "@types/react-dom": "^18.2.0",
+          },
+          "engines": {
+            "node": ">=20",
+          },
+          "name": "@proj/myapp",
+          "private": true,
+          "scripts": {},
+          "sideEffects": false,
+          "type": "module",
         }
       `);
     });

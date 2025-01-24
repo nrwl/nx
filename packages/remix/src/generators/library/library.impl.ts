@@ -29,6 +29,10 @@ export async function remixLibraryGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
   const jsInitTask = await jsInitGenerator(tree, {
     js: options.js,
     skipFormat: true,
@@ -76,10 +80,6 @@ export async function remixLibraryGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
-
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
-  }
 
   sortPackageJsonFields(tree, options.projectRoot);
 

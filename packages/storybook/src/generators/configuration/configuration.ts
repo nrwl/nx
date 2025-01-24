@@ -47,6 +47,7 @@ import {
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function configurationGenerator(
   tree: Tree,
@@ -126,7 +127,8 @@ export async function configurationGeneratorInternal(
   );
 
   const mainDir =
-    !!nextConfigFilePath && projectType === 'application'
+    !!nextConfigFilePath &&
+    getProjectType(tree, root, projectType) === 'application'
       ? 'components'
       : 'src';
 

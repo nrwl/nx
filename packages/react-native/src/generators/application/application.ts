@@ -82,13 +82,14 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
+    'tsconfig.app.json'
   );
   tasks.push(jestTask);
 
   const webTask = await webConfigurationGenerator(host, {
     ...options,
-    project: options.name,
+    project: options.projectName,
     skipFormat: true,
   });
   tasks.push(webTask);

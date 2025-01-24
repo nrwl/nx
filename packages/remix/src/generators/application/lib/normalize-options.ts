@@ -6,6 +6,7 @@ import {
 import { Linter } from '@nx/eslint';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { type NxRemixGeneratorSchema } from '../schema';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -13,6 +14,7 @@ export interface NormalizedSchema extends NxRemixGeneratorSchema {
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
@@ -43,14 +45,18 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     linter: options.linter ?? Linter.EsLint,
-    projectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectRoot,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
-    useTsSolution: options.useTsSolution ?? isUsingTsSolutionSetup(tree),
+    useTsSolution: options.useTsSolution ?? isUsingTsSolutionConfig,
+    isUsingTsSolutionConfig,
   };
 }

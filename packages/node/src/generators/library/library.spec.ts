@@ -563,7 +563,6 @@ describe('lib', () => {
           "main",
           "types",
           "exports",
-          "nx",
           "dependencies",
         ]
       `);
@@ -580,11 +579,6 @@ describe('lib', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
-          "nx": {
-            "name": "mylib",
-            "projectType": "library",
-            "sourceRoot": "mylib/src",
-          },
           "private": true,
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -684,9 +678,6 @@ describe('lib', () => {
           "module": "./dist/index.js",
           "name": "@proj/mylib",
           "nx": {
-            "name": "mylib",
-            "projectType": "library",
-            "sourceRoot": "mylib/src",
             "targets": {
               "build": {
                 "executor": "@nx/js:swc",

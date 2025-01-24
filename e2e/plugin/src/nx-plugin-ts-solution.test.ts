@@ -42,14 +42,14 @@ describe('Nx Plugin (TS solution)', () => {
       `generate @nx/plugin:migration packages/${plugin}/src/migrations/update-${migrationVersion}/update-${migrationVersion} --packageVersion=${migrationVersion} --packageJsonUpdates=false`
     );
 
-    expect(runCLI(`lint ${plugin}`)).toContain(
-      `Successfully ran target lint for project ${plugin}`
+    expect(runCLI(`lint @proj/${plugin}`)).toContain(
+      `Successfully ran target lint for project @proj/${plugin}`
     );
-    expect(runCLI(`typecheck ${plugin}`)).toContain(
-      `Successfully ran target typecheck for project ${plugin}`
+    expect(runCLI(`typecheck @proj/${plugin}`)).toContain(
+      `Successfully ran target typecheck for project @proj/${plugin}`
     );
-    expect(runCLI(`build ${plugin}`)).toContain(
-      `Successfully ran target build for project ${plugin}`
+    expect(runCLI(`build @proj/${plugin}`)).toContain(
+      `Successfully ran target build for project @proj/${plugin}`
     );
     checkFilesExist(
       // entry point
@@ -71,11 +71,11 @@ describe('Nx Plugin (TS solution)', () => {
       `packages/${plugin}/dist/migrations/update-${migrationVersion}/update-${migrationVersion}.js`,
       `packages/${plugin}/dist/migrations/update-${migrationVersion}/update-${migrationVersion}.d.ts`
     );
-    expect(runCLI(`test ${plugin}`)).toContain(
-      `Successfully ran target test for project ${plugin}`
+    expect(runCLI(`test @proj/${plugin}`)).toContain(
+      `Successfully ran target test for project @proj/${plugin}`
     );
-    expect(runCLI(`e2e ${plugin}-e2e`)).toContain(
-      `Successfully ran target e2e for project ${plugin}-e2e`
+    expect(runCLI(`e2e @proj/${plugin}-e2e`)).toContain(
+      `Successfully ran target e2e for project @proj/${plugin}-e2e`
     );
   }, 90000);
 

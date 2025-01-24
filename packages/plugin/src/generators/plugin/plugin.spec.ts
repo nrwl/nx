@@ -330,6 +330,7 @@ describe('NxPlugin Plugin Generator', () => {
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
+      tree.write('.gitignore', '');
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*'];
         return json;
@@ -371,7 +372,7 @@ describe('NxPlugin Plugin Generator', () => {
         swcJestConfig.swcrc = false;
 
         export default {
-          displayName: 'my-plugin',
+          displayName: '@proj/my-plugin',
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
@@ -412,11 +413,119 @@ describe('NxPlugin Plugin Generator', () => {
 
       const projectTargets = readProjectConfiguration(
         tree,
-        'my-plugin'
+        '@proj/my-plugin'
       ).targets;
 
       expect(projectTargets.test).toBeDefined();
       expect(projectTargets.test?.executor).toEqual('@nx/jest:jest');
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await pluginGenerator(
+        tree,
+        getSchema({
+          e2eTestRunner: 'jest',
+        })
+      );
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-plugin",
+          },
+          {
+            "path": "./my-plugin-e2e",
+          },
+        ]
+      `);
+      expect(readJson(tree, 'my-plugin/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "tslib": "^2.3.0",
+          },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "name": "@proj/my-plugin",
+          "types": "./dist/index.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(tree, 'my-plugin/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-plugin/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "baseUrl": ".",
+            "emitDeclarationOnly": false,
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "dist",
+            "rootDir": "src",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+          ],
+          "references": [],
+        }
+      `);
+      expect(readJson(tree, 'my-plugin/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
     });
   });
 });
