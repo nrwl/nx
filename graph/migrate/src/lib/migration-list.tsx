@@ -2,16 +2,17 @@
 // nx-ignore-next-line
 import { FileChange } from '@nx/devkit';
 // nx-ignore-next-line
+import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, useState } from 'react';
-import { NxConsoleMigrateMetadata } from './migrate';
 import { MigrationCard } from './migration-card';
 
 export function MigrationList(props: {
   migrations: MigrationDetailsWithId[];
-  nxConsoleMetadata: NxConsoleMigrateMetadata;
+  nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onRunMany: (migrations: MigrationDetailsWithId[]) => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;

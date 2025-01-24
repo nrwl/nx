@@ -1,23 +1,23 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
+import { assign } from '@xstate/immer';
 import type {
   GeneratedMigrationDetails,
   MigrationDetailsWithId,
 } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
+import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { createMachine } from 'xstate';
-import { assign } from '@xstate/immer';
-import { NxConsoleMigrateMetadata } from '@nx/graph-migrate';
-
 export interface MigrateState {
   migrations: MigrationDetailsWithId[];
-  nxConsoleMetadata: NxConsoleMigrateMetadata;
+  nxConsoleMetadata: MigrationsJsonMetadata;
 }
 
 export type MigrateEvents = {
   type: 'loadData';
   migrations: GeneratedMigrationDetails[];
-  'nx-console': NxConsoleMigrateMetadata;
+  'nx-console': MigrationsJsonMetadata;
 };
 
 const initialContext: MigrateState = {
@@ -26,6 +26,7 @@ const initialContext: MigrateState = {
 };
 
 export const migrateMachine = createMachine<MigrateState, MigrateEvents>({
+  /** @xstate-layout N4IgpgJg5mDOIC5QFsCWUBOBDALmAxADYD2WEAIrlgNoAMAuoqAA7Gyo6rEB2TIAHogAsAJgA0IAJ6IAjAGYAnADoAHDJFCAbAFYVtGTNpHtAXzMTuxCHD5pMuMH1btOPPoIQBaTROlfNSkZBwSEA7OYgdth4SqgQhI5IIM4cXLxJHpoySiIqcira2gqitEJBPlKIakpyIiIKMrql6kIqKhFRDkokZJBObKluGbKaynU6oXKKIjKaU+KVCLMiSqG02uvF2jqaeiJmZkA */
   predictableActionArguments: true,
   preserveActionOrder: true,
   id: 'migrate',

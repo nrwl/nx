@@ -22,6 +22,7 @@ export function MigrationCard({
   onSelect,
   onRunMigration,
   onFileClick,
+  forceIsRunning,
 }: {
   migration: MigrationDetailsWithId;
   nxConsoleMetadata: MigrationsJsonMetadata;
@@ -29,6 +30,7 @@ export function MigrationCard({
   onSelect?: (isSelected: boolean) => void;
   onRunMigration?: () => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  forceIsRunning?: boolean;
 }) {
   const migrationResult = nxConsoleMetadata.completedMigrations?.[migration.id];
   const succeeded = migrationResult?.type === 'successful';
@@ -164,7 +166,7 @@ export function MigrationCard({
               <Pill text="Failed" color="red" />
             </div>
           )}
-          {onRunMigration && (
+          {(onRunMigration || forceIsRunning) && (
             <span
               className={`rounded-md p-1 text-sm ring-1 ring-inset transition-colors ${
                 succeeded
@@ -174,7 +176,7 @@ export function MigrationCard({
                   : 'bg-inherit text-slate-600 ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60'
               }`}
             >
-              {inProgress ? (
+              {inProgress || forceIsRunning ? (
                 <ArrowPathIcon
                   className="h-6 w-6 animate-spin cursor-not-allowed text-blue-500"
                   aria-label="Migration in progress"

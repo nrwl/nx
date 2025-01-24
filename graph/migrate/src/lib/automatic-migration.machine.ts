@@ -5,8 +5,8 @@ import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 
-import { createMachine, send } from 'xstate';
 import { assign } from '@xstate/immer';
+import { createMachine } from 'xstate';
 import { log } from 'xstate/lib/actions';
 
 type AutomaticMigrationState = {
@@ -127,15 +127,23 @@ export const automaticMigrationMachine = createMachine<
           {
             cond: 'lastMigrationIsDone',
             target: 'done',
+            actions: [log('last migration is done')],
           },
           {
             cond: 'currentMigrationIsDone',
             target: 'running',
-            actions: ['incrementCurrentMigration'],
+            actions: [
+              'incrementCurrentMigration',
+              log('incremented current migration'),
+            ],
           },
           {
             cond: 'canStartRunningCurrentMigration',
-            actions: ['setCurrentMigrationRunning', 'runMigration'],
+            actions: [
+              'setCurrentMigrationRunning',
+              'runMigration',
+              log('running current migration'),
+            ],
           },
           {
             target: 'needsReview',
@@ -144,6 +152,7 @@ export const automaticMigrationMachine = createMachine<
         ],
       },
       needsReview: {
+        entry: [log('entering needs review')],
         on: {
           pause: [
             {
@@ -224,7 +233,9 @@ export const automaticMigrationMachine = createMachine<
   }
 );
 
-function currentMigrationHasFailed(ctx: AutomaticMigrationState) {
+export function currentMigrationHasFailed(
+  ctx: AutomaticMigrationState
+): boolean {
   if (!ctx.currentMigration) {
     return false;
   }

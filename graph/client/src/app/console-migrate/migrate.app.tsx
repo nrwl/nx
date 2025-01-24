@@ -1,18 +1,15 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type {
-  GeneratedMigrationDetails,
-  MigrationDetailsWithId,
-} from 'nx/src/config/misc-interfaces';
+import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 
+import { MigrateUI } from '@nx/graph-migrate';
+import { getExternalApiService } from '@nx/graph/shared';
+import { useSelector } from '@xstate/react';
 import { Interpreter } from 'xstate';
 import { MigrateEvents, MigrateState } from './migrate.machine';
-import { MigrateUI } from '@nx/graph-migrate';
-import { useSelector } from '@xstate/react';
-import { getExternalApiService } from '@nx/graph/shared';
 
 export function MigrateApp({
   service,
@@ -80,6 +77,12 @@ export function MigrateApp({
     });
   };
 
+  const onSkipMigration = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'skip-migration',
+      payload: { migration },
+    });
+  };
   return (
     <MigrateUI
       migrations={migrations}
@@ -89,6 +92,7 @@ export function MigrateApp({
       onCancel={onCancel}
       onFinish={onFinish}
       onFileClick={onFileClick}
+      onSkipMigration={onSkipMigration}
     ></MigrateUI>
   );
 }

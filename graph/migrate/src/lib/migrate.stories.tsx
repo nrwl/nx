@@ -180,6 +180,11 @@ export const Automatic: Story = {
           type: 'successful',
           changedFiles: [],
         },
+        'migration-2': {
+          name: 'migration-2',
+          type: 'failed',
+          error: 'This is an error',
+        },
       },
       targetVersion: '20.3.2',
     },

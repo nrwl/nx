@@ -11,6 +11,8 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 // nx-ignore-next-line
 import type { GraphError } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
+import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+// nx-ignore-next-line
 import { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { StrictMode } from 'react';
@@ -23,7 +25,6 @@ import { ProjectDetailsApp } from './app/console-project-details/project-details
 import { interpret } from 'xstate';
 import { MigrateApp } from './app/console-migrate/migrate.app';
 import { migrateMachine } from './app/console-migrate/migrate.machine';
-import { NxConsoleMigrateMetadata } from '@nx/graph-migrate';
 
 if (window.__NX_RENDER_GRAPH__ === false) {
   window.externalApi = new ExternalApiImpl();
@@ -66,7 +67,7 @@ if (window.__NX_RENDER_GRAPH__ === false) {
 
   window.renderMigrate = (data: {
     migrations: GeneratedMigrationDetails[];
-    'nx-console': NxConsoleMigrateMetadata;
+    'nx-console': MigrationsJsonMetadata;
   }) => {
     const service = interpret(migrateMachine).start();
 
