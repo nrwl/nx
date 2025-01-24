@@ -412,7 +412,12 @@ export function parseConventionalCommitsMessage(message: string): {
 } | null {
   const match = message.match(ConventionalCommitRegex);
   if (!match) {
-    return null;
+    return {
+      type: '__INVALID__',
+      scope: '',
+      description: message,
+      breaking: false,
+    };
   }
 
   return {
