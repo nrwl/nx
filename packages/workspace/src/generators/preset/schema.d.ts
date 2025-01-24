@@ -17,6 +17,7 @@ export interface Schema {
   nextSrcDir?: boolean;
   routing?: boolean;
   standaloneApi?: boolean;
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
   ssr?: boolean;
