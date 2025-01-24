@@ -90,6 +90,11 @@
       "type": "boolean",
       "default": true
     },
+    "unitTestRunner": {
+      "description": "The tool to use for running unit tests.",
+      "type": "string",
+      "enum": ["jest", "vitest", "none"]
+    },
     "e2eTestRunner": {
       "description": "The tool to use for running e2e tests.",
       "type": "string",
