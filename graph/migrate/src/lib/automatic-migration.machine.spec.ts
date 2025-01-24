@@ -170,6 +170,108 @@ describe('Automatic Migration Machine', () => {
     service.stop();
   });
 
+  it('should keep running migrations until one has changes', async () => {
+    let metadata: MigrationsJsonMetadata = {
+      targetVersion: '20.3.2',
+    };
+    const service = interpret(
+      automaticMigrationMachine.withConfig({
+        actions: {
+          runMigration: (ctx) => {
+            const migration = ctx.currentMigration;
+            if (!migration) {
+              return;
+            }
+            console.log('running migration', migration.id);
+            if (migration.id !== 'migration-3') {
+              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+            } else {
+              metadata = addSuccessfulMigration(migration.id, [
+                {
+                  type: 'UPDATE',
+                  path: 'apps/app/tsconfig.json',
+                },
+              ])(metadata);
+            }
+            service.send({
+              type: 'updateMetadata',
+              metadata,
+            });
+          },
+        },
+      })
+    );
+    service.start();
+    service.send({
+      type: 'loadInitialData',
+      migrations: dummyMigrations,
+      metadata: metadata,
+    });
+
+    service.send('startRunning');
+    expect(service.getSnapshot().value).toBe('needsReview');
+    expect(service.getSnapshot().context.currentMigration?.id).toEqual(
+      'migration-3'
+    );
+
+    service.stop();
+  });
+
+  it('should keep running migrations after changes are reviewed', async () => {
+    let metadata: MigrationsJsonMetadata = {
+      targetVersion: '20.3.2',
+    };
+    const service = interpret(
+      automaticMigrationMachine.withConfig({
+        actions: {
+          runMigration: (ctx) => {
+            const migration = ctx.currentMigration;
+            if (!migration) {
+              return;
+            }
+            console.log('running migration', migration.id);
+            if (migration.id !== 'migration-3') {
+              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+            } else {
+              metadata = addSuccessfulMigration(migration.id, [
+                {
+                  type: 'UPDATE',
+                  path: 'apps/app/tsconfig.json',
+                },
+              ])(metadata);
+            }
+            service.send({
+              type: 'updateMetadata',
+              metadata,
+            });
+          },
+        },
+      })
+    );
+    service.start();
+    service.send({
+      type: 'loadInitialData',
+      migrations: dummyMigrations,
+      metadata: metadata,
+    });
+
+    service.send('startRunning');
+    expect(service.getSnapshot().value).toBe('needsReview');
+    expect(service.getSnapshot().context.currentMigration?.id).toEqual(
+      'migration-3'
+    );
+
+    service.send({
+      type: 'reviewMigration',
+      migrationId: 'migration-3',
+    });
+    expect(service.getSnapshot().value).toBe('done');
+    expect(service.getSnapshot().context.currentMigration?.id).toEqual(
+      'migration-7'
+    );
+    service.stop();
+  });
+
   it('should not continue running migrations after failed one is skipped if state is paused', async () => {
     let metadata: MigrationsJsonMetadata = {
       targetVersion: '20.3.2',

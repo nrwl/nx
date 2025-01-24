@@ -32,6 +32,10 @@ type AutomaticMigrationEvents =
     }
   | {
       type: 'startRunning';
+    }
+  | {
+      type: 'reviewMigration';
+      migrationId: string;
     };
 
 const guards = {
@@ -57,16 +61,18 @@ const guards = {
         ((completedMigration?.type === 'successful' &&
           completedMigration.changedFiles.length === 0) ||
           currentMigrationIsSkipped(ctx) ||
-          currentMigrationIsReviewed(ctx))
+          currentMigrationIsReviewed(ctx)),
+      `running = ${ctx.currentMigrationRunning}`,
+      `currentMigration = ${ctx.currentMigration?.id}`,
+      `completedMigration = ${completedMigration}`,
+      `skipped = ${currentMigrationIsSkipped(ctx)}`,
+      `reviewed = ${currentMigrationIsReviewed(ctx)}`
     );
 
     return (
       !!ctx.currentMigration &&
       !ctx.currentMigrationRunning &&
-      ((completedMigration?.type === 'successful' &&
-        completedMigration.changedFiles.length === 0) ||
-        currentMigrationIsSkipped(ctx) ||
-        currentMigrationIsReviewed(ctx))
+      currentMigrationCanLeaveReview(ctx)
     );
   },
   currentMigrationCanLeaveReview: (ctx: AutomaticMigrationState) =>
@@ -200,8 +206,22 @@ export const automaticMigrationMachine = createMachine<
                   ctx.currentMigration.id
                 ]
               ) {
+                console.log('setting current migration running to false');
                 ctx.currentMigrationRunning = false;
               }
+            }),
+          ],
+        },
+      ],
+      reviewMigration: [
+        {
+          actions: [
+            log('reviewing migration'),
+            assign((ctx, event) => {
+              ctx.reviewedMigrations = [
+                ...ctx.reviewedMigrations,
+                event.migrationId,
+              ];
             }),
           ],
         },
@@ -253,7 +273,7 @@ function currentMigrationHasSucceeded(ctx: AutomaticMigrationState) {
   return completedMigration?.type === 'successful';
 }
 
-function currentMigrationHasChanges(ctx: AutomaticMigrationState) {
+export function currentMigrationHasChanges(ctx: AutomaticMigrationState) {
   if (!ctx.currentMigration) {
     return false;
   }
@@ -285,7 +305,7 @@ function currentMigrationCanLeaveReview(ctx: AutomaticMigrationState) {
   return (
     currentMigrationIsReviewed(ctx) ||
     currentMigrationIsSkipped(ctx) ||
-    currentMigrationHasSucceeded(ctx)
+    (currentMigrationHasSucceeded(ctx) && !currentMigrationHasChanges(ctx))
   );
 }
 
@@ -295,6 +315,7 @@ function findFirstIncompleteMigration(
   migrations: MigrationDetailsWithId[],
   nxConsoleMetadata: MigrationsJsonMetadata
 ) {
+  console.log('finding first incomplete migration');
   return (
     migrations.find(
       (migration) =>
