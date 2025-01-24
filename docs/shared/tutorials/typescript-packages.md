@@ -324,7 +324,7 @@ import { getRandomItem } from '@tuskdesign/util';
 // ...
 ```
 
-Now if you run run the build, Nx will notice that the TypeScript project references need to be updated and ask your permission to update them.
+Now if you run the build, Nx will notice that the TypeScript project references need to be updated and ask your permission to update them.
 
 ```text {% command="nx build @tuskdesign/zoo" path="~/tuskydesigns" %}
  NX   The workspace is out of sync
