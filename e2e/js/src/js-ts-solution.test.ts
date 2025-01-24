@@ -114,70 +114,70 @@ ${content}`
 
     // check build
     expect(runCLI(`build ${esbuildParentLib}`)).toContain(
-      `Successfully ran target build for project ${esbuildParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${esbuildParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`build ${rollupParentLib}`)).toContain(
-      `Successfully ran target build for project ${rollupParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${rollupParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`build ${swcParentLib}`)).toContain(
-      `Successfully ran target build for project ${swcParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${swcParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`build ${tscParentLib}`)).toContain(
-      `Successfully ran target build for project ${tscParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${tscParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`build ${viteParentLib}`)).toContain(
-      `Successfully ran target build for project ${viteParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${viteParentLib} and 5 tasks it depends on`
     );
 
     // check typecheck
     expect(runCLI(`typecheck ${esbuildParentLib}`)).toContain(
-      `Successfully ran target typecheck for project ${esbuildParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${esbuildParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`typecheck ${rollupParentLib}`)).toContain(
-      `Successfully ran target typecheck for project ${rollupParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${rollupParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`typecheck ${swcParentLib}`)).toContain(
-      `Successfully ran target typecheck for project ${swcParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${swcParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`typecheck ${tscParentLib}`)).toContain(
-      `Successfully ran target typecheck for project ${tscParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${tscParentLib} and 5 tasks it depends on`
     );
     expect(runCLI(`typecheck ${viteParentLib}`)).toContain(
-      `Successfully ran target typecheck for project ${viteParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${viteParentLib} and 5 tasks it depends on`
     );
 
     // check lint
     expect(runCLI(`lint ${esbuildParentLib}`)).toContain(
-      `Successfully ran target lint for project ${esbuildParentLib}`
+      `Successfully ran target lint for project @proj/${esbuildParentLib}`
     );
     expect(runCLI(`lint ${rollupParentLib}`)).toContain(
-      `Successfully ran target lint for project ${rollupParentLib}`
+      `Successfully ran target lint for project @proj/${rollupParentLib}`
     );
     expect(runCLI(`lint ${swcParentLib}`)).toContain(
-      `Successfully ran target lint for project ${swcParentLib}`
+      `Successfully ran target lint for project @proj/${swcParentLib}`
     );
     expect(runCLI(`lint ${tscParentLib}`)).toContain(
-      `Successfully ran target lint for project ${tscParentLib}`
+      `Successfully ran target lint for project @proj/${tscParentLib}`
     );
     expect(runCLI(`lint ${viteParentLib}`)).toContain(
-      `Successfully ran target lint for project ${viteParentLib}`
+      `Successfully ran target lint for project @proj/${viteParentLib}`
     );
 
     // check test
     expect(runCLI(`test ${esbuildParentLib}`)).toContain(
-      `Successfully ran target test for project ${esbuildParentLib}`
+      `Successfully ran target test for project @proj/${esbuildParentLib}`
     );
     expect(runCLI(`test ${rollupParentLib}`)).toContain(
-      `Successfully ran target test for project ${rollupParentLib}`
+      `Successfully ran target test for project @proj/${rollupParentLib}`
     );
     expect(runCLI(`test ${swcParentLib}`)).toContain(
-      `Successfully ran target test for project ${swcParentLib}`
+      `Successfully ran target test for project @proj/${swcParentLib}`
     );
     expect(runCLI(`test ${tscParentLib}`)).toContain(
-      `Successfully ran target test for project ${tscParentLib}`
+      `Successfully ran target test for project @proj/${tscParentLib}`
     );
     expect(runCLI(`test ${viteParentLib}`)).toContain(
-      `Successfully ran target test for project ${viteParentLib}`
+      `Successfully ran target test for project @proj/${viteParentLib}`
     );
   }, 300_000);
 });

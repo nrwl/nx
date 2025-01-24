@@ -50,11 +50,11 @@ describe('Vue Plugin', () => {
     `
     );
 
-    expect(() => runCLI(`lint ${app}`)).not.toThrow();
-    expect(() => runCLI(`test ${app}`)).not.toThrow();
-    expect(() => runCLI(`build ${app}`)).not.toThrow();
-    expect(() => runCLI(`lint ${lib}`)).not.toThrow();
-    expect(() => runCLI(`test ${lib}`)).not.toThrow();
-    expect(() => runCLI(`build ${lib}`)).not.toThrow();
+    expect(() => runCLI(`lint @proj/${app}`)).not.toThrow();
+    expect(() => runCLI(`test @proj/${app}`)).not.toThrow();
+    expect(() => runCLI(`build @proj/${app}`)).not.toThrow();
+    expect(() => runCLI(`lint @proj/${lib}`)).not.toThrow();
+    expect(() => runCLI(`test @proj/${lib}`)).not.toThrow();
+    expect(() => runCLI(`build @proj/${lib}`)).not.toThrow();
   }, 300_000);
 });

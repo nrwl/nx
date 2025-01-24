@@ -70,7 +70,7 @@ export async function normalizeOptions(
     bundler,
     fileName,
     routePath: `/${projectNames.projectSimpleName}`,
-    name: projectName,
+    name: isUsingTsSolutionConfig ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,

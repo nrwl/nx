@@ -47,6 +47,12 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
   if (options.isUsingTsSolutionConfig) {
     writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
       name: getImportPath(tree, options.name),
@@ -54,12 +60,11 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       private: true,
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-      nx: {
-        name: options.name,
-        projectType: 'library',
-        sourceRoot: `${options.projectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
     });
   } else {
     addProjectConfiguration(tree, options.name, {
@@ -147,12 +152,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
         : undefined
     );
-  }
-
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   sortPackageJsonFields(tree, options.projectRoot);

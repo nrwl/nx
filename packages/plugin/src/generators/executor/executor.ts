@@ -190,7 +190,7 @@ async function normalizeOptions(
     propertyName,
     description,
     projectRoot,
-    projectSourceRoot,
+    projectSourceRoot: projectSourceRoot ?? join(projectRoot, 'src'),
     isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 }

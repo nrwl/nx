@@ -247,12 +247,11 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
       name: getImportPath(tree, options.name),
       version: '0.0.1',
       private: true,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: `${options.appProjectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
     });
   } else {
     addProjectConfiguration(tree, options.projectName, {
@@ -287,6 +286,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const tasks: GeneratorCallback[] = [];
 
@@ -666,10 +669,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       : undefined
   );
 
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
-  }
-
   if (!options.skipFormat) {
     await formatFiles(host);
   }
@@ -719,7 +718,9 @@ async function normalizeOptions(
     name: names(options.name).fileName,
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',
-    projectName: appProjectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(host, appProjectName)
+      : appProjectName,
     strict: options.strict ?? true,
     appProjectRoot,
     e2eProjectRoot,

@@ -20,6 +20,7 @@ import {
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 let tsModule: typeof import('typescript');
 
@@ -165,14 +166,14 @@ async function normalizeOptions(
 
   const projects = getProjects(host);
   const project = projects.get(projectName);
-  const { sourceRoot, projectType } = project;
+  const { root, sourceRoot, projectType } = project;
 
   const tsConfigJson = readJson(host, getRootTsConfigPathInTree(host));
   const tsPaths: { [module: string]: string[] } = tsConfigJson.compilerOptions
     ? tsConfigJson.compilerOptions.paths || {}
     : {};
   const modulePath =
-    projectType === 'application'
+    getProjectType(host, root, projectType) === 'application'
       ? options.path
         ? `./app/${options.path}/${extraNames.fileName}.slice`
         : `./app/${extraNames.fileName}.slice`

@@ -16,7 +16,7 @@ export function addTsconfigEntryPoints(
     tree,
     options.projectName
   );
-  const serverFilePath = joinPathFragments(sourceRoot, 'server.ts');
+  const serverFilePath = joinPathFragments(sourceRoot ?? 'src', 'server.ts');
 
   tree.write(
     serverFilePath,
