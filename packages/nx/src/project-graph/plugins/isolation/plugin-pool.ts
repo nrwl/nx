@@ -5,7 +5,7 @@ import { Socket, connect } from 'net';
 import { PluginConfiguration } from '../../../config/nx-json';
 
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
-// import { logger } from '../../utils/logger';
+import { logger } from '../../../utils/logger';
 
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
@@ -147,7 +147,15 @@ function createWorkerHandler(
     return consumeMessage(socket, message, {
       'load-result': (result) => {
         if (result.success) {
-          const { name, createNodesPattern, include, exclude } = result;
+          const {
+            name,
+            include,
+            exclude,
+            createNodesPattern,
+            hasCreateDependencies,
+            hasProcessProjectGraph,
+            hasCreateMetadata,
+          } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
           onload({
@@ -177,7 +185,7 @@ function createWorkerHandler(
                   },
                 ]
               : undefined,
-            createDependencies: result.hasCreateDependencies
+            createDependencies: hasCreateDependencies
               ? (ctx) => {
                   const tx =
                     pluginName + worker.pid + ':createDependencies:' + txId++;
@@ -197,7 +205,7 @@ function createWorkerHandler(
                   );
                 }
               : undefined,
-            createMetadata: result.hasCreateMetadata
+            createMetadata: hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
                     pluginName + worker.pid + ':createMetadata:' + txId++;
@@ -254,7 +262,7 @@ function createWorkerExitHandler(
   worker: ChildProcess,
   pendingPromises: Map<string, PendingPromise>
 ) {
-  return () => {
+  return (code?: number) => {
     for (const [_, pendingPromise] of pendingPromises) {
       pendingPromise.rejector(
         new Error(
@@ -262,6 +270,13 @@ function createWorkerExitHandler(
             pluginNames.get(worker) ?? worker.pid
           } exited unexpectedly with code ${worker.exitCode}`
         )
+      );
+    }
+    if (code && code !== 0) {
+      logger.error(
+        `[plugin-pool] worker ${
+          pluginNames.get(worker) ?? worker.pid
+        } exited with code ${code}`
       );
     }
   };

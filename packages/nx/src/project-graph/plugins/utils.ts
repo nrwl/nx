@@ -4,6 +4,8 @@ import {
   CreateNodesResult,
 } from './public-api';
 import { AggregateCreateNodesError } from '../error-types';
+import type { LoadedNxPlugin } from './loaded-nx-plugin';
+
 export async function createNodesFromFiles<T = unknown>(
   createNodes: CreateNodesFunction<T>,
   configFiles: readonly string[],
@@ -33,4 +35,8 @@ export async function createNodesFromFiles<T = unknown>(
     throw new AggregateCreateNodesError(errors, results);
   }
   return results;
+}
+
+export function isRuntimePlugin(plugin: LoadedNxPlugin): boolean {
+  return !!(plugin.createNodes || plugin.createDependencies);
 }

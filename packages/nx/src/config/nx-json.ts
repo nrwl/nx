@@ -529,9 +529,30 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
 export type PluginConfiguration = string | ExpandedPluginConfiguration;
 
 export type ExpandedPluginConfiguration<T = unknown> = {
+  /**
+   * The plugin module that should be loaded by Nx
+   */
   plugin: string;
+
+  /**
+   * The version of the plugin to be installed by the Nx wrapper.
+   * If Nx is invoked from node_modules, this is unused.
+   */
+  version?: string;
+
+  /**
+   * Configuration options for the loaded plugin
+   */
   options?: T;
+
+  /**
+   * Glob patterns to limit which paths the plugin's createNodes function will run on.
+   */
   include?: string[];
+
+  /**
+   * Glob patterns to exclude paths from the plugin's createNodes function.
+   */
   exclude?: string[];
 };
 

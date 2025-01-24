@@ -1,6 +1,7 @@
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { isRuntimePlugin } from '../utils';
 
 import { createServer } from 'net';
 import { unlinkSync } from 'fs';
@@ -76,6 +77,11 @@ const server = createServer((socket) => {
                 hasCreateMetadata:
                   'createMetadata' in plugin && !!plugin.createMetadata,
                 success: true,
+                callback: isRuntimePlugin(plugin)
+                  ? undefined
+                  : () => {
+                      process.exit(0);
+                    },
               },
             };
           } catch (e) {
