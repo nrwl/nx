@@ -116,7 +116,7 @@ export async function* nodeExecutor(
   yield* createAsyncIterable<{
     success: boolean;
     options?: Record<string, any>;
-  }>(async ({ done, next, error, onCleanup }) => {
+  }>(async ({ done, next, error, registerCleanup }) => {
     const processQueue = async () => {
       if (tasks.length === 0) return;
 
@@ -246,7 +246,7 @@ export async function* nodeExecutor(
       process.exit(128 + 1);
     });
 
-    onCleanup(async () => {
+    registerCleanup(async () => {
       await stopAllTasks('SIGTERM');
     });
 

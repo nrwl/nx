@@ -2,7 +2,7 @@ export interface AsyncPushCallbacks<T> {
   next: (value: T) => void;
   done: () => void;
   error: (err: unknown) => void;
-  onCleanup?: (cb: () => void | Promise<void>) => void;
+  registerCleanup?: (cb: () => void | Promise<void>) => void;
 }
 
 export function createAsyncIterable<T = unknown>(
@@ -44,7 +44,7 @@ export function createAsyncIterable<T = unknown>(
           }
           done = true;
         },
-        onCleanup: (cb) => {
+        registerCleanup: (cb) => {
           cleanup = cb;
         },
       });
