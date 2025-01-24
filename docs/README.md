@@ -208,14 +208,6 @@ You can optionally also pass a `path` like
 ‎```
 ````
 
-#### Terminal Video Output
-
-You can have a more dynamic visualization of a terminal output by using the following component:
-
-```
-{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
-```
-
 #### Table of Contents
 
 You can add a table of contents to your document by using the following component. This is mostly useful for blog posts.
