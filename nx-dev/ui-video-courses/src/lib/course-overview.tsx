@@ -15,7 +15,7 @@ export function CourseOverview({ courses }: CourseOverviewProps): JSX.Element {
           {courses.map((course) => (
             <Link
               key={course.id}
-              href={`/courses/${course.id}`}
+              href={course.externalLink || `/courses/${course.id}`}
               className="block h-full transform-gpu"
               prefetch={false}
             >
@@ -43,14 +43,20 @@ export function CourseOverview({ courses }: CourseOverviewProps): JSX.Element {
                         </span>
                       </>
                     )}
-                    <span>{course.lessons.length} lessons</span>
+                    <span>
+                      {course.lessons.length > 0
+                        ? `${course.lessons.length} lessons`
+                        : `${course.lessonCount} lessons`}
+                    </span>
                     <span className="text-slate-300 dark:text-slate-600">
                       •
                     </span>
-                    <span className="flex items-center gap-1">
-                      <ClockIcon className="h-3 w-3" />
-                      {course.totalDuration}
-                    </span>
+                    {course.lessons.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <ClockIcon className="h-3 w-3" />
+                        {course.totalDuration}
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-4">
