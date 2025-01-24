@@ -1,12 +1,10 @@
 ---
-title: What Are TypeScript Project References?
+title: A Beginner's Guide to TypeScript Project References
 slug: typescript-project-references
 authors: [Zack DeRose]
 tags: [typescript, monorepo, nx]
 cover_image: /blog/images/2025-01-21/ts-islands.png
 ---
-
-## Connecting Projects At The TypeScript Level
 
 Consider the following workspace:
 
@@ -22,10 +20,7 @@ tsconfig.base.json
 
 If we try to run our build script on the `is-odd` project, we see that TypeScript is unable to run the `tsc` command because at the TypeScript level, `is-odd` is not aware of the `is-even` module:
 
-```shell
- . > cd is-odd
- is-odd > tsc
-
+```{% title="Typescript cannot find the 'is-even' module." path="~/is-odd" command="tsc" lineWrap=80 %}
 index.ts:1:24 - error TS2792: Cannot find module 'is-even'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
 
 1 import { isEven } from 'is-even';
@@ -42,7 +37,7 @@ As we can see, there's an error associated with this line:
 import { isEven } from 'is-even';
 ```
 
-TypeScript needs to be informed as to how to find the module named `is-even`. The error message here actually suggests that we may have forgotten to add aliases to the 'paths' option. To do this we can adjust our `tsconfig.json` file at the root of the monorepo:
+TypeScript needs to be informed as to how to find the module named `is-even`. The error message here actually suggests that we may have forgotten to add aliases to the `paths` option. To do this we can adjust our `tsconfig.json` file at the root of the monorepo:
 
 ```json
 {
@@ -57,8 +52,8 @@ TypeScript needs to be informed as to how to find the module named `is-even`. Th
 
 By having the individual `tsconfig.json` files `extend` this base config, they will all get these paths, and now our build command will work:
 
-```shell
-is-odd > tsc
+```{% title="Successfully building 'is-odd' package" path="~/is-odd" command="tsc" %}
+
 ```
 
 This solution that we just implemented is how Nx has set up tsconfigs in the past. Before the new "Project References" feature that this article will look at next, this was the best option available for allowing you to import from another named project inside of your monorepo.
@@ -99,8 +94,7 @@ There are alternatives to path aliases to allow for this name to be resolved. Th
 
 With this set up, we can now use the `-b` or `--build` option when building `is-odd` - let's run it now with the `--verbose` flag on:
 
-```shell
-  % tsc -b is-odd --verbose
+```{% title="Successful build with Typescript's 'Build Mode'" path="~" command="tsc -b is-odd --verbose" lineWrap=80 %}
 Projects in this build:
     * is-even/tsconfig.json
     * is-odd/tsconfig.json
@@ -126,7 +120,7 @@ is-even
 is-odd
   index.d.ts
   index.js
-  index.tx
+  index.ts
   tsconfig.json
   tsconfig.tsbuildinfo
 tsconfig.base.json
@@ -134,15 +128,15 @@ tsconfig.base.json
 
 Notice how both `is-even` AND `is-odd` now have a compiled `index.d.ts` declaration file and `index.js`. They also both have a `tsconfig.base.json` file now (this holds the additional data TypeScript needs to determine which builds are needed). With the `--build` option, TypeScript is now operating as a build orchestrator - by finding all referenced projects, determining if they are out-of-date, and then building them in the correct order.
 
-## So What Does This Mean For You
+## Why This Matters
 
 As a practical/pragmatic developer - the TLDR of all of this information is project references allow for more performant builds.
 
-We've put together [a repo to demonstrate the perfomance gains](https://github.com/jaysoo/typecheck-timings), summarized by this graphic:
+We've put together [a repo to demonstrate the performance gains](https://github.com/nrwl/typecheck-timings), summarized by this graphic:
 
 ![results](/blog/images/2025-01-21/results.png)
 
-In addition to the time savings we saw reduced memory usage (~< 1GB vs 3 GB). This makes sense given what we saw about how project references work. This is actually a very good thing for CI pipelines, as exceeding memory usuage is a common issue we see with our clients for their TypeScript builds. Less memory usuage means we can use smaller machines, which saves on the CI costs.
+In addition to the time savings we saw reduced memory usage (~< 1GB vs 3 GB). This makes sense given what we saw about how project references work. This is actually a very good thing for CI pipelines, as exceeding memory usage is a common issue we see with our clients for their TypeScript builds. Less memory usage means we can use smaller machines, which saves on the CI costs.
 
 In general, while it's good to understand the mechanics around everything, we believe it's better to use tools for this (like Nx!). This way you can off-shore your mental capacity to the tool and instead focus on building your solution.
 
@@ -157,8 +151,7 @@ nx g lib packages/is-odd
 
 After making the adjustments to the contents of the `is-even` and `is-odd`, we can now simply build `is-even` and Nx will automatically prompt us to "sync" our workspace (updating our project references since `is-odd` now depends on `is-even`):
 
-```shell
-% nx build is-odd
+```{% title="Showing Nx's sync generators in action" path="~" command="nx build is-odd" lineWrap=80 %}
 
  NX   The workspace is out of sync
 
@@ -175,3 +168,12 @@ For more information, refer to the docs: https://nx.dev/concepts/sync-generators
 ```
 
 So, offload the mental load to your tools, focus on building your solution, and you should have the best of all worlds.
+
+- [Nx Docs](/getting-started/intro)
+- [X/Twitter](https://twitter.com/nxdevtools)
+- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+- [Bluesky](https://bsky.app/profile/nx.dev)
+- [Nx GitHub](https://github.com/nrwl/nx)
+- [Nx Official Discord Server](https://go.nx.dev/community)
+- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+- [Speed up your CI](/nx-cloud)
