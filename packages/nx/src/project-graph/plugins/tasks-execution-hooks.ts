@@ -11,7 +11,7 @@ export async function runPreTasksExecution(
 ) {
   if (isOnDaemon() || !isDaemonEnabled()) {
     performance.mark(`preTasksExecution:start`);
-    const plugins = await getPlugins();
+    const plugins = await getPlugins(pluginContext.workspaceRoot);
     const envs = await Promise.all(
       plugins
         .filter((p) => p.preTasksExecution)

@@ -198,8 +198,9 @@ export async function runCommand(
         {
           ...nxArgs,
           skipNxCache:
+            nxArgs.skipNxCache ||
             process.env.NX_SKIP_NX_CACHE === 'true' ||
-            process.env.DISABLE_NX_CACHE === 'true',
+            process.env.NX_DISABLE_NX_CACHE === 'true',
         },
         overrides,
         initiatingProject,
