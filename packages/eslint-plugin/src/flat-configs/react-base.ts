@@ -18,11 +18,16 @@ import tseslint from 'typescript-eslint';
  * https://github.com/facebook/create-react-app/blob/567f36c9235f1e1fd4a76dc6d1ae00be754ca047/packages/eslint-config-react-app/index.js
  */
 export default tseslint.config({
-  // Files need to be specified or else typescript-eslint rules will be
-  // applied to non-TS files. For example, libs add rules to *.json
-  // files, and TS rules should not apply to them.
-  // See: https://github.com/nrwl/nx/issues/28245
-  files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+  files: [
+    '**/*.ts',
+    '**/*.cts',
+    '**/*.mts',
+    '**/*.tsx',
+    '**/*.js',
+    '**/*.cjs',
+    '**/*.mjs',
+    '**/*.jsx',
+  ],
   plugins: { import: importPlugin },
   languageOptions: {
     globals: {

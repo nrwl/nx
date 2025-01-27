@@ -15,22 +15,32 @@ import tseslint from 'typescript-eslint';
  */
 export default tseslint.config(
   {
-    // Files need to be specified or else typescript-eslint rules will be
-    // applied to non-TS files. For example, libs add rules to *.json
-    // files, and TS rules should not apply to them.
-    // See: https://github.com/nrwl/nx/issues/28245
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: [
+      '**/*.ts',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      '**/*.jsx',
+    ],
     plugins: {
       'react-hooks': reactHooksPlugin,
     },
     rules: reactHooksPlugin.configs.recommended.rules,
   },
   {
-    // Files need to be specified or else typescript-eslint rules will be
-    // applied to non-TS files. For example, libs add rules to *.json
-    // files, and TS rules should not apply to them.
-    // See: https://github.com/nrwl/nx/issues/28245
-    files: ['**/*.tsx', '**/*.jsx'],
+    files: [
+      '**/*.ts',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      '**/*.jsx',
+    ],
     settings: { react: { version: 'detect' } },
     plugins: {
       'jsx-a11y': jsxA11yPlugin,
