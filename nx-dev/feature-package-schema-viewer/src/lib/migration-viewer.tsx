@@ -40,7 +40,7 @@ export function MigrationViewer({
               </thead>
               <tbody>
                 {Object.entries(schema.requires).map(([name, version]) => (
-                  <tr>
+                  <tr key={name}>
                     <td>{name}</td>
                     <td>{version}</td>
                   </tr>
@@ -67,7 +67,7 @@ export function MigrationViewer({
               <tbody>
                 {Object.entries(schema.packages).map(
                   ([name, { version, alwaysAddToPackageJson }]) => (
-                    <tr>
+                    <tr key={name}>
                       <td>{name}</td>
                       <td>{version}</td>
                       <td>

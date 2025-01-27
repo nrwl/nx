@@ -27,7 +27,6 @@ export default function Package({
   migrations: MigrationMetadata[];
 }): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
-  console.log(migrations);
 
   const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
     menu: {

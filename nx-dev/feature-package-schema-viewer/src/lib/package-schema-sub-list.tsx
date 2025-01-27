@@ -144,9 +144,9 @@ export const VersionLabelListItem = ({ label }: { label: string }) => {
   return label ? (
     <li className="relative flex px-1 pt-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">
       <div className="pt-2">
-        <p className="text-sm font-bold">
+        <span className="text-sm font-bold">
           <Heading2 title={label} />
-        </p>
+        </span>
       </div>
     </li>
   ) : undefined;
