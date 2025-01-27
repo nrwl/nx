@@ -207,6 +207,7 @@ export async function remixApplicationGeneratorInternal(
         skipPackageJson: false,
         skipFormat: true,
         addPlugin: true,
+        compiler: options.useTsSolution ? 'swc' : undefined,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
       if (projectConfig.targets?.['test']?.options) {

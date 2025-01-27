@@ -1,14 +1,15 @@
 import {
+  offsetFromRoot as _offsetFromRoot,
   detectPackageManager,
   generateFiles,
   getPackageManagerCommand,
-  offsetFromRoot as _offsetFromRoot,
+  joinPathFragments,
   toJS,
   Tree,
   writeJson,
-  joinPathFragments,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 
@@ -23,8 +24,22 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     exec: getPackageManagerCommand(detectPackageManager(host.root)).exec,
     offsetFromRoot,
     rootTsConfigPath,
+    jestConfigFileName: options.isUsingTsSolutionConfig
+      ? 'jest.config.ts'
+      : 'jest.config.json',
   });
   if (options.isUsingTsSolutionConfig) {
+    addSwcTestConfig(host, options.e2eProjectRoot, 'es6');
+    generateFiles(
+      host,
+      join(__dirname, '../files/ts-solution'),
+      options.e2eProjectRoot,
+      {
+        ...options,
+        exec: getPackageManagerCommand(detectPackageManager(host.root)).exec,
+        offsetFromRoot,
+      }
+    );
     writeJson(
       host,
       joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),

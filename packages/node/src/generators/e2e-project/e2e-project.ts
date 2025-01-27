@@ -36,6 +36,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { relative } from 'node:path/posix';
+import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
@@ -126,6 +127,10 @@ export async function e2eProjectGeneratorInternal(
   const tsConfigFile = isUsingTsSolutionConfig
     ? 'tsconfig.json'
     : 'tsconfig.spec.json';
+  const rootOffset = offsetFromRoot(options.e2eProjectRoot);
+  const coverageDirectory = isUsingTsSolutionConfig
+    ? 'test-output/jest/coverage'
+    : joinPathFragments(rootOffset, 'coverage', options.e2eProjectName);
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -135,8 +140,10 @@ export async function e2eProjectGeneratorInternal(
         ...options,
         ...names(options.rootProject ? 'server' : options.project),
         tsConfigFile,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         jestPreset,
+        coverageDirectory,
+        isUsingTsSolutionConfig,
         tmpl: '',
       }
     );
@@ -150,7 +157,7 @@ export async function e2eProjectGeneratorInternal(
           ...options,
           ...names(options.rootProject ? 'server' : options.project),
           tsConfigFile,
-          offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+          offsetFromRoot: rootOffset,
           tmpl: '',
         }
       );
@@ -166,14 +173,17 @@ export async function e2eProjectGeneratorInternal(
         ...names(options.rootProject ? 'cli' : options.project),
         mainFile,
         tsConfigFile,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         jestPreset,
+        coverageDirectory,
+        isUsingTsSolutionConfig,
         tmpl: '',
       }
     );
   }
 
   if (isUsingTsSolutionConfig) {
+    addSwcTestConfig(host, options.e2eProjectRoot, 'es6');
     generateFiles(
       host,
       path.join(__dirname, 'files/ts-solution'),
@@ -184,7 +194,7 @@ export async function e2eProjectGeneratorInternal(
           options.e2eProjectRoot,
           appProject.root
         ),
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         tmpl: '',
       }
     );
@@ -195,7 +205,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         tmpl: '',
       }
     );

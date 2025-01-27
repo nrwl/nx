@@ -252,11 +252,8 @@ describe('detox application generator', () => {
       expect(tree.exists('my-dir/my-app-e2e/.detoxrc.json')).toBeTruthy();
       expect(tree.exists('my-dir/my-app-e2e/src/app.spec.ts')).toBeTruthy();
 
-      const detoxrc = tree.read('my-dir/my-app-e2e/.detoxrc.json').toString();
-      // Strip trailing commas
-      const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
-      );
+      const detoxrcJson = readJson(tree, 'my-dir/my-app-e2e/.detoxrc.json');
+      expect(detoxrcJson.testRunner.args.config).toEqual('./jest.config.json');
       const appsDetoxrcJson = detoxrcJson['apps'];
       expect(appsDetoxrcJson).toEqual({
         'android.debug': {
@@ -288,6 +285,32 @@ describe('detox application generator', () => {
           type: 'ios.app',
         },
       });
+      expect(tree.read('my-dir/my-app-e2e/jest.config.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "preset": "../../jest.preset",
+          "rootDir": ".",
+          "testMatch": [
+            "<rootDir>/src/**/*.test.ts?(x)",
+            "<rootDir>/src/**/*.spec.ts?(x)"
+          ],
+          "testTimeout": 120000,
+          "maxWorkers": 1,
+          "globalSetup": "detox/runners/jest/globalSetup",
+          "globalTeardown": "detox/runners/jest/globalTeardown",
+          "reporters": ["detox/runners/jest/reporter"],
+          "testEnvironment": "detox/runners/jest/testEnvironment",
+          "verbose": true,
+          "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
+          "transform": {
+            "^.+\\\\.(ts|js|html)$": [
+              "ts-jest",
+              { "tsconfig": "<rootDir>/tsconfig.e2e.json" }
+            ]
+          }
+        }
+        "
+      `);
     });
 
     it('should update configuration', async () => {
@@ -557,6 +580,85 @@ describe('detox application generator', () => {
         }
         "
       `);
+    });
+
+    it('should generate jest test config with @swc/jest', async () => {
+      writeJson(tree, 'apps/my-app/package.json', {
+        name: 'my-app',
+      });
+
+      await detoxApplicationGenerator(tree, {
+        e2eDirectory: 'apps/my-app-e2e',
+        appProject: 'my-app',
+        linter: Linter.None,
+        framework: 'react-native',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/my-app-e2e/test-setup.ts')).toBeTruthy();
+      const detoxrc = readJson(tree, 'apps/my-app-e2e/.detoxrc.json');
+      expect(detoxrc.testRunner.args.config).toEqual('./jest.config.ts');
+      expect(tree.read('apps/my-app-e2e/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          preset: "../../jest.preset",
+          rootDir: ".",
+          testMatch: [
+            "<rootDir>/src/**/*.test.ts?(x)",
+            "<rootDir>/src/**/*.spec.ts?(x)"
+          ],
+          testTimeout: 120000,
+          maxWorkers: 1,
+          globalSetup: "detox/runners/jest/globalSetup",
+          globalTeardown: "detox/runners/jest/globalTeardown",
+          reporters: ["detox/runners/jest/reporter"],
+          testEnvironment: "detox/runners/jest/testEnvironment",
+          verbose: true,
+          setupFilesAfterEnv: ["<rootDir>/test-setup.ts"],
+          transform: {
+            "^.+\\\\.(ts|js|html)$": ['@swc/jest', swcJestConfig]
+          }
+        };
+        "
+      `);
+      expect(tree.read('apps/my-app-e2e/.spec.swcrc', 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "{
+            "jsc": {
+              "target": "es2017",
+              "parser": {
+                "syntax": "typescript",
+                "decorators": true,
+                "dynamicImport": true
+              },
+              "transform": {
+                "decoratorMetadata": true,
+                "legacyDecorator": true
+              },
+              "keepClassNames": true,
+              "externalHelpers": true,
+              "loose": true
+            },
+            "module": {
+              "type": "es6"
+            },
+            "sourceMaps": true,
+            "exclude": []
+          }
+          "
+        `);
     });
   });
 });
