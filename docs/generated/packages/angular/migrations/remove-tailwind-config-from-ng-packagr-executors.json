@@ -1,0 +1,15 @@
+{
+  "name": "remove-tailwind-config-from-ng-packagr-executors",
+  "cli": "nx",
+  "version": "20.2.0-beta.8",
+  "requires": { "@angular/core": ">=19.0.0" },
+  "description": "Remove the deprecated 'tailwindConfig' option from ng-packagr executors. Tailwind CSS configurations located at the project or workspace root will be picked up automatically.",
+  "factory": "./src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors",
+  "implementation": "/packages/angular/src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

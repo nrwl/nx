@@ -53,6 +53,7 @@ export class PackagesApi {
     documents: StaticDocumentPaths[];
     executors: StaticDocumentPaths[];
     generators: StaticDocumentPaths[];
+    migrations: StaticDocumentPaths[];
   } {
     /**
      * TODO: Extract this into utils, can be used by DocumentsAPI as well.
@@ -79,11 +80,13 @@ export class PackagesApi {
       documents: StaticDocumentPaths[];
       executors: StaticDocumentPaths[];
       generators: StaticDocumentPaths[];
+      migrations: StaticDocumentPaths[];
     } = {
       packages: [],
       documents: [],
       executors: [],
       generators: [],
+      migrations: [],
     };
 
     packages.forEach((p) => {
@@ -126,6 +129,10 @@ export class PackagesApi {
       Object.keys(p.generators).forEach((path) =>
         experiment.generators.push(generateSegments(path, this.options.prefix))
       );
+
+      Object.keys(p.migrations).forEach((path) =>
+        experiment.migrations.push(generateSegments(path, this.options.prefix))
+      );
     });
 
     return experiment;
@@ -153,7 +160,7 @@ export class PackagesApi {
   }
   getPackageFileMetadatas(
     name: string,
-    type: 'executors' | 'generators'
+    type: 'executors' | 'generators' | 'migrations'
   ): Record<string, FileMetadata> {
     return this.manifest[name][type];
   }

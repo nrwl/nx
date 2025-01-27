@@ -7467,6 +7467,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/angular/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -7575,6 +7583,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/cypress/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -7657,6 +7673,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/detox/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -7853,6 +7877,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/eslint/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -7893,6 +7925,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/eslint-plugin/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -8075,6 +8115,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/expo/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -8177,6 +8225,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/gradle/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -8251,6 +8307,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/jest/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -8401,6 +8465,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/js/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -8410,7 +8482,16 @@
         "id": "module-federation",
         "path": "/nx-api/module-federation",
         "name": "module-federation",
-        "children": [],
+        "children": [
+          {
+            "id": "migrations",
+            "path": "/nx-api/module-federation/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
         "isExternal": false,
         "disableCollapsible": false
       },
@@ -8712,6 +8793,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/next/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -8779,6 +8868,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/node/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -8836,6 +8933,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/nuxt/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -9122,6 +9227,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/nx/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -9196,6 +9309,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/playwright/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -9493,6 +9614,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/react/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -9705,6 +9834,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/react-native/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -9893,6 +10030,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/remix/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -9950,6 +10095,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/rollup/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -10134,6 +10287,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/rspack/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -10258,6 +10419,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/storybook/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -10374,6 +10543,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/vite/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -10465,6 +10642,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/vue/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -10539,6 +10724,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/web/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -10639,6 +10832,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/webpack/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
@@ -10779,6 +10980,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/workspace/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
