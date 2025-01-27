@@ -64,7 +64,7 @@ export async function remixLibraryGeneratorInternal(
   addTsconfigEntryPoints(tree, options);
 
   if (options.bundler === 'rollup' || options.buildable) {
-    updateBuildableConfig(tree, options.projectName);
+    updateBuildableConfig(tree, options);
   }
 
   updateTsconfigFiles(
