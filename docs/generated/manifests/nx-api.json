@@ -1466,6 +1466,16 @@
       }
     },
     "migrations": {
+      "/nx-api/detox/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/detox/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.2",
+        "originalFilePath": "/packages/detox",
+        "path": "/nx-api/detox/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/detox/migrations/20.3.0-package-updates": {
         "description": "",
         "file": "generated/packages/detox/migrations/20.3.0-package-updates.json",
@@ -3118,6 +3128,16 @@
       }
     },
     "migrations": {
+      "/nx-api/node/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/node/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.3",
+        "originalFilePath": "/packages/node",
+        "path": "/nx-api/node/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/node/migrations/17.3.1-package-updates": {
         "description": "",
         "file": "generated/packages/node/migrations/17.3.1-package-updates.json",
