@@ -1459,6 +1459,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/detox/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.2",
+        "originalFilePath": "/packages/detox",
+        "path": "detox/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/detox/migrations/20.3.0-package-updates.json",
         "hidden": false,
         "name": "20.3.0-package-updates",
@@ -3096,6 +3106,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/node/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.3",
+        "originalFilePath": "/packages/node",
+        "path": "node/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/node/migrations/17.3.1-package-updates.json",
