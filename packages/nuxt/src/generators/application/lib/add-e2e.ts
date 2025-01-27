@@ -129,8 +129,8 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerAddress: e2eWebServerInfo.e2eCiWebServerCommand,
-      webServerCommand: e2eWebServerInfo.e2eCiBaseUrl,
+      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       addPlugin: true,
     });
 
