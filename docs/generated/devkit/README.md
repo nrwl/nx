@@ -59,6 +59,7 @@ It only uses language primitives and immutable objects
 - [Task](../../devkit/documents/Task)
 - [TaskGraph](../../devkit/documents/TaskGraph)
 - [TaskHasher](../../devkit/documents/TaskHasher)
+- [TaskResult](../../devkit/documents/TaskResult)
 - [Tree](../../devkit/documents/Tree)
 - [Workspace](../../devkit/documents/Workspace)
 
@@ -86,6 +87,10 @@ It only uses language primitives and immutable objects
 - [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)
 - [PluginConfiguration](../../devkit/documents/PluginConfiguration)
+- [PostTasksExecution](../../devkit/documents/PostTasksExecution)
+- [PostTasksExecutionContext](../../devkit/documents/PostTasksExecutionContext)
+- [PreTasksExecution](../../devkit/documents/PreTasksExecution)
+- [PreTasksExecutionContext](../../devkit/documents/PreTasksExecutionContext)
 - [ProjectType](../../devkit/documents/ProjectType)
 - [ProjectsMetadata](../../devkit/documents/ProjectsMetadata)
 - [PromiseExecutor](../../devkit/documents/PromiseExecutor)
@@ -94,6 +99,7 @@ It only uses language primitives and immutable objects
 - [StringChange](../../devkit/documents/StringChange)
 - [TargetDefaults](../../devkit/documents/TargetDefaults)
 - [TaskGraphExecutor](../../devkit/documents/TaskGraphExecutor)
+- [TaskResults](../../devkit/documents/TaskResults)
 - [ToJSOptions](../../devkit/documents/ToJSOptions)
 - [WorkspaceJsonConfiguration](../../devkit/documents/WorkspaceJsonConfiguration)
 
