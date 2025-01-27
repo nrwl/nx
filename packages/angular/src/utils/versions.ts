@@ -11,8 +11,8 @@ export const tsLibVersion = '^2.3.0';
 
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.5';
-export const expressVersion = '~4.18.2';
-export const typesExpressVersion = '4.17.14';
+export const expressVersion = '^4.21.2';
+export const typesExpressVersion = '^4.17.21';
 export const browserSyncVersion = '^3.0.0';
 export const moduleFederationNodeVersion = '^2.6.21';
 export const moduleFederationEnhancedVersion = '^0.8.8';

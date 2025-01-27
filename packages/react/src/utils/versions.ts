@@ -53,8 +53,8 @@ export const tailwindcssVersion = '3.4.3';
 export const autoprefixerVersion = '10.4.13';
 
 // SSR and Module Federation
-export const expressVersion = '~4.18.2';
-export const typesExpressVersion = '4.17.17';
+export const expressVersion = '^4.21.2';
+export const typesExpressVersion = '^4.17.21';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
